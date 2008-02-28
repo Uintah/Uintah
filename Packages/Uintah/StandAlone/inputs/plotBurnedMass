@@ -23,10 +23,37 @@ grep -v "inf\|e+308" $out > $out.tmp
 mv $out.tmp $out
 
 #__________________________________
-echo "computing cumulative sum"
-awk 'NR==1 {sum=$2; print $1,$2,sum} ; NR>1 {sum=sum + $2; print $1, $2, sum}' < $out >& $out.tmp
-awk 'NR==1 {init_time=$1; print 0} ; NR>1 {time=$1 - init_time; print time, $2, $3}' < $out.tmp > $out.tmp1
+# post process the dat file
+echo "computing cumulative sum of the mass burned"
+awk 'NR==1 {sum=$2; printf("%15.16E %15.16E %15.16E\n", $1,$2,sum)} ; NR>1 {sum=sum + $2; printf("%15.16E %15.16E %15.16E\n", $1, $2, sum)}' < $out >& $out.tmp
 
+#compute the relative time
+awk 'NR==1 {init_time=$1; print 0} ; NR>1 {time=$1 - init_time; printf("%15.16E %15.16E %15.16E\n", time, $2, $3)}' < $out.tmp > $out.tmp1
+
+echo "computing delta time"
+awk '                               \
+BEGIN {                             \
+  old_t = 0;                        \
+}                                   \
+{                                   \
+  printf("%15.16E\n", $1 - old_t);  \
+  old_t = $1;                       \
+}                                   \
+' <$out.tmp1 > $out.tmp2
+
+echo "computing massBurned rate"
+paste -d " " $out.tmp1 $out.tmp2 > $out.tmp3
+
+# time, massBurned/timestep, sumMassBurned, delT massBurned/sec
+awk '                                                                           \
+NR>1 {                                                                          \
+  if ( $4 > 0.0) {                                                              \
+    printf("%15.16E %15.16E %15.16E %15.16E %15.16E\n", $1, $2, $3, $4, $3/$4); \
+  }                                                                             \
+}                                                                               \
+' < $out.tmp3 > $out.tmp4
+
+/bin/rm $out.tmp[1-3]
 /bin/rm $out.tmp
 
 echo "" > gp
@@ -53,8 +80,8 @@ set ylabel 'Mass Burned /timestep  [Kg]' textcolor lt 1
 set y2label 'Total Mass Burned [Kg]'     textcolor lt 2
 set xlabel 'Physical Time[sec]
 
-plot '$out.tmp1' using 1:2 t           'Mass Burned' with lines,\
-     '$out.tmp1' using 1:3 axis x1y2 t 'Cum. Sum' with lines
+plot '$out.tmp4' using 1:2 t           'Mass Burned' with lines,\
+     '$out.tmp4' using 1:3 axis x1y2 t 'Cum. Sum' with lines
 
 fin
 if( $hardcopy == "n") then
@@ -69,5 +96,5 @@ if($hardcopy == "y" || $hardcopy == "Y") then
   mogrify -rotate 90 plotMassBurned.jpg
 endif
 
-/bin/rm gp $out.tmp1
+/bin/rm gp $out.tmp4
 exit(1)
