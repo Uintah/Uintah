@@ -232,8 +232,9 @@ string getStackTrace(void* context /*=0*/)
     stacktrace << "Backtrace:\n";
     stacktrace.flags(ios::hex);
     // Skip the first procedure (us)
-    for(int i=1;i<nframes;i++)
+    for( int i = 1; i < nframes; i++ ) {
       stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
+    }
   }
 #elif defined(REDSTORM)
 
@@ -247,8 +248,12 @@ string getStackTrace(void* context /*=0*/)
     stacktrace << "Backtrace not available!\n";
   } else {
     char ** strs = backtrace_symbols( callstack, nframes );
+
+    stacktrace << "RedStorm Stack Trace:\n";
+    stacktrace.flags( ios::hex );
+
     for( int pos = 0; pos < nframes; ++pos ) {
-      stacktrace << callstack[ pos ] << "\n";
+      stacktrace << strs[pos] << "\n";
     }
     free(strs);
   }
