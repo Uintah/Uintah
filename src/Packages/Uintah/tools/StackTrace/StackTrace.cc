@@ -62,18 +62,12 @@ findLocation( int value )
 }
 
 void
-readSymbolLocations( /*char * filename*/ )
+readSymbolLocations( char * filename )
 {
-  //char * filename = "sus.symbols.sorted";
-  char * filename = "StackTrace.symbols.sorted";
-
   FILE * fp = fopen( filename, "r" );
 
-  const int LINE_SIZE = 4000;
-  char      line[ LINE_SIZE ];
-
   if( fp == NULL ) {
-    printf( "Error reading file '%s'.  Goodbye.\n", filename );
+    printf( "Error reading file '%s'.  Goodbye.\n\n", filename );
     exit( 1 );
   }
 
@@ -89,6 +83,9 @@ readSymbolLocations( /*char * filename*/ )
     Info_S * info = new Info_S();
     char name[1024], address[1024];
     
+    const int LINE_SIZE = 4000;
+    char      line[ LINE_SIZE ];
+
     fgets( line, LINE_SIZE, fp );
 
     int numRead = sscanf( line, "%s %c %s", address, &info->type, name );
@@ -103,10 +100,66 @@ readSymbolLocations( /*char * filename*/ )
       infoVector.push_back( info );
     }
   }
-  printf( "Total Number of Symbols: %d\n", cnt );
+  printf( "\nTotal Number of Symbols: %d\n\n", cnt );
 }
 
-void bar()
+void
+printStackTrace( char * filename )
+{
+  FILE * fp = fopen( filename, "r" );
+
+  if( fp == NULL ) {
+    printf( "Error reading file '%s'.  Goodbye.\n\n", filename );
+    exit( 1 );
+  }
+
+  vector< string > stacktrace;
+
+  printf("stack trace (raw):\n\n");
+
+  while( !feof( fp ) ) {
+    const int LINE_SIZE = 4000;
+    char      line[ LINE_SIZE ];
+
+    fgets( line, LINE_SIZE, fp );
+    
+    printf("%s", line);
+    stacktrace.push_back( line );
+  }
+
+  printf("\n\n");
+  printf("stack trace (with names):\n\n");
+
+  for( int pos = 0; pos < stacktrace.size(); ++pos ) {
+
+    string line = stacktrace[ pos ];
+    int    loc  = line.rfind( "[" );
+    string addrStr = line.substr( loc + 1, 8 );
+
+    int    addr;
+
+    sscanf( addrStr.c_str(), "%x", &addr );
+
+    Info_S * info;
+
+    info = findLocation( addr ); //, infoVector.size()/2, 0 );
+    string name = "unknown";
+    if( info ) {
+      name = info->name;
+    }
+    printf( "%x -- %s\n", addr, name.c_str() );
+  }
+  printf( "\n" );
+}
+
+#define DO_TESTING 0
+
+#if DO_TESTING
+
+// Get the stack trace and print it out.  1st in raw form, then with
+// associated function names.
+void
+bar()
 {
   void* callstack[128];
   int i, frames = backtrace(callstack, 128);
@@ -141,6 +194,7 @@ void bar()
   free(strs);
 }
 
+// Dummy functions  to create a deeper stack trace.
 void
 foo() 
 {
@@ -154,7 +208,7 @@ doit( int value )
   return 1.0;
 }
 
-#if 0
+// Tests the binary search lookup with a number of addresses.
 void
 test() 
 {
@@ -186,12 +240,37 @@ test()
     printf( "%x -- %x -- %s\n\n\n", addr, address, name.c_str() );
   }
 } // end test()
-#endif
+#endif // DO_TESTING
+
+void
+usage( string arg = "" )
+{
+  if( arg != "" ) {
+    printf( "\n" );
+    printf( "Bad argument: %s\n", arg.c_str() );
+  }
+  printf( "\n" );
+  printf( "Usage: StackTrace <symbol_file> <stack_trace_file>\n" );
+  printf( "\n" );
+  printf( "       Reads in function symbols from 'symbol_file'.  ('Symbol_file' must be sorted!)\n" );
+  printf( "       Then reads in the stack trace from 'stack_trace_file', looks up the function\n" );
+  printf( "       addresses, and displays their names.\n" );
+  printf( "\n" );
+  exit( 1 );
+}
 
 int
-main()
+main( int argc, char *argv[] )
 {
-  readSymbolLocations();
+  if( argc != 3 ) {
+    usage();
+  }
 
-  doit( 3 );
+  readSymbolLocations( argv[1] );
+
+#if DO_TESTING
+  doit(1);
+#endif
+
+  printStackTrace( argv[2] );
 }
