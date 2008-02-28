@@ -139,7 +139,7 @@ void SocketEpChannel::activateConnection(void* obj)
 {
   ep->object = obj;
   ServerContext* sc = (ServerContext*) (obj);
-  sc->d_objid = (int) ep;
+  sc->d_objid = (size_t) ep;
 }
 
 Message* SocketEpChannel::getMessage()

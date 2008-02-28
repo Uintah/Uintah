@@ -80,7 +80,7 @@ DESCRIPTION
     //////////
     // The ID of this object from the object wharehouse.  This
     // id is unique within this process.
-    int d_objid;
+    size_t d_objid;
 
     //////////
     // A pointer to the object base class.

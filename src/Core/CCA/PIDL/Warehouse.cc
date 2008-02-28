@@ -74,16 +74,16 @@ void Warehouse::run()
   mutex.unlock();
 }
 
-int Warehouse::registerObject(Object* object)
+size_t Warehouse::registerObject(Object* object)
 {
   Guard g(&mutex);
-  int id = nextID++;
+  size_t id = nextID++;
   objects[id] = object;
   return id;
 }
 
 
-int Warehouse::registerObject(int id, Object* object)
+size_t Warehouse::registerObject(size_t id, Object* object)
 {
   Guard g(&mutex);
   objects[id] = object;
@@ -91,10 +91,10 @@ int Warehouse::registerObject(int id, Object* object)
 }
 
 
-Object* Warehouse::unregisterObject(int id)
+Object* Warehouse::unregisterObject(size_t id)
 {
   Guard g(&mutex);
-  std::map<int, Object*>::iterator iter = objects.find(id);
+  std::map<size_t, Object*>::iterator iter = objects.find(id);
   if (iter == objects.end()) {
     throw SCIRun::InternalError("Object not in wharehouse", __FILE__, __LINE__);
   }
@@ -105,10 +105,10 @@ Object* Warehouse::unregisterObject(int id)
   return iter->second;
 }
 
-Object* Warehouse::lookupObject(int id)
+Object* Warehouse::lookupObject(size_t id)
 {
   Guard g(&mutex);
-  std::map<int, Object*>::iterator iter = objects.find(id);
+  std::map<size_t, Object*>::iterator iter = objects.find(id);
   if (iter == objects.end()) {
     return 0;
   } else {
@@ -119,7 +119,7 @@ Object* Warehouse::lookupObject(int id)
 Object* Warehouse::lookupObject(const std::string& str)
 {
   std::istringstream i(str);
-  int objid;
+  size_t objid;
   i >> objid;
   if (!i) {
     throw InvalidReference("Cannot parse object ID ("+str+")");

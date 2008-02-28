@@ -79,7 +79,7 @@ DESCRIPTION
     //////////
     // Lookup an object by the object ID.  Returns null if
     // the object is not found.
-    Object* lookupObject(int id);
+    Object* lookupObject(size_t id);
 
   protected:
 
@@ -103,17 +103,17 @@ DESCRIPTION
     //////////
     // Register obj with the warehouse, returning the objects
     // unique identifier.
-    int registerObject(Object* obj);
+    size_t registerObject(Object* obj);
 
     //////////
     // Register obj with the warehouse with the given unique id, 
     // returning the objects unique identifier.
-    int registerObject(int id, Object* obj);
+    size_t registerObject(size_t id, Object* obj);
 
     //////////
     // Unregister the object associated with the object ID.
     // Returns a pointer to the object.
-    Object* unregisterObject(int id);
+    Object* unregisterObject(size_t id);
 
     //////////
     // "Run" the warehouse.  This simply blocks until objects
@@ -132,11 +132,11 @@ DESCRIPTION
 
     //////////
     // The object database
-    std::map<int, Object*> objects;
+    std::map<size_t, Object*> objects;
 
     //////////
     // The ID of the next object to be created.
-    int nextID;
+    size_t nextID;
   };
 } // End namespace SCIRun
 
