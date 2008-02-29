@@ -5073,6 +5073,8 @@ if test "$sci_required_wx" = "yes" -a "$enable_scijump" = "yes" ; then
   SCI_CHECK_VERSION($WX_CONFIG,--version,2.6,,echo configure: error: wrong wxWidgets version (2.6.x supported).; exit)
   HAVE_WX="yes"
   WX_LIBS=`$WX_CONFIG --libs`
+  ## add runtime path to wxWidgets libraries
+  WX_LIBS="$WX_LIBS -Wl,-rpath -Wl,$WX_DIR/lib"
   WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
 
  if test "$HAVE_WX" = "yes"; then
