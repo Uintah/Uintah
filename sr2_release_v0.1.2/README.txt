@@ -1,4 +1,4 @@
-SCIJump version 0.1.1
+SCIJump version 0.1.2
 
 Use build.sh to build a minimal version of SCIJump (CCA, Babel and SCIRun
 Dataflow component models only) or follow the installation instructions
