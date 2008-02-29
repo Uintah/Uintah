@@ -47,8 +47,8 @@ function usage() {
   echo -e "  --enable-fortran77[=DIR]   Babel configure option: enables Fortran77 bindings."
   echo -e "  --enable-fortran90[=DIR]   Babel configure option: enables Fortran90 bindings."
   echo -e "\nThis script will configure and build SCIJump based on the options provided\nto this script.\nSee (code.sci.utah.edu/SCIJump/index.php/Main_Page) for more configuration options.\n"
-  echo -e "This script will attempt to detect Babel (www.llnl.gov/CASC/components/babel.html)\nlibraries on your system.\nIf not found, version 1.0.2 will be downloaded and built.\n"
-  echo -e "This script will also attempt to detect wxWidgets (www.wxwidgets.org) 2.6.x\non your system if configuring with a GUI.\nIf not found and if configuring with a GUI,\nversion 2.6.3 will be downloaded and built.\n"
+  echo -e "This script will attempt to detect Babel (www.llnl.gov/CASC/components/babel.html)\nlibraries on your system.\nIf not found, version 1.0.8 will be downloaded and built.\n"
+  echo -e "This script will also attempt to detect wxWidgets (www.wxwidgets.org) 2.6.x\non your system if configuring with a GUI.\nIf not found and if configuring with a GUI,\nversion 2.6.4 will be downloaded and built.\n"
   echo -e "To build SCIJump with parallel component support, use the --mpi option.\nIf an MPI implementation is not installed\nin standard system directories, provide the path.\nLAM-MPI and MPICH are supported.\n"
   echo -e "SCIRun Thirdparty libraries (required) are available for download from\nwww.sci.utah.edu."
   exit $1
@@ -81,12 +81,13 @@ if [ $# -lt 1 ] ; then
 fi
 
 ## code snippet from SCIRun build script, author McKay Davis
+## don't check certificates
 if test `uname` = "Darwin"; then
-  getcommand="curl -O"
+  getcommand="curl --insecure --remote-name"
   platform="darwin"
   sed_re="-E"
 elif test `uname` = "Linux"; then
-  getcommand="wget"
+  getcommand="wget --no-check-certificate"
   platform="linux"
   sed_re="-r"
 else
@@ -97,6 +98,7 @@ fi
 mpidir=
 ## Explicitly setting babel configure flags for fortran is a workaround
 ## for Babel issue 457.  A fix is expected in the Babel 1.0.4 release.
+## TODO: setting minimum Babel version to 1.0.8 - is this still needed?
 babel_fortan77_flags=
 babel_fortan90_flags=
 while [ "$1" != "" ] ; do
@@ -155,19 +157,23 @@ fi
 export ROOT_DIR=`pwd`
 export BUILD_DIR="build"
 
+## TODO: should make build dirs for wxwidgets, babel
+## could use `hostname -s` to annotate build dirs
 function getbabel() {
   build_dir="$ROOT_DIR/babel/local"
-  babel_version="babel-1.0.2"
+  babel_version="babel-1.0.8"
   babel_archive="$babel_version.tar.gz"
 
   if [ ! -e "$ROOT_DIR/$babel_version" ] ; then
-    echo "***Downloading Babel 1.0.2***"
+    echo "***Downloading Babel 1.0.8***"
     try "$getcommand http://www.llnl.gov/CASC/components/docs/$babel_archive"
     try "tar xzvf $babel_archive"
   fi
   try "mkdir -p $build_dir"
   try "cd $babel_version"
-  try "./configure --prefix=$build_dir $babel_fortran_flags"
+  ## TODO: Babel python configuration bug fixed in v1.2.0
+  ## Get rid of this once a patched v.1.2.0 is available or RMI patch posted to CCA wiki.
+  try "./configure --prefix=$build_dir $babel_fortran_flags --disable-python"
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
@@ -176,12 +182,12 @@ function getbabel() {
 }
 
 function getwxwidgets_darwin() {
-  wxwidgets_version="wxMac-2.6.3"
+  wxwidgets_version="wxMac-2.6.4"
   wxwidgets_archive="$wxwidgets_version.tar.gz"
   build_dir="$ROOT_DIR/wxwidgets/local"
 
   if [ ! -e "$ROOT_DIR/wxwidgets_version" ] ; then
-    echo "***Downloading wxMac 2.6.3***"
+    echo "***Downloading wxMac 2.6.4***"
     try "$getcommand http://umn.dl.sourceforge.net/sourceforge/wxwindows/$wxwidgets_archive"
     try "tar xzvf $wxwidgets_archive"
   fi
@@ -196,12 +202,12 @@ function getwxwidgets_darwin() {
 }
 
 function getwxwidgets_linux() {
-  wxwidgets_version="wxGTK-2.6.3"
+  wxwidgets_version="wxGTK-2.6.4"
   wxwidgets_archive="$wxwidgets_version.tar.gz"
   build_dir="$ROOT_DIR/wxwidgets/local"
 
   if [ ! -e "$ROOT_DIR/wxwidgets_version" ] ; then
-    echo "***Downloading wxGTK 2.6.3***"
+    echo "***Downloading wxGTK 2.6.4***"
     try "$getcommand http://umn.dl.sourceforge.net/sourceforge/wxwindows/$wxwidgets_archive"
     try "tar xzvf $wxwidgets_archive"
   fi
@@ -253,12 +259,15 @@ if [ $DEBUG_BUILD ] ; then
   export CONFIG_ARGS="$CONFIG_ARGS --enable-debug"
 fi
 
-babelbin=`which babel`
+babelconfig=`which babel-config`
+echo $babelconfig
 babeldir=
-versioncheck $babelbin 1 0
+versioncheck $babelconfig 1 0
 if [ $? == "0" ] ; then
-  babelbindir=`dirname $babelbin`
-  babeldir=`dirname $babelbindir`
+  #babelconfigdir=`dirname $babelconfig`
+  #babeldir=`dirname $babelconfigdir`
+  babeldir=`$babelconfig --prefix`
+  babelconfigdir=`$babelconfig --bindir`
 else
   getbabel
   babeldir=$BUILDDIR_TMP
@@ -270,11 +279,14 @@ export CONFIG_ARGS="$CONFIG_ARGS --with-babel=$babeldir"
 
 if [ ! $NO_GUI ] ; then
   wxconfigbin=`which wx-config`
+  echo wxconfigbin
   wxdir=
   versioncheck $wxconfigbin 2 6
   if [ $? == "0" ] ; then
-    wxbindir=`dirname $wxconfigbin`
-    wxdir=`dirname $wxbindir`
+    #wxbindir=`dirname $wxconfigbin`
+    #wxdir=`dirname $wxbindir`
+    wxdir=`$wxconfigbin --prefix`
+    wxbindir="$wxdir/bin"
   else
     if test $platform = "darwin" ; then
       getwxwidgets_darwin
