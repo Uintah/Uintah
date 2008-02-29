@@ -1,0 +1,21 @@
+<config>
+<compareUtil_path>junk</compareUtil_path>
+<test>
+  <name>advect_X_FO</name>
+  <ups>advectPS.ups</ups>
+  <tst>dx.tst</tst>
+  <compareUtility>compare_PS.m</compareUtility>
+</test>
+<test>
+  <name>advect_Y_FO</name>
+  <ups>advectPS.ups</ups>
+  <tst>dx.tst</tst>
+  <compareUtility>compare_PS.m</compareUtility>
+</test>
+<test>
+  <name>advect_Z_FO</name>
+  <ups>advectPS.ups</ups>
+  <tst>dx.tst</tst>
+  <compareUtility>compare_PS.m</compareUtility>
+</test>
+</config>
