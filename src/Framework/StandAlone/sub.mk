@@ -81,6 +81,9 @@ ifeq ($(OS_NAME),Darwin)
   PROGRAM_LDFLAGS := -bind_at_load
   #ALLTARGETS := bundle_prologue $(ALLTARGETS) bundle_epilogue
   ALLTARGETS := bundle_prologue $(ALLTARGETS)
+else
+  ## SuSE 10.2 hack (hopefully isn't harmful on other systems)
+  PROGRAM_LDFLAGS += -u FT_Library_SetLcdFilter
 endif
 include $(SCIRUN_SCRIPTS)/program.mk
 
