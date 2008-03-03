@@ -8,6 +8,10 @@
    <Meta>
        <title>Slender Bar Three Point Bending Problem</title>
    </Meta>
+  
+  <SimulationComponent>
+         <type> mpm </type>
+   </SimulationComponent>
 
    <Time>
        <maxTime>0.01</maxTime>
