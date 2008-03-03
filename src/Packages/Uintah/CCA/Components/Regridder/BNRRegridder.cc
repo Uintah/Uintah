@@ -18,6 +18,9 @@ using namespace Uintah;
 #include <iomanip>
 using namespace std;
 
+
+static DebugStream times("BNRTimes",false);
+
 bool BNRRegridder::getTags(int &tag1, int &tag2)
 {
 
@@ -96,6 +99,11 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
+  double t[8]={0};
+  double avg[8];
+  
+  double start=Time::currentSeconds();
+  
   TAU_PROFILE("BNRRegridder::regrid", " ", TAU_USER);
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
   vector< vector<Region> > patch_sets(min(oldGrid->numLevels()+1,d_maxLevels));
@@ -104,7 +112,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 
   //create coarse flag sets
   CreateCoarseFlagSets(oldGrid,coarse_flag_sets);
-  
+ 
   //add old level 0 to patch sets
   for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
   {
@@ -114,10 +122,15 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   int rank=d_myworld->myrank();
   int procs=d_myworld->size();
   MPI_Comm comm=d_myworld->getComm();
+  
+  t[0]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
 
   //For each level Fine to Coarse
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
   {
+    t[1]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
     //create coarse flag vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
@@ -127,7 +140,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
       
     TAU_PROFILE_TIMER(combinetimer, "BNRRegridder::consolidate flags", "", TAU_USER);
     TAU_PROFILE_START(combinetimer);
-            
+    
     //Calculate the number of stages to reduce
     //this is a guess based on the coarsening factor and the number of processors
     int stages=log((float)coarsen_factor)/log(2.0) + log((float)procs)/log(2.0)/4;
@@ -225,6 +238,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
       AddSafetyLayer(patch_sets[l+1], coarse_flag_sets[l-1], lb_->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
     }
   }
+  t[2]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
  
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,patch_sets);
@@ -238,12 +253,21 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   TAU_PROFILE_TIMER(finalizetimer, "BNRRegridder::finalize grid", "", TAU_USER);
   TAU_PROFILE_START(finalizetimer);
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
+  
+  t[3]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
   for(int l=0;l<newGrid->numLevels();l++)
   {
     LevelP level= newGrid->getLevel(l);
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+    t[4]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
     level->assignBCS(grid_ps_);
+    t[5]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
   }
+  t[6]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
   TAU_PROFILE_STOP(finalizetimer);
   
   d_newGrid = true;
@@ -257,7 +281,20 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 
   //initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
-  
+  t[7]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
+ 
+  if(times.active())
+  {
+    MPI_Reduce(&t,&avg,8,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    if(d_myworld->myrank()==0)
+    {
+      times << "BNRTimes: ";
+      for(int i=0;i<8;i++)
+        times << t[i] << " ";
+      times << endl;
+    }
+  }
   return newGrid;
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
