@@ -80,16 +80,22 @@ readSymbolLocations( char * filename )
       printf( "Number of symbols read: %d\n", cnt );
     }
     
-    Info_S * info = new Info_S();
-    char name[1024], address[1024];
-    
     const int LINE_SIZE = 4000;
     char      line[ LINE_SIZE ];
 
     fgets( line, LINE_SIZE, fp );
 
+    int maxLength = strlen( line );
+
+    Info_S * info = new Info_S();
+    char * name, * address;
+    name = new char[ maxLength ];
+    address = new char[ maxLength ];
+
     int numRead = sscanf( line, "%s %c %s", address, &info->type, name );
-    if( numRead <= 0 ) {
+
+    if( numRead < 3 ) {
+      printf( "Skipping invalid line. Reason: Failed to parse this symbol... '%s'\n", line );
       continue;
     }
 
@@ -99,6 +105,8 @@ readSymbolLocations( char * filename )
     if( info->address != 0 ) {
       infoVector.push_back( info );
     }
+    delete [] name;
+    delete [] address;
   }
   printf( "\nTotal Number of Symbols: %d\n\n", cnt );
 }
@@ -121,8 +129,11 @@ printStackTrace( char * filename )
     const int LINE_SIZE = 4000;
     char      line[ LINE_SIZE ];
 
-    fgets( line, LINE_SIZE, fp );
-    
+    char * result = fgets( line, LINE_SIZE, fp );
+
+    if( result == NULL ) { 
+      break;
+    }
     printf("%s", line);
     stacktrace.push_back( line );
   }
@@ -133,12 +144,22 @@ printStackTrace( char * filename )
   for( int pos = 0; pos < stacktrace.size(); ++pos ) {
 
     string line = stacktrace[ pos ];
-    int    loc  = line.rfind( "[" );
-    string addrStr = line.substr( loc + 1, 8 );
+    line[ line.length()-1 ] = 0; // remove \n from line
+    int    loc  = line.rfind( "[0x" );
 
-    int    addr;
+    if( loc == string::npos ) {
+      printf( "Warning: Did not find valid address (0x...) in: '%s'\n", line.c_str() );
+      continue;
+    }
 
-    sscanf( addrStr.c_str(), "%x", &addr );
+    string addrStr = line.substr( loc + 1 );
+    int    addr = -1;
+    int    numScanned = sscanf( addrStr.c_str(), "%x", &addr );
+
+    if( addr == -1 || numScanned != 1 ) {
+      printf( "Warning: Could not parse function address: '%s'\n", line.c_str() );
+      continue;
+    }
 
     Info_S * info;
 
@@ -270,7 +291,7 @@ main( int argc, char *argv[] )
 
 #if DO_TESTING
   doit(1);
-#endif
-
+#else
   printStackTrace( argv[2] );
+#endif
 }
