@@ -410,6 +410,8 @@ private:
     bool d_calcExtraScalars;
     vector<ExtraScalarSolver*>* d_extraScalars;
 
+    bool d_carbon_balance_es;
+
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

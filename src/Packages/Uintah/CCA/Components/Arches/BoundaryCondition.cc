@@ -5642,7 +5642,7 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
             FlowInlet* fi = d_flowInlets[indx];
             if (fi->d_prefill) {
               int BC_ID = fi->d_cellTypeID;
-              double extra_scalar_value;
+              double extra_scalar_value=0.0;
               for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
                 if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
                     (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)

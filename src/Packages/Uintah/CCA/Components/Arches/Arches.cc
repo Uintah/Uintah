@@ -125,6 +125,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                      const ProblemSpecP& materials_ps, 
 		     GridP& grid, SimulationStateP& sharedState)
 {
+
   d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);
   ArchesMaterial* mat= scinew ArchesMaterial();
@@ -205,16 +206,16 @@ Arches::problemSetup(const ProblemSpecP& params,
       d_extraScalars.push_back(d_extraScalarSolver);
     }
   }
-
   // read properties
   // d_MAlab = multimaterial arches common labels
   d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts,
                               d_calcReactingScalar, 
                               d_calcEnthalpy, d_calcVariance);
+
   d_props->setCalcExtraScalars(d_calcExtraScalars);
   if (d_calcExtraScalars) d_props->setExtraScalars(&d_extraScalars);
-  d_props->problemSetup(db);
 
+  d_props->problemSetup(db);
   // read turbulence mode
   // read turbulence model
 
@@ -227,6 +228,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_boundaryCondition->setCalcExtraScalars(d_calcExtraScalars);
   if (d_calcExtraScalars) d_boundaryCondition->setExtraScalars(&d_extraScalars);
   d_boundaryCondition->problemSetup(db);
+
+  d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();	
 
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
@@ -334,7 +337,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (d_analysisModule) {
     d_analysisModule->problemSetup(params, grid, sharedState);
   }
-
 }
 
 // ****************************************************************************
@@ -361,6 +363,16 @@ Arches::scheduleInitialize(const LevelP& level,
   if (d_doMMS) {
 	  sched_mmsInitialCondition(level, sched);
   }
+
+  //========= MOM debugging ===========
+  bool debug_mom = true;
+  if (debug_mom){
+    
+    sched_blobInit(level, sched);
+    
+  }
+  //===================================
+
   // schedule init of cell type
   // require : NONE
   // compute : cellType
@@ -512,8 +524,8 @@ Arches::sched_paramInit(const LevelP& level,
     if (d_calcExtraScalars)
       for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++)
         tsk->computes(d_extraScalars[i]->getScalarLabel());
-
-    tsk->computes(d_lab->d_co2RateLabel);	
+    if (d_carbon_balance_es)
+    	tsk->computes(d_lab->d_co2RateLabel);	
 
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -541,6 +553,8 @@ Arches::paramInit(const ProcessorGroup* ,
     PerPatch<CellInformationP> cellInfoP;
     cellInfoP.setData(scinew CellInformation(patch));
     new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
     //cout << "cellInfo original INIT" << endl;
 
 
@@ -569,10 +583,14 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> reactScalarDiffusivity;
     CCVariable<double> pPlusHydro;
     CCVariable<double> mmgasVolFrac;
-    
-    CCVariable<double> co2Rate;
-    new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
-    co2Rate.initialize(0.0);
+   
+    if (d_calcExtraScalars){
+	if (d_carbon_balance_es){ 
+    		CCVariable<double> co2Rate;
+    		new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+    		co2Rate.initialize(0.0);
+	}
+    }	
 
     // Variables for mms analysis
     if (d_doMMS){
@@ -715,18 +733,23 @@ Arches::paramInit(const ProcessorGroup* ,
       if (d_calcReactingScalar)
         reactScalarDiffusivity.initialize(visVal/0.4);
     }
-    scalar.initialize(0.0);
+    //scalar.initialize(1.0);
 
     if (d_calcExtraScalars) {
+
       for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-        CCVariable<double> extra_scalar;
+	CCVariable<double> extra_scalar;
         new_dw->allocateAndPut(extra_scalar,
                                d_extraScalars[i]->getScalarLabel(),
                                matlIndex, patch);
         extra_scalar.initialize(d_extraScalars[i]->getScalarInitValue());
+	
       }
+      
+      
+      
     }
-
+    
   }
 }
 
@@ -1065,6 +1088,80 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     }
     fd.close();  
   }
+}
+
+
+
+
+void 
+Arches::sched_blobInit(const LevelP& level,
+				     SchedulerP& sched)
+{
+    // primitive variable initialization
+    Task* tsk = scinew Task( "Arches::blobInit",
+			    this, &Arches::blobInit);
+
+    tsk->modifies(d_extraScalars[0]->getScalarLabel());
+
+    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+void
+Arches::blobInit(const ProcessorGroup* ,
+		 const PatchSubset* patches,
+		 const MaterialSubset*,
+		 DataWarehouse* ,
+		 DataWarehouse* new_dw)
+{
+
+  //WARNING: Hardcoded to 1 patch!
+  for (int p = 0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    const VarLabel* extrascalarlabel;
+    CCVariable<double> extrascalar;
+
+    PerPatch<CellInformationP> cellInfoP;
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    else 
+      throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+
+    extrascalarlabel = d_extraScalars[0]->getScalarLabel();
+    new_dw->getModifiable(extrascalar, extrascalarlabel,
+    			  matlIndex, patch);
+  
+    std::cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
+    std::cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
+  
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
+	  
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  
+	  IntVector currCell(colX,colY,colZ);
+		
+	  if (cellinfo->xx[colX] >= .4 && cellinfo->xx[colX] <= .6){
+	    if (cellinfo->yy[colY] >= .4 && cellinfo->yy[colY] <= .6){
+	      if (cellinfo->zz[colZ] >= .4 && cellinfo->zz[colZ] <= .6){
+		      
+		//for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
+		extrascalar[currCell] = .0004513;
+		//}
+		
+	      }
+	    }
+	  } //end if	  
+	}
+      }
+    } //end for
+  }  //end patch loop
 }
 
 

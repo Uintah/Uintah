@@ -138,6 +138,14 @@ Properties::problemSetup(const ProblemSpecP& params)
   cout << "d_co_output "<< d_co_output << endl;
   
   d_radiationCalc = false;
+
+  //If this is true, a CO2 rate will be looked up from 
+  // the table.  We assume that extra scalars are being
+  // used to computed the CO2 (ES) balance.
+  // -jeremy
+  if (d_calcExtraScalars)
+  	d_carbon_balance_es = d_bc->getCarbonBalanceES(); 
+
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
     const ProblemSpecP params_root = params_non_constant->getRootNode();
@@ -330,8 +338,11 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
         tsk->computes(d_lab->d_absorpINLabel);
       tsk->computes(d_lab->d_sootFVINLabel);
     }
-    tsk->modifies(d_lab->d_co2RateLabel);
+    if (d_carbon_balance_es){	
+    	tsk->modifies(d_lab->d_co2RateLabel);
+
     //tsk->modifies(d_lab->d_so2RateLabel);
+    }
 
   }
   else {
@@ -386,7 +397,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_sootFVINLabel);
     }
 
-    tsk->modifies(d_lab->d_co2RateLabel);
+    if (d_carbon_balance_es)	
+    	tsk->modifies(d_lab->d_co2RateLabel);
     //tsk->modifies(d_lab->d_so2RateLabel);
   
     //tsk->modifies(d_lab->d_tabReactionRateLabel);
@@ -663,7 +675,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			         matlIndex, patch);
         new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
-      new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+
+      if (d_carbon_balance_es)	
+      	new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
       //new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
       //new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
 
@@ -733,7 +747,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
 
-      new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+      if (d_carbon_balance_es)
+      	new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
       //new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
 
     }
@@ -789,7 +804,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)){
-    //co2Rate.initialize(0.0);
+    
+    if (d_carbon_balance_es)
+    	co2Rate.initialize(0.0);
     //so2Rate.initialize(0.0);
     }
 
@@ -973,7 +990,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  new_density[currCell] = local_den;
 
 	  //write the rates:
-	  co2Rate[currCell] = outStream.getCO2RATE();
+
+	  if (d_carbon_balance_es)
+	  	co2Rate[currCell] = outStream.getCO2RATE();
 	  //so2Rate[currCell] = outStream.getSO2RATE();
 	   
 
