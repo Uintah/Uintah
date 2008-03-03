@@ -265,6 +265,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 int ExplicitSolver::nonlinearSolve(const LevelP& level,
 					  SchedulerP& sched)
 {
+
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
   IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -298,6 +299,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if (curr_level > 0)
        sched_saveTempCopies(sched, patches, matls,
 			   	      d_timeIntegratorLabels[curr_level]);
+
+
     
     bool doing_EKT_now = false;
     if (d_EKTCorrection) {
@@ -491,6 +494,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     //if (curr_level == numTimeIntegratorLevels - 1) {
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
+
       d_boundaryCondition->sched_getFlowINOUT(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
       d_boundaryCondition->sched_correctVelocityOutletBC(sched, patches, matls,
@@ -535,7 +539,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   if (d_probe_data)
     sched_probeData(sched, patches, matls);
 
-
   return(0);
 }
 
@@ -563,6 +566,17 @@ int ExplicitSolver::noSolve(const LevelP& level,
   //                     viscosityIN
 
   sched_setInitialGuess(sched, patches, matls);
+
+  //setting initial guess for extra scalars
+  if (d_calcExtraScalars){
+      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++){
+			  d_extraScalars->at(i)->sched_setInitialGuess(sched,
+			  											   patches, 
+														   matls,
+														   nosolve_timelabels);	
+      }
+  }
+
 
   // check if filter is defined...
 #ifdef PetscFilter
@@ -688,7 +702,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     if (d_timeIntegratorLabels[0]->multiple_steps)
       tsk->computes(d_lab->d_reactscalarTempLabel);
   }
-
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
     if (d_timeIntegratorLabels[0]->multiple_steps)
@@ -1396,7 +1409,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
+		for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
 
 	  IntVector idx(ii,jj,kk);
 	  IntVector idxU(ii+1,jj,kk);
@@ -1406,7 +1419,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  IntVector idxyminus(ii,jj-1,kk);
 	  IntVector idxzminus(ii,jj,kk-1);
 	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-	  
+    
 	  divergence[idx] = (newUVel[idxU]-newUVel[idx])/cellinfo->sew[ii]+
 		            (newVVel[idxV]-newVVel[idx])/cellinfo->sns[jj]+
 			    (newWVel[idxW]-newWVel[idx])/cellinfo->stb[kk];
@@ -1420,7 +1433,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 			  (0.5*(density[idxW]+density[idx])*newWVel[idxW]-
 			   0.5*(density[idx]+density[idxzminus])*newWVel[idx])/cellinfo->stb[kk]+
 			  drhodt[idx]/vol;
-	}
+		}
       }
     }
     new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out); 
@@ -1869,8 +1882,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       }
     }
 
-
-
     CCVariable<double> new_enthalpy;
     CCVariable<double> temp_enthalpy;
     if (d_enthalpySolve) {
@@ -1985,6 +1996,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_scalarEfficiencyLabel);
   tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
   tsk->computes(d_lab->d_carbonEfficiencyLabel);
+  tsk->computes(d_lab->d_carbonEfficiencyESLabel);
   tsk->computes(d_lab->d_sulfurEfficiencyLabel);
   tsk->computes(d_lab->d_CO2FlowRateLabel);
   tsk->computes(d_lab->d_SO2FlowRateLabel);
@@ -1993,9 +2005,10 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->computes(d_lab->d_divConstraintLabel);
-
-
-  sched->addTask(tsk, patches, matls);  
+      
+  sched->addTask(tsk, patches, matls); 
+  
+   
   
 }
 
@@ -2016,7 +2029,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     // gets for old dw variables
-
 
     constCCVariable<double> div;
     old_dw->get(div, d_lab->d_divConstraintLabel, matlIndex, patch, 
@@ -2067,6 +2079,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
     double carbon_efficiency = 0.0;
+    double carbon_efficiency_es = 0.0;
     double sulfur_efficiency = 0.0;
     double scalar_efficiency = 0.0;
     double enthalpy_efficiency = 0.0;
@@ -2080,6 +2093,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(flowOUToutbc), d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum), d_lab->d_denAccumLabel);
     new_dw->put(delt_vartype(carbon_efficiency), d_lab->d_carbonEfficiencyLabel);
+    new_dw->put(delt_vartype(carbon_efficiency_es), d_lab->d_carbonEfficiencyESLabel);
     new_dw->put(delt_vartype(sulfur_efficiency), d_lab->d_sulfurEfficiencyLabel);
     new_dw->put(delt_vartype(enthalpy_efficiency), d_lab->d_enthalpyEfficiencyLabel);
     new_dw->put(delt_vartype(scalar_efficiency), d_lab->d_scalarEfficiencyLabel);
@@ -2424,7 +2438,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 	    if (densityGuess[currCell] < 0.0) {
               cout << "got negative density guess at " << currCell << " , density guess value was " << densityGuess[currCell] << endl;
               negativeDensityGuess = 1.0;
-            }
+           }
           }
         }
       } 
