@@ -261,6 +261,10 @@ run_test () {
 
     echo; date
 
+    if test -x /usr/bin/lamboot; then
+        /usr/bin/lamboot
+    fi
+
     cd $results
     cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
     input_file=../$n.ups.rt
@@ -299,6 +303,10 @@ run_test () {
         echo; echo "FAILURE running sus . . ."
         cd ..
         continue
+    fi
+
+    if test -x /usr/bin/lamhalt; then
+        /usr/bin/lamhalt
     fi
 
 }
