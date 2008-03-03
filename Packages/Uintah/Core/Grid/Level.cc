@@ -10,7 +10,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondReader.h>
-
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -514,10 +513,11 @@ void Level::finalizeLevel()
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
   TAU_PROFILE("Level::finalizeLevel(periodic)", " ", TAU_USER);
+
   // set each_patch and all_patches before creating virtual patches
   each_patch = scinew PatchSet();
   each_patch->addReference();
-
+  
   // The compute set requires an array const Patch*, we must copy d_realPatches
   vector<const Patch*> tmp_patches(d_realPatches.size());
   for(int i=0;i<(int)d_realPatches.size();i++)
@@ -568,7 +568,6 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
             Patch::Compare());
   
   setBCTypes();
-
 }
 void Level::setBCTypes()
 {
@@ -638,9 +637,9 @@ void Level::setBCTypes()
   int rank=0;
   if (Parallel::isInitialized()) {
     // only sus uses Parallel, but anybody else who uses DataArchive to read data does not
-    ProcessorGroup *myworld=Parallel::getRootProcessorGroup();
-    int numProcs=myworld->size();
-    int rank=myworld->myrank();
+    myworld=Parallel::getRootProcessorGroup();
+    numProcs=myworld->size();
+    rank=myworld->myrank();
   }
 
   vector<int> displacements(numProcs);
@@ -775,31 +774,35 @@ void Level::setBCTypes()
   d_finalized=true;
 }
 
-void Level::assignBCS(const ProblemSpecP& grid_ps)
+void Level::assignBCS(const ProblemSpecP& grid_ps,LoadBalancer* lb)
 {
   TAU_PROFILE("Level::assignBCS()", " ", TAU_USER);
+  
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0) {
     static ProgressiveWarning warn("No BoundaryConditions specified", -1);
     warn.invoke();
     return;
   }
-
-
+  
   BoundCondReader reader;
   reader.read(bc_ps, grid_ps);
-
-  for (Patch::FaceType face_side = Patch::startFace; 
-       face_side <= Patch::endFace; face_side=Patch::nextFace(face_side)) {
     
-    for(patchIterator iter=d_virtualAndRealPatches.begin(); 
-        iter != d_virtualAndRealPatches.end(); iter++){
-      Patch* patch = *iter;
-      if (patch->getBCType(face_side) == Patch::None) {
-        patch->setArrayBCValues(face_side,&(reader.d_BCReaderData[face_side]));
-      }
-    }  // end of patchIterator
-  }
+  for(patchIterator iter=d_virtualAndRealPatches.begin(); 
+    iter != d_virtualAndRealPatches.end(); iter++){
+    Patch* patch = *iter;
+    
+    //if we have a lb then only apply bcs this processors patches
+    if(lb==0 || lb->getPatchwiseProcessorAssignment(patch)==Parallel::getMPIRank())
+    {
+      for(Patch::FaceType face_side = Patch::startFace; 
+          face_side <= Patch::endFace; face_side=Patch::nextFace(face_side)) {
+        if (patch->getBCType(face_side) == Patch::None) {
+          patch->setArrayBCValues(face_side,&(reader.d_BCReaderData[face_side]));
+        }
+      }  // end of face iterator
+    }
+  } //end of patch iterator
 }
 
 Box Level::getBox(const IntVector& l, const IntVector& h) const

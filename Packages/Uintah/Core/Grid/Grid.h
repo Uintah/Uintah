@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
@@ -98,7 +99,10 @@ WARNING
 
     // Returns true if the two grids cover the exact same region.  Patch structure can be different.
     bool isSimilar(const Grid& othergrid) const;
-    
+
+    //Assigns the boundary conditions to the grid
+    void assignBCS(const ProblemSpecP &grid_ps,LoadBalancer *lb);
+           
     UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     // Used in Level and Patch for stretched grids

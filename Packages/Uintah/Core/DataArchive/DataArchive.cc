@@ -402,7 +402,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
       if (ups) {
         // this is not necessary on non-restarts.
         ProblemSpecP grid_ps = ups->findBlock("Grid");
-        level->assignBCS(grid_ps);
+        level->assignBCS(grid_ps,0);
        }
 
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){

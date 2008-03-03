@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Containers/OffsetArray1.h>
 
 #ifdef max
@@ -126,7 +127,7 @@ public:
 
   void finalizeLevel();
   void finalizeLevel(bool periodicX, bool periodicY, bool periodicZ);
-  void assignBCS(const ProblemSpecP& ps);
+  void assignBCS(const ProblemSpecP& ps, LoadBalancer* lb);
       
   int numPatches() const;
   long totalCells() const;

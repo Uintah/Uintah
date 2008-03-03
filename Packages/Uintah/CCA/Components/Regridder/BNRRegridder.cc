@@ -99,8 +99,8 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
-  double t[8]={0};
-  double avg[8];
+  double t[6]={0};
+  double avg[6];
   
   double start=Time::currentSeconds();
   
@@ -260,13 +260,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   {
     LevelP level= newGrid->getLevel(l);
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-    t[4]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
-    level->assignBCS(grid_ps_);
-    t[5]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
   }
-  t[6]+=Time::currentSeconds()-start;
+  t[4]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
   TAU_PROFILE_STOP(finalizetimer);
   
@@ -275,23 +270,19 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   
   OutputGridStats(patch_sets, newGrid);
 
-#if SCI_ASSERTION_LEVEL > 0
-  newGrid->performConsistencyCheck();
-#endif
-
   //initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
-  t[7]+=Time::currentSeconds()-start;
+  t[5]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
  
   if(times.active())
   {
-    MPI_Reduce(&t,&avg,8,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    MPI_Reduce(&t,&avg,6,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     if(d_myworld->myrank()==0)
     {
       times << "BNRTimes: ";
-      for(int i=0;i<8;i++)
-        times << t[i] << " ";
+      for(int i=0;i<6;i++)
+        times << avg[i]/d_myworld->size() << " ";
       times << endl;
     }
   }

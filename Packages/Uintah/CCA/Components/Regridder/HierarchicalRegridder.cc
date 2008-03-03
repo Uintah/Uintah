@@ -763,7 +763,6 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
       periodic = newGrid->getLevel(levelIdx-1)->getPeriodicBoundaries();
     }
     lev->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-    lev->assignBCS(grid_ps_);
   }
 
   newGrid->performConsistencyCheck();
