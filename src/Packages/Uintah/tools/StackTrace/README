@@ -1,4 +1,13 @@
 
+Note: StackTrace is compiled on the 'src' side of the tree (as opposed
+to the binary tree where most everything else is compiled).  The
+reason for this is that it should not be compiled using the same
+compiler as the rest of the code (on Redstorm, in particular).  (Ie,
+on Redstorm, the main code is built using the PGI cross compiler so
+that the code can be run on the compute nodes.  However, StackTrace is
+to be run on the front end nodes.)  To build, just type 'make' in this
+source directory.
+
 The StackTrace program was written to take a stacktrace that includes
 addresses by not function names and find the corresponding function
 names.  Specifically this happens on Sandia's RedStorm computer.
