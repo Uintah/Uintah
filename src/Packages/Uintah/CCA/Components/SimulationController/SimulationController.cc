@@ -82,6 +82,7 @@ namespace Uintah {
     d_archive = NULL;
 
     d_ups->writeMessages(d_myworld->myrank() == 0);
+    d_grid_ps=d_ups->findBlock("Grid");
   }
 
   SimulationController::~SimulationController()
@@ -212,7 +213,6 @@ namespace Uintah {
     if (!d_restarting) {
       grid = scinew Grid;
       grid->problemSetup(d_ups, d_myworld, d_doAMR);
-      grid->performConsistencyCheck();
     }
     else {
       grid = d_archive->queryGrid(d_restartIndex, d_ups.get_rep());

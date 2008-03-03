@@ -167,6 +167,7 @@ Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
 
 void Grid::performConsistencyCheck() const
 {
+#if SCI_ASSERTION_LEVEL > 0
   TAU_PROFILE("Grid::performConsistencyCheck()", " ", TAU_USER);
   // Verify that patches on a single level do not overlap
   for(int i=0;i<(int)d_levels.size();i++)
@@ -241,6 +242,7 @@ void Grid::performConsistencyCheck() const
       } 
     }
   }
+#endif
 }
 
 void Grid::printStatistics() const
@@ -837,7 +839,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       else {
        level->finalizeLevel();
       }
-      level->assignBCS(grid_ps);
       levelIndex++;
    }
    if(numLevels() >1 && !do_amr) {  // bullet proofing
@@ -1016,4 +1017,14 @@ const Patch* Grid::getPatchByID(int patchid, int startingLevel) const
     }
   }
   return patch;
+}
+
+void Grid::assignBCS(const ProblemSpecP &grid_ps,LoadBalancer *lb)
+{
+  TAU_PROFILE("Grid::assignBCS()", " ", TAU_USER);
+  for(int l=0;l<numLevels();l++)
+  {
+    LevelP level= getLevel(l);
+    level->assignBCS(grid_ps,lb);
+  }
 }

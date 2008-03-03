@@ -95,6 +95,7 @@ class DataArchive;
       void printSimulationStats    ( int timestep, double delt, double time );
 
       ProblemSpecP d_ups;
+      ProblemSpecP d_grid_ps;         // Problem Spec for the Grid
       SimulationStateP d_sharedState;
       SchedulerP d_scheduler;
       LoadBalancer* d_lb;
@@ -137,7 +138,7 @@ class DataArchive;
       double d_prevWallTime;
       //double d_sumOfWallTimes;
       //double d_sumOfWallTimeSquares;
-      
+     
       // this is for calculating an exponential moving average
       double d_movingAverage;
    /*
