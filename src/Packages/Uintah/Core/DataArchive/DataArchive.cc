@@ -1167,7 +1167,7 @@ DataArchive::TimeData::parsePatch(const Patch* patch)
   // the processor of the same index as the patch.  Many datasets
   // have only one patch per processor, so this is a reasonable
   // first attempt.  Future attemps could perhaps be smarter.
-  if (!patchinfo.parsed && patchIndex < d_xmlParsed[levelIndex].size() && !d_xmlParsed[levelIndex][patchIndex]) {
+  if (!patchinfo.parsed && patchIndex < (int)d_xmlParsed[levelIndex].size() && !d_xmlParsed[levelIndex][patchIndex]) {
     parseFile(d_xmlUrls[levelIndex][patchIndex], levelIndex, levelBasePatchID);
     d_xmlParsed[levelIndex][patchIndex] = true;
   }
