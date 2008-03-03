@@ -6,10 +6,14 @@ names.  Specifically this happens on Sandia's RedStorm computer.
 StackTrace requires a current symbol list of the program in question.
 This list MUST be sorted and can be produced in the following manner:
 
-> nm sus | grep -v "      U " | grep -v "       w " | c++filt | sort > sus.symbols.sorted
+> nm sus | grep -v "      U " | grep -v "       w " | pgdecode | sort > sus.symbols.sorted
+
+[Note: pgdecode is a symbol demangler (like c++filt) for the PGI compiler.]
 
 FYI, StackTrace is to be compiled and run on a linux box (NOT on the
-RedStorm compute nodes).
+RedStorm compute nodes).  However, in test mode (#define DO_TESTING),
+it can be compiled for and run on the compute nodes to show that a
+valid stack trace can be generated there.
 
 -----------------------------------------
 
