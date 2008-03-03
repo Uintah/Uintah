@@ -19,36 +19,21 @@
  */
 
 #include <Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar.h>
-
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
-#include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
-#include <Core/Thread/Thread.h>
-
-#include <sci_values.h>
 
 #include <iostream>
 #include <string>
-#include <vector>
 #include <sstream>
-#include <iomanip>
 #include <math.h>
 
 using namespace SCIRun;
@@ -136,14 +121,12 @@ main( int argc, char *argv[] )
       usage( "", "", argv[0]);
     } else if(s == "-uda") {
       if(++i == argc){
-        usage("You must provide a uda name for -uda",
-              s, argv[0]);
+        usage("You must provide a uda name for -uda",s, argv[0]);
       }
       udaFileName = argv[i];
     } else if(s == "-o") {
       if(++i == argc) {
-        usage("You must provide an output filename for -o",
-              s, argv[0]);
+        usage("You must provide an output filename for -o", s, argv[0]);
       }
       outFile = fopen(argv[i],"w");
       
@@ -156,8 +139,7 @@ main( int argc, char *argv[] )
     }
   }
 
-  if (""==udaFileName)
-  {
+  if (""==udaFileName){
     usage();
   }
 
@@ -175,7 +157,7 @@ main( int argc, char *argv[] )
     Vector velocity;
      
     ProblemSpecP PS_Block = ((docTop->findBlock("Models"))->findBlock("Model")
-			     ->findBlock("scalar"));
+                             ->findBlock("scalar"));
     
     
     if( PS_Block == 0 ) {                                                                                                
@@ -247,10 +229,11 @@ main( int argc, char *argv[] )
     cout<<"resolution"<<resolution<<endl;
     cout<<"velocity"<<velocity<<endl;
 
-    if (!(is_int(offset.x()) && is_int(offset.y()) && is_int(offset.z()) ) )
-    {
-      cerr<<"The offset is not an integer value"<<offset<<endl;
-      exit(1);
+    if (!(is_int(offset.x()) && is_int(offset.y()) && is_int(offset.z()) ) ){
+      ostringstream warn;
+      warn<<"ERROR:Compare_scalar: The quantity (final timestep * velocity) must be an integer multiple of dx \n"
+          << offset << "\n";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
 
     unsigned int loopLowerBound = 0;
@@ -277,17 +260,16 @@ main( int argc, char *argv[] )
         //////////////////////////////
         // Iterate over the variables
         for( unsigned int varIndex = 0; varIndex < vars.size(); varIndex++ ) {
-            
           int i=0;
           double total_error=0.0;
 
-	  int vel_var_index = -1;
-	  for (int varIdx = 0; varIdx < vars.size();varIdx++) {
-	    if (vars[varIdx] == "vel_CC" ) {
-	      vel_var_index = varIdx;
-	      break;
-	    }
-	  }
+          int vel_var_index = -1;
+          for (int varIdx = 0; varIdx < vars.size();varIdx++) {
+            if (vars[varIdx] == "vel_CC" ) {
+              vel_var_index = varIdx;
+              break;
+            }
+          }
           if( (vars[varIndex] != varName) ) continue;
             
 
@@ -301,8 +283,7 @@ main( int argc, char *argv[] )
 
             if ( first ) {
                 matls = da1->queryMaterials( vars[varIndex], patch, timeIndex );
-            }
-            else if (matls != da1->queryMaterials(vars[varIndex], patch, timeIndex)) {
+            }else if (matls != da1->queryMaterials(vars[varIndex], patch, timeIndex)) {
                 cerr << "The material set is not consistent for variable "
                      << vars[varIndex] << " across patches at time " << times[timeIndex] << endl;
                 cerr << "Previously was: " << matls << endl;
@@ -319,20 +300,20 @@ main( int argc, char *argv[] )
               int matl = *matlIter;
 
               CCVariable<double> scalarVar;
-	      CCVariable<Vector> velocityVar;
-	      //          CCVariable<Vector> vectorVar;
-	      da1->query(scalarVar, vars[varIndex], matl, patch, timeIndex);
-	      da1->query(velocityVar, vars[vel_var_index], matl, patch, timeIndex);
-	      if (initialize_analytical_values)
-	      {
-		da1->query(analytic_value, vars[varIndex], matl, patch, timeIndex);
-		cerr<<"vel_var_index:"<<vel_var_index<<endl;
-		da1->query(init_vel, vars[vel_var_index], matl, patch, timeIndex );
-	      }
+              CCVariable<Vector> velocityVar;
+              //          CCVariable<Vector> vectorVar;
+              da1->query(scalarVar,   vars[varIndex],      matl, patch, timeIndex);
+              da1->query(velocityVar, vars[vel_var_index], matl, patch, timeIndex);
+              
+              if (initialize_analytical_values){
+                da1->query(analytic_value, vars[varIndex], matl, patch, timeIndex);
+                cerr<<"vel_var_index:"<<vel_var_index<<endl;
+                da1->query(init_vel, vars[vel_var_index], matl, patch, timeIndex );
+              }
 
-	      
+              
               IntVector low, high, size;
-	      scalarVar.getSizes(low,high,size);
+              scalarVar.getSizes(low,high,size);
 
               double maxDiff = -FLT_MAX,  minDiff = FLT_MAX;
               
@@ -342,57 +323,53 @@ main( int argc, char *argv[] )
                 IntVector cell = *iter;
                 double diff;
 
+                int new_x, new_y, new_z;
+                
+                if (initialize_analytical_values){
+                   new_x = ( cell.x() + iround(offset.x()) )%iround(resolution.x());
+                   new_y = ( cell.y() + iround(offset.y()) )%iround(resolution.y());
+                   new_z = ( cell.z() + iround(offset.z()) )%iround(resolution.z());
+                } else {
+                   new_x = cell.x();
+                   new_y = cell.y();
+                   new_z = cell.z();
+                }
+                
+                IntVector a(new_x, new_y, new_z);
+                
+                if ( initialize_analytical_values ) {
+                  analytic_value[a] = scalarVar[cell];  // This is where the analytical value gets filled
+                } else {
+                  diff = scalarVar[cell] - analytic_value[a];
 
-		int new_x, new_y, new_z;
-		
-		if (initialize_analytical_values){
-		   new_x = ( cell.x() + iround(offset.x()) )%iround(resolution.x());
-		   new_y = ( cell.y() + iround(offset.y()) )%iround(resolution.y());
-		   new_z = ( cell.z() + iround(offset.z()) )%iround(resolution.z());
-		}
-		else {
-		   new_x = cell.x();
-		   new_y = cell.y();
-		   new_z = cell.z();
-		}
-		
-		
-		IntVector a(new_x, new_y, new_z);
-		
-		if ( initialize_analytical_values ) {
-		  analytic_value[a] = scalarVar[cell];  // This is where the analytical value gets filled
-		}
-		else {
-		  diff = scalarVar[cell] - analytic_value[a];
-
-		  if ( !is_equal(velocityVar[cell], init_vel[cell]) ) {
-		    cerr<<"veloctiy fields don't match\n";
-		    cerr<<"current velocity"<<velocityVar[cell]<<" init_vel:"<<init_vel[cell]<<endl;
-		    cerr<<"Diff:"<<(velocityVar[cell]-init_vel[cell])<<endl;
-		    exit(1);
-		  }
-		  
-		  total_error+=diff*diff;
-		  if( diff > maxDiff ) maxDiff = diff;
-		  if( diff < minDiff ) minDiff = diff;
-		  
-		}
+                  if ( !is_equal(velocityVar[cell], init_vel[cell]) ) {
+                    cerr<<"veloctiy fields don't match\n";
+                    cerr<<"current velocity"<<velocityVar[cell]<<" init_vel:"<<init_vel[cell]<<endl;
+                    cerr<<"Diff:"<<(velocityVar[cell]-init_vel[cell])<<endl;
+                    exit(1);
+                  }
+                  
+                  total_error+=diff*diff;
+                  if( diff > maxDiff ) maxDiff = diff;
+                  if( diff < minDiff ) minDiff = diff;
+                  
+                }
                 
                 i=i+1;
               }
-	      printf( "Max diff: %16.16le, Min diff %16.16le\n", maxDiff, minDiff );
+              printf( "Max diff: %16.16le, Min diff %16.16le\n", maxDiff, minDiff );
             } // end materials iteration
           } // end patch iteration
           
-	  cout << "i= " << i << endl << "L2norm of error: " << endl << sqrt(total_error/i) << "\n";
+          cout << "i= " << i << endl << "L2norm of error: " << endl << sqrt(total_error/i) << "\n";
 
-	  if (!initialize_analytical_values)
-	    fprintf(outFile, "%16.16le\n",sqrt(total_error/i)) ;
-	  
+          if (!initialize_analytical_values)
+            fprintf(outFile, "%16.16le\n",sqrt(total_error/i)) ;
+          
         } // end variable iteration
       } // end levels iteration
       if (initialize_analytical_values)
-	timeIndex = index.size()-2;   // This moves the time index to the last but 2 time-step
+        timeIndex = index.size()-2;   // This moves the time index to the last but 2 time-step
                                       // (we need the last but one time-step,
                                       // but the loop incrementer will do that)
       initialize_analytical_values = false;
