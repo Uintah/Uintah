@@ -201,7 +201,7 @@ namespace Uintah {
           }
       }
       
-      if (d_restartIndex == indices.size()) {
+      if (d_restartIndex == (int) indices.size()) {
         // timestep not found
         ostringstream message;
         message << "Timestep " << d_restartTimestep << " not found";

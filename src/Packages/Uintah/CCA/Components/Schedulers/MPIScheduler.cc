@@ -1068,7 +1068,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 }
 
 void
-MPIScheduler::emitTime(char* label)
+MPIScheduler::emitTime(const char* label)
 {
    double time = Time::currentSeconds();
    emitTime(label, time-d_lasttime);
@@ -1076,7 +1076,7 @@ MPIScheduler::emitTime(char* label)
 }
 
 void
-MPIScheduler::emitTime(char* label, double dt)
+MPIScheduler::emitTime(const char* label, double dt)
 {
    d_labels.push_back(label);
    d_times.push_back(dt);

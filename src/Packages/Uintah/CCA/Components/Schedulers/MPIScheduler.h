@@ -126,14 +126,14 @@ WARNING
     CommRecMPI            recvs_;
 
     double           d_lasttime;
-    vector<char*>    d_labels;
+    vector<const char*>    d_labels;
     vector<double>   d_times;
     ofstream         timingStats, avgStats, maxStats;
 
     bool useExternalQueue_;
 
-    void emitTime(char* label);
-    void emitTime(char* label, double time);
+    void emitTime(const char* label);
+    void emitTime(const char* label, double time);
   };
 
 } // End namespace Uintah
