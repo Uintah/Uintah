@@ -256,6 +256,8 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
     else
       throw InvalidValue("current MMS "
 			 "not supported: " + d_mms, __FILE__, __LINE__);
+
+    d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();	
   }
 }
 
@@ -732,10 +734,12 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   //Helper variable
   tsk->computes(d_lab->d_zerosrcVarLabel);
 
-  //CO2 Rate term for CO2 scalar equation
-  tsk->computes(d_lab->d_co2RateLabel); //new one
-  tsk->requires(Task::OldDW, d_lab->d_co2RateLabel,
+  if (d_carbon_balance_es){	
+  	//CO2 Rate term for CO2 scalar equation
+  	tsk->computes(d_lab->d_co2RateLabel); //new one
+  	tsk->requires(Task::OldDW, d_lab->d_co2RateLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS); //old one to copy into new one
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1948,7 +1952,8 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> zerosrcVar;
     new_dw->allocateAndPut(zerosrcVar, d_lab->d_zerosrcVarLabel, matlIndex, patch);
     zerosrcVar.initialize(0.0);
-  
+
+    if (d_carbon_balance_es){  
     constCCVariable<double> co2Rate_old;
     old_dw->get(co2Rate_old, d_lab->d_co2RateLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1957,6 +1962,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
     co2Rate.initialize(0.0);
     co2Rate.copyData(co2Rate_old);
+    }
 
   }
 }
