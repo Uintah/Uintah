@@ -48,6 +48,12 @@ CO2RateSrc::problemSetup(const ProblemSpecP& params)
  	setTableIndex(-1);
 
 
+	//warning
+	cout << "** WARNING! **\n";
+	cout << "   The CO2Rate Source term requires that carbon_balance_es be set to true! \n";
+	cout << "   You run shoudl crash.\n"; 
+
+
 }
 //****************************************************************************
 // Schedule source computation

@@ -152,6 +152,8 @@ int nofTimeSteps;
 			   		 SchedulerP&);
       virtual void sched_mmsInitialCondition(const LevelP& level,
 				   		SchedulerP&);
+      virtual void sched_blobInit(const LevelP& level,
+				   		SchedulerP&);
       // GROUP: Access Functions :
       ///////////////////////////////////////////////////////////////////////
 	// Boolean to see whether or not Enthalpy is solved for
@@ -243,6 +245,11 @@ private:
 		     		  const MaterialSubset*,
 		    		  DataWarehouse* ,
 		     		  DataWarehouse* new_dw);
+      void blobInit(const ProcessorGroup*,
+		     		  const PatchSubset* patches,
+		     		  const MaterialSubset*,
+		    		  DataWarehouse* ,
+		     		  DataWarehouse* new_dw);
 
 private:
 
@@ -301,6 +308,8 @@ private:
     bool d_calcExtraScalars;
     ExtraScalarSolver* d_extraScalarSolver;
     vector<ExtraScalarSolver*> d_extraScalars;
+
+    bool d_carbon_balance_es;	
     
 
 }; // end class Arches

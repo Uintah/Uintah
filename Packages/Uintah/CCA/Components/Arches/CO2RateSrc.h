@@ -33,6 +33,7 @@ WARNING
 ****************************************/
 
 namespace Uintah {
+class BoundaryCondition; 
 class CO2RateSrc: public ExtraScalarSrc{
 
 public:
@@ -88,6 +89,7 @@ private:
 
 	string	d_tableName;
 	int d_tableIndex;
+
 }; // End class CO2RateSrc
 } // End namespace Uintah
 
