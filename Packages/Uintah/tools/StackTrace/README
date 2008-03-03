@@ -10,3 +10,26 @@ This list MUST be sorted and can be produced in the following manner:
 
 FYI, StackTrace is to be compiled and run on a linux box (NOT on the
 RedStorm compute nodes).
+
+-----------------------------------------
+
+- Running StackTrace
+
+To run StackTrace, you need to provide it two arguments.  1) The
+symbol file (sorted), and 2) a file containing the stack trace you
+want displayed with function names.
+
+The stacktrace file should look like this:
+
+0: ./StackTrace [0x4016dd]
+1: ./StackTrace [0x4019ef]
+2: ./StackTrace [0x401a02]
+3: ./StackTrace [0x401e17]
+4: /lib64/tls/libc.so.6(__libc_start_main+0xfd) [0x2a95ac9acd]
+5: ./StackTrace(_ZNSt24__default_alloc_templateILb1ELi0EE10deallocateEPvm+0x42) [0x400f8a]
+
+(The very minimum that is required is a hex number within []'s:
+[0x4016dd]
+If the stack trace does not look like this, then the
+StackTrace program most likely will seg fault.)
+
