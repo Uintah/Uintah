@@ -15,7 +15,7 @@ ConvergenceFailure::ConvergenceFailure(const string& message,
 				       int numiterations,
 				       double final_residual,
 				       double target_residual,
-                                       char* file,
+                                       const char* file,
                                        int line)
 {
   ostringstream s;

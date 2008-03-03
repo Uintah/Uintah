@@ -28,7 +28,7 @@ namespace Uintah {
     ConvergenceFailure(const string& msg,
 		       int numiterations, double final_residual,
 		       double target_residual,
-                       char* file, int line);
+                       const char* file, int line);
     ConvergenceFailure(const ConvergenceFailure&);
     virtual ~ConvergenceFailure();
     virtual const char* message() const;
