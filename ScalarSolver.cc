@@ -673,6 +673,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 	IntVector currCell(ii,jj,kk);
+
 	if (scalarVars.scalar[currCell] > 1.0) {
           if (scalarVars.scalar[currCell] > 1.0 + epsilon) {
 	    scalar_clipped = 1.0;
