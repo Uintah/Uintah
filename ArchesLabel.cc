@@ -989,6 +989,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_ShRFLabel);
   VarLabel::destroy(d_CO2FlowRateLabel);
   VarLabel::destroy(d_carbonEfficiencyLabel);
+  VarLabel::destroy(d_carbonEfficiencyESLabel);
   VarLabel::destroy(d_SO2FlowRateLabel);
   VarLabel::destroy(d_sulfurEfficiencyLabel);
   VarLabel::destroy(d_scalarFlowRateLabel);

@@ -178,6 +178,65 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 }
+//*---------------------------------------------------------------
+//* Method for allocating the extra scalars when dummy solve is used
+//* for MPMArches.
+//* - jeremy t.
+//*---------------------------------------------------------------
+void ExtraScalarSolver::sched_setInitialGuess(SchedulerP& sched,
+		    const PatchSet* patches,
+		    const MaterialSet* matls,
+		    const TimeIntegratorLabel* timelabels)
+{
+	  string taskname =  "ExtraScalarSolver::setInitialGuess" + d_scalar_name +
+		     timelabels->integrator_step_name;
+	
+	  Task* tsk = scinew Task(taskname, this,
+			  &ExtraScalarSolver::setInitialGuess,
+			  timelabels);
+
+   	  tsk->requires(Task::OldDW, d_scalar_label,
+			  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+      tsk->computes(d_scalar_label);
+
+   	  sched->addTask(tsk, patches, matls);
+
+}
+//*---------------------------------------------------------------
+//* Implementation of setInitialGuess
+//* - jeremy t.
+//*---------------------------------------------------------------
+void ExtraScalarSolver::setInitialGuess(const ProcessorGroup* pc,
+				     const PatchSubset* patches,
+				     const MaterialSubset*,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw,
+				     const TimeIntegratorLabel* timelabels)
+{
+	for (int p = 0; p < patches->size(); p++) {
+    	const Patch* patch = patches->get(p);
+    	int archIndex = 0; // only one arches material
+    	int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+		CCVariable<double> newscalar;
+		constCCVariable<double> oldscalar;
+
+		new_dw->allocateAndPut(newscalar, d_scalar_label, matlIndex, patch);
+		newscalar.initialize(0.0);
+		old_dw->get(oldscalar, d_scalar_label, matlIndex, 
+			     	patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+
+		newscalar.copyData(oldscalar); //copy old into new. see note.
+
+		//*note that when this was written, the inlet boundary conditions
+		// were only applied once at the begining of the solve.  Hence the 
+		// need for the actual copy performed here. 
+		// -jeremy t. 
+
+	}
+}
+
+
 
 //****************************************************************************
 // Schedule solve of linearized scalar equation

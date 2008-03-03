@@ -84,6 +84,13 @@ public:
       // Set up the problem specification database
       void problemSetup(const ProblemSpecP& params);
 
+	  // for setting the intial guess when performing a dummy solve	
+	  void sched_setInitialGuess(SchedulerP& sched,
+		    const PatchSet* patches,
+		    const MaterialSet* matls,
+		    const TimeIntegratorLabel* timelabels);
+
+
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized scalar equation
@@ -175,6 +182,15 @@ private:
 			     const TimeIntegratorLabel* timelabels,
                              bool d_EKTCorrection,
                              bool doing_EKT_now);
+
+	  // set the intial guess for nosolve
+	  void setInitialGuess(const ProcessorGroup* pc,
+				     const PatchSubset* patches,
+				     const MaterialSubset*,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw,
+				     const TimeIntegratorLabel* timelabels);
+
 
       ///////////////////////////////////////////////////////////////////////
       // Actually Solver the Linear System for Scalar
