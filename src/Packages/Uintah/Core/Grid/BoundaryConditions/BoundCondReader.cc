@@ -276,81 +276,81 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   // together and stored in a Union class.  This union class is then subtracted
   // off from the side class resulting in a difference class.  The difference
   // class represents the region of the side minus any circles/rectangle.  
-  
+
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");
-       face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
+      face_ps != 0; face_ps=face_ps->findNextBlock("Face")) {
 
-      Patch::FaceType face_side;
-      BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,grid_ps,face_side);
-      BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
-	      << typeid(*bcGeom).name() << " " << bcGeom << endl;
-	      
-      multimap<int, BoundCondBase*> bctype_data;
+    Patch::FaceType face_side;
+    BCGeomBase* bcGeom = createBoundaryConditionFace(face_ps,grid_ps,face_side);
+    BCR_dbg << endl << endl << "Face = " << face_side << " Geometry type = " 
+      << typeid(*bcGeom).name() << " " << bcGeom << endl;
 
-      for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
-	   child = child->findNextBlock("BCType")) {
-	int mat_id;
-	BoundCondBase* bc;
-	BoundCondFactory::create(child,bc,mat_id);
-	BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
-		<<  bc->getType() << " bctype = " << typeid(*bc).name() 
-		<<  " "  << bc  << endl;
+    multimap<int, BoundCondBase*> bctype_data;
 
-	bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
-	delete bc;
+    for (ProblemSpecP child = face_ps->findBlock("BCType"); child != 0;
+        child = child->findNextBlock("BCType")) {
+      int mat_id;
+      BoundCondBase* bc;
+      BoundCondFactory::create(child,bc,mat_id);
+      BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
+        <<  bc->getType() << " bctype = " << typeid(*bc).name() 
+        <<  " "  << bc  << endl;
+
+      bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
+      delete bc;
+    }
+
+    // Print out all of the bcs just created
+    multimap<int,BoundCondBase*>::const_iterator it;
+    for (it = bctype_data.begin(); it != bctype_data.end(); it++) {
+      BCR_dbg << "Getting out mat_id = " << it->first << " bc = " 
+        << it->second->getType() << " bctype = " 
+        << typeid(*(it->second)).name() << endl;
+    }
+
+    // Search through the newly created boundary conditions and create
+    // new BCGeomBase* clones if there are multi materials specified 
+    // in the give <Face>.  This is usually a problem when Pressure is
+    // specified for material id = 0, and other bcs such as velocity,
+    // temperature, etc. for material_id != 0.
+
+    map<int, BCGeomBase*> bcgeom_data;
+    map<int, BCGeomBase*>::const_iterator bc_geom_itr,mat_all_itr;
+
+    // Search through the bctype_data and make sure that there are
+    // enough bcGeom clones for each material.
+    multimap<int,BoundCondBase*>::const_iterator itr;
+    for (itr = bctype_data.begin(); itr != bctype_data.end(); itr++) {
+      bc_geom_itr =  bcgeom_data.find(itr->first);
+      // Clone it
+      if (bc_geom_itr == bcgeom_data.end()) {
+        bcgeom_data[itr->first] = bcGeom->clone();
       }
 
-      // Print out all of the bcs just created
-      multimap<int,BoundCondBase*>::const_iterator it;
-      for (it = bctype_data.begin(); it != bctype_data.end(); it++) {
-	BCR_dbg << "Getting out mat_id = " << it->first << " bc = " 
-		<< it->second->getType() << " bctype = " 
-		<< typeid(*(it->second)).name() << endl;
-      }
+      BCR_dbg << "Storing in  = " << typeid(bcgeom_data[itr->first]).name()
+        << " " << bcgeom_data[itr->first] << " " 
+        << typeid(*(itr->second)).name() << " " << (itr->second)
+        << endl;
 
-      // Search through the newly created boundary conditions and create
-      // new BCGeomBase* clones if there are multi materials specified 
-      // in the give <Face>.  This is usually a problem when Pressure is
-      // specified for material id = 0, and other bcs such as velocity,
-      // temperature, etc. for material_id != 0.
+      bcgeom_data[itr->first]->addBC(itr->second);
+    }
+    for (bc_geom_itr = bcgeom_data.begin(); bc_geom_itr != bcgeom_data.end();
+        bc_geom_itr++) {
+      d_BCReaderData[face_side].addBCData(bc_geom_itr->first,
+          bcgeom_data[bc_geom_itr->first]->clone());
+      delete bc_geom_itr->second;
+    }
 
-      map<int, BCGeomBase*> bcgeom_data;
-      map<int, BCGeomBase*>::const_iterator bc_geom_itr,mat_all_itr;
-
-      // Search through the bctype_data and make sure that there are
-      // enough bcGeom clones for each material.
-      multimap<int,BoundCondBase*>::const_iterator itr;
-      for (itr = bctype_data.begin(); itr != bctype_data.end(); itr++) {
-	bc_geom_itr =  bcgeom_data.find(itr->first);
-	// Clone it
-	if (bc_geom_itr == bcgeom_data.end()) {
-	  bcgeom_data[itr->first] = bcGeom->clone();
-	}
-
-	BCR_dbg << "Storing in  = " << typeid(bcgeom_data[itr->first]).name()
-		<< " " << bcgeom_data[itr->first] << " " 
-		<< typeid(*(itr->second)).name() << " " << (itr->second)
-		<< endl;
-
-	bcgeom_data[itr->first]->addBC(itr->second);
-      }
-      for (bc_geom_itr = bcgeom_data.begin(); bc_geom_itr != bcgeom_data.end();
-	   bc_geom_itr++) {
-	d_BCReaderData[face_side].addBCData(bc_geom_itr->first,
-				    bcgeom_data[bc_geom_itr->first]->clone());
-	delete bc_geom_itr->second;
-      }
-						   
-      BCR_dbg << "Printing out bcDataArray . . " << endl;
-      //d_BCReaderData[face_side].print();
+    BCR_dbg << "Printing out bcDataArray . . " << endl;
+    //d_BCReaderData[face_side].print();
 
 
-      delete bcGeom;
+    delete bcGeom;
 
-      // Delete stuff in bctype_data
-      multimap<int, BoundCondBase*>::const_iterator m_itr;
-      for (m_itr = bctype_data.begin(); m_itr != bctype_data.end(); ++m_itr) 
-	delete m_itr->second;
+    // Delete stuff in bctype_data
+    multimap<int, BoundCondBase*>::const_iterator m_itr;
+    for (m_itr = bctype_data.begin(); m_itr != bctype_data.end(); ++m_itr) 
+      delete m_itr->second;
   }
 
 #if 1
@@ -358,31 +358,31 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   // materials boundary condition section.
   BCDataArray::bcDataArrayType::const_iterator  mat_all_itr, bc_geom_itr;
   for (Patch::FaceType face = Patch::startFace; 
-       face <= Patch::endFace; face=Patch::nextFace(face)) {
+      face <= Patch::endFace; face=Patch::nextFace(face)) {
     mat_all_itr = d_BCReaderData[face].d_BCDataArray.find(-1);
     if (mat_all_itr != d_BCReaderData[face].d_BCDataArray.end()) 
       for (bc_geom_itr = d_BCReaderData[face].d_BCDataArray.begin(); 
-	   bc_geom_itr != d_BCReaderData[face].d_BCDataArray.end(); 
-	   bc_geom_itr++) {
-	if (bc_geom_itr != mat_all_itr) {
-	  vector<BCGeomBase*>::const_iterator itr;
-	  for (itr = mat_all_itr->second.begin(); 
-	       itr != mat_all_itr->second.end(); ++itr)
-	    d_BCReaderData[face].addBCData(bc_geom_itr->first,
-					   (*itr)->clone());
-	}
+          bc_geom_itr != d_BCReaderData[face].d_BCDataArray.end(); 
+          bc_geom_itr++) {
+        if (bc_geom_itr != mat_all_itr) {
+          vector<BCGeomBase*>::const_iterator itr;
+          for (itr = mat_all_itr->second.begin(); 
+              itr != mat_all_itr->second.end(); ++itr)
+            d_BCReaderData[face].addBCData(bc_geom_itr->first,
+                (*itr)->clone());
+        }
       }
 #if 0
     for (bc_geom_itr = d_BCReaderData[face].d_BCDataArray.begin();
-	 bc_geom_itr != d_BCReaderData[face].d_BCDataArray.end();
-	 bc_geom_itr++) {
+        bc_geom_itr != d_BCReaderData[face].d_BCDataArray.end();
+        bc_geom_itr++) {
       cout << "mat_id = " << bc_geom_itr->first << endl;
       d_BCReaderData[face].combineBCGeometryTypes(bc_geom_itr->first);
     }
 #endif
-    
+
     BCR_dbg << "Printing out bcDataArray for face " << face 
-	    << " after adding 'all' . . " << endl;
+      << " after adding 'all' . . " << endl;
     //d_BCReaderData[face].print();
   }
 #endif
@@ -391,22 +391,22 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   // a single different (side and the union of any holes (circles or
   // rectangles.  This only happens if there are more than 1 bc_data per
   // face.
-  
+
 
   BCR_dbg << endl << "Before combineBCS() . . ." << endl << endl;
   for (Patch::FaceType face = Patch::startFace; 
-       face <= Patch::endFace; face=Patch::nextFace(face)) {
+      face <= Patch::endFace; face=Patch::nextFace(face)) {
     BCR_dbg << endl << endl << "Before Face . . ." << face << endl;
     //    d_BCReaderData[face].print();
   } 
-  
+
 
   combineBCS();
 
 
   BCR_dbg << endl << "After combineBCS() . . ." << endl << endl;
   for (Patch::FaceType face = Patch::startFace; 
-       face <= Patch::endFace; face=Patch::nextFace(face)) {
+      face <= Patch::endFace; face=Patch::nextFace(face)) {
     BCR_dbg << "After Face . . .  " << face << endl;
     //    d_BCReaderData[face].print();
   } 
