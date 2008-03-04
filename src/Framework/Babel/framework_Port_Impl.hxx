@@ -2,19 +2,18 @@
 // File:          framework_Port_Impl.hxx
 // Symbol:        framework.Port-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for framework.Port
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 
 #ifndef included_framework_Port_Impl_hxx
 #define included_framework_Port_Impl_hxx
 
-#ifndef included_sidl_ucxx_hxx
-#include "sidl_ucxx.hxx"
+#ifndef included_sidl_cxx_hxx
+#include "sidl_cxx.hxx"
 #endif
 #ifndef included_framework_Port_IOR_h
 #include "framework_Port_IOR.h"
@@ -36,59 +35,66 @@
 #endif
 
 
-// DO-NOT-DELETE splicer.begin(framework.Port._includes)
-// Insert-Code-Here {framework.Port._includes} (includes or arbitrary code)
-// DO-NOT-DELETE splicer.end(framework.Port._includes)
+// DO-NOT-DELETE splicer.begin(framework.Port._hincludes)
+// insert code here (includes or arbitrary code)
+// DO-NOT-DELETE splicer.end(framework.Port._hincludes)
 
 namespace framework { 
 
   /**
    * Symbol "framework.Port" (version 1.0)
    */
-  class Port_impl : public virtual UCXX ::framework::Port 
+  class Port_impl : public virtual ::framework::Port 
   // DO-NOT-DELETE splicer.begin(framework.Port._inherits)
   // Insert-Code-Here {framework.Port._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(framework.Port._inherits)
+
   {
 
   // All data marked protected will be accessable by 
   // descendant Impl classes
   protected:
 
+    bool _wrapped;
+
     // DO-NOT-DELETE splicer.begin(framework.Port._implementation)
     // Insert-Code-Here {framework.Port._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(framework.Port._implementation)
 
   public:
-    // default constructor, shouldn't be used (required)
-    Port_impl() : StubBase(0,true) { } 
+    // default constructor, used for data wrapping(required)
+    Port_impl();
+    // sidl constructor (required)
+    // Note: alternate Skel constructor doesn't call addref()
+    // (fixes bug #275)
+      Port_impl( struct framework_Port__object * ior ) : StubBase(ior,true), 
+    ::gov::cca::Port((ior==NULL) ? NULL : &((*ior).d_gov_cca_port)) , _wrapped(
+      false) {_ctor();}
 
-      // sidl constructor (required)
-      // Note: alternate Skel constructor doesn't call addref()
-      // (fixes bug #275)
-      Port_impl( struct framework_Port__object * s ) : StubBase(s,
-        true) { _ctor(); }
 
-      // user defined construction
-      void _ctor();
+    // user defined construction
+    void _ctor();
 
-      // virtual destructor (required)
-      virtual ~Port_impl() { _dtor(); }
+    // virtual destructor (required)
+    virtual ~Port_impl() { _dtor(); }
 
-      // user defined destruction
-      void _dtor();
+    // user defined destruction
+    void _dtor();
 
-      // static class initializer
-      static void _load();
+    // true if this object was created by a user newing the impl
+    inline bool _isWrapped() {return _wrapped;}
 
-    public:
+    // static class initializer
+    static void _load();
 
-    };  // end class Port_impl
+  public:
 
-  } // end namespace framework
+  };  // end class Port_impl
 
-  // DO-NOT-DELETE splicer.begin(framework.Port._misc)
-  // Insert-Code-Here {framework.Port._misc} (miscellaneous things)
-  // DO-NOT-DELETE splicer.end(framework.Port._misc)
+} // end namespace framework
 
-  #endif
+// DO-NOT-DELETE splicer.begin(framework.Port._hmisc)
+// insert code here (miscellaneous things)
+// DO-NOT-DELETE splicer.end(framework.Port._hmisc)
+
+#endif

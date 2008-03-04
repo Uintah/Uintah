@@ -1,39 +1,12 @@
-// For more information, please see: http://software.sci.utah.edu
-//
-// The MIT License
-//
-// Copyright (c) 2004 Scientific Computing and Imaging Institute,
-// University of Utah.
-//
-// License for the specific language governing rights and limitations under
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the "Software"),
-// to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-
 // 
 // File:          framework_TypeMap_Impl.cxx
 // Symbol:        framework.TypeMap-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for framework.TypeMap
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "framework_TypeMap_Impl.hxx"
 
@@ -58,9 +31,21 @@
 #ifndef included_sidl_RuntimeException_hxx
 #include "sidl_RuntimeException.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(framework.TypeMap._includes)
 // Insert-Code-Here {framework.TypeMap._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(framework.TypeMap._includes)
+
+// special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+framework::TypeMap_impl::TypeMap_impl() : StubBase(reinterpret_cast< void*>(
+  ::framework::TypeMap::_wrapObj(reinterpret_cast< void*>(this))),false) , 
+  _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(framework.TypeMap._ctor2)
+  // insert code here (ctor2)
+  // DO-NOT-DELETE splicer.end(framework.TypeMap._ctor2)
+}
 
 // user defined constructor
 void framework::TypeMap_impl::_ctor() {
@@ -114,9 +99,9 @@ framework::TypeMap_impl::getInternalData_impl ()
 }
 
 /**
- * Create an exact copy of this Map 
+ *  Create an exact copy of this Map 
  */
-UCXX ::gov::cca::TypeMap
+::gov::cca::TypeMap
 framework::TypeMap_impl::cloneTypeMap_impl () 
 
 {
@@ -132,9 +117,9 @@ framework::TypeMap_impl::cloneTypeMap_impl ()
 }
 
 /**
- * Create a new Map with no key/value associations. 
+ *  Create a new Map with no key/value associations. 
  */
-UCXX ::gov::cca::TypeMap
+::gov::cca::TypeMap
 framework::TypeMap_impl::cloneEmpty_impl () 
 
 {
@@ -152,10 +137,10 @@ int32_t
 framework::TypeMap_impl::getInt_impl (
   /* in */const ::std::string& key,
   /* in */int32_t dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getInt)
   return typeMap->getInt(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getInt)
@@ -168,10 +153,10 @@ int64_t
 framework::TypeMap_impl::getLong_impl (
   /* in */const ::std::string& key,
   /* in */int64_t dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getLong)
   return typeMap->getLong(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getLong)
@@ -184,10 +169,10 @@ float
 framework::TypeMap_impl::getFloat_impl (
   /* in */const ::std::string& key,
   /* in */float dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getFloat)
   return typeMap->getFloat(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getFloat)
@@ -200,10 +185,10 @@ double
 framework::TypeMap_impl::getDouble_impl (
   /* in */const ::std::string& key,
   /* in */double dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getDouble)
   return typeMap->getDouble(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getDouble)
@@ -216,10 +201,10 @@ throw (
 framework::TypeMap_impl::getFcomplex_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::complex<float>& dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getFcomplex)
   return typeMap->getFcomplex(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getFcomplex)
@@ -232,10 +217,10 @@ throw (
 framework::TypeMap_impl::getDcomplex_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::complex<double>& dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getDcomplex)
   return typeMap->getDcomplex(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getDcomplex)
@@ -248,10 +233,10 @@ throw (
 framework::TypeMap_impl::getString_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::string& dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getString)
   return typeMap->getString(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getString)
@@ -264,10 +249,10 @@ bool
 framework::TypeMap_impl::getBool_impl (
   /* in */const ::std::string& key,
   /* in */bool dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getBool)
   return typeMap->getBool(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getBool)
@@ -276,14 +261,14 @@ throw (
 /**
  * Method:  getIntArray[]
  */
-UCXX ::sidl::array<int32_t>
+::sidl::array<int32_t>
 framework::TypeMap_impl::getIntArray_impl (
   /* in */const ::std::string& key,
-  /* in array<int> */UCXX ::sidl::array<int32_t> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<int> */::sidl::array<int32_t>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getIntArray)
   //return typeMap->getIntArray(key, dflt);
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getIntArray)
@@ -292,14 +277,14 @@ throw (
 /**
  * Method:  getLongArray[]
  */
-UCXX ::sidl::array<int64_t>
+::sidl::array<int64_t>
 framework::TypeMap_impl::getLongArray_impl (
   /* in */const ::std::string& key,
-  /* in array<long> */UCXX ::sidl::array<int64_t> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<long> */::sidl::array<int64_t>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getLongArray)
   // Insert-Code-Here {framework.TypeMap.getLongArray} (getLongArray method)
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getLongArray)
@@ -308,14 +293,14 @@ throw (
 /**
  * Method:  getFloatArray[]
  */
-UCXX ::sidl::array<float>
+::sidl::array<float>
 framework::TypeMap_impl::getFloatArray_impl (
   /* in */const ::std::string& key,
-  /* in array<float> */UCXX ::sidl::array<float> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<float> */::sidl::array<float>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getFloatArray)
   // Insert-Code-Here {framework.TypeMap.getFloatArray} (getFloatArray method)
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getFloatArray)
@@ -324,14 +309,14 @@ throw (
 /**
  * Method:  getDoubleArray[]
  */
-UCXX ::sidl::array<double>
+::sidl::array<double>
 framework::TypeMap_impl::getDoubleArray_impl (
   /* in */const ::std::string& key,
-  /* in array<double> */UCXX ::sidl::array<double> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<double> */::sidl::array<double>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getDoubleArray)
   // Insert-Code-Here {framework.TypeMap.getDoubleArray} (getDoubleArray method)
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getDoubleArray)
@@ -340,14 +325,14 @@ throw (
 /**
  * Method:  getFcomplexArray[]
  */
-UCXX ::sidl::array< UCXX ::sidl::fcomplex>
+::sidl::array< ::sidl::fcomplex>
 framework::TypeMap_impl::getFcomplexArray_impl (
   /* in */const ::std::string& key,
-  /* in array<fcomplex> */UCXX ::sidl::array< UCXX ::sidl::fcomplex> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<fcomplex> */::sidl::array< ::sidl::fcomplex>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getFcomplexArray)
   // Insert-Code-Here {framework.TypeMap.getFcomplexArray} (getFcomplexArray method)
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getFcomplexArray)
@@ -356,14 +341,14 @@ throw (
 /**
  * Method:  getDcomplexArray[]
  */
-UCXX ::sidl::array< UCXX ::sidl::dcomplex>
+::sidl::array< ::sidl::dcomplex>
 framework::TypeMap_impl::getDcomplexArray_impl (
   /* in */const ::std::string& key,
-  /* in array<dcomplex> */UCXX ::sidl::array< UCXX ::sidl::dcomplex> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<dcomplex> */::sidl::array< ::sidl::dcomplex>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getDcomplexArray)
   // Insert-Code-Here {framework.TypeMap.getDcomplexArray} (getDcomplexArray method)
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getDcomplexArray)
@@ -372,14 +357,14 @@ throw (
 /**
  * Method:  getStringArray[]
  */
-UCXX ::sidl::array< ::std::string>
+::sidl::array< ::std::string>
 framework::TypeMap_impl::getStringArray_impl (
   /* in */const ::std::string& key,
-  /* in array<string> */UCXX ::sidl::array< ::std::string> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<string> */::sidl::array< ::std::string>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getStringArray)
   // Insert-Code-Here {framework.TypeMap.getStringArray} (getStringArray method)
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getStringArray)
@@ -388,14 +373,14 @@ throw (
 /**
  * Method:  getBoolArray[]
  */
-UCXX ::sidl::array<bool>
+::sidl::array<bool>
 framework::TypeMap_impl::getBoolArray_impl (
   /* in */const ::std::string& key,
-  /* in array<bool> */UCXX ::sidl::array<bool> dflt ) 
-throw ( 
-  UCXX ::gov::cca::TypeMismatchException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in array<bool> */::sidl::array<bool>& dflt ) 
+// throws:
+//     ::gov::cca::TypeMismatchException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getBoolArray)
   // Insert-Code-Here {framework.TypeMap.getBoolArray} (getBoolArray method)
   // DO-NOT-DELETE splicer.end(framework.TypeMap.getBoolArray)
@@ -512,7 +497,7 @@ framework::TypeMap_impl::putBool_impl (
 void
 framework::TypeMap_impl::putIntArray_impl (
   /* in */const ::std::string& key,
-  /* in array<int> */UCXX ::sidl::array<int32_t> value ) 
+  /* in array<int> */::sidl::array<int32_t>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putIntArray)
   // Insert-Code-Here {framework.TypeMap.putIntArray} (putIntArray method)
@@ -525,7 +510,7 @@ framework::TypeMap_impl::putIntArray_impl (
 void
 framework::TypeMap_impl::putLongArray_impl (
   /* in */const ::std::string& key,
-  /* in array<long> */UCXX ::sidl::array<int64_t> value ) 
+  /* in array<long> */::sidl::array<int64_t>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putLongArray)
   // Insert-Code-Here {framework.TypeMap.putLongArray} (putLongArray method)
@@ -538,7 +523,7 @@ framework::TypeMap_impl::putLongArray_impl (
 void
 framework::TypeMap_impl::putFloatArray_impl (
   /* in */const ::std::string& key,
-  /* in array<float> */UCXX ::sidl::array<float> value ) 
+  /* in array<float> */::sidl::array<float>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putFloatArray)
   // Insert-Code-Here {framework.TypeMap.putFloatArray} (putFloatArray method)
@@ -551,7 +536,7 @@ framework::TypeMap_impl::putFloatArray_impl (
 void
 framework::TypeMap_impl::putDoubleArray_impl (
   /* in */const ::std::string& key,
-  /* in array<double> */UCXX ::sidl::array<double> value ) 
+  /* in array<double> */::sidl::array<double>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putDoubleArray)
   // Insert-Code-Here {framework.TypeMap.putDoubleArray} (putDoubleArray method)
@@ -564,7 +549,7 @@ framework::TypeMap_impl::putDoubleArray_impl (
 void
 framework::TypeMap_impl::putFcomplexArray_impl (
   /* in */const ::std::string& key,
-  /* in array<fcomplex> */UCXX ::sidl::array< UCXX ::sidl::fcomplex> value ) 
+  /* in array<fcomplex> */::sidl::array< ::sidl::fcomplex>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putFcomplexArray)
   // Insert-Code-Here {framework.TypeMap.putFcomplexArray} (putFcomplexArray method)
@@ -577,7 +562,7 @@ framework::TypeMap_impl::putFcomplexArray_impl (
 void
 framework::TypeMap_impl::putDcomplexArray_impl (
   /* in */const ::std::string& key,
-  /* in array<dcomplex> */UCXX ::sidl::array< UCXX ::sidl::dcomplex> value ) 
+  /* in array<dcomplex> */::sidl::array< ::sidl::dcomplex>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putDcomplexArray)
   // Insert-Code-Here {framework.TypeMap.putDcomplexArray} (putDcomplexArray method)
@@ -590,7 +575,7 @@ framework::TypeMap_impl::putDcomplexArray_impl (
 void
 framework::TypeMap_impl::putStringArray_impl (
   /* in */const ::std::string& key,
-  /* in array<string> */UCXX ::sidl::array< ::std::string> value ) 
+  /* in array<string> */::sidl::array< ::std::string>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putStringArray)
   // Insert-Code-Here {framework.TypeMap.putStringArray} (putStringArray method)
@@ -603,7 +588,7 @@ framework::TypeMap_impl::putStringArray_impl (
 void
 framework::TypeMap_impl::putBoolArray_impl (
   /* in */const ::std::string& key,
-  /* in array<bool> */UCXX ::sidl::array<bool> value ) 
+  /* in array<bool> */::sidl::array<bool>& value ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.putBoolArray)
   // Insert-Code-Here {framework.TypeMap.putBoolArray} (putBoolArray method)
@@ -611,7 +596,7 @@ framework::TypeMap_impl::putBoolArray_impl (
 }
 
 /**
- * Make the key and associated value disappear from the object. 
+ *  Make the key and associated value disappear from the object. 
  */
 void
 framework::TypeMap_impl::remove_impl (
@@ -623,14 +608,14 @@ framework::TypeMap_impl::remove_impl (
 }
 
 /**
- *  Get all the names associated with a particular type
- *  without exposing the data implementation details.  The keys
- *  will be returned in an arbitrary order. If type specified is
- *  None (no specification) all keys of all types are returned.
+ * Get all the names associated with a particular type
+ * without exposing the data implementation details.  The keys
+ * will be returned in an arbitrary order. If type specified is
+ * None (no specification) all keys of all types are returned.
  */
-UCXX ::sidl::array< ::std::string>
+::sidl::array< ::std::string>
 framework::TypeMap_impl::getAllKeys_impl (
-  /* in */UCXX ::gov::cca::Type t ) 
+  /* in */::gov::cca::Type t ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.TypeMap.getAllKeys)
   // Insert-Code-Here {framework.TypeMap.getAllKeys} (getAllKeys method)
@@ -638,7 +623,7 @@ framework::TypeMap_impl::getAllKeys_impl (
 }
 
 /**
- * Return true if the key exists in this map 
+ *  Return true if the key exists in this map 
  */
 bool
 framework::TypeMap_impl::hasKey_impl (
@@ -650,9 +635,9 @@ framework::TypeMap_impl::hasKey_impl (
 }
 
 /**
- * Return the type of the value associated with this key 
+ *  Return the type of the value associated with this key 
  */
-UCXX ::gov::cca::Type
+::gov::cca::Type
 framework::TypeMap_impl::typeOf_impl (
   /* in */const ::std::string& key ) 
 {

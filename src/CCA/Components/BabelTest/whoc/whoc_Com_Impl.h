@@ -1,36 +1,8 @@
 /*
- * For more information, please see: http://software.sci.utah.edu
- *
- * The MIT License
- *
- * Copyright (c) 2005 Scientific Computing and Imaging Institute,
- * University of Utah.
- *
- * License for the specific language governing rights and limitations under
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
-
-/*
  * File:          whoc_Com_Impl.h
  * Symbol:        whoc.Com-v1.0
  * Symbol Type:   class
- * Babel Version: 0.99.2
+ * Babel Version: 1.2.0
  * Description:   Server-side implementation for whoc.Com
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
@@ -65,9 +37,9 @@
 #include "whoc_Com.h"
 #endif
 
-/* DO-NOT-DELETE splicer.begin(whoc.Com._includes) */
-/* Insert-Code-Here {whoc.Com._includes} (include files) */
-/* DO-NOT-DELETE splicer.end(whoc.Com._includes) */
+/* DO-NOT-DELETE splicer.begin(whoc.Com._hincludes) */
+/* insert code here (include files) */
+/* DO-NOT-DELETE splicer.end(whoc.Com._hincludes) */
 
 /*
  * Private data for class whoc.Com
@@ -124,40 +96,13 @@ impl_whoc_Com__dtor(
  * User-defined object methods
  */
 
-extern struct gov_cca_Component__object* 
-  impl_whoc_Com_fconnect_gov_cca_Component(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct gov_cca_Component__object* 
-  impl_whoc_Com_fcast_gov_cca_Component(void* bi, sidl_BaseInterface* _ex);
-extern struct gov_cca_Services__object* 
-  impl_whoc_Com_fconnect_gov_cca_Services(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct gov_cca_Services__object* 
-  impl_whoc_Com_fcast_gov_cca_Services(void* bi, sidl_BaseInterface* _ex);
-extern struct sidl_BaseClass__object* 
-  impl_whoc_Com_fconnect_sidl_BaseClass(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct sidl_BaseClass__object* impl_whoc_Com_fcast_sidl_BaseClass(void* 
-  bi, sidl_BaseInterface* _ex);
+#ifdef WITH_RMI
+extern struct gov_cca_Services__object* impl_whoc_Com_fconnect_gov_cca_Services(
+  const char* url, sidl_bool ar, sidl_BaseInterface *_ex);
 extern struct sidl_BaseInterface__object* 
-  impl_whoc_Com_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar,
+  impl_whoc_Com_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar, 
   sidl_BaseInterface *_ex);
-extern struct sidl_BaseInterface__object* 
-  impl_whoc_Com_fcast_sidl_BaseInterface(void* bi, sidl_BaseInterface* _ex);
-extern struct sidl_ClassInfo__object* 
-  impl_whoc_Com_fconnect_sidl_ClassInfo(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct sidl_ClassInfo__object* impl_whoc_Com_fcast_sidl_ClassInfo(void* 
-  bi, sidl_BaseInterface* _ex);
-extern struct sidl_RuntimeException__object* 
-  impl_whoc_Com_fconnect_sidl_RuntimeException(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct sidl_RuntimeException__object* 
-  impl_whoc_Com_fcast_sidl_RuntimeException(void* bi, sidl_BaseInterface* _ex);
-extern struct whoc_Com__object* impl_whoc_Com_fconnect_whoc_Com(const char* url,
-  sidl_bool ar, sidl_BaseInterface *_ex);
-extern struct whoc_Com__object* impl_whoc_Com_fcast_whoc_Com(void* bi,
-  sidl_BaseInterface* _ex);
+#endif /*WITH_RMI*/
 extern
 void
 impl_whoc_Com_setServices(
@@ -165,41 +110,18 @@ impl_whoc_Com_setServices(
   /* in */ gov_cca_Services services,
   /* out */ sidl_BaseInterface *_ex);
 
-extern struct gov_cca_Component__object* 
-  impl_whoc_Com_fconnect_gov_cca_Component(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct gov_cca_Component__object* 
-  impl_whoc_Com_fcast_gov_cca_Component(void* bi, sidl_BaseInterface* _ex);
-extern struct gov_cca_Services__object* 
-  impl_whoc_Com_fconnect_gov_cca_Services(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct gov_cca_Services__object* 
-  impl_whoc_Com_fcast_gov_cca_Services(void* bi, sidl_BaseInterface* _ex);
-extern struct sidl_BaseClass__object* 
-  impl_whoc_Com_fconnect_sidl_BaseClass(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct sidl_BaseClass__object* impl_whoc_Com_fcast_sidl_BaseClass(void* 
-  bi, sidl_BaseInterface* _ex);
+#ifdef WITH_RMI
+extern struct gov_cca_Services__object* impl_whoc_Com_fconnect_gov_cca_Services(
+  const char* url, sidl_bool ar, sidl_BaseInterface *_ex);
 extern struct sidl_BaseInterface__object* 
-  impl_whoc_Com_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar,
+  impl_whoc_Com_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar, 
   sidl_BaseInterface *_ex);
-extern struct sidl_BaseInterface__object* 
-  impl_whoc_Com_fcast_sidl_BaseInterface(void* bi, sidl_BaseInterface* _ex);
-extern struct sidl_ClassInfo__object* 
-  impl_whoc_Com_fconnect_sidl_ClassInfo(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct sidl_ClassInfo__object* impl_whoc_Com_fcast_sidl_ClassInfo(void* 
-  bi, sidl_BaseInterface* _ex);
-extern struct sidl_RuntimeException__object* 
-  impl_whoc_Com_fconnect_sidl_RuntimeException(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex);
-extern struct sidl_RuntimeException__object* 
-  impl_whoc_Com_fcast_sidl_RuntimeException(void* bi, sidl_BaseInterface* _ex);
-extern struct whoc_Com__object* impl_whoc_Com_fconnect_whoc_Com(const char* url,
-  sidl_bool ar, sidl_BaseInterface *_ex);
-extern struct whoc_Com__object* impl_whoc_Com_fcast_whoc_Com(void* bi,
-  sidl_BaseInterface* _ex);
+#endif /*WITH_RMI*/
+
+/* DO-NOT-DELETE splicer.begin(_hmisc) */
 #ifdef __cplusplus
 }
 #endif
+/* DO-NOT-DELETE splicer.end(_hmisc) */
+
 #endif

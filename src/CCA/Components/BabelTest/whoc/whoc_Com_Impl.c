@@ -1,36 +1,8 @@
 /*
- * For more information, please see: http://software.sci.utah.edu
- *
- * The MIT License
- *
- * Copyright (c) 2005 Scientific Computing and Imaging Institute,
- * University of Utah.
- *
- * License for the specific language governing rights and limitations under
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
-
-/*
  * File:          whoc_Com_Impl.c
  * Symbol:        whoc.Com-v1.0
  * Symbol Type:   class
- * Babel Version: 0.99.2
+ * Babel Version: 1.2.0
  * Description:   Server-side implementation for whoc.Com
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
@@ -49,6 +21,9 @@
 #include "whoc_Com_Impl.h"
 #include "sidl_NotImplementedException.h"
 #include "sidl_Exception.h"
+#ifndef included_sidl_MemAllocException_h
+#include "sidl_MemAllocException.h"
+#endif
 
 /* DO-NOT-DELETE splicer.begin(whoc.Com._includes) */
 #include <stdio.h>
@@ -57,8 +32,8 @@
 #include "whoc_IDPort.h"
 /* DO-NOT-DELETE splicer.end(whoc.Com._includes) */
 
-#define SIDL_IOR_MAJOR_VERSION 0
-#define SIDL_IOR_MINOR_VERSION 10
+#define SIDL_IOR_MAJOR_VERSION 2
+#define SIDL_IOR_MINOR_VERSION 0
 /*
  * Static class initializer called exactly once before any user-defined method is dispatched
  */
@@ -226,62 +201,8 @@ impl_whoc_Com_setServices(
   }
 }
 /* Babel internal methods, Users should not edit below this line. */
-struct gov_cca_Component__object* 
-  impl_whoc_Com_fconnect_gov_cca_Component(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex) {
-  return gov_cca_Component__connectI(url, ar, _ex);
-}
-struct gov_cca_Component__object* impl_whoc_Com_fcast_gov_cca_Component(void* 
-  bi, sidl_BaseInterface* _ex) {
-  return gov_cca_Component__cast(bi, _ex);
-}
-struct gov_cca_Services__object* impl_whoc_Com_fconnect_gov_cca_Services(const 
-  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
-  return gov_cca_Services__connectI(url, ar, _ex);
-}
-struct gov_cca_Services__object* impl_whoc_Com_fcast_gov_cca_Services(void* bi,
-  sidl_BaseInterface* _ex) {
-  return gov_cca_Services__cast(bi, _ex);
-}
-struct sidl_BaseClass__object* impl_whoc_Com_fconnect_sidl_BaseClass(const 
-  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
-  return sidl_BaseClass__connectI(url, ar, _ex);
-}
-struct sidl_BaseClass__object* impl_whoc_Com_fcast_sidl_BaseClass(void* bi,
-  sidl_BaseInterface* _ex) {
-  return sidl_BaseClass__cast(bi, _ex);
-}
-struct sidl_BaseInterface__object* 
-  impl_whoc_Com_fconnect_sidl_BaseInterface(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex) {
-  return sidl_BaseInterface__connectI(url, ar, _ex);
-}
-struct sidl_BaseInterface__object* impl_whoc_Com_fcast_sidl_BaseInterface(void* 
-  bi, sidl_BaseInterface* _ex) {
-  return sidl_BaseInterface__cast(bi, _ex);
-}
-struct sidl_ClassInfo__object* impl_whoc_Com_fconnect_sidl_ClassInfo(const 
-  char* url, sidl_bool ar, sidl_BaseInterface *_ex) {
-  return sidl_ClassInfo__connectI(url, ar, _ex);
-}
-struct sidl_ClassInfo__object* impl_whoc_Com_fcast_sidl_ClassInfo(void* bi,
-  sidl_BaseInterface* _ex) {
-  return sidl_ClassInfo__cast(bi, _ex);
-}
-struct sidl_RuntimeException__object* 
-  impl_whoc_Com_fconnect_sidl_RuntimeException(const char* url, sidl_bool ar,
-  sidl_BaseInterface *_ex) {
-  return sidl_RuntimeException__connectI(url, ar, _ex);
-}
-struct sidl_RuntimeException__object* 
-  impl_whoc_Com_fcast_sidl_RuntimeException(void* bi, sidl_BaseInterface* _ex) {
-  return sidl_RuntimeException__cast(bi, _ex);
-}
-struct whoc_Com__object* impl_whoc_Com_fconnect_whoc_Com(const char* url,
-  sidl_bool ar, sidl_BaseInterface *_ex) {
-  return whoc_Com__connectI(url, ar, _ex);
-}
-struct whoc_Com__object* impl_whoc_Com_fcast_whoc_Com(void* bi,
-  sidl_BaseInterface* _ex) {
-  return whoc_Com__cast(bi, _ex);
-}
+
+/* DO-NOT-DELETE splicer.begin(_misc) */
+/* insert code here (miscellaneous code) */
+/* DO-NOT-DELETE splicer.end(_misc) */
+
