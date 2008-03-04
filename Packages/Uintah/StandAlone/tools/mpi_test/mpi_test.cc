@@ -56,7 +56,7 @@ int gather_test();
 int point2pointasync_test();
 int point2pointsync_test();
 int fileSystem_test();
-int testme( int (*testfunc)(void), char* name );
+int testme( int (*testfunc)(void),const char* name );
 
 int
 main( int argc, char** argv )
