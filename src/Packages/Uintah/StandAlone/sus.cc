@@ -103,7 +103,7 @@ quit( const std::string & msg = "" )
       cerr << msg << "\n";
     }
   Uintah::Parallel::finalizeManager();
-  exit( 1 );
+  Thread::exitAll( 1 );
 }
 
 static
@@ -342,7 +342,7 @@ main( int argc, char** argv )
       cout << "\n";
       cout << "Error: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
       cout << "\n";
-      exit( 1 );
+      Thread::exitAll( 1 );
     }
   }
 
@@ -376,6 +376,7 @@ main( int argc, char** argv )
   traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank() << ".txt";
   mallocTraceInfo.setOutputFilename( traceFilename.str().c_str(),
                                      "this could be some important info to log..." );
+  //mallocTraceInfo.setTracingState( false );
 #endif
 
  if( Uintah::Parallel::getMPIRank() == 0 ) {
