@@ -493,8 +493,13 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   short_cmd = command.replace(susdir+'/','')
   print "Command Line: %s %s" % (short_cmd, susinput)
   rc = system("%s %s > sus.log.txt 2>&1" % (command, susinput))
-
-
+  
+  # was an exception thrown
+  exception = system("grep -q exception sus.log.txt");
+  if exception == 0:
+    print "\t*** An exception was thrown ***";
+    rc = -9
+    
   # determine path of replace_msg in 2 places to not have 2 different msgs.
   replace_msg = "\tTo replace the goldStandards run:\n\t "
 
