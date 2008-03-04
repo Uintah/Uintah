@@ -2,12 +2,11 @@
 // File:          framework_ComponentID_Impl.cxx
 // Symbol:        framework.ComponentID-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for framework.ComponentID
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "framework_ComponentID_Impl.hxx"
 
@@ -26,9 +25,21 @@
 #ifndef included_sidl_RuntimeException_hxx
 #include "sidl_RuntimeException.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(framework.ComponentID._includes)
 // Insert-Code-Here {framework.ComponentID._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(framework.ComponentID._includes)
+
+// special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+framework::ComponentID_impl::ComponentID_impl() : StubBase(reinterpret_cast< 
+  void*>(::framework::ComponentID::_wrapObj(reinterpret_cast< void*>(this))),
+  false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(framework.ComponentID._ctor2)
+  // insert code here (ctor2)
+  // DO-NOT-DELETE splicer.end(framework.ComponentID._ctor2)
+}
 
 // user defined constructor
 void framework::ComponentID_impl::_ctor() {
@@ -63,10 +74,10 @@ void framework::ComponentID_impl::_load() {
  */
 ::std::string
 framework::ComponentID_impl::getInstanceName_impl () 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-)
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+
 {
   // DO-NOT-DELETE splicer.begin(framework.ComponentID.getInstanceName)
   // Insert-Code-Here {framework.ComponentID.getInstanceName} (getInstanceName method)
@@ -80,10 +91,10 @@ throw (
  */
 ::std::string
 framework::ComponentID_impl::getSerialization_impl () 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-)
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+
 {
   // DO-NOT-DELETE splicer.begin(framework.ComponentID.getSerialization)
   // Insert-Code-Here {framework.ComponentID.getSerialization} (getSerialization method)

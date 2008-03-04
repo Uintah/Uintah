@@ -1,39 +1,12 @@
-// For more information, please see: http://software.sci.utah.edu
-//
-// The MIT License
-//
-// Copyright (c) 2004 Scientific Computing and Imaging Institute,
-// University of Utah.
-//
-// License for the specific language governing rights and limitations under
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the "Software"),
-// to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-
 // 
 // File:          framework_Services_Impl.cxx
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "framework_Services_Impl.hxx"
 
@@ -64,6 +37,9 @@
 #ifndef included_sidl_RuntimeException_hxx
 #include "sidl_RuntimeException.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(framework.Services._includes)
 #include <Framework/CCA/CCAException.h>
 #include <Core/Thread/Guard.h>
@@ -73,6 +49,15 @@
 
 #include <iostream>
 // DO-NOT-DELETE splicer.end(framework.Services._includes)
+
+// special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+framework::Services_impl::Services_impl() : StubBase(reinterpret_cast< void*>(
+  ::framework::Services::_wrapObj(reinterpret_cast< void*>(this))),false) , 
+  _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(framework.Services._ctor2)
+  // insert code here (ctor2)
+  // DO-NOT-DELETE splicer.end(framework.Services._ctor2)
+}
 
 // user defined constructor
 void framework::Services_impl::_ctor() {
@@ -104,7 +89,7 @@ void framework::Services_impl::_load() {
  * Method:  getData[]
  */
 void*
-framework::Services_impl::getData_impl ()
+framework::Services_impl::getData_impl () 
 
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.getData)
@@ -130,22 +115,22 @@ framework::Services_impl::getData_impl ()
  * break the connection until after the component calls releasePort.
  * </p>
  * <p>The framework may go through some machinations to obtain
- *    the port, possibly involving an interactive user or network
- *    queries, before giving up and throwing an exception.
+ * the port, possibly involving an interactive user or network
+ * queries, before giving up and throwing an exception.
  * </p>
  * 
  * @param portName The previously registered or provide port which
- *         the component now wants to use.
+ * the component now wants to use.
  * @exception CCAException with the following types: NotConnected, PortNotDefined,
- *                NetworkError, OutOfMemory.
+ * NetworkError, OutOfMemory.
  */
-UCXX ::gov::cca::Port
+::gov::cca::Port
 framework::Services_impl::getPort_impl (
   /* in */const ::std::string& portName ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.getPort)
   Guard g(lockServices);
 
@@ -177,7 +162,7 @@ throw (
   pr->incrementUseCount();
   BabelPortInstance *pi = dynamic_cast<BabelPortInstance*>(pr->getPeer());
   return pi->getPort();
-// DO-NOT-DELETE splicer.end(framework.Services.getPort)
+  // DO-NOT-DELETE splicer.end(framework.Services.getPort)
 }
 
 /**
@@ -188,20 +173,20 @@ throw (
  * There is an contract that the
  * port will remain valid per the description of getPort.
  * @return The named port, if it exists and is connected or self-provided,
- *            or NULL if it is registered and is not yet connected. Does not
- *            return if the Port is neither registered nor provided, but rather
- *            throws an exception.
+ * or NULL if it is registered and is not yet connected. Does not
+ * return if the Port is neither registered nor provided, but rather
+ * throws an exception.
  * @param portName registered or provided port that
- *           the component now wants to use.
+ * the component now wants to use.
  * @exception CCAException with the following types: PortNotDefined, OutOfMemory.
  */
-UCXX ::gov::cca::Port
+::gov::cca::Port
 framework::Services_impl::getPortNonblocking_impl (
   /* in */const ::std::string& portName ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.getPortNonblocking)
   lockPorts->lock();
   std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
@@ -245,10 +230,10 @@ throw (
 void
 framework::Services_impl::releasePort_impl (
   /* in */const ::std::string& portName ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.releasePort)
   Guard g(lockServices);
 
@@ -277,12 +262,12 @@ throw (
  * Creates a TypeMap, potentially to be used in subsequent
  * calls to describe a Port.  Initially, this map is empty.
  */
-UCXX ::gov::cca::TypeMap
+::gov::cca::TypeMap
 framework::Services_impl::createTypeMap_impl () 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-)
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+
 {
   // DO-NOT-DELETE splicer.begin(framework.Services.createTypeMap)
   UCXX ::framework::TypeMap tm = UCXX ::framework::TypeMap::_create();
@@ -307,7 +292,7 @@ throw (
  * associated with this port.
  * In these properties, all frameworks recognize at least the
  * following keys and values in implementing registerUsesPort:
- * <pre xml:space="preserve">
+ * <pre>
  * key:              standard values (in string form)     default
  * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
  * "MIN_CONNECTIONS" any integer > 0.                        0
@@ -320,18 +305,18 @@ throw (
  * e.g. it does not implement multiple uses ports.
  * The caller of registerUsesPort is not obligated to define
  * these properties. If left undefined, the default listed above is
- *       assumed.
+ * assumed.
  * @exception CCAException with the following types: PortAlreadyDefined, OutOfMemory.
  */
 void
 framework::Services_impl::registerUsesPort_impl (
   /* in */const ::std::string& portName,
   /* in */const ::std::string& type,
-  /* in */UCXX ::gov::cca::TypeMap properties ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in */::gov::cca::TypeMap& properties ) 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.registerUsesPort)
   Guard g(lockPorts);
 
@@ -364,10 +349,10 @@ throw (
 void
 framework::Services_impl::unregisterUsesPort_impl (
   /* in */const ::std::string& portName ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.unregisterUsesPort)
   Guard g(lockPorts);
 
@@ -399,8 +384,8 @@ throw (
  * This Port is now available for the framework to connect
  * to other components.
  * @param inPort An abstract interface (tagged with CCA-ness
- *      by inheriting from gov.cca.Port) the framework will
- *      make available to other components.
+ * by inheriting from gov.cca.Port) the framework will
+ * make available to other components.
  * 
  * @param portName string uniquely describing this port.  This string
  * must be unique for this component, over both uses and provides ports.
@@ -416,7 +401,7 @@ throw (
  * associated with this port.
  * In these properties, all frameworks recognize at least the
  * following keys and values in implementing registerUsesPort:
- * <pre xml:space="preserve">
+ * <pre>
  * key:              standard values (in string form)     default
  * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
  * "MIN_CONNECTIONS" any integer > 0.                        0
@@ -434,14 +419,14 @@ throw (
  */
 void
 framework::Services_impl::addProvidesPort_impl (
-  /* in */UCXX ::gov::cca::Port inPort,
+  /* in */::gov::cca::Port& inPort,
   /* in */const ::std::string& portName,
   /* in */const ::std::string& type,
-  /* in */UCXX ::gov::cca::TypeMap properties ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in */::gov::cca::TypeMap& properties ) 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.addProvidesPort)
   lockPorts->lock();
   std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
@@ -473,7 +458,7 @@ throw (
  * properties (i.e. from addProvidesPort/registerUsesPort) that it
  * will honor.
  */
-UCXX ::gov::cca::TypeMap
+::gov::cca::TypeMap
 framework::Services_impl::getPortProperties_impl (
   /* in */const ::std::string& name ) 
 {
@@ -505,10 +490,10 @@ framework::Services_impl::getPortProperties_impl (
 void
 framework::Services_impl::removeProvidesPort_impl (
   /* in */const ::std::string& portName ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.removeProvidesPort)
   lockPorts->lock();
   std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
@@ -530,7 +515,7 @@ throw (
  * Get a reference to the component to which this
  * Services object belongs.
  */
-UCXX ::gov::cca::ComponentID
+::gov::cca::ComponentID
 framework::Services_impl::getComponentID_impl () 
 
 {
@@ -546,7 +531,7 @@ framework::Services_impl::getComponentID_impl ()
 }
 
 /**
- * Obtain a callback for component destruction.
+ *  Obtain a callback for component destruction.
  * @param callback an object that implements the ComponentRelease
  * interface that will be called when the component is to be destroyed.
  * 
@@ -558,11 +543,11 @@ framework::Services_impl::getComponentID_impl ()
  */
 void
 framework::Services_impl::registerForRelease_impl (
-  /* in */UCXX ::gov::cca::ComponentRelease callback ) 
-throw ( 
-  UCXX ::gov::cca::CCAException, 
-  UCXX ::sidl::RuntimeException
-){
+  /* in */::gov::cca::ComponentRelease& callback ) 
+// throws:
+//     ::gov::cca::CCAException
+//     ::sidl::RuntimeException
+{
   // DO-NOT-DELETE splicer.begin(framework.Services.registerForRelease)
   // Insert-Code-Here {framework.Services.registerForRelease} (registerForRelease method)
   // DO-NOT-DELETE splicer.end(framework.Services.registerForRelease)

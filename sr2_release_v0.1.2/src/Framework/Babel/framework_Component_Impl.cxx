@@ -2,12 +2,11 @@
 // File:          framework_Component_Impl.cxx
 // Symbol:        framework.Component-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for framework.Component
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "framework_Component_Impl.hxx"
 
@@ -23,9 +22,21 @@
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(framework.Component._includes)
 // Insert-Code-Here {framework.Component._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(framework.Component._includes)
+
+// special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+framework::Component_impl::Component_impl() : StubBase(reinterpret_cast< void*>(
+  ::framework::Component::_wrapObj(reinterpret_cast< void*>(this))),false) , 
+  _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(framework.Component._ctor2)
+  // insert code here (ctor2)
+  // DO-NOT-DELETE splicer.end(framework.Component._ctor2)
+}
 
 // user defined constructor
 void framework::Component_impl::_ctor() {
@@ -52,7 +63,7 @@ void framework::Component_impl::_load() {
 
 // user defined non-static methods:
 /**
- * Starts up a component presence in the calling framework.
+ *  Starts up a component presence in the calling framework.
  * @param Svc the component instance's handle on the framework world.
  * Contracts concerning Svc and setServices:
  * 
@@ -70,7 +81,7 @@ void framework::Component_impl::_load() {
  */
 void
 framework::Component_impl::setServices_impl (
-  /* in */UCXX ::gov::cca::Services services ) 
+  /* in */::gov::cca::Services& services ) 
 {
   // DO-NOT-DELETE splicer.begin(framework.Component.setServices)
   // Insert-Code-Here {framework.Component.setServices} (setServices method)

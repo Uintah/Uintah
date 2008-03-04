@@ -1,35 +1,8 @@
-//
-// For more information, please see: http://software.sci.utah.edu
-//
-// The MIT License
-//
-// Copyright (c) 2005 Scientific Computing and Imaging Institute,
-// University of Utah.
-//
-// License for the specific language governing rights and limitations under
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the "Software"),
-// to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-// DEALINGS IN THE SOFTWARE.
-//
-
+// 
 // File:          hello_Com_Impl.hxx
 // Symbol:        hello.Com-v1.0
 // Symbol Type:   class
-// Babel Version: 0.99.2
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for hello.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -65,9 +38,9 @@
 #endif
 
 
-// DO-NOT-DELETE splicer.begin(hello.Com._includes)
-// Insert-Code-Here {hello.Com._includes} (includes or arbitrary code)
-// DO-NOT-DELETE splicer.end(hello.Com._includes)
+// DO-NOT-DELETE splicer.begin(hello.Com._hincludes)
+// insert code here (includes or arbitrary code)
+// DO-NOT-DELETE splicer.end(hello.Com._hincludes)
 
 namespace hello { 
 
@@ -84,20 +57,23 @@ namespace hello {
   // descendant Impl classes
   protected:
 
+    bool _wrapped;
+
     // DO-NOT-DELETE splicer.begin(hello.Com._implementation)
     ::gov::cca::Services svc;
 
     // DO-NOT-DELETE splicer.end(hello.Com._implementation)
 
-    bool _wrapped;
   public:
     // default constructor, used for data wrapping(required)
     Com_impl();
     // sidl constructor (required)
     // Note: alternate Skel constructor doesn't call addref()
     // (fixes bug #275)
-    Com_impl( struct hello_Com__object * s ) : StubBase(s,true),
-      _wrapped(false) { _ctor(); }
+      Com_impl( struct hello_Com__object * ior ) : StubBase(ior,true), 
+    ::gov::cca::Component((ior==NULL) ? NULL : &((*ior).d_gov_cca_component)) , 
+      _wrapped(false) {_ctor();}
+
 
     // user defined construction
     void _ctor();
@@ -136,7 +112,7 @@ namespace hello {
      */
     void
     setServices_impl (
-      /* in */::gov::cca::Services services
+      /* in */::gov::cca::Services& services
     )
     ;
 
@@ -144,8 +120,8 @@ namespace hello {
 
 } // end namespace hello
 
-// DO-NOT-DELETE splicer.begin(hello.Com._misc)
-// Insert-Code-Here {hello.Com._misc} (miscellaneous things)
-// DO-NOT-DELETE splicer.end(hello.Com._misc)
+// DO-NOT-DELETE splicer.begin(hello.Com._hmisc)
+// insert code here (miscellaneous things)
+// DO-NOT-DELETE splicer.end(hello.Com._hmisc)
 
 #endif
