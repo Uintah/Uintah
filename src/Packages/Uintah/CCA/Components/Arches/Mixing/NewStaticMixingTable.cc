@@ -451,7 +451,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     else if(vars_names[ii]== "HS2")	hs2_index 	 = ii;
     else if(vars_names[ii]== "H2S2")	h2s2_index	 = ii;
 
-    //else if(vars_names[ii]== "rate_CO2") co2rate_index   = ii;
+    else if(vars_names[ii]== "rate_CO2") co2rate_index   = ii;
     else if(vars_names[ii]== "rate_SO2") so2rate_index   = ii;
 
     else if(vars_names[ii]== "CO")

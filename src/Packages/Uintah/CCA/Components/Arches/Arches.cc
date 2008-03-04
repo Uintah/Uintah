@@ -365,7 +365,7 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //========= MOM debugging ===========
-  bool debug_mom = true;
+  bool debug_mom = false;
   if (debug_mom){
     
     sched_blobInit(level, sched);
