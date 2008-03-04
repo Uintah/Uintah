@@ -44,10 +44,8 @@ function usage() {
   echo -e "  --debug, -d                Build SCIJump in debug mode."
   echo -e "  --no-gui                   Build SCIJump without a gui."
   echo -e "  --mpi[=DIR]                Build SCIJump with MPI (optional path)."
-  echo -e "  --enable-fortran77[=DIR]   Babel configure option: enables Fortran77 bindings."
-  echo -e "  --enable-fortran90[=DIR]   Babel configure option: enables Fortran90 bindings."
   echo -e "\nThis script will configure and build SCIJump based on the options provided\nto this script.\nSee (code.sci.utah.edu/SCIJump/index.php/Main_Page) for more configuration options.\n"
-  echo -e "This script will attempt to detect Babel (www.llnl.gov/CASC/components/babel.html)\nlibraries on your system.\nIf not found, version 1.0.8 will be downloaded and built.\n"
+  echo -e "This script will attempt to detect Babel (www.llnl.gov/CASC/components/babel.html)\nlibraries on your system.\nIf not found, version 1.2.0 will be downloaded and built.\n"
   echo -e "This script will also attempt to detect wxWidgets (www.wxwidgets.org) 2.6.x\non your system if configuring with a GUI.\nIf not found and if configuring with a GUI,\nversion 2.6.4 will be downloaded and built.\n"
   echo -e "To build SCIJump with parallel component support, use the --mpi option.\nIf an MPI implementation is not installed\nin standard system directories, provide the path.\nLAM-MPI and MPICH are supported.\n"
   echo -e "SCIRun Thirdparty libraries (required) are available for download from\nwww.sci.utah.edu."
@@ -96,11 +94,6 @@ else
 fi
 
 mpidir=
-## Explicitly setting babel configure flags for fortran is a workaround
-## for Babel issue 457.  A fix is expected in the Babel 1.0.4 release.
-## TODO: setting minimum Babel version to 1.0.8 - is this still needed?
-babel_fortan77_flags=
-babel_fortan90_flags=
 while [ "$1" != "" ] ; do
   case $1 in
     -h | --help )
@@ -119,12 +112,6 @@ while [ "$1" != "" ] ; do
       export MPI_BUILD=1
       mpidir=${1#--mpi=}
       ;;
-    --enable-fortran77 )
-      babel_fortran77_flags=$1
-      ;;
-    --enable-fortran90 )
-      babel_fortran90_flags=$1
-      ;;
     * )
       if [ -d $1 ] ; then
         export THIRDPARTY_INSTALL_DIR=$1
@@ -135,19 +122,6 @@ while [ "$1" != "" ] ; do
   esac
   shift
 done
-
-babel_fortran_flags=
-if [ -z "$babel_fortan77_flags" ] ; then
-  babel_fortran_flags="$babel_fortran_flags --disable-fortran77"
-else
-  babel_fortran_flags="$babel_fortran_flags $babel_fortran77_flags"
-fi
-
-if [ -z "$babel_fortan90_flags" ] ; then
-  babel_fortran_flags="$babel_fortran_flags --disable-fortran90"
-else
-  babel_fortran_flags="$babel_fortran_flags $babel_fortran90_flags"
-fi
 
 if [ -z "$THIRDPARTY_INSTALL_DIR" ] ; then
   echo -e "***ERROR: missing path to SCIRun Thirdparty libraries.\n"
@@ -161,19 +135,21 @@ export BUILD_DIR="build"
 ## could use `hostname -s` to annotate build dirs
 function getbabel() {
   build_dir="$ROOT_DIR/babel/local"
-  babel_version="babel-1.0.8"
+  babel_version="babel-1.2.0"
   babel_archive="$babel_version.tar.gz"
 
   if [ ! -e "$ROOT_DIR/$babel_version" ] ; then
-    echo "***Downloading Babel 1.0.8***"
+    echo "***Downloading Babel 1.2.0***"
     try "$getcommand http://www.llnl.gov/CASC/components/docs/$babel_archive"
     try "tar xzvf $babel_archive"
   fi
   try "mkdir -p $build_dir"
   try "cd $babel_version"
-  ## TODO: Babel python configuration bug fixed in v1.2.0
-  ## Get rid of this once a patched v.1.2.0 is available or RMI patch posted to CCA wiki.
-  try "./configure --prefix=$build_dir $babel_fortran_flags --disable-python"
+
+  ## get rmicast.txt patch and apply
+
+  ## Get rid of this once a patched version >= 1.2.0 is available.
+  try "./configure --prefix=$build_dir --disable-python"
   try "make"
   try "make install"
   try "cd $ROOT_DIR"
