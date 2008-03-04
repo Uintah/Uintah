@@ -554,7 +554,6 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   
   if(d_restarting){
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::restart); 
-    grid->assignBCS(d_grid_ps,d_lb);
     grid->performConsistencyCheck();
     d_sim->restartInitialize();
     if (d_regridder && d_regridder->isAdaptive()) {
