@@ -4339,8 +4339,8 @@ if test "$sci_required_babel" = "yes" ; then
   fi
 
   if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-    ## check for compatible version (0.99.0 or greater)
-    SCI_CHECK_VERSION($BABEL_BIN,--version,0.99.0,,echo configure: error: wrong Babel version.; exit)
+    ## check for compatible version (1.2.0 or greater)
+    SCI_CHECK_VERSION($BABEL_BIN,--version,1.2.0,,echo configure: error: wrong Babel version.; exit)
     DEF_BABEL="#define HAVE_BABEL 1"
     HAVE_BABEL="yes"
   fi
@@ -4575,7 +4575,7 @@ if test "$with_opengl"; then
   _sci_lib="$_sci_lib $with_opengl/lib"
   _sci_inc="$_sci_inc $with_opengl/include"
 else
-  _sci_lib_t="usr/X11R6"
+  _sci_lib_t="/usr/X11R6"
   BASE_LIB_PATH(_sci_lib_t,$_sci_lib_t)
   _sci_lib="$_sci_lib $_sci_lib_t"
   _sci_inc="$_sci_inc /usr/X11R6/include"

@@ -54411,18 +54411,18 @@ fi
   fi
 
   if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-    ## check for compatible version (0.99.0 or greater)
+    ## check for compatible version (1.2.0 or greater)
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
     _SCI_VER_1_="0"
-    _SCI_VER_2_="0.99.0"
+    _SCI_VER_2_="1.2.0"
     _CUR_1_=""
     _CUR_2_=""
 
-    { echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.99.0" >&5
-echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.99.0... $ECHO_C" >&6; }
+    { echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 1.2.0" >&5
+echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 1.2.0... $ECHO_C" >&6; }
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -57169,7 +57169,7 @@ if test "$with_opengl"; then
   _sci_lib="$_sci_lib $with_opengl/lib"
   _sci_inc="$_sci_inc $with_opengl/include"
 else
-  _sci_lib_t="usr/X11R6"
+  _sci_lib_t="/usr/X11R6"
 
 ##
 ## BASE_LIB_PATH:
