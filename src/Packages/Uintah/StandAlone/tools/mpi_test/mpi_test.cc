@@ -85,7 +85,7 @@ main( int argc, char** argv )
 }
 
 int
-testme(int (*testfunc)(void),char* name)
+testme(int (*testfunc)(void),const char* name)
 {
   if( rank == 0 ) {
     cout << "Testing '" << name << "': ";
