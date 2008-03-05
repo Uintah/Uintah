@@ -67,7 +67,7 @@ while ($line=<tstFile>){
 close(tstFile);
 
 
-open(statsFile,">$ARGV[0]".".stat");
+open(statsFile,">out.stat");
 # This loop will make sure our synchronization file is created 
 for ($i=0;$i<$num_of_tests;$i++) {
   if ($compUtil_cmd[$i]){
@@ -197,7 +197,7 @@ for ($i=0;$i<$num_of_tests;$i++){
     if($compUtil_cmd[$i]){
       print "\n\nLaunching analyze_results.pl $compFilename\n\n";
       @args = ("analyze_results.pl","$compFilename");
-      system("@args")==0 or die("ERROR(analyze.pl):@args failed: $?");
+      system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
     }
     $fin = time()-$now;
     print  statsFile "Running Time : ".$fin."\n";

@@ -44,19 +44,18 @@ $ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
    my $fw_path = $config_files_path."/".$component;  # path to framework config files
   
    # read whatToRun.xml file into data array
-   my $data = $simple->XMLin($fw_path."/whatToRun.xml");
+   my $whatToRun = $simple->XMLin($fw_path."/whatToRun.xml");
    
    # add the comparison utilities path to PATH
-   my $p   = $data->{compareUtil_path}[0];
+   my $p   = $whatToRun->{compareUtil_path}[0];
    my $orgPath = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
-
  
    #__________________________________
    # loop over all tests
    #   - make test directories
    #   - copy config_files_path_pathig & input files
-   my @tests = @{$data->{test}};
+   my @tests = @{$whatToRun->{test}};
    my $i=0;
    for($i = 0; $i<=$#tests; $i++){
      my $test     = $tests[$i];
@@ -70,7 +69,7 @@ $ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
      chdir($testName);
      
      #print Dumper($test) . "\n";
-     print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile \n";
+     print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile\n";
      
      # bulletproofing
      # do these files exist
@@ -88,14 +87,18 @@ $ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
      # copy files to the testing directory
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
-     system("cp $upsFile $tstFile $testing_path");
+     system("cp -f $upsFile $tstFile $testing_path");
+      
+     my $tst = $simple->XMLin($fw_path."/dx.tst");
+     my $gnuplotScript = $tst->{gnuplotFile}->[0];
+     system("cp -f $gnuplotScript $testing_path");
       
      print "$testing_path \n";
      
      chdir($testing_path);
      
      #__________________________________
-     # Remove any section of the tst configuration file that is commented out
+     # Remove any commented out section of the tst configuration file
      # WARNING this doesn't work for single lines that are commented out
      print "cleaning out comments from $tstFile\n";
      system("/bin/rm -f $tstFile.clean");
@@ -106,7 +109,7 @@ $ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
      # run the tests
      print "\n\n Launching run_tests.pl $testing_path/$tstFile.clean\n\n";
      my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile.clean");
-     system("@args")==0  or die("ERROR(driver.pl): @args failed");
+     system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n");
 
      system("/bin/rm -f $testing_path/$tstFile.clean");
      

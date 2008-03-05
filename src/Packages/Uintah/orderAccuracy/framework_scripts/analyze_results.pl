@@ -30,11 +30,15 @@ foreach $e (@{$data->{start}->[0]->{Test}}){
   @x = @{$e->{x}};
   
   @uda_files = @{$e->{udaFile}};
+  
+  #__________________________________
+  # bulletproofing
+  system("which $int_command")==0 or die("ERROR(analyze_results.pl): \tThe comparison script/command ($int_command) could not be found\n");
 
+  # main loop
   for ($k = 0 ; $k<=$#uda_files; $k++){   
     ####################
     # This is to take care of the number of tests 
-    ####################
     if (-e ".$output_file.tmp"){
       $tmp_err =  `cat .$output_file.tmp`;   # This file stores the number of tests, so we decrement it every time we run a compare_mms
       chomp($tmp_err);
@@ -42,9 +46,8 @@ foreach $e (@{$data->{start}->[0]->{Test}}){
       
       `echo $tmp_err >.$output_file.tmp`;
     } 
-    ############################
+    #__________________________________
     # Run the comparison tests
-    ############################
 
     print "$int_command -o $uda_files[$k].tmp -uda $uda_files[$k]\n";
     `rm -f $uda_files[$k].tmp`;    # Deleting the tmp file (if it already exists)
@@ -53,12 +56,12 @@ foreach $e (@{$data->{start}->[0]->{Test}}){
     system("@args")==0 or die("ERROR(analyze_results.pl): @args failed: $?");
     
     $tmp = `cat $uda_files[$k].tmp`; # This is the output from the comparison utility
-    chomp($tmp);   # Removing the carriage return from the end
+    chomp($tmp);                     # Removing the carriage return from the end
     
     my $prev_line = "";
     if (-e "$output_file.dat"){
       $prev_line = `tail -q -n1 $output_file.dat`; # This reads the last line from the global err file
-      chomp($prev_line);      # Removing the carriage return 
+      chomp($prev_line);              # Removing the carriage return 
     }
 
     if ($prev_line != ""){  # Checking if the prev_line is empty (if the file is created for the first time this can happen)
