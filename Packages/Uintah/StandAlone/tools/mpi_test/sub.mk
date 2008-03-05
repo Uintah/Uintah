@@ -22,7 +22,9 @@ PROGRAM := $(SRCDIR)/mpi_test
 SRCS    := $(SRCDIR)/mpi_test.cc
 
 LIBS    := $(MPI_LIBRARY) $(M_LIBRARY) 
-PSELIBS := Core/Util
+PSELIBS := \
+	Core/Util   \
+	Core/Thread
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
