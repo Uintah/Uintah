@@ -208,6 +208,9 @@ public:
       inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
         d_extraScalars = extraScalars;
       }
+	  inline void setCarbonBalanceES(bool carbon_balance_es){
+		d_carbon_balance_es = carbon_balance_es;
+	  }
 
 protected :
 
