@@ -8,14 +8,19 @@ ifeq ($(LARGESOS),yes)
 else
 
   PSELIBS := \
+        Core/Containers   \
+        Core/Exceptions   \
         Core/Geometry     \
         Core/Math         \
+        Core/Util         \
         Packages/Uintah/Core/DataArchive \
+        Packages/Uintah/Core/Disclosure  \
+        Packages/Uintah/Core/Exceptions  \
         Packages/Uintah/Core/Grid        \
         Packages/Uintah/Core/Labels      \
-        Packages/Uintah/Core/Exceptions  \
-        Packages/Uintah/CCA/Components/DataArchiver         \
         Packages/Uintah/Core/ProblemSpec                    \
+        Packages/Uintah/Core/Util                           \
+        Packages/Uintah/CCA/Components/DataArchiver         \
         Packages/Uintah/CCA/Components/Schedulers           \
         Packages/Uintah/CCA/Components/ProblemSpecification \
         Packages/Uintah/CCA/Components/PatchCombiner
