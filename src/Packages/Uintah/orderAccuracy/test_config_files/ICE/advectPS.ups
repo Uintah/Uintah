@@ -13,14 +13,14 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.1        </maxTime>
+       <maxTime>            0.1         </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
-       <!--<delt_max>           1e-6     </delt_max> -->
+       <delt_max>           1e-4        </delt_max>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-20     </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <!--<max_iterations>     1000         </max_iterations> -->
+       <max_Timesteps>      21          </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -51,7 +51,7 @@
               <upper>        [1.0,  0.05, 0.05]    </upper>
               <extraCells>   [0,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
-              <resolution>    [400,1,1]          </resolution>
+              <resolution>    [100,1,1]          </resolution>
            </Box>
            <periodic>    [1,0,0]    </periodic>
        </Level>
@@ -61,7 +61,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>r10_v100.uda</filebase>
-      <outputTimestepInterval>10</outputTimestepInterval>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>

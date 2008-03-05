@@ -3,17 +3,18 @@
 
 <upsFile>advectPS.ups</upsFile>
 <Study>Res.Study</Study>
+<gnuplotFile>plotScript.gp</gnuplotFile>
+
 
 <Test>
-    <Title>75</Title>
+    <Title>100</Title>
     <Interactive>sus -ice </Interactive>
     <Study>Res.Study</Study>
-    <compCommand>compare_PS.m -type triangular -slope 1 -vel 10 -min -0.5 -max 0.5 -cells \'-istart 0 0 0 -iend 74 0 0\'  -L</compCommand>
-    <x>75</x>
+    <compCommand>compare_scalar</compCommand>
+    <x>100</x>
     <replace_lines>
-      <resolution>   [75,1,1]          </resolution>
+      <resolution>   [100,1,1]          </resolution>
     </replace_lines>
-
 </Test>
 
 <!--
