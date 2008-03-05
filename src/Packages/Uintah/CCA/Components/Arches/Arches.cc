@@ -303,8 +303,9 @@ Arches::problemSetup(const ProblemSpecP& params,
 					   d_calcScalar,
 					   d_calcReactingScalar,
 					   d_calcEnthalpy,
-                                           d_calcVariance,
+                       d_calcVariance,
 					   d_myworld);
+
   }
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
@@ -313,6 +314,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
+  d_nlSolver->setCarbonBalanceES(d_carbon_balance_es);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
   d_nlSolver->setCalcExtraScalars(d_calcExtraScalars);
   if (d_calcExtraScalars) d_nlSolver->setExtraScalars(&d_extraScalars);
