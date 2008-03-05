@@ -1,21 +1,23 @@
 <config>
-<compareUtil_path>junk</compareUtil_path>
+<compareUtil_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms</compareUtil_path>
 <test>
   <name>advect_X_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dx.tst</tst>
-  <compareUtility>compare_PS.m</compareUtility>
+  <compareUtility>compareScalar</compareUtility>
 </test>
+<!--
 <test>
   <name>advect_Y_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dx.tst</tst>
-  <compareUtility>compare_PS.m</compareUtility>
+  <compareUtility>compareScalar</compareUtility>
 </test>
 <test>
   <name>advect_Z_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dx.tst</tst>
-  <compareUtility>compare_PS.m</compareUtility>
+  <compareUtility>compareScalar</compareUtility>
 </test>
+-->
 </config>
