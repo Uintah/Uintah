@@ -71,13 +71,16 @@ main( int argc, char** argv )
     cout << "Testing mpi communication on " << procs << " processors." << endl;
   }
  
+  // Run Point2PointSync_Test first, as it will hopefully tell us the
+  // exact processor number (rank) if there is a problem...
+  testme( point2pointsync_test,  "Point To Point Sync" );
+
   testme( allreduce_test,        "MPI_Allreduce" );
   testme( reduce_test,           "MPI_Reduce" );
   testme( broadcast_test,        "MPI_Bcast" );
   testme( allgather_test,        "MPI_Allgather" );
   testme( gather_test,           "MPI_Gather" );
   testme( point2pointasync_test, "Point To Point Async" );
-  testme( point2pointsync_test,  "Point To Point Sync" );
   testme( fileSystem_test,       "File System" );
   
   MPI_Finalize();
