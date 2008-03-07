@@ -337,7 +337,7 @@ testFilesystem( const string & directoryPath,
   if( fp == NULL ) {
     error_stream << "ERROR: testFilesystem() failed to create a temp file (" << fileName << ") in " 
                  << directoryPath << "\n";
-    error_stream << "       errno is %d" << errno << "\n";
+    error_stream << "       errno is " << errno << "\n";
     return false;
   }
 
