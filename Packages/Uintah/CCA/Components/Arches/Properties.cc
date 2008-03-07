@@ -331,6 +331,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
         tsk->computes(d_lab->d_absorpINLabel);
       tsk->computes(d_lab->d_sootFVINLabel);
     }
+
     if (d_carbon_balance_es){	
     	tsk->modifies(d_lab->d_co2RateLabel);
 
