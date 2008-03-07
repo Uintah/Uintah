@@ -43,7 +43,7 @@ using namespace Uintah;
 // Finds out if two doubles are equal within the given tolerance
 
 bool
-is_equal(double num1, double num2, double tol = 10 * DBL_EPSILON)
+is_equal(double num1, double num2, double tol = 100 * DBL_EPSILON)
 {
   return ( (num1-num2) < tol)?true:false;
 }
@@ -52,7 +52,7 @@ is_equal(double num1, double num2, double tol = 10 * DBL_EPSILON)
 // Finds out if two SCIRun::Vectors are equal within the given tolerance
 
 bool
-is_equal(Vector num1, Vector num2, double tol = 10 * DBL_EPSILON)
+is_equal(Vector num1, Vector num2, double tol = 100 * DBL_EPSILON)
 {
   return ( ( is_equal(num1.x(), num2.x(), tol) ) && 
            ( is_equal(num1.y(), num2.y(), tol) ) && 
@@ -73,7 +73,7 @@ iround(double num)
 // is_int(double) - checks if the double can qualify as an integer
 
 int
-is_int(double a, double tol = 10*DBL_EPSILON)
+is_int(double a, double tol = 100*DBL_EPSILON)
 {
   long b;
   b = iround(a);
@@ -155,7 +155,7 @@ main( int argc, char *argv[] )
   DataArchive* da1 = scinew DataArchive(udaFileName);
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(16);
-  
+
   vector<int> index;
   vector<double> times;
   da1->queryTimesteps(index, times);
@@ -200,6 +200,7 @@ main( int argc, char *argv[] )
         if (!(is_int(offset.x()) && is_int(offset.y()) && is_int(offset.z()) ) ){
           cout<<"ERROR:Compare_scalar: The quantity (final timestep * velocity/dx) must be an integer:"
               << offset << "\n";
+          cout << "final timestep " << t_final << " velocity " << initial_vel[c] << " dx " << dx << endl;
           exit(1);
         }
         
