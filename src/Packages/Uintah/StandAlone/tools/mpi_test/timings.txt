@@ -18,3 +18,13 @@ Testing 'Point To Point Sync': Passed (Test took 0.284965 seconds.)
 Testing 'File System': Passed (Test took 1.35392 seconds.)
 
 =============================================================================
+= Inferno
+= 33 nodes (66 procs) - mpirun using 66 procs
+
+Testing 'Point To Point ASync': Passed (Test took 0.00795 seconds.)
+Testing 'MPI_Allreduce': Passed (Test took 0.000419 seconds.)
+Testing 'MPI_Reduce': Passed (Test took 0.255329 seconds.)
+Testing 'MPI_Bcast': Passed (Test took 1.14332 seconds.)
+Testing 'MPI_Allgather': Passed (Test took 0.000595 seconds.)
+Testing 'MPI_Gather': Passed (Test took 0.208994 seconds.)
+Testing 'Point To Point Sync': Passed (Test took 0.026473 seconds.)
