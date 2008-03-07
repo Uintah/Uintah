@@ -962,8 +962,14 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
 void BC_bulletproofing(const ProblemSpecP& prob_spec,
                        SimulationStateP& sharedState )
 {
+  Vector periodic;
+  ProblemSpecP grid_ps  = prob_spec->findBlock("Grid");
+  ProblemSpecP level_ps = grid_ps->findBlock("Level");
+  level_ps->getWithDefault("periodic", periodic, Vector(0,0,0));
   
-  ProblemSpecP grid_ps= prob_spec->findBlock("Grid");
+  Vector tagFace_minus(0,0,0);
+  Vector tagFace_plus(0,0,0);
+                               
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
   int numAllMatls = sharedState->getNumMatls();
   
@@ -974,6 +980,15 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     map<string,string> face;
     face_ps->getAttributes(face);
     
+    // tag each face
+    if(face["side"] == "x-") tagFace_minus.x(1);
+    if(face["side"] == "y-") tagFace_minus.y(1);
+    if(face["side"] == "z-") tagFace_minus.z(1);
+            
+    if(face["side"] == "x+") tagFace_plus.x(1);
+    if(face["side"] == "y+") tagFace_plus.y(1);
+    if(face["side"] == "z+") tagFace_plus.z(1);
+        
     // loop over all BCTypes  
     for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
                      bc_iter = bc_iter->findNextBlock("BCType")){
@@ -988,6 +1003,44 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
              << "setting the boundary conditions twice on each face.  Set BCType id = '0' \n" 
              << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+    }
+  } //face loop
+  
+  //__________________________________
+  // BULLET PROOFING
+  // Has each face has been touched
+  if (periodic.length() == 0){
+    if( (tagFace_minus != Vector(1,1,1)) ||
+        (tagFace_plus  != Vector(1,1,1)) ){
+      ostringstream warn;
+      warn <<"\n__________________________________\n "
+           << "ERROR: the boundary conditions on one of the faces of the computational domain has not been set \n"<<endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
+    }
+  }
+  
+  // Periodic BC and missing BC's
+  if(periodic.length() != 0){
+    for(int dir = 0; dir<3; dir++){
+      if( periodic[dir]==0 && ( tagFace_minus[dir] == 0 || tagFace_plus[dir] == 0)){
+        ostringstream warn;
+        warn <<"\n__________________________________\n "
+             << "ERROR: You must specify a boundary condition in direction "<< dir << endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
+      }
+    }
+  }
+  
+  // Duplicate periodic BC and normal BCs
+  if(periodic.length() != 0){
+    for(int dir = 0; dir<3; dir++){
+      if( periodic[dir]==1 && ( tagFace_minus[dir] == 1 || tagFace_plus[dir] == 1)){
+        ostringstream warn;
+        warn <<"\n__________________________________\n "
+             << "ERROR: A periodic AND a normal boundary condition have been specifed for \n"
+             << " direction: "<< dir << "  You can only have on or the other"<< endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);   
       }
     }
   }
