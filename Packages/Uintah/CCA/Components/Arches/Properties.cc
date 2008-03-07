@@ -139,18 +139,6 @@ Properties::problemSetup(const ProblemSpecP& params)
   
   d_radiationCalc = false;
 
-  //If this is true, a CO2 rate will be looked up from 
-  // the table.  We assume that extra scalars are being
-  // used to computed the CO2 (ES) balance.
-  // -jeremy
-  //if (d_calcExtraScalars)
-  	//d_carbon_balance_es = d_bc->getCarbonBalanceES(); 
-
-//************* HACK **************
-	if (d_calcExtraScalars)
-			d_carbon_balance_es = true;
-//********* END HACK **************			
-
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
     const ProblemSpecP params_root = params_non_constant->getRootNode();

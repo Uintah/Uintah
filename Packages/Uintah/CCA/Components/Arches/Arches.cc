@@ -213,6 +213,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                               d_calcEnthalpy, d_calcVariance);
 
   d_props->setCalcExtraScalars(d_calcExtraScalars);
+
   if (d_calcExtraScalars) d_props->setExtraScalars(&d_extraScalars);
 
   d_props->problemSetup(db);
@@ -229,7 +230,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (d_calcExtraScalars) d_boundaryCondition->setExtraScalars(&d_extraScalars);
   d_boundaryCondition->problemSetup(db);
 
-  d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();	
+  d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
+  d_props->setCarbonBalanceES(d_carbon_balance_es);	
 
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
