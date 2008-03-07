@@ -30,6 +30,7 @@ my $sus_path   = $xml->{sus_path}[0];
 my $orgPath = $ENV{"PATH"};
 $ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
 
+system("which sus") == 0 ||  die("Cannot find the command sus $@");
 
 #__________________________________
 # loop over each component 
@@ -62,29 +63,24 @@ $ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
      my $testName = $test->{name}[0];
      my $upsFile  = $test->{ups}[0];
      my $tstFile  = $test->{tst}[0];
-     my $compareUtil = $test->{compareUtility}[0];
- 
     
      mkdir($testName) || die "cannot mkdir($testName) $!";
      chdir($testName);
      
-     #print Dumper($test) . "\n";
      print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile\n";
      
      # bulletproofing
      # do these files exist
      if (! -e $fw_path."/".$upsFile || 
-         ! -e $fw_path."/".$tstFile ||
-           -e $fw_path."/".$compareUtil){
+         ! -e $fw_path."/".$tstFile ){
        print "\n \nERROR:setupFrameWork:\n";
        print "The ups file: \n \t $fw_path."/".upsFile \n"; 
        print "or the tst file: \n \t $fw_path."/".$tstFile \n";
-       print "or the comparison utility \n \t $fw_path."/".$compareUtil \n";
        print "doesn't exist.  Now exiting\n";
        exit
      }
      
-     # copy files to the testing directory
+     # copy the config files to the testing directory
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $testing_path");
@@ -97,24 +93,18 @@ $ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
      
      chdir($testing_path);
      
-     #__________________________________
-     # Remove any commented out section of the tst configuration file
-     # WARNING this doesn't work for single lines that are commented out
-     print "cleaning out comments from $tstFile\n";
-     system("/bin/rm -f $tstFile.clean");
-     my $cmd = "sed  /'<!--'/,/'-->'/d < $tstFile > $tstFile.clean \n";
-     system("$cmd");
+     # make a symbolic link to sus
+     my $sus = `which sus`;
+     system("ln -s $sus");
      
      #__________________________________
      # run the tests
-     print "\n\n Launching run_tests.pl $testing_path/$tstFile.clean\n\n";
-     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile.clean");
+     print "\n\n Launching run_tests.pl $testing_path/$tstFile\n\n";
+     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile");
      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n");
-
-     system("/bin/rm -f $testing_path/$tstFile.clean");
      
      chdir("..");
    }
-   system("which sus") == 0 ||  die("Cannot find the command sus $@");
+   chdir("..");
  }
   # END
