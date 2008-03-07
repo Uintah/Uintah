@@ -4,11 +4,16 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 
 using namespace std;
@@ -18,7 +23,7 @@ using namespace Uintah;
 // Interface constructor for CO2RateSrc
 //****************************************************************************
 CO2RateSrc::CO2RateSrc(const ArchesLabel* label, 
-		       const MPMArchesLabel* MAlb,
+		       		   const MPMArchesLabel* MAlb,
                        const VarLabel* d_src_label):
                        ExtraScalarSrc(label, MAlb, d_src_label)
 {
@@ -60,22 +65,25 @@ CO2RateSrc::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void
 CO2RateSrc::sched_addExtraScalarSrc(SchedulerP& sched, 
-                                   const PatchSet* patches,
-				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels)
+                                    const PatchSet* patches,
+				   				    const MaterialSet* matls,
+				   				    const TimeIntegratorLabel* timelabels)
 {
   
   string taskname =  "CO2RateSrc::addExtraScalarSrc" +
       	              timelabels->integrator_step_name+
                       d_scalar_nonlin_src_label->getName();
-  //cout << taskname << endl;
+  
   Task* tsk = scinew Task(taskname, this,
       		    &CO2RateSrc::addExtraScalarSrc,
       		    timelabels);
+
+  //variables needed:
   tsk->modifies(d_scalar_nonlin_src_label);
   tsk->requires(Task::NewDW, d_lab->d_co2RateLabel, 
   		Ghost::None, Arches::ZEROGHOSTCELLS);
 
+  //add the task:
   sched->addTask(tsk, patches, matls);
   
 }
@@ -91,7 +99,6 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 				      const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
-
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -99,6 +106,11 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     CCVariable<double> scalarNonlinSrc;
     new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label,
                           matlIndex, patch);
+
+	//going to estimate volume for all cells.
+	//this will need to be fixed when going to stretched meshes
+	Vector dx = patch->dCell();
+	double vol = dx.x()*dx.y()*dx.z();
 
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
@@ -109,9 +121,12 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 
     for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-          scalarNonlinSrc[currCell] += CO2rate[currCell]*44000;
+    	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+
+	      IntVector currCell(colX, colY, colZ);
+
+          scalarNonlinSrc[currCell] += CO2rate[currCell]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
+
         }
       }
     }
