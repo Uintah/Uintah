@@ -253,6 +253,8 @@ private:
       vector<ExtraScalarSrc*> d_extraScalarSources;
       vector<string> d_tabSrcNames;
       bool d_carbon_balance; 
+	  double d_clipValue;
+	  bool d_noisyClipping;
 
 }; // End class ExtraScalarSolver
 } // End namespace Uintah
