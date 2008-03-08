@@ -97,6 +97,9 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("density_weighted",d_scalar_density_weighted,true);
   db->getWithDefault("useforDensity",d_scalar_useforden,false);
   db->getWithDefault("carbon_balance", d_carbon_balance, false);
+  db->getWithDefault("clip_value", d_clipValue, 100000000000.0);
+  db->getWithDefault("noisy_clipping", d_noisyClipping, false);
+
   //I am anticipating that we might have several source terms that 
   // could be read from the table.  For a specific scalar, one would 
   // have to associate the source term variable from the table to this
@@ -818,7 +821,7 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				    &scalarVars, &constScalarVars,
 				    cellinfo);
 
-/*  double scalar_clipped = 0.0;
+  double scalar_clipped = 0.0;
   double epsilon = 1.0e-15;
   // Get the patch bounds and the variable bounds
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -826,35 +829,31 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-	IntVector currCell(ii,jj,kk);
-	if (scalarVars.scalar[currCell] > 1.0) {
-          if (scalarVars.scalar[currCell] > 1.0 + epsilon) {
-	    scalar_clipped = 1.0;
-	    cout << "scalar got clipped to 1 at " << currCell
-            << " , scalar value was " << scalarVars.scalar[currCell] 
-	    << " , density guess was " 
-	    << constScalarVars.density_guess[currCell] << endl;
+		IntVector currCell(ii,jj,kk);
+		if (scalarVars.scalar[currCell] > d_clipValue) {
+          if (scalarVars.scalar[currCell] > d_clipValue + epsilon) {
+	    	scalar_clipped = 1.0;
+			if (d_noisyClipping){
+	    		cout << "Clipping extra scalar value! " << currCell
+            	<< " , scalar value was " << scalarVars.scalar[currCell]  << endl;
+			}
           }
-	  scalarVars.scalar[currCell] = 1.0;
+	  scalarVars.scalar[currCell] = d_clipValue;
 	}  
 	else if (scalarVars.scalar[currCell] < 0.0) {
           if (scalarVars.scalar[currCell] < - epsilon) {
 	    scalar_clipped = 1.0;
-	    cout << "scalar got clipped to 0 at " << currCell
-            << " , scalar value was " << scalarVars.scalar[currCell]
-	    << " , density guess was " 
-	    << constScalarVars.density_guess[currCell] << endl;
-	    cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
-	    << "in the <ARCHES> section of the input file, "
-	    <<"but it would only help for first time substep if RKSSP is used" << endl;
+		if (d_noisyClipping){
+	    	cout << "scalar got clipped to 0 at " << currCell
+        	<< " , scalar value was " << scalarVars.scalar[currCell] << endl;
+		}
+	    
           }
 	  scalarVars.scalar[currCell] = 0.0;
 	}
       }
     }
   }
-  if (timelabels->recursion)
-    new_dw->put(max_vartype(scalar_clipped), d_lab->d_ScalarClippedLabel);*/
 
 // Outlet bc is done here not to change old scalar
     if ((d_boundaryCondition->getOutletBC())||
