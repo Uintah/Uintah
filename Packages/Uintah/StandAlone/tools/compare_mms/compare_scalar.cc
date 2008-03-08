@@ -189,6 +189,9 @@ main( int argc, char *argv[] )
       da1->query(initial_vel,    velocityName,  matl, patch, timeIndex);
       da1->query(scalarVar,      scalarName,    matl, patch, timeIndex);
       
+      IntVector patch_l = patch->getLowIndex();
+      IntVector patch_h = patch->getHighIndex();
+      
       // translate the initial passive scalar concentration by(t_final * velocity/dx) cells
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -211,7 +214,10 @@ main( int argc, char *argv[] )
         
         IntVector a(new_x, new_y, new_z);
         
-        analytic_value[a] = scalarVar[c];
+        // don't fall off the edge of a patch
+        if(a.asVector() > patch_l.asVector() && a.asVector() < patch_h.asVector() - Vector(1,1,1)){
+          analytic_value[a] = scalarVar[c];
+        }
       }
     } // end patch iteration
   } // end levels iteration
