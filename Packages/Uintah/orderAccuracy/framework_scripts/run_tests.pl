@@ -31,6 +31,7 @@ foreach $e (@{$data->{Test}}){
   
   $i++;     
 }
+$num_of_tests=$i;
 
 #__________________________________
 # make a symbolic link to the compareUtil
@@ -42,28 +43,73 @@ system("ln -s $cmd");
 `rm -f one_big_comp.xml`;
 `echo \\<start\\> \| tee -a one_big_comp.xml`;
 
-$num_of_tests=$i;
-
 #__________________________________
 # Read in all of the replacement patterns 
-# and store them in an array 
+# and store them in arrays.
+#   There can be global replacement lines and individual test replacement lines
 my $nTest=0;
 my $line;
+my $insideTest=0;
+my $insideAllTest=0;
 
 open(tstFile, "$ARGV[0]") or die("ERROR(run_tests.pl): $ARGV[0], File not found");
 
 while ($line=<tstFile>){
-  if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
-    $nLine=0;
-    while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
-      $req_lines[$nTest][$nLine]=$line;
-      $nLine++;
+  if($line=~ /\<AllTests\>/){
+    $insideAllTest=1;
+  }
+  if($line=~ /\<\/AllTests\>/){
+    $insideAllTest=0;
+  }
+  if($line=~ /\<Test\>/){
+    $insideTest=1;
+  }
+  if($line=~ /\<\/Test\>/){
+    $insideTest=0;
+  } 
+  
+  # inside of <AllTests>
+  if($insideAllTest){
+    if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
+      $nLine=0;
+      while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
+        $global_replaceLines[$nLine]=$line;
+        $nLine++;
+      }
     }
-    $nTest++;
+  }
+  
+  # inside each <Test>
+  if($insideTest){
+    if ($line=~ /\<replace_lines\>/){       # find <replace_lines>
+      $nLine=0;
+      while (($line=<tstFile>) !~ /\<\/replace_lines\>/){
+        $replaceLines[$nTest][$nLine]=$line;
+        $nLine++;
+      }
+      $nTest++;
+    }
   }
 }
 close(tstFile);
 
+#__________________________________
+# Globally, replace lines in the main ups file before each test.
+@replacementPatterns = (@global_replaceLines);
+foreach $rp (@global_replaceLines){
+  chomp($rp);
+  system("replace_XML_line", "$rp", "$upsFile");
+  print "\t\t$rp\n"
+}
+
+#__________________________________
+# Globally perform substitutions in the main ups
+my $substitutions = $data->{AllTests}->[0]->{substitutions};
+
+foreach my $t (@{$substitutions->[0]->{text}}){
+  print "Now making the substitution text Find: $t->{find} replace: $t->{replace} in file: $upsFile \n";
+  system("findReplace","$t->{find}","$t->{replace}", "$upsFile");
+}
 
 open(statsFile,">out.stat");
 
@@ -92,7 +138,7 @@ for ($i=0;$i<$num_of_tests;$i++){
   print "\t\t$fn\n";
   
   # replace lines in the ups files
-  @replacementPatterns = (@{$req_lines[$i]});
+  @replacementPatterns = (@{$replaceLines[$i]});
   foreach $rp (@replacementPatterns){
     chomp($rp);
     system("replace_XML_line", "$rp", "$test_ups");
