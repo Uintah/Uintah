@@ -76,9 +76,9 @@ foreach $e (@{$data->{start}->[0]->{Test}}){
     }
     close(gpFile);
           
-    `gnuplot plotScript.gp`;
+    `gnuplot plotScript.gp >&gp.out`;
   } else{
     print "Now plotting Analysis with $gnuplotFile \n";
-    `gnuplot $gnuplotFile`;
+    `gnuplot $gnuplotFile >&gp.out`;
   }
 }
