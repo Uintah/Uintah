@@ -1,22 +1,22 @@
 <config>
 <compareUtil_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms</compareUtil_path>
-<!--
+
 <test>
   <name>advect_X_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dx.tst</tst>
 </test>
--->
+
 <test>
   <name>advect_Y_FO</name>
   <ups>advectPS.ups</ups>
   <tst>dy.tst</tst>
 </test>
-<!--
+
 <test>
   <name>advect_Z_FO</name>
   <ups>advectPS.ups</ups>
-  <tst>dx.tst</tst>
+  <tst>dz.tst</tst>
 </test>
--->
+
 </config>
