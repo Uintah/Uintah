@@ -13,14 +13,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.1         </maxTime>
+       <maxTime>            1e-3        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
-       <delt_max>           1e-4        </delt_max>
-       <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-20     </delt_init>
+       <delt_max>           1.0e-6      </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_Timesteps>      41          </max_Timesteps>
+       <max_Timesteps>      100          </max_Timesteps> 
    </Time>
    
     <!--____________________________________________________________________-->
@@ -47,8 +46,8 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [-1.0,-0.05,-0.05]    </lower>
-              <upper>        [1.0,  0.05, 0.05]    </upper>
+              <lower>        [-0.5,-0.05,-0.05]    </lower>
+              <upper>        [ 0.5, 0.05, 0.05]    </upper>
               <extraCells>   [0,1,1]              </extraCells>
               <patches>      [1,1,1]              </patches>
               <resolution>    [10000,1,1]          </resolution>
@@ -84,9 +83,9 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.4</cfl>
+         <cfl>0.2</cfl>
       <ICE>
-        <advection type = "FirstOrder" />
+        <advection type = "SecondOrder" />
         
         
         <TimeStepControl>
@@ -143,7 +142,7 @@
                     <max>       [  10.,  10.,  10. ]       </max>
                 </box>
                <res>                 [2,2,2]            </res>
-               <velocity>      [10,0.,0.]               </velocity>
+               <velocity>      [100,0.,0.]               </velocity>
                <density>       1.1792946927374306000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
@@ -167,8 +166,8 @@
             <difference>
             <box label="wholeDomain">             </box>
             <box label="scalarSlug">
-              <min>         [-0.5,-0.5,-0.5]       </min>
-              <max>         [ 0.5, 0.5, 0.5]       </max>
+              <min>         [-0.4,-0.4,-0.4]       </min>
+              <max>         [ 0.4, 0.4, 0.4]       </max>
             </box>
             </difference>
             <scalar>    0.00   </scalar>
@@ -176,13 +175,13 @@
           <geom_object>
             <box label="scalarSlug">  </box>
             <scalar>    1.00   </scalar>
-            <sinusoidalInitialize>  false      </sinusoidalInitialize>
+            <sinusoidalInitialize>     false      </sinusoidalInitialize>
             <freq> [1,0,0]    </freq>
-            <linearInitialize>      false      </linearInitialize>
+            <linearInitialize>         false      </linearInitialize>
             <slope> [1,0,0]   </slope>
-            <triangularInitialize>  false      </triangularInitialize>
-            <cubicInitialize>       false      </cubicInitialize>
-            <exponentialInitialize> true      </exponentialInitialize>
+            <triangularInitialize>     false      </triangularInitialize>
+            <cubicInitialize>          false      </cubicInitialize>
+            <exponentialInitialize_1D> true       </exponentialInitialize_1D>
            <coeff> [20,0,0]  </coeff>
          </geom_object>
        </scalar>
