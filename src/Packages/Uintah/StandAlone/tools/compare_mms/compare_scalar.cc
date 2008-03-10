@@ -43,7 +43,7 @@ using namespace Uintah;
 // Finds out if two doubles are equal within the given tolerance
 
 bool
-is_equal(double num1, double num2, double tol = 100 * DBL_EPSILON)
+is_equal(double num1, double num2, double tol = 1000 * DBL_EPSILON)
 {
   return ( (num1-num2) < tol)?true:false;
 }
@@ -52,7 +52,7 @@ is_equal(double num1, double num2, double tol = 100 * DBL_EPSILON)
 // Finds out if two SCIRun::Vectors are equal within the given tolerance
 
 bool
-is_equal(Vector num1, Vector num2, double tol = 100 * DBL_EPSILON)
+is_equal(Vector num1, Vector num2, double tol = 1000 * DBL_EPSILON)
 {
   return ( ( is_equal(num1.x(), num2.x(), tol) ) && 
            ( is_equal(num1.y(), num2.y(), tol) ) && 
@@ -73,7 +73,7 @@ iround(double num)
 // is_int(double) - checks if the double can qualify as an integer
 
 int
-is_int(double a, double tol = 100*DBL_EPSILON)
+is_int(double a, double tol = 1000*DBL_EPSILON)
 {
   long b;
   b = iround(a);
@@ -102,7 +102,7 @@ usage( const std::string & message,
   cerr << "-h[elp]    This usage information.\n";
   cerr << "-matl      material index for the velocity and scalar-f. Default is 0.\n";
   cerr << "-o         output_file_name\n";
-  cerr << "-v         verbose output\n";
+  cerr << "-v         verbose output.  This also creates a file named compScalar.dat that contains cell indices and the difference\n";
   
   exit(1);
 }
@@ -115,7 +115,8 @@ main( int argc, char *argv[] )
   string scalarName   = "scalar-f";     
   string velocityName = "vel_CC";
   int matl = 0;                         
-  FILE *outFile = stdout;               
+  FILE *outFile = stdout;
+  FILE *outDat;    
   
   // read in commmand line arguments
   for(int i=1;i<argc;i++){
@@ -150,6 +151,10 @@ main( int argc, char *argv[] )
     usage( "", "", ""); 
   }
   
+  //
+  if(verbose){
+    outDat =fopen("compScalar.dat","w");
+  }
   //__________________________________
   //
   DataArchive* da1 = scinew DataArchive(udaFileName);
@@ -175,6 +180,8 @@ main( int argc, char *argv[] )
   CCVariable<Vector> initial_vel;
   
   int timeIndex = 0;
+  Vector dx;
+  Vector offset;
   GridP grid = da1->queryGrid( timeIndex );
   // initialize 
   for( int levIndex = 0; levIndex < grid->numLevels(); levIndex++ ) {
@@ -182,7 +189,7 @@ main( int argc, char *argv[] )
 
     for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
-      Vector  dx = patch->dCell();
+      dx = patch->dCell();
       
       CCVariable<double> scalarVar;
       da1->query(analytic_value, scalarName,    matl, patch, timeIndex);
@@ -196,7 +203,6 @@ main( int argc, char *argv[] )
       for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
         
-        Vector offset;
         offset = Vector(t_final) * (initial_vel[c]/dx);
   
         //bullet proofing
@@ -249,7 +255,11 @@ main( int argc, char *argv[] )
         IntVector c = *iter;
         double diff;
 
-        diff = scalarVar[c] - analytic_value[c];
+        diff = fabs(scalarVar[c]) - fabs(analytic_value[c]);
+        
+        if(verbose){
+          fprintf(outDat, "%i %i %i %16.16le\n", c.x(), c.y(), c.z(),  diff);
+        }
         
         //__________________________________
         // bulletproofing
@@ -273,14 +283,15 @@ main( int argc, char *argv[] )
       }
     } // end patch iteration
     if(verbose){
-      cout << "\t\tTime Step: " << index[timeIndex] << " Physical Time: " << times[timeIndex] << endl;;
+      cout << "\t\tTime Step: " << index[timeIndex] << " Physical Time: " << times[timeIndex] << " dx " << dx << endl;
       cout << "\t\tMax diff: "<< maxDiff << " " << c_maxDiff << endl;
       cout << "\t\tMin_diff: "<< minDiff << " " << c_minDiff << endl; 
-      cout << "\t\tNumber of cells:  " << i << endl;
+      cout << "\t\tNumber of cells:  " << i << " Number of cells the passive scalar moved " << offset << endl;
       cout << "\t\tL2 norm of error: " << sqrt(total_error/i) << "\n";
     }
-    fprintf(outFile, "%16.16le\n",sqrt(total_error/i) );
+    fprintf(outFile, "%16.16le\n",sqrt(total_error/double(i)) );
   } // end levels iteration
+  fclose(outDat);
   
   return 0;
 } 
