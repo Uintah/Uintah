@@ -1,6 +1,8 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/SideBCData.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -63,13 +65,38 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
 #if 0
   cout << "SideBC determineIteratorLimits()" << endl;
 #endif
+
+#if 0
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+#else
+  IntVector l,h;
+  patch->getFaceCells(face,0,l,h);
+  vector<IntVector> b,nb;
+
+
+  for (CellIterator bound(l,h); !bound.done(); bound++) 
+    b.push_back(*bound);
+  
+  IntVector ln,hn;
+  patch->getFaceNodes(face,0,ln,hn);
+  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
+    nb.push_back(*bound);
+  }
+
+  setBoundaryIterator(b);
+  setNBoundaryIterator(nb);
+
+  determineSFLimits(face,patch);
+#endif  
+
+  
 }
 
 void SideBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
 {
 #if 0
   cout << "SideBC determineSFLimits()" << endl;
-#endif
   BCGeomBase::determineSFLimits(face,patch);
+#endif
+  return;
 }

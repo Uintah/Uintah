@@ -73,6 +73,7 @@ namespace Uintah {
      /// Set the node centered boundary iterators.
      void setNBoundaryIterator(int mat_id,vector<IntVector>& b, int i);
 
+#if 0
      /// Set the face centered (X) boundary iterators.
      void setSFCXIterator(int mat_id,vector<IntVector>& i, int ii);
 
@@ -81,6 +82,7 @@ namespace Uintah {
      
      /// Set the face centered (Z) boundary iterators.
      void setSFCZIterator(int mat_id,vector<IntVector>& i, int ii);
+#endif
 
      /// Get the cell centered boundary iterator.
      void getBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr, int i) const;

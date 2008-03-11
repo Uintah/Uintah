@@ -24,9 +24,11 @@ DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs)
 
   boundary=rhs.boundary;
   nboundary=rhs.nboundary;
+#if 0
   sfcx=rhs.sfcx;
   sfcy=rhs.sfcy;
   sfcz=rhs.sfcz;
+#endif
 }
 
 DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
@@ -45,9 +47,11 @@ DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
 
   boundary = rhs.boundary;
   nboundary = rhs.nboundary;
+#if 0
   sfcx=rhs.sfcx;
   sfcy=rhs.sfcy;
   sfcz=rhs.sfcz;
+#endif
   return *this;
 }
 
@@ -213,10 +217,11 @@ void DifferenceBCData::determineSFLimits(Patch::FaceType face,
     if (result == right_sfcz_ptr->end())
       sfz.push_back(*it);
   }
-
+#if 0
   setSFCXIterator(sfx);
   setSFCYIterator(sfy);
   setSFCZIterator(sfz);
+#endif
 
 #if 0
   cout << "Size of left_sfcx = " << left_sfcx.size() << endl;

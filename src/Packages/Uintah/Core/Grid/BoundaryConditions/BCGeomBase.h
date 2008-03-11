@@ -58,6 +58,7 @@ namespace Uintah {
     /// Set the node centered boundary iterators
     void setNBoundaryIterator(std::vector<IntVector>& b);
 
+#if 1
     /// Set the face centered iterators for the x component
     void setSFCXIterator(std::vector<IntVector>& i);
 
@@ -67,6 +68,7 @@ namespace Uintah {
 
     /// Set the face centered iterators for the z component
     void setSFCZIterator(std::vector<IntVector>& i);
+#endif
 
     /// Return the cell centered boundary iterators
     void getBoundaryIterator(std::vector<IntVector>*& b_ptr);
@@ -105,6 +107,7 @@ namespace Uintah {
 
   protected:
     std::vector<IntVector> boundary,nboundary,sfcx,sfcy,sfcz;
+
   };
 
   template<class T> class cmp_type {
