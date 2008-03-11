@@ -42,7 +42,7 @@ void TypeDescription::register_type()
     ASSERT(!killed);
     ASSERT(!typelist)
     types=scinew map<string, const TypeDescription*>;
-    typelist=new vector<const TypeDescription*>;
+    typelist=scinew vector<const TypeDescription*>;
   }
   
   map<string, const TypeDescription*>::iterator iter = types->find(getName());
@@ -102,7 +102,7 @@ const TypeDescription* TypeDescription::lookupType(const std::string& t)
 {
   if(!types){
     types=scinew map<string, const TypeDescription*>;   
-    typelist=new vector<const TypeDescription*>;
+    typelist=scinew vector<const TypeDescription*>;
   }
   map<string, const TypeDescription*>::iterator iter = types->find(t);
   if(iter == types->end())
