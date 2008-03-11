@@ -348,7 +348,7 @@ main( int argc, char *argv[] )
         CCVariable<double> scalarVar;
         CCVariable<Vector> vectorVar;
         
-        if (varName=="pressurePS"||varName=="press_CC") {
+        if (varName=="pressurePS"||varName=="press_CC" || varName=="press_equil_CC") {
           da1->query(scalarVar, varName, d_matl, patch, timeIndex);
         }
         if (varName=="vel_CC"||varName=="newCCVelocity") {
@@ -370,7 +370,7 @@ main( int argc, char *argv[] )
 
           //__________________________________
           //
-          if (varName=="pressurePS"||varName=="press_CC") {
+          if (varName=="pressurePS"||varName=="press_CC" || varName=="press_equil_CC") {
                 
             double analytic_value;
             double diff;
@@ -422,7 +422,7 @@ main( int argc, char *argv[] )
         }  // cell iterator
       } // end patch iteration
 
-      if(varName=="pressurePS"||varName=="press_CC") {
+      if(varName=="pressurePS"||varName=="press_CC" || varName=="press_equil_CC") {
         cout << " Max. Diff: " << c_maxDiff << " "<< maxDiff_D << endl;
         cout << " Min. Diff: " << c_minDiff << " "<< minDiff_D << endl;
       }
@@ -431,7 +431,7 @@ main( int argc, char *argv[] )
         cout << " Min. Diff: " << c_minDiff << " "<< minDiff_V << endl;
       }
       
-      if (varName=="pressurePS"||varName=="press_CC") {
+      if (varName=="pressurePS"||varName=="press_CC"|| varName=="press_equil_CC") {
         cout << "i= " << i << endl;
         cout << "L2norm of error: " << sqrt(total_error_D/i) << endl;
         fprintf(outFile, "%le\n",sqrt(total_error_D/double(i))) ;
