@@ -1191,7 +1191,7 @@ void    ICE::Message(
   cerr << message2 << "\n";
   cerr << message3 << "\n";
   cerr << "\n\n ______________________________________________\n";
-  char* exitMode = getenv("ICE_DEBUGGER_ON_EXIT");
+  const char* exitMode = getenv("ICE_DEBUGGER_ON_EXIT");
 
   if(!exitMode)
     exitMode = "no";    //default exit mode

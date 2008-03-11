@@ -471,7 +471,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //compute costs of current load balance
       vector<double> currentProcCosts(num_procs);
 
-      for(int p=0;p<patch_costs[l].size();p++)
+      for(int p=0;p<(int)patch_costs[l].size();p++)
       {
         //copy assignment from current load balance
         d_tempAssignment[level_offset+p]=d_processorAssignment[level_offset+p];

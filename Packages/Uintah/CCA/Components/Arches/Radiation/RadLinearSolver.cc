@@ -104,7 +104,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
   }
   int argc = 4;
   char** argv;
-  argv = scinew char*[argc];
+  argv = scinew  char*[argc];
   argv[0] = "RadLinearSolver::problemSetup";
   argv[1] = "-no_signal_handler";
   argv[2] = "-log_exclude_actions";
