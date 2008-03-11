@@ -91,6 +91,7 @@ do_mpmarches=0
 do_examples=0
 do_remove=0
 do_restart=0
+do_mem=0
 
 ALL=
 
@@ -116,6 +117,7 @@ usage () {
     echo "  -opt           use the opt TestData"
     echo "  -nompi         do not use mpi"
     echo "  -restart       restart and compare with the original uda.000"
+    echo "  -mem           check for memory leaks"
     echo "  -clean         remove the *.out *.compare and uda directories"
     echo "  -h[elp]        display this help and exit"
     echo;
@@ -190,6 +192,9 @@ for arg in $*; do
         -restart)
             echo; echo "Doing restart tests . . ."
             do_restart=1;;
+        -mem)
+            echo; echo "Doing memory leak . . ."
+            do_mem=1;;
         *)
             usage ;;
     esac
@@ -253,8 +258,19 @@ REMOVE () {
 }
 
 num_proc () {
-   numproc=`grep -m1 patches $input_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+    numproc=`grep -m1 patches $input_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
 #   echo "number of patches" $numproc
+}
+
+mem_check () {
+    
+    if test $do_mem -eq 0; then
+        return;
+    fi
+
+    MALLOC_STATS=$n.mem
+    
+
 }
 
 run_test () {
@@ -279,17 +295,7 @@ run_test () {
         MPI=""
     fi
 
-#    if test $MPI_RUN == "yes"; then 
-#        if test $numproc -gt 1; then
-#            MPI="mpirun -np $numproc"
-#        elif test -n "$MPI" ; then
-#            echo $MPI
-#        else
-#            MPI=""
-#        fi
-#    else
-#        MPI=""
-#    fi
+    mem_check
 
     echo; echo "Running $MPI sus $opts $input_file"
     $MPI ../sus $opts $input_file &> $n.out
