@@ -7,7 +7,7 @@
 class ExpMMS : public MMS {
 
 public:
-  ExpMMS();
+  ExpMMS(double A, double viscosity, double p_ref);
   ~ExpMMS();
 
   double pressure( double x, double y, double z, double time );
@@ -16,9 +16,9 @@ public:
   double wVelocity( double x, double y, double z, double time );
 
 private:
-  double A_;
-  double viscosity_;
-  double p_ref_;
+  double d_A;
+  double d_viscosity;
+  double d_p_ref;
   
 };
 

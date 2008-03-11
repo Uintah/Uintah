@@ -17,9 +17,9 @@ public:
   
 
 private:
-  double A_;
-  double viscosity_;
-  double p_ref_;
+  double d_A;
+  double d_viscosity;
+  double d_p_ref;
 };
 
 #endif

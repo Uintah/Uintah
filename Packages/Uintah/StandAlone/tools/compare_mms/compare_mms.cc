@@ -221,7 +221,7 @@ main( int argc, char *argv[] )
         mms = new SineMMS(A, dyVis, p_ref);                                                                              
       }                                                                                                                   
       else if(whichMMS=="exp") {                                                                                          
-        mms = new ExpMMS();                                                                                              
+        mms = new ExpMMS(A, dyVis, p_ref);                                                                                              
       }                                                                                                                   
        else {                                                                                                              
   
@@ -292,7 +292,7 @@ main( int argc, char *argv[] )
          mms = new SineMMS(A, dyVis, p_ref);
       }
       else if(whichMMS=="expMMS") { 
-         mms = new ExpMMS();
+         mms = new ExpMMS(A, dyVis, p_ref);
       }
       else {
   

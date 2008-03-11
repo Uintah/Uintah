@@ -8,7 +8,10 @@
 
 // !!!!WHAT IS A?  It should be renamed with a better name!!!!
 
-ExpMMS::ExpMMS() {
+ExpMMS::ExpMMS(double A, double viscosity, double p_ref) {
+    	d_A=A;
+	d_viscosity=viscosity;
+	d_p_ref=p_ref;
 };
 ExpMMS::~ExpMMS() {
 };
@@ -16,25 +19,25 @@ ExpMMS::~ExpMMS() {
 double
 ExpMMS::pressure( double x, double y, double z, double time )
 {
-  return p_ref_ - ( 0.25 * A_ * A_ * 
-                   ( cos( 2.0*(x-time) ) + cos( 2.0*(y-time))) * exp( -4.0 * viscosity_ * time ) );
+  return d_p_ref - ( 0.25 * d_A * d_A * 
+                   ( cos( 2.0*(x-time) ) + cos( 2.0*(y-time))) * exp( -4.0 * d_viscosity * time ) );
 }
 
 double
 ExpMMS::uVelocity( double x, double y, double z, double time )
 {
-  return 1- A_*cos(x-time)*sin(y-time)*exp(-2.0*viscosity_*time);
+  return 1- d_A*cos(x-time)*sin(y-time)*exp(-2.0*d_viscosity*time);
 }
   
 double
 ExpMMS::vVelocity( double x, double y, double z, double time )
 {
-  return 1- A_*cos(x-time)*sin(y-time)*exp(-2.0*viscosity_*time);
+  return 1- d_A*cos(x-time)*sin(y-time)*exp(-2.0*d_viscosity*time);
 }
 
 double
 ExpMMS::wVelocity( double x, double y, double z, double time )
 {
-  return 1- A_*cos(x-time)*sin(y-time)*exp(-2.0*viscosity_*time);
+  return 1- d_A*cos(x-time)*sin(y-time)*exp(-2.0*d_viscosity*time);
 }
 
