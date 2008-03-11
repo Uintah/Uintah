@@ -74,6 +74,7 @@ usage( const std::string& message,
    cerr << "-mms                 :<linear, sine or exp> \n";
    cerr << "-uda                 :\n";
    cerr << "-v,                  :<variable name>\n";
+   cerr << "-verbose             : verbose output \n";
    cerr << "-matl                : material index. Default is 0.\n";
    cerr << "-o                   :<output_file_name>\n";
    cerr << "-L                   :Compute global error for the last time step only\n";
@@ -92,6 +93,7 @@ main( int argc, char *argv[] )
   FILE *outFile = stdout;
   bool last_time_step = false;
   int d_matl = 0;
+  bool d_verbose = false;
 
   for(int i=1;i<argc;i++){
     string s=argv[i];
@@ -115,6 +117,8 @@ main( int argc, char *argv[] )
       udaFileName = argv[i];
     } else if(s == "-matl"){
       d_matl = atoi(argv[i]);
+    }else if(s == "-verbose"){
+      d_verbose == true;
     } else if(s == "-v") {
       if(++i == argc){
         usage("You must provide a variable name for -v",
@@ -311,18 +315,28 @@ main( int argc, char *argv[] )
   //__________________________________
   // Iterate over TIME
   for( unsigned int timeIndex = loopLowerBound; timeIndex < index.size(); timeIndex++ ) {
-    printf( "Time Step: %d Phy Time: %lf\n", index[timeIndex], times[timeIndex] );
+    printf( "Timestep: %d Physical Time: %lf\n", index[timeIndex], times[timeIndex] );
 
     GridP grid = da1->queryGrid( timeIndex );
 
     //__________________________________
     // Iterate over the levels
     for( int levIndex = 0; levIndex < grid->numLevels(); levIndex++ ) {
-      printf( "Looking at level %d.\n", levIndex );
+      printf( "Level %d.\n", levIndex );
       LevelP level = grid->getLevel(levIndex);
       int i=0;
-      double total_error=0.0, total_errorU=0.0, total_errorV=0.0;
-      cout<< "varName: " << "**************** "<<varName<<" ****************"<<endl;
+      double total_error_D = 0.0;
+      Vector total_error_V = Vector(0.0);
+      
+      double maxDiff_D = -(1.0/FLT_MAX);
+      double minDiff_D =  FLT_MAX;
+      Vector maxDiff_V = Vector(-1.0/FLT_MAX);
+      Vector minDiff_V = Vector(FLT_MAX);  
+      
+      IntVector c_maxDiff = IntVector(0,0,0);
+      IntVector c_minDiff = IntVector(0,0,0);    
+      
+      cout<< "**************** "<<varName<<" ****************"<<endl;
 
       //__________________________________
       // Iterate over the patches
@@ -334,41 +348,22 @@ main( int argc, char *argv[] )
         CCVariable<double> scalarVar;
         CCVariable<Vector> vectorVar;
         
-        if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
+        if (varName=="pressurePS"||varName=="press_CC") {
           da1->query(scalarVar, varName, d_matl, patch, timeIndex);
         }
         if (varName=="vel_CC"||varName=="newCCVelocity") {
           da1->query(vectorVar, varName, d_matl, patch, timeIndex);
         }
 
-        IntVector low, high, size;
-        if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
-          scalarVar.getSizes(low,high,size);
-        }
-        if (varName=="vel_CC"||varName=="newCCVelocity") {
-          vectorVar.getSizes(low,high,size);
-        }
-        cout << "Low:      " << low << "\n";
-        cout << "High:     " << high << "\n";
-        cout << "Size:     " << size << "\n";
-
-        double maxDiff = -FLT_MAX,  minDiff = FLT_MAX;
-        double maxDiffU = -FLT_MAX, minDiffU = FLT_MAX;
-        double maxDiffV = -FLT_MAX, minDiffV = FLT_MAX;
-        
-        //////////////////////////////
+        //__________________________________
         // Iterate over the cells
         for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++) {
           IntVector c = *iter;
-          
-          double analytic_value;
-          double analytic_valueU;
-          double analytic_valueV;
-          double diff, diffU, diffV;
                                   
           Point pt = patch->cellPosition(c);
-          cout <<"Cell:     "<< c << "\n";
-          cout <<"Position: "<< pt <<endl;
+          if(d_verbose){
+            cout <<"Cell:     "<< c <<"  Position: "<< pt <<endl;
+          }
           double x_pos = pt.x();
           double y_pos = pt.y();
           double z_pos = pt.z();
@@ -376,89 +371,74 @@ main( int argc, char *argv[] )
           //__________________________________
           //
           if (varName=="pressurePS"||varName=="press_CC") {
+                
+            double analytic_value;
+            double diff;
+            
             analytic_value = mms->pressure( x_pos, y_pos, z_pos, times[timeIndex] );
-            diff = scalarVar[c] - analytic_value;
-            total_error+=diff*diff;
-            if( diff > maxDiff ) maxDiff = diff;
-            if( diff < minDiff ) minDiff = diff;
-
-            printf( "UDA value: %le, Analytic Value: %le.  Diff: %le, fabs(Diff): %le\n", 
-                     scalarVar[c], analytic_value, diff, fabs(diff) );
-          }
-          
-          //__________________________________
-          //
-          if (varName=="newCCUVelocity") {
-            analytic_value = mms->uVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
-              
-            diff = scalarVar[c] - analytic_value;
-            total_error+=diff*diff;
-            if( diff > maxDiff ) maxDiff = diff;
-            if( diff < minDiff ) minDiff = diff;
+            diff = fabs(scalarVar[c]) - fabs(analytic_value);
+            total_error_D +=diff*diff;
             
-            printf( "UDA value: %f, Analytic Value: %le.  Diff: %le, fabs(Diff): %le\n", 
-                      scalarVar[c], analytic_value, diff, fabs(diff) );
-          }
-          
-          //__________________________________
-          //
-          if (varName=="newCCVVelocity") {
-            analytic_value = mms->vVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
-              
-            diff = scalarVar[c] - analytic_value;
-            total_error+=diff*diff;
-            
-            if( diff > maxDiff ) maxDiff = diff;
-            if( diff < minDiff ) minDiff = diff;
-            
-            printf( "UDA value: %le, Analytic Value: %le.  Diff: %le, fabs(Diff): %le\n", 
-                      scalarVar[c], analytic_value, diff, fabs(diff) );
+            if( diff > maxDiff_D ){
+              maxDiff_D = diff;
+              c_maxDiff = c;
+            }
+            if( diff < minDiff_D ){
+              minDiff_D = diff;
+              c_minDiff = c;
+            }
+            if(d_verbose){
+              cout<< c << " uda " << scalarVar[c] << " Analytic Value: " << analytic_value << " Diff: " <<diff<<endl;
+            }
           }
           
           //__________________________________
           //
           if (varName=="vel_CC"||varName=="newCCVelocity") {
-            analytic_valueU = mms->uVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
-            analytic_valueV = mms->vVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
-
-            diffU = vectorVar[c].x() - analytic_valueU;
-            diffV = vectorVar[c].y() - analytic_valueV;
-            total_errorU+=diffU*diffU;
-            total_errorV+=diffV*diffV;
-            if( diffU > maxDiffU ) maxDiffU = diffU;
-            if( diffV > maxDiffV ) maxDiffV = diffV;
-            if( diffU < minDiffU ) minDiffU = diffU;
-            if( diffV < minDiffV ) minDiffV = diffV;
+          
+            Vector analytic_value= Vector(0,0,0);
+            Vector diff = Vector(0,0,0);
             
-            printf( "UDA value: %le, Analytic Value: %le.  Diff: %le, fabs(Diff): %le\n", 
-                    vectorVar[c].x(), analytic_valueU, diffU, fabs(diffU) );
-            printf( "UDA value: %le, Analytic Value: %le.  Diff: %le, fabs(Diff): %le\n", 
-                    vectorVar[c].y(), analytic_valueV, diffV, fabs(diffV) ); 
+            analytic_value.x(mms->uVelocity( x_pos, y_pos, z_pos, times[timeIndex] ));
+            analytic_value.y(mms->vVelocity( x_pos, y_pos, z_pos, times[timeIndex] ));
+            
+            diff = Abs(vectorVar[c]) - Abs(analytic_value);
+            total_error_V +=diff*diff;
+            
+            if( diff.length() > maxDiff_V.length() ){
+              maxDiff_V = diff;
+              c_maxDiff = c;
+            }
+            if( diff.length() < minDiff_V.length() ){
+              minDiff_V = diff;
+              c_minDiff = c;
+            }
+            
+            if(d_verbose){
+              cout<< c << " uda " << vectorVar[c] << " Analytic Value: " << analytic_value << " Diff: " <<diff<<endl;
+            } 
           } 
           i=i+1;
         }  // cell iterator
-        
-        if(varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
-          printf( "Max diff: %le, Min diff %le\n", maxDiff, minDiff );
-        }
-        if(varName=="vel_CC"||varName=="newCCVelocity") {
-          printf( "MaxU diff: %le, MaxV diff: %le, MinU diff %le, MinV diff %le\n", maxDiffU, maxDiffV, 
-                     minDiffU, minDiffV);
-        }
       } // end patch iteration
-      
-      if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
-        cout << "i= " << i << endl << "L2norm of error: " << endl << sqrt(total_error/i) << "\n";
-      }
-      if (varName=="vel_CC"||varName=="newCCVelocity") {
-        cout << "i= " << i << ", L2norm of error= " << sqrt(total_errorU/i) << " " << sqrt(total_errorV/i) << "\n";
-      }
 
-      if(varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
-        fprintf(outFile, "%le\n",sqrt(total_error/i)) ;
+      if(varName=="pressurePS"||varName=="press_CC") {
+        cout << " Max. Diff: " << c_maxDiff << " "<< maxDiff_D << endl;
+        cout << " Min. Diff: " << c_minDiff << " "<< minDiff_D << endl;
       }
       if(varName=="vel_CC"||varName=="newCCVelocity") {
-        fprintf(outFile,"%le,%le\n", sqrt(total_errorU/i), sqrt(total_errorV/i));
+        cout << " Max. Diff: " << c_maxDiff << " "<< maxDiff_V << endl;
+        cout << " Min. Diff: " << c_minDiff << " "<< minDiff_V << endl;
+      }
+      
+      if (varName=="pressurePS"||varName=="press_CC") {
+        cout << "i= " << i << endl;
+        cout << "L2norm of error: " << sqrt(total_error_D/i) << endl;
+        fprintf(outFile, "%le\n",sqrt(total_error_D/double(i))) ;
+      }
+      if (varName=="vel_CC"||varName=="newCCVelocity") {
+        cout << "i= " << i << ", L2norm of error= " << sqrt(total_error_V.length()/double(i)) << "\n";
+        fprintf(outFile,"%le\n", sqrt(total_error_V.length()/double(i)) );
       }
     } // end levels iteration
   } // end time iteration

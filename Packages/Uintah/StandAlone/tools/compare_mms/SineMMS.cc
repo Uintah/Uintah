@@ -6,8 +6,9 @@
 
 using std::cout;
 
-// Depending on speed issues and how large these functions become, it
-// is possible that they should be moved to the .h files.
+//__________________________________
+// Reference:  "A non-trival analytical solution to the 2d incompressible
+//        Navier-Stokes equations" by Randy McDermott, August 12 2003
 
 SineMMS::SineMMS(double A, double viscosity, double p_ref) {
 	d_A=A;
@@ -40,6 +41,6 @@ SineMMS::vVelocity( double x, double y, double z, double time )
 double
 SineMMS::wVelocity( double x, double y, double z, double time )
 {
-  return 1+ d_A*sin(x-time)*cos(y-time)*exp(-2.0*d_viscosity*time);
+  return -9999999;
 }
 
