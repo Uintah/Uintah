@@ -262,7 +262,7 @@ void BCDataArray::setNBoundaryIterator(int mat_id,vector<IntVector>& b,int i)
       itr->second[i]->setNBoundaryIterator(b);
   }
 }
-
+#if 0
 void BCDataArray::setSFCXIterator(int mat_id,vector<IntVector>& i,int ii)
 {
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
@@ -298,7 +298,7 @@ void BCDataArray::setSFCZIterator(int mat_id,vector<IntVector>& i,int ii)
       itr->second[ii]->setSFCZIterator(i);
   }
 }
-
+#endif
 void BCDataArray::getBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr,
                                       int i) const
 {

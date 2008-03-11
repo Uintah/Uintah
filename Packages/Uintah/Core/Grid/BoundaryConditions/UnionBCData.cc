@@ -39,9 +39,11 @@ UnionBCData::UnionBCData(const UnionBCData& mybc)
  
   boundary=mybc.boundary;
   nboundary=mybc.nboundary;
+#if 0
   sfcx=mybc.sfcx;
   sfcy=mybc.sfcy;
   sfcz=mybc.sfcz;
+#endif
 }
 
 UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
@@ -62,9 +64,11 @@ UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
   
   boundary = rhs.boundary;
   nboundary = rhs.nboundary;
+#if 0
   sfcx=rhs.sfcx;
   sfcy=rhs.sfcy;
   sfcz=rhs.sfcz;
+#endif
 
   return *this;
 }
@@ -181,9 +185,11 @@ void UnionBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
     copy(y_itr_ptr->begin(), y_itr_ptr->end(), back_inserter(sfy));
     copy(z_itr_ptr->begin(), z_itr_ptr->end(), back_inserter(sfz));
   }
+#if 0
   setSFCXIterator(sfx);
   setSFCXIterator(sfy);
   setSFCXIterator(sfz);
+#endif 
 #if 0
   for (vector<IntVector>::const_iterator it = sfcx.begin(); it != sfcx.end();
        ++it) 

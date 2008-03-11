@@ -186,10 +186,11 @@ WARNING
      CellIterator getEdgeCellIterator(const FaceType& face0, 
                                 const FaceType& face1,
                                 const string& domain="minusCornerCells") const;
-
+#if 1
      CellIterator getSFCXIterator(const int offset = 0) const;
      CellIterator getSFCYIterator(const int offset = 0) const;
      CellIterator getSFCZIterator(const int offset = 0) const;
+#endif
      CellIterator getSFCIterator( const int dir, const int offset = 0) const;
      CellIterator addGhostCell_Iter(CellIterator hi_lo, const int nCells) const;
      
@@ -206,7 +207,7 @@ WARNING
      NodeIterator getNodeIterator(const Box& b) const;
 
      // Get a larger set of nodes if using GIMP
-     NodeIterator getNodeIterator(string interp_type) const;
+     NodeIterator getNodeIterator(const string& interp_type) const;
 
      IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
      IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
@@ -346,7 +347,7 @@ WARNING
      const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-                                           string type,
+                                           const string& type,
                                            vector<IntVector>*& b_ptr,
                                            vector<IntVector>*& nb_ptr,
                                            vector<IntVector>*& sfx_ptr,
@@ -354,8 +355,8 @@ WARNING
                                            vector<IntVector>*& sfz_ptr,
                                            int child) const ;
      
-     bool haveBC(FaceType face,int mat_id,string bc_type,
-                 string bc_variable) const;
+     bool haveBC(FaceType face,int mat_id,const string& bc_type,
+                 const string& bc_variable) const;
 
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {

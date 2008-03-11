@@ -34,7 +34,7 @@ void BCGeomBase::setNBoundaryIterator(vector<IntVector>& b)
 {
   nboundary = b;
 }
-
+#if 0
 void BCGeomBase::setSFCXIterator(vector<IntVector>& i)
 {
   sfcx = i;
@@ -49,7 +49,7 @@ void BCGeomBase::setSFCZIterator(vector<IntVector>& i)
 {
   sfcz = i;
 }
-
+#endif
 void BCGeomBase::getBoundaryIterator(vector<IntVector>*& b_ptr) 
 {
   b_ptr = &boundary;
@@ -59,7 +59,7 @@ void BCGeomBase::getNBoundaryIterator(vector<IntVector>*& b_ptr)
 {
   b_ptr = &nboundary;
 }
-
+#if 1
 void BCGeomBase::getSFCXIterator(vector<IntVector>*& i_ptr)
 {
   i_ptr = &sfcx;
@@ -75,6 +75,7 @@ void BCGeomBase::getSFCZIterator(vector<IntVector>*& i_ptr)
   i_ptr = &sfcz;
 }
 
+#endif
 void BCGeomBase::determineIteratorLimits(Patch::FaceType face, 
 					 const Patch* patch, 
 					 vector<Point>& test_pts)
@@ -133,7 +134,7 @@ void BCGeomBase::determineSFLimits(Patch::FaceType face, const Patch* patch)
   vector<IntVector> x_iterator;
   vector<IntVector> y_iterator;
   vector<IntVector> z_iterator;
-  vector<IntVector> sfx,sfy,sfz;
+  //  vector<IntVector> sfx,sfy,sfz;
 
   if (face == Patch::xplus || face == Patch::xminus) {
     for (set<int>::const_iterator y = same_y.begin(); y != same_y.end(); ++y) {
@@ -143,7 +144,7 @@ void BCGeomBase::determineSFLimits(Patch::FaceType face, const Patch* patch)
 	if (*y == (*it).y())
 	  same_y_element.push_back(*it);
       }
-      // Find the biggest element and add (1,0,0)
+      // Find the biggest element and add (0,0,1)
       sort(same_y_element.begin(),same_y_element.end(),ltiv_z());
       z_iterator.push_back(same_y_element.back()+IntVector(0,0,1));
     }
@@ -228,73 +229,77 @@ void BCGeomBase::determineSFLimits(Patch::FaceType face, const Patch* patch)
     
   }
 
+#if 0
   switch(face) {
   case Patch::xminus:
     {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfx),
+      transform(boundary.begin(),boundary.end(),back_inserter(sfcx),
 		bind2nd(plus<IntVector>(),IntVector(1,0,0)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfy),
+      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
 		bind2nd(plus<IntVector>(),IntVector(1,0,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfz),
+      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
 		bind2nd(plus<IntVector>(),IntVector(1,0,0)));
       break;
     }
   case Patch::xplus:
     {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfx),
+      transform(boundary.begin(),boundary.end(),back_inserter(sfcx),
 		bind2nd(plus<IntVector>(),IntVector(-1,0,0)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfy),
+      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
 		bind2nd(plus<IntVector>(),IntVector(-1,0,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfz),
+      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
 		bind2nd(plus<IntVector>(),IntVector(-1,0,0)));
       break;
     }
   case Patch::yminus:
     {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfy),
+      transform(boundary.begin(),boundary.end(),back_inserter(sfcy),
 		bind2nd(plus<IntVector>(),IntVector(0,1,0)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfx),
+      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
 		bind2nd(plus<IntVector>(),IntVector(0,1,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfz),
+      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
 		bind2nd(plus<IntVector>(),IntVector(0,1,0)));
       break;
     }
   case Patch::yplus:
     {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfy),
+      transform(boundary.begin(),boundary.end(),back_inserter(sfcy),
 		bind2nd(plus<IntVector>(),IntVector(0,-1,0)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfx),
+      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
 		bind2nd(plus<IntVector>(),IntVector(0,-1,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfz),
+      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
 		bind2nd(plus<IntVector>(),IntVector(0,-1,0)));
       break;
     }
   case Patch::zminus:
     {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfz),
+      transform(boundary.begin(),boundary.end(),back_inserter(sfcz),
 		bind2nd(plus<IntVector>(),IntVector(0,0,1)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfx),
+      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
 		bind2nd(plus<IntVector>(),IntVector(0,0,1)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfy),
+      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
 		bind2nd(plus<IntVector>(),IntVector(0,0,1)));
       break;
     }
   case Patch::zplus:
     {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfz),
+      transform(boundary.begin(),boundary.end(),back_inserter(sfcz),
 		bind2nd(plus<IntVector>(),IntVector(0,0,-1)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfx),
+      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
 		bind2nd(plus<IntVector>(),IntVector(0,0,-1)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfy),
+      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
 		bind2nd(plus<IntVector>(),IntVector(0,0,-1)));
       break;
     }
   default:
     break;
   }
+#endif
+#if 0
   setSFCXIterator(sfx);
   setSFCYIterator(sfy);
   setSFCZIterator(sfz);
+#endif
 #if 0
   cout << "Size of sfcx = " << sfcx.size() << endl;
   for (vector<IntVector>::const_iterator it = sfcx.begin(); it != sfcx.end();
