@@ -152,7 +152,7 @@ CompareMMS::execute()
 
   CompareMMSAlgo::compare_field_type field_type;
 
-  if ( field_name == "press_CC" ){
+  if ( field_name == "press_CC" || field_name == "press_equil_CC" ){
     field_type = CompareMMSAlgo::PRESSURE;
   }else if ( field_name == "vel_CC:1" ){
      field_type = CompareMMSAlgo::UVEL;
