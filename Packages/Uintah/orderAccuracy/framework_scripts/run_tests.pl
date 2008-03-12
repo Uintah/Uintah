@@ -40,8 +40,8 @@ my $cmd = `which $stripped_cmd[0]`;
 system("ln -s $cmd");
 
 
-`rm -f one_big_comp.xml`;
-`echo \\<start\\> \| tee -a one_big_comp.xml`;
+`rm -f compareAll.xml`;
+`echo \\<start\\> \| tee -a compareAll.xml`;
 
 #__________________________________
 # Read in all of the replacement patterns 
@@ -195,13 +195,13 @@ for ($i=0;$i<$num_of_tests;$i++){
     `rm -fr $compFilename`;
     
     `echo \\<start\\> \|  tee -a $compFilename`;
-    `echo \\<gnuplotFile\\>$gnuplotFile\\</gnuplotFile\\> \|tee -a $compFilename`;
-    `echo \\<Test\\>  \|  tee -a $compFilename one_big_comp.xml`;
-    `echo \\<Title\\>$study[$i]\\</Title\\>  \| tee -a $compFilename one_big_comp.xml`;
-    `echo \\<compareUtil\\>$compUtil_cmd[$i]\\</compareUtil\\>  \| tee -a $compFilename one_big_comp.xml`;
-    `echo \\<x\\>$x[$i]\\</x\\>  \| tee -a $compFilename one_big_comp.xml`;
-    `echo \\<uda\\>$udaFilename\\</uda\\>  \| tee -a $compFilename one_big_comp.xml`;
-    `echo \\</Test\\>  \| tee -a $compFilename one_big_comp.xml`;
+    `echo \\<gnuplotFile\\>$gnuplotFile\\</gnuplotFile\\> \|tee -a $compFilename compareAll.xml`;
+    `echo \\<Test\\>  \|  tee -a $compFilename compareAll.xml`;
+    `echo \\<Title\\>$study[$i]\\</Title\\>  \| tee -a $compFilename compareAll.xml`;
+    `echo \\<compareUtil\\>$compUtil_cmd[$i]\\</compareUtil\\>  \| tee -a $compFilename compareAll.xml`;
+    `echo \\<x\\>$x[$i]\\</x\\>  \| tee -a $compFilename compareAll.xml`;
+    `echo \\<uda\\>$udaFilename\\</uda\\>  \| tee -a $compFilename compareAll.xml`;
+    `echo \\</Test\\>  \| tee -a $compFilename compareAll.xml`;
     `echo \\</start\\> \| tee -a $compFilename`;
   }
   
@@ -242,4 +242,4 @@ for ($i=0;$i<$num_of_tests;$i++){
 close(statsFile);
 
 
-`echo \\</start\\> \| tee -a one_big_comp.xml`;
+`echo \\</start\\> \| tee -a compareAll.xml`;

@@ -26,7 +26,6 @@ foreach $e (@{$data->{start}->[0]->{Test}}){
 
   # main loop
   for ($k = 0 ; $k<=$#uda_files; $k++){ 
-    
     #__________________________________
     # Run the comparison tests
     my $comp_output = "out.$x.cmp";
@@ -45,7 +44,7 @@ foreach $e (@{$data->{start}->[0]->{Test}}){
 
   #______________________________________________________________________
   # Create a default gnuplot script
-  if ( $gnuplotFile != "") {
+  if ( $gnuplotFile eq "") {
     print "Using Default gnuplot Script\n";
     
     open(gpFile, "> plotScript.gp");
