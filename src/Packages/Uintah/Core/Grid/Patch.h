@@ -322,11 +322,6 @@ WARNING
      Box getBox() const;
      Box getInteriorBox() const;
      
-     inline IntVector getNFaces() const {
-       // NOT CORRECT
-       return IntVector(0,0,0);
-     }
-     
      inline IntVector getNNodes() const {
        return getNodeHighIndex()-getNodeLowIndex();
      }
