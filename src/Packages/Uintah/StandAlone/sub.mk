@@ -319,7 +319,24 @@ link_regression_tester:
 	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT; \
 	   fi )
 
+# The REDSTORM portion of the following command somehow prevents Make, on Redstorm,
+# from running a bogus compile line of sus...
+#
+# This is the bogus line:
+#
+# cc -Minline -O3 -fastsse -fast   -Minform=severe -DREDSTORM  -Llib -lgmalloc \
+#       sus.o prereqs Packages/Uintah/StandAlone/sus   -o sus
+#
+# Notice that is using the generic 'cc' compiler, and only a subset of
+# the CFLAGS, and the bogus 'prereqs' target that has not been
+# expanded...  This happens after _successfully_ running the real link
+# line for sus... I have no idea why it is being triggered, but this
+# hack seems to prevent the 2nd 'compilation' from running...
+#
 sus: prereqs Packages/Uintah/StandAlone/sus
+ifeq ($(IS_REDSTORM),yess)
+	@echo "Built sus"
+endif
 
 tools: puda dumpfields compare_uda uda2nrrd restart_merger partextract partvarRange selectpart async_mpi_test mpi_test extractV extractF extractS gambitFileReader slb pfs pfs2 timeextract faceextract lineextract compare_mms compare_scalar
 
