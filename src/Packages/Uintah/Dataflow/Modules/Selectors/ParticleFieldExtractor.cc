@@ -73,6 +73,7 @@ DECLARE_MAKER(ParticleFieldExtractor)
 
 ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx) :
   Module("ParticleFieldExtractor", ctx, Filter, "Selectors", "Uintah"),
+  progress_lock("PFE Progress Lock"),
   tcl_status(get_ctx()->subVar("tcl_status")),
   generation(-1),  timestep(-1), material(-1), levelnum(0),
   level_(get_ctx()->subVar("level"), 0),
@@ -82,8 +83,8 @@ ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx) :
   onMaterials(get_ctx()->subVar("onMaterials")),
   pNMaterials(get_ctx()->subVar("pNMaterials")),
   positionName(""), particleIDs(""), archiveH(0),
-  num_materials(0), num_selected_materials(0),
-  progress_lock("PFE Progress Lock")
+  num_materials(0), num_selected_materials(0)
+
 { 
 } 
 
@@ -689,9 +690,6 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, int index,
   Vector scale = archive->getCellScale();
 //   WallClockTimer my_timer;
 //   my_timer.start();
-  
-  double numPatches = level->numPatches();
-  int count = 0;
 
   // Iterate over patches
   update_progress_max( level->numPatches() );
