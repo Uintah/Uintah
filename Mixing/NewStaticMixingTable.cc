@@ -2,33 +2,39 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <iostream>
-#include <math.h>
+
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+
 #include <Core/Math/MiscMath.h>
-#include <iomanip>
-#include <stdio.h>
+
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <sstream>
+
 #include <fcntl.h>
-#include <unistd.h>
+#include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <zlib.h>
 
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
+
 //****************************************************************************
 // Default constructor for NewStaticMixingTable
 //****************************************************************************
-NewStaticMixingTable::NewStaticMixingTable(bool calcReactingScalar,
-                                           bool calcEnthalpy,
-                                           bool calcVariance) :
+NewStaticMixingTable::NewStaticMixingTable( bool calcReactingScalar,
+                                            bool calcEnthalpy,
+                                            bool calcVariance ) :
   MixingModel(),
   d_calcReactingScalar(calcReactingScalar),
   d_calcEnthalpy(calcEnthalpy),
@@ -52,7 +58,7 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
   /*if (d_calcReactingScalar) 
     throw InvalidValue("Reacting scalar is unsupported parameter",
     __FILE__, __LINE__);*/
-  std::string d_inputfile;
+  string d_inputfile;
   ProblemSpecP db = params->findBlock("NewStaticMixingTable");
 
   db->getWithDefault("co_output",d_co_output,false);
@@ -89,9 +95,9 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     // so no need to do it here
     /*double var_limit = (mixFrac*(1.0-mixFrac));
       if(mixFracVars < small)
-      mixFracVars=0.0;
+        mixFracVars=0.0;
       if(mixFracVars > var_limit)
-      mixFracVars = var_limit;
+        mixFracVars = var_limit;
 
       mixFracVars = mixFracVars/(var_limit+small);*/
   }
@@ -311,60 +317,122 @@ NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double cur
   return var_value; 
 }
 
+//
+// Reads a token out of a gzipped file... Tokens are separated by
+// white space (spaces, tabs, newlines...).
+//
+// NOTE: Lines that being with "#" (the very 1st character is a #) are
+// considered comments and are skipped.
+//
+const string
+getToken( gzFile gzFp )
+{
+  string token;
+
+  while( true ) {
+
+    char ch = gzgetc( gzFp );
+
+    if( ch == '#' ) { // The input line is commented out.
+      while( ch != '\n' ) { // Skip it.
+        ch = gzgetc( gzFp );
+      }
+    }
+
+    if( ch == -1 ) { // end of file reached
+      break;
+    }
+
+    if( ch == '\n' || ch == '\t' || ch == '\r' || ch == ' ' ) { // done reading token
+      if( token.size() > 0 ) {
+        break;
+      }
+      else {
+        continue; // until we get a non-empty token.
+      }
+    }
+    token.push_back( ch );
+  }
+  return token;
+}
+
+const string
+getString( gzFile gzFp )
+{
+  return getToken( gzFp );
+}
+
+void
+getDouble( gzFile gzFp, double & out )
+{
+  const string result = getToken( gzFp );
+  sscanf( result.c_str(), "%lf", &out );
+}
+
+void
+getInt( gzFile gzFp, int & out )
+{
+  const string result = getToken( gzFp );
+  sscanf( result.c_str(), "%d", &out );
+}
 
 void
 NewStaticMixingTable::readMixingTable( const string & inputfile )
 {
-  cout << "Preparing to read the inputfile:   " << inputfile << endl;
-  ifstream fd(inputfile.c_str());
-  if(fd.fail()){
-    throw InvalidValue(" Unable to open the given input file " + inputfile,
-                       __FILE__, __LINE__);
+  cout << "Preparing to read the inputfile:   " << inputfile << "\n";
+
+  gzFile gzFp = gzopen( inputfile.c_str(), "r" );
+
+  if( gzFp == NULL ) {
+    // If errno is 0, then not enough memory to uncompress file.
+    cout << "Error gz opening file " << inputfile << ".  Errno: " << errno << "\n";
+    throw InvalidValue("Unable to open the given input file " + inputfile, __FILE__, __LINE__);
   }
-  std::string header;
-  while (getline(fd, header) && header[0] == '#') { /* skip header lines */ }
 
-  std::istringstream stream_header(header);
-  stream_header >> d_f_stoich;
+  getDouble( gzFp, d_f_stoich );
+  getDouble( gzFp, d_H_fuel );
+  getDouble( gzFp, d_H_air );
+  getDouble( gzFp, d_carbon_fuel );
+  getDouble( gzFp, d_carbon_air );
+  getInt(    gzFp, d_indepvarscount );
 
-  fd >> d_H_fuel;
-  fd >> d_H_air;
-  fd >> d_carbon_fuel;
-  fd >> d_carbon_air;
-  fd >> d_indepvarscount;
-  cout<< "d_indepvars count: " << d_indepvarscount << endl;
+  cout<< "d_indepvars count: " << d_indepvarscount << "\n";
   
-  indepvars_names = vector<string>(d_indepvarscount);
   Hl_index = -1;
   F_index = -1;
   Fvar_index = -1;
   
   for (int ii = 0; ii < d_indepvarscount; ii++) {
-    fd >> indepvars_names[ii];
-    if(indepvars_names[ii]== "heat_loss")
+    string varname = getString( gzFp );
+    if( varname == "heat_loss" ) {
       Hl_index = ii;
-    else if(indepvars_names[ii]== "mixture_fraction")
+    }
+    else if( varname == "mixture_fraction" ) {
       F_index = ii;
-    else if(indepvars_names[ii]== "mixture_fraction_variance")
+    }
+    else if( varname == "mixture_fraction_variance" ) {
       Fvar_index = ii;
-    cout<<indepvars_names[ii]<<endl;
+    }
+    cout << varname << "\n";
   }
   
   eachindepvarcount = vector<int>(d_indepvarscount);
-  for (int ii = 0; ii < d_indepvarscount; ii++)
-    fd >> eachindepvarcount[ii];
+  for (int ii = 0; ii < d_indepvarscount; ii++) {
+    getInt( gzFp, eachindepvarcount[ii] );
+  }
 
   d_heatlosscount = 1;
   d_mixfraccount = 1;
   d_mixvarcount = 1;
-  if (!(Hl_index == -1)) d_heatlosscount = eachindepvarcount[Hl_index];
-  if (!(F_index == -1)) d_mixfraccount = eachindepvarcount[F_index];
-  if (!(Fvar_index == -1)) d_mixvarcount = eachindepvarcount[Fvar_index];
-  cout << d_heatlosscount << " " << d_mixfraccount << " " << d_mixvarcount << endl;
+  if (!(Hl_index == -1))   d_heatlosscount = eachindepvarcount[Hl_index];
+  if (!(F_index == -1))    d_mixfraccount  = eachindepvarcount[F_index];
+  if (!(Fvar_index == -1)) d_mixvarcount   = eachindepvarcount[Fvar_index];
+
+  cout << d_heatlosscount << " " << d_mixfraccount << " " << d_mixvarcount << "\n";
 
   // Total number of variables in the table: non-adaibatic table has sensibile enthalpy too
-  fd >> d_varscount;
-  cout<< "d_vars count: " << d_varscount << endl;
+  getInt( gzFp, d_varscount );
+  cout<< "d_vars count: " << d_varscount << "\n";
   vars_names= vector<string>(d_varscount);
   Rho_index = -1;
   T_index = -1;
@@ -407,66 +475,66 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   so2rate_index = -1;
 
   for (int ii = 0; ii < d_varscount; ii++) {
-    fd >> vars_names[ii];
-    if(vars_names[ii]==  "density")
+    vars_names[ii] = getString( gzFp );
+    if(     vars_names[ii] == "density")
       Rho_index = ii;
-    else if(vars_names[ii]== "temperature")
+    else if(vars_names[ii] == "temperature")
       T_index = ii;
-    else if(vars_names[ii]== "heat_capacity")
+    else if(vars_names[ii] == "heat_capacity")
       Cp_index = ii;
-    else if(vars_names[ii]== "sensible_heat")
+    else if(vars_names[ii] == "sensible_heat")
       Hs_index = ii;
-    else if(vars_names[ii]== "CO2")
+    else if(vars_names[ii] == "CO2")
       co2_index = ii;
-    else if(vars_names[ii]== "H2O")
+    else if(vars_names[ii] == "H2O")
       h2o_index = ii;
 
-    else if(vars_names[ii]== "H2S")
+    else if(vars_names[ii] == "H2S")
       h2s_index = ii;
-    else if(vars_names[ii]== "SO2")
+    else if(vars_names[ii] == "SO2")
       so2_index = ii;
-    else if(vars_names[ii]== "SO3")
+    else if(vars_names[ii] == "SO3")
       so3_index = ii;
-    else if(vars_names[ii]== "SULFUR")
+    else if(vars_names[ii] == "SULFUR")
       sulfur_index = ii;
 
-    else if(vars_names[ii]== "S2")      s2_index         = ii;
-    else if(vars_names[ii]== "SH")      sh_index         = ii;
-    else if(vars_names[ii]== "SO")      so_index         = ii;
-    else if(vars_names[ii]== "HSO2")    hso2_index       = ii;
+    else if(vars_names[ii] == "S2")      s2_index         = ii;
+    else if(vars_names[ii] == "SH")      sh_index         = ii;
+    else if(vars_names[ii] == "SO")      so_index         = ii;
+    else if(vars_names[ii] == "HSO2")    hso2_index       = ii;
 
-    else if(vars_names[ii]== "HOSO")    hoso_index       = ii;
-    else if(vars_names[ii]== "HOSO2")   hoso2_index      = ii;
-    else if(vars_names[ii]== "SN")      sn_index         = ii;
-    else if(vars_names[ii]== "CS")      cs_index         = ii;
+    else if(vars_names[ii] == "HOSO")    hoso_index       = ii;
+    else if(vars_names[ii] == "HOSO2")   hoso2_index      = ii;
+    else if(vars_names[ii] == "SN")      sn_index         = ii;
+    else if(vars_names[ii] == "CS")      cs_index         = ii;
 
-    else if(vars_names[ii]== "OCS")     ocs_index        = ii;
-    else if(vars_names[ii]== "HSO")     hso_index        = ii;
-    else if(vars_names[ii]== "HOS")     hos_index        = ii;
-    else if(vars_names[ii]== "HSOH")    hsoh_index       = ii;
+    else if(vars_names[ii] == "OCS")     ocs_index        = ii;
+    else if(vars_names[ii] == "HSO")     hso_index        = ii;
+    else if(vars_names[ii] == "HOS")     hos_index        = ii;
+    else if(vars_names[ii] == "HSOH")    hsoh_index       = ii;
 
-    else if(vars_names[ii]== "H2SO")    h2so_index       = ii;
-    else if(vars_names[ii]== "HOSHO")   hosho_index      = ii;
-    else if(vars_names[ii]== "HS2")     hs2_index        = ii;
-    else if(vars_names[ii]== "H2S2")    h2s2_index       = ii;
+    else if(vars_names[ii] == "H2SO")    h2so_index       = ii;
+    else if(vars_names[ii] == "HOSHO")   hosho_index      = ii;
+    else if(vars_names[ii] == "HS2")     hs2_index        = ii;
+    else if(vars_names[ii] == "H2S2")    h2s2_index       = ii;
 
-    else if(vars_names[ii]== "rate_CO2") co2rate_index   = ii;
-    else if(vars_names[ii]== "rate_SO2") so2rate_index   = ii;
+    else if(vars_names[ii] == "rate_CO2") co2rate_index   = ii;
+    else if(vars_names[ii] == "rate_SO2") so2rate_index   = ii;
 
-    else if(vars_names[ii]== "CO")
+    else if(vars_names[ii] == "CO")
       co_index = ii;
-    else if(vars_names[ii]== "C2H2")
+    else if(vars_names[ii] == "C2H2")
       c2h2_index = ii;
-    else if(vars_names[ii]== "CH4")
+    else if(vars_names[ii] == "CH4")
       ch4_index = ii;
-    else if(vars_names[ii]== "sootFV")
+    else if(vars_names[ii] == "sootFV")
       soot_index = ii;
 
     if (d_calcExtraScalars){
       //This is going to be very source term specific.  
       //It might be nice to make this more generic in the future.
 
-      std::vector<ExtraScalarSolver*>::iterator iss; 
+      vector<ExtraScalarSolver*>::iterator iss; 
       for ( iss=d_extraScalars->begin(); iss!=d_extraScalars->end(); ++iss ){
 
         std::vector<ExtraScalarSrc*> extraScalarSources = (*iss)->getExtraScalarSources();
@@ -596,15 +664,16 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);
   for (int ii = 0; ii < d_varscount; ii++) {
-    fd >> vars_units[ii];
+    vars_units[ii] = getString( gzFp );
   }
   
   // Enthalpy loss vector
   heatLoss=vector<double>(d_heatlosscount);
   // Reading heat loss values
+
   if (Hl_index != -1) {
     for (int mm=0; mm< d_heatlosscount; mm++){
-      fd >> heatLoss[mm];
+      getDouble( gzFp, heatLoss[mm] );
       //cout << heatLoss[mm] << endl;
     }
   }
@@ -615,7 +684,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   // Jennifer's bug fix
   if (Fvar_index != -1) {
     for (int mm=0; mm< d_mixvarcount; mm++){
-      fd >> variance[mm];
+      getDouble( gzFp, variance[mm] );
     }
   }
 
@@ -635,23 +704,23 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   for (int kk=0; kk< d_varscount; kk++){
     // Reading mixture fraction values
     for (int ii=0; ii< d_mixfraccount; ii++){
-      fd >> meanMix[kk][ii];
-      //cout << meanMix[kk][ii] << "      ";
+      getDouble( gzFp, meanMix[kk][ii] );
+      //cout << ii << ": " << meanMix[kk][ii] << "      ";
     }
+    //cout << "\n";
     // Enthalpy loss loop
-    for (int mm=0; mm< d_heatlosscount; mm++){
-      // Variance loop
-      for (int jj=0;jj<d_mixvarcount; jj++){
-        // Mixture fraction loop 
+    for (int mm=0; mm< d_heatlosscount; mm++) {   // Variance loop
+      for (int jj=0;jj<d_mixvarcount; jj++){      // Mixture fraction loop 
         for (int ii=0; ii< d_mixfraccount; ii++){
-          fd >> table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii];
+          getDouble( gzFp, table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii] );
           //cout << table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii]<< "  ";
-        }// End of mixture fraction loop
+        } // End of mixture fraction loop
+        //cout << "\n";
       } // End of variance loop
-    }//End of enthalpy loss loop
-  }// End of Variables loop
-
+    } // End of enthalpy loss loop
+  } // End of Variables loop
+  
   // Closing the file pointer
-  fd.close();
+  gzclose( gzFp );
   cout << "Table reading is successful" << endl;
 }
