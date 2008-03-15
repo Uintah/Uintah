@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2008 Scientific Computing and Imaging Institute,
    University of Utah.
 
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -25,6 +25,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+//
+// mpi_test.cc
+//
+// Author: Justin Luitjens, J. Davison de St. Germain
+//
+// Date:   Mar. 2008
+//
+
 #include <sci_defs/mpi_defs.h>
 #include <mpi.h>
 
@@ -41,12 +49,28 @@
 using namespace SCIRun;
 using namespace std;
 
+///////////////////////////////////////////////////
+
 const int HOST_NAME_SIZE = 100;
 char      hostname[ HOST_NAME_SIZE ];
 int       rank;
 int       procs;
 
 stringstream error_stream;
+
+struct Args {
+  bool testFileSystem;
+  bool verbose;
+
+  Args() :
+    testFileSystem( true ),
+    verbose( false )
+  {}
+
+} args;
+
+///////////////////////////////////////////////////
+// Pre-declarations of test functions
 
 int allreduce_test();
 int reduce_test();
@@ -58,17 +82,77 @@ int point2pointsync_test();
 int fileSystem_test();
 int testme( int (*testfunc)(void),const char* name );
 
+///////////////////////////////////////////////////
+
+void
+usage( const string & prog, const string & badArg )
+{
+  if( rank == 0 ) {
+    cout << "\n";
+    if( badArg != "" ) {
+      cout << "Bad command line argument: '" << badArg << "'\n\n";
+    }
+    cout << "Usage: mpirun -np # mpi_test [options]\n";
+    cout << "\n";
+    cout << "       mpi_test runs a number of MPI calls attempting to verify\n";
+    cout << "       that all nodes are up and running.  These tests include\n";
+    cout << "       both synchronous and async point to point messages, broadcasts,\n";
+    cout << "       reductions, and gathers.  Additionally, mpi_test will attempt\n";
+    cout << "       to create and read files on the file system on each node\n";
+    cout << "       (once per proc per node) to verify that the filesystem appears\n";
+    cout << "       to be working on all nodes.\n";
+    cout << "\n";
+    cout << "       Note, on Inferno, if some of the tests fail and report the processor\n";
+    cout << "       rank, you can look in the $PBS_NODEFILE for a list of processors.\n";
+    cout << "       Rank corresponds to location in the file (ie, rank 0 is the first\n";
+    cout << "       entry, rank 1 is the second entry, etc).\n";
+    cout << "\n";
+    cout << "       Options:\n";
+    cout << "\n";
+    cout << "         -nofs - Don't check filesystem.\n";
+    cout << "         -v    - Be verbose!  (Warning, on a lot of processors this will .\n";
+    cout << "                   produce a lot of output!)\n";
+    cout << "\n";
+  }
+  exit(1);
+}
+
+void
+parseArgs( int argc, char *argv[] )
+{
+  for( int pos = 1; pos < argc; pos++ ) {
+    string arg = argv[pos];
+    if( arg == "-nofs" ) {
+      args.testFileSystem = false;
+    }
+    else if( arg == "-v" ) {
+      args.verbose = true;
+    }
+    else {
+      usage( argv[0], arg );
+    }
+  }
+}
+
+
 int
-main( int argc, char** argv )
+main( int argc, char* argv[] )
 {
   gethostname( (char*)&hostname, HOST_NAME_SIZE );
 
-  MPI_Init(&argc,&argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &procs);
+  MPI_Init( &argc, &argv );
+  MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+  MPI_Comm_size( MPI_COMM_WORLD, &procs );
   
-  if(rank==0) {
+  parseArgs( argc, argv );
+
+  if( rank == 0 ) {
     cout << "Testing mpi communication on " << procs << " processors." << endl;
+  }
+
+  if( args.verbose ) {
+    cout << "Rank " << rank << " hostname is " << hostname << ".\n";
+    usleep(1000000); // Give enough time for prints to complete before starting tests.
   }
  
   // Run Point2PointASync_Test first, as it will hopefully tell us the
@@ -81,7 +165,10 @@ main( int argc, char** argv )
   testme( allgather_test,        "MPI_Allgather" );
   testme( gather_test,           "MPI_Gather" );
   testme( point2pointsync_test, "Point To Point Sync" );
-  testme( fileSystem_test,       "File System" );
+
+  if( args.testFileSystem ) {
+    testme( fileSystem_test,       "File System" );
+  }
   
   MPI_Finalize();
   return 0;
@@ -245,6 +332,95 @@ fileSystem_test()
     pass = raid1 && raid2 && raid3 && raid4;
   }
   
+  if( args.verbose ) {
+    if( rank == 0 ) { 
+
+      cout << "\n";
+      cout << "   Any numbers printed out (.#.) correspond to processors that have successfully\n";
+      cout << "   completed the test:\n";
+      cout << "\n";
+
+      vector<int>    messages(procs);
+      MPI_Request  * rrequest = new MPI_Request[ procs ];    
+
+      for( int proc = 1; proc < procs; proc++ ) {    
+        MPI_Irecv( &messages[proc], 1, MPI_INT, proc, proc, MPI_COMM_WORLD, &rrequest[proc] );
+      }
+      bool done = false;
+      int  totalCompleted = 0;
+
+      double startTime = -1, curTime = -1;
+
+      startTime = Time::currentSeconds();
+
+      int          totalPassed = (int)pass, totalFailed = (int)(!pass);
+      int          numCompleted = -1;
+      int        * completedBuffer = new int[ procs ]; // Passed to MPI
+      MPI_Status * status = new MPI_Status[ procs ];
+
+      usleep(1000000);//testing
+
+      while( !done ) {
+
+        usleep( 100000 ); // Wait a .1 sec for messages to come in
+
+        // See if any processors have reported their status...
+        //
+        // Not sure why we have to use 'procs' instead of 'procs-1', but it
+        // doesn't work unless you do...
+        MPI_Testsome( procs, rrequest, &numCompleted, completedBuffer, status );
+
+        if( numCompleted > 0 ) {
+          for( int pos = 0; pos < numCompleted; pos++ ) {
+            if( messages[completedBuffer[ pos ]] > 0 ) {
+              cout << "." << messages[completedBuffer[pos]] << ".";
+              totalPassed++;
+            } else { // failed
+              cout << "<" << messages[completedBuffer[pos]] << ">"; cout.flush();
+              totalFailed++;
+            }
+          }
+        }
+        curTime = Time::currentSeconds();
+        
+        double secsToWait = 50.0;
+        if( curTime > startTime + secsToWait ) { // Give it 'secsToWait' seconds to finish
+          if( rank == 0 ) {
+            cout << "\nWarning: Some processors have not responded after " << secsToWait << " seconds.\n"
+                 << "           Continuing to wait, but no further information will be displayed until\n"
+                 << "           all processors complete.  Number of processors that did respond: " 
+                 << numCompleted << " of " << procs-1 << ".\n";
+            done = true;
+          }
+        }
+      
+        totalCompleted += numCompleted;
+        if( totalCompleted == (procs-1) ) {
+          cout << "\n\n";
+          done = true;
+        }
+      
+      } // end while (!done)
+      if( rank == 0 ) {
+        cout << "Total number of processors reporting FS check success: " << totalPassed << ".\n";
+        cout << "Total number of processors reporting FS check failure: " << totalFailed << ".\n";
+      }
+
+      // Clean up memory
+      delete [] completedBuffer;
+      delete [] status;
+      delete [] rrequest;
+    }
+    else {
+
+      MPI_Request request;    
+      // Tell rank 0 that we have succeeded or failed (-rank).
+      int data = pass ? rank : -rank;
+
+      MPI_Isend( &data, 1, MPI_INT, 0, rank, MPI_COMM_WORLD, &request );
+    }
+  } // end if verbose
+
   return pass;
 }
 
@@ -298,10 +474,6 @@ point2pointasync_test()
     //status[ pos ].MPI_ERROR  = -4;
   }
 
-  //MPI_Waitsome( procs, srequest, &numCompleted, completedBuffer, status );
-
-  //printf("%d: completed %d\n", rank, numCompleted );
-
   bool done = false;
   int  totalCompleted = 0;
 
@@ -327,7 +499,7 @@ point2pointasync_test()
       // Find out (and display) which processors did not successfully respond...
       for( int pos = 0; pos < procs; pos++ ) {
         if( completed[ pos ] == false ) {
-          printf( "Proc %d failed to hear from processor %d.\n", rank, pos );
+          cout << "Proc " << rank << " failed to hear from processor " << pos << ".\n";
           pass = false;
         }
       }
@@ -360,6 +532,7 @@ point2pointasync_test()
 
   delete [] status;
   delete [] completed;
+  delete [] completedBuffer;
   delete [] srequest;
   delete [] rrequest;
 
