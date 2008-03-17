@@ -99,7 +99,7 @@ namespace SCIRun {
     if ( file != NULL ) {
       unsigned long tempLong = 0;
       char tempString[1024];
-      char* compareString;
+      const char* compareString;
 
       switch ( info_type ) {
       case MEM_SIZE: compareString = "VmSize:"; break;

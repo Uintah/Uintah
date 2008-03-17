@@ -148,7 +148,7 @@ InsertStringInFile(char* filename, const char* match, const char* add_text)
 }
 
 map<int,char*>*
-GetFilenamesEndingWith(const char* d, char* ext)
+GetFilenamesEndingWith(const char* d, string ext)
 {
   map<int,char*>* newmap = 0;
   dirent* file = 0;
@@ -162,8 +162,8 @@ GetFilenamesEndingWith(const char* d, char* ext)
 
   file = readdir(dir);
   while (file) {
-    if ((strlen(file->d_name)>=strlen(ext)) && 
-        (strcmp(&(file->d_name[strlen(file->d_name)-strlen(ext)]),ext)==0)) {
+    if ((strlen(file->d_name)>=strlen(ext.c_str())) && 
+        (strcmp(&(file->d_name[strlen(file->d_name)-strlen(ext.c_str())]),ext.c_str())==0)) {
       newstring = new char[strlen(file->d_name)+1];
       sprintf(newstring,"%s",file->d_name);
       newmap->insert(pair<int,char*>(newmap->size(),newstring));

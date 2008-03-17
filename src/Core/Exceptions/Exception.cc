@@ -113,7 +113,7 @@ void Exception::sci_throw(const Exception& exc)
   // Set this environment variable if you want to have a default
   // response to the question below.  Value values are:
   // ask, dbx, cvd, throw, abort
-  char* emode = getenv("SCI_EXCEPTIONMODE");
+  const char* emode = getenv("SCI_EXCEPTIONMODE");
   if(!emode)
     emode = "dbx"; // Default exceptionmode
 

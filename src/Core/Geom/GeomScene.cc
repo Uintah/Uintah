@@ -158,7 +158,7 @@ void GeomSave::end_trn(ostream& out)
     out << "TransformEnd\n";
 }
 
-void GeomSave::start_node(ostream& out, char* name)
+void GeomSave::start_node(ostream& out, const char* name)
 {
     indent(out);
     out << name << " {\n";
