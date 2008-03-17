@@ -221,7 +221,7 @@ void MemStats::tcl_command(GuiArgs& args, void*)
 		    (long)bytes_overhead, 100.*(double)bytes_overhead/(double)total,
 		    (long)bytes_fragmented, 100.*(double)bytes_fragmented/(double)total,
 		    (long)bytes_inhunks, 100.*(double)bytes_inhunks/(double)total,
-		    total, 100.);
+		    (long)total, 100.);
 	    args.result(buf);
 	} else {
 	    redraw_globals=0;

@@ -40,8 +40,6 @@
 
 using namespace SCIRun;
 
-static bool mNV_float_buffer = true;
-static bool mNV_texture_rectangle = false;
 
 Fbuffer::Fbuffer( int width, int height ) :
   mWidth( width ),

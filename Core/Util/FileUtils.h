@@ -65,7 +65,7 @@ SCISHARE void InsertStringInFile( char* filename, const char* match, const char*
 
 
 SCISHARE std::map<int,char*>* GetFilenamesEndingWith(const char* dir, 
-                                                     char* ext);
+                                                     string ext);
 
 SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
                                                  const string & prefix);

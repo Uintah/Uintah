@@ -255,7 +255,7 @@ ServiceDB::loadpackages()
           xmldir = pathelt+"/"+packageelt+"/Services";
         }
       map<int,char*>* files;
-      files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
+      files = GetFilenamesEndingWith( xmldir.c_str(),".xml");
 
       if (!files) 
         {
