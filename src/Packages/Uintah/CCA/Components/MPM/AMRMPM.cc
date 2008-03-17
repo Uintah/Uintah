@@ -56,20 +56,6 @@ static DebugStream amr_doing("AMRMPM", false);
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
 extern Mutex cerrLock;
 
-static Vector face_norm(Patch::FaceType f)
-{
-  switch(f) { 
-  case Patch::xminus: return Vector(-1,0,0);
-  case Patch::xplus:  return Vector( 1,0,0);
-  case Patch::yminus: return Vector(0,-1,0);
-  case Patch::yplus:  return Vector(0, 1,0);
-  case Patch::zminus: return Vector(0,0,-1);
-  case Patch::zplus:  return Vector(0,0, 1);
-  default:
-    return Vector(0,0,0); // oops !
-  }
-}
-
 AMRMPM::AMRMPM(const ProcessorGroup* myworld) :
   SerialMPM(myworld)
 {

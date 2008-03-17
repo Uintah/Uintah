@@ -204,10 +204,6 @@ ArchesHeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
     normal[gp->thicknessDirection()] = 1.0;
     flux = fluxPerParticle;
   } else if (d_surfaceType == "cylinder") {
-    CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
-    double length = gp->height();
-    //cout << "length = " << length << endl;
-
     double new_flux = d_polyData->interpolateValue(px) * getSurfaceArea()/static_cast<double>(d_numMaterialPoints);
     // cout << "interpolated new_flux = " << new_flux << endl;
 #if 0

@@ -708,7 +708,7 @@ void Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& st
     MaterialSet* new_matls = scinew MaterialSet;
     new_matls->addReference();
     new_matls->createEmptySubsets(1);
-    for (unsigned int i = 0; i < numMatls; i++)
+    for (int i = 0; i < numMatls; i++)
       new_matls->getSubset(0)->add(i);
     state->setOriginalMatlsFromRestart(new_matls);
   }

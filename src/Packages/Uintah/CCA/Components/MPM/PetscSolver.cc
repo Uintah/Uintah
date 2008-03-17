@@ -51,7 +51,7 @@ void MPMPetscSolver::initialize()
   // store in a vector so we can customize the settings easily
   vector<char*> args;
   //null argument is needed as it normaly stores the command
-  args.push_back("");
+  args.push_back(const_cast<char*>(""));
   
 #ifdef DEBUG_PETSC
   args.push_back("ImpMPM::problemSetup");

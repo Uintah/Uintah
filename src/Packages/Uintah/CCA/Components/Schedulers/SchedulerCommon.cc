@@ -675,11 +675,11 @@ SchedulerCommon::logMemoryUse()
   for(int i=0;i<(int)dws.size();i++){
     char* name;
     if(i==0)
-      name="OldDW";
+      name=const_cast<char*>("OldDW");
     else if(i==(int)dws.size()-1)
-      name="NewDW";
+      name=const_cast<char*>("NewDW");
     else
-      name="IntermediateDW";
+      name=const_cast<char*>("IntermediateDW");
     dws[i]->logMemoryUse(*memlogfile, total, name);
   }
   
