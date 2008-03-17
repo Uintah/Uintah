@@ -262,43 +262,7 @@ void BCDataArray::setNBoundaryIterator(int mat_id,vector<IntVector>& b,int i)
       itr->second[i]->setNBoundaryIterator(b);
   }
 }
-#if 0
-void BCDataArray::setSFCXIterator(int mat_id,vector<IntVector>& i,int ii)
-{
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end())
-    itr->second[ii]->setSFCXIterator(i);
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      itr->second[ii]->setSFCXIterator(i);
-  }
-}
 
-void BCDataArray::setSFCYIterator(int mat_id,vector<IntVector>& i,int ii)
-{
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end())
-    itr->second[ii]->setSFCYIterator(i);
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      itr->second[ii]->setSFCYIterator(i);
-  }
-}
-
-void BCDataArray::setSFCZIterator(int mat_id,vector<IntVector>& i,int ii)
-{
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end())
-    itr->second[ii]->setSFCZIterator(i);
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      itr->second[ii]->setSFCZIterator(i);
-  }
-}
-#endif
 void BCDataArray::getBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr,
                                       int i) const
 {
@@ -324,45 +288,6 @@ void BCDataArray::getNBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr,
     itr = d_BCDataArray.find(-1);
     if (itr != d_BCDataArray.end())
       itr->second[i]->getNBoundaryIterator(b_ptr);
-  }
-}
-
-void BCDataArray::getSFCXIterator(int mat_id,vector<IntVector>*& i_ptr,int ii) const
-{
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end()) {
-    itr->second[ii]->getSFCXIterator(i_ptr);
-  }
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      itr->second[ii]->getSFCXIterator(i_ptr);
-  }
-}
-
-void BCDataArray::getSFCYIterator(int mat_id,vector<IntVector>*& i_ptr,int ii) const
-{
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end()) {
-    itr->second[ii]->getSFCYIterator(i_ptr);
-  }
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      itr->second[ii]->getSFCYIterator(i_ptr);
-  }
-}
-
-void BCDataArray::getSFCZIterator(int mat_id,vector<IntVector>*& i_ptr,int ii) const
-{
-  bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  if (itr != d_BCDataArray.end()) {
-    itr->second[ii]->getSFCZIterator(i_ptr);
-  }
-  else {
-    itr = d_BCDataArray.find(-1);
-    if (itr != d_BCDataArray.end())
-      itr->second[ii]->getSFCZIterator(i_ptr);
   }
 }
 
