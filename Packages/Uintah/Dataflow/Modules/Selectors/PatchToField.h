@@ -42,11 +42,11 @@ public:
                      IntVector max_i,
                      Semaphore* sema = 0):
     fld_(fld),
+    var_(patchData),
     offset_(offset),
     min_(min_i),
     max_(max_i),
-    sema_(sema),
-    var_(patchData) 
+    sema_(sema)
   {
   }
   void run()
