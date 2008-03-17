@@ -198,12 +198,6 @@ HeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);
-    double theta = atan(px.y()/px.x());
-    double theta_n = atan(normal.y()/normal.x());
-    double max_min = .3;  // span for which the flux varies over the surface
-    double flux_variation_mag = fluxPerParticle*max_min/2.;
-    double offset = fluxPerParticle - flux_variation_mag;
-    double flux_variation = flux_variation_mag*cos(theta) + offset;
 #if 0
     cout << "theta = " << theta << " theta_n = " << theta_n << endl;
     cout << "flux = " << fluxPerParticle  << " flux_variation = " 

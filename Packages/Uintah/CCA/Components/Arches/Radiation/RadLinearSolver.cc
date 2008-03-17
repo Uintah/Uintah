@@ -105,10 +105,10 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
   int argc = 4;
   char** argv;
   argv = scinew  char*[argc];
-  argv[0] = "RadLinearSolver::problemSetup";
-  argv[1] = "-no_signal_handler";
-  argv[2] = "-log_exclude_actions";
-  argv[3] = "-log_exclude_objects";
+  argv[0] = const_cast<char*>("RadLinearSolver::problemSetup");
+  argv[1] = const_cast<char*>("-no_signal_handler");
+  argv[2] = const_cast<char*>("-log_exclude_actions");
+  argv[3] = const_cast<char*>("-log_exclude_objects");
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
     throw PetscError(ierr, "PetscInitialize", __FILE__, __LINE__);

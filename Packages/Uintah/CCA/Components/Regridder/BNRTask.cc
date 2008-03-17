@@ -176,7 +176,7 @@ void BNRTask::continueTask()
             flag_info_[2]=flag_info_buffer_[2];   //set new  max
           }
           //update bit field
-          for(int i=3;i<flag_info_.size();i++)
+          for(int i=3;i<(int)flag_info_.size();i++)
           {
             flag_info_[i]|=flag_info_buffer_[i];
           }
@@ -208,7 +208,7 @@ void BNRTask::continueTask()
     //remove processors from p_group_ that have zero flags
     p=0;
     mask=1;
-    for(int i=0;i<p_group_.size();i++,index++)
+    for(int i=0;i<(int)p_group_.size();i++,index++)
     {
       index=i/(sizeof(int)*8);
       shift=i-(index)*(sizeof(int)*8);
@@ -222,7 +222,7 @@ void BNRTask::continueTask()
         if(i==flag_info_[1])  //if this is the master processor
         {
             swap(p_group_[0],p_group_[p]); //place it at the front of the p_group_
-            if(p_rank_==p)                //if i'm master
+            if((int)p_rank_==p)                //if i'm master
               p_rank_=0;                      //set my rank to 0
             else if(p_rank_==0)           //if i'm rank 0
               p_rank_=p;                      //set my rank to p
@@ -286,7 +286,7 @@ void BNRTask::continueTask()
 
           SUM_SIGNATURES:
           
-          for(unsigned int i=0;i<sig_size_;i++)
+          for(int i=0;i<sig_size_;i++)
           {
             count_[i]+=sum_[i];
           }

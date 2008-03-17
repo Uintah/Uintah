@@ -10,7 +10,7 @@ void CostProfiler::setMinPatchSize(const vector<IntVector> &min_patch_size)
   d_minPatchSize=min_patch_size;
   costs.resize(d_minPatchSize.size());
   d_minPatchSizeVolume.resize(d_minPatchSize.size());
-  for(int l=0;l<d_minPatchSize.size();l++)
+  for(int l=0;l<(int)d_minPatchSize.size();l++)
   {
     d_minPatchSizeVolume[l]=d_minPatchSize[l][0]*d_minPatchSize[l][1]*d_minPatchSize[l][2];
   }
@@ -74,7 +74,7 @@ void CostProfiler::outputError(const GridP currentGrid)
       vector<double> predictedzo_sum(regions.size(),0), predictedfo_sum(regions.size(),0), predictedso_sum(regions.size(),0), predictedto_sum(regions.size(),0), measured_sum(regions.size(),0);
       vector<double> predictedzo(regions.size(),0), predictedfo(regions.size(),0), predictedso(regions.size(),0), predictedto(regions.size(),0), measured(regions.size(),0);
  
-      for(int r=0;r<regions.size();r++)
+      for(int r=0;r<(int)regions.size();r++)
       {
         //coarsen region by minimum patch size
         IntVector low=regions[r].getLow()/d_minPatchSize[l];
@@ -115,7 +115,7 @@ void CostProfiler::outputError(const GridP currentGrid)
         double total_soerror=0,mean_soerror=0, total_percent_soerror=0, mean_percent_soerror=0;
         double total_toerror=0,mean_toerror=0, total_percent_toerror=0, mean_percent_toerror=0;
         double total_measured=0, total_zopredicted=0, total_fopredicted=0, total_sopredicted=0, total_topredicted=0;
-        for(int r=0;r<predictedfo.size();r++)
+        for(int r=0;r<(int)predictedfo.size();r++)
         {
           total_measured+=measured_sum[r];
           total_zopredicted+=predictedzo_sum[r];
@@ -161,7 +161,7 @@ void CostProfiler::finalizeContributions(const GridP currentGrid)
    
   timesteps++;
   //for each level
-  for(int l=0;l<costs.size();l++)
+  for(int l=0;l<(int)costs.size();l++)
   {
     //for each datapoint
     for(map<IntVector,Contribution>::iterator iter=costs[l].begin();iter!=costs[l].end();)
@@ -204,7 +204,7 @@ void CostProfiler::getWeights(int l, const vector<Region> &regions, vector<doubl
   weights.resize(regions.size());
   vector<double> partial_weights(regions.size(),0);      
 
-  for(int r=0;r<regions.size();r++)
+  for(int r=0;r<(int)regions.size();r++)
   {
     //coarsen region by minimum patch size
     IntVector low=regions[r].getLow()/d_minPatchSize[l];
@@ -260,7 +260,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     double volume=0;
     double weight=0;
     //compute average cost per datapoint
-    for(int r=0;r<old_level.size();r++)
+    for(int r=0;r<(int)old_level.size();r++)
     {
       volume+=old_level[r].getVolume();
       weight+=weights[r];
@@ -292,7 +292,6 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     new_regions=Region::difference(dnew, dold);
     
     //initialize weights 
-    int i=0;
     for(deque<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
     {
       IntVector low=it->getLow()/d_minPatchSize[l];
@@ -312,7 +311,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
 }
 void CostProfiler::reset()
 {
-  for(int i=0;i<costs.size();i++)
+  for(int i=0;i<(int)costs.size();i++)
   {
     costs[i].clear();
   }

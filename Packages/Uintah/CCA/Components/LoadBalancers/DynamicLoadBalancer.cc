@@ -30,7 +30,7 @@ static DebugStream dbg("DynamicLoadBalancer", false);
 static DebugStream stats("LBStats",false);
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
-   : LoadBalancerCommon(myworld), sfc(myworld), d_costProfiler(myworld)
+  : LoadBalancerCommon(myworld), d_costProfiler(myworld), sfc(myworld)
 {
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
@@ -690,7 +690,7 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch
     currentProcCosts[l].assign(num_procs,0);
     tempProcCosts[l].assign(num_procs,0);
     
-    for(int p=0;p<patch_costs[l].size();p++,i++)
+    for(int p=0;p<(int)patch_costs[l].size();p++,i++)
     {
       currentProcCosts[l][d_processorAssignment[i]] += patch_costs[l][p];
       tempProcCosts[l][d_tempAssignment[i]] += patch_costs[l][p];
@@ -989,7 +989,7 @@ DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, Pro
   }
 
   if (d_myworld->myrank() == 0) {
-    int startPatch = (*grid->getLevel(0)->patchesBegin())->getID();
+    int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
     dbg << d_myworld->myrank() << " check after restart: " << d_checkAfterRestart << "\n";
     /*if (lb.active()) {
       for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
@@ -1098,7 +1098,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
     if(during_regrid)
     {
       //for each level
-      for (int l=0; l<patches.size();l++) 
+      for (int l=0; l<(int)patches.size();l++) 
       {
         d_costProfiler.getWeights(l,patches[l],costs[l]);
       }
@@ -1220,7 +1220,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
         d_oldAssignmentBasePatch = d_assignmentBasePatch;
       }
       if (lb.active()) {
-        int num_procs = d_myworld->size();
+        int num_procs = (int)d_myworld->size();
         int myrank = d_myworld->myrank();
         if (myrank == 0) {
           LevelP curLevel = grid->getLevel(0);
