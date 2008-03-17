@@ -203,7 +203,7 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
      if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS)
 #endif
        {
-	 MpiError("MPI_Init", status);
+	 MpiError(const_cast<char*>("MPI_Init"), status);
        }
 
 #ifdef THREADED_MPI_AVAILABLE
@@ -217,10 +217,10 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 
      worldComm=MPI_COMM_WORLD;
      if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
-       MpiError("MPI_Comm_size", status);
+       MpiError(const_cast<char*>("MPI_Comm_size"), status);
 
      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
-       MpiError("MPI_Comm_rank", status);
+       MpiError(const_cast<char*>("MPI_Comm_rank"), status);
 #if !defined( _WIN32 ) && ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
      SCIRun::AllocatorSetDefaultTagMalloc(oldtag);
      SCIRun::AllocatorMallocStatsAppendNumber(worldRank);
@@ -275,7 +275,7 @@ Parallel::finalizeManager(Circumstances circumstances)
     } else {
       int status;
       if((status=MPI_Finalize()) != MPI_SUCCESS)
-	MpiError("MPI_Finalize", status);
+	MpiError(const_cast<char*>("MPI_Finalize"), status);
     }
   }
   if(rootContext){
