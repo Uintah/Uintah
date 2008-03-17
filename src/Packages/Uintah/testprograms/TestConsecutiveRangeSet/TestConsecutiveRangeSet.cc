@@ -253,7 +253,7 @@ void doUnionTests(Suite* suite)
 bool equalSets(ConsecutiveRangeSet& set, const int* array, int arraySize,
 	       bool& sameSize)
 {
-  if (arraySize != set.size()) {
+  if (arraySize != (int)set.size()) {
     sameSize = false;
     return false;
   }
