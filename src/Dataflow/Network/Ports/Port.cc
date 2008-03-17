@@ -44,7 +44,7 @@
 #include <Dataflow/Network/Connection.h>
 #include <Dataflow/Network/Module.h>
 #include <iostream>
-#include <stdio.h>
+#include <sstream>
 
 using namespace std;
 using namespace SCIRun;
@@ -134,7 +134,7 @@ Port::set_which_port(int wp)
 void
 IPort::update_light()
 {
-    char* color;
+    string color;
     switch(portstate){
     case Resetting:
 	color="blue";
@@ -150,15 +150,18 @@ IPort::update_light()
 	color="black";
 	break;
     }
-    char str[1000];
-    sprintf(str,"lightPort {%s %d i} %s",module->id_.c_str(),which_port,color);
-    module->get_gui()->execute(str);
+    stringstream str;
+    //  char str[1000];
+    //  sprintf(str,"lightPort {%s %d i} %s",module->id_.c_str(),which_port,color);
+    str << "lightPort {" << module->id_ << " " << which_port << " " << color 
+        << "} ";
+    module->get_gui()->execute(str.str().c_str());
 }
 
 void
 OPort::update_light()
 {
-    char* color;
+    string color;
     switch(portstate){
     case Resetting:
 	color="blue";
@@ -178,9 +181,15 @@ OPort::update_light()
 	}
 	break;
     }
+#if 0
     char str[1000];
     sprintf(str,"lightPort {%s %d o} %s",module->id_.c_str(),which_port,color);
-    module->get_gui()->execute(str);
+#endif
+    stringstream str;
+
+    str << "lightPort {" << module->id_ << " " << which_port << " " << color 
+        << "} ";
+    module->get_gui()->execute(str.str().c_str());
 }
 
 void

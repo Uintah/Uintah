@@ -148,7 +148,7 @@ FieldInfo::update_input_attributes(FieldHandle f)
   if (regressing) { remark("Type: " + tname); }
 
   // Basis
-  static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
+  string at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
   string dataat;
   switch(f->basis_order())
   {

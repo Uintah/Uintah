@@ -354,7 +354,7 @@ void
 Module::update_state(State st)
 {
   state_= st;
-  char* s;
+  string s;
 
   switch(st){
   case JustStarted:
@@ -395,7 +395,7 @@ Module::update_msg_state(MsgState st)
   if( !( ((msg_state_ == Error) && (st != Reset))  || 
 	 ((msg_state_ == Warning) && (st == Remark)) ) ) {
     msg_state_=st;
-    char* s="unknown";
+    string s="unknown";
     switch(st){
     case Remark:
       s="Remark";

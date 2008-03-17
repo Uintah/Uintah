@@ -44,9 +44,8 @@
 #include <Dataflow/Constraints/BaseVariable.h>
 #include <Dataflow/Constraints/ConstraintSolver.h>
 #include <iostream>
+#include <sstream>
 using std::ostream;
-
-#include <stdio.h>
 
 namespace SCIRun {
 
@@ -208,10 +207,10 @@ BaseVariable::printc( ostream& os, const Index c )
 
 /******* Miscellaneous Functions *******/
 
-char*
+string
 PriorityString( const VPriority p )
 {
-   static char temp[20];
+   std::stringstream temp;
    
    switch (p) {
    case P_Lowest:	        return "Lowest";
@@ -220,16 +219,16 @@ PriorityString( const VPriority p )
    case P_HighMedium:		return "HighMedium";
    case P_Highest:		return "Highest";
    default:
-      sprintf(temp, "priority[%d]", p);
-      return temp;
+     temp << "priority[" << p << "]";
+     return temp.str();
    }
 }
 
 
-char*
+string
 SchemeString( const Scheme s )
 {
-   static char temp[20];
+   std::stringstream temp;
    
    switch (s) {
    case Scheme1:		return "Scheme 1";
@@ -241,8 +240,8 @@ SchemeString( const Scheme s )
    case Scheme7:		return "Scheme 7";
    case Scheme8:		return "Scheme 8";
    default:
-      sprintf(temp, "scheme[%d]", s);
-      return temp;
+     temp << "scheme[" << s << "]";
+     return temp.str();
    }
 }
 
