@@ -19,7 +19,7 @@ GV_Task::GV_Task(string name, double duration, GV_TaskGraph* owner)
   : m_name(name), m_duration(duration),
     m_graph(owner),
     m_maxBelowCost(0), m_maxAboveCost(0),
-    m_visited(false), m_sorted(false)
+    m_sorted(false),m_visited(false)
 {}
 
 GV_Task::~GV_Task()
@@ -206,7 +206,7 @@ void GV_TaskGraph::topologicallySortEdges()
   }
 
   m_edges.clear();
-  for (int i = 0; i < sortedTasks.size(); i++) {
+  for (int i = 0; i < (int)sortedTasks.size(); i++) {
     list<Edge*> dependentEdges = sortedTasks[i]->getDependentEdges();
     for (list<Edge*>::iterator edgeIter = dependentEdges.begin();
 	 edgeIter != dependentEdges.end(); edgeIter++) {

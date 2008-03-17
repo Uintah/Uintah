@@ -357,7 +357,7 @@ writeline(int fd, string str)
   ssize_t written = 0;
   ssize_t len;
 
-  while (written < str.size()) {
+  while (written < (int)str.size()) {
     len = write(fd, str.c_str() + written, str.size() - written);
     if (len > 0)
       written += len;

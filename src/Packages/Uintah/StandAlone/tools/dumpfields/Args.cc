@@ -42,7 +42,7 @@ vector<string>
 Args::allTrailing(unsigned int minnumber)
 {
   vector<string> res;
-  int nargs = args.size();
+  unsigned int nargs = args.size();
   if(nargs<minnumber)
     throw ProblemSetupException("Not enough arguments",__FILE__,__LINE__);
   for(int iarg=nargs-1;iarg--;iarg>=0) {

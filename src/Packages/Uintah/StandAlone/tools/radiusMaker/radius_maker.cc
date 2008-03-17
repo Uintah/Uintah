@@ -70,8 +70,8 @@ int
 main( int argc, char *argv[] )
 {
   char            * err;
-  char            * in = "-";
-  char            * out_file_name = "-";
+  char            * in = const_cast<char*>("-");
+  char            * out_file_name = const_cast<char*>("-");
   int               var = -1;
   float             global_norm = 1;
   vector<Exception> exceptions;
