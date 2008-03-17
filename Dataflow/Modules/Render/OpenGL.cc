@@ -1957,9 +1957,8 @@ OpenGL::StartMpeg(const string& fname)
   // Get the default options.
   MPEGe_default_options( &mpeg_options_ );
   // Change a couple of the options.
-  char *pattern = scinew char[4];
-  pattern = "II\0";
-  mpeg_options_.frame_pattern = pattern;
+  string pattern = "II\0";
+  mpeg_options_.frame_pattern = const_cast<char *> (pattern.c_str());
   mpeg_options_.search_range[1]=0;
   mpeg_options_.gop_size=1;
   mpeg_options_.IQscale=1;

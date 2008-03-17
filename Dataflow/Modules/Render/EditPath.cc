@@ -151,7 +151,7 @@ private:
   void removeView();
   void savePathToFile();
   void loadPathFromFile();
-  bool reset();
+  void reset();
   void start();
   void stop();
 
@@ -418,7 +418,7 @@ EditPath::togglePathPoints( bool updateGeometry /* = false */, bool updateView /
 
   if( numKeyFrames == 0 ) return;
 
-  if( ( pathPointsMap_.size() != numKeyFrames ) || updateGeometry ) {
+  if( ( (int) pathPointsMap_.size() != numKeyFrames ) || updateGeometry ) {
 
     // (Re-)Build path widgets, lines, markers.
 
@@ -689,10 +689,15 @@ EditPath::savePathToFile()
 
   fprintf( fp, "%d\n", numKeyFrames );
   for( int pos = 0; pos < numKeyFrames; pos++ ) {
-    fprintf( fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf\n",
-             eyepointKeyFrames_[ pos ].x(), eyepointKeyFrames_[ pos ].y(), eyepointKeyFrames_[ pos ].z(),
-             lookatKeyFrames_[ pos ].x(),   lookatKeyFrames_[ pos ].y(),   lookatKeyFrames_[ pos ].z(),
-             upVectorKeyFrames_[ pos ].x(), upVectorKeyFrames_[ pos ].y(), upVectorKeyFrames_[ pos ].z(),
+    fprintf( fp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %d\n",
+             eyepointKeyFrames_[ pos ].x(), eyepointKeyFrames_[ pos ].y(), 
+             eyepointKeyFrames_[ pos ].z(),
+             lookatKeyFrames_[ pos ].x(),   
+             lookatKeyFrames_[ pos ].y(),   
+             lookatKeyFrames_[ pos ].z(),
+             upVectorKeyFrames_[ pos ].x(), 
+             upVectorKeyFrames_[ pos ].y(), 
+             upVectorKeyFrames_[ pos ].z(),
              fovKeyFrames_[ pos ], numberSubKeyFrames_[ pos ] );
   }
   fclose( fp );
@@ -737,7 +742,7 @@ EditPath::loadPathFromFile()
   fclose( fp );
 }
 
-bool
+void
 EditPath::reset()
 {
   state_ = STOPPED;

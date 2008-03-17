@@ -77,7 +77,7 @@ ChangeFieldBasis::~ChangeFieldBasis()
 void
 ChangeFieldBasis::update_input_attributes(FieldHandle f) 
 {
-  static char *at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
+  string at_table[4] = { "Nodes", "Edges", "Faces", "Cells" };
   switch(f->basis_order())
   {
   case 1:

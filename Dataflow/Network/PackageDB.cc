@@ -257,7 +257,7 @@ PackageDB::loadPackage(bool resolve)
 		 "/Dataflow/GUI");
     }
     std::map<int,char*>* files;
-    files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
+    files = GetFilenamesEndingWith(xmldir.c_str(),".xml");
 
     // WARNING... looks like the 'files' variable is memory leaked...
     // both in the failure case directly below and in the success case.

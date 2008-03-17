@@ -231,7 +231,7 @@ TCLThread::startNetworkEditor()
       Thread::exitAll(0);//exit_all_threads(TCL_ERROR);
     }
     fflush(stdout);
-    Tcl_StaticPackage(the_interp, "Tk", Tk_Init, Tk_SafeInit);
+    Tcl_StaticPackage(the_interp, const_cast<char *>("Tk"), Tk_Init, Tk_SafeInit);
   }
 
 #ifdef _WIN32
@@ -287,11 +287,11 @@ TCLThread::startNetworkEditor()
       return TCL_ERROR;
     }
   }
-  Tcl_StaticPackage(the_interp, "Itcl", Itcl_Init, Itcl_SafeInit);
+  Tcl_StaticPackage(the_interp, const_cast<char *>("Itcl"), Itcl_Init, Itcl_SafeInit);
   if (!scirun_nogui)
   {
-    Tcl_StaticPackage(the_interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
-    Tcl_StaticPackage(the_interp, "BLT", Blt_Init, Blt_SafeInit);
+    Tcl_StaticPackage(the_interp, const_cast<char*>("Itk"), Itk_Init, (Tcl_PackageInitProc *) NULL);
+    Tcl_StaticPackage(the_interp, const_cast<char*>("BLT"), Blt_Init, Blt_SafeInit);
   }
   printf("Done.\n");
   fflush(stdout);
@@ -304,25 +304,25 @@ TCLThread::startNetworkEditor()
   if (!scirun_nogui)
   {
     if (Tcl_Import(the_interp, Tcl_GetGlobalNamespace(the_interp),
-                   "::itk::*", /* allowOverwrite */ 1) != TCL_OK) {
+                   const_cast<char*>("::itk::*"), /* allowOverwrite */ 1) != TCL_OK) {
       return TCL_ERROR;
     }
   }
 
   if (Tcl_Import(the_interp, Tcl_GetGlobalNamespace(the_interp),
-		 "::itcl::*", /* allowOverwrite */ 1) != TCL_OK) {
+		 const_cast<char*>("::itcl::*"), /* allowOverwrite */ 1) != TCL_OK) {
     return TCL_ERROR;
   }
 
   if (!scirun_nogui)
   {
-    if (Tcl_Eval(the_interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }") != TCL_OK) {
+    if (Tcl_Eval(the_interp,const_cast<char*>( "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* ::itk::* }")) != TCL_OK) {
       return TCL_ERROR;
     }
   }
   else
   {
-    if (Tcl_Eval(the_interp, "auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* }") != TCL_OK) {
+    if (Tcl_Eval(the_interp, const_cast<char*>("auto_mkindex_parser::slavehook { _%@namespace import -force ::itcl::* }")) != TCL_OK) {
       return TCL_ERROR;
     }
   }
@@ -351,21 +351,21 @@ TCLThread::startNetworkEditor()
 
 #ifdef SCI_OPENGL
     printf("OpenGL widget, ");
-    Tcl_CreateCommand(the_interp, "opengl", OpenGLCmd, 
+    Tcl_CreateCommand(the_interp, const_cast<char*>("opengl"), OpenGLCmd, 
                       (ClientData) Tk_MainWindow(the_interp), 0);
 #endif
     fflush(stdout);
     printf("bevel widget, ");
-    Tcl_CreateCommand(the_interp, "bevel", BevelCmd,
+    Tcl_CreateCommand(the_interp, const_cast<char*>("bevel"), BevelCmd,
                       (ClientData) Tk_MainWindow(the_interp), 0);
     //                      (void (*)(PARAMETERTYPE)) NULL);
     fflush(stdout);
     printf("range widget, ");
-    Tcl_CreateObjCommand(the_interp, "range", (Tcl_ObjCmdProc *)Tk_RangeObjCmd,
+    Tcl_CreateObjCommand(the_interp, const_cast<char*>("range"), (Tcl_ObjCmdProc *)Tk_RangeObjCmd,
                          (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     fflush(stdout);
     printf("cursor, ");
-    Tcl_CreateCommand(the_interp, "cursor", Tk_CursorCmd,
+    Tcl_CreateCommand(the_interp, const_cast<char*>("cursor"), Tk_CursorCmd,
                       (ClientData) Tk_MainWindow(the_interp), NULL);
 
     printf("Done.\n");
@@ -490,7 +490,7 @@ TCLThread::startNetworkEditor()
   // Test for shaders.
   ShaderProgramARB::init_shaders_supported();
 
-  Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
+  Tcl_CreateCommand(the_interp, const_cast<char*>("exit"), exitproc, 0, 0);
 
   // TCL Socket
   int port;

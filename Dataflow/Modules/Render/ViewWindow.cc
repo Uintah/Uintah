@@ -870,8 +870,8 @@ ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       case UNICAM_ZOOM:     unicam_zoom(x, y); break;
       }
       need_redraw_=true;
-      ostringstream str;
-      char *unicamMode[] = {"Choose", "Rotate", "Pan", "Zoom"};
+      ostringstream str; 
+      const char *unicamMode[] = {"Choose", "Rotate", "Pan", "Zoom"};
       str << "unicam: " << unicamMode[unicam_state_];
       update_mode_string(str.str());
     }
