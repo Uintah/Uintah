@@ -88,6 +88,9 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   d_source = scinew Source(d_physicalConsts);
   if (d_doMMS)
 	  d_source->problemSetup(db);
+// ++ jeremy ++
+  d_source->setBoundary(d_boundaryCondition);
+// -- jeremy --  	  
 
   d_rhsSolver = scinew RHSSolver();
   d_rhsSolver->setMMS(d_doMMS);
@@ -527,6 +530,11 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   else
     tsk->modifies(d_lab->d_divConstraintLabel);
 //#endif
+ // build linear matrix vel hat 
+  tsk->modifies(d_lab->d_umomBoundarySrcLabel);
+  tsk->modifies(d_lab->d_vmomBoundarySrcLabel);
+  tsk->modifies(d_lab->d_wmomBoundarySrcLabel);
+
 
   if (d_doMMS) {
 
@@ -658,9 +666,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     velocityVars.divergence.initialize(0.0);
     //#endif    
 
+ // boundary source terms 
+	new_dw->getModifiable(velocityVars.umomBoundarySrc,
+						  d_lab->d_umomBoundarySrcLabel, matlIndex, patch);
+    new_dw->getModifiable(velocityVars.vmomBoundarySrc,
+						  d_lab->d_vmomBoundarySrcLabel, matlIndex, patch);
+	new_dw->getModifiable(velocityVars.wmomBoundarySrc,
+						  d_lab->d_wmomBoundarySrcLabel, matlIndex, patch);
 
-  TAU_PROFILE_STOP(input);
-  TAU_PROFILE_START(inputcell);
+	TAU_PROFILE_STOP(input);
+  	TAU_PROFILE_START(inputcell);
 
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -996,7 +1011,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 				        &constVelocityVars);
 	}
 
-        /*if (d_boundaryCondition->getIntrusionBC()) {
+       /*if (d_boundaryCondition->getIntrusionBC()) {
 	  // if 0'ing stuff below for zero friction drag
 #if 0
 	  d_boundaryCondition->intrusionMomExchangeBC(pc, patch, index,
@@ -1010,9 +1025,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
-
       if (d_MAlab)
-	d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo,
+	       d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo,
 					  &velocityVars, &constVelocityVars);
     
     // Modify Velocity Mass Source

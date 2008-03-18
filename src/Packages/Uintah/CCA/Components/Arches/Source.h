@@ -47,6 +47,7 @@ WARNING
 namespace Uintah {
   class ProcessorGroup;
 class PhysicalConstants;
+class BoundaryCondition;
 using namespace SCIRun;
 
 class Source {
@@ -102,6 +103,13 @@ public:
       // Set source terms. Will need more parameters...like velocity and
       // scalars
       void calculateScalarSource(const ProcessorGroup* pc,
+				 const Patch* patch,
+				 double delta_t, 
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars,
+				 ArchesConstVariables* constvars);
+
+      void calculateExtraScalarSource(const ProcessorGroup* pc,
 				 const Patch* patch,
 				 double delta_t, 
 				 CellInformation* cellinfo,
@@ -193,6 +201,34 @@ public:
 				       ArchesVariables* vars,
 				       ArchesConstVariables* constvars); 
 
+	  void calculateScalarBoundarySource(const ProcessorGroup*,
+			      						 const Patch* patch,
+			      						 double delta_t,
+			      						 CellInformation* cellinfo,
+			      						 ArchesVariables* vars,
+			      						 ArchesConstVariables* constvars); 
+	  void calculateUmomBoundarySource(const ProcessorGroup*,
+			      						 const Patch* patch,
+			      						 double delta_t,
+			      						 CellInformation* cellinfo,
+			      						 ArchesVariables* vars,
+			      						 ArchesConstVariables* constvars); 
+	  void calculateVmomBoundarySource(const ProcessorGroup*,
+			      						 const Patch* patch,
+			      						 double delta_t,
+			      						 CellInformation* cellinfo,
+			      						 ArchesVariables* vars,
+			      						 ArchesConstVariables* constvars); 
+	  void calculateWmomBoundarySource(const ProcessorGroup*,
+			      						 const Patch* patch,
+			      						 double delta_t,
+			      						 CellInformation* cellinfo,
+			      						 ArchesVariables* vars,
+			      						 ArchesConstVariables* constvars);
+	  void setBoundary(BoundaryCondition* boundaryCondition){
+			  d_boundaryCondition = boundaryCondition;
+	  } 
+
 private:
 
       PhysicalConstants* d_physicalConsts;
@@ -206,6 +242,9 @@ private:
       double cu, cv, cw, cp, phi0;
       // sine mms
       double amp;
+
+	  //Source term boundary conditions stuff
+	  BoundaryCondition* d_boundaryCondition;
 
 
 }; // end Class Source

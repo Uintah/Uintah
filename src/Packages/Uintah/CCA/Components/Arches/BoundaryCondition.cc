@@ -100,6 +100,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_wallBdry = 0;
   d_pressureBC = 0;
   d_outletBC = 0;
+  d_doAreaCalcforSourceBoundaries = 0;
 }
 
 //****************************************************************************
@@ -115,6 +116,7 @@ BoundaryCondition::~BoundaryCondition()
   if (d_calcExtraScalars)
     for (int i=0; i < static_cast<int>(d_extraScalarBCs.size()); i++)
       delete d_extraScalarBCs[i];
+	  
 }
 
 //****************************************************************************
@@ -127,11 +129,35 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("BoundaryConditions");
   d_flowfieldCellTypeVal = -1;
   d_numInlets = 0;
+  d_numSourceBoundaries = 0;
   int total_cellTypes = 0;
   
   db->getWithDefault("carbon_balance", d_carbon_balance, false);
   db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
   db->getWithDefault("carbon_balance_es", d_carbon_balance_es, false);
+
+ //--- instrusions with boundary sources -----
+ if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
+
+	for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");
+		 intrusionbcs_db != 0; intrusionbcs_db = intrusionbcs_db->findNextBlock("IntrusionWithBCSource")){
+				 
+			d_sourceBoundaryInfo.push_back(scinew BCSourceInfo(d_calcVariance, d_reactingScalarSolve));
+			d_sourceBoundaryInfo[d_numSourceBoundaries]->problemSetup(intrusionbcs_db);
+			if (d_sourceBoundaryInfo[d_numSourceBoundaries]->doAreaCalc)
+				d_doAreaCalcforSourceBoundaries = true; //there has to be a better way
+					
+			//compute the density and other properties for this inlet stream
+			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_initEnthalpy = true;
+			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_scalarDisp=0.0;
+			d_props->computeInletProperties(d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction,
+											d_sourceBoundaryInfo[d_numSourceBoundaries]->calcStream);
+				
+
+			++d_numSourceBoundaries;
+
+	}
+ }
 
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
@@ -2040,6 +2066,7 @@ BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
     d_temperature = 300;
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
+
 }
 
 
@@ -2302,6 +2329,607 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
     streamMixturefraction.d_rxnVars.push_back(reactscalar);
   }
 }
+//****************************************************************************
+// Constructor Setup for BoundaryCondition::BCSourceInfo
+//****************************************************************************
+BoundaryCondition::BCSourceInfo::BCSourceInfo(bool calcVariance, bool reactingScalarSolve):
+d_calcVariance(calcVariance), d_reactingScalarSolve(reactingScalarSolve)
+{
+		//initialize some variables
+		area_x = 0.0;
+		area_y = 0.0;
+		area_z = 0.0;
+		umom_flux = 0.0;
+		vmom_flux = 0.0;
+		wmom_flux = 0.0;
+		f_flux = 0.0;
+		h_flux = 0.0;
+		totalMassFlux = 0.0;
+		totalVelocity = 0.0;
+
+}
+//****************************************************************************
+// Destructor Setup for BoundaryCondition::BCSourceInfo
+//****************************************************************************
+BoundaryCondition::BCSourceInfo::~BCSourceInfo(){
+}
+//****************************************************************************
+// Problem Setup for BoundaryCondition::BCSourceInfo
+//****************************************************************************
+void 
+BoundaryCondition::BCSourceInfo::problemSetup(ProblemSpecP& params)
+{
+	//You can pick MassFlux or Velocity
+	if (ProblemSpecP massfluxchild = params->findBlock("MassFlux"))
+	{
+		doAreaCalc = true;	
+		massfluxchild->require("massflux_value", totalMassFlux); //value of the vector
+
+		massfluxchild->getAttribute("type",velocityType); //relative or absolute
+		if (velocityType == "relative")
+		{
+			massfluxchild->getAttribute("relation",velocityRelation); // choose "point" or "axis"
+
+			if (velocityRelation == "point"){
+				massfluxchild->require("point_location", point);	
+
+			}
+			else if (velocityRelation == "axis"){
+
+				massfluxchild->require("axis_start",axisStart); //Starting and ending point of the axis
+				massfluxchild->require("axis_end",  axisEnd);
+
+			}
+		}
+		else if (velocityType == "absolute")
+		{
+			massfluxchild->require("normals",normal); //since it is absolute, we need tell it what faces and how to scale it. ie v_{face,i} = n_i*V
+			cout << "normal =" << normal << endl;
+		}
+		else
+		{
+			throw ParameterNotFound(" Must specify an absolute or relative attribute for the <Velocity> or <MassFlux>.",__FILE__,__LINE__); 
+		}
+
+	}
+	else if (ProblemSpecP velchild = params->findBlock("Velocity"))
+	{
+		velchild->require("velocity_value", totalVelocity); //value of the vector
+
+		velchild->getAttribute("type",velocityType); //relative or absolute
+		if (velocityType == "relative")
+		{
+			velchild->getAttribute("relation",velocityRelation); // choose "point" or "axis"
+
+			if (velocityRelation == "point"){
+				velchild->require("point_location", point);	
+
+			}
+			else if (velocityRelation == "axis"){
+
+				velchild->require("axis_start",axisStart); //Starting and ending point of the axis
+				velchild->require("axis_end",  axisEnd);
+
+			}
+		}
+		else if (velocityType == "absolute")
+		{
+			velchild->require("normals",normal); //since it is absolute, we need tell it what faces and how to scale it. ie v_{face,i} = n_i*V
+			cout << "normal =" << normal << endl;
+		}
+		else
+		{
+			throw ParameterNotFound(" Must specify an absolute or relative attribute for the <Velocity> or <MassFlux>.",__FILE__,__LINE__); 
+		}
+	}
+	else
+		throw ParameterNotFound(" Please enter a MassFlux or Velocity for the <IntrusionWithBCSource> block!",__FILE__,__LINE__);
+							
+
+	// Get the scalar information
+	if (ProblemSpecP mfchild = params->findBlock("MixtureFraction"))
+	{
+		mfchild->require("inlet_value",mixfrac_inlet);
+	}
+	//for getting the inlet properties
+	//hard coded for now!
+	d_calcVariance = false;
+	d_reactingScalarSolve = false;
+  	streamMixturefraction.d_mixVars.push_back(mixfrac_inlet);
+  	if (d_calcVariance)
+    	streamMixturefraction.d_mixVarVariance.push_back(0.0);
+  	double reactscalar;
+  	if (d_reactingScalarSolve) {
+    	params->require("reacting_scalar", reactscalar);
+    	streamMixturefraction.d_rxnVars.push_back(reactscalar);
+  	}
+
+	// Get the geometry piece(s)
+	if (ProblemSpecP geomObjPS = params->findBlock("geom_object")){
+		GeometryPieceFactory::create(geomObjPS, d_geomPiece);
+	}
+	else
+		throw ParameterNotFound(" Must specify a geometry piece for BCSource.\nPlease add a <geom_object> to the <IntrusionWithBCSource> block in the inputfile.  Stopping...",__FILE__,__LINE__);
+
+}
+//****************************************************************************
+// Compute surface area of inlet for BoundaryCondition::BCSourceInfo
+//****************************************************************************
+void
+BoundaryCondition::computeInletAreaBCSource(const ProcessorGroup*,
+								     		  const PatchSubset* patches,
+								              const MaterialSubset*,
+									  		  DataWarehouse* old_dw,
+											  DataWarehouse* new_dw)
+{
+
+  //Loop through current patch...compute area	
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Box patchInteriorBox = patch->getInteriorBox();
+	
+	int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
+
+	//assuming a uniform mesh!
+	Vector dx = patch->dCell();
+
+	for (int bp = 0; bp < nofBoundaryPieces; bp++){
+		// The main loop for computing the source term
+		//**get the geometry piece for this boundary source block**
+		// we could have more than one geometry piece per block.
+		int nofGeomPieces = (int)d_sourceBoundaryInfo[bp]->d_geomPiece.size();
+		
+		for (int gp = 0; gp < nofGeomPieces; gp++){
+
+			GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
+			Box geomBox = piece->getBoundingBox();
+			Box b = geomBox.intersect(patchInteriorBox);
+
+			if (!(b.degenerate())){
+				//iterator over cells and see if a boundary source needs adding.
+				for (CellIterator iter=patch->getCellCenterIterator(b); 
+					!iter.done(); iter++){
+					
+					Point p = patch->cellPosition(*iter);
+					Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
+					Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
+					Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
+					Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
+					Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
+					Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
+					
+					if (piece->inside(p)){
+							
+						//Now check neighbors
+						// x+
+						if (!(piece->inside(p_xp)))
+							d_sourceBoundaryInfo[bp]->area_x += dx.y()*dx.z();
+						// x-
+						if (!(piece->inside(p_xm)))
+							d_sourceBoundaryInfo[bp]->area_x += dx.y()*dx.z();
+						// y+	
+						if (!(piece->inside(p_yp)))
+							d_sourceBoundaryInfo[bp]->area_y += dx.x()*dx.z();
+						// y-
+						if (!(piece->inside(p_ym)))
+							d_sourceBoundaryInfo[bp]->area_y += dx.x()*dx.z();
+						// z+
+						if (!(piece->inside(p_zp)))
+							d_sourceBoundaryInfo[bp]->area_z += dx.x()*dx.y();
+						// z-
+						if (!(piece->inside(p_zm)))
+							d_sourceBoundaryInfo[bp]->area_z += dx.x()*dx.y();
+					}
+				}
+			}
+		}
+
+		//Now get the totalVelocity from the the mass flux
+		//hard coded for jennifer at the moment!
+		d_sourceBoundaryInfo[bp]->totalVelocity = d_sourceBoundaryInfo[bp]->totalMassFlux/(d_sourceBoundaryInfo[bp]->calcStream.d_density*
+													(d_sourceBoundaryInfo[bp]->area_y+d_sourceBoundaryInfo[bp]->area_z));
+		cout << "The total area for your geometry = " << d_sourceBoundaryInfo[bp]->area_y+d_sourceBoundaryInfo[bp]->area_z << " m" << endl;
+	}
+  }
+}
+// *------------------------------------------------*
+// Schedule the compute of the boundary source term
+// *------------------------------------------------*
+void 
+BoundaryCondition::sched_computeMomSourceTerm(SchedulerP& sched,
+						                                      const PatchSet* patches,
+                                      						  const MaterialSet* matls,
+															  const TimeIntegratorLabel* timelabels)
+ 
+{
+
+	string taskname = "BoundaryCondition::computeMomSourceTerm" + timelabels->integrator_step_name;
+	Task* tsk = scinew Task(taskname, this, &BoundaryCondition::computeMomSourceTerm, timelabels);
+
+	tsk->modifies(d_lab->d_umomBoundarySrcLabel);
+	tsk->modifies(d_lab->d_vmomBoundarySrcLabel);
+	tsk->modifies(d_lab->d_wmomBoundarySrcLabel);
+	
+	sched->addTask(tsk, patches, matls); 	
+		
+}
+// *------------------------------------------------*
+// Carry out the compute of the boundary source term
+// *------------------------------------------------*
+void 
+BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
+								     			  const PatchSubset* patches,
+								                  const MaterialSubset*,
+												  DataWarehouse*,
+												  DataWarehouse* new_dw,
+												  const TimeIntegratorLabel* timelabels)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Box patchInteriorBox = patch->getInteriorBox();
+
+	SFCXVariable<double> umomSource;
+	SFCYVariable<double> vmomSource;
+	SFCZVariable<double> wmomSource;
+
+	new_dw->getModifiable(umomSource, d_lab->d_umomBoundarySrcLabel, matlIndex, patch);
+	new_dw->getModifiable(vmomSource, d_lab->d_vmomBoundarySrcLabel, matlIndex, patch);
+	new_dw->getModifiable(wmomSource, d_lab->d_wmomBoundarySrcLabel, matlIndex, patch);
+	
+	umomSource.initialize(0.0);
+	vmomSource.initialize(0.0);
+	wmomSource.initialize(0.0);
+
+	//assuming a uniform mesh!
+	Vector dx = patch->dCell();
+
+	IntVector idxLo = patch->getCellFORTLowIndex();
+  	IntVector idxHi = patch->getCellFORTHighIndex();
+  	double bc_source = 0.0; 
+
+	int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
+
+	for (int bp = 0; bp < nofBoundaryPieces; bp++){
+		// The main loop for computing the source term
+		//**get the geometry piece for this boundary source block**
+		// we could have more than one geometry piece per block.
+		int nofGeomPieces = (int)d_sourceBoundaryInfo[bp]->d_geomPiece.size();
+		
+		for (int gp = 0; gp < nofBoundaryPieces; gp++){
+
+			GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
+			Box geomBox = piece->getBoundingBox();
+			Box b = geomBox.intersect(patchInteriorBox);
+
+			if (!(b.degenerate())){
+				//iterator over cells and see if a boundary source needs adding.
+				for (CellIterator iter=patch->getSFCXIterator(0); 
+					!iter.done(); iter++){
+					
+					Point p = patch->cellPosition(*iter);
+					Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
+					Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
+					Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
+					Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
+					Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
+					Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
+					
+					if (piece->inside(p)){
+						//this is a nasty embedded set of if's....will fix in the future.
+						// x+
+						if (!(piece->inside(p_xp))){
+							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
+							}
+							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
+								if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
+								}
+								else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
+								}
+
+							}
+						}
+						// x-
+						if (!(piece->inside(p_xm))){
+							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
+							}
+							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
+								if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
+								}
+								else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
+								}
+
+							}
+
+						}
+						// y+
+						if (!(piece->inside(p_yp))){
+							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
+							}
+							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
+								if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
+									//hard coding for jennifer for now.
+									double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+									double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+									double theta = atan(z/y);
+
+									double y_comp = d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);
+									vmomSource[*iter+IntVector(0,2,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*
+																		  y_comp*y_comp*dx.x()*dx.z();
+								}
+								else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
+								}
+
+							}
+
+						}	
+						// y-
+						if (!(piece->inside(p_ym))){
+							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
+							}
+							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
+								if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
+									//hard coding for jennifer for now.
+									double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+									double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+									double theta = atan(z/y);
+
+									double y_comp = -1.0*d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);
+									vmomSource[*iter-IntVector(0,1,0)] = -1.0*d_sourceBoundaryInfo[bp]->calcStream.d_density*
+																		  y_comp*y_comp*dx.x()*dx.z();
+
+								}
+								else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
+								}
+
+							}
+
+						}
+						// z+
+						if (!(piece->inside(p_zp))){
+							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
+							}
+							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
+								if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
+									//hard coding for jennifer for now.
+									double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+									double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+									double theta = atan(z/y);
+
+									double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
+									wmomSource[*iter+IntVector(0,0,2)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*
+																		  z_comp*z_comp*dx.x()*dx.y();
+
+								}
+								else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
+								}
+
+							}
+
+						}
+						// z-
+						if (!(piece->inside(p_zm))){
+							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
+							}
+							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
+								if (d_sourceBoundaryInfo[bp]->velocityRelation == "axis"){
+									//hard coding for jennifer for now.
+									double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+									double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+									double theta = atan(z/y);
+
+									double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
+									wmomSource[*iter-IntVector(0,0,1)] = -1.0*d_sourceBoundaryInfo[bp]->calcStream.d_density*
+																		  z_comp*z_comp*dx.x()*dx.y();
+
+								}
+								else if (d_sourceBoundaryInfo[bp]->velocityRelation == "point"){
+								}
+
+							}
+
+						}																	
+
+					}
+
+				}
+
+			}
+	
+		
+		} // end Geometry Pieces loop
+	} // end of Boundary Pieces loop 
+	
+  }
+		
+}
+// *--------------------------------------------------------*
+// Schedule the compute of the boundary source term-scalar
+// *--------------------------------------------------------*
+void 
+BoundaryCondition::sched_computeScalarSourceTerm(SchedulerP& sched,
+				                                  const PatchSet* patches,
+                          						  const MaterialSet* matls,
+												  const TimeIntegratorLabel* timelabels)
+{
+	string taskname = "BoundaryCondition::computeScalarSourceTerm" + timelabels->integrator_step_name;
+	Task* tsk = scinew Task(taskname, this, &BoundaryCondition::computeScalarSourceTerm, timelabels);
+
+	tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
+	tsk->modifies(d_lab->d_enthalpyBoundarySrcLabel);
+
+	sched->addTask(tsk, patches, matls); 	
+		
+}
+// *--------------------------------------------------------*
+// Perform the compute of the boundary source term-scalar
+// This includes: Mixture fraction, Enthalpy
+// *--------------------------------------------------------*
+void 
+BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
+						     			   const PatchSubset* patches,
+						                   const MaterialSubset*,
+										   DataWarehouse*,
+										   DataWarehouse* new_dw,
+										   const TimeIntegratorLabel* timelabels)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    Box patchInteriorBox = patch->getInteriorBox();
+
+	//assuming a uniform mesh!
+	Vector dx = patch->dCell();
+
+	CCVariable<double> scalarBoundarySrc;
+	CCVariable<double> enthalpyBoundarySrc;
+
+	new_dw->getModifiable(scalarBoundarySrc, d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
+	new_dw->getModifiable(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
+
+	scalarBoundarySrc.initialize(0.0);
+	enthalpyBoundarySrc.initialize(0.0);
+
+	IntVector idxLo = patch->getCellFORTLowIndex();
+  	IntVector idxHi = patch->getCellFORTHighIndex();
+  	double bc_source = 0.0; 
+
+	int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
+
+	for (int bp = 0; bp < nofBoundaryPieces; bp++){
+		// The main loop for computing the source term
+		//**get the geometry piece for this boundary source block**
+		// we could have more than one geometry piece per block.
+		int nofGeomPieces = (int)d_sourceBoundaryInfo[bp]->d_geomPiece.size();
+		
+		for (int gp = 0; gp < nofGeomPieces; gp++){
+
+			GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
+			Box geomBox = piece->getBoundingBox();
+			Box b = geomBox.intersect(patchInteriorBox);
+
+			if (!(b.degenerate())){
+				//iterator over cells and see if a boundary source needs adding.
+				for (CellIterator iter=patch->getCellCenterIterator(b); 
+					!iter.done(); iter++){
+					
+					Point p = patch->cellPosition(*iter);
+					Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
+					Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
+					Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
+					Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
+					Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
+					Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
+					
+					if (piece->inside(p)){
+							
+						//Now check neighbors
+						// x+
+						if (!(piece->inside(p_xp))){
+							// source term = \int \rho u \phi \cdot dS	
+							scalarBoundarySrc[*iter + IntVector(1,0,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
+													   d_sourceBoundaryInfo[bp]->normal[0]*	
+													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
+													   dx.y()*dx.z();
+							if (d_enthalpySolve)
+								enthalpyBoundarySrc[*iter + IntVector(1,0,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
+														d_sourceBoundaryInfo[bp]->normal[0]*
+														d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
+														dx.y()*dx.z();							   
+						}
+						// x-
+						if (!(piece->inside(p_xm))){
+							scalarBoundarySrc[*iter - IntVector(1,0,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
+													   d_sourceBoundaryInfo[bp]->normal[0]*	
+													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
+													   dx.y()*dx.z();							
+							if (d_enthalpySolve)
+								enthalpyBoundarySrc[*iter - IntVector(1,0,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
+														d_sourceBoundaryInfo[bp]->normal[0]*
+														d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
+														dx.y()*dx.z();
+						}
+						// y+
+						if (!(piece->inside(p_yp))){
+							//hard coding for jennifer for now.
+							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+							double theta = atan(z/y);
+							double y_comp = d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);			
+											
+							scalarBoundarySrc[*iter + IntVector(0,1,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
+													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
+													   dx.x()*dx.z();		
+							if (d_enthalpySolve)
+								enthalpyBoundarySrc[*iter + IntVector(0,1,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
+														d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
+														dx.x()*dx.z();							   					
+						}
+						// y-
+						if (!(piece->inside(p_ym))){
+							//hard coding for jennifer for now.
+							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+							double theta = atan(z/y);
+							double y_comp = d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);			
+
+							scalarBoundarySrc[*iter - IntVector(0,1,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
+													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
+													   dx.x()*dx.z();
+							if (d_enthalpySolve)
+								enthalpyBoundarySrc[*iter - IntVector(0,1,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
+														d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
+														dx.x()*dx.z();
+						}
+						// z+
+						if (!(piece->inside(p_zp))){
+							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+							double theta = atan(z/y);
+							double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
+							scalarBoundarySrc[*iter + IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
+													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
+													   dx.x()*dx.y();				
+							if (d_enthalpySolve)
+								enthalpyBoundarySrc[*iter + IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
+														d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
+														dx.x()*dx.y();													   			
+						}
+						// z-
+						if (!(piece->inside(p_zm))){
+							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
+							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
+							double theta = atan(z/y);
+							double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
+
+							scalarBoundarySrc[*iter - IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
+													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
+													   dx.x()*dx.y();			
+	
+							enthalpyBoundarySrc[*iter - IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
+														d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
+														dx.x()*dx.y();												   
+													   				
+						} 				
+
+					}
+				}
+			}
+
+		
+
+		} // end Geometry Pieces loop
+	} // end Boundary Pieces loop
+
+
+  } // end patch loop
+	
+}
+
 
 void
 BoundaryCondition::calculateIntrusionVel(const ProcessorGroup* ,

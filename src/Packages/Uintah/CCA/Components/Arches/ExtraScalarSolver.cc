@@ -293,7 +293,7 @@ ExtraScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   else parent_old_dw = Task::OldDW;
 
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
-  
+
   // This task requires scalar and density from old time step for transient
   // calculation
   //DataWarehouseP old_dw = new_dw->getTop();  
@@ -375,7 +375,7 @@ ExtraScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
       else
         tsk->modifies(d_scalar_temp_label);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-      tsk->computes(d_scalar_label);
+	  tsk->computes(d_scalar_label);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -393,6 +393,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                      bool d_EKTCorrection,
                                      bool doing_EKT_now)
 {
+
 
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -472,7 +473,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
-  // allocate matrix coeffs
+ // allocate matrix coeffs
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -528,7 +529,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate scalar source terms
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
-    d_source->calculateScalarSource(pc, patch,
+    d_source->calculateExtraScalarSource(pc, patch,
 				    delta_t, cellinfo, 
 				    &scalarVars, &constScalarVars);
     if (d_doMMS)
@@ -657,7 +658,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
         new_dw->copyOut(scalar_temp, d_scalar_label,
 		  matlIndex, patch);
       }
-    
+
     CCVariable<double> new_scalar;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(new_scalar, d_scalar_label, 
