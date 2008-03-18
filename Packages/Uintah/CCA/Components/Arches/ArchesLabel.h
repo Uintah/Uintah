@@ -469,6 +469,13 @@ namespace Uintah {
       const VarLabel* d_co2RateLabel;
       const VarLabel* d_so2RateLabel;
 
+	  //source term labels for intrusion (non-zero) boundary conditions
+	  const VarLabel* d_scalarBoundarySrcLabel;
+	  const VarLabel* d_enthalpyBoundarySrcLabel;
+	  const VarLabel* d_umomBoundarySrcLabel;
+	  const VarLabel* d_vmomBoundarySrcLabel;
+	  const VarLabel* d_wmomBoundarySrcLabel;
+
     }; // End class ArchesLabel
 } // End namespace Uintah
 

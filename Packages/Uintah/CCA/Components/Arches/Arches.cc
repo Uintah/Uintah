@@ -230,6 +230,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (d_calcExtraScalars) d_boundaryCondition->setExtraScalars(&d_extraScalars);
   d_boundaryCondition->problemSetup(db);
 
+	  
+
   d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
   d_props->setCarbonBalanceES(d_carbon_balance_es);	
 
@@ -526,10 +528,17 @@ Arches::sched_paramInit(const LevelP& level,
 
     }
     if (d_calcExtraScalars)
-      for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++)
-        tsk->computes(d_extraScalars[i]->getScalarLabel());
+      for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
+              tsk->computes(d_extraScalars[i]->getScalarLabel());
+      }
     if (d_carbon_balance_es)
     	tsk->computes(d_lab->d_co2RateLabel);	
+
+	tsk->computes(d_lab->d_scalarBoundarySrcLabel);
+	tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
+	tsk->computes(d_lab->d_umomBoundarySrcLabel);
+	tsk->computes(d_lab->d_vmomBoundarySrcLabel);
+	tsk->computes(d_lab->d_wmomBoundarySrcLabel);
 
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
@@ -539,14 +548,19 @@ Arches::sched_paramInit(const LevelP& level,
 // Actual initialization
 // ****************************************************************************
 void
-Arches::paramInit(const ProcessorGroup* ,
+Arches::paramInit(const ProcessorGroup* pg,
 		  const PatchSubset* patches,
-		  const MaterialSubset*,
-		  DataWarehouse* ,
+		  const MaterialSubset* matls,
+		  DataWarehouse* old_dw,
 		  DataWarehouse* new_dw)
 {
     double old_delta_t = 0.0;
     new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
+
+  //get inlet area information for BC Sources
+  if (d_boundaryCondition->getSrcBoundaryAreaCalc())
+		 d_boundaryCondition->computeInletAreaBCSource(pg, patches, matls, old_dw, new_dw); 
+
   // ....but will only compute for computational domain
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -595,6 +609,25 @@ Arches::paramInit(const ProcessorGroup* ,
     		co2Rate.initialize(0.0);
 	}
     }	
+
+	CCVariable<double> scalarBoundarySrc;
+	CCVariable<double> enthalpyBoundarySrc;
+	SFCXVariable<double> umomBoundarySrc;
+	SFCYVariable<double> vmomBoundarySrc;
+	SFCZVariable<double> wmomBoundarySrc;
+
+	new_dw->allocateAndPut(scalarBoundarySrc, d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(umomBoundarySrc, d_lab->d_umomBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(vmomBoundarySrc, d_lab->d_vmomBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(wmomBoundarySrc, d_lab->d_wmomBoundarySrcLabel, matlIndex, patch);
+
+	scalarBoundarySrc.initialize(0.0);
+	enthalpyBoundarySrc.initialize(0.0);
+	umomBoundarySrc.initialize(0.0);
+	vmomBoundarySrc.initialize(0.0);
+	wmomBoundarySrc.initialize(0.0);
+
 
     // Variables for mms analysis
     if (d_doMMS){
@@ -990,7 +1023,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
       cout << "Calculating at time step = " << nofTimeSteps << endl;
       d_nlSolver->noSolve(level, sched);
     }
-    else
+    else 
       d_nlSolver->nonlinearSolve(level, sched);
 #else
     d_nlSolver->nonlinearSolve(level, sched);

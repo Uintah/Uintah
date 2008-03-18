@@ -735,7 +735,19 @@ ArchesLabel::ArchesLabel()
   				    CCVariable<double>::getTypeDescription());
   d_so2RateLabel = VarLabel::create("so2Rate", 
   				    CCVariable<double>::getTypeDescription());
-  
+
+  //Artificial source terms
+  d_scalarBoundarySrcLabel = VarLabel::create("scalarBoundarySrc", 
+  					CCVariable<double>::getTypeDescription());
+  d_enthalpyBoundarySrcLabel = VarLabel::create("enthalpyBoundarySrc",
+  					CCVariable<double>::getTypeDescription());
+  d_umomBoundarySrcLabel = VarLabel::create("umomBoundarySrc", 
+  					SFCXVariable<double>::getTypeDescription());
+  d_vmomBoundarySrcLabel = VarLabel::create("vmomBoundarySrc", 
+  					SFCYVariable<double>::getTypeDescription());
+  d_wmomBoundarySrcLabel = VarLabel::create("wmomBoundarySrc", 
+  					SFCZVariable<double>::getTypeDescription());
+ 
 
 
 }
@@ -1048,7 +1060,13 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalgradpmmsExactSolLabel);
   VarLabel::destroy(d_totalgradpmmsExactSolPredLabel);
   VarLabel::destroy(d_totalgradpmmsExactSolIntermLabel);
-  
+
+  VarLabel::destroy(d_scalarBoundarySrcLabel);
+  VarLabel::destroy(d_enthalpyBoundarySrcLabel);
+  VarLabel::destroy(d_umomBoundarySrcLabel);
+  VarLabel::destroy(d_vmomBoundarySrcLabel);
+  VarLabel::destroy(d_wmomBoundarySrcLabel);
+   
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)

@@ -142,6 +142,13 @@ namespace Uintah {
     CCVariable<double> co2Rate;
     CCVariable<double> so2Rate;
 
+	//intrusion boundary source terms
+	CCVariable<double> scalarBoundarySrc;
+	CCVariable<double> enthalpyBoundarySrc;
+	SFCXVariable<double> umomBoundarySrc;
+	SFCYVariable<double> vmomBoundarySrc;
+	SFCZVariable<double> wmomBoundarySrc;
+
     }; // End class ArchesVariables
    
 } // End namespace Uintah

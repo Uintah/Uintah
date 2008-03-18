@@ -7,6 +7,10 @@
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -60,7 +64,7 @@ Source::problemSetup(const ProblemSpecP& params)
   ProblemSpecP params_non_constant = params;
   const ProblemSpecP params_root = params_non_constant->getRootNode();
   ProblemSpecP db=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
- 
+
   db->getWithDefault("whichMMS", d_mms, "constantMMS");
   if (d_mms == "constantMMS"){
     ProblemSpecP db_mms = db->findBlock("constantMMS");
@@ -101,7 +105,7 @@ Source::problemSetup(const ProblemSpecP& params)
 // Velocity source calculation
 //****************************************************************************
 void 
-Source::calculateVelocitySource(const ProcessorGroup* ,
+Source::calculateVelocitySource(const ProcessorGroup* pc ,
 				const Patch* patch,
 				double delta_t,
 				int index,
@@ -122,7 +126,7 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   
   switch(index) {
   case Arches::XDIR:
-
+{
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_uvelsrc(idxLoU, idxHiU, constvars->uVelocity, constvars->old_uVelocity,
@@ -137,10 +141,19 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		 cellinfo->fac1u, cellinfo->fac2u, cellinfo->fac3u,
 		 cellinfo->fac4u, cellinfo->iesdu, cellinfo->iwsdu);
 
-
+// ++ jeremy ++
+	if (d_boundaryCondition->getNumSourceBndry() > 0){	
+    	Box pBox = patch->getInteriorBox();
+		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+			vars->uVelNonlinearSrc[*iter] += vars->umomBoundarySrc[*iter];
+		}
+	}
+	
+// -- jeremy -- 
+}
     break;
   case Arches::YDIR:
-
+  {	
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_vvelsrc(idxLoV, idxHiV, constvars->vVelocity, constvars->old_vVelocity,
@@ -157,10 +170,18 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		 cellinfo->fac3v, cellinfo->fac4v, cellinfo->jnsdv,
 		 cellinfo->jssdv); 
 
-
+// ++ jeremy ++
+	if (d_boundaryCondition->getNumSourceBndry() > 0){	
+    	Box pBox = patch->getInteriorBox();
+		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+			vars->vVelNonlinearSrc[*iter] += vars->vmomBoundarySrc[*iter];
+		}
+	}
+//-- jeremy -- 	
+}
     break;
   case Arches::ZDIR:
-
+{
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_wvelsrc(idxLoW, idxHiW, constvars->wVelocity, constvars->old_wVelocity,
@@ -177,7 +198,16 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		 cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
 		 cellinfo->ktsdw, cellinfo->kbsdw); 
 
+// ++ jeremy ++ 
+	if (d_boundaryCondition->getNumSourceBndry() > 0){	
+    	Box pBox = patch->getInteriorBox();
+		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+			vars->wVelNonlinearSrc[*iter] += vars->wmomBoundarySrc[*iter];
+		}
+	}
+// -- jeremy -- 	
 
+}
     break;
   default:
     throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
@@ -230,7 +260,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
 // Scalar source calculation
 //****************************************************************************
 void 
-Source::calculateScalarSource(const ProcessorGroup*,
+Source::calculateScalarSource(const ProcessorGroup* pc,
 			      const Patch* patch,
 			      double delta_t,
 			      CellInformation* cellinfo,
@@ -250,6 +280,38 @@ Source::calculateScalarSource(const ProcessorGroup*,
 	       constvars->old_density, constvars->old_scalar,
 	       cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
+// Here we need to add the boundary source term if there are some.
+	if (d_boundaryCondition->getNumSourceBndry() > 0){
+    	Box pBox = patch->getInteriorBox();
+		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+			vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
+		}
+	}
+}
+
+//****************************************************************************
+// Scalar source calculation
+//****************************************************************************
+void 
+Source::calculateExtraScalarSource(const ProcessorGroup* pc,
+			      const Patch* patch,
+			      double delta_t,
+			      CellInformation* cellinfo,
+			      ArchesVariables* vars,
+			      ArchesConstVariables* constvars) 
+{
+
+  // Get the patch and variable indices
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+
+  // 3-d array for volume - fortran uses it for temporary storage
+  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
+  // computes remaining diffusion term and also computes 
+  // source due to gravity...need to pass ipref, jpref and kpref
+  fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
+	       constvars->old_density, constvars->old_scalar,
+	       cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 }
 
 
@@ -304,6 +366,16 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
 	       constvars->old_density, constvars->old_enthalpy,
 	       cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
+
+// ++ jeremy ++
+	if (d_boundaryCondition->getNumSourceBndry() > 0) {
+    	Box pBox = patch->getInteriorBox();
+		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+			vars->scalarNonlinearSrc[*iter] += vars->enthalpyBoundarySrc[*iter];
+		}
+	}
+// -- jeremy -- 
+
 
 }
 
@@ -698,7 +770,4 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
     }
   }
 }
-
-
-
 

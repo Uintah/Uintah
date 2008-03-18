@@ -100,6 +100,12 @@ namespace Uintah {
       constSFCXVariable<double> vFmms;
       constSFCXVariable<double> wFmms;
 
+	  constCCVariable<double> scalarBoundarySrc; 
+	  constCCVariable<double> enthalpyBoundarySrc;
+	  constSFCXVariable<double> umomBoundarySrc;
+	  constSFCYVariable<double> vmomBoundarySrc;
+	  constSFCZVariable<double> wmomBoundarySrc;
+
     }; // End class ArchesConstVariables
 } // End namespace Uintah
 

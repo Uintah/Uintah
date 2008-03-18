@@ -177,6 +177,10 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 
+// ++ jeremy ++ 
+  d_source->setBoundary(d_boundaryCondition);
+// -- jeremy --	
+
   d_iteration_number = 0;
 }
 
@@ -418,6 +422,8 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     else
       tsk->modifies(d_lab->d_enthalpyEKTLabel);
 
+  tsk->modifies(d_lab->d_enthalpyBoundarySrcLabel);		  
+
   //  sched->addTask(tsk, patches, matls);
   sched->addTask(tsk, d_perproc_patches, matls);
 }
@@ -562,6 +568,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 			   d_lab->d_enthNonLinSrcSBLMLabel, matlIndex, patch);
     enthalpyVars.scalarNonlinearSrc.initialize(0.0);
   }
+
+  //boundary source terms
+  new_dw->getModifiable(enthalpyVars.enthalpyBoundarySrc, 
+  						d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateTemporary(enthalpyVars.scalarConvectCoeff[ii],  patch);
