@@ -146,6 +146,10 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
     }
   }
 
+// ++ jeremy ++ 
+  d_source->setBoundary(d_boundaryCondition);
+// -- jeremy --	
+
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
 }
 
@@ -253,6 +257,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 //#ifdef divergenceconstraint
     tsk->computes(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
+	tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
   }
   else {
     tsk->modifies(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
@@ -263,12 +268,15 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 //#ifdef divergenceconstraint
     tsk->modifies(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
+	tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
   }
   if (doing_EKT_now)
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       tsk->computes(d_lab->d_scalarEKTLabel);
     else
       tsk->modifies(d_lab->d_scalarEKTLabel);
+
+	  
 
   sched->addTask(tsk, patches, matls);
 }
@@ -365,6 +373,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 			   d_lab->d_scalDiffCoefSrcLabel, matlIndex, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);
 //#endif
+	new_dw->getModifiable(scalarVars.scalarBoundarySrc,
+				d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
   }
   else {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -383,6 +393,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 			  d_lab->d_scalDiffCoefSrcLabel, matlIndex, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);
 //#endif
+	new_dw->getModifiable(scalarVars.scalarBoundarySrc,
+			d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
   }
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
@@ -405,7 +417,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_source->calculateScalarSource(pc, patch,
 				    delta_t, cellinfo, 
 				    &scalarVars, &constScalarVars);
-    if (d_doMMS)
+   if (d_doMMS)
     d_source->calculateScalarMMSSource(pc, patch,
 				    delta_t, cellinfo, 
 				    &scalarVars, &constScalarVars);

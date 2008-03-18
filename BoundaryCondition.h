@@ -96,6 +96,8 @@ public:
 
       // GROUP: Access functions
       ////////////////////////////////////////////////////////////////////////
+	  int getNumSourceBndry() {return d_numSourceBoundaries;}
+
       bool getWallBC() { return d_wallBoundary; }
       
       bool getInletBC() { return d_inletBoundary; }
@@ -108,8 +110,10 @@ public:
         cout << "Intrusion machinery has been disabled" << endl;
         exit(1);
         return 1;
-      //return d_intrusionBoundary; 
+        //return d_intrusionBoundary; 
       }
+
+	  bool getSrcBoundaryAreaCalc() { return d_doAreaCalcforSourceBoundaries;}
 
       bool anyArchesPhysicalBC() { 
        return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); }
@@ -198,6 +202,10 @@ public:
 	  d_cutCells = cutCells;
 	}
 
+	  inline double getIntrusionSourceVelocity(int whichIntrusion) {
+			  return d_sourceBoundaryInfo[whichIntrusion]->totalVelocity;
+	  }
+
       ////////////////////////////////////////////////////////////////////////
       // Access function for d_cutCells (multimaterial)
 
@@ -244,7 +252,7 @@ public:
       void sched_Prefill(SchedulerP&, const PatchSet* patches,
 			    const MaterialSet* matls);
 
-      void sched_initInletBC(SchedulerP&, const PatchSet* patches,
+     void sched_initInletBC(SchedulerP&, const PatchSet* patches,
 			    const MaterialSet* matls);
 
       ////////////////////////////////////////////////////////////////////////
@@ -274,6 +282,14 @@ public:
 				const MaterialSubset* matls,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw);
+
+	   void computeInletAreaBCSource(const ProcessorGroup*,
+								     		  const PatchSubset* patches,
+								              const MaterialSubset*,
+									  		  DataWarehouse* old_dw,
+											  DataWarehouse* new_dw);
+
+
 
       ////////////////////////////////////////////////////////////////////////
       // Actually compute velocity BC terms
@@ -547,6 +563,15 @@ public:
         d_extraScalars = extraScalars;
       }
 
+	  //boundary source term methods
+	  void sched_computeScalarSourceTerm(SchedulerP& sched,
+						                   const PatchSet* patches,
+                            			   const MaterialSet* matls, const TimeIntegratorLabel* timelabels);
+	  void sched_computeMomSourceTerm(SchedulerP& sched,
+						                   const PatchSet* patches,
+                            			   const MaterialSet* matls, const TimeIntegratorLabel* timelabels);
+
+
 
  
 
@@ -655,7 +680,7 @@ private:
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
 
-      void initInletBC(const ProcessorGroup* pc,
+     void initInletBC(const ProcessorGroup* pc,
 			  const PatchSubset* patches,
 			  const MaterialSubset* matls,
 			  DataWarehouse* old_dw,
@@ -793,6 +818,70 @@ private:
 	void problemSetup(ProblemSpecP& params);
       };
 
+	  //*-------------------------------------*
+	  // BCSourceInfo
+	  // a struct to hold infromation for a specific
+	  // geometry piece that applies a source term 
+	  // on the surface of itself
+	  //*-------------------------------------*
+	  class BCSourceInfo
+	  {
+		public:
+		BCSourceInfo();
+		BCSourceInfo(bool calcVariance, bool reactingScalarSolve);
+		~BCSourceInfo();
+			  
+		//The geometry piece	  
+		std::vector<GeometryPieceP> d_geomPiece;
+		//Area information
+		double area_x; //total area with normals in the x-direction
+		double area_y; //total area with normals in the y-direction
+		double area_z; //total area with normals in the z-direction
+		//Normal information
+		Vector normal;
+		//Flux information
+		double umom_flux; //velocities
+		double vmom_flux;
+		double wmom_flux;
+		double f_flux;   //mixture fraction
+		double h_flux;   //enthalpy
+		double totalMassFlux;
+		double totalVelocity;
+		double totalFlowArea;
+		string velocityType;
+		string velocityRelation;
+        InletStream streamMixturefraction; //inlet values
+		Stream calcStream; // calculated values
+		bool d_calcVariance;
+		bool d_reactingScalarSolve;
+
+		//Mixture fraction inlet value
+		double mixfrac_inlet;
+
+		//relational information
+		Vector axisStart;
+		Vector axisEnd;
+		Vector point;
+		bool doAreaCalc;
+
+		//---methods---		
+		//Problem setup
+		void problemSetup(ProblemSpecP& params);
+	};
+
+	void computeScalarSourceTerm(const ProcessorGroup*,
+						     			   const PatchSubset* patches,
+						                   const MaterialSubset*,
+										   DataWarehouse*,
+										   DataWarehouse* new_dw,
+										   const TimeIntegratorLabel* timelabels);
+								   
+	void computeMomSourceTerm(const ProcessorGroup*,
+						     			   const PatchSubset* patches,
+						                   const MaterialSubset*,
+										   DataWarehouse*,
+										   DataWarehouse* new_dw,
+										   const TimeIntegratorLabel* timelabels);
 private:
 
       // const VarLabel* inputs
@@ -861,6 +950,11 @@ private:
         int d_BC_ID; 
       };
       vector<d_extraScalarBC*> d_extraScalarBCs; 
+
+	  //BC source term stuff
+	  std::vector<BCSourceInfo* > d_sourceBoundaryInfo;
+	  int d_numSourceBoundaries;
+	  bool d_doAreaCalcforSourceBoundaries;
 
 
 }; // End of class BoundaryCondition

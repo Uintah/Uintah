@@ -302,8 +302,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
        sched_saveTempCopies(sched, patches, matls,
 			   	      d_timeIntegratorLabels[curr_level]);
 
+  	if (d_boundaryCondition->getNumSourceBndry() > 0){
+			d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+			d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+			//add other ones here too.
+ 	} 
 
-    
     bool doing_EKT_now = false;
     if (d_EKTCorrection) {
       doing_EKT_now = true;
@@ -509,6 +513,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
     }
 
+
+
     // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls,
 			d_timeIntegratorLabels[curr_level]);
@@ -672,9 +678,9 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   if (d_enthalpySolve)
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
+    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
+    tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_dynScalarModel) {
     if (d_calScalar)
@@ -740,6 +746,12 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   	tsk->requires(Task::OldDW, d_lab->d_co2RateLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS); //old one to copy into new one
   }
+
+  tsk->computes(d_lab->d_scalarBoundarySrcLabel);		
+  tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
+  tsk->computes(d_lab->d_umomBoundarySrcLabel);		
+  tsk->computes(d_lab->d_vmomBoundarySrcLabel);		
+  tsk->computes(d_lab->d_wmomBoundarySrcLabel);		
 
   sched->addTask(tsk, patches, matls);
 }
@@ -1963,6 +1975,24 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     co2Rate.initialize(0.0);
     co2Rate.copyData(co2Rate_old);
     }
+
+	CCVariable<double> scalarBoundarySrc;
+	CCVariable<double> enthalpyBoundarySrc;
+	SFCXVariable<double> umomBoundarySrc;
+	SFCYVariable<double> vmomBoundarySrc;
+	SFCZVariable<double> wmomBoundarySrc;
+
+	new_dw->allocateAndPut(scalarBoundarySrc, d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(umomBoundarySrc, d_lab->d_umomBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(vmomBoundarySrc, d_lab->d_vmomBoundarySrcLabel, matlIndex, patch);
+	new_dw->allocateAndPut(wmomBoundarySrc, d_lab->d_wmomBoundarySrcLabel, matlIndex, patch);
+
+	scalarBoundarySrc.initialize(0.0);
+	enthalpyBoundarySrc.initialize(0.0);
+	umomBoundarySrc.initialize(0.0);
+	vmomBoundarySrc.initialize(0.0);
+	wmomBoundarySrc.initialize(0.0);
 
   }
 }
