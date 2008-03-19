@@ -85,7 +85,7 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $testing_path");
       
-     my $tst = $simple->XMLin($fw_path."/dx.tst");
+     my $tst = $simple->XMLin($fw_path."/".$tstFile);
      my $gnuplotScript = $tst->{gnuplotFile}->[0];
      system("cp -f $gnuplotScript $testing_path");
       
