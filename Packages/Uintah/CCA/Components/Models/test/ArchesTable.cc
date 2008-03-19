@@ -2,24 +2,29 @@
 #include <Packages/Uintah/CCA/Components/Models/test/ArchesTable.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
+
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
+
 #include <iostream>
 #include <fstream>
-#include <Core/Util/DebugStream.h>
 
 #define MAXINDEPENDENTS 100
 
 // TODO:  Interpolation could be a lot faster
 // TODO: parentheses in expressions, other ops in expressions
+
 using namespace std;
 using namespace Uintah;
+
 static DebugStream cerr_dbg("ARCHES_TABLE", true);
 
 ArchesTable::ArchesTable(ProblemSpecP& params)
 {
-  file_read = false;
-  params->require("filename", filename);
+  file_read_ = false;
+  params->require("filename", filename_);
 
   // Parse default values
   for (ProblemSpecP child = params->findBlock("defaultValue"); child != 0;
@@ -82,25 +87,27 @@ ArchesTable::~ArchesTable()
   }
 }
 
-void ArchesTable::outputProblemSpec(ProblemSpecP& ps)
+void
+ArchesTable::outputProblemSpec(ProblemSpecP& ps)
 {
   ps->setAttribute("type", "Arches");
-  ps->appendElement("filename",filename);
+  ps->appendElement("filename",filename_);
   for (vector<DefaultValue*>::const_iterator it = defaults.begin();
        it != defaults.end(); ++it)
     (*it)->outputProblemSpec(ps);
 
   for (vector<Dep*>::const_iterator it = deps.begin(); it != deps.end(); ++it)
     (*it)->outputProblemSpec(ps);
-
 }
 
-ArchesTable::Expr* ArchesTable::parse_addsub(string::iterator&  begin,
-                                             string::iterator& end)
+ArchesTable::Expr*
+ArchesTable::parse_addsub( string::iterator & begin,
+                           string::iterator & end )
 {
   Expr* child1 = parse_muldiv(begin, end);
-  if(!child1)
+  if( !child1 ) {
     return 0;
+  }
   while(begin != end){
     char next = *begin;
     if(next == '+' || next == '-'){
@@ -118,13 +125,15 @@ ArchesTable::Expr* ArchesTable::parse_addsub(string::iterator&  begin,
   return child1;
 }
 
-ArchesTable::Expr* ArchesTable::parse_muldiv(string::iterator&  begin,
-                                             string::iterator& end)
+ArchesTable::Expr*
+ArchesTable::parse_muldiv( string::iterator& begin,
+                           string::iterator& end )
 {
   Expr* child1 = parse_sign(begin, end);
-  if(!child1)
+  if( !child1 ) {
     return 0;
-  while(begin != end){
+  }
+  while(begin != end) {
     char next = *begin;
     if(next == '*' || next == '/'){
       begin++;
@@ -141,12 +150,13 @@ ArchesTable::Expr* ArchesTable::parse_muldiv(string::iterator&  begin,
   return child1;
 }
 
-ArchesTable::Expr* ArchesTable::parse_sign(string::iterator& begin,
-                                           string::iterator& end)
+ArchesTable::Expr*
+ArchesTable::parse_sign( string::iterator& begin,
+                         string::iterator& end )
 {
-  while(begin != end){
+  while(begin != end) {
     char next = *begin;
-    if(next == '-'){
+    if(next == '-') {
       begin++;
       Expr* child = parse_idorconstant(begin, end);
       if(!child)
@@ -166,22 +176,27 @@ ArchesTable::Expr* ArchesTable::parse_sign(string::iterator& begin,
   return 0;
 }
 
-ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
-                                                   string::iterator& end)
+ArchesTable::Expr*
+ArchesTable::parse_idorconstant( string::iterator& begin,
+                                 string::iterator& end )
 {
-  while(begin != end && (*begin == ' ' || *begin == '\t' || *begin == '\n'))
+  while(begin != end && (*begin == ' ' || *begin == '\t' || *begin == '\n')) {
     begin++;
-  if(begin == end)
+  }
+  if(begin == end) {
     return 0;
+  }
   char next = *begin;
-  if(next == '['){
+  if(next == '[') {
     // ID...
     begin++;
     string id;
-    while(begin != end && *begin != ']')
+    while(begin != end && *begin != ']') {
       id.push_back(*begin++);
-    if(begin == end)
+    }
+    if(begin == end) {
       return 0;
+    }
     begin++; // skip ]
 
     int id_index = addDependentVariable(id);
@@ -190,18 +205,20 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
       return scinew Expr(dep->constantValue);
     else
       return scinew Expr(id_index);
-  } else if(next == '{'){
+  } else if(next == '{') {
     // Independent variable...
     begin++;
     string id;
-    while(begin != end && *begin != '}')
+    while(begin != end && *begin != '}') {
       id.push_back(*begin++);
-    if(begin == end)
+    }
+    if(begin == end) {
       return 0;
+    }
     begin++; // skip }
 
     return scinew Expr(id);
-  } else if(next =='('){
+  } else if(next =='(') {
     // Parenthetical
     begin++;
     Expr* child = parse_addsub(begin, end);
@@ -209,7 +226,7 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
       return 0;
     else
       return child;
-  } else if(isdigit(next)){
+  } else if(isdigit(next)) {
     string constant;
     while((*begin >= '0' && *begin <= '9') || *begin == '.')
       constant.push_back(*begin++);
@@ -220,6 +237,7 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
       while((*begin >= '0' && *begin <= '9'))
         constant.push_back(*begin++);
     }
+
     istringstream in(constant);
     double c;
     in >> c;
@@ -231,10 +249,11 @@ ArchesTable::Expr* ArchesTable::parse_idorconstant(string::iterator& begin,
   }
 }
 
-int ArchesTable::addDependentVariable(const string& name)
+int
+ArchesTable::addDependentVariable( const string & name )
 {
-  ASSERT(!file_read);
-  for(int i=0;i<static_cast<int>(deps.size());i++){
+  ASSERT(!file_read_);
+  for(int i=0;i<static_cast<int>(deps.size());i++) {
     Dep* dep = deps[i];
     if(dep->name == name)
       return i;
@@ -245,50 +264,56 @@ int ArchesTable::addDependentVariable(const string& name)
   return (int)deps.size()-1;
 }
 
-void ArchesTable::addIndependentVariable(const string& name)
+void
+ArchesTable::addIndependentVariable( const string& name )
 {
-  ASSERT(!file_read);
+  ASSERT(!file_read_);
   Ind* ind = scinew Ind;
   ind->name = name;
   inds.push_back(ind);
 }
 
-void ArchesTable::setup(const bool cerrSwitch)
+void
+ArchesTable::setup(const bool cerrSwitch)
 {
-
   cerr_dbg.setActive(cerrSwitch);
   double start = Time::currentSeconds();
   // Read the index...
-  ifstream in(filename.c_str());
-  startline = true;
-  if(!in)
-    throw ProblemSetupException("file not found: "+filename, __FILE__, __LINE__);
-  
 
-  cerr_dbg << "Reading reaction table: " << filename << endl;
-  int nvars = getInt(in);
+
+  gzFile gzFp = gzopen( filename_.c_str(), "r" );
+
+  if( gzFp == NULL ) {
+    // If errno is 0, then not enough memory to uncompress file.
+    cout << "Error: gz open failed for file: '" << filename_ << "'.  (Errno: " << errno << ")\n";
+    throw ProblemSetupException("Unable to open the given input file: " + filename_, __FILE__, __LINE__);
+  }
+
+  cerr_dbg << "Reading reaction table: " << filename_ << endl;
+  int nvars = getInt( gzFp );
   cerr_dbg << "Reading " << nvars << " variables : ";
 
   vector<Ind*> in_inds(nvars);
   vector<int> axis_sizes(nvars);
 
   // Read the names.
-  for(int i=0;i<nvars;i++){
+  for( int i = 0; i < nvars; i++ ) {
     Ind* ind = scinew Ind;
-    ind->name = getString(in);
+    ind->name = getString( gzFp );
     in_inds[i] = ind;
   }
 
   // Read the size of each axis
-  for(int i=0;i<nvars;i++){
-    int num = getInt(in);
+  for( int i = 0; i < nvars; i++ ) {
+    int num = getInt( gzFp );
     axis_sizes[i] = num;
     if(num <= 2)
       throw InternalError("Table must have at least size 2 in each dimension", __FILE__, __LINE__);
   }
 
-  for(int i=0;i<nvars;i++)
+  for(int i=0;i<nvars;i++) {
     cerr_dbg << axis_sizes[i] << " ";
+  }
   cerr_dbg << '\n';
 
   // Set up the axes.
@@ -297,19 +322,19 @@ void ArchesTable::setup(const bool cerrSwitch)
   vector<InterpAxis*> in_axes(nvars);
   long stride = axis_sizes[0];
   in_axes[0] = 0;
-  for(int i=nvars-1;i>=1;i--){
+  for( int i = nvars-1; i >= 1; i-- ) {
     in_axes[i] = scinew InterpAxis(axis_sizes[i], stride);
     in_axes[i]->useCount++;
     stride *= axis_sizes[i];
   }
   long size = stride;
 
-  int ndeps = getInt(in);
+  int ndeps = getInt( gzFp );
   vector<Dep*> in_deps(ndeps);
-  for(int j=0;j<ndeps;j++){
+  for(int j=0;j<ndeps;j++) {
     Dep* dep = scinew Dep(Dep::TableValue);
     
-    dep->name = getString(in);
+    dep->name = getString( gzFp );
     dep->data = scinew double[size];
     // Add the first (typically masss fraction) axis with stride 1
     dep->addAxis(scinew InterpAxis(axis_sizes[0], 1));
@@ -320,38 +345,38 @@ void ArchesTable::setup(const bool cerrSwitch)
 
   // Next, read units - they may not all be there, so we just read the
   // line and throw it away...
-  getLine(in);
+  getLine( gzFp );
 
   // Next, read the axis weights for everything but the first axis
-  for(int i=1;i<nvars;i++){
+  for(int i=1;i<nvars;i++) {
     InterpAxis* axis = in_axes[i];
     int n=axis_sizes[i];
     for(int i=0;i<n;i++)
-      axis->weights[i] = getDouble(in);
+      axis->weights[i] = getDouble( gzFp );
   }
   int sizefirst = axis_sizes[0];
-  for(int idep=0;idep<ndeps;idep++){
+  for(int idep=0;idep<ndeps;idep++) {
     Dep* dep = in_deps[idep];
-    for(int i=0;i<sizefirst;i++){
+    for(int i=0;i<sizefirst;i++) {
       // Read axis weights
-      double weight = getDouble(in);
+      double weight = getDouble( gzFp );
       dep->axes[0]->weights[i] = weight;
     }
-    for(int i=0;i<size;i++){
+    for(int i=0;i<size;i++) {
       // Read values for this dependent variable
-      double value = getDouble(in);
+      double value = getDouble( gzFp );
       dep->data[i] = value;
     }
   }
 
-  // Make sure that we are at the end of the file
-  skipComments(in);
-  if(in){
-    cerr_dbg << "Rest of file:\n";
-    while(in)
-      cerr_dbg << (char)in.get();
-    cerr_dbg << '\n';
-    throw InternalError("Data remaining in file after read\n", __FILE__, __LINE__);
+  // At this point, the entire file should have been parsed... so if
+  // there is anything left in the file, it is an error... let the
+  // user know in this case.
+  //
+  string data = getString( gzFp );
+  if( data != "" ) {
+    throw InternalError( "Extra data found in file after parsing... (starting with " + 
+                         data + ".\n", __FILE__, __LINE__ );
   }
 
   // finalize axes
@@ -362,15 +387,15 @@ void ArchesTable::setup(const bool cerrSwitch)
 
   // Map the desired variables to the input variables
   vector<int> axis_map(inds.size(), -1);
-  for(int i=0;i<static_cast<int>(inds.size());i++){
+  for(int i=0;i<static_cast<int>(inds.size());i++) {
     Ind* ind = inds[i];
     // Look in the alias map
     bool found = false;
-    for(int j=0;j<static_cast<int>(in_inds.size());j++){
+    for(int j=0;j<static_cast<int>(in_inds.size());j++) {
       if(in_inds[j]->name == ind->name){
-	found=true;
-	axis_map[i] = j;
-	break;
+        found=true;
+        axis_map[i] = j;
+        break;
       }
     }
     if(!found)
@@ -408,12 +433,13 @@ void ArchesTable::setup(const bool cerrSwitch)
     Dep* inputdep = 0;
     for(int j=0;j<static_cast<int>(in_deps.size());j++){
       if(in_deps[j]->name == dep->name){
-	inputdep = in_deps[j];
-	break;
+        inputdep = in_deps[j];
+        break;
       }
     }
-    if(!inputdep)
+    if(!inputdep) {
       throw InternalError(string("Dependent variable: ")+dep->name+" not found", __FILE__, __LINE__);
+    }
     cerr_dbg << "Downslicing: " << dep->name << '\n';
     dep->data =scinew double[newsize];
 
@@ -474,26 +500,26 @@ void ArchesTable::setup(const bool cerrSwitch)
       int l=0;
       int h=axis->weights.size()-1;
       if(value < axis->weights[l] || value > axis->weights[h])
-	throw InternalError("Interpolate outside range of table", __FILE__, __LINE__);
+        throw InternalError("Interpolate outside range of table", __FILE__, __LINE__);
       while(h > l+1){
-	int m = (h+l)/2;
-	if(value < axis->weights[m])
-	  h=m;
-	else
-	  l=m;
+        int m = (h+l)/2;
+        if(value < axis->weights[m])
+          h=m;
+        else
+          l=m;
       }
       long i0 = axis->offset[l];
       long i1 = axis->offset[h];
       double w0 = (value-axis->weights[l])/(axis->weights[h]-axis->weights[l]);
       double w1 = 1-w0;
       for(int j=0;j<interp_size;j++){
-	if(j&s){
-	  idx[j] += i1;
-	  w[j] *= w0;
-	} else {
-	  idx[j] += i0;
-	  w[j] *= w1;
-	}
+        if(j&s){
+          idx[j] += i1;
+          w[j] *= w0;
+        } else {
+          idx[j] += i0;
+          w[j] *= w1;
+        }
       }
       s<<=1;
     }
@@ -505,26 +531,26 @@ void ArchesTable::setup(const bool cerrSwitch)
       long iidx = 0;
       // Determine the source indices...
       for(int j=0;j<static_cast<int>(inds.size());j++){
-	InterpAxis* in_axis = inputdep->axes[axis_map[j]];
-	iidx += in_axis->offset[n[j]];
+        InterpAxis* in_axis = inputdep->axes[axis_map[j]];
+        iidx += in_axis->offset[n[j]];
       }
 
       // Interpolate
       for(int j=0;j<interp_size;j++){
-	long index = iidx+idx[j];
+        long index = iidx+idx[j];
         sum += w[j]*inputdep->data[index];
       }
 
       // Determine the output index
       long oidx = 0;
       for(int j=0;j<static_cast<int>(inds.size());j++){
-	oidx += dep->axes[j]->offset[n[j]];
+        oidx += dep->axes[j]->offset[n[j]];
       }
       dep->data[oidx] = sum;
       int s = inds.size()-1;
       while(s >= 0 && ++n[s] >= (int)dep->axes[s]->weights.size()){
-	n[s]=0;
-	s--;
+        n[s]=0;
+        s--;
       }
       
     }
@@ -559,30 +585,32 @@ void ArchesTable::setup(const bool cerrSwitch)
     for(int i=0;i<static_cast<int>(axes.size());i++)
       dep->addAxis(axes[i]);
   }
-  file_read = true;
+  file_read_ = true;
   double dt = Time::currentSeconds()-start;
   cerr_dbg << "Read and interpolated table in " << dt << " seconds\n";
 }
 
-void ArchesTable::checkAxes(const vector<InterpAxis*>& a,
-                            const vector<InterpAxis*>& b,
-                            vector<InterpAxis*>& out_axes)
+void
+ArchesTable::checkAxes( const vector<InterpAxis*> & a,
+                        const vector<InterpAxis*> & b,
+                        vector<InterpAxis*> &       out_axes)
 {
   // If either of the axes are empty, use the ohter one...
-  if(a.size() == 0){
+  if(a.size() == 0) {
     if(b.size() != 0)
       out_axes=b;
     return;
   } else {
-    if(b.size() == 0){
+    if(b.size() == 0) {
       out_axes=a;
       return;
     }
   }
-  if(a.size() != b.size())
+  if(a.size() != b.size()) {
     throw InternalError("Cannot compute a derived quantity on variables with different dimension", 
                         __FILE__, __LINE__);
-  for(int i=0;i<static_cast<int>(a.size());i++){
+  }
+  for(int i=0;i<static_cast<int>(a.size());i++) {
     if(!a[i]->sameAs(b[i]))
       throw InternalError("Cannot compute a derived quantity on variables with different axes",
                           __FILE__, __LINE__);
@@ -591,10 +619,11 @@ void ArchesTable::checkAxes(const vector<InterpAxis*>& a,
   out_axes=a;
 }
 
-void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
-                           double* data, int size)
+void
+ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
+                      double* data, int size)
 {
-  switch(expr->op){
+  switch(expr->op) {
   case '+':
     {
       vector<InterpAxis*> axes1;
@@ -705,12 +734,13 @@ void ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
   }
 }
     
-void ArchesTable::interpolate(int index, CCVariable<double>& result,
-			      const CellIterator& in_iter,
-			      vector<constCCVariable<double> >& independents)
+void
+ArchesTable::interpolate( int index, CCVariable<double>& result,
+                          const CellIterator& in_iter,
+                          vector<constCCVariable<double> >& independents )
 {
   Dep* dep = deps[index];
-  switch(dep->type){
+  switch(dep->type) {
   case Dep::ConstantValue:
     {
       double value = dep->constantValue;
@@ -802,12 +832,14 @@ void ArchesTable::interpolate(int index, CCVariable<double>& result,
   }
 }
 
-double ArchesTable::interpolate(int index, vector<double>& independents)
+double
+ArchesTable::interpolate( int index, vector<double>& independents )
 {
   Dep* dep = deps[index];
   int ni = dep->axes.size();
-  if(dep->type == Dep::ConstantValue)
+  if(dep->type == Dep::ConstantValue) {
     return dep->constantValue;
+  }
   ASSERT(ni < MAXINDEPENDENTS);
   ASSERT(ni == static_cast<int>(independents.size()));
 
@@ -877,15 +909,17 @@ double ArchesTable::interpolate(int index, vector<double>& independents)
   return sum;
 }
 
-
-void ArchesTable::error(istream& in)
+#if 0
+void
+ArchesTable::error(istream& in)
 {
   string s;
   getline(in, s);
   throw InternalError("Error parsing table, text follows: "+s, __FILE__, __LINE__);
 }
 
-int ArchesTable::getInt(istream& in)
+int
+ArchesTable::getInt(istream& in)
 {
   if(startline)
     skipComments(in);
@@ -969,7 +1003,8 @@ string ArchesTable::getLine(istream& in)
   return result;
 }
 
-void ArchesTable::skipComments(istream& in)
+void
+ArchesTable::skipComments(istream& in)
 {
   eatWhite(in);
   int c = in.get();
@@ -982,7 +1017,8 @@ void ArchesTable::skipComments(istream& in)
   in.unget();
 }
 
-void ArchesTable::eatWhite(istream& in)
+void
+ArchesTable::eatWhite(istream& in)
 {
   int c = in.get();
   while(in && isspace(c))
@@ -990,10 +1026,11 @@ void ArchesTable::eatWhite(istream& in)
   if(in)
     in.unget();
 }
+#endif
 
-void ArchesTable::Dep::outputProblemSpec(ProblemSpecP& ps)
+void
+ArchesTable::Dep::outputProblemSpec(ProblemSpecP& ps)
 {
-
   if (type == Dep::ConstantValue) {
     stringstream ss;
     ss << constantValue;
@@ -1004,10 +1041,10 @@ void ArchesTable::Dep::outputProblemSpec(ProblemSpecP& ps)
     ProblemSpecP dv_ps = ps->appendElement("derivedValue",expr_string);
     dv_ps->setAttribute("name",name);
   }
-
 }
 
-void ArchesTable::Dep::addAxis(InterpAxis* newAxis)
+void
+ArchesTable::Dep::addAxis(InterpAxis* newAxis)
 {
   newAxis->useCount++;
   axes.push_back(newAxis);
@@ -1027,16 +1064,17 @@ ArchesTable::InterpAxis::InterpAxis(int size, int stride)
     offset[i] = i*stride;
 }
 
-ArchesTable::InterpAxis::InterpAxis(const InterpAxis* copy, int newStride)
-  : weights(copy->weights), offset(copy->offset.size()),
-    uniform(copy->uniform), dx(copy->dx), useCount(0)
+ArchesTable::InterpAxis::InterpAxis(const InterpAxis* copy, int newStride) : 
+  weights(copy->weights), offset(copy->offset.size()),
+  uniform(copy->uniform), dx(copy->dx), useCount(0)
 {
   int size = weights.size();
   for(int i=0;i<size;i++)
     offset[i] = i*newStride;
 }
 
-bool ArchesTable::InterpAxis::sameAs(const InterpAxis* b) const
+bool
+ArchesTable::InterpAxis::sameAs(const InterpAxis* b) const
 {
   if(this == b)
     return true;
@@ -1048,7 +1086,8 @@ bool ArchesTable::InterpAxis::sameAs(const InterpAxis* b) const
   return true;
 }
 
-void ArchesTable::InterpAxis::finalize()
+void
+ArchesTable::InterpAxis::finalize()
 {
   int n = weights.size();
   dx = (weights[n-1]-weights[0])/(n-1);
