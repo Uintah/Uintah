@@ -15,5 +15,5 @@
   <derivedValue name="reference_mixture_molecular_weight">    0.0346616*(1-{mixture_fraction}) + 0.0312402*{mixture_fraction}   </derivedValue>
   <derivedValue name="reference_heat_capac_Cv"> [reference_heat_capac_Cp]-8314*[reference_mixture_molecular_weight]             </derivedValue>
   <derivedValue name="reference_gamma">         [reference_heat_capac_Cp]/[reference_heat_capac_Cv]                             </derivedValue>
-  <filename>inputs/ARCHES/NewStaticMixingTables/jp8/jp8_adia_equil.rxn</filename>
+  <filename>inputs/ARCHES/NewStaticMixingTables/jp8/jp8_adia_equil.rxn.gz</filename>
 </Uintah_Include> 
