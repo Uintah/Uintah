@@ -53,6 +53,7 @@ using namespace std;
 
 const int HOST_NAME_SIZE = 100;
 char      hostname[ HOST_NAME_SIZE ];
+vector< string > hostnames;  // Only valid on rank 0
 int       rank;
 int       procs;
 
@@ -110,8 +111,11 @@ usage( const string & prog, const string & badArg )
     cout << "       Options:\n";
     cout << "\n";
     cout << "         -nofs - Don't check filesystem.\n";
-    cout << "         -v    - Be verbose!  (Warning, on a lot of processors this will .\n";
-    cout << "                   produce a lot of output!)\n";
+    cout << "         -v    - Be verbose!  (Warning, on a lot of processors this will\n";
+    cout << "                   produce a lot of output! Also, this will initiate a number\n";
+    cout << "                   of additional MPI calls (to send verbose information) which\n";
+    cout << "                   could possibly hang and/or cause the outcome to be somewhat\n";
+    cout << "                   different from the non-verbose execution.)\n";
     cout << "\n";
   }
   exit(1);
@@ -134,7 +138,6 @@ parseArgs( int argc, char *argv[] )
   }
 }
 
-
 int
 main( int argc, char* argv[] )
 {
@@ -143,16 +146,43 @@ main( int argc, char* argv[] )
   MPI_Init( &argc, &argv );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
   MPI_Comm_size( MPI_COMM_WORLD, &procs );
-  
+
   parseArgs( argc, argv );
 
   if( rank == 0 ) {
-    cout << "Testing mpi communication on " << procs << " processors." << endl;
+    cout << "Testing mpi communication on " << procs << " processors.\n";
   }
 
-  if( args.verbose ) {
-    cout << "Rank " << rank << " hostname is " << hostname << ".\n";
-    usleep(1000000); // Give enough time for prints to complete before starting tests.
+  if( args.verbose ) { // Create 'rank to processor name' mapping:
+
+    if( rank == 0 ) {
+      hostnames.resize( procs ); // Reserve enough space for all the incoming names.
+
+      hostnames[ 0 ] = hostname; // Save proc 0's name.
+
+      for( int proc = 1; proc < procs; proc++ ) { // Get all the other procs names.
+        char hnMessage[ HOST_NAME_SIZE ];
+        bzero( hnMessage, HOST_NAME_SIZE );
+        MPI_Status status;
+
+        MPI_Recv( &hnMessage, HOST_NAME_SIZE, MPI_CHAR, proc, 0, MPI_COMM_WORLD, &status );
+
+        // int numBytesReceived = -1;
+        // MPI_Get_count( &status, MPI_CHAR, &numBytesReceived );
+        // printf("result is %d, received bytes: %d\n", result, numBytesReceived);
+
+        hostnames[ proc ] = hnMessage;
+      }
+
+      cout << "Machine rank to name mapping:\n";
+      for( int r = 0; r < procs; r++ ) {
+        cout << r << ": " << hostnames[ r ] << "\n";
+      }
+    }
+    else {
+      // everyone but rank 0 needs to send rank 0 a message with it's name...
+      MPI_Send( hostname, HOST_NAME_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD );
+    }
   }
  
   // Run Point2PointASync_Test first, as it will hopefully tell us the
@@ -324,10 +354,10 @@ fileSystem_test()
   string host = string( hostname ).substr( 0, 3 );
 
   if( host == "inf" ) {
-    bool raid1 = testFilesystem( "/usr/csafe/raid1", error_stream, rank );
+    bool raid1 = true; //testFilesystem( "/usr/csafe/raid1", error_stream, rank );
     bool raid2 = testFilesystem( "/usr/csafe/raid2", error_stream, rank );
-    bool raid3 = testFilesystem( "/usr/csafe/raid3", error_stream, rank );
-    bool raid4 = testFilesystem( "/usr/csafe/raid4", error_stream, rank );
+    bool raid3 = true; //testFilesystem( "/usr/csafe/raid3", error_stream, rank );
+    bool raid4 = true; //testFilesystem( "/usr/csafe/raid4", error_stream, rank );
 
     pass = raid1 && raid2 && raid3 && raid4;
   }
@@ -548,7 +578,7 @@ point2pointsync_test()
   int pass = true;
   int message;
 
-  for(int pp=0;pp<procs;pp++) {
+  for( int pp = 0; pp < procs; pp++ ) {
     if( pp == rank ) { // sending
       for(int p=0;p<procs;p++) {
         MPI_Send(&rank,1,MPI_INT,p,p,MPI_COMM_WORLD);
