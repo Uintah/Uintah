@@ -4,9 +4,8 @@
 % the L2norm of the rayleigh problem with and without dimensions
 % Reference:  Incompressible Flow, by Panton pg 177
 %
-%  - first run sus -ice rayleigh.ups
-%  - cd rayleigh.uda
-%  - matlab ../inputs/ICE/gnuplotScrips/rayleigh.m
+%  Example usage:
+%  compare_Rayleigh.m -pDir 1 -mat 0 -plot false -o out.400.cmp -uda rayleigh_400.uda
 %_________________________________
 clear all;
 close all;
