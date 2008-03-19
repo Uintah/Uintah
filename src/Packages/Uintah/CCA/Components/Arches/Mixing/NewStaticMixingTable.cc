@@ -9,6 +9,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
 
 #include <Core/Math/MiscMath.h>
 
@@ -317,65 +319,6 @@ NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double cur
   return var_value; 
 }
 
-//
-// Reads a token out of a gzipped file... Tokens are separated by
-// white space (spaces, tabs, newlines...).
-//
-// NOTE: Lines that being with "#" (the very 1st character is a #) are
-// considered comments and are skipped.
-//
-const string
-getToken( gzFile gzFp )
-{
-  string token;
-
-  while( true ) {
-
-    char ch = gzgetc( gzFp );
-
-    if( ch == '#' ) { // The input line is commented out.
-      while( ch != '\n' ) { // Skip it.
-        ch = gzgetc( gzFp );
-      }
-    }
-
-    if( ch == -1 ) { // end of file reached
-      break;
-    }
-
-    if( ch == '\n' || ch == '\t' || ch == '\r' || ch == ' ' ) { // done reading token
-      if( token.size() > 0 ) {
-        break;
-      }
-      else {
-        continue; // until we get a non-empty token.
-      }
-    }
-    token.push_back( ch );
-  }
-  return token;
-}
-
-const string
-getString( gzFile gzFp )
-{
-  return getToken( gzFp );
-}
-
-void
-getDouble( gzFile gzFp, double & out )
-{
-  const string result = getToken( gzFp );
-  sscanf( result.c_str(), "%lf", &out );
-}
-
-void
-getInt( gzFile gzFp, int & out )
-{
-  const string result = getToken( gzFp );
-  sscanf( result.c_str(), "%d", &out );
-}
-
 void
 NewStaticMixingTable::readMixingTable( const string & inputfile )
 {
@@ -386,15 +329,15 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   if( gzFp == NULL ) {
     // If errno is 0, then not enough memory to uncompress file.
     cout << "Error gz opening file " << inputfile << ".  Errno: " << errno << "\n";
-    throw InvalidValue("Unable to open the given input file " + inputfile, __FILE__, __LINE__);
+    throw ProblemSetupException("Unable to open the given input file: " + inputfile, __FILE__, __LINE__);
   }
 
-  getDouble( gzFp, d_f_stoich );
-  getDouble( gzFp, d_H_fuel );
-  getDouble( gzFp, d_H_air );
-  getDouble( gzFp, d_carbon_fuel );
-  getDouble( gzFp, d_carbon_air );
-  getInt(    gzFp, d_indepvarscount );
+  d_f_stoich       = getDouble( gzFp );
+  d_H_fuel         = getDouble( gzFp );
+  d_H_air          = getDouble( gzFp );
+  d_carbon_fuel    = getDouble( gzFp );
+  d_carbon_air     = getDouble( gzFp );
+  d_indepvarscount = getInt(    gzFp );
 
   cout<< "d_indepvars count: " << d_indepvarscount << "\n";
   
@@ -418,7 +361,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   
   eachindepvarcount = vector<int>(d_indepvarscount);
   for (int ii = 0; ii < d_indepvarscount; ii++) {
-    getInt( gzFp, eachindepvarcount[ii] );
+    eachindepvarcount[ii] = getInt( gzFp );
   }
 
   d_heatlosscount = 1;
@@ -431,7 +374,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   cout << d_heatlosscount << " " << d_mixfraccount << " " << d_mixvarcount << "\n";
 
   // Total number of variables in the table: non-adaibatic table has sensibile enthalpy too
-  getInt( gzFp, d_varscount );
+  d_varscount = getInt( gzFp );
   cout<< "d_vars count: " << d_varscount << "\n";
   vars_names= vector<string>(d_varscount);
   Rho_index = -1;
@@ -673,7 +616,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
 
   if (Hl_index != -1) {
     for (int mm=0; mm< d_heatlosscount; mm++){
-      getDouble( gzFp, heatLoss[mm] );
+      heatLoss[mm] = getDouble( gzFp );
       //cout << heatLoss[mm] << endl;
     }
   }
@@ -684,7 +627,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   // Jennifer's bug fix
   if (Fvar_index != -1) {
     for (int mm=0; mm< d_mixvarcount; mm++){
-      getDouble( gzFp, variance[mm] );
+      variance[mm] = getDouble( gzFp );
     }
   }
 
@@ -704,7 +647,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   for (int kk=0; kk< d_varscount; kk++){
     // Reading mixture fraction values
     for (int ii=0; ii< d_mixfraccount; ii++){
-      getDouble( gzFp, meanMix[kk][ii] );
+      meanMix[kk][ii] = getDouble( gzFp );
       //cout << ii << ": " << meanMix[kk][ii] << "      ";
     }
     //cout << "\n";
@@ -712,7 +655,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     for (int mm=0; mm< d_heatlosscount; mm++) {   // Variance loop
       for (int jj=0;jj<d_mixvarcount; jj++){      // Mixture fraction loop 
         for (int ii=0; ii< d_mixfraccount; ii++){
-          getDouble( gzFp, table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii] );
+          table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii] = getDouble( gzFp );
           //cout << table[kk][mm*(d_mixfraccount*d_mixvarcount)+jj*d_mixfraccount+ii]<< "  ";
         } // End of mixture fraction loop
         //cout << "\n";

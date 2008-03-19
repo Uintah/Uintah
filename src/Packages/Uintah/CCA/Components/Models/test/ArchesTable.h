@@ -8,6 +8,7 @@
 namespace Uintah {
 
   using std::stringstream;
+
 /****************************************
 
 CLASS
@@ -49,8 +50,8 @@ WARNING
     virtual void setup(const bool cerrSwitch);
     
     virtual void interpolate(int index, CCVariable<double>& result,
-			     const CellIterator&,
-			     vector<constCCVariable<double> >& independents);
+                             const CellIterator&,
+                             vector<constCCVariable<double> >& independents);
     virtual double interpolate(int index, vector<double>& independents);
 
   private:
@@ -132,8 +133,8 @@ WARNING
     void checkAxes(const vector<InterpAxis*>& a, const vector<InterpAxis*>& b,
                    vector<InterpAxis*>& out_axes);
 
-    string filename;
-    bool file_read;
+    string filename_;
+    bool   file_read_;
 
     struct DefaultValue {
       void outputProblemSpec(ProblemSpecP& ps) {
@@ -147,15 +148,6 @@ WARNING
     };
     vector<DefaultValue*> defaults;
 
-    int getInt(istream&);
-    double getDouble(istream&);
-    string getString(istream&);
-    string getLine(istream&);
-
-    bool startline;
-    void error(istream& in);
-    void skipComments(istream& in);
-    void eatWhite(istream& in);
   };
 } // End namespace Uintah
     

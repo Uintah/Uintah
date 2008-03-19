@@ -6,18 +6,22 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing
 
-SRCS     += $(SRCDIR)/MixingModel.cc $(SRCDIR)/ColdflowMixingModel.cc  \
-		$(SRCDIR)/NewStaticMixingTable.cc \
-		$(SRCDIR)/MOMColdflowMixingModel.cc \
-		$(SRCDIR)/StandardTable.cc \
-		$(SRCDIR)/Stream.cc $(SRCDIR)/InletStream.cc
+SRCS += \
+        $(SRCDIR)/ColdflowMixingModel.cc    \
+        $(SRCDIR)/InletStream.cc            \
+        $(SRCDIR)/MixingModel.cc            \
+        $(SRCDIR)/MOMColdflowMixingModel.cc \
+        $(SRCDIR)/NewStaticMixingTable.cc   \
+        $(SRCDIR)/StandardTable.cc          \
+        $(SRCDIR)/Stream.cc                 
 
 PSELIBS := \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Util   \
-	Packages/Uintah/Core/Exceptions    \
-	Packages/Uintah/Core/Math          \
-	Packages/Uintah/CCA/Components/Models          \
+	Packages/Uintah/Core/Exceptions       \
+	Packages/Uintah/Core/IO               \
+	Packages/Uintah/Core/Math             \
+	Packages/Uintah/Core/ProblemSpec      \
+	Packages/Uintah/Core/Util             \
+	Packages/Uintah/CCA/Components/Models \
 	Core/Exceptions \
 	Core/Thread     \
 	Core/Geometry   

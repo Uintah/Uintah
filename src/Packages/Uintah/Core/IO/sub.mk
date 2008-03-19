@@ -2,9 +2,12 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/IO
+SRCDIR := Packages/Uintah/Core/IO
 
-SRCS     +=
+SRCS += \
+	$(SRCDIR)/UintahZlibUtil.cc
+
+PSELIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
