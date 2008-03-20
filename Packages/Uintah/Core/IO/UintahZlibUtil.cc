@@ -1,5 +1,7 @@
 #include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
 
+#include <stdio.h>
+
 namespace Uintah {
 
 using namespace std;
