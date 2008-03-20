@@ -335,7 +335,7 @@ link_regression_tester:
 # hack seems to prevent the 2nd 'compilation' from running...
 #
 sus: prereqs Packages/Uintah/StandAlone/sus
-ifeq ($(IS_REDSTORM),yess)
+ifeq ($(IS_REDSTORM),yes)
 	@echo "Built sus"
 endif
 
