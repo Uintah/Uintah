@@ -62,8 +62,8 @@ public:
 					   const MaterialSet* matls,
 				     const TimeIntegratorLabel* timelabels) = 0;
 
-      virtual inline const string getTableName() = 0;
-      virtual inline void setTableIndex(int tableIndex) = 0;  
+      virtual const string getTableName() = 0;
+      virtual void setTableIndex(int tableIndex) = 0;  
 					     
 protected:
       const ArchesLabel* d_lab;
