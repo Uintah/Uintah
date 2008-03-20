@@ -8,6 +8,7 @@ SRCS += \
 	$(SRCDIR)/UintahZlibUtil.cc
 
 PSELIBS :=
+LIBS    := $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
