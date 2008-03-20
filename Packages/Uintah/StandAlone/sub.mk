@@ -53,6 +53,7 @@ ifeq ($(SET_AIX_LIB),yes)
         Core/Persistent   \
         Core/Thread       \
         Core/XMLUtil      \
+        Packages/Uintah/Core/IO                          \
         Packages/Uintah/Core/Math                        \
         Packages/Uintah/Core/GeometryPiece               \
         Packages/Uintah/CCA/Components/Parent            \
