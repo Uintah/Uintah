@@ -955,9 +955,7 @@ void is_BC_specified(const ProblemSpecP& prob_spec, string variable)
 }
 
 /* --------------------------------------------------------------------- 
- Function~  BC_bulletproofing--
- Purpose~   if BCType id = "all" and it's a single material problem 
-            throw an exception.  
+ Function~  BC_bulletproofing--  
  ---------------------------------------------------------------------  */
 void BC_bulletproofing(const ProblemSpecP& prob_spec,
                        SimulationStateP& sharedState )
@@ -973,14 +971,30 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
   ProblemSpecP bc_ps  = grid_ps->findBlock("BoundaryConditions");
   int numAllMatls = sharedState->getNumMatls();
   
+  // If a face is periodic then is_press_BC_set = true
+  map<string,bool> is_press_BC_set;
+  is_press_BC_set["x-"] = (periodic.x() ==1) ? true:false;
+  is_press_BC_set["x+"] = (periodic.x() ==1) ? true:false;
+  is_press_BC_set["y-"] = (periodic.y() ==1) ? true:false;
+  is_press_BC_set["y+"] = (periodic.y() ==1) ? true:false;
+  is_press_BC_set["z-"] = (periodic.z() ==1) ? true:false;
+  is_press_BC_set["z+"] = (periodic.z() ==1) ? true:false;
+  
   // loop over all faces
   for (ProblemSpecP face_ps = bc_ps->findBlock("Face");face_ps != 0; 
                     face_ps=face_ps->findNextBlock("Face")) {
-                    
+  
+    map<string,bool>isBC_set;
+    isBC_set["Temperature"] =false;
+    isBC_set["Density"]     =false;
+    isBC_set["Velocity"]    =false;            
+    //isBC_set["SpecificVol"] =false;  this is an optional BC    
+    isBC_set["Symmetric"]   =false;    
+                      
     map<string,string> face;
     face_ps->getAttributes(face);
     
-    // tag each face
+    // tag each face if it's been specified
     if(face["side"] == "x-") tagFace_minus.x(1);
     if(face["side"] == "y-") tagFace_minus.y(1);
     if(face["side"] == "z-") tagFace_minus.z(1);
@@ -989,27 +1003,90 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     if(face["side"] == "y+") tagFace_plus.y(1);
     if(face["side"] == "z+") tagFace_plus.z(1);
         
-    // loop over all BCTypes  
+    // loop over all BCTypes for that face 
     for(ProblemSpecP bc_iter = face_ps->findBlock("BCType"); bc_iter != 0;
                      bc_iter = bc_iter->findNextBlock("BCType")){
       map<string,string> bc_type;
       bc_iter->getAttributes(bc_type);
             
-      if (bc_type["id"] == "all" && numAllMatls == 1) {
+      // valid user input      
+      if( bc_type["label"] != "Pressure"      && bc_type["label"] != "Temperature" && 
+          bc_type["label"] != "SpecificVol"   && bc_type["label"] != "Velocity" &&
+          bc_type["label"] != "Density"       && bc_type["label"] != "Symmetric"){
+        ostringstream warn;
+        warn <<"\n INPUT FILE ERROR:\n The boundary condition label ("<< bc_type["label"] <<") is not valid\n"
+             << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }  
+      
+      // specified "all" for a 1 matl problem
+      if (bc_type["id"] == "all" && numAllMatls == 1){
         ostringstream warn;
         warn <<"\n__________________________________\n"   
              << "ERROR: This is a single material problem and you've specified 'BCType id = all' \n"
-             << "The boundary condition machinery essentially treats 'all' and '0' as two separate materials, \n"
+             << "The boundary condition infrastructure treats 'all' and '0' as two separate materials, \n"
              << "setting the boundary conditions twice on each face.  Set BCType id = '0' \n" 
              << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
+      
+      // symmetric BCs
+      if ( bc_type["label"] == "Symmetric"){
+        if (numAllMatls > 1 &&  bc_type["id"] != "all") {
+          ostringstream warn;
+          warn <<"\n__________________________________\n"   
+             << "ERROR: This is a multimaterial problem with a symmetric boundary condition\n"
+             << "You must have the id = all instead of id = "<<bc_type["id"]<<"\n"
+             << "Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        }
+      }  // symmetric 
+      
+      // All passed tests on this face set the flags to true
+      if(bc_type["label"] == "Pressure" || bc_type["label"] == "Symmetric"){
+        is_press_BC_set[face["side"]] = true;
+      }
+      isBC_set[bc_type["label"]] = true;
+    }  // BCType loop
+    
+    //__________________________________
+    //Now check if all the variables on this face were set
+    map<string,bool>::iterator iter;
+    for( iter  = isBC_set.begin();iter !=  isBC_set.end(); iter++){
+      string var = (*iter).first;
+      bool isSet = (*iter).second;
+      bool isSymmetric = isBC_set["Symmetric"];
+      
+      if(isSymmetric == false && isSet == false && var != "Symmetric"){
+        ostringstream warn;
+        warn <<"\n__________________________________\n"   
+           << "INPUT FILE ERROR: \n"
+           << "The "<<var<<" boundary condition for one of the materials has not been set \n"
+           << "Face:  " << face["side"] <<  endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
     }
   } //face loop
+
+  //__________________________________
+  //Has the pressure BC been set on faces that are not periodic
+  map<string,bool>::iterator iter;
+  for( iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++){
+    string face = (*iter).first;
+    bool isSet  = (*iter).second;
+    
+    if(isSet == false){
+      ostringstream warn;
+      warn <<"\n__________________________________\n"   
+         << "INPUT FILE ERROR: \n"
+         << "The pressure boundary condition has not been set \n"
+         << "Face:  " << face <<  endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  }
   
   //__________________________________
-  // BULLET PROOFING
-  // Has each face has been touched
+  // Has each non-periodic face has been touched?
   if (periodic.length() == 0){
     if( (tagFace_minus != Vector(1,1,1)) ||
         (tagFace_plus  != Vector(1,1,1)) ){
