@@ -169,11 +169,6 @@ Variable::emit( OutputContext& oc, const IntVector& l,
 string*
 Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 {
-#if defined(REDSTORM)
-  cout << "ERROR: compression not currently supported on RedStorm.\n";
-  exit( 1 );
-#else
-
   unsigned long uncompressedSize = pUncompressed->size();
 
   // follows compress guidelines: 1% more than source size + 12
@@ -207,9 +202,7 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 			       save space */
     return pBuffer;
   } 
-#endif
 }
-
 
 void
 Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
@@ -258,10 +251,6 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
     ic.cur += datasize;
 
     if (use_gzip) {
-#if defined( REDSTORM )
-      printf("Error: compression not supported on RedStorm\n");
-      exit(1);
-#else
       // use gzip compression
 
       // first read the uncompressed data size
@@ -287,7 +276,6 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
       }
 
       uncompressedData = &bufferStr;
-#endif
     }
 
     istringstream instream(*uncompressedData);
