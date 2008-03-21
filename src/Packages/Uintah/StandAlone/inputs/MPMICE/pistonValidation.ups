@@ -163,7 +163,6 @@
     <MaterialProperties>
        <MPM>
          <material name = " Piston">
-                <EOS type = "ideal_gas">                 </EOS>
                 <density>                  1.9e8         </density>
                 <constitutive_model type = "comp_neo_hook_plastic">
                   <bulk_modulus>           10.2e8        </bulk_modulus>
