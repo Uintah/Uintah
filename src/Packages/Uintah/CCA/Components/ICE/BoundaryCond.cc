@@ -1012,7 +1012,8 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
       // valid user input      
       if( bc_type["label"] != "Pressure"      && bc_type["label"] != "Temperature" && 
           bc_type["label"] != "SpecificVol"   && bc_type["label"] != "Velocity" &&
-          bc_type["label"] != "Density"       && bc_type["label"] != "Symmetric"){
+          bc_type["label"] != "Density"       && bc_type["label"] != "Symmetric" &&
+          bc_type["label"] != "scalar-f"      && bc_type["label"] != "cumulativeEnergyReleased"){
         ostringstream warn;
         warn <<"\n INPUT FILE ERROR:\n The boundary condition label ("<< bc_type["label"] <<") is not valid\n"
              << " Face:  " << face["side"] << " BCType " << bc_type["label"]<< endl;
