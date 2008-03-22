@@ -123,7 +123,7 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 
 	      IntVector currCell(colX, colY, colZ);
 
-          scalarNonlinSrc[currCell] += CO2rate[currCell]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
+          scalarNonlinSrc[currCell] = CO2rate[currCell]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
 
         }
       }
