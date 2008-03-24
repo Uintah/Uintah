@@ -2760,6 +2760,7 @@ BoundaryCondition::sched_computeScalarSourceTerm(SchedulerP& sched,
 
 	tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 	tsk->modifies(d_lab->d_enthalpyBoundarySrcLabel);
+	tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 	sched->addTask(tsk, patches, matls); 	
 		
@@ -2787,9 +2788,11 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 
 	CCVariable<double> scalarBoundarySrc;
 	CCVariable<double> enthalpyBoundarySrc;
+	constCCVariable<int> cellType;
 
 	new_dw->getModifiable(scalarBoundarySrc, d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
 	new_dw->getModifiable(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
+	new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 	scalarBoundarySrc.initialize(0.0);
 	enthalpyBoundarySrc.initialize(0.0);
@@ -2825,11 +2828,16 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 					Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
 					Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
 					
-					if (piece->inside(p)){
+					if (cellType[*iter] == d_intrusionBC->d_cellTypeID) { 
+
+						/*IntVector ci;
+						patch->findCell(p_zm, ci);
+
+						cout << "my cell index = " << ci << endl;*/
 							
 						//Now check neighbors
 						// x+
-						if (!(piece->inside(p_xp))){
+						if (cellType[*iter + IntVector(1,0,0)] == d_flowfieldCellTypeVal){ 		
 							// source term = \int \rho u \phi \cdot dS	
 							scalarBoundarySrc[*iter + IntVector(1,0,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
 													   d_sourceBoundaryInfo[bp]->normal[0]*	
@@ -2842,7 +2850,7 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 														dx.y()*dx.z();							   
 						}
 						// x-
-						if (!(piece->inside(p_xm))){
+						if (cellType[*iter - IntVector(1,0,0)] == d_flowfieldCellTypeVal){		
 							scalarBoundarySrc[*iter - IntVector(1,0,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->totalVelocity*
 													   d_sourceBoundaryInfo[bp]->normal[0]*	
 													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
@@ -2854,12 +2862,12 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 														dx.y()*dx.z();
 						}
 						// y+
-						if (!(piece->inside(p_yp))){
+						if (cellType[*iter + IntVector(0,1,0)] == d_flowfieldCellTypeVal){		
 							//hard coding for jennifer for now.
 							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
 							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
 							double theta = atan(z/y);
-							double y_comp = d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);			
+							double y_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta));			
 											
 							scalarBoundarySrc[*iter + IntVector(0,1,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
 													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
@@ -2870,12 +2878,12 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 														dx.x()*dx.z();							   					
 						}
 						// y-
-						if (!(piece->inside(p_ym))){
+						if (cellType[*iter - IntVector(0,1,0)] == d_flowfieldCellTypeVal){		
 							//hard coding for jennifer for now.
 							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
 							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
 							double theta = atan(z/y);
-							double y_comp = d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta);			
+							double y_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*cos(theta));	
 
 							scalarBoundarySrc[*iter - IntVector(0,1,0)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*y_comp*
 													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
@@ -2886,11 +2894,11 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 														dx.x()*dx.z();
 						}
 						// z+
-						if (!(piece->inside(p_zp))){
+						if (cellType[*iter + IntVector(0,0,1)] == d_flowfieldCellTypeVal){		
 							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
 							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
 							double theta = atan(z/y);
-							double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
+							double z_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta));
 							scalarBoundarySrc[*iter + IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
 													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
 													   dx.x()*dx.y();				
@@ -2900,17 +2908,21 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 														dx.x()*dx.y();													   			
 						}
 						// z-
-						if (!(piece->inside(p_zm))){
+						if (cellType[*iter - IntVector(0,0,1)] == d_flowfieldCellTypeVal){		
 							double y = p.y() - d_sourceBoundaryInfo[bp]->axisStart[1];		
 							double z = p.z() - d_sourceBoundaryInfo[bp]->axisStart[2];
 							double theta = atan(z/y);
-							double z_comp = d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta);
+							double z_comp = Abs(d_sourceBoundaryInfo[bp]->totalVelocity*sin(theta));
+
 
 							scalarBoundarySrc[*iter - IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
 													   d_sourceBoundaryInfo[bp]->mixfrac_inlet*
-													   dx.x()*dx.y();			
-	
-							enthalpyBoundarySrc[*iter - IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
+													   dx.x()*dx.y();
+													   
+							double testme = scalarBoundarySrc[*iter - IntVector(0,0,1)];
+							
+							if (d_enthalpySolve)	
+								enthalpyBoundarySrc[*iter - IntVector(0,0,1)] = d_sourceBoundaryInfo[bp]->calcStream.d_density*z_comp*
 														d_sourceBoundaryInfo[bp]->calcStream.d_enthalpy*
 														dx.x()*dx.y();												   
 													   				
