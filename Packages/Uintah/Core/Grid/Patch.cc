@@ -31,7 +31,7 @@ Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
 	     const IntVector& inLowIndex, const IntVector& inHighIndex,
 	     int id)
-    : Region(lowIndex,highIndex), d_realPatch(0), d_level(level), d_level_index(-1),
+    : d_lowIndex(lowIndex),d_highIndex(highIndex), d_realPatch(0), d_level(level), d_level_index(-1),
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id )
 {
@@ -64,7 +64,7 @@ Patch::Patch(const Level* level,
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
-    : Region(realPatch->d_lowIndex + virtualOffset, realPatch->d_highIndex + virtualOffset),
+    : d_lowIndex(realPatch->d_lowIndex + virtualOffset), d_highIndex(realPatch->d_highIndex + virtualOffset),
       d_realPatch(realPatch), d_level(realPatch->d_level),
       d_level_index(realPatch->d_level_index),
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
