@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_Patch_H
 
 #include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Region.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 
@@ -68,7 +67,7 @@ WARNING
      
 ****************************************/
     
-   class UINTAHSHARE Patch : public Region {
+   class UINTAHSHARE Patch {
    public:
 
      UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
@@ -101,6 +100,43 @@ WARNING
         ZFaceBased = Ghost::AroundFacesZ,
         AllFaceBased = Ghost::AroundFaces
      };
+    
+    //Get refrences to the indices
+    inline IntVector& low()
+    { return d_lowIndex;  }
+
+    inline IntVector& high()
+    { return d_highIndex;  }
+
+    /********************
+      The following are needed in order to use Patch as a Box in
+      Core/Container/SuperBox.h (see
+      Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
+    *********************/
+
+    inline IntVector getLow() const
+    { return d_lowIndex; }
+
+    inline IntVector getHigh() const
+    { return d_highIndex; }
+
+    inline int getVolume() const
+    { return getVolume(getLow(), getHigh()); }
+
+    inline int getArea(int side) const
+    {
+      int area = 1;
+      for (int i = 0; i < 3; i++)
+        if (i != side)
+          area *= getHigh()[i] - getLow()[i];
+      return area;
+    }
+
+    static inline int getVolume(const IntVector& low, const IntVector& high)
+    {
+      return (high.x() -  low.x()) * (high.y() - low.y()) * (high.z() - low.z());
+    } 
+
 
      //Below for Fracture *************************************************
      void findCellNodes(const Point& pos,IntVector ni[8]) const;
@@ -160,8 +196,6 @@ WARNING
      //    --tan
      void findNodesFromCell( const IntVector& cellIndex,
                              IntVector nodeIndex[8]) const;
-     
-
      //////////
      //////////
      // Insert Documentation Here:  
@@ -263,7 +297,7 @@ WARNING
        return d_inHighIndex;
      }
      int getInteriorVolume() const {
-       return Region(d_inLowIndex,d_inHighIndex).getVolume(); 
+       return getVolume(d_inLowIndex,d_inHighIndex); 
      }
      void setExtraIndices(const IntVector& l, const IntVector& h);
 
@@ -579,9 +613,8 @@ WARNING
      // Locations in space of opposite box corners.
      // These are in terms of cells positioned from the level's anchor,
      // and they include extra cells
-     // Defined in parent class Region
-     //IntVector d_lowIndex;
-     //IntVector d_highIndex;
+     IntVector d_lowIndex;
+     IntVector d_highIndex;
 
      //////////
      // Locations in space of opposite box corners.

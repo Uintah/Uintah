@@ -83,7 +83,7 @@ WARNING
     { return d_highIndex;  }
 
     /********************
-      The following are needed in order to use Patch as a Box in
+      The following are needed in order to use Region as a Box in
       Core/Container/SuperBox.h (see
       Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
     *********************/
@@ -124,12 +124,6 @@ WARNING
     inline bool degenerate() const {
       return d_lowIndex.x() >= d_highIndex.x() || d_lowIndex.y() >= d_highIndex.y() || d_lowIndex.z() >= d_highIndex.z();
     }
-
-    //O(p log p)
-    static void difference(list<Region> l1, list<Region> l2, list<Region> &diff1);
-    static void difference(list<Region> &l1, const list<Region>::iterator &l1_begin, const list<Region>::iterator &l1_end,
-                    list<Region> &l2, const list<Region>::iterator &l2_begin, const list<Region>::iterator &l2_end,
-                    const Region &bounds, list<Region> &diff);
 
     //O(p^2)
     static deque<Region> difference(const Region& b1, const Region& b2);
