@@ -387,9 +387,6 @@ Patch::getArrayBCValues(Patch::FaceType face,
                         const string& type,
 			vector<IntVector>*& bound_ptr, 
 			vector<IntVector>*& nbound_ptr,
-			vector<IntVector>*& sfx_ptr, 
-			vector<IntVector>*& sfy_ptr, 
-			vector<IntVector>*& sfz_ptr,
 			int child) const
 {
   map<Patch::FaceType,BCDataArray* >::const_iterator itr=array_bcs.find(face); 
@@ -397,11 +394,6 @@ Patch::getArrayBCValues(Patch::FaceType face,
     const BoundCondBase* bc = itr->second->getBoundCondData(mat_id,type,child);
     itr->second->getBoundaryIterator( mat_id,bound_ptr,  child);
     itr->second->getNBoundaryIterator(mat_id,nbound_ptr, child);
-#if 0
-    itr->second->getSFCXIterator(mat_id,sfx_ptr,child);
-    itr->second->getSFCYIterator(mat_id,sfy_ptr,child);
-    itr->second->getSFCZIterator(mat_id,sfz_ptr,child);
-#endif
     return bc;
   } else
     return 0;

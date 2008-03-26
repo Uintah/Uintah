@@ -45,11 +45,11 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         vector<IntVector>::const_iterator b;  // boundary cell iterator
         if (type == "Acceleration"){
           vel_bcs = patch->getArrayBCValues(face,dwi,"Velocity",nu,
-                                            nbound_ptr,nu,nu,nu,child);
+                                            nbound_ptr,child);
         }
         else{
           vel_bcs  = patch->getArrayBCValues(face,dwi,type,nu,
-                                             nbound_ptr,nu,nu,nu,child);
+                                             nbound_ptr,child);
         }
 
         if (type == "Velocity"){
@@ -201,8 +201,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
        vector<IntVector>::const_iterator b;
        if(type=="Temperature"){
         const BoundCondBase *temp_bcs = patch->getArrayBCValues(face,dwi,
-                                                       type,nu,nbound_ptr,
-                                                      nu,nu,nu,child);
+                                                                type,nu,
+                                                                nbound_ptr,
+                                                                child);
         if (temp_bcs != 0){
           const TemperatureBoundCond* bc =
             dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
@@ -226,7 +227,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
        if(type=="Pressure"){
         const BoundCondBase *press_bcs = patch->getArrayBCValues(face,dwi,
                                                         type,nu,nbound_ptr,
-                                                        nu,nu,nu,child);
+                                                        child);
         if (press_bcs != 0) {
           const PressureBoundCond* bc =
             dynamic_cast<const PressureBoundCond*>(press_bcs);
@@ -313,7 +314,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
        vector<IntVector> *nu;    // not used
         vector<IntVector>::const_iterator boundary;
         temp_bcs  = patch->getArrayBCValues(face,dwi,"Temperature",nu,
-                                            nbound_ptr,nu,nu,nu,child);
+                                            nbound_ptr,child);
         
         double dx = -9;
         if (face == Patch::xplus || face == Patch::xminus) dx = deltax.x();

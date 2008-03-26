@@ -165,13 +165,11 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   vector<IntVector> *nu;  // not used
   const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 						    desc, bound_ptr,
-                                              nu,nu,nu,nu,
-                                              child);
+                                                    nu, child);
 
   const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
 						       "Symmetric", bound_ptr, 
-							nu,nu,nu,nu,
-                                                 child);
+							nu, child);
 
   const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);       
 
@@ -235,7 +233,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    vector<IntVector> *nu;  // not used
    const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 						     "Density", 
-                                               nu,nu,nu,nu,nu,child);
+                                                     nu,nu,child);
 
    const BoundCond<double> *new_bcs = 
      dynamic_cast<const BoundCond<double> *>(bc);

@@ -2413,9 +2413,9 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
             vector<IntVector>::const_iterator boundary;
             
             vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",nu,
-                                              nbound_ptr,nu,nu,nu,child);
+                                              nbound_ptr,child);
             sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",nu,
-                                               nbound_ptr,nu,nu,nu,child);
+                                               nbound_ptr,child);
             if (vel_bcs != 0) {
               const VelocityBoundCond* bc =
                 dynamic_cast<const VelocityBoundCond*>(vel_bcs);
