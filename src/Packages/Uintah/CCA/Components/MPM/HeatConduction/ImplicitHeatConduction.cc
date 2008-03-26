@@ -398,7 +398,7 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
           vector<IntVector>::const_iterator boundary;
           
           temp_bcs = patch->getArrayBCValues(face,matl,"Temperature",nu,
-                                             nbound_ptr,nu,nu,nu,child);
+                                             nbound_ptr,child);
           if (temp_bcs != 0) {
             const TemperatureBoundCond* bc =
               dynamic_cast<const TemperatureBoundCond*>(temp_bcs);

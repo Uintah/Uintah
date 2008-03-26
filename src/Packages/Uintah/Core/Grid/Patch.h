@@ -379,9 +379,6 @@ WARNING
                                            const string& type,
                                            vector<IntVector>*& b_ptr,
                                            vector<IntVector>*& nb_ptr,
-                                           vector<IntVector>*& sfx_ptr,
-                                           vector<IntVector>*& sfy_ptr,
-                                           vector<IntVector>*& sfz_ptr,
                                            int child) const ;
      
      bool haveBC(FaceType face,int mat_id,const string& bc_type,
