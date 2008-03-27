@@ -565,7 +565,7 @@ int main(int argc, char** argv)
     cout << "face extract for velocity \n";
   }  else if (d_doincheatflux) {
 	cout << "face extract for incident heat flux \n";	  
-  } else if (!(d_donetheatflux) && !(d_doincheatflux) && !(d_dovelocity))
+  } else if (!(d_donetheatflux) && !(d_doincheatflux) && !(d_dovelocity)) {
     cerr << "You must specify -donetheatflux or -doincheatflux or -dovelocity (see help)" << endl;
 	cerr << "Aborting!\n";
 	exit(-1);
