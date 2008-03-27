@@ -1049,7 +1049,6 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   // remaining MPM steps are explicitly shown here.
   d_mpm->scheduleExMomInterpolated(sched, patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
 
   d_mpm->scheduleComputeInternalForce(sched, patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(sched, patches, mpm_matls);
@@ -1058,7 +1057,7 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   d_mpm->scheduleIntegrateAcceleration(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
-  //  d_mpm->scheduleApplyExternalLoads(sched, patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, patches, mpm_matls);
 
   sched->scheduleParticleRelocation(level, 
@@ -1068,7 +1067,6 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
                                     d_sharedState->d_particleState,
 				    Mlb->pParticleIDLabel,
 				    mpm_matls);
-
 
 }
 
