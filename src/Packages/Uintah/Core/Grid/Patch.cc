@@ -26,12 +26,16 @@ using namespace std;
 
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
+IntVector Patch::d_extraCells;
+
 
 Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
 	     const IntVector& inLowIndex, const IntVector& inHighIndex,
 	     int id)
-    : d_lowIndex(lowIndex),d_highIndex(highIndex), d_realPatch(0), d_level(level), d_level_index(-1),
+    : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
+    
+    d_lowIndex(lowIndex),d_highIndex(highIndex), d_realPatch(0), d_level(level), d_level_index(-1),
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id )
 {
@@ -64,7 +68,11 @@ Patch::Patch(const Level* level,
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
-    : d_lowIndex(realPatch->d_lowIndex + virtualOffset), d_highIndex(realPatch->d_highIndex + virtualOffset),
+    : 
+      d_lowIndex__New(realPatch->d_inLowIndex+virtualOffset),
+      d_highIndex__New(realPatch->d_inHighIndex+virtualOffset),
+      
+      d_lowIndex(realPatch->d_lowIndex + virtualOffset), d_highIndex(realPatch->d_highIndex + virtualOffset),
       d_realPatch(realPatch), d_level(realPatch->d_level),
       d_level_index(realPatch->d_level_index),
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
@@ -714,6 +722,7 @@ Patch::getCellIterator(const IntVector gc) const
   //   return CellIterator(getCellLowIndex(), getCellHighIndex());
    return CellIterator(d_inLowIndex-gc, d_inHighIndex+gc);
 }
+
 
 CellIterator
 Patch::getExtraCellIterator(const IntVector gc) const

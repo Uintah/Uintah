@@ -4,6 +4,8 @@
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
@@ -100,7 +102,222 @@ WARNING
         ZFaceBased = Ghost::AroundFacesZ,
         AllFaceBased = Ghost::AroundFaces
      };
+   
+    /**************New Public Interaface*******************
+     *
+     * This block will be used to store the new public interface as it goes live
+     *
+     */
+
+    /**
+     * Returns the cell low index not including extra cells or ghost cells.
+     * This version of this function included to avoid unnecessary branching.
+     */
+     inline IntVector getCellLowIndex__New() const
+     {
+        return d_lowIndex__New;
+     }
+     
+    /**
+     * Returns the cell low index not including extra cells.
+     * ngc specifies the number of ghost cells.
+     */
+     inline IntVector  getCellLowIndex__New(int ngc) const
+     {  
+        //if we have a neighbor subtract the number of ghost cells from the index
+        return d_lowIndex__New-IntVector(
+                                getBCType(xminus)==Neighbor?ngc:0,
+                                getBCType(yminus)==Neighbor?ngc:0,
+                                getBCType(zminus)==Neighbor?ngc:0); 
+     }
+
+    /**
+     * Returns the cell high index not including extra cells or ghost cells.
+     * This version of this function is included to avoid unnecessary branching.
+     */
+    inline IntVector getCellHighIndex__New() const
+    {
+       return d_highIndex__New;
+    }
     
+     /**
+     * Returns the cell high index not including extra cells.
+     * ngc specifies the number of ghost cells.
+     */
+    inline IntVector getCellHighIndex__New(int ngc) const
+    {
+      //if we have a neighbor add the number of ghost cells to the index
+      return d_highIndex__New+IntVector(
+                                getBCType(xplus)==Neighbor?ngc:0,
+                                getBCType(yplus)==Neighbor?ngc:0,
+                                getBCType(zplus)==Neighbor?ngc:0); 
+    }
+    
+    /**
+     * Returns the cell low index including extra cells.
+     * ngc specifies the number of ghost cells.
+     */
+    inline IntVector getExtraCellLowIndex__New(int ngc=0) const
+    {
+      //if have a neighbor subtract the number of ghost cells from the index
+      //otherwise subtract the number of extra cells from the index
+      return d_lowIndex__New-IntVector(
+                                getBCType(xminus)!=Neighbor?ngc:d_extraCells[0],
+                                getBCType(yminus)!=Neighbor?ngc:d_extraCells[1],
+                                getBCType(zminus)!=Neighbor?ngc:d_extraCells[2]); 
+    }
+    
+    /**
+     * Returns the cell high index including extra cells.
+     * ngc specifies the number of ghost cells.
+     */
+    inline IntVector getExtraCellHighIndex__New(int ngc=0) const
+    {
+      //if have a neighbor add the number of ghost cells to the index
+      //otherwise add the number of extra cells to the index
+      return d_lowIndex__New+IntVector(
+                                getBCType(xplus)!=Neighbor?ngc:d_extraCells[0],
+                                getBCType(yplus)!=Neighbor?ngc:d_extraCells[1],
+                                getBCType(zplus)!=Neighbor?ngc:d_extraCells[2]); 
+    }
+    
+    /**
+     * Returns the node low index not including extra nodes or ghost nodes.
+     * This version of this function is included to avoid unnecessary branching.
+     */
+     inline IntVector getNodeLowIndex__New() const
+     {
+        return d_lowIndex__New;
+     }
+    
+    /**
+     * Returns the node low index not including extra nodes.
+     * ngn specifies the number of ghost nodes.
+     */
+    inline IntVector getNodeLowIndex__New(int ngn) const
+    {
+        //if we have a neighbor subtract the number of ghost nodes from the index
+        return d_lowIndex__New-IntVector(
+                                getBCType(xminus)==Neighbor?ngn:0,
+                                getBCType(yminus)==Neighbor?ngn:0,
+                                getBCType(zminus)==Neighbor?ngn:0); 
+    }
+    
+    /**
+     * Returns the node high index not including extra nodes.
+     * ngn specifies the number of ghost nodes.
+     */
+    inline IntVector getNodeHighIndex__New(int ngn=0) const
+    {
+      //if we have a neighbor add the number of ghost nodes to the index
+      //otherwise add 1 because we own the plus face node
+      return d_highIndex__New+IntVector(
+                                getBCType(xplus)==Neighbor?ngn:1,
+                                getBCType(yplus)==Neighbor?ngn:1,
+                                getBCType(zplus)==Neighbor?ngn:1); 
+    } 
+    
+    /**
+     * Returns the node low index including extra nodes.
+     * ngn specifies the number of ghost nodes.
+     */
+    inline IntVector getExtraNodeLowIndex__New(int ngn=0) const
+    {
+      //if have a neighbor subtract the number of ghost nodes from the index
+      //otherwise subtract the number of extra nodes from the index
+      return d_lowIndex__New-IntVector(
+                                getBCType(xminus)!=Neighbor?ngn:d_extraCells[0],
+                                getBCType(yminus)!=Neighbor?ngn:d_extraCells[1],
+                                getBCType(zminus)!=Neighbor?ngn:d_extraCells[2]); 
+    }
+    
+    /**
+     * Returns the node high index including extra nodes.
+     * ngn specifies the number of ghost nodes.
+     */
+    inline IntVector getExtraNodeHighIndex__New(int ngn=0) const
+    {
+      //if have a neighbor add the number of ghost nodes to the index
+      //otherwise the number of extra nodes to the index and 1 for the plus face node
+      return d_lowIndex__New+IntVector(
+                                getBCType(xplus)!=Neighbor?ngn:d_extraCells[0]+1,
+                                getBCType(yplus)!=Neighbor?ngn:d_extraCells[1]+1,
+                                getBCType(zplus)!=Neighbor?ngn:d_extraCells[2]+1); 
+
+    }
+    
+    /**
+     * Returns a cell iterator not including extra cells or ghost cells.
+     * This version of this function is included to avoid unnecessary branching.
+     */
+    inline CellIterator getCellIterator__New() const
+    {
+      return CellIterator(getCellLowIndex__New(),getCellHighIndex__New());
+    }
+    
+    /**
+     * Returns a cell iterator not including extra cells.
+     * ngc specifies the number of ghost cells.
+     */
+    inline CellIterator getCellIterator__New(int ngc) const
+    {
+      return CellIterator(getCellLowIndex__New(ngc),getCellHighIndex__New(ngc));
+    }
+    
+    /**
+     * Returns a cell iterator including extra cells.
+     * ngc specifies the number of ghost cells.
+     */
+    CellIterator getExtraAndCellIterator__New(int ngc=0) const
+    {
+      return CellIterator(getExtraCellLowIndex__New(ngc),getExtraCellHighIndex__New(ngc));
+    }
+    
+    /**
+     * Returns a node iterator not including extra nodes or ghost nodes.
+     * This version of this function is included to avoid unnecessary branching.
+     */
+    NodeIterator getNodeIterator__New() const
+    {
+      return NodeIterator(getNodeLowIndex__New(),getNodeHighIndex__New());
+    }
+    
+    /**
+     * Returns a node iterator not including extra nodes.
+     * ngn specifies the number of ghost nodes.
+     */
+    NodeIterator getNodeIterator__New(int ngn) const
+    {
+      return NodeIterator(getNodeLowIndex__New(ngn),getNodeHighIndex__New(ngn));
+    }
+    
+    /**
+     * Returns a node iterator including extra cells.
+     * ngn specifies the number of ghost nodes.
+     */
+    NodeIterator getExtraAndNodeIterator__New(int ngn=0) const
+    {
+      return NodeIterator(getExtraNodeLowIndex__New(ngn),getExtraNodeHighIndex__New(ngn));
+    }
+    
+    /**
+     * Sets the number of extra cells for the patch class.
+     */
+    static inline void setExtraCells(IntVector extraCells)
+    {
+      d_extraCells=extraCells;
+    }
+    
+    /**
+     * Gets the number of extra cells for the patch class.
+     */
+    static inline IntVector getExtraCells() 
+    {
+      return d_extraCells;
+    }
+
+     /**************End New Public Interace****************/
+     
     //Get refrences to the indices
     inline IntVector& low()
     { return d_lowIndex;  }
@@ -283,13 +500,14 @@ WARNING
        return d_lowIndex;
      }
      IntVector getSFCZHighIndex() const;
-
+     
      IntVector getCellLowIndex() const {
        return d_lowIndex;
      }
      IntVector getCellHighIndex() const {
        return d_highIndex;
      }
+     
      IntVector getInteriorCellLowIndex() const {
        return d_inLowIndex;
      }
@@ -592,6 +810,35 @@ WARNING
      Patch* createVirtualPatch(const IntVector& offset) const
      { return scinew Patch(this, offset); }
    private:
+
+    /****************New Private Interface*********************
+     *Functions will slowly be moved into this block as it is verified
+     ***********************************************************/
+     
+    
+     /**
+      * The low index of the patch without extra or ghost cells
+      */
+     IntVector d_lowIndex__New;
+     /**
+      * The high index of the patch without extra or ghost cells
+      */
+     IntVector d_highIndex__New;
+
+     /**
+      * The number of extra cells on the edge of the domain
+      */
+     static IntVector d_extraCells;
+
+     /**
+      * The boundary conditions on each face.  They can be either
+      * None, Coarse, or Fine
+      */
+     BCType d_bctypes[numFaces];  // specifies bc type for each face
+       
+    //****************End of new private Interace**************/
+
+     
      Patch(const Patch&);
      Patch(const Patch* realPatch, const IntVector& virtualOffset);
      Patch& operator=(const Patch&);
@@ -623,8 +870,6 @@ WARNING
      
      int d_id; // Patch ID
      
-     // Added an extra vector<> for each material
-     BCType d_bctypes[numFaces];  // specifies bc type for each face
      map<Patch::FaceType,BCDataArray* > array_bcs;
      bool have_layout;
      IntVector layouthint;
