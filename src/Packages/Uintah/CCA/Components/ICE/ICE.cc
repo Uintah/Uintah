@@ -5233,6 +5233,104 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
 
+/*`==========TESTING==========*/
+//__________________________________
+//  new patch testing  
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    IntVector ngc(1,1,1);
+    IntVector ngn(1,1,1);
+    IntVector diff1 = patch->getLow()  - patch->getExtraCellLowIndex__New();
+    IntVector diff2 = patch->getHigh() - patch->getExtraCellHighIndex__New();
+    
+    IntVector diff3 = patch->getLowIndex()  - patch->getExtraCellLowIndex__New();
+    IntVector diff4 = patch->getHighIndex() - patch->getExtraCellHighIndex__New();
+    
+    IntVector diff5 = patch->getNodeLowIndex()  - patch->getExtraNodeLowIndex__New();
+    IntVector diff6 = patch->getNodeHighIndex() - patch->getExtraNodeHighIndex__New();
+    
+    IntVector diff7 = patch->getInteriorNodeLowIndex() - patch->getNodeLowIndex__New();
+    IntVector diff8 = patch->getInteriorNodeHighIndex() - patch->getNodeHighIndex__New();
+     
+    IntVector diff9  = patch->getCellLowIndex()  - patch->getExtraCellLowIndex__New();
+    IntVector diff10 = patch->getCellHighIndex() - patch->getExtraCellHighIndex__New();
+        
+    IntVector diff11 = patch->getInteriorCellLowIndex() - patch->getCellLowIndex__New();
+    IntVector diff12 = patch->getInteriorCellHighIndex() - patch->getCellHighIndex__New();
+    int numGC  = 1;
+    IntVector diff13 = patch->getGhostCellLowIndex(numGC)  - patch->getExtraCellLowIndex__New(numGC);
+    IntVector diff14 = patch->getGhostCellHighIndex(numGC) - patch->getExtraCellHighIndex__New(numGC);          
+    
+    IntVector diff15 = patch->getCellIterator().begin() - patch->getCellIterator__New().begin();
+    IntVector diff16 = patch->getCellIterator().end() - patch->getCellIterator__New().end();
+
+    IntVector diff17 = patch->getCellIterator(ngc).begin() - patch->getCellIterator__New(numGC).begin();
+    IntVector diff18 = patch->getCellIterator(ngc).end() - patch->getCellIterator__New(numGC).end();
+        
+    IntVector diff19 = patch->getExtraCellIterator().begin() - patch->getExtraAndCellIterator__New().begin();
+    IntVector diff20 = patch->getExtraCellIterator().end() - patch->getExtraAndCellIterator__New().end();
+
+    IntVector diff21 = patch->getExtraCellIterator(ngc).begin() - patch->getExtraAndCellIterator__New(numGC).begin();
+    IntVector diff22 = patch->getExtraCellIterator(ngc).end() - patch->getExtraAndCellIterator__New(numGC).end();
+    
+    IntVector zero=IntVector(0,0,0);
+    if (diff1 != zero || diff2 != zero || diff3 != zero ||
+        diff4 != zero || diff5 != zero || diff6 != zero ||
+        diff7 != zero || diff8 != zero || diff9 != zero ||
+        diff10 != zero || diff11 != zero || diff12 != zero ||
+        diff13 != zero || diff14 != zero || diff15 != zero ||
+        diff16 != zero || diff19 != zero || diff20 != zero){
+      cout << "diff1 " << diff1 <<  " " << patch->getLow()  << " " << patch->getExtraCellLowIndex__New() << endl;
+      cout << "diff2 " << diff2 <<  " " << patch->getHigh()  << " " << patch->getExtraCellHighIndex__New() << endl;
+      
+      cout << "diff3 " << diff3 <<  " " << patch->getLowIndex()  << " " << patch->getExtraCellLowIndex__New() << endl;
+      cout << "diff4 " << diff4 <<  " " << patch->getHighIndex()  << " " << patch->getExtraCellHighIndex__New() << endl;
+      
+      cout << "diff5 " << diff5 << " " << patch->getNodeLowIndex() << " " << patch->getExtraNodeLowIndex__New() << endl;
+      cout << "diff6 " << diff6 << " " << patch->getNodeHighIndex() << " " << patch->getExtraNodeHighIndex__New() << endl;
+      
+      cout << "diff7 " << diff7 << " " << patch->getInteriorNodeLowIndex() << " " << patch->getNodeLowIndex__New() << endl;
+      cout << "diff8 " << diff8 << " " << patch->getInteriorNodeHighIndex() << " " << patch->getNodeHighIndex__New() << endl;
+      
+      cout << "diff9 " << diff9   << " " << patch->getCellLowIndex() << " " <<  patch->getExtraCellLowIndex__New()<< endl;
+      cout << "diff10 " << diff10 << " " << patch->getCellHighIndex() << " " <<  patch->getExtraCellHighIndex__New()<< endl;
+      
+      cout << "diff11 " << diff11 << " " << patch->getInteriorCellLowIndex() << " " << patch->getCellLowIndex__New() << endl;
+      cout << "diff12 " << diff12 << " " << patch->getInteriorCellHighIndex() << " " << patch->getCellHighIndex__New() << endl;
+      
+      cout << "diff13 " << diff13 << " " << patch->getGhostCellLowIndex(numGC) << " " << patch->getExtraCellLowIndex__New(numGC) << endl;
+      cout << "diff14 " << diff14 << " " << patch->getGhostCellHighIndex(numGC) << " " << patch->getExtraCellHighIndex__New(numGC) << endl;
+      
+      cout << "diff15 " << diff15 << " " << patch->getCellIterator().begin() << " " <<  patch->getCellIterator__New().begin() << endl;
+      cout << "diff16 " << diff16 << " " << patch->getCellIterator().end() << " " <<  patch->getCellIterator__New().end() << endl;
+      
+      cout << "diff19 " << diff19 << " " << patch->getExtraCellIterator().begin() << " " <<  patch->getExtraAndCellIterator__New().begin() << endl;
+      cout << "diff20 " << diff20 << " " << patch->getExtraCellIterator().end() << " " <<  patch->getExtraAndCellIterator__New().end() << endl;      
+
+      ostringstream warn;
+      int idx = level->getIndex();
+      warn<<"ICE:(L-"<<idx<<", Patch"<< patch->getID()<<"): Problem with the new patch functons";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);               
+    }
+#if 0
+    if ( diff17 != zero || diff18 != zero ||  diff21 != zero || diff22 != zero){
+      cout << "diff17 " << diff17 << " " << patch->getCellIterator(ngc).begin() << " " << patch->getCellIterator__New(numGC).begin() << endl;
+      cout << "diff18 " << diff18 << " " << patch->getCellIterator(ngc).end() << " " << patch->getCellIterator__New(numGC).end() << endl;
+      
+      cout << "diff21 " << diff21 << " " << patch->getExtraCellIterator(ngc).begin() << " " <<  patch->getExtraAndCellIterator__New(numGC).begin() << endl;
+      cout << "diff22 " << diff22 <<" " << patch->getExtraCellIterator(ngc).end() << " " <<  patch->getExtraAndCellIterator__New(numGC).end() << endl; 
+      ostringstream warn;
+      int idx = level->getIndex();
+      warn<<"ICE:(L-"<<idx<<", Patch"<< patch->getID()<<"): Problem with the new patch functons";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);               
+    }
+#endif   
+                        
+}  
+/*===========TESTING==========`*/
+
+
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
  
