@@ -1649,6 +1649,23 @@ void Patch::finalizePatch()
       d_CornerCells[face].push_back(corner);
     } 
   }
+
+
+#if 0
+  ASSERT(getLow()==getExtraCellLowIndex__New());
+  ASSERT(getHigh()==getExtraCellHighIndex__New());
+  ASSERT(getLowIndex()==getExtraCellLowIndex__New());
+  ASSERT(getHighIndex()==getExtraCellHighIndex__New());
+  ASSERT(getNodeLowIndex()==getExtraNodeLowIndex__New());
+  ASSERT(getNodeHighIndex()==getExtraNodeHighIndex__New());
+  ASSERT(getInteriorNodeLowIndex()==getNodeLowIndex__New());
+  ASSERT(getInteriorNodeHighIndex()==getNodeHighIndex__New());
+  ASSERT(getCellLowIndex()==getExtraCellLowIndex__New());
+  ASSERT(getCellHighIndex()==getExtraCellHighIndex__New());
+  ASSERT(getInteriorCellLowIndex()==getCellLowIndex__New());
+  ASSERT(getInteriorCellHighIndex()==getCellHighIndex__New());
+
+#endif 
 }
 
 int Patch::getGridIndex() const 
