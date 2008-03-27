@@ -314,7 +314,8 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
         dcell *= d_cell_scale;
       IntVector extraCells(0,0,0);
       n->get("extraCells", extraCells);
-      
+      Patch::setExtraCells(extraCells);
+
       int id;
       if(!n->get("id", id)){
         static bool warned_once=false;
