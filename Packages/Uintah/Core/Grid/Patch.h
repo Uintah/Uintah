@@ -102,7 +102,7 @@ WARNING
         ZFaceBased = Ghost::AroundFacesZ,
         AllFaceBased = Ghost::AroundFaces
      };
-   
+  
     /**************New Public Interaface*******************
      *
      * This block will be used to store the new public interface as it goes live
@@ -162,9 +162,9 @@ WARNING
       //if have a neighbor subtract the number of ghost cells from the index
       //otherwise subtract the number of extra cells from the index
       return d_lowIndex__New-IntVector(
-                                getBCType(xminus)!=Neighbor?ngc:d_extraCells[0],
-                                getBCType(yminus)!=Neighbor?ngc:d_extraCells[1],
-                                getBCType(zminus)!=Neighbor?ngc:d_extraCells[2]); 
+                                getBCType(xminus)==Neighbor?ngc:d_extraCells[0],
+                                getBCType(yminus)==Neighbor?ngc:d_extraCells[1],
+                                getBCType(zminus)==Neighbor?ngc:d_extraCells[2]); 
     }
     
     /**
@@ -175,10 +175,10 @@ WARNING
     {
       //if have a neighbor add the number of ghost cells to the index
       //otherwise add the number of extra cells to the index
-      return d_lowIndex__New+IntVector(
-                                getBCType(xplus)!=Neighbor?ngc:d_extraCells[0],
-                                getBCType(yplus)!=Neighbor?ngc:d_extraCells[1],
-                                getBCType(zplus)!=Neighbor?ngc:d_extraCells[2]); 
+      return d_highIndex__New+IntVector(
+                                getBCType(xplus)==Neighbor?ngc:d_extraCells[0],
+                                getBCType(yplus)==Neighbor?ngc:d_extraCells[1],
+                                getBCType(zplus)==Neighbor?ngc:d_extraCells[2]); 
     }
     
     /**
@@ -226,9 +226,9 @@ WARNING
       //if have a neighbor subtract the number of ghost nodes from the index
       //otherwise subtract the number of extra nodes from the index
       return d_lowIndex__New-IntVector(
-                                getBCType(xminus)!=Neighbor?ngn:d_extraCells[0],
-                                getBCType(yminus)!=Neighbor?ngn:d_extraCells[1],
-                                getBCType(zminus)!=Neighbor?ngn:d_extraCells[2]); 
+                                getBCType(xminus)==Neighbor?ngn:d_extraCells[0],
+                                getBCType(yminus)==Neighbor?ngn:d_extraCells[1],
+                                getBCType(zminus)==Neighbor?ngn:d_extraCells[2]); 
     }
     
     /**
@@ -239,10 +239,10 @@ WARNING
     {
       //if have a neighbor add the number of ghost nodes to the index
       //otherwise the number of extra nodes to the index and 1 for the plus face node
-      return d_lowIndex__New+IntVector(
-                                getBCType(xplus)!=Neighbor?ngn:d_extraCells[0]+1,
-                                getBCType(yplus)!=Neighbor?ngn:d_extraCells[1]+1,
-                                getBCType(zplus)!=Neighbor?ngn:d_extraCells[2]+1); 
+      return d_highIndex__New+IntVector(
+                                getBCType(xplus)==Neighbor?ngn:d_extraCells[0]+1,
+                                getBCType(yplus)==Neighbor?ngn:d_extraCells[1]+1,
+                                getBCType(zplus)==Neighbor?ngn:d_extraCells[2]+1); 
 
     }
     
