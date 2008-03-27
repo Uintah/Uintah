@@ -47,8 +47,9 @@ using namespace Uintah;
 
 bool verbose = false;
 bool d_printCell_coords = false;
-bool d_doheatflux = false;
+bool d_donetheatflux = false;
 bool d_dovelocity = false;
+bool d_doincheatflux = false;
   
 void
 usage(const std::string& badarg, const std::string& progname)
@@ -64,8 +65,9 @@ usage(const std::string& badarg, const std::string& progname)
   cerr << "  -m,--material <material number> [defaults to 1]\n";
   cerr << "  -timestep,--timestep [int] (timestep used for face lookup int) [defaults to 1]\n";
   cerr << "  -container,--container [int] (container cell type int) [defaults to -3 (i.e. not present)]\n";
-  cerr << "  -doheatflux [do heat flux extraction]\n";
+  cerr << "  -donetheatflux [do net heat flux extraction]\n";
   cerr << "  -dovelocity [do velocity extraction at face boundary (one off)]\n";
+  cerr << "  -doincheatflux [do incident heat flux extraction]\n";
   cerr << "  -istart,--indexs <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
   cerr << "  -iend,--indexe <x> <y> <z> (cell index) [defaults to Nx,Ny,Nz]\n";
   cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
@@ -319,7 +321,7 @@ void printData(DataArchive* archive, string& variable_name,
         Point point = level->getCellPosition(c);
         Vector here = point.asVector() + shift;
         out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
-      }else if (d_doheatflux){
+      }else if (d_donetheatflux){
         if ((val == container)&&(!(val_xm == container)))
           out << path_to_timeextract << " -v htfluxRadX -i "
               <<c.x() << " "<< c.y() << " " << c.z() <<" -o htfluxRadX_"
@@ -349,6 +351,37 @@ void printData(DataArchive* archive, string& variable_name,
           out << path_to_timeextract << " -v htfluxRadZ -i "
               <<c.x() << " "<< c.y() << " " << c.z()+1 <<" -o htfluxRadZ_"
               <<c.x() << "_"<< c.y() << "_" << c.z()+1<<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+	  } else if (d_doincheatflux){
+        if ((val == container)&&(!(val_xm == container)))
+          out << path_to_timeextract << " -v radiationFluxWIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxWIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_xp == container)))
+          out << path_to_timeextract << " -v radiationFluxEIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxEIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_ym == container)))
+          out << path_to_timeextract << " -v radiationFluxSIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxSIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_yp == container)))
+          out << path_to_timeextract << " -v radiationFluxNIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxNIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_zm == container)))
+          out << path_to_timeextract << " -v radiationFluxBIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxBIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+              <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
+        if ((val == container)&&(!(val_zp == container)))
+          out << path_to_timeextract << " -v radiationFluxTIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxTIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
       } else if (d_dovelocity){
         //Taking (delta x)/2 Cell Centered velocity components 
@@ -500,9 +533,11 @@ int main(int argc, char** argv)
       input_uda_name = string(argv[++i]);
     } else if (s == "-o" || s == "--out") {
       output_file_name = string(argv[++i]);
-    } else if (s == "-doheatflux" ) {
-      d_doheatflux = true;
-    } else if ( s== "-dovelocity" ) {
+    } else if (s == "-donetheatflux" ) {
+      d_donetheatflux = true;
+    } else if (s == "-doincheatflux") {
+	  d_doincheatflux = true;		
+	} else if ( s== "-dovelocity" ) {
       d_dovelocity = true;
     }else {
       usage(s, argv[0]);
@@ -516,14 +551,24 @@ int main(int argc, char** argv)
 
   // ---------------------------
   // Bullet proofing
-  if (d_doheatflux && d_dovelocity){
+  if (d_donetheatflux && d_dovelocity){
     cout << "Error!  You can only specify heat flux or velocity, not both\n";
     cout << "Aborting.\n";
     exit(-1);
-  }  else if (d_doheatflux) {
-    cout << "face extract for heat flux \n";
+  } else if (d_donetheatflux && d_doincheatflux) {
+	cerr << "Error!  You can only specify incident or net heat flux (see help)\n";
+	cerr << "Aborting.\n";
+	exit(-1);
+  }  else if (d_donetheatflux) {
+    cout << "face extract for net heat flux \n";
   }  else if (d_dovelocity) {
     cout << "face extract for velocity \n";
+  }  else if (d_doincheatflux) {
+	cout << "face extract for incident heat flux \n";	  
+  } else if (!(d_donetheatflux) && !(d_doincheatflux) && !(d_dovelocity))
+    cerr << "You must specify -donetheatflux or -doincheatflux or -dovelocity (see help)" << endl;
+	cerr << "Aborting!\n";
+	exit(-1);
   }
 
   try {
