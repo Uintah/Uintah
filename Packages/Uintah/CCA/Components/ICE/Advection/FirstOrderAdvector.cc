@@ -90,11 +90,15 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   double delY_top, delY_bottom,delX_right, delX_left, delZ_front, delZ_back;
   double delX = dx.x(), delY = dx.y(), delZ = dx.z();
 
-  // Compute outfluxes 
-  const IntVector gc(1,1,1);
+  //__________________________________
+  //  At patch boundaries you need to extend
+  // the computational footprint by one cell in ghostCells
+  CellIterator iter = patch->getExtraCellIterator();
+  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
+  
   bool error = false;
-  for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
-    const IntVector& c = *iter; 
+  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    const IntVector& c = *iter;
     delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
     delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
@@ -138,7 +142,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     vector<IntVector> badCells;
     vector<double>  badOutflux;
     
-    for(CellIterator iter = patch->getCellIterator(gc); !iter.done(); iter++){
+    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) { 
       IntVector c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {
