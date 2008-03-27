@@ -1664,7 +1664,12 @@ void Patch::finalizePatch()
   ASSERT(getCellHighIndex()==getExtraCellHighIndex__New());
   ASSERT(getInteriorCellLowIndex()==getCellLowIndex__New());
   ASSERT(getInteriorCellHighIndex()==getCellHighIndex__New());
-
+  ASSERT(getGhostCellLowIndex(1)==getExtraCellLowIndex__New(1));
+  ASSERT(getGhostCellHighIndex(1)==getExtraCellHighIndex__New(1));
+  ASSERT(getCellIterator().begin()==getCellIterator__New().begin());
+  ASSERT(getCellIterator().end()==getCellIterator__New().end());
+  ASSERT(getExtraCellIterator().begin()==getExtraAndCellIterator__New().begin());
+  ASSERT(getExtraCellIterator().end()==getExtraAndCellIterator__New().end());
 #endif 
 }
 
