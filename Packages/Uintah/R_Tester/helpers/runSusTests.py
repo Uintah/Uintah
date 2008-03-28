@@ -396,9 +396,9 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   do_uda_comparison_test  = tests_to_do[0]
   do_memory_test          = tests_to_do[1]
   do_performance_test     = tests_to_do[2]
-  cu_rc  = 0   # compare_uda return code
-  pf_rc  = 0   # performance return code
-  mem_rc = 0   # memory return code
+  compUda_RC      = 0   # compare_uda return code
+  performance_RC  = 0   # performance return code
+  memory_RC       = 0   # memory return code
 
 
   output_to_browser=1
@@ -540,19 +540,19 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     # performance test
     if do_performance_test == 1:
       print "\tPerforming performance test on %s" % (date())
-      pf_rc = system("performance_check %s %s %s/%s/%s > performance_check.log.txt 2>&1" % (testname, ts_file, compare_root, testname, ts_file))
+      performance_RC = system("performance_check %s %s %s/%s/%s > performance_check.log.txt 2>&1" % (testname, ts_file, compare_root, testname, ts_file))
       try:
         short_message_file = open("performance_shortmessage.txt", 'r+', 500)
         short_message = rstrip(short_message_file.readline(500))
       except Exception:
         short_message = ""
-      if pf_rc == 0:
+      if performance_RC == 0:
         print "\tPerformance tests passed."
         if short_message != "":
           print "\t%s" % (short_message)    
-      elif pf_rc == 5 * 256:
+      elif performance_RC == 5 * 256:
         print "\t* Warning, no timestamp file created.  No performance test performed."
-      elif pf_rc == 2*256:
+      elif performance_RC == 2*256:
         print "\t*** Warning, test %s failed performance test." % (testname)
         if short_message != "":
           print "\t%s" % (short_message)
@@ -572,17 +572,17 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
       abs_tol= tolerances[0]
       rel_tol= tolerances[1]
-      cu_rc = system("compare_sus_runs %s %s %s %s %s %s> compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol))
-      if cu_rc != 0:
-        if cu_rc == 10 * 256:
+      compUda_RC = system("compare_sus_runs %s %s %s %s %s %s> compare_sus_runs.log.txt 2>&1" % (testname, getcwd(), compare_root, susdir,abs_tol, rel_tol))
+      if compUda_RC != 0:
+        if compUda_RC == 10 * 256:
           print "\t*** Input file(s) differs from the goldstandard"
           print "%s" % replace_msg
-        elif cu_rc == 1 * 256 or cu_rc == 5*256:
-          print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, cu_rc)
+        elif compUda_RC == 1 * 256 or compUda_RC == 5*256:
+          print "\t*** Warning, test %s failed uda comparison with error code %s" % (testname, compUda_RC)
           print compare_msg
           if startFrom != "restart":
            print "%s" % replace_msg
-        elif cu_rc == 65280: # (-1 return code)
+        elif compUda_RC == 65280: # (-1 return code)
           print "\tComparison tests passed.  (Note: No dat files to compare.)"
         else:
           print "\tComparison tests passed.  (Note: No previous gold standard.)"
@@ -591,23 +591,23 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     #__________________________________
     # Memory leak test
     if do_memory_test == 1:
-      mem_rc = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
+      memory_RC = system("mem_leak_check %s %s %s/%s/%s %s > mem_leak_check.log.txt 2>&1" % (testname, malloc_stats_file, compare_root, testname, malloc_stats_file, "."))
       try:
         short_message_file = open("highwater_shortmessage.txt", 'r+', 500)
         short_message = rstrip(short_message_file.readline(500))
       except Exception:
         short_message = ""
 
-      if mem_rc == 0:
+      if memory_RC == 0:
           print "\tMemory leak tests passed."
           if short_message != "":
             print "\t%s" % (short_message)    
-      elif mem_rc == 5 * 256:
+      elif memory_RC == 5 * 256:
           print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
-      elif mem_rc == 256:
+      elif memory_RC == 256:
           print "\t*** Warning, test %s failed memory leak test." % (testname)
           print memory_msg
-      elif mem_rc == 2*256:
+      elif memory_RC == 2*256:
           print "\t*** Warning, test %s failed memory highwater test." % (testname)
           if short_message != "":
             print "\t%s" % (short_message)
@@ -617,22 +617,16 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
           print "\tMemory leak tests passed. (Note: no previous memory usage stats)."
     #__________________________________
     # print error codes
-    # if comparison tests fail, return here, so mem_leak tests can run
-    if cu_rc == 5*256 or cu_rc == 1*256:
+    # if comparison, memory, performance tests fail, return here, so mem_leak tests can run
+    if compUda_RC == 5*256 or compUda_RC == 1*256:
       system("echo '  -- %s%s test failed comparison tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
-      # debug
       return_code = 2;
         
-    if pf_rc == 2*256:
-      # For the present, hard code the PERFORMANCE as the algo, as
-      # performance is a test set and not an algorithm.  This follows the
-      # current model of performance tests (all in one test file), but will
-      # need to change if the model changes
-      system("echo '  -- %s%s test failed performance tests' >> %s/PERFORMANCE-short.log" % (testname,restart_text,startpath))
+    if performance_RC == 2*256:
+      system("echo '  -- %s%s test failed performance tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
-    if mem_rc == 1*256 or mem_rc == 2*256:
-      # debug
+    if memory_RC == 1*256 or memory_RC == 2*256:
       system("echo '  -- %s%s test failed memory tests' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
       return_code = 2;
     
