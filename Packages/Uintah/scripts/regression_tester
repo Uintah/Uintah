@@ -223,12 +223,6 @@ arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="jp8cyl"
 examples_test_cases="poisson1 poisson2"
 
-# IRIX tests
-OS=`uname -s`
-if test $OS = "IRIX64"; then
-  mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz testConvertMPMICEAdd"
-fi
-
 # Check if the applications sus and compare_uda are available
 
 if test ! -x compare_uda; then
