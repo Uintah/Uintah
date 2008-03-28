@@ -247,6 +247,103 @@ WARNING
     }
     
     /**
+     * Returns the staggared face centered on X cell low index excluding extra cells
+     */
+    inline IntVector getXFC_CellLowIndex__New() const 
+    {
+       return getCellLowIndex__New();
+    }
+    
+    /**
+     * Returns the staggared face centered on X cell high index excluding extra cells
+     */
+    inline IntVector getXFC_CellHighIndex__New() const
+    {
+      return getCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
+    }
+    
+    /**
+     * Returns the staggared face centered on Y cell low index excluding extra cells
+     */
+    inline IntVector getYFC_CellLowIndex__New() const 
+    {
+       return getCellLowIndex__New();
+    }
+
+    /**
+     * Returns the staggared face centered on Y cell high index excluding extra cells
+     */
+    inline IntVector getYFC_CellHighIndex__New() const
+    {
+      return getCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
+    }
+    
+    /**
+     * Returns the staggared face centered on Z cell low index excluding extra cells
+     */
+    IntVector getZFC_CellLowIndex__New() const 
+    {
+       return getCellLowIndex__New();
+    }
+
+    /**
+     * Returns the staggared face centered on Z cell high index excluding extra cells
+     */
+    IntVector getZFC_CellHighIndex__New() const
+    {
+      return getCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
+    }
+    
+    /**
+     * Returns the staggared face centered on X cell low index including extra cells
+     */
+    inline IntVector getXFC_ExtraCellLowIndex__New() const 
+    {
+       return getExtraCellLowIndex__New();
+    }
+    
+    /**
+     * Returns the staggared face centered on X cell high index including extra cells
+     */
+    inline IntVector getXFC_ExtraCellHighIndex__New() const
+    {
+      return getExtraCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
+    }
+    
+    /**
+     * Returns the staggared face centered on Y cell low index including extra cells
+     */
+    inline IntVector getYFC_ExtraCellLowIndex__New() const 
+    {
+       return getExtraCellLowIndex__New();
+    }
+    
+    /**
+     * Returns the staggared face centered on Y cell high index including extra cells
+     */
+    inline IntVector getYFC_ExtraCellHighIndex__New() const
+    {
+      return getExtraCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
+    }
+
+    /**
+     * Returns the staggared face centered on Z cell low index including extra cells
+     */
+    inline IntVector getZFC_ExtraCellLowIndex__New() const 
+    {
+       return getExtraCellLowIndex__New();
+    }
+    
+    /**
+     * Returns the staggared face centered on Z cell high index including extra cells
+     */
+    inline IntVector getZFC_ExtraCellHighIndex__New() const
+    {
+      return getExtraCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
+    }
+     
+    
+    /**
      * Returns a cell iterator not including extra cells or ghost cells.
      * This version of this function is included to avoid unnecessary branching.
      */
@@ -268,7 +365,7 @@ WARNING
      * Returns a cell iterator including extra cells.
      * ngc specifies the number of ghost cells.
      */
-    CellIterator getExtraAndCellIterator__New(int ngc=0) const
+    inline CellIterator getExtraCellIterator__New(int ngc=0) const
     {
       return CellIterator(getExtraCellLowIndex__New(ngc),getExtraCellHighIndex__New(ngc));
     }
@@ -277,7 +374,7 @@ WARNING
      * Returns a node iterator not including extra nodes or ghost nodes.
      * This version of this function is included to avoid unnecessary branching.
      */
-    NodeIterator getNodeIterator__New() const
+    inline NodeIterator getNodeIterator__New() const
     {
       return NodeIterator(getNodeLowIndex__New(),getNodeHighIndex__New());
     }
@@ -286,7 +383,7 @@ WARNING
      * Returns a node iterator not including extra nodes.
      * ngn specifies the number of ghost nodes.
      */
-    NodeIterator getNodeIterator__New(int ngn) const
+    inline NodeIterator getNodeIterator__New(int ngn) const
     {
       return NodeIterator(getNodeLowIndex__New(ngn),getNodeHighIndex__New(ngn));
     }
@@ -295,11 +392,59 @@ WARNING
      * Returns a node iterator including extra cells.
      * ngn specifies the number of ghost nodes.
      */
-    NodeIterator getExtraAndNodeIterator__New(int ngn=0) const
+    NodeIterator getExtraNodeIterator__New(int ngn=0) const
     {
       return NodeIterator(getExtraNodeLowIndex__New(ngn),getExtraNodeHighIndex__New(ngn));
     }
     
+    /**
+     * Returns a staggared face centered on X cell iterator excluding extra cells
+     */
+    inline CellIterator getXFC_CellIterator__New()
+    {
+      return CellIterator(getXFC_CellLowIndex__New(),getXFC_CellHighIndex__New());
+    }
+    
+    /**
+     * Returns a staggared face centered on Y cell iterator excluding extra cells
+     */
+    inline CellIterator getYFC_CellIterator__New()
+    {
+      return CellIterator(getYFC_CellLowIndex__New(),getYFC_CellHighIndex__New());
+    }
+    
+    /**
+     * Returns a staggared face centered on Z cell iterator excluding extra cells
+     */
+    inline CellIterator getZFC_CellIterator__New()
+    {
+      return CellIterator(getZFC_CellLowIndex__New(),getZFC_CellHighIndex__New());
+    }
+
+    /**
+     * Returns a staggared face centered on X cell iterator including extra cells
+     */
+    inline CellIterator getXFC_ExtraCellIterator__New()
+    {
+      return CellIterator(getXFC_ExtraCellLowIndex__New(),getXFC_ExtraCellHighIndex__New());
+    }
+    
+    /**
+     * Returns a staggared face centered on Y cell iterator including extra cells
+     */
+    inline CellIterator getYFC_ExtraCellIterator__New()
+    {
+      return CellIterator(getYFC_ExtraCellLowIndex__New(),getYFC_ExtraCellHighIndex__New());
+    }
+    
+    /**
+     * Returns a staggared face centered on Z cell iterator including extra cells
+     */
+    inline CellIterator getZFC_ExtraCellIterator__New()
+    {
+      return CellIterator(getZFC_ExtraCellLowIndex__New(),getZFC_ExtraCellHighIndex__New());
+    }
+
     /**
      * Sets the number of extra cells for the patch class.
      */
@@ -316,26 +461,24 @@ WARNING
       return d_extraCells;
     }
 
+
      /**************End New Public Interace****************/
-     
+   
+    /*
     //Get refrences to the indices
     inline IntVector& low()
     { return d_lowIndex;  }
 
     inline IntVector& high()
     { return d_highIndex;  }
+    */
+
 
     /********************
       The following are needed in order to use Patch as a Box in
       Core/Container/SuperBox.h (see
       Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
     *********************/
-
-    inline IntVector getLow() const
-    { return d_lowIndex; }
-
-    inline IntVector getHigh() const
-    { return d_highIndex; }
 
     inline int getVolume() const
     { return getVolume(getLow(), getHigh()); }
@@ -353,7 +496,6 @@ WARNING
     {
       return (high.x() -  low.x()) * (high.y() - low.y()) * (high.z() - low.z());
     } 
-
 
      //Below for Fracture *************************************************
      void findCellNodes(const Point& pos,IntVector ni[8]) const;
@@ -413,12 +555,6 @@ WARNING
      //    --tan
      void findNodesFromCell( const IntVector& cellIndex,
                              IntVector nodeIndex[8]) const;
-     //////////
-     //////////
-     // Insert Documentation Here:  
-     CellIterator getCellIterator(const IntVector gc = IntVector(0,0,0)) const;
-     CellIterator getExtraCellIterator(const IntVector gc = 
-                                       IntVector(0,0,0)) const;
      
      // This function will return all cells that are intersected by
      // the box.  This is based on the fact that boundaries of cells
@@ -437,19 +573,10 @@ WARNING
      CellIterator getEdgeCellIterator(const FaceType& face0, 
                                 const FaceType& face1,
                                 const string& domain="minusCornerCells") const;
-#if 1
-     CellIterator getSFCXIterator(const int offset = 0) const;
-     CellIterator getSFCYIterator(const int offset = 0) const;
-     CellIterator getSFCZIterator(const int offset = 0) const;
-#endif
      CellIterator getSFCIterator( const int dir, const int offset = 0) const;
      CellIterator addGhostCell_Iter(CellIterator hi_lo, const int nCells) const;
      
      IntVector faceAxes(const FaceType& face) const; 
-     //__________________________________
-     //////////
-     // Insert Documentation Here:
-     NodeIterator getNodeIterator() const;
      
      // This will return an iterator which will include all the nodes
      // contained by the bounding box.  If a dimension of the widget
@@ -469,54 +596,10 @@ WARNING
      IntVector getInteriorLowIndexWithBoundary(VariableBasis basis) const;
      IntVector getInteriorHighIndexWithBoundary(VariableBasis basis) const;
      
-     IntVector getLowIndex() const
-     { return d_lowIndex; }
-     
-     IntVector getHighIndex() const
-     { return d_highIndex; }
-     
-     IntVector getNodeLowIndex() const {
-       return d_lowIndex;
-     }
-
-     IntVector getNodeHighIndex() const {
-       return d_nodeHighIndex;
-     }
- 
-     IntVector getInteriorNodeLowIndex()const;
-     IntVector getInteriorNodeHighIndex()const;     
-
-     IntVector getSFCXLowIndex() const {
-       return d_lowIndex;
-     }
-     IntVector getSFCXHighIndex() const;
-
-     IntVector getSFCYLowIndex() const {
-       return d_lowIndex;
-     }
-     IntVector getSFCYHighIndex() const;
-
-     IntVector getSFCZLowIndex() const {
-       return d_lowIndex;
-     }
-     IntVector getSFCZHighIndex() const;
-     
-     IntVector getCellLowIndex() const {
-       return d_lowIndex;
-     }
-     IntVector getCellHighIndex() const {
-       return d_highIndex;
-     }
-     
-     IntVector getInteriorCellLowIndex() const {
-       return d_inLowIndex;
-     }
-     IntVector getInteriorCellHighIndex() const {
-       return d_inHighIndex;
-     }
      int getInteriorVolume() const {
        return getVolume(d_inLowIndex,d_inHighIndex); 
      }
+     
      void setExtraIndices(const IntVector& l, const IntVector& h);
 
      // required for fortran interface
@@ -532,9 +615,6 @@ WARNING
      IntVector getCellFORTLowIndex() const;
      IntVector getCellFORTHighIndex() const;
 
-     // returns ghost cell index
-     IntVector getGhostCellLowIndex(int numGC) const;
-     IntVector getGhostCellHighIndex(int numGC) const;
 
      // For AMR.  When there are weird patch configurations, sometimes patches can overlap.
      // Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
@@ -793,6 +873,81 @@ WARNING
 
      void setFaceMark(int markType, FaceType face, int mark) const { d_faceMarks[markType*numFaces + face] = mark; }
      int getFaceMark(int markType, FaceType face) const { return d_faceMarks[markType*numFaces + face]; }
+
+     /***********************Old Interface that is been implemented in new interface*******************************/
+    
+     inline IntVector getLow() const
+    { return d_lowIndex; }
+
+    inline IntVector getHigh() const
+    { return d_highIndex; }
+     
+     IntVector getCellLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getCellHighIndex() const {
+       return d_highIndex;
+     }
+     
+     IntVector getInteriorCellLowIndex() const {
+       return d_inLowIndex;
+     }
+     IntVector getInteriorCellHighIndex() const {
+       return d_inHighIndex;
+     }
+
+     // returns ghost cell index
+     IntVector getGhostCellLowIndex(int numGC) const;
+     IntVector getGhostCellHighIndex(int numGC) const;
+     
+     IntVector getLowIndex() const
+     { return d_lowIndex; }
+     
+     IntVector getHighIndex() const
+     { return d_highIndex; }
+     
+     IntVector getNodeLowIndex() const {
+       return d_lowIndex;
+     }
+
+     IntVector getNodeHighIndex() const {
+       return d_nodeHighIndex;
+     }
+ 
+     IntVector getInteriorNodeLowIndex()const;
+     IntVector getInteriorNodeHighIndex()const;     
+     
+     IntVector getSFCXLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getSFCXHighIndex() const;
+
+     IntVector getSFCYLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getSFCYHighIndex() const;
+
+     IntVector getSFCZLowIndex() const {
+       return d_lowIndex;
+     }
+     IntVector getSFCZHighIndex() const;
+     
+     
+     
+     CellIterator getCellIterator(const IntVector gc = IntVector(0,0,0)) const;
+     CellIterator getExtraCellIterator(const IntVector gc = 
+                                       IntVector(0,0,0)) const;
+
+     NodeIterator getNodeIterator() const;
+
+#if 1
+     CellIterator getSFCXIterator(const int offset = 0) const;
+     CellIterator getSFCYIterator(const int offset = 0) const;
+     CellIterator getSFCZIterator(const int offset = 0) const;
+#endif
+
+
+     /***********************End old interface********************************************************************/
 
    protected:
      friend class Level;

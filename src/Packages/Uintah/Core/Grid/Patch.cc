@@ -1651,7 +1651,7 @@ void Patch::finalizePatch()
   }
 
 
-#if 0
+#if 1
   ASSERT(getLow()==getExtraCellLowIndex__New());
   ASSERT(getHigh()==getExtraCellHighIndex__New());
   ASSERT(getLowIndex()==getExtraCellLowIndex__New());
@@ -1668,8 +1668,20 @@ void Patch::finalizePatch()
   ASSERT(getGhostCellHighIndex(1)==getExtraCellHighIndex__New(1));
   ASSERT(getCellIterator().begin()==getCellIterator__New().begin());
   ASSERT(getCellIterator().end()==getCellIterator__New().end());
-  ASSERT(getExtraCellIterator().begin()==getExtraAndCellIterator__New().begin());
-  ASSERT(getExtraCellIterator().end()==getExtraAndCellIterator__New().end());
+  ASSERT(getExtraCellIterator().begin()==getExtraCellIterator__New().begin());
+  ASSERT(getExtraCellIterator().end()==getExtraCellIterator__New().end());
+  ASSERT(getNodeIterator().begin()==getNodeIterator__New().begin());
+  ASSERT(getNodeIterator().end()==getNodeIterator__New().end());
+  ASSERT(getSFCXLowIndex()==getXFC_ExtraCellLowIndex__New());
+  ASSERT(getSFCXHighIndex()==getXFC_ExtraCellHighIndex__New());
+  ASSERT(getSFCYLowIndex()==getYFC_ExtraCellLowIndex__New());
+  ASSERT(getSFCYHighIndex()==getYFC_ExtraCellHighIndex__New());
+  ASSERT(getSFCZLowIndex()==getZFC_ExtraCellLowIndex__New());
+  ASSERT(getSFCZHighIndex()==getZFC_ExtraCellHighIndex__New());
+  ASSERT(getSFCXIterator().begin()==getXFC_CellIterator__New().begin());
+  ASSERT(getSFCXIterator().end()==getXFC_CellIterator__New().end());
+
+  
 #endif 
 }
 
