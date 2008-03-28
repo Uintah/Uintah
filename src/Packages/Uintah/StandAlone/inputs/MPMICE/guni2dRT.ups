@@ -89,7 +89,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>guni.orig.uda</filebase>
+      <filebase>guni2dRT.uda</filebase>
       <outputTimestepInterval> 20 </outputTimestepInterval>
       <save label = "rho_CC"/>
       <save label = "press_CC"/>
