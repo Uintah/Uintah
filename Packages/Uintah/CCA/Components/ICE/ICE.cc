@@ -5268,11 +5268,11 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
     IntVector diff17 = patch->getCellIterator(ngc).begin() - patch->getCellIterator__New(numGC).begin();
     IntVector diff18 = patch->getCellIterator(ngc).end() - patch->getCellIterator__New(numGC).end();
         
-    IntVector diff19 = patch->getExtraCellIterator().begin() - patch->getExtraAndCellIterator__New().begin();
-    IntVector diff20 = patch->getExtraCellIterator().end() - patch->getExtraAndCellIterator__New().end();
+    IntVector diff19 = patch->getExtraCellIterator().begin() - patch->getExtraCellIterator__New().begin();
+    IntVector diff20 = patch->getExtraCellIterator().end() - patch->getExtraCellIterator__New().end();
 
-    IntVector diff21 = patch->getExtraCellIterator(ngc).begin() - patch->getExtraAndCellIterator__New(numGC).begin();
-    IntVector diff22 = patch->getExtraCellIterator(ngc).end() - patch->getExtraAndCellIterator__New(numGC).end();
+    IntVector diff21 = patch->getExtraCellIterator(ngc).begin() - patch->getExtraCellIterator__New(numGC).begin();
+    IntVector diff22 = patch->getExtraCellIterator(ngc).end() - patch->getExtraCellIterator__New(numGC).end();
     
     IntVector zero=IntVector(0,0,0);
     if (diff1 != zero || diff2 != zero || diff3 != zero ||
@@ -5305,8 +5305,8 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       cout << "diff15 " << diff15 << " " << patch->getCellIterator().begin() << " " <<  patch->getCellIterator__New().begin() << endl;
       cout << "diff16 " << diff16 << " " << patch->getCellIterator().end() << " " <<  patch->getCellIterator__New().end() << endl;
       
-      cout << "diff19 " << diff19 << " " << patch->getExtraCellIterator().begin() << " " <<  patch->getExtraAndCellIterator__New().begin() << endl;
-      cout << "diff20 " << diff20 << " " << patch->getExtraCellIterator().end() << " " <<  patch->getExtraAndCellIterator__New().end() << endl;      
+      cout << "diff19 " << diff19 << " " << patch->getExtraCellIterator().begin() << " " <<  patch->getExtraCellIterator__New().begin() << endl;
+      cout << "diff20 " << diff20 << " " << patch->getExtraCellIterator().end() << " " <<  patch->getExtraCellIterator__New().end() << endl;      
 
       ostringstream warn;
       int idx = level->getIndex();
@@ -5318,8 +5318,8 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
       cout << "diff17 " << diff17 << " " << patch->getCellIterator(ngc).begin() << " " << patch->getCellIterator__New(numGC).begin() << endl;
       cout << "diff18 " << diff18 << " " << patch->getCellIterator(ngc).end() << " " << patch->getCellIterator__New(numGC).end() << endl;
       
-      cout << "diff21 " << diff21 << " " << patch->getExtraCellIterator(ngc).begin() << " " <<  patch->getExtraAndCellIterator__New(numGC).begin() << endl;
-      cout << "diff22 " << diff22 <<" " << patch->getExtraCellIterator(ngc).end() << " " <<  patch->getExtraAndCellIterator__New(numGC).end() << endl; 
+      cout << "diff21 " << diff21 << " " << patch->getExtraCellIterator(ngc).begin() << " " <<  patch->getExtraCellIterator__New(numGC).begin() << endl;
+      cout << "diff22 " << diff22 <<" " << patch->getExtraCellIterator(ngc).end() << " " <<  patch->getExtraCellIterator__New(numGC).end() << endl; 
       ostringstream warn;
       int idx = level->getIndex();
       warn<<"ICE:(L-"<<idx<<", Patch"<< patch->getID()<<"): Problem with the new patch functons";
