@@ -354,34 +354,34 @@ void printData(DataArchive* archive, string& variable_name,
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
 	  } else if (d_doincheatflux){
         if ((val == container)&&(!(val_xm == container)))
-          out << path_to_timeextract << " -v radiationFluxWIN -i "
-              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxWIN_"
-              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+          out << path_to_timeextract << " -v radiationFluxEIN -i "
+              <<c.x()-1 << " "<< c.y() << " " << c.z() <<" -o radiationFluxEIN_"
+              <<c.x()-1 << "_"<< c.y() << "_" << c.z() <<".dat " 
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
         if ((val == container)&&(!(val_xp == container)))
-          out << path_to_timeextract << " -v radiationFluxEIN -i "
-              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxEIN_"
-              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+          out << path_to_timeextract << " -v radiationFluxWIN -i "
+              <<c.x()+1 << " "<< c.y() << " " << c.z() <<" -o radiationFluxWIN_"
+              <<c.x()+1 << "_"<< c.y() << "_" << c.z() <<".dat " 
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
         if ((val == container)&&(!(val_ym == container)))
-          out << path_to_timeextract << " -v radiationFluxSIN -i "
-              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxSIN_"
-              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+          out << path_to_timeextract << " -v radiationFluxNIN -i "
+              <<c.x() << " "<< c.y()-1 << " " << c.z() <<" -o radiationFluxNIN_"
+              <<c.x() << "_"<< c.y()-1 << "_" << c.z() <<".dat " 
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
         if ((val == container)&&(!(val_yp == container)))
-          out << path_to_timeextract << " -v radiationFluxNIN -i "
-              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxNIN_"
-              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+          out << path_to_timeextract << " -v radiationFluxSIN -i "
+              <<c.x() << " "<< c.y()+1 << " " << c.z() <<" -o radiationFluxSIN_"
+              <<c.x() << "_"<< c.y()+1 << "_" << c.z() <<".dat " 
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
         if ((val == container)&&(!(val_zm == container)))
-          out << path_to_timeextract << " -v radiationFluxBIN -i "
-              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxBIN_"
-              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+          out << path_to_timeextract << " -v radiationFluxTIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z()-1 <<" -o radiationFluxTIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()-1 <<".dat " 
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
         if ((val == container)&&(!(val_zp == container)))
-          out << path_to_timeextract << " -v radiationFluxTIN -i "
-              <<c.x() << " "<< c.y() << " " << c.z() <<" -o radiationFluxTIN_"
-              <<c.x() << "_"<< c.y() << "_" << c.z() <<".dat " 
+          out << path_to_timeextract << " -v radiationFluxBIN -i "
+              <<c.x() << " "<< c.y() << " " << c.z()+1 <<" -o radiationFluxBIN_"
+              <<c.x() << "_"<< c.y() << "_" << c.z()+1 <<".dat " 
               <<" -m "<<material<<" -uda "<<input_uda_name<<endl;
       } else if (d_dovelocity){
         //Taking (delta x)/2 Cell Centered velocity components 
