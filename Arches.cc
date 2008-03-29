@@ -770,7 +770,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       if (d_calcReactingScalar)
         reactScalarDiffusivity.initialize(visVal/0.4);
     }
-    //scalar.initialize(1.0);
+    scalar.initialize(0.0);
 
     if (d_calcExtraScalars) {
 
