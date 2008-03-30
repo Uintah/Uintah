@@ -1680,7 +1680,24 @@ void Patch::finalizePatch()
   ASSERT(getSFCZHighIndex()==getZFC_ExtraCellHighIndex__New());
   ASSERT(getSFCXIterator().begin()==getXFC_CellIterator__New().begin());
   ASSERT(getSFCXIterator().end()==getXFC_CellIterator__New().end());
+  
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getCellFORTLowIndex()==getFortranCellLowIndex__New());
+  ASSERT(d_extraCells!=IntVector(1,1,1) ||getCellFORTHighIndex()==getFortranCellHighIndex__New());
 
+  //ASSERT(getSFCXFORTLowIndex()==getFortranZFC_ExtraCellLowIndex__New());
+  //ASSERT(getSFCXFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
+  //ASSERT(getSFCYFORTLowIndex()==getFortranZFC_ExtraCellLowIndex__New());
+  //ASSERT(getSFCYFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
+  //ASSERT(getSFCZFORTLowIndex()==getFortranZFC_ExtraCellLowIndex__New());
+  //ASSERT(getSFCZFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
+/*
+     IntVector getSFCYFORTLowIndex() const;
+     IntVector getSFCYFORTHighIndex() const;
+
+     IntVector getSFCZFORTLowIndex() const;
+     IntVector getSFCZFORTHighIndex() const;
+
+*/
   
 #endif 
 }
