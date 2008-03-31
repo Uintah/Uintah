@@ -1672,7 +1672,7 @@ void Patch::finalizePatch()
   ASSERT(getExtraCellIterator().end()==getExtraCellIterator__New().end());
   ASSERT(getNodeIterator().begin()==getNodeIterator__New().begin());
   ASSERT(getNodeIterator().end()==getNodeIterator__New().end());
-  ASSERT(getSFCXLowIndex()==getExtraSFCLowIndex__New());
+  ASSERT(getSFCXLowIndex()==getExtraSFCXLowIndex__New());
   ASSERT(getSFCXHighIndex()==getExtraSFCXHighIndex__New());
   ASSERT(getSFCYLowIndex()==getExtraSFCYLowIndex__New());
   ASSERT(getSFCYHighIndex()==getExtraSFCYHighIndex__New());
