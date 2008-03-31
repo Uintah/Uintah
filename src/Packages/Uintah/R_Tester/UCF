@@ -29,14 +29,16 @@ UNUSED = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux","", ["do
            ("switcher",       "JP8-switch.ups",     8, "NONE") 
 ]
 
-TESTS = [ ]
+TESTS = [ ("ice_perf_test",    "icePerformanceTest.ups",    1, "Linux", ["do_performance_test"]),  \
+          ("mpmice_perf_test", "mpmicePerformanceTest.ups", 1, "Linux", ["do_performance_test"])
+        ]
 
 #______________________________________________________________________
 # Scalability tests -
 # last 6 args are start patches x,y,z and start res x,y,z
 # The 4th argument is the number of times to double the processor count
-SCALE_TESTS = [ ("ice_scale_test", "iceScalabilityTest.ups", 8, "Linux",1,1,1,10,10,10)]
-
+#SCALE_TESTS = [ ("ice_scale_test", "iceScalabilityTest.ups", 8, "Linux",1,1,1,50,50,50)]
+SCALE_TESTS = []
 retval = 0
 
 for test in SCALE_TESTS:
@@ -54,7 +56,7 @@ for test in SCALE_TESTS:
 
   max_parallelism = float(argv[5])
 
-  # do tests n times, double the procs each time, and double res and patches
+  # do tests n times, double the procs each time, and double res and patches 
   for i in range(0, iterations):
     procs = 2**i
     if procs > max_parallelism:
