@@ -128,7 +128,15 @@ public:
     d_done = copy.d_done;
     return *this;
   }
-
+  bool operator==(const CellIterator& o) const
+  {
+    return begin()==o.begin() && end()==o.end() && d_cur==o.d_cur;
+  }
+  
+  bool operator!=(const CellIterator& o) const
+  {
+    return begin()!=o.begin() || end()!=o.end() || d_cur!=o.d_cur;
+  }
   friend std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
 
   friend class GridIterator;
