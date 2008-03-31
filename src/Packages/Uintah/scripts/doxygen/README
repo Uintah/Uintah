@@ -3,7 +3,7 @@ The run_doxygen.sh script is run nightly via a cron job on inferno2.
 
 You can edit/create the crontab by running the command (from inferno2):
 
-(As user 'dav':)
+(As user 'csafe-tester':)
 
 > crontab -e
 
