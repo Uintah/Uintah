@@ -249,7 +249,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell low index excluding extra cells
      */
-    inline IntVector getXFC_CellLowIndex__New() const 
+    inline IntVector getSFCXLowIndex__New() const 
     {
        return getCellLowIndex__New();
     }
@@ -257,7 +257,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell high index excluding extra cells
      */
-    inline IntVector getXFC_CellHighIndex__New() const
+    inline IntVector getSFCXHighIndex__New() const
     {
       return getCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
     }
@@ -265,7 +265,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell low index excluding extra cells
      */
-    inline IntVector getYFC_CellLowIndex__New() const 
+    inline IntVector getSFCYLowIndex__New() const 
     {
        return getCellLowIndex__New();
     }
@@ -273,7 +273,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell high index excluding extra cells
      */
-    inline IntVector getYFC_CellHighIndex__New() const
+    inline IntVector getSFCYHighIndex__New() const
     {
       return getCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
     }
@@ -281,7 +281,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell low index excluding extra cells
      */
-    IntVector getZFC_CellLowIndex__New() const 
+    IntVector getSFCZLowIndex__New() const 
     {
        return getCellLowIndex__New();
     }
@@ -289,7 +289,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell high index excluding extra cells
      */
-    IntVector getZFC_CellHighIndex__New() const
+    IntVector getSFCZHighIndex__New() const
     {
       return getCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
     }
@@ -297,7 +297,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell low index including extra cells
      */
-    inline IntVector getXFC_ExtraCellLowIndex__New() const 
+    inline IntVector getExtraSFCXLowIndex__New() const 
     {
        return getExtraCellLowIndex__New();
     }
@@ -305,7 +305,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell high index including extra cells
      */
-    inline IntVector getXFC_ExtraCellHighIndex__New() const
+    inline IntVector getExtraSFCXHighIndex__New() const
     {
       return getExtraCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
     }
@@ -313,7 +313,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell low index including extra cells
      */
-    inline IntVector getYFC_ExtraCellLowIndex__New() const 
+    inline IntVector getExtraSFCYLowIndex__New() const 
     {
        return getExtraCellLowIndex__New();
     }
@@ -321,7 +321,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell high index including extra cells
      */
-    inline IntVector getYFC_ExtraCellHighIndex__New() const
+    inline IntVector getExtraSFCYHighIndex__New() const
     {
       return getExtraCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
     }
@@ -329,7 +329,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell low index including extra cells
      */
-    inline IntVector getZFC_ExtraCellLowIndex__New() const 
+    inline IntVector getExtraSFCZLowIndex__New() const 
     {
        return getExtraCellLowIndex__New();
     }
@@ -337,7 +337,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell high index including extra cells
      */
-    inline IntVector getZFC_ExtraCellHighIndex__New() const
+    inline IntVector getExtraSFCZHighIndex__New() const
     {
       return getExtraCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
     }
@@ -400,49 +400,49 @@ WARNING
     /**
      * Returns a staggared face centered on X cell iterator excluding extra cells
      */
-    inline CellIterator getXFC_CellIterator__New()
+    inline CellIterator getSFCXIterator__New()
     {
-      return CellIterator(getXFC_CellLowIndex__New(),getXFC_CellHighIndex__New());
+      return CellIterator(getSFCXLowIndex__New(),getSFCXHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Y cell iterator excluding extra cells
      */
-    inline CellIterator getYFC_CellIterator__New()
+    inline CellIterator getSFCYIterator__New()
     {
-      return CellIterator(getYFC_CellLowIndex__New(),getYFC_CellHighIndex__New());
+      return CellIterator(getSFCYLowIndex__New(),getSFCYHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Z cell iterator excluding extra cells
      */
-    inline CellIterator getZFC_CellIterator__New()
+    inline CellIterator getSFCZIterator__New()
     {
-      return CellIterator(getZFC_CellLowIndex__New(),getZFC_CellHighIndex__New());
+      return CellIterator(getSFCZLowIndex__New(),getSFCZHighIndex__New());
     }
 
     /**
      * Returns a staggared face centered on X cell iterator including extra cells
      */
-    inline CellIterator getXFC_ExtraCellIterator__New()
+    inline CellIterator getExtraSFCXIterator__New()
     {
-      return CellIterator(getXFC_ExtraCellLowIndex__New(),getXFC_ExtraCellHighIndex__New());
+      return CellIterator(getExtraSFCXLowIndex__New(),getExtraSFCXHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Y cell iterator including extra cells
      */
-    inline CellIterator getYFC_ExtraCellIterator__New()
+    inline CellIterator getExtraSFCYIterator__New()
     {
-      return CellIterator(getYFC_ExtraCellLowIndex__New(),getYFC_ExtraCellHighIndex__New());
+      return CellIterator(getExtraSFCYLowIndex__New(),getExtraSFCYHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Z cell iterator including extra cells
      */
-    inline CellIterator getZFC_ExtraCellIterator__New()
+    inline CellIterator getExtraSFCZIterator__New()
     {
-      return CellIterator(getZFC_ExtraCellLowIndex__New(),getZFC_ExtraCellHighIndex__New());
+      return CellIterator(getExtraSFCZLowIndex__New(),getExtraSFCZHighIndex__New());
     }
 
     /*************************************************************
@@ -591,7 +591,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell low index excluding extra cells
      */
-    inline IntVector getFortranXFC_CellLowIndex__New() const 
+    inline IntVector getFortranSFCXLowIndex__New() const 
     {
        return getFortranCellLowIndex__New();
     }
@@ -599,7 +599,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell high index excluding extra cells
      */
-    inline IntVector getFortranXFC_CellHighIndex__New() const
+    inline IntVector getFortranSFCXHighIndex__New() const
     {
       return getFortranCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
     }
@@ -607,7 +607,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell low index excluding extra cells
      */
-    inline IntVector getFortranYFC_CellLowIndex__New() const 
+    inline IntVector getFortranSFCYLowIndex__New() const 
     {
        return getFortranCellLowIndex__New();
     }
@@ -615,7 +615,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell high index excluding extra cells
      */
-    inline IntVector getFortranYFC_CellHighIndex__New() const
+    inline IntVector getFortranSFCYHighIndex__New() const
     {
       return getFortranCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
     }
@@ -623,7 +623,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell low index excluding extra cells
      */
-    IntVector getFortranZFC_CellLowIndex__New() const 
+    IntVector getFortranSFCZLowIndex__New() const 
     {
        return getFortranCellLowIndex__New();
     }
@@ -631,7 +631,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell high index excluding extra cells
      */
-    IntVector getFortranZFC_CellHighIndex__New() const
+    IntVector getFortranSFCZHighIndex__New() const
     {
       return getFortranCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
     }
@@ -639,7 +639,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell low index including extra cells
      */
-    inline IntVector getFortranXFC_ExtraCellLowIndex__New() const 
+    inline IntVector getFortranExtraSFCXLowIndex__New() const 
     {
        return getFortranExtraCellLowIndex__New();
     }
@@ -647,7 +647,7 @@ WARNING
     /**
      * Returns the staggared face centered on X cell high index including extra cells
      */
-    inline IntVector getFortranXFC_ExtraCellHighIndex__New() const
+    inline IntVector getFortranExtraSFCXHighIndex__New() const
     {
       return getFortranExtraCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
     }
@@ -655,7 +655,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell low index including extra cells
      */
-    inline IntVector getFortranYFC_ExtraCellLowIndex__New() const 
+    inline IntVector getFortranExtraSFCYLowIndex__New() const 
     {
        return getFortranExtraCellLowIndex__New();
     }
@@ -663,7 +663,7 @@ WARNING
     /**
      * Returns the staggared face centered on Y cell high index including extra cells
      */
-    inline IntVector getFortranYFC_ExtraCellHighIndex__New() const
+    inline IntVector getFortranExtraSFCYHighIndex__New() const
     {
       return getFortranExtraCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
     }
@@ -671,7 +671,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell low index including extra cells
      */
-    inline IntVector getFortranZFC_ExtraCellLowIndex__New() const 
+    inline IntVector getFortranExtraSFCZLowIndex__New() const 
     {
        return getFortranExtraCellLowIndex__New();
     }
@@ -679,7 +679,7 @@ WARNING
     /**
      * Returns the staggared face centered on Z cell high index including extra cells
      */
-    inline IntVector getFortranZFC_ExtraCellHighIndex__New() const
+    inline IntVector getFortranExtraSFCZHighIndex__New() const
     {
       return getFortranExtraCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
     }
@@ -742,49 +742,49 @@ WARNING
     /**
      * Returns a staggared face centered on X cell iterator excluding extra cells
      */
-    inline CellIterator getFortranXFC_CellIterator__New()
+    inline CellIterator getFortranSFCXIterator__New()
     {
-      return CellIterator(getFortranXFC_CellLowIndex__New(),getFortranXFC_CellHighIndex__New());
+      return CellIterator(getFortranSFCXLowIndex__New(),getFortranSFCXHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Y cell iterator excluding extra cells
      */
-    inline CellIterator getFortranYFC_CellIterator__New()
+    inline CellIterator getFortranSFCYIterator__New()
     {
-      return CellIterator(getFortranYFC_CellLowIndex__New(),getFortranYFC_CellHighIndex__New());
+      return CellIterator(getFortranSFCYLowIndex__New(),getFortranSFCYHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Z cell iterator excluding extra cells
      */
-    inline CellIterator getFortranZFC_CellIterator__New()
+    inline CellIterator getFortranSFCZIterator__New()
     {
-      return CellIterator(getFortranZFC_CellLowIndex__New(),getFortranZFC_CellHighIndex__New());
+      return CellIterator(getFortranSFCZLowIndex__New(),getFortranSFCZHighIndex__New());
     }
 
     /**
      * Returns a staggared face centered on X cell iterator including extra cells
      */
-    inline CellIterator getFortranXFC_ExtraCellIterator__New()
+    inline CellIterator getFortranExtraSFCXIterator__New()
     {
-      return CellIterator(getFortranXFC_ExtraCellLowIndex__New(),getFortranXFC_ExtraCellHighIndex__New());
+      return CellIterator(getFortranExtraSFCXLowIndex__New(),getFortranExtraSFCXHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Y cell iterator including extra cells
      */
-    inline CellIterator getFortranYFC_ExtraCellIterator__New()
+    inline CellIterator getFortranExtraSFCYIterator__New()
     {
-      return CellIterator(getFortranYFC_ExtraCellLowIndex__New(),getFortranYFC_ExtraCellHighIndex__New());
+      return CellIterator(getFortranExtraSFCYLowIndex__New(),getFortranExtraSFCYHighIndex__New());
     }
     
     /**
      * Returns a staggared face centered on Z cell iterator including extra cells
      */
-    inline CellIterator getFortranZFC_ExtraCellIterator__New()
+    inline CellIterator getFortranExtraSFCZIterator__New()
     {
-      return CellIterator(getFortranZFC_ExtraCellLowIndex__New(),getFortranZFC_ExtraCellHighIndex__New());
+      return CellIterator(getFortranExtraSFCZLowIndex__New(),getFortranExtraSFCZHighIndex__New());
     }
 
     /**
