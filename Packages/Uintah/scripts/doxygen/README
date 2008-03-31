@@ -13,5 +13,5 @@ The crontab file should look something like this:
 MAILTO=dav@sci.utah.edu
 #
 # run five minutes after 1am, every day
-5 1 * * *       cd $HOME/SVN/SCIRun/src/Packages/Uintah && scripts/doxygen/run_doxygen.sh
+5 1 * * *       cd $HOME/DoxygenCheckout/SCIRun/src/Packages/Uintah && scripts/doxygen/run_doxygen.sh
 

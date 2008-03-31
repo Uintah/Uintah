@@ -11,8 +11,10 @@
 # C-SAFE web site (http://www.csafe.utah.edu/dist/doxygen).  Updates
 # the index.html file to include the SVN revision number of the tree.
 #
-# Note, run_doxygen.sh should be running nightly via a cron job.  See
+# NOTE, run_doxygen.sh should be running nightly via a cron job.  See
 # the README file for more information.
+#
+# WARNING: run_doxygen.sh runs an 'svn update' on the checked out code.
 #
 ############################################################################
 
