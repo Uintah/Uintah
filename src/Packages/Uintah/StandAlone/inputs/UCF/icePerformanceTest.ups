@@ -20,7 +20,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
-       <max_Timesteps>     25          </max_Timesteps>
+       <max_Timesteps>      50          </max_Timesteps>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -120,8 +120,8 @@
               <upper>        [10,10,10]       </upper>
               <extraCells>   [1,1,1]          </extraCells>
               <patches>      [1,1,1]          </patches>
+              <resolution>   [50,50,50]       </resolution>
            </Box>
-           <spacing>        [0.5,0.5,0.5]     </spacing>
        </Level>
     </Grid>
    
