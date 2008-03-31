@@ -102,7 +102,15 @@ WARNING
         ZFaceBased = Ghost::AroundFacesZ,
         AllFaceBased = Ghost::AroundFaces
      };
-  
+ 
+     enum FaceIteratorType {
+      minusEdgeCells,          //Excludes the edge/corner cells.
+      plusEdgeCells,           //Includes the edge/corner cells.
+      NC_vars,                 //Hit all nodes/faces on the border of the extra cells
+      FC_vars,                 //Hit all nodes/faces on the border of the extra cells
+      alongInteriorFaceCells   //Hit interior face cells
+     };
+
     /**************New Public Interaface*******************
      *
      * This block will be used to store the new public interface as it goes live
@@ -444,6 +452,19 @@ WARNING
     {
       return CellIterator(getExtraSFCZLowIndex__New(),getExtraSFCZHighIndex__New());
     }
+
+    /*****************************************************
+    * Returns a boundary face cell iterator.
+    *  This function assumes the face being called on does not have a neighbor.
+    *  Inputs:
+    *  face specifies which face will be returned
+    *  domain specifies which type of iterator will be returned
+    *  and can be one of the following:
+    *     plusEdgeCells:          Includes the edge and corner cells.
+    *     NC_vars/FC_vars:        Hit all nodes/faces on the border of the extra cells
+    *     alongInteriorFaceCells: Hit interior face cells
+    */
+    CellIterator getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType& domain) const;
 
     /*************************************************************
      *The following queries are for fortran.  Fortran indexing

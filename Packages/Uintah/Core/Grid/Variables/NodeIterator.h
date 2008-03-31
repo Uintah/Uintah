@@ -109,6 +109,17 @@ public:
   }
     
   friend class GridIterator;
+  
+  bool operator==(const NodeIterator& o) const
+  {
+    return begin()==o.begin() && end()==o.end() && index()==o.index();
+  }
+
+  bool operator!=(const NodeIterator& o) const
+  {
+    return begin()!=o.begin() || end()!=o.end() || index()!=o.index();
+  }
+
 
 private:
   NodeIterator();
