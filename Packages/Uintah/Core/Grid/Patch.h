@@ -11,6 +11,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Exceptions/InternalError.h>
 #undef None
 
 #include <sgi_stl_warnings_off.h>
@@ -110,6 +111,16 @@ WARNING
       FC_vars,                 //Hit all nodes/faces on the border of the extra cells
       alongInteriorFaceCells   //Hit interior face cells
      };
+     
+     class Compare {
+      public:
+       inline bool operator()(const Patch* p1, const Patch* p2) const {
+         return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) :
+           ((p2 != 0) ? true : false);
+       }
+      private:
+     };
+
 
     /**************New Public Interaface*******************
      *
@@ -465,6 +476,13 @@ WARNING
     *     alongInteriorFaceCells: Hit interior face cells
     */
     CellIterator getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType& domain) const;
+
+
+    /**
+     *Returns an iterator to the edge of two intersecting faces.
+     *if minusCornerCells is true the edge will exclude corner cells.
+     */
+    CellIterator getBoundaryEdgeCellIterator__New(const FaceType& face0,const FaceType& face1,bool minusCornerCells=true) const;
 
     /*************************************************************
      *The following queries are for fortran.  Fortran indexing
@@ -824,8 +842,72 @@ WARNING
       return d_extraCells;
     }
 
+    /**
+     * Returns the number of cells excluding extra cells
+     */
+    inline int getNumCells()
+    {
+      return getVolume(getCellLowIndex__New(),getCellHighIndex__New());
+    }
 
-     /**************End New Public Interace****************/
+    /**
+     * Returns the number of cells including extra cells
+     */
+    inline int getNumExtraCells()
+    {
+      return getVolume(getExtraCellLowIndex__New(),getExtraCellHighIndex__New());
+    }
+
+    /**
+     * Returns the number of cells excluding extra cells
+     */
+    inline int getNumNodes()
+    {
+      return getVolume(getNodeLowIndex__New(),getNodeHighIndex__New());
+    }
+
+    /**
+     * Returns the number of cells excluding extra cells
+     */
+    inline int getNumExtraNodes()
+    {
+      return getVolume(getExtraNodeLowIndex__New(),getExtraNodeHighIndex__New());
+    }
+
+    /**
+     * Returns the dimension of the face
+     * x=0, y=1, z=2
+     */
+    static inline int getFaceDimension(const FaceType& face)
+    {
+      return face/2;
+    }
+
+    /**
+     * Returns the normal to the patch face
+     */
+    static inline IntVector getFaceDirection(const FaceType& face)
+    {
+      switch(face) 
+      {
+        case xminus:
+          return IntVector(-1,0,0);
+        case xplus:
+          return IntVector(1,0,0);
+        case yminus:
+          return IntVector(0,-1,0);
+        case yplus:
+          return IntVector(0,1,0);
+        case zminus:
+          return IntVector(0,0,-1);
+        case zplus:
+          return IntVector(0,0,1);
+        default:
+          //throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+          return IntVector(0,0,0);
+      }
+    }
+    /**************End New Public Interace****************/
    
     /*
     //Get refrences to the indices
@@ -1189,15 +1271,6 @@ WARNING
      void getOtherLevelPatches(int levelOffset, selectType& patches, int numGhostCells = 0)
        const;
      
-     class Compare {
-     public:
-       inline bool operator()(const Patch* p1, const Patch* p2) const {
-         return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) :
-           ((p2 != 0) ? true : false);
-       }
-     private:
-     };
-
      // get the index into the Level::d_patches array
      int getLevelIndex() const { return d_level_index; }
 

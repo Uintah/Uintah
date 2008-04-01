@@ -1020,6 +1020,65 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
   } 
   return CellIterator(lowPt, highPt);
 }
+
+/**
+ * Returns an iterator to the edge of two intersecting faces.
+ * if minusCornerCells is true the edge will exclude corner cells.
+ */
+CellIterator    
+Patch::getBoundaryEdgeCellIterator__New(const FaceType& face0, 
+                           const FaceType& face1,bool minusCornerCells) const
+{
+  FaceType face[2]={face0,face1};
+
+  //will contain extra cells
+  vector<IntVector>loPt(2), hiPt(2); 
+  loPt[0] = loPt[1] = getExtraCellLowIndex__New();
+  hiPt[0] = hiPt[1] = getExtraCellHighIndex__New();
+
+  int dim[2]={getFaceDimension(face0),getFaceDimension(face1)};
+
+  //return an empty iterator if trying to intersect the same dimension
+  if(dim[0]==dim[1])
+    return CellIterator(IntVector(0,0,0),IntVector(0,0,0));
+
+  for (int f = 0; f < 2 ; f++ ) {
+   
+    switch(face[f])
+    {
+        case xminus: case yminus: case zminus:
+          //restrict to face
+          hiPt[f][dim[f]]=getCellLowIndex__New()[dim[f]];
+          break;
+        case xplus: case yplus: case zplus:
+          //restrict to face
+          loPt[f][dim[f]]=getCellHighIndex__New()[dim[f]];
+          break;
+        default:
+          throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+          break;
+
+    }
+
+    //remove the corner cells by pruning the other dimension's extra cells
+    if(minusCornerCells)
+    {
+      //compute the dimension of the face not being used
+      int otherdim=3-dim[0]-dim[1];
+  
+      loPt[f][otherdim]=getCellLowIndex__New()[otherdim];
+      hiPt[f][otherdim]=getCellHighIndex__New()[otherdim];
+    }
+  }
+
+  // compute the edge low and high pt from the intersection
+  IntVector LowPt  = Max(loPt[0], loPt[1]);
+  IntVector HighPt = Min(hiPt[0], hiPt[1]);
+  
+  return CellIterator(LowPt, HighPt);
+  
+
+}
 //__________________________________
 //  Iterate over an edge at the intersection of face0 and face1
 // if domain == minusCornerCells this subtracts off the corner cells.
@@ -1896,6 +1955,32 @@ void Patch::finalizePatch()
   ASSERT(getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(yminus,alongInteriorFaceCells));
   ASSERT(getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(zplus,alongInteriorFaceCells));
   ASSERT(getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(zminus,alongInteriorFaceCells));
+
+
+  /*
+  FaceType face0=xplus,face1=yminus;
+  if( !( getBCType(face0)==Neighbor || getBCType(face1)==Neighbor || getEdgeCellIterator(face0,face1)==getBoundaryEdgeCellIterator_New(face0,face1) ) )
+  {
+    cout << "old:" << getEdgeCellIterator(face0,face1).begin() << " -> " << getEdgeCellIterator(face0,face1).end() << endl;
+    cout << "new:" << getBoundaryEdgeCellIterator_New(face0,face1).begin() << "->" << getBoundaryEdgeCellIterator_New(face0,face1).end() << endl;
+
+  }
+  */
+
+  /***************Disabled because stock one is bugged
+  ASSERT(getBCType(xminus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xminus,yminus)==getBoundaryEdgeCellIterator_New(xminus,yminus));
+  ASSERT(getBCType(xminus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xminus,yplus)==getBoundaryEdgeCellIterator_New(xminus,yplus));
+  ASSERT(getBCType(xminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xminus,zminus)==getBoundaryEdgeCellIterator_New(xminus,zminus));
+  ASSERT(getBCType(xminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xminus,zplus)==getBoundaryEdgeCellIterator_New(xminus,zplus));
+  ASSERT(getBCType(xplus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xplus,yminus)==getBoundaryEdgeCellIterator_New(xplus,yminus));
+  ASSERT(getBCType(xplus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xplus,yplus)==getBoundaryEdgeCellIterator_New(xplus,yplus));
+  ASSERT(getBCType(xplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xplus,zminus)==getBoundaryEdgeCellIterator_New(xplus,zminus));
+  ASSERT(getBCType(xplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xplus,zplus)==getBoundaryEdgeCellIterator_New(xplus,zplus));
+  ASSERT(getBCType(yminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yminus,zminus)==getBoundaryEdgeCellIterator_New(yminus,zminus));
+  ASSERT(getBCType(yminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yminus,zplus)==getBoundaryEdgeCellIterator_New(yminus,zplus));
+  ASSERT(getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getBoundaryEdgeCellIterator_New(yplus,zminus));
+  ASSERT(getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getBoundaryEdgeCellIterator_New(yplus,zplus));
+  ****************************************************/
 
 #endif 
 }
