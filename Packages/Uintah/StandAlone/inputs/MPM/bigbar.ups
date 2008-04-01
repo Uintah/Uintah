@@ -29,7 +29,6 @@
         <save label = "p.volume"/>
         <save label = "p.stress"/>
         <save label = "p.deformationMeasure"/>
-        <save label = "p.volumedeformed" />
         <save label = "p.externalforce" />
    </DataArchiver>
 
