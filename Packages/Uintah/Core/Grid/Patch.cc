@@ -815,6 +815,8 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
 
   //compute the dimension
   int dim=face/2;
+
+
   //compute if we are a plus face
   bool plusface=face%2;
 
@@ -822,6 +824,7 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
 
   switch(domain)
   {
+    //start with tight fitting patch and expand the indices to include the wanted regions
     case minusEdgeCells:
       //grab patch region without extra cells
       lowPt =  getCellLowIndex__New();
@@ -831,19 +834,20 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
       switch(plusface)
       {
         case true:
-          //restrict index to face
+          //restrict dimension to the face
           lowPt[dim]=highPt[dim];
           //extend dimension by extra cells
-          highPt[dim]=highPt[dim]+d_extraCells[dim];
+          highPt[dim]=getExtraCellHighIndex__New()[dim];
           break;
         case false:
-          //restrict index to face
+          //restrict dimension to face
           highPt[dim]=lowPt[dim];
           //extend dimension by extra cells
-          lowPt[dim]=lowPt[dim]-d_extraCells[dim];
+          lowPt[dim]=getExtraCellLowIndex__New()[dim];
           break;
       }
       break;
+      //start with the loose fitting patch and contract the indices to exclude the unwanted regions
     case plusEdgeCells:
       //grab patch region with extra cells
       lowPt =  getExtraCellLowIndex__New();
@@ -853,16 +857,12 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
       switch(plusface)
       {
         case true:
-          //restrict index to face
-          lowPt[dim]=highPt[dim];
-          //contract dimension by extra cells
-          lowPt[dim]=lowPt[dim]-d_extraCells[dim];
+          //move low point to plus face
+          lowPt[dim]=getCellHighIndex__New()[dim];
           break;
         case false:
-          //restrict index to face
-          highPt[dim]=lowPt[dim];
-          //contract dimension by extra cells
-          highPt[dim]=highPt[dim]+d_extraCells[dim];
+          //move high point to minus face
+          highPt[dim]=getCellLowIndex__New()[dim];
           break;
       }
       break;
@@ -1906,18 +1906,18 @@ void Patch::finalizePatch()
   //ASSERT(getSFCYFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
   //ASSERT(getSFCZFORTLowIndex()==getFortranZFC_ExtraCellLowIndex__New());
   //ASSERT(getSFCZFORTHighIndex()==getFortranZFC_ExtraCellHighIndex__New());
-  
+ 
   /*
   FaceType face=xminus;
-  string domain1="FC_vars";
-  FaceIteratorType domain2=FC_vars;
+  string domain1="plusEdgeCells";
+  FaceIteratorType domain2=plusEdgeCells;
   if(getBCType(face)!=Neighbor && !(getFaceCellIterator(face,domain1)==getBoundaryFaceIterator__New(face,domain2)))
   {
       cout << "old:" << getFaceCellIterator(face,domain1).begin() << " -> " << getFaceCellIterator(face,domain1).end() << endl;
       cout << "new:" << getBoundaryFaceIterator__New(face,domain2).begin() << " -> " << getBoundaryFaceIterator__New(face,domain2).end() << endl;
   }
   */
-  
+
   ASSERT(getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"minusEdgeCells")==getBoundaryFaceIterator__New(xplus,minusEdgeCells));
   ASSERT(getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"minusEdgeCells")==getBoundaryFaceIterator__New(xminus,minusEdgeCells));
   ASSERT(getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"minusEdgeCells")==getBoundaryFaceIterator__New(yplus,minusEdgeCells));
