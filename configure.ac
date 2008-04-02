@@ -571,6 +571,11 @@ SCI_ARG_ENABLE(sci-malloc,
                  Use SCI memory allocation/deallocation checks.  Note: you cannot use sci-malloc-trace at the same time.),
   [enable_sci_malloc="$enableval"],
   [enable_sci_malloc=${enable_sci_malloc='no'}])
+SCI_ARG_ENABLE(memory-init,
+  AC_HELP_STRING(--enable-memory-initialization=8_bit_number,
+                 Force all new'd and malloc'd memory to be initialied to the value given - defaults to 127.),
+  [enable_memory_initialization="$enableval"],
+  [enable_memory_initialization=${enable_memory_initialization='no'}])
 SCI_ARG_ENABLE(sci-trace,
   AC_HELP_STRING(--enable-sci-malloc-trace,
                  Use SCI memory trace functionality.  Note: you cannot use sci-malloc at the same time.),
@@ -644,10 +649,28 @@ SCI_ARG_ENABLE(no-dynamic-cast,
   [enable_no_dynamic_cast="$enableval"],
   [enable_no_dynamic_cast=${enable_no_dynamic_cast='no'}])
 
-
 if test "$enable_sci_malloc" = "yes" -a "$enable_sci_malloc_trace" = "yes"; then
    AC_MSG_ERROR( "You cannot use both --enable-sci-malloc-trace and --enable-sci-malloc!" )
 fi
+
+if test "$enable_memory_initialization" != "no"; then
+   DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
+   if   test "$enable_memory_initialization" == "yes"; then
+      memory_init=127
+   else
+      val=$enable_memory_initialization
+      if test $val -lt 128 -a $val -gt 0; then
+         memory_init=$val
+      else
+         AC_MSG_ERROR( "--enable-memory-initialization's value must be from 0 to 127." )
+      fi
+   fi
+   DEF_MEMORY_INIT_NUMBER="#define MEMORY_INIT_NUMBER $memory_init"
+fi
+
+AC_SUBST(DEF_MEMORY_INIT)
+AC_SUBST(DEF_MEMORY_INIT_NUMBER)
+sci_defs_files="$sci_defs_files Core/Malloc/testmem_init.h"
 
 if test "$enable_rpath" = "no"; then
    AC_MSG_WARN("You have removed the rpath flag from some libraries.")
