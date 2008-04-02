@@ -946,6 +946,12 @@ WARNING
       if(getBCType(yplus)==None) faces.push_back(yplus);
       if(getBCType(zplus)==None) faces.push_back(zplus);
     }
+  
+    /**
+     * sets the vector cells equal to the list of cells that are in the corners
+     */
+    void getBoundaryCornerCells__New(vector<IntVector> & cells, const FaceType &face) const;
+
     /*
     void setBCType(FaceType face, BCType newbc)
     {
