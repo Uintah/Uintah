@@ -1575,6 +1575,11 @@ WARNING
      mutable int d_faceMarks[4*numFaces];
      
    }; // end class Patch
+   
+   inline Patch::FaceType operator++(Patch::FaceType &face,int)
+   {
+    return face=static_cast<Patch::FaceType>(face+1);
+   }
 
 
 } // End namespace Uintah
