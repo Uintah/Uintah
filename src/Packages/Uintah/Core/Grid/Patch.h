@@ -121,7 +121,6 @@ WARNING
       private:
      };
 
-
     /**************New Public Interaface*******************
      *
      * This block will be used to store the new public interface as it goes live
@@ -903,10 +902,79 @@ WARNING
         case zplus:
           return IntVector(0,0,1);
         default:
+          //we should throw an exception here but for some reason this doesn't compile
           //throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
           return IntVector(0,0,0);
       }
     }
+     
+    inline BCType getBCType(FaceType face) const
+    {
+      switch(face)
+      {
+        case xminus:
+          return d_patchState.xminus;
+        case yminus:
+          return d_patchState.yminus;
+        case zminus:
+          return d_patchState.zminus;
+        case xplus:
+          return d_patchState.xplus;
+        case yplus:
+          return d_patchState.yplus;
+        case zplus:
+          return d_patchState.zplus;
+        default:
+          //we should throw an exception here but for some reason this doesn't compile
+          //throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          return None;
+      }
+    }
+    /**
+     * sets the vector faces equal to the list of faces that are on the boundary
+     */
+    inline void getBoundaryFaces__New(vector<FaceType>& faces) const
+    { 
+      faces.clear();
+
+      //for each face 
+        //if we don't have a neigbor add that face to the boundary vector
+      if(getBCType(xminus)==None) faces.push_back(xminus);
+      if(getBCType(yminus)!=None) faces.push_back(yminus);
+      if(getBCType(zminus)!=None) faces.push_back(zminus);
+      if(getBCType(xplus)!=None) faces.push_back(xplus);
+      if(getBCType(yplus)!=None) faces.push_back(yplus);
+      if(getBCType(zplus)!=None) faces.push_back(zplus);
+    }
+    /*
+    void setBCType(FaceType face, BCType newbc)
+    {
+      switch(face)
+      {
+        case xminus:
+          d_patchState.xminus=newbc;
+          break;
+        case yminus:
+          d_patchState.yminus=newbc;
+          break;
+        case zminus:
+          d_patchState.zminus=newbc;
+          break;
+        case xplus:
+          d_patchState.xplus=newbc;
+          break;
+        case yplus:
+          d_patchState.yplus=newbc;
+          break;
+        case zplus:
+          d_patchState.zplus=newbc;
+          break;
+        default:
+          //we should throw an exception here but for some reason this doesn't compile
+          //throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+      }
+    }
+    */
     /**************End New Public Interace****************/
    
     /*
@@ -924,6 +992,8 @@ WARNING
       Core/Container/SuperBox.h (see
       Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
     *********************/
+
+    void setBCType(FaceType face, BCType newbc);
 
     inline int getVolume() const
     { return getVolume(getLow(), getHigh()); }
@@ -1098,8 +1168,6 @@ WARNING
      
      void performConsistencyCheck() const;
      
-     BCType getBCType(FaceType face) const;
-     void setBCType(FaceType face, BCType newbc);
      void printPatchBCs(std::ostream& out) const;
      void setArrayBCValues(FaceType face, BCDataArray* bc);
 
@@ -1402,6 +1470,22 @@ WARNING
      Patch* createVirtualPatch(const IntVector& offset) const
      { return scinew Patch(this, offset); }
    private:
+     
+     /**
+      * This struct will tightly store data that the patch needs
+      * elements will only use the number of bits necessary for its
+      * storage
+      */
+     struct PatchState
+     {
+        BCType xminus : 2;
+        BCType xplus : 2;
+        BCType yminus : 2;
+        BCType yplus : 2;
+        BCType zminus : 2;
+        BCType zplus : 2;
+     };
+
 
     /****************New Private Interface*********************
      *Functions will slowly be moved into this block as it is verified
@@ -1423,10 +1507,10 @@ WARNING
      static IntVector d_extraCells;
 
      /**
-      * The boundary conditions on each face.  They can be either
-      * None, Coarse, or Fine
+      * The patch state.  This stores much of the internal state
+      * of the patch in a compact datastructure.
       */
-     BCType d_bctypes[numFaces];  // specifies bc type for each face
+      PatchState d_patchState;
        
     //****************End of new private Interace**************/
 

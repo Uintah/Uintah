@@ -53,12 +53,12 @@ Patch::Patch(const Level* level,
   d_hasBoundaryFaces = false;
 
   // DON'T call setBCType here     
-  d_bctypes[xminus]=None;
-  d_bctypes[yminus]=None;
-  d_bctypes[zminus]=None;
-  d_bctypes[xplus]=None;
-  d_bctypes[yplus]=None;
-  d_bctypes[zplus]=None;
+  d_patchState.xminus=None;
+  d_patchState.yminus=None;
+  d_patchState.zminus=None;
+  d_patchState.xplus=None;
+  d_patchState.yplus=None;
+  d_patchState.zplus=None;
 
   d_nodeHighIndex = d_highIndex+
     IntVector(getBCType(xplus) == Neighbor?0:1,
@@ -99,8 +99,13 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
   d_id -= index;
   
-  for (int i = 0; i < numFaces; i++)
-    d_bctypes[i] = realPatch->d_bctypes[i];
+  //set boundary conditions
+  d_patchState.xminus=realPatch->getBCType(xminus);
+  d_patchState.yminus=realPatch->getBCType(yminus);
+  d_patchState.zminus=realPatch->getBCType(zminus);
+  d_patchState.xplus=realPatch->getBCType(xplus);
+  d_patchState.yplus=realPatch->getBCType(yplus);
+  d_patchState.zplus=realPatch->getBCType(zplus);
 }
 
 Patch::~Patch()
@@ -282,16 +287,34 @@ Patch::performConsistencyCheck() const
   }
 }
 
-Patch::BCType 
-Patch::getBCType(Patch::FaceType face) const
-{
-  return d_bctypes[face];
-}
-
 void
 Patch::setBCType(Patch::FaceType face, BCType newbc)
 {
-   d_bctypes[face]=newbc;
+  switch(face)
+  {
+    case xminus:
+      d_patchState.xminus=newbc;
+      break;
+    case yminus:
+      d_patchState.yminus=newbc;
+      break;
+    case zminus:
+      d_patchState.zminus=newbc;
+      break;
+    case xplus:
+      d_patchState.xplus=newbc;
+      break;
+    case yplus:
+      d_patchState.yplus=newbc;
+      break;
+    case zplus:
+      d_patchState.zplus=newbc;
+      break;
+    default:
+      //we should throw an exception here but for some reason this doesn't compile
+      //throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+      return;
+    }
 
    // If this face has a BCType of Patch::None, make sure
    // that it is in the list of d_BoundaryFaces, otherwise, make
@@ -356,7 +379,6 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    d_nodeHighIndex = d_highIndex + IntVector(getBCType(xplus) == Neighbor?0:1,
                                              getBCType(yplus) == Neighbor?0:1,
                                              getBCType(zplus) == Neighbor?0:1);
-
 }
 
 void
@@ -1396,17 +1418,17 @@ IntVector Patch::getCellFORTHighIndex() const
 
 IntVector Patch::getGhostCellLowIndex(int numGC) const
 {
-  return d_lowIndex - IntVector(d_bctypes[xminus] == Neighbor?numGC:0,
-				d_bctypes[yminus] == Neighbor?numGC:0,
-				d_bctypes[zminus] == Neighbor?numGC:0);
+  return d_lowIndex - IntVector(getBCType(xminus) == Neighbor?numGC:0,
+				getBCType(yminus) == Neighbor?numGC:0,
+				getBCType(zminus) == Neighbor?numGC:0);
 
 }
 
 IntVector Patch::getGhostCellHighIndex(int numGC) const
 {
-  return d_highIndex + IntVector(d_bctypes[xplus] == Neighbor?numGC:0,
-				 d_bctypes[yplus] == Neighbor?numGC:0,
-				 d_bctypes[zplus] == Neighbor?numGC:0);
+  return d_highIndex + IntVector(getBCType(xplus) == Neighbor?numGC:0,
+				 getBCType(yplus) == Neighbor?numGC:0,
+				 getBCType(zplus) == Neighbor?numGC:0);
 }
 
 void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
@@ -1685,16 +1707,16 @@ Box Patch::getInteriorBox() const {
 
 IntVector Patch::neighborsLow() const
 {
-  return IntVector(d_bctypes[xminus] == Neighbor? 0:1,
-		   d_bctypes[yminus] == Neighbor? 0:1,
-		   d_bctypes[zminus] == Neighbor? 0:1);
+  return IntVector(getBCType(xminus) == Neighbor? 0:1,
+		   getBCType(yminus) == Neighbor? 0:1,
+		   getBCType(zminus) == Neighbor? 0:1);
 }
 
 IntVector Patch::neighborsHigh() const
 {
-  return IntVector(d_bctypes[xplus] == Neighbor? 0:1,
-		   d_bctypes[yplus] == Neighbor? 0:1,
-		   d_bctypes[zplus] == Neighbor? 0:1);
+  return IntVector(getBCType(xplus) == Neighbor? 0:1,
+		   getBCType(yplus) == Neighbor? 0:1,
+		   getBCType(zplus) == Neighbor? 0:1);
 }
 
 IntVector Patch::getLowIndex(VariableBasis basis,
@@ -1756,11 +1778,11 @@ IntVector Patch::getInteriorHighIndex(VariableBasis basis) const
   case NodeBased:
     return getInteriorNodeHighIndex();
   case XFaceBased:
-    return d_inHighIndex+IntVector(d_bctypes[xplus] == Neighbor? 0:1,0,0);
+    return d_inHighIndex+IntVector(getBCType(xplus) == Neighbor? 0:1,0,0);
   case YFaceBased:
-    return d_inHighIndex+IntVector(0,d_bctypes[yplus] == Neighbor? 0:1,0);
+    return d_inHighIndex+IntVector(0,getBCType(yplus) == Neighbor? 0:1,0);
   case ZFaceBased:
-    return d_inHighIndex+IntVector(0,0,d_bctypes[zplus] == Neighbor? 0:1);
+    return d_inHighIndex+IntVector(0,0,getBCType(zplus) == Neighbor? 0:1);
   case AllFaceBased:
     SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getInteriorHighIndex(basis)",
                             __FILE__, __LINE__));
