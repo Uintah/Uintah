@@ -97,9 +97,14 @@ void AllocatorResetDefaultTagMalloc()
 
 void* malloc(size_t size) THROWCLAUSE
 {
-    if(!default_allocator)
-	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_malloc_tag, default_tag_line_number);
+  if(!default_allocator)
+    MakeDefaultAllocator();
+  void* mem=default_allocator->alloc(size, default_malloc_tag, default_tag_line_number);
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 void free(void* ptr) THROWCLAUSE
@@ -118,23 +123,23 @@ void* calloc(size_t n, size_t s) THROWCLAUSE
 void* realloc(void* p, size_t s) THROWCLAUSE
 {
     if(!default_allocator)
-	MakeDefaultAllocator();
+  MakeDefaultAllocator();
     return default_allocator->realloc(p, s);
 }
 
 void* memalign(size_t alignment, size_t size) THROWCLAUSE
 {
     if(!default_allocator)
-	MakeDefaultAllocator();
+  MakeDefaultAllocator();
     return default_allocator->memalign(alignment, size, "Unknown - memalign");
 }
 
 void* valloc(size_t size) THROWCLAUSE
 {
     if(!default_allocator)
-	MakeDefaultAllocator();
+  MakeDefaultAllocator();
     return default_allocator->memalign(getpagesize(), size,
-				       "Unknown - valloc");
+               "Unknown - valloc");
 }
 
 #endif

@@ -72,12 +72,23 @@ namespace SCIRun {
 
 void* operator new(size_t size, Allocator*, const char*, int)
 {
-    return new char[size];
+  void* mem=new char[size];
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 void* operator new[](size_t size, Allocator*, const char*, int)
 {
-    return new char[size];
+  void* mem=new char[size];
+
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 #else // ifdef DISABLE_SCI_MALLOC
@@ -135,80 +146,113 @@ namespace SCIRun {
 extern "C" {
     void* __nw__GUi(size_t size)
     {
-	if(!default_allocator)
-	    MakeDefaultAllocator();
-	return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
+  if(!default_allocator)
+      MakeDefaultAllocator();
+  return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
     }
 
     void* __nwa__GUi(size_t size)
     {
-	if(!default_allocator)
-	    MakeDefaultAllocator();
-	return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
+  if(!default_allocator)
+      MakeDefaultAllocator();
+  return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
     }
 }
 #endif
 
 void* operator new(size_t size) throw(std::bad_alloc)
 {
-    if(!default_allocator)
-	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_new_tag, default_tag_line_number);
+  if(!default_allocator)
+    MakeDefaultAllocator();
+   
+  void *mem=default_allocator->alloc(size, default_new_tag, default_tag_line_number);
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 void* operator new[](size_t size) throw(std::bad_alloc)
 {
-    if(!default_allocator)
-	MakeDefaultAllocator();
-    return default_allocator->alloc(size, default_new_array_tag, default_tag_line_number);
+  if(!default_allocator)
+    MakeDefaultAllocator();
+  
+  void*  mem=default_allocator->alloc(size, default_new_array_tag, default_tag_line_number);
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 void* operator new(size_t size, const std::nothrow_t&) throw()
 {
-    if(!default_allocator)
-	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - nothrow operator new", default_tag_line_number);
+  if(!default_allocator)
+    MakeDefaultAllocator();
+  void* mem=default_allocator->alloc(size, "unknown - nothrow operator new", default_tag_line_number);
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 void* operator new[](size_t size, const std::nothrow_t&) throw()
 {
-    if(!default_allocator)
-	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - nothrow operator new[]", default_tag_line_number);
+  if(!default_allocator)
+    MakeDefaultAllocator();
+  
+  void *mem=default_allocator->alloc(size, "unknown - nothrow operator new[]", default_tag_line_number);
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 void operator delete(void* ptr) throw()
 {
     if(!default_allocator)
-	MakeDefaultAllocator();
+  MakeDefaultAllocator();
     default_allocator->free(ptr);
 }
 
 void operator delete[](void* ptr) throw()
 {
     if(!default_allocator)
-	MakeDefaultAllocator();
+  MakeDefaultAllocator();
     default_allocator->free(ptr);
 }
 
 void* operator new(size_t size, Allocator* a, const char* tag, int linenum)
 {
-    if(!a){
-	if(!default_allocator)
-	    MakeDefaultAllocator();
-	a=default_allocator;
-    }
-    return a->alloc(size, tag, linenum);
+  if(!a){
+    if(!default_allocator)
+      MakeDefaultAllocator();
+      a=default_allocator;
+  }
+  void* mem=a->alloc(size, tag, linenum);
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 void* operator new[](size_t size, Allocator* a, const char* tag, int linenum)
 {
-    if(!a){
-	if(!default_allocator)
-	    MakeDefaultAllocator();
-	a=default_allocator;
-    }
-    return a->alloc(size, tag, linenum);
+  if(!a){
+    if(!default_allocator)
+      MakeDefaultAllocator();
+      a=default_allocator;
+  }
+  void* mem=a->alloc(size, tag, linenum);
+#ifdef INITIALIZE_EVIL
+  for(unsigned int i=0;i<size;i++)
+    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+#endif
+  return mem;
 }
 
 #endif // ifdef DISABLE_SCI_MALLOC
