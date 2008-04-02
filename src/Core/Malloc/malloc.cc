@@ -43,6 +43,7 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Malloc/AllocPriv.h>
+#include <Core/Malloc/mem_init.h>
 
 #if defined(__sun) || defined(_WIN32)
 #  include <string.h>
@@ -100,9 +101,9 @@ void* malloc(size_t size) THROWCLAUSE
   if(!default_allocator)
     MakeDefaultAllocator();
   void* mem=default_allocator->alloc(size, default_malloc_tag, default_tag_line_number);
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
