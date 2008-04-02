@@ -109,7 +109,42 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException("lineExtract: analyze label not found: "
                            + name , __FILE__, __LINE__);
     }
-     d_varLabels.push_back(label);
+    
+    const Uintah::TypeDescription* td = label->typeDescription();
+    const Uintah::TypeDescription* subtype = td->getSubType();
+    
+    //__________________________________
+    // Bulletproofing
+    bool throwException = false;  
+    
+    // only CC, SFCX, SFCY, SFCZ variables
+    if(td->getType() != TypeDescription::CCVariable &&
+       td->getType() != TypeDescription::SFCXVariable &&
+       td->getType() != TypeDescription::SFCYVariable &&
+       td->getType() != TypeDescription::SFCZVariable ){
+       throwException = true;
+    }
+    // CC Variables, only Doubles and Vectors 
+    if(td->getType() != TypeDescription::CCVariable &&
+       subtype->getType() != TypeDescription::double_type &&
+       subtype->getType() != TypeDescription::int_type &&
+       subtype->getType() != TypeDescription::Vector  ){
+      throwException = true;
+    }
+    // Face Centered Vars, only Doubles
+    if( (td->getType() == TypeDescription::SFCXVariable ||
+         td->getType() == TypeDescription::SFCYVariable ||
+         td->getType() == TypeDescription::SFCZVariable) &&
+         subtype->getType() != TypeDescription::double_type) {
+      throwException = true;
+    } 
+    if(throwException){       
+      ostringstream warn;
+      warn << "ERROR:AnalysisModule:lineExtact: ("<<label->getName() << " " 
+           << td->getName() << " ) has not been implemented" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    d_varLabels.push_back(label);
   }    
   
   //__________________________________
@@ -310,10 +345,21 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       //__________________________________
       // loop over each of the variables
       // load them into the data vectors
-      vector< constCCVariable<double> > CC_double_data;
-      vector< constCCVariable<Vector> > CC_Vector_data;
+      vector< constCCVariable<int> >      CC_integer_data;
+      vector< constCCVariable<double> >   CC_double_data;
+      vector< constCCVariable<Vector> >   CC_Vector_data;
+      vector< constSFCXVariable<double> > SFCX_double_data;
+      vector< constSFCYVariable<double> > SFCY_double_data;
+      vector< constSFCZVariable<double> > SFCZ_double_data;
+      
+      constCCVariable<int>    q_CC_integer;      
       constCCVariable<double> q_CC_double;
-      constCCVariable<Vector> q_CC_Vector;      
+      constCCVariable<Vector> q_CC_Vector;
+      
+      constSFCXVariable<double> q_SFCX_double;      
+      constSFCYVariable<double> q_SFCY_double;
+      constSFCZVariable<double> q_SFCZ_double;      
+            
       Ghost::GhostType gac = Ghost::AroundCells;
       int indx = d_matl->getDWIndex();
 
@@ -325,21 +371,52 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           throw InternalError("lineExtract: analyze label not found: " 
                           + name , __FILE__, __LINE__);
         }
-      
-        switch( d_varLabels[i]->typeDescription()->getSubType()->getType()){
-        case TypeDescription::double_type:
-          new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gac, 1);
-          CC_double_data.push_back(q_CC_double);
-          break;
-        case TypeDescription::Vector:
-          new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gac, 1);
-          CC_Vector_data.push_back(q_CC_Vector);
-          break;
-        default:
-          throw InternalError("ERROR:AnalysisModule:lineExtact:Unknown variable type", __FILE__, __LINE__);
-        }
-      }      
 
+        const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
+        const Uintah::TypeDescription* subtype = td->getSubType();
+        
+        switch(td->getType()){
+          case Uintah::TypeDescription::CCVariable:      // CC Variables
+            switch(subtype->getType()) {
+            
+            case Uintah::TypeDescription::double_type:
+              new_dw->get(q_CC_double, d_varLabels[i], indx, patch, gac, 1);
+              CC_double_data.push_back(q_CC_double);
+              break;
+             
+            case Uintah::TypeDescription::Vector:
+              new_dw->get(q_CC_Vector, d_varLabels[i], indx, patch, gac, 1);
+              CC_Vector_data.push_back(q_CC_Vector);
+              break;
+              
+            case Uintah::TypeDescription::int_type:
+              new_dw->get(q_CC_integer, d_varLabels[i], indx, patch, gac, 1);
+              CC_integer_data.push_back(q_CC_integer);
+              break; 
+            default:
+              throw InternalError("LineExtract: invalid data type", __FILE__, __LINE__); 
+            }
+            break;
+          case Uintah::TypeDescription::SFCXVariable:   // SFCX Variables
+            new_dw->get(q_SFCX_double, d_varLabels[i], indx, patch, gac, 1);
+            SFCX_double_data.push_back(q_SFCX_double);
+            break;
+          case Uintah::TypeDescription::SFCYVariable:    // SFCY Variables
+            new_dw->get(q_SFCY_double, d_varLabels[i], indx, patch, gac, 1);
+            SFCY_double_data.push_back(q_SFCY_double);
+            break;
+          case Uintah::TypeDescription::SFCZVariable:   // SFCZ Variables
+            new_dw->get(q_SFCZ_double, d_varLabels[i], indx, patch, gac, 1);
+            SFCZ_double_data.push_back(q_SFCZ_double);
+            break;
+          default:
+            ostringstream warn;
+            warn << "ERROR:AnalysisModule:lineExtact: ("<<d_varLabels[i]->getName() << " " 
+                 << td->getName() << " ) has not been implemented" << endl;
+            throw InternalError(warn.str(), __FILE__, __LINE__);
+        }
+      }            
+      
       //__________________________________
       // loop over each line 
       for (unsigned int l =0 ; l < d_lines.size(); l++) {
@@ -409,19 +486,39 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
           Point here = patch->cellPosition(c);
           double time = d_dataArchiver->getCurrentTime();
           fprintf(fp,    "%E\t %E\t %E\t %E",here.x(),here.y(),here.z(), time);
-          
-          // write double variables
+         
+         
+           // WARNING  If you change the order that these are written out you must 
+           // also change the order that the header is written
+           
+          // write CC<int> variables      
+          for (unsigned int i=0 ; i <  CC_integer_data.size(); i++) {
+            fprintf(fp, "    %i",CC_integer_data[i][c]);            
+          }          
+          // write CC<double> variables
           for (unsigned int i=0 ; i <  CC_double_data.size(); i++) {
-            fprintf(fp, "\t%16E",CC_double_data[i][c]);            
+            fprintf(fp, "    %16E",CC_double_data[i][c]);            
           }
-          
-          // write Vector variable
+          // write CC<Vector> variable
           for (unsigned int i=0 ; i <  CC_Vector_data.size(); i++) {
-            fprintf(fp, "\t% 16E \t %16E \t %16E",
+            fprintf(fp, "    % 16E      %16E      %16E",
                     CC_Vector_data[i][c].x(),
                     CC_Vector_data[i][c].y(),
                     CC_Vector_data[i][c].z() );            
+          }         
+          // write SFCX<double> variables
+          for (unsigned int i=0 ; i <  SFCX_double_data.size(); i++) {
+            fprintf(fp, "    %16E",SFCX_double_data[i][c]);            
           }
+          // write SFCY<double> variables
+          for (unsigned int i=0 ; i <  SFCY_double_data.size(); i++) {
+            fprintf(fp, "    %16E",SFCY_double_data[i][c]);            
+          }
+          // write SFCZ<double> variables
+          for (unsigned int i=0 ; i <  SFCZ_double_data.size(); i++) {
+            fprintf(fp, "    %16E",SFCZ_double_data[i][c]);            
+          }
+          
           fprintf(fp,    "\n");
           fclose(fp);
         }  // loop over points
@@ -438,25 +535,72 @@ void lineExtract::createFile(string& filename)
 { 
   FILE *fp;
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"X_CC \t Y_CC \t Z_CC \t Time"); 
+  fprintf(fp,"X_CC      Y_CC      Z_CC      Time"); 
   
-  // double variables header
+  // All CCVariable<int>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-    VarLabel* vl = d_varLabels[i];
-    TypeDescription::Type type =vl->typeDescription()->getSubType()->getType();
-    if(type ==  TypeDescription::double_type){
-      string name = vl->getName();
-      fprintf(fp,"\t %s", name.c_str());
+    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
+    const Uintah::TypeDescription* subtype = td->getSubType();
+
+    if(td->getType()      == TypeDescription::CCVariable && 
+       subtype->getType() == TypeDescription::int_type){
+      string name = d_varLabels[i]->getName();
+      fprintf(fp,"     %s", name.c_str());
     }
   }
-  
-  // Vector variables header
+  // All CCVariable<double>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-    VarLabel* vl = d_varLabels[i];
-    TypeDescription::Type type =vl->typeDescription()->getSubType()->getType();
-    if(type ==  TypeDescription::Vector){
-      string name = vl->getName();
-      fprintf(fp,"\t %s.x \t %s.y \t %s.z", name.c_str(),name.c_str(),name.c_str());
+    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
+    const Uintah::TypeDescription* subtype = td->getSubType();
+
+    if(td->getType()      == TypeDescription::CCVariable && 
+       subtype->getType() == TypeDescription::double_type){
+      string name = d_varLabels[i]->getName();
+      fprintf(fp,"     %s", name.c_str());
+    }
+  }
+  // All CCVariable<Vector>
+  for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
+    const Uintah::TypeDescription* subtype = td->getSubType();
+
+    if(td->getType()      == TypeDescription::CCVariable && 
+       subtype->getType() == TypeDescription::Vector){
+      string name = d_varLabels[i]->getName(); 
+      fprintf(fp,"     %s.x      %s.y      %s.z", name.c_str(),name.c_str(),name.c_str());
+    }
+  }
+  // All SFCXVariable<double>
+  for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
+    const Uintah::TypeDescription* subtype = td->getSubType();
+
+    if(td->getType()      == TypeDescription::SFCXVariable && 
+       subtype->getType() == TypeDescription::double_type){
+      string name = d_varLabels[i]->getName();
+      fprintf(fp,"     %s", name.c_str());
+    }
+  }
+  // All SFCYVariable<double>
+  for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
+    const Uintah::TypeDescription* subtype = td->getSubType();
+
+    if(td->getType()      == TypeDescription::SFCYVariable && 
+       subtype->getType() == TypeDescription::double_type){
+      string name = d_varLabels[i]->getName();
+      fprintf(fp,"     %s", name.c_str());
+    }
+  }
+  // All SFCZVariable<double>
+  for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
+    const Uintah::TypeDescription* subtype = td->getSubType();
+
+    if(td->getType()      == TypeDescription::SFCZVariable && 
+       subtype->getType() == TypeDescription::double_type){
+      string name = d_varLabels[i]->getName();
+      fprintf(fp,"     %s", name.c_str());
     }
   }
   fprintf(fp,"\n");
