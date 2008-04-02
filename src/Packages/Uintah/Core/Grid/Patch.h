@@ -940,11 +940,11 @@ WARNING
       //for each face 
         //if we don't have a neigbor add that face to the boundary vector
       if(getBCType(xminus)==None) faces.push_back(xminus);
-      if(getBCType(yminus)!=None) faces.push_back(yminus);
-      if(getBCType(zminus)!=None) faces.push_back(zminus);
-      if(getBCType(xplus)!=None) faces.push_back(xplus);
-      if(getBCType(yplus)!=None) faces.push_back(yplus);
-      if(getBCType(zplus)!=None) faces.push_back(zplus);
+      if(getBCType(yminus)==None) faces.push_back(yminus);
+      if(getBCType(zminus)==None) faces.push_back(zminus);
+      if(getBCType(xplus)==None) faces.push_back(xplus);
+      if(getBCType(yplus)==None) faces.push_back(yplus);
+      if(getBCType(zplus)==None) faces.push_back(zplus);
     }
     /*
     void setBCType(FaceType face, BCType newbc)

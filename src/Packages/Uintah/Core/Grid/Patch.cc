@@ -1885,7 +1885,7 @@ void Patch::finalizePatch()
   }
 
 
-#if 1
+#if SCI_ASSERTION_LEVEL>0
   ASSERT(getLow()==getExtraCellLowIndex__New());
   ASSERT(getHigh()==getExtraCellHighIndex__New());
   ASSERT(getLowIndex()==getExtraCellLowIndex__New());
@@ -2004,6 +2004,40 @@ void Patch::finalizePatch()
   ASSERT(getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getBoundaryEdgeCellIterator_New(yplus,zplus));
   ****************************************************/
 
+  const vector<FaceType> *bfaces1=getBoundaryFaces();
+  vector<FaceType> bfaces2;
+  getBoundaryFaces__New(bfaces2);
+
+  if(!(bfaces1->size()==bfaces2.size()) )
+  {
+    cout << "old:" << endl;
+    for(int i=0;i<bfaces1->size();i++)
+    {
+      cout << "  " << (*bfaces1)[i] << endl;
+    }
+    cout << "new:" << endl;
+    for(int i=0;i<bfaces2.size();i++)
+    {
+      cout << "  " << bfaces2[i] << endl;
+    }
+
+
+  }
+  ASSERT(bfaces1->size()==bfaces2.size());
+
+  for(unsigned int i=0;i<bfaces1->size();i++)
+  {
+    //search for face in other vector since order may vary
+    bool found=false;
+    for(unsigned int j=0;j<bfaces2.size();j++)
+    {
+      if((*bfaces1)[i]==bfaces2[j])
+      {
+        found=true;
+      }
+    }  
+    ASSERT(found);
+  }
 #endif 
 }
 
