@@ -41,6 +41,8 @@
 
 #include <sci_defs/malloc_defs.h>
 
+#include <Core/Malloc/mem_init.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Malloc/AllocPriv.h>
 #include <new>
@@ -73,9 +75,9 @@ namespace SCIRun {
 void* operator new(size_t size, Allocator*, const char*, int)
 {
   void* mem=new char[size];
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
@@ -84,9 +86,9 @@ void* operator new[](size_t size, Allocator*, const char*, int)
 {
   void* mem=new char[size];
 
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
@@ -166,9 +168,9 @@ void* operator new(size_t size) throw(std::bad_alloc)
     MakeDefaultAllocator();
    
   void *mem=default_allocator->alloc(size, default_new_tag, default_tag_line_number);
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
@@ -179,9 +181,9 @@ void* operator new[](size_t size) throw(std::bad_alloc)
     MakeDefaultAllocator();
   
   void*  mem=default_allocator->alloc(size, default_new_array_tag, default_tag_line_number);
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
@@ -191,9 +193,9 @@ void* operator new(size_t size, const std::nothrow_t&) throw()
   if(!default_allocator)
     MakeDefaultAllocator();
   void* mem=default_allocator->alloc(size, "unknown - nothrow operator new", default_tag_line_number);
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
@@ -204,9 +206,9 @@ void* operator new[](size_t size, const std::nothrow_t&) throw()
     MakeDefaultAllocator();
   
   void *mem=default_allocator->alloc(size, "unknown - nothrow operator new[]", default_tag_line_number);
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
@@ -233,9 +235,9 @@ void* operator new(size_t size, Allocator* a, const char* tag, int linenum)
       a=default_allocator;
   }
   void* mem=a->alloc(size, tag, linenum);
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
@@ -248,9 +250,9 @@ void* operator new[](size_t size, Allocator* a, const char* tag, int linenum)
       a=default_allocator;
   }
   void* mem=a->alloc(size, tag, linenum);
-#ifdef INITIALIZE_EVIL
+#ifdef INITIALIZE_MEMORY
   for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=EVIL_NUM;
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
 #endif
   return mem;
 }
