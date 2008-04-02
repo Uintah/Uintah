@@ -1,0 +1,8 @@
+<config>
+<compareUtil_path>/home/harman/working_on/orderAccuracy/comparisonUtils</compareUtil_path>
+<test>
+  <name>Rayleigh</name>
+  <ups>rayleigh.ups</ups>
+  <tst>rayleigh_dy.tst</tst>
+</test>
+</config>
