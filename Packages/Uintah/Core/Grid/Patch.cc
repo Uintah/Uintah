@@ -1172,7 +1172,8 @@ Patch::getEdgeCellIterator(const FaceType& face0,
   if(domain == "minusCornerCells"){
     IntVector offset = IntVector(1,1,1) - Abs(dir0) - Abs(dir1);
     
-    const vector<IntVector> corner = getCornerCells(face0);
+    vector<IntVector> corner;
+    getCornerCells(corner,face0);
     vector<IntVector>::const_iterator itr;
 
     for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
@@ -1995,6 +1996,7 @@ void Patch::finalizePatch()
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getEdgeCellIterator__New(yplus,zminus));
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus));
 
+#if 0
   const vector<FaceType> *bfaces1=getBoundaryFaces();
   vector<FaceType> bfaces2;
   getBoundaryFaces__New(bfaces2);
@@ -2060,6 +2062,8 @@ void Patch::finalizePatch()
       }
     }
   }
+#endif
+
 #endif 
 }
 
@@ -2081,7 +2085,7 @@ int Patch::getGridIndex() const
 /**
 * sets the vector cells equal to the list of cells that at the intersection of three faces extra cells
 */
-void Patch::getCornerCells__New(vector<IntVector> & cells, const FaceType& face) const
+void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
 {
   //set bounds for loops below
   int xstart=0,xend=2;

@@ -42,9 +42,10 @@ void  conservationTest(const Patch* patch,
   T sum_fluxes(zero);
 
   vector<Patch::FaceType>::const_iterator iter;
-
-  for (iter  = patch->getBoundaryFaces()->begin(); 
-       iter != patch->getBoundaryFaces()->end(); ++iter){
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  for (iter  = bf.begin(); 
+       iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
 
     IntVector axes = patch->faceAxes(face);
