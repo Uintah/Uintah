@@ -603,8 +603,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
         vector<Patch::FaceType> bf;
         patch->getBoundaryFaces(bf);
         
-        for (iter  = bf.begin(); 
-             iter != bf.end(); ++iter){
+        for (iter  = bf.begin(); iter != bf.end(); ++iter){
           Patch::FaceType face = *iter;
           cout_dbg << " Setting BC on Face " << face << " patch " << patch->getGridIndex() << " Level " << fineLevel->getIndex() << endl;
           //__________________________________
