@@ -935,7 +935,7 @@ WARNING
     /**
      * sets the vector faces equal to the list of faces that are on the boundary
      */
-    inline void getBoundaryFaces__New(vector<FaceType>& faces) const
+    inline void getBoundaryFaces(vector<FaceType>& faces) const
     { 
       faces.clear();
 
@@ -952,7 +952,7 @@ WARNING
     /**
      * sets the vector cells equal to the list of cells that are in the corners
      */
-    void getCornerCells__New(vector<IntVector> & cells, const FaceType &face) const;
+    void getCornerCells(vector<IntVector> & cells, const FaceType &face) const;
 
     /**
      * Returns the principal axis along a face and
@@ -1310,10 +1310,16 @@ WARNING
 
      void getFaceCells(FaceType face, int offset, IntVector& l,
                        IntVector& h) const;
-
+/*
      const vector<FaceType>* getBoundaryFaces() const 
      { return &d_BoundaryFaces; }
      
+     //////////
+     // Return the list of corner cells for the given face.
+     const vector<IntVector> getCornerCells(const Patch::FaceType face) const { return d_CornerCells[face]; }
+*/
+
+
      const vector<FaceType>* getCoarseFineInterfaceFaces() const 
      { return &d_coarseFineInterfaceFaces; }
     
@@ -1326,10 +1332,6 @@ WARNING
         return d_hasBoundaryFaces;
      }     
      */
-
-     //////////
-     // Return the list of corner cells for the given face.
-     const vector<IntVector> getCornerCells(const Patch::FaceType face) const { return d_CornerCells[face]; }
 
      static const int MAX_PATCH_SELECT = 32;
      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
