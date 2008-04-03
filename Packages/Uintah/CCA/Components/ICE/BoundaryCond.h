@@ -389,8 +389,7 @@ void setBC(T& vel_FC,
   vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
 
-  for (iter  = bf.begin(); 
-       iter != bf.end(); ++iter){
+  for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
 

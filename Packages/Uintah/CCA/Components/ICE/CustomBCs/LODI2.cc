@@ -325,8 +325,7 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
     vector<Patch::FaceType>::const_iterator itr;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
-    for (itr  = bf.begin(); 
-         itr != bf.end(); ++itr){
+    for (itr  = bf.begin(); itr != bf.end(); ++itr){
       Patch::FaceType face = *itr;
       //__________________________________
       //  if Lodi face then keep track of the patch
@@ -702,8 +701,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
   vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); 
-       iter != bf.end(); ++iter){
+  for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {

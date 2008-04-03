@@ -147,8 +147,7 @@ void meanFreePath(DataWarehouse* new_dw,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for (iter  = bf.begin(); 
-       iter != bf.end(); ++iter){
+  for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_MicroSlip_face(patch,face, sharedState) ) {

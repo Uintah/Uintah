@@ -109,8 +109,7 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
 
-    for (itr  = bf.begin(); 
-         itr != bf.end(); ++itr){
+    for (itr  = bf.begin(); itr != bf.end(); ++itr){
       Patch::FaceType face = *itr;
       //__________________________________
       //  if Lodi face then keep track of the patch
@@ -534,8 +533,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for (iter  = bf.begin(); 
-       iter != bf.end(); ++iter){
+  for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {
@@ -603,8 +601,7 @@ void computeNu(CCVariable<Vector>& nu,
   vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); 
-       iter != bf.end(); ++iter){
+  for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch, face, sharedState) ) {
@@ -766,8 +763,7 @@ void  lodi_bc_preprocess( const Patch* patch,
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for (iter  = bf.begin(); 
-       iter != bf.end(); ++iter){
+  for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {

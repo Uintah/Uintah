@@ -2411,8 +2411,7 @@ void MPMICE::refineCoarseFineInterface(const ProcessorGroup*,
       vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       
-      for (iter  = bf.begin();
-           iter != bf.end(); ++iter){
+      for (iter  = bf.begin(); iter != bf.end(); ++iter){
         Patch::FaceType face = *iter;
         int mat_id = 0;
         if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
@@ -2620,8 +2619,7 @@ MPMICE::refine(const ProcessorGroup*,
       vector<Patch::FaceType> bf;
       patch->getBoundaryFaces(bf);
       
-      for (iter  = bf.begin();
-           iter != bf.end(); ++iter){
+      for (iter  = bf.begin(); iter != bf.end(); ++iter){
         Patch::FaceType face = *iter;
         int mat_id = 0;
         if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
