@@ -1827,10 +1827,12 @@ void Patch::finalizePatch()
   IntVector patchNeighborLow  = neighborsLow();
   IntVector patchNeighborHigh = neighborsHigh();
 
-  vector<FaceType>::const_iterator iter;
-  for (iter  = getBoundaryFaces()->begin(); 
-       iter != getBoundaryFaces()->end(); ++iter){
-    FaceType face = *iter;  
+  for (FaceType face=startFace;face<numFaces;face++)
+  {
+  
+    //if this face has a neighbor it has no corners
+    if(getBCType(face)==Neighbor)
+      continue;
  
     IntVector axes = faceAxes(face);
     int P_dir = axes[0];  // principal direction
@@ -1957,14 +1959,12 @@ void Patch::finalizePatch()
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"plusEdgeCells")==getBoundaryFaceIterator__New(zplus,plusEdgeCells));
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"plusEdgeCells")==getBoundaryFaceIterator__New(zminus,plusEdgeCells));
   
-  /*********These don't line up I think original FC_vars was bugged*********************
-  ASSERT(getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"NC_vars")==getBoundaryFaceIterator__New(xplus,NC_vars));
-  ASSERT(getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"NC_vars")==getBoundaryFaceIterator__New(xminus,NC_vars));
-  ASSERT(getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"NC_vars")==getBoundaryFaceIterator__New(yplus,NC_vars));
-  ASSERT(getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"NC_vars")==getBoundaryFaceIterator__New(yminus,NC_vars));
-  ASSERT(getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"NC_vars")==getBoundaryFaceIterator__New(zplus,NC_vars));
-  ASSERT(getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"NC_vars")==getBoundaryFaceIterator__New(zminus,NC_vars));
-  */
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"NC_vars")==getBoundaryFaceIterator__New(xplus,NC_vars));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"NC_vars")==getBoundaryFaceIterator__New(xminus,NC_vars));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"NC_vars")==getBoundaryFaceIterator__New(yplus,NC_vars));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"NC_vars")==getBoundaryFaceIterator__New(yminus,NC_vars));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"NC_vars")==getBoundaryFaceIterator__New(zplus,NC_vars));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"NC_vars")==getBoundaryFaceIterator__New(zminus,NC_vars));
 
   /*********These don't line up I think original FC_vars was bugged*********************
   ASSERT(getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"FC_vars")==getBoundaryFaceIterator__New(xplus,FC_vars));
@@ -1986,28 +1986,28 @@ void Patch::finalizePatch()
 
   /*
   FaceType face0=xplus,face1=yminus;
-  if( !( getBCType(face0)==Neighbor || getBCType(face1)==Neighbor || getEdgeCellIterator(face0,face1)==getBoundaryEdgeCellIterator_New(face0,face1) ) )
+  if( !( getBCType(face0)==Neighbor || getBCType(face1)==Neighbor || getEdgeCellIterator(face0,face1)==getBoundaryEdgeCellIterator__New(face0,face1) ) )
   {
     cout << "old:" << getEdgeCellIterator(face0,face1).begin() << " -> " << getEdgeCellIterator(face0,face1).end() << endl;
-    cout << "new:" << getBoundaryEdgeCellIterator_New(face0,face1).begin() << "->" << getBoundaryEdgeCellIterator_New(face0,face1).end() << endl;
+    cout << "new:" << getBoundaryEdgeCellIterator__New(face0,face1).begin() << "->" << getBoundaryEdgeCellIterator__New(face0,face1).end() << endl;
 
   }
   */
 
-  /***************Disabled because stock one is bugged
-  ASSERT(getBCType(xminus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xminus,yminus)==getBoundaryEdgeCellIterator_New(xminus,yminus));
-  ASSERT(getBCType(xminus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xminus,yplus)==getBoundaryEdgeCellIterator_New(xminus,yplus));
-  ASSERT(getBCType(xminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xminus,zminus)==getBoundaryEdgeCellIterator_New(xminus,zminus));
-  ASSERT(getBCType(xminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xminus,zplus)==getBoundaryEdgeCellIterator_New(xminus,zplus));
-  ASSERT(getBCType(xplus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xplus,yminus)==getBoundaryEdgeCellIterator_New(xplus,yminus));
-  ASSERT(getBCType(xplus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xplus,yplus)==getBoundaryEdgeCellIterator_New(xplus,yplus));
-  ASSERT(getBCType(xplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xplus,zminus)==getBoundaryEdgeCellIterator_New(xplus,zminus));
-  ASSERT(getBCType(xplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xplus,zplus)==getBoundaryEdgeCellIterator_New(xplus,zplus));
-  ASSERT(getBCType(yminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yminus,zminus)==getBoundaryEdgeCellIterator_New(yminus,zminus));
-  ASSERT(getBCType(yminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yminus,zplus)==getBoundaryEdgeCellIterator_New(yminus,zplus));
-  ASSERT(getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getBoundaryEdgeCellIterator_New(yplus,zminus));
-  ASSERT(getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getBoundaryEdgeCellIterator_New(yplus,zplus));
-  ****************************************************/
+  /***************Disabled because stock one is bugged*
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xminus,yminus)==getBoundaryEdgeCellIterator__New(xminus,yminus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xminus,yplus)==getBoundaryEdgeCellIterator__New(xminus,yplus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xminus,zminus)==getBoundaryEdgeCellIterator__New(xminus,zminus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xminus,zplus)==getBoundaryEdgeCellIterator__New(xminus,zplus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xplus,yminus)==getBoundaryEdgeCellIterator__New(xplus,yminus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xplus,yplus)==getBoundaryEdgeCellIterator__New(xplus,yplus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xplus,zminus)==getBoundaryEdgeCellIterator__New(xplus,zminus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xplus,zplus)==getBoundaryEdgeCellIterator__New(xplus,zplus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yminus,zminus)==getBoundaryEdgeCellIterator__New(yminus,zminus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yminus,zplus)==getBoundaryEdgeCellIterator__New(yminus,zplus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getBoundaryEdgeCellIterator__New(yplus,zminus));
+  ASSERT(d_extraCells==IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getBoundaryEdgeCellIterator__New(yplus,zplus));
+  /****************************************************/
 
   const vector<FaceType> *bfaces1=getBoundaryFaces();
   vector<FaceType> bfaces2;
@@ -2029,7 +2029,6 @@ void Patch::finalizePatch()
     ASSERT(found);
   } 
  
-  /*********Disabled since old getCornerCells seems bugged*****************
   if(d_extraCells==IntVector(1,1,1))
   {
     for(int face=0;face<6;face++)
@@ -2037,7 +2036,7 @@ void Patch::finalizePatch()
       const vector<IntVector> ccells1=getCornerCells(static_cast<FaceType>(face));
       vector<IntVector> ccells2;
       getBoundaryCornerCells__New(ccells2,static_cast<FaceType>(face));
-  
+/*  
       if(ccells1.size()!=ccells2.size())
       {
         cout << "face:" << face << endl;
@@ -2057,7 +2056,7 @@ void Patch::finalizePatch()
           cout << ccells2[i] << endl;
         }
       }
-    
+*/    
       ASSERT(ccells1.size()==ccells2.size());
 
       for(unsigned int i=0;i<ccells1.size();i++)
@@ -2075,7 +2074,6 @@ void Patch::finalizePatch()
       }
     }
   }
-  */
 #endif 
 }
 
