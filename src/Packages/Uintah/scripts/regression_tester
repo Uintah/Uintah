@@ -56,7 +56,7 @@ MPI=''
 MPI_RUN="no"
 
 # Set the default inputs directory
-INPUTS=inputs
+INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 
 if test ! -d "$INPUTS"; then
    echo
