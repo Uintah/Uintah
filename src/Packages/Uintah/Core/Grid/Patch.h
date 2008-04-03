@@ -907,7 +907,10 @@ WARNING
           return IntVector(0,0,0);
       }
     }
-     
+    
+    /**
+     * Returns the BC type for the specified face
+     */
     inline BCType getBCType(FaceType face) const
     {
       switch(face)
@@ -951,6 +954,34 @@ WARNING
      * sets the vector cells equal to the list of cells that are in the corners
      */
     void getBoundaryCornerCells__New(vector<IntVector> & cells, const FaceType &face) const;
+
+    /**
+     * Returns the principal axis along a face and
+     *the orthognonal axes to that face (right hand rule).
+     */
+    static inline IntVector faceAxes(const FaceType& face) 
+    {
+      switch(face)
+      {
+        case xminus: case xplus:
+          return IntVector(0,1,2);
+        case yminus: case yplus:
+          return IntVector(1,2,0);
+        case zminus: case zplus:
+          return IntVector(2,0,1);
+        default:
+          //we should throw an exception here but for some reason this doesn't compile
+          //throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          return IntVector(0,0,0);
+      };
+    }
+     
+     /**
+      * Returns a string equivalent of the face name (eg: "xminus")
+      */
+     static string getFaceName(FaceType face);
+     
+
 
     /*
     void setBCType(FaceType face, BCType newbc)
@@ -1097,8 +1128,6 @@ WARNING
      CellIterator getSFCIterator( const int dir, const int offset = 0) const;
      CellIterator addGhostCell_Iter(CellIterator hi_lo, const int nCells) const;
      
-     IntVector faceAxes(const FaceType& face) const; 
-     
      // This will return an iterator which will include all the nodes
      // contained by the bounding box.  If a dimension of the widget
      // is degenerate (has a thickness of 0) the nearest node in that
@@ -1121,8 +1150,9 @@ WARNING
        return getVolume(d_inLowIndex,d_inHighIndex); 
      }
      
+     /*
      void setExtraIndices(const IntVector& l, const IntVector& h);
-
+    */
 
      // For AMR.  When there are weird patch configurations, sometimes patches can overlap.
      // Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
@@ -1271,9 +1301,6 @@ WARNING
                 
      IntVector faceDirection(FaceType face) const;
      
-     // Returns a string equivalent of the face name (eg: "xminus")
-     static string getFaceName(FaceType face);
-     
      void getFaceNodes(FaceType face, int offset, IntVector& l,
                        IntVector& h) const;
 
@@ -1288,15 +1315,17 @@ WARNING
      
      const vector<FaceType>* getCoarseFineInterfaceFaces() const 
      { return &d_coarseFineInterfaceFaces; }
-     
+    
      bool hasCoarseFineInterfaceFace() const
      { return d_hasCoarsefineInterfaceFace;}
      
+     /*
      bool hasBoundaryFaces() const
      { 
         return d_hasBoundaryFaces;
      }     
-     
+     */
+
      //////////
      // Return the list of corner cells for the given face.
      const vector<IntVector> getCornerCells(const Patch::FaceType face) const { return d_CornerCells[face]; }
