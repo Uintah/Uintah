@@ -105,11 +105,11 @@ WARNING
      };
  
      enum FaceIteratorType {
-      minusEdgeCells,          //Excludes the edge/corner cells.
-      plusEdgeCells,           //Includes the edge/corner cells.
-      NC_vars,                 //Hit all nodes/faces on the border of the extra cells
-      FC_vars,                 //Hit all nodes/faces on the border of the extra cells
-      alongInteriorFaceCells   //Hit interior face cells
+      ExtraMinusEdgeCells,            //Excludes the edge/corner cells.
+      ExtraPlusEdgeCells,             //Includes the edge/corner cells.
+      FaceNodes,                      //Includes all nodes on the face of the patch (without extra cells)
+      SFCVars,                        //Includes SFC vars on the face           (without extra cells)
+      InteriorFaceCells               //Includes cells on the interior of the face
      };
      
      class Compare {
@@ -464,24 +464,23 @@ WARNING
     }
 
     /*****************************************************
-    * Returns a boundary face cell iterator.
-    *  This function assumes the face being called on does not have a neighbor.
-    *  Inputs:
-    *  face specifies which face will be returned
-    *  domain specifies which type of iterator will be returned
-    *  and can be one of the following:
-    *     plusEdgeCells:          Includes the edge and corner cells.
-    *     NC_vars/FC_vars:        Hit all nodes/faces on the border of the extra cells
-    *     alongInteriorFaceCells: Hit interior face cells
-    */
-    CellIterator getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType& domain) const;
-
+     * Returns a face cell iterator
+     *  face specifies which face will be returned
+     *  domain specifies which type of iterator will be returned
+     *  and can be one of the following:
+     *     ExtraMinusEdgeCells:    All extra cells beyond the face excluding the edge cells.
+     *     ExtraPlusEdgeCells:     All extra cells beyond the face including the edge cells.
+     *     FaceNodes:              All nodes on the face.
+     *     SFCVars:                All face centered nodes on the face.
+     *     InteriorFaceCells:      All cells on the interior of the face.                                                             
+     */
+    CellIterator getFaceIterator__New(const FaceType& face, const FaceIteratorType& domain) const;
 
     /**
      *Returns an iterator to the edge of two intersecting faces.
      *if minusCornerCells is true the edge will exclude corner cells.
      */
-    CellIterator getBoundaryEdgeCellIterator__New(const FaceType& face0,const FaceType& face1,bool minusCornerCells=true) const;
+    CellIterator getEdgeCellIterator__New(const FaceType& face0,const FaceType& face1,bool minusCornerCells=true) const;
 
     /*************************************************************
      *The following queries are for fortran.  Fortran indexing
@@ -953,7 +952,7 @@ WARNING
     /**
      * sets the vector cells equal to the list of cells that are in the corners
      */
-    void getBoundaryCornerCells__New(vector<IntVector> & cells, const FaceType &face) const;
+    void getCornerCells__New(vector<IntVector> & cells, const FaceType &face) const;
 
     /**
      * Returns the principal axis along a face and
@@ -1145,10 +1144,12 @@ WARNING
      // do not get coarse-fine extra cells that are not the domain boundary
      IntVector getInteriorLowIndexWithBoundary(VariableBasis basis) const;
      IntVector getInteriorHighIndexWithBoundary(VariableBasis basis) const;
-     
+    
+     /*
      int getInteriorVolume() const {
        return getVolume(d_inLowIndex,d_inHighIndex); 
      }
+     */
      
      /*
      void setExtraIndices(const IntVector& l, const IntVector& h);

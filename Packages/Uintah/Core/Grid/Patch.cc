@@ -832,12 +832,14 @@ Patch::getSFCIterator(const int dir, const int offset) const
  *  face specifies which face will be returned
  *  domain specifies which type of iterator will be returned
  *  and can be one of the following:
- *     plusEdgeCells:          Includes the edge and corner cells.
- *     NC_vars/FC_vars:        Hit all nodes/faces on the border of the extra cells        
- *     alongInteriorFaceCells: Hit interior face cells                                                            
+ *     ExtraMinusEdgeCells:    All extra cells beyond the face excluding the edge cells.
+ *     ExtraPlusEdgeCells:     All extra cells beyond the face including the edge cells.
+ *     FaceNodes:              All nodes on the face.
+ *     SFCVars:                All face centered nodes on the face.
+ *     InteriorFaceCells:      All cells on the interior of the face.                                                             
  */
 CellIterator    
-Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType& domain) const
+Patch::getFaceIterator__New(const FaceType& face, const FaceIteratorType& domain) const
 {
   IntVector lowPt, highPt;
 
@@ -853,7 +855,7 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
   switch(domain)
   {
     //start with tight fitting patch and expand the indices to include the wanted regions
-    case minusEdgeCells:
+    case ExtraMinusEdgeCells:
       //grab patch region without extra cells
       lowPt =  getCellLowIndex__New();
       highPt = getCellHighIndex__New();
@@ -876,7 +878,7 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
       }
       break;
       //start with the loose fitting patch and contract the indices to exclude the unwanted regions
-    case plusEdgeCells:
+    case ExtraPlusEdgeCells:
       //grab patch region with extra cells
       lowPt =  getExtraCellLowIndex__New();
       highPt = getExtraCellHighIndex__New();
@@ -894,7 +896,7 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
           break;
       }
       break;
-    case NC_vars:
+    case FaceNodes:
       //grab patch region without extra cells
       lowPt =  getNodeLowIndex__New();
       highPt = getNodeHighIndex__New();
@@ -916,7 +918,7 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
           break;
       }
       break;
-    case FC_vars:
+    case SFCVars:
      
       //grab patch region without extra cells
       switch(dim)
@@ -954,7 +956,7 @@ Patch::getBoundaryFaceIterator__New(const FaceType& face, const FaceIteratorType
           break;
       }
       break;
-    case alongInteriorFaceCells:
+    case InteriorFaceCells:
       lowPt =  getCellLowIndex__New();
       highPt = getCellHighIndex__New();
       
@@ -1054,7 +1056,7 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
  * if minusCornerCells is true the edge will exclude corner cells.
  */
 CellIterator    
-Patch::getBoundaryEdgeCellIterator__New(const FaceType& face0, 
+Patch::getEdgeCellIterator__New(const FaceType& face0, 
                            const FaceType& face1,bool minusCornerCells) const
 {
   FaceType face[2]={face0,face1};
@@ -1919,11 +1921,11 @@ void Patch::finalizePatch()
   /*
   FaceType face=xplus;
   string domain1="NC_vars";
-  FaceIteratorType domain2=NC_vars;
-  if(d_extraCells!=IntVector(1,1,1) || getBCType(face)!=Neighbor && !(getFaceCellIterator(face,domain1)==getBoundaryFaceIterator__New(face,domain2)))
+  FaceIteratorType domain2=FaceNodes;
+  if(d_extraCells!=IntVector(1,1,1) || getBCType(face)!=Neighbor && !(getFaceCellIterator(face,domain1)==getFaceIterator__New(face,domain2)))
   {
       cout << "old:" << getFaceCellIterator(face,domain1).begin() << " -> " << getFaceCellIterator(face,domain1).end() << endl;
-      cout << "new:" << getBoundaryFaceIterator__New(face,domain2).begin() << " -> " << getBoundaryFaceIterator__New(face,domain2).end() << endl;
+      cout << "new:" << getFaceIterator__New(face,domain2).begin() << " -> " << getFaceIterator__New(face,domain2).end() << endl;
       for(int i=0;i<6;i++)
       {
         cout << "face " << i << ":" << getBCType(static_cast<FaceType>(i)) << endl;
@@ -1931,66 +1933,67 @@ void Patch::finalizePatch()
   }
   */
 
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"minusEdgeCells")==getBoundaryFaceIterator__New(xplus,minusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"minusEdgeCells")==getBoundaryFaceIterator__New(xminus,minusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"minusEdgeCells")==getBoundaryFaceIterator__New(yplus,minusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"minusEdgeCells")==getBoundaryFaceIterator__New(yminus,minusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"minusEdgeCells")==getBoundaryFaceIterator__New(zplus,minusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"minusEdgeCells")==getBoundaryFaceIterator__New(zminus,minusEdgeCells));
+
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"minusEdgeCells")==getFaceIterator__New(xplus,ExtraMinusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"minusEdgeCells")==getFaceIterator__New(xminus,ExtraMinusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"minusEdgeCells")==getFaceIterator__New(yplus,ExtraMinusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"minusEdgeCells")==getFaceIterator__New(yminus,ExtraMinusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"minusEdgeCells")==getFaceIterator__New(zplus,ExtraMinusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"minusEdgeCells")==getFaceIterator__New(zminus,ExtraMinusEdgeCells));
   
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"plusEdgeCells")==getBoundaryFaceIterator__New(xplus,plusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"plusEdgeCells")==getBoundaryFaceIterator__New(xminus,plusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"plusEdgeCells")==getBoundaryFaceIterator__New(yplus,plusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"plusEdgeCells")==getBoundaryFaceIterator__New(yminus,plusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"plusEdgeCells")==getBoundaryFaceIterator__New(zplus,plusEdgeCells));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"plusEdgeCells")==getBoundaryFaceIterator__New(zminus,plusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"plusEdgeCells")==getFaceIterator__New(xplus,ExtraPlusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"plusEdgeCells")==getFaceIterator__New(xminus,ExtraPlusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"plusEdgeCells")==getFaceIterator__New(yplus,ExtraPlusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"plusEdgeCells")==getFaceIterator__New(yminus,ExtraPlusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"plusEdgeCells")==getFaceIterator__New(zplus,ExtraPlusEdgeCells));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"plusEdgeCells")==getFaceIterator__New(zminus,ExtraPlusEdgeCells));
   
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"NC_vars")==getBoundaryFaceIterator__New(xplus,NC_vars));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"NC_vars")==getBoundaryFaceIterator__New(xminus,NC_vars));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"NC_vars")==getBoundaryFaceIterator__New(yplus,NC_vars));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"NC_vars")==getBoundaryFaceIterator__New(yminus,NC_vars));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"NC_vars")==getBoundaryFaceIterator__New(zplus,NC_vars));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"NC_vars")==getBoundaryFaceIterator__New(zminus,NC_vars));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"NC_vars")==getFaceIterator__New(xplus,FaceNodes));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"NC_vars")==getFaceIterator__New(xminus,FaceNodes));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"NC_vars")==getFaceIterator__New(yplus,FaceNodes));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"NC_vars")==getFaceIterator__New(yminus,FaceNodes));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"NC_vars")==getFaceIterator__New(zplus,FaceNodes));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"NC_vars")==getFaceIterator__New(zminus,FaceNodes));
 
   /*********These don't line up I think original FC_vars was bugged*********************
-  ASSERT(getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"FC_vars")==getBoundaryFaceIterator__New(xplus,FC_vars));
-  ASSERT(getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"FC_vars")==getBoundaryFaceIterator__New(xminus,FC_vars));
-  ASSERT(getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"FC_vars")==getBoundaryFaceIterator__New(yplus,FC_vars));
-  ASSERT(getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"FC_vars")==getBoundaryFaceIterator__New(yminus,FC_vars));
-  ASSERT(getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"FC_vars")==getBoundaryFaceIterator__New(zplus,FC_vars));
-  ASSERT(getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"FC_vars")==getBoundaryFaceIterator__New(zminus,FC_vars));
+  ASSERT(getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"FC_vars")==getFaceIterator__New(xplus,SFCVars));
+  ASSERT(getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"FC_vars")==getFaceIterator__New(xminus,SFCvars));
+  ASSERT(getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"FC_vars")==getFaceIterator__New(yplus,SFCvars));
+  ASSERT(getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"FC_vars")==getFaceIterator__New(yminus,SFCvars));
+  ASSERT(getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"FC_vars")==getFaceIterator__New(zplus,SFCvars));
+  ASSERT(getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"FC_vars")==getFaceIterator__New(zminus,SFCvars));
   */
 
   
-  ASSERT(getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(xplus,alongInteriorFaceCells));
-  ASSERT(getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(xminus,alongInteriorFaceCells));
-  ASSERT(getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(yplus,alongInteriorFaceCells));
-  ASSERT(getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(yminus,alongInteriorFaceCells));
-  ASSERT(getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(zplus,alongInteriorFaceCells));
-  ASSERT(getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"alongInteriorFaceCells")==getBoundaryFaceIterator__New(zminus,alongInteriorFaceCells));
+  ASSERT(getBCType(xplus)==Neighbor || getFaceCellIterator(xplus,"alongInteriorFaceCells")==getFaceIterator__New(xplus,InteriorFaceCells));
+  ASSERT(getBCType(xminus)==Neighbor || getFaceCellIterator(xminus,"alongInteriorFaceCells")==getFaceIterator__New(xminus,InteriorFaceCells));
+  ASSERT(getBCType(yplus)==Neighbor || getFaceCellIterator(yplus,"alongInteriorFaceCells")==getFaceIterator__New(yplus,InteriorFaceCells));
+  ASSERT(getBCType(yminus)==Neighbor || getFaceCellIterator(yminus,"alongInteriorFaceCells")==getFaceIterator__New(yminus,InteriorFaceCells));
+  ASSERT(getBCType(zplus)==Neighbor || getFaceCellIterator(zplus,"alongInteriorFaceCells")==getFaceIterator__New(zplus,InteriorFaceCells));
+  ASSERT(getBCType(zminus)==Neighbor || getFaceCellIterator(zminus,"alongInteriorFaceCells")==getFaceIterator__New(zminus,InteriorFaceCells));
 
 /*
   FaceType face0=xminus,face1=yminus;
-  if( !( getBCType(face0)==Neighbor || getBCType(face1)==Neighbor || getEdgeCellIterator(face0,face1)==getBoundaryEdgeCellIterator__New(face0,face1) ) )
+  if( !( getBCType(face0)==Neighbor || getBCType(face1)==Neighbor || getEdgeCellIterator(face0,face1)==getEdgeCellIterator__New(face0,face1) ) )
   {
     cout << "old:" << getEdgeCellIterator(face0,face1).begin() << " -> " << getEdgeCellIterator(face0,face1).end() << endl;
-    cout << "new:" << getBoundaryEdgeCellIterator__New(face0,face1).begin() << "->" << getBoundaryEdgeCellIterator__New(face0,face1).end() << endl;
+    cout << "new:" << getEdgeCellIterator__New(face0,face1).begin() << "->" << getEdgeCellIterator__New(face0,face1).end() << endl;
 
   }
 */
 
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xminus,yminus)==getBoundaryEdgeCellIterator__New(xminus,yminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xminus,yplus)==getBoundaryEdgeCellIterator__New(xminus,yplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xminus,zminus)==getBoundaryEdgeCellIterator__New(xminus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xminus,zplus)==getBoundaryEdgeCellIterator__New(xminus,zplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xplus,yminus)==getBoundaryEdgeCellIterator__New(xplus,yminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xplus,yplus)==getBoundaryEdgeCellIterator__New(xplus,yplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xplus,zminus)==getBoundaryEdgeCellIterator__New(xplus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xplus,zplus)==getBoundaryEdgeCellIterator__New(xplus,zplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yminus,zminus)==getBoundaryEdgeCellIterator__New(yminus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yminus,zplus)==getBoundaryEdgeCellIterator__New(yminus,zplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getBoundaryEdgeCellIterator__New(yplus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getBoundaryEdgeCellIterator__New(yplus,zplus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xminus,yminus)==getEdgeCellIterator__New(xminus,yminus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xminus,yplus)==getEdgeCellIterator__New(xminus,yplus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xminus,zminus)==getEdgeCellIterator__New(xminus,zminus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xminus,zplus)==getEdgeCellIterator__New(xminus,zplus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xplus,yminus)==getEdgeCellIterator__New(xplus,yminus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xplus,yplus)==getEdgeCellIterator__New(xplus,yplus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xplus,zminus)==getEdgeCellIterator__New(xplus,zminus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xplus,zplus)==getEdgeCellIterator__New(xplus,zplus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yminus,zminus)==getEdgeCellIterator__New(yminus,zminus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yminus,zplus)==getEdgeCellIterator__New(yminus,zplus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getEdgeCellIterator__New(yplus,zminus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus));
 
   const vector<FaceType> *bfaces1=getBoundaryFaces();
   vector<FaceType> bfaces2;
@@ -2018,7 +2021,7 @@ void Patch::finalizePatch()
     {
       const vector<IntVector> ccells1=getCornerCells(static_cast<FaceType>(face));
       vector<IntVector> ccells2;
-      getBoundaryCornerCells__New(ccells2,static_cast<FaceType>(face));
+      getCornerCells__New(ccells2,static_cast<FaceType>(face));
 /*  
       if(ccells1.size()!=ccells2.size())
       {
@@ -2076,9 +2079,9 @@ int Patch::getGridIndex() const
 
 
 /**
-* sets the vector cells equal to the list of cells that are in the corners
+* sets the vector cells equal to the list of cells that at the intersection of three faces extra cells
 */
-void Patch::getBoundaryCornerCells__New(vector<IntVector> & cells, const FaceType& face) const
+void Patch::getCornerCells__New(vector<IntVector> & cells, const FaceType& face) const
 {
   //set bounds for loops below
   int xstart=0,xend=2;
