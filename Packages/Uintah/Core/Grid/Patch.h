@@ -902,7 +902,7 @@ WARNING
           return IntVector(0,0,1);
         default:
           //we should throw an exception here but for some reason this doesn't compile
-          //throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+          throw SCIRun::InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
           return IntVector(0,0,0);
       }
     }
@@ -928,7 +928,7 @@ WARNING
           return d_patchState.zplus;
         default:
           //we should throw an exception here but for some reason this doesn't compile
-          //throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
           return None;
       }
     }
@@ -970,7 +970,7 @@ WARNING
           return IntVector(2,0,1);
         default:
           //we should throw an exception here but for some reason this doesn't compile
-          //throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
           return IntVector(0,0,0);
       };
     }
@@ -1007,7 +1007,7 @@ WARNING
           break;
         default:
           //we should throw an exception here but for some reason this doesn't compile
-          //throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
       }
     }
     */
