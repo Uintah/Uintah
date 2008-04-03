@@ -418,7 +418,7 @@ WARNING
     /**
      * Returns a staggared face centered on X cell iterator excluding extra cells
      */
-    inline CellIterator getSFCXIterator__New()
+    inline CellIterator getSFCXIterator__New() const
     {
       return CellIterator(getSFCXLowIndex__New(),getSFCXHighIndex__New());
     }
@@ -426,7 +426,7 @@ WARNING
     /**
      * Returns a staggared face centered on Y cell iterator excluding extra cells
      */
-    inline CellIterator getSFCYIterator__New()
+    inline CellIterator getSFCYIterator__New() const
     {
       return CellIterator(getSFCYLowIndex__New(),getSFCYHighIndex__New());
     }
@@ -434,7 +434,7 @@ WARNING
     /**
      * Returns a staggared face centered on Z cell iterator excluding extra cells
      */
-    inline CellIterator getSFCZIterator__New()
+    inline CellIterator getSFCZIterator__New() const
     {
       return CellIterator(getSFCZLowIndex__New(),getSFCZHighIndex__New());
     }
@@ -442,7 +442,7 @@ WARNING
     /**
      * Returns a staggared face centered on X cell iterator including extra cells
      */
-    inline CellIterator getExtraSFCXIterator__New()
+    inline CellIterator getExtraSFCXIterator__New() const
     {
       return CellIterator(getExtraSFCXLowIndex__New(),getExtraSFCXHighIndex__New());
     }
@@ -450,7 +450,7 @@ WARNING
     /**
      * Returns a staggared face centered on Y cell iterator including extra cells
      */
-    inline CellIterator getExtraSFCYIterator__New()
+    inline CellIterator getExtraSFCYIterator__New() const
     {
       return CellIterator(getExtraSFCYLowIndex__New(),getExtraSFCYHighIndex__New());
     }
@@ -458,7 +458,7 @@ WARNING
     /**
      * Returns a staggared face centered on Z cell iterator including extra cells
      */
-    inline CellIterator getExtraSFCZIterator__New()
+    inline CellIterator getExtraSFCZIterator__New() const
     {
       return CellIterator(getExtraSFCZLowIndex__New(),getExtraSFCZHighIndex__New());
     }
@@ -779,7 +779,7 @@ WARNING
     /**
      * Returns a staggared face centered on X cell iterator excluding extra cells
      */
-    inline CellIterator getFortranSFCXIterator__New()
+    inline CellIterator getFortranSFCXIterator__New() const
     {
       return CellIterator(getFortranSFCXLowIndex__New(),getFortranSFCXHighIndex__New());
     }
@@ -787,7 +787,7 @@ WARNING
     /**
      * Returns a staggared face centered on Y cell iterator excluding extra cells
      */
-    inline CellIterator getFortranSFCYIterator__New()
+    inline CellIterator getFortranSFCYIterator__New() const
     {
       return CellIterator(getFortranSFCYLowIndex__New(),getFortranSFCYHighIndex__New());
     }
@@ -795,7 +795,7 @@ WARNING
     /**
      * Returns a staggared face centered on Z cell iterator excluding extra cells
      */
-    inline CellIterator getFortranSFCZIterator__New()
+    inline CellIterator getFortranSFCZIterator__New() const
     {
       return CellIterator(getFortranSFCZLowIndex__New(),getFortranSFCZHighIndex__New());
     }
@@ -803,7 +803,7 @@ WARNING
     /**
      * Returns a staggared face centered on X cell iterator including extra cells
      */
-    inline CellIterator getFortranExtraSFCXIterator__New()
+    inline CellIterator getFortranExtraSFCXIterator__New() const
     {
       return CellIterator(getFortranExtraSFCXLowIndex__New(),getFortranExtraSFCXHighIndex__New());
     }
@@ -811,7 +811,7 @@ WARNING
     /**
      * Returns a staggared face centered on Y cell iterator including extra cells
      */
-    inline CellIterator getFortranExtraSFCYIterator__New()
+    inline CellIterator getFortranExtraSFCYIterator__New() const
     {
       return CellIterator(getFortranExtraSFCYLowIndex__New(),getFortranExtraSFCYHighIndex__New());
     }
@@ -819,7 +819,7 @@ WARNING
     /**
      * Returns a staggared face centered on Z cell iterator including extra cells
      */
-    inline CellIterator getFortranExtraSFCZIterator__New()
+    inline CellIterator getFortranExtraSFCZIterator__New() const
     {
       return CellIterator(getFortranExtraSFCZLowIndex__New(),getFortranExtraSFCZHighIndex__New());
     }
@@ -827,7 +827,7 @@ WARNING
     /**
      * Sets the number of extra cells for the patch class.
      */
-    static inline void setExtraCells(IntVector extraCells)
+    static inline void setExtraCells(IntVector extraCells) 
     {
       d_extraCells=extraCells;
     }
@@ -843,7 +843,7 @@ WARNING
     /**
      * Returns the number of cells excluding extra cells
      */
-    inline int getNumCells()
+    inline int getNumCells() const
     {
       return getVolume(getCellLowIndex__New(),getCellHighIndex__New());
     }
@@ -851,7 +851,7 @@ WARNING
     /**
      * Returns the number of cells including extra cells
      */
-    inline int getNumExtraCells()
+    inline int getNumExtraCells() const
     {
       return getVolume(getExtraCellLowIndex__New(),getExtraCellHighIndex__New());
     }
@@ -859,7 +859,7 @@ WARNING
     /**
      * Returns the number of cells excluding extra cells
      */
-    inline int getNumNodes()
+    inline int getNumNodes() const
     {
       return getVolume(getNodeLowIndex__New(),getNodeHighIndex__New());
     }
@@ -867,7 +867,7 @@ WARNING
     /**
      * Returns the number of cells excluding extra cells
      */
-    inline int getNumExtraNodes()
+    inline int getNumExtraNodes() const
     {
       return getVolume(getExtraNodeLowIndex__New(),getExtraNodeHighIndex__New());
     }
