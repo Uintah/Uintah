@@ -26,7 +26,7 @@ void CostProfiler::addContribution(const PatchSubset* patches, double cost)
     {
       const Patch* patch=patches->get(p);
       int l=patch->getLevel()->getIndex();
-      num_points+=patch->getInteriorVolume()/d_minPatchSizeVolume[l];
+      num_points+=patch->getNumCells()/d_minPatchSizeVolume[l];
     }
     double average_cost=cost/num_points;
   
