@@ -904,7 +904,6 @@ WARNING
         case zplus:
           return IntVector(0,0,1);
         default:
-          //we should throw an exception here but for some reason this doesn't compile
           throw SCIRun::InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
           return IntVector(0,0,0);
       }
@@ -930,7 +929,6 @@ WARNING
         case zplus:
           return d_patchState.zplus;
         default:
-          //we should throw an exception here but for some reason this doesn't compile
           throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
           return None;
       }
@@ -993,7 +991,6 @@ WARNING
         case zminus: case zplus:
           return IntVector(2,0,1);
         default:
-          //we should throw an exception here but for some reason this doesn't compile
           throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
           return IntVector(0,0,0);
       };
@@ -1003,6 +1000,20 @@ WARNING
       * Returns a string equivalent of the face name (eg: "xminus")
       */
      static string getFaceName(FaceType face);
+      
+     /**
+      * Sets the static pointer to the new grid
+      */
+     static inline void setNextGrid(GridP grid)
+     {
+       //update the index
+       d_newGridIndex=(d_newGridIndex+1)%2;
+
+       //set the grid pointer 
+       //all patches that call finalize patch after
+       //this point will point to this grid
+       d_grid[d_newGridIndex]=grid;
+     }
      
 
 
@@ -1030,7 +1041,6 @@ WARNING
           d_patchState.zplus=newbc;
           break;
         default:
-          //we should throw an exception here but for some reason this doesn't compile
           throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
       }
     }
@@ -1526,6 +1536,7 @@ WARNING
            const IntVector& d_highIndex,
            const IntVector& d_inLowIndex,
            const IntVector& d_inHighIndex,
+           unsigned int levelIndex,
            int id=-1);
      ~Patch();
 
@@ -1548,8 +1559,8 @@ WARNING
         BCType yplus : 2;
         BCType zminus : 2;
         BCType zplus : 2;
-        unsigned int grid_index : 1; //The grid index for this patch
-        unsigned int level_index : 3; //The level index for this patch (max of 8 levels)
+        unsigned int gridIndex : 1; //The grid index for this patch
+        unsigned int levelIndex : 3; //The level index for this patch (max of 8 levels)
      };
 
 
@@ -1592,19 +1603,6 @@ WARNING
        */
       static int d_newGridIndex;
 
-      /**
-       * Sets the static pointer to the new grid
-       */
-      static inline void setNextGrid(GridP grid)
-      {
-
-        //set the grid pointer 
-        //all patches created have saved this index
-        d_grid[d_newGridIndex]=grid;
-        
-        //update the index
-        d_newGridIndex=(d_newGridIndex+1)%2;
-      }
 
     //****************End of new private Interace**************/
 

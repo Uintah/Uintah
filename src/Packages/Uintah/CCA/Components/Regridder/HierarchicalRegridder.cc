@@ -752,6 +752,9 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
     delete newGrid;
     return oldGrid;
   }
+  
+  //update the patch grid pointer
+  Patch::setNextGrid(GridP(newGrid));
 
   // do this after the grid check, as it's expensive and we don't want to do it if we're just going to throw it away
   for (int levelIdx = 0; levelIdx < newGrid->numLevels(); levelIdx++) {

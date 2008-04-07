@@ -27,14 +27,14 @@ using namespace std;
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
 IntVector Patch::d_extraCells;
-GridP d_grid[2]={0,0};
-int d_newGridIndex=0;
+GridP Patch::d_grid[2]={0,0};
+int Patch::d_newGridIndex=0;
 
 
 Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
-	     const IntVector& inLowIndex, const IntVector& inHighIndex,
-	     int id)
+	     const IntVector& inLowIndex, const IntVector& inHighIndex, 
+       unsigned int levelIndex,  int id)
     : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
     
       d_realPatch(0),d_level(level),  d_level_index(-1),
@@ -62,6 +62,9 @@ Patch::Patch(const Level* level,
   d_patchState.xplus=None;
   d_patchState.yplus=None;
   d_patchState.zplus=None;
+
+  //set the level index
+  d_patchState.levelIndex=levelIndex;
 
   d_nodeHighIndex = d_highIndex+
     IntVector(getBCType(xplus) == Neighbor?0:1,
@@ -112,6 +115,9 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   d_patchState.xplus=realPatch->getBCType(xplus);
   d_patchState.yplus=realPatch->getBCType(yplus);
   d_patchState.zplus=realPatch->getBCType(zplus);
+  
+  //set the level index
+  d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 }
 
 Patch::~Patch()
@@ -1806,8 +1812,13 @@ IntVector Patch::getInteriorHighIndexWithBoundary(VariableBasis basis) const
 void Patch::finalizePatch()
 {
   TAU_PROFILE("Patch::finalizePatch()", " ", TAU_USER);
+  
+  //set the grid index
+  d_patchState.gridIndex=d_newGridIndex;
+  //set the level index
+  
   //////////
-  // Calculate with of this patche's cells are on the corner
+  // Calculate with of this patches cells are on the corner
   // of the domain and keep a list of these cells for each
   // face of the patch.
 
@@ -2083,7 +2094,10 @@ void Patch::finalizePatch()
       }
     }  
     ASSERT(found);
-  } 
+  }
+  //ASSERT(d_grid[d_patchState.gridIndex]!=0);
+  //ASSERT(getLevel()==d_grid[d_patchState.gridIndex]->getLevel(d_patchState.levelIndex).get_rep());
+
 #endif 
 }
 
