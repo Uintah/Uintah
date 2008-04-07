@@ -138,7 +138,7 @@ Patch* Level::addPatch(const IntVector& lowIndex,
                        const IntVector& inHighIndex)
 {
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
-                            inHighIndex);
+                            inHighIndex,getIndex());
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
     return r;
@@ -151,7 +151,7 @@ Patch* Level::addPatch(const IntVector& lowIndex,
                        int ID)
 {
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
-                            inHighIndex,ID);
+                            inHighIndex,getIndex(),ID);
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
     return r;
@@ -507,7 +507,14 @@ void Level::finalizeLevel()
   all_patches->sortSubsets();
   std::sort(d_realPatches.begin(), d_realPatches.end(), Patch::Compare());
   
+  //determines and sets the boundary conditions for the patches
   setBCTypes();
+
+  //finalize the patches
+  for(patchIterator iter=d_virtualAndRealPatches.begin();iter!=d_virtualAndRealPatches.end();iter++)
+  {
+    (*iter)->finalizePatch();
+  }
 }
 
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
@@ -568,6 +575,12 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
             Patch::Compare());
   
   setBCTypes();
+  
+  //finalize the patches
+  for(patchIterator iter=d_virtualAndRealPatches.begin();iter!=d_virtualAndRealPatches.end();iter++)
+  {
+    (*iter)->finalizePatch();
+  }
 }
 void Level::setBCTypes()
 {
@@ -768,7 +781,6 @@ void Level::setBCTypes()
       patch->setBCType(Patch::FaceType(j),Patch::BCType(bc_type));
       bitfield>>=2;
     }
-    patch->finalizePatch();
   }
   
   d_finalized=true;
