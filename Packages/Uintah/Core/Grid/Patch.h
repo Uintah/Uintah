@@ -69,6 +69,7 @@ DESCRIPTION
 WARNING
      
 ****************************************/
+     
     
    class UINTAHSHARE Patch {
    public:
@@ -1529,6 +1530,7 @@ WARNING
      Patch* createVirtualPatch(const IntVector& offset) const
      { return scinew Patch(this, offset); }
    private:
+
      
      /**
       * This struct will tightly store data that the patch needs
@@ -1537,12 +1539,15 @@ WARNING
       */
      struct PatchState
      {
+        //The boundary conditions for each face
         BCType xminus : 2;
         BCType xplus : 2;
         BCType yminus : 2;
         BCType yplus : 2;
         BCType zminus : 2;
         BCType zplus : 2;
+        unsigned int grid_index : 1; //The grid index for this patch
+        unsigned int level_index : 3; //The level index for this patch (max of 8 levels)
      };
 
 
@@ -1569,8 +1574,36 @@ WARNING
       * The patch state.  This stores much of the internal state
       * of the patch in a compact datastructure.
       */
-      PatchState d_patchState;
-       
+     PatchState d_patchState;
+      
+
+      /**
+       * This array will store pointers to grids.
+       * Patches store an index into this array to specify
+       * their grid. 
+       */
+      static GridP d_grid[2];
+
+      /**
+       *  The index of the new grid.  All new patches
+       *  will point to this grid until setNextGrid is called
+       */
+      static int d_newGridIndex;
+
+      /**
+       * Sets the static pointer to the new grid
+       */
+      static inline int setNextGrid(GridP grid)
+      {
+
+        //set the grid pointer 
+        //all patches created have saved this index
+        d_grid[d_newGridIndex]=grid;
+        
+        //update the index
+        newGridIndex=(newGridIndex+1)%2;
+      }
+
     //****************End of new private Interace**************/
 
      

@@ -27,6 +27,8 @@ using namespace std;
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
 IntVector Patch::d_extraCells;
+GridP d_grid[2]={0,0};
+int d_newGridIndex=0;
 
 
 Patch::Patch(const Level* level,
