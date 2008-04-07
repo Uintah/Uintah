@@ -2063,7 +2063,25 @@ void Patch::finalizePatch()
     }
   }
 #endif
+  const vector<FaceType> *cfaces1=getCoarseFineInterfaceFaces();
+  vector<FaceType> cfaces2;
+  getCoarseFaces(cfaces2);
 
+  ASSERT(cfaces1->size()==cfaces2.size());
+
+  for(unsigned int i=0;i<cfaces1->size();i++)
+  {
+    //search for face in other vector since order may vary
+    bool found=false;
+    for(unsigned int j=0;j<cfaces2.size();j++)
+    {
+      if((*cfaces1)[i]==cfaces2[j])
+      {
+        found=true;
+      }
+    }  
+    ASSERT(found);
+  } 
 #endif 
 }
 
