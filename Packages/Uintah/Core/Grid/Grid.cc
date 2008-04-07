@@ -317,6 +317,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
    if(!grid_ps)
       return;
 
+   cout << "Calling setNextGrid\n";
+   Patch::setNextGrid(GridP(this));
+
    // anchor/highpoint on the grid
    Point anchor(DBL_MAX, DBL_MAX, DBL_MAX);
 
