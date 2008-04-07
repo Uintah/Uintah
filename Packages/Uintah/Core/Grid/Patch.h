@@ -932,6 +932,7 @@ WARNING
           return None;
       }
     }
+
     /**
      * sets the vector faces equal to the list of faces that are on the boundary
      */
@@ -947,6 +948,26 @@ WARNING
       if(getBCType(xplus)==None) faces.push_back(xplus);
       if(getBCType(yplus)==None) faces.push_back(yplus);
       if(getBCType(zplus)==None) faces.push_back(zplus);
+    }
+    
+    /**
+     * sets the vector faces equal to the list of faces that are coarse.
+     * A face is considered coarse when neighboring cells only exist on
+     * a coarser level.  Thus the face does not have a neighbor on the same 
+     * level and is not on the boundary.
+     */
+    inline void getCoarseFaces(vector<FaceType>& faces) const
+    { 
+      faces.clear();
+
+      //for each face 
+        //if we don't have a neigbor add that face to the boundary vector
+      if(getBCType(xminus)==Coarse) faces.push_back(xminus);
+      if(getBCType(yminus)==Coarse) faces.push_back(yminus);
+      if(getBCType(zminus)==Coarse) faces.push_back(zminus);
+      if(getBCType(xplus)==Coarse) faces.push_back(xplus);
+      if(getBCType(yplus)==Coarse) faces.push_back(yplus);
+      if(getBCType(zplus)==Coarse) faces.push_back(zplus);
     }
   
     /**
