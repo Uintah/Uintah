@@ -2095,8 +2095,8 @@ void Patch::finalizePatch()
     }  
     ASSERT(found);
   }
-  //ASSERT(d_grid[d_patchState.gridIndex]!=0);
-  //ASSERT(getLevel()==d_grid[d_patchState.gridIndex]->getLevel(d_patchState.levelIndex).get_rep());
+  ASSERT(d_grid[d_patchState.gridIndex]!=0);
+  ASSERT(getLevel()==d_grid[d_patchState.gridIndex]->getLevel(d_patchState.levelIndex).get_rep());
 
 #endif 
 }
