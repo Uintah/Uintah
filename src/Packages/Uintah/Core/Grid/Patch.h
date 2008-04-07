@@ -1,6 +1,8 @@
 #ifndef UINTAH_HOMEBREW_Patch_H
 #define UINTAH_HOMEBREW_Patch_H
 
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
@@ -1593,7 +1595,7 @@ WARNING
       /**
        * Sets the static pointer to the new grid
        */
-      static inline int setNextGrid(GridP grid)
+      static inline void setNextGrid(GridP grid)
       {
 
         //set the grid pointer 
@@ -1601,7 +1603,7 @@ WARNING
         d_grid[d_newGridIndex]=grid;
         
         //update the index
-        newGridIndex=(newGridIndex+1)%2;
+        d_newGridIndex=(d_newGridIndex+1)%2;
       }
 
     //****************End of new private Interace**************/
