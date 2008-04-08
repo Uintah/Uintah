@@ -823,7 +823,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
             Patch* p = level->addPatch(startcell, endcell,
                                        inStartCell, inEndCell);
-            p->setLayoutHint(IntVector(i,j,k));
           }
         }
       }

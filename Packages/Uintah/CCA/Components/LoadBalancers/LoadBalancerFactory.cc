@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
@@ -48,9 +47,6 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
     bal = scinew RoundRobinLoadBalancer(world);
   } else if(loadbalancer == "SimpleLoadBalancer") {
     bal = scinew SimpleLoadBalancer(world);
-  } else if( (loadbalancer == "NirvanaLoadBalancer") ||
-             (loadbalancer == "NLB") ) {
-    bal = scinew NirvanaLoadBalancer(world, layout);
   } else if( (loadbalancer == "DLB") ||
              (loadbalancer == "PLB") /* backward-compatibility*/) {
     bal = scinew DynamicLoadBalancer(world);
