@@ -1416,9 +1416,7 @@ WARNING
 
      // get the index this patch would be if all levels were taken into account
      int getGridIndex() const;
-     void setLayoutHint(const IntVector& pos);
-     bool getLayoutHint(IntVector& pos) const;
-
+     
      // true for wrap around patches (periodic boundary conditions) that
      // represent other real patches.
      bool isVirtual() const
@@ -1639,8 +1637,6 @@ WARNING
      int d_id; // Patch ID
      
      map<Patch::FaceType,BCDataArray* > array_bcs;
-     bool have_layout;
-     IntVector layouthint;
 
      //////////
      // Keep track of faces on the edge of the domain

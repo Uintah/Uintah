@@ -7,7 +7,6 @@ SRCDIR   := Packages/Uintah/CCA/Components/LoadBalancers
 SRCS += \
 	$(SRCDIR)/LoadBalancerCommon.cc \
 	$(SRCDIR)/LoadBalancerFactory.cc \
-	$(SRCDIR)/NirvanaLoadBalancer.cc \
 	$(SRCDIR)/RoundRobinLoadBalancer.cc \
 	$(SRCDIR)/DynamicLoadBalancer.cc \
 	$(SRCDIR)/SimpleLoadBalancer.cc \

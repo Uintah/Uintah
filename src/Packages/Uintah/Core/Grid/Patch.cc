@@ -42,7 +42,6 @@ Patch::Patch(const Level* level,
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id )
 {
-  have_layout=false;
   
   if(d_id == -1){
     d_id = ids++;
@@ -87,9 +86,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
-      array_bcs(realPatch->array_bcs),
-      have_layout(realPatch->have_layout),
-      layouthint(realPatch->layouthint)
+      array_bcs(realPatch->array_bcs)
 {
   //if(!ids){
   // make the id be -1000 * realPatch id - some first come, first serve index
@@ -1679,19 +1676,6 @@ Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type t
     else
       return CellBased; // doesn't matter
   }
-}
-
-void Patch::setLayoutHint(const IntVector& pos)
-{
-  ASSERT(!have_layout);
-  layouthint = pos;
-  have_layout=true;
-}
-
-bool Patch::getLayoutHint(IntVector& pos) const
-{
-  pos = layouthint;
-  return have_layout;
 }
 
 Box Patch::getBox() const {
