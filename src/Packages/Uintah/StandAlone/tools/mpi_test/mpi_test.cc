@@ -144,8 +144,16 @@ main( int argc, char* argv[] )
   gethostname( (char*)&hostname, HOST_NAME_SIZE );
 
   MPI_Init( &argc, &argv );
+
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
   MPI_Comm_size( MPI_COMM_WORLD, &procs );
+
+#if DO_DEBUG
+  // Many times if there is a problem with a node, the MPI_Init() call above will just hang.
+  // If debugging, sometimes it is useful to print something out at this point to track
+  // how many nodes have initialized... and to get an idea of how long it took.
+  printf( "Finished MPI_Init() on rank %d.\n", rank );
+#endif
 
   parseArgs( argc, argv );
 
@@ -354,20 +362,25 @@ fileSystem_test()
   string host = string( hostname ).substr( 0, 3 );
 
   if( host == "inf" ) {
-    bool raid1 = true; //testFilesystem( "/usr/csafe/raid1", error_stream, rank );
+    // On inferno, test the raid disks, and the FS the code is being run from...
+    bool raid1 = testFilesystem( "/usr/csafe/raid1", error_stream, rank );
     bool raid2 = testFilesystem( "/usr/csafe/raid2", error_stream, rank );
-    bool raid3 = true; //testFilesystem( "/usr/csafe/raid3", error_stream, rank );
-    bool raid4 = true; //testFilesystem( "/usr/csafe/raid4", error_stream, rank );
-
+    bool raid3 = testFilesystem( "/usr/csafe/raid3", error_stream, rank );
+    bool raid4 = testFilesystem( "/usr/csafe/raid4", error_stream, rank );
+    bool home  = testFilesystem( ".",                error_stream, rank );
     pass = raid1 && raid2 && raid3 && raid4;
+  } 
+  else {
+    // On other systems, (at least for now) just check the file system of the current dir.
+    pass = testFilesystem( ".", error_stream, rank );
   }
   
   if( args.verbose ) {
     if( rank == 0 ) { 
 
       cout << "\n";
-      cout << "   Any numbers printed out (.#.) correspond to processors that have successfully\n";
-      cout << "   completed the test:\n";
+      cout << "   Print outs in the form of '.name (rank).' correspond to processors that have successfully\n";
+      cout << "   completed the test.  '<name (-rank)>' correspond to processors that failed file system check.\n";
       cout << "\n";
 
       vector<int>    messages(procs);
@@ -390,6 +403,9 @@ fileSystem_test()
 
       usleep(1000000);//testing
 
+      const double totalSecsToWait = 5 * 60; // 5 mintues
+      int          generation = 1;
+
       while( !done ) {
 
         usleep( 100000 ); // Wait a .1 sec for messages to come in
@@ -403,34 +419,39 @@ fileSystem_test()
         if( numCompleted > 0 ) {
           for( int pos = 0; pos < numCompleted; pos++ ) {
             if( messages[completedBuffer[ pos ]] > 0 ) {
-              cout << "." << messages[completedBuffer[pos]] << ".";
+              cout << "." << hostnames[completedBuffer[pos]] << " (" << messages[completedBuffer[pos]] << ").";
               totalPassed++;
             } else { // failed
-              cout << "<" << messages[completedBuffer[pos]] << ">"; cout.flush();
+              cout << "<" << hostnames[completedBuffer[pos]] << " (" << messages[completedBuffer[pos]] << ")>";
               totalFailed++;
             }
+            cout.flush();
           }
         }
-        curTime = Time::currentSeconds();
         
-        double secsToWait = 50.0;
-        if( curTime > startTime + secsToWait ) { // Give it 'secsToWait' seconds to finish
-          if( rank == 0 ) {
-            cout << "\nWarning: Some processors have not responded after " << secsToWait << " seconds.\n"
-                 << "           Continuing to wait, but no further information will be displayed until\n"
-                 << "           all processors complete.  Number of processors that did respond: " 
-                 << numCompleted << " of " << procs-1 << ".\n";
-            done = true;
-          }
-        }
-      
         totalCompleted += numCompleted;
         if( totalCompleted == (procs-1) ) {
           cout << "\n\n";
           done = true;
         }
-      
+        else {
+          const double secsToWait = 30.0;
+          curTime = Time::currentSeconds();
+          
+          if( curTime > (startTime + (secsToWait*generation)) ) { // Give it 'secsToWait' seconds, then print some info
+            if( rank == 0 ) {
+              cout << "\nWarning: Some processors have not responded after " << generation * secsToWait << " seconds.\n"
+                   << "           Continuing to wait...  Number of processors that have responded: " 
+                   << totalPassed + totalFailed << " of " << procs-1 << ".\n";
+              generation++;
+            }
+          }
+          if( curTime > (startTime + totalSecsToWait) ) { // Give it 'totalSecsToWait' seconds to finish completely
+            done = true;
+          }
+        }
       } // end while (!done)
+
       if( rank == 0 ) {
         cout << "Total number of processors reporting FS check success: " << totalPassed << ".\n";
         cout << "Total number of processors reporting FS check failure: " << totalFailed << ".\n";
