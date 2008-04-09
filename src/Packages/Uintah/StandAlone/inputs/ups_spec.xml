@@ -1,0 +1,121 @@
+
+<!--
+   UPS_SPEC:
+     This specification defines the valid tags, their attributes, and
+     their values.  
+
+   DTD/XML Schema:
+
+     This file is similar to a DTD or an XML Schema, however we didn't
+     use either of these approaches for the following reasons: DTD's
+     do not (easily) allow you to have optional Tags and Tags that may
+     appear in any order.  They also don't do (minimal) validation of
+     the type of data in each tag.  XML Schema may actually allow for
+     some or all of this type of validation, however, we don't have an
+     XML library capable of using XML Schema (as libxml2 (the lib we
+     use) doesn't (yet?) support it.  We could have tried using
+     another XML library (off-line), such as Xerces, but we wanted the
+     validation to take place as the code begins to execute.
+
+   Format of this specification:
+
+     spec: need  type  validValues
+
+       need: OPTIONAL, REQUIRED, MULTIPLE   (Probably need MULTIPLE-REQ and MULTIPLE-OPT.
+                                             Currently MULTIPLE means 0 or more...)
+       type: DOUBLE, INTEGER, STRING, VECTOR, NONE (NONE means the tag doesn't have any
+                                                    data (text) but can have attributes and/or
+                                                    sub-tags.)
+
+       validValues is a _single_ string (see below for how it is parsed) that contains valid values
+       or the value of the tag.  The specification of valid values depends on the type of the tag:
+  
+         STRING: a comma separated lists of strings which enumerate
+                 explicitly which values the string can take on. If 
+                 valid values for a string are not provided, then
+                 all strings will be accepted.
+         INTEGER/DOUBLE: "positive" = a positive value, "num, num" =
+                 min, max values.  If not specified, then any
+                 integer/double will be accepted.
+               
+         VECTOR: not quite sure how to specify valid values for a
+         vector yet...
+
+       Probably need a way to specify that if one tag exists, then
+       another is not valid... perhaps we need a few more of these type
+       of things too.  Let me know if you run into cases like this
+       that should be enumerated so that they can be validated.
+-->
+
+
+<Uintah_specification> 
+
+  <Time                 spec="REQUIRED NONE">
+    <maxTime            spec="REQUIRED DOUBLE 'positive'" />
+    <initTime           spec="REQUIRED DOUBLE 'positive'" />
+    <deltMin            spec="REQUIRED DOUBLE '0.0000001, 1000'" />
+    <deltMax            spec="REQUIRED DOUBLE '0.0000001, 1000'" />
+    <timestepMultiplier spec="REQUIRED DOUBLE 'positive'" />
+  </Time>
+
+  <SimulationComponent  spec="REQUIRED NONE">
+    <type               spec="REQUIRED STRING 'mpm, arches, ice, mpmice, mpmarches, impm'" />
+  </SimulationComponent>
+
+  <DataArchiver         spec="REQUIRED NONE">
+      <filebase         spec="REQUIRED STRING" />
+      <outputTimestepInterval spec="REQUIRED INTEGER 'positive'" />
+      <save             spec="MULTIPLE NONE"
+                        attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'">
+                        attribute2="label     REQUIRED STRING 'press_equil_CC, vol_frac_CC,
+                                                               sp_vol_CC, uvel_FC, vvel_FC,
+                                                               wvel_FC, uvel_FCME, vvel_FCME,
+                                                               wvel_FCME, delP_Dilatate, press_CC,
+                                                               mom_L_ME_CC, vel_CC, rho_CC, temp_CC,
+                                                               KineticEnergy, TotalIntEng'" />
+      <checkpoint       spec="REQUIRED NONE"
+                        attribute1="interval  REQUIRED DOUBLE  'positive'"
+                        attribute2="cycle     REQUIRED INTEGER 'positive'" />
+      <outputDoubleAsFloat spec="OPTIONAL NONE" />
+      <compression         spec="OPTIONAL STRING 'gzip'" />
+  </DataArchiver>
+
+  <InitialConditions>   spec="REQUIRED NONE">
+    <MPM                spec="OPTIONAL NONE" />
+    <ARCHES             spec="OPTIONAL NONE" />
+  </InitialConditions>
+
+  <Grid                 spec="REQUIRED NONE">
+
+    <BoundaryConditions spec="REQUIRED NONE">
+      <Face             spec="MULTIPLE NONE"
+                        attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'">
+        <BCType         spec="MULTIPLE NONE"
+                        attribute1="id        REQUIRED STRING 'all'"
+                        attribute2="var       REQUIRED STRING 'Dirichlet'"
+                        attribute3="label     REQUIRED STRING 'Velocity'" >
+          <value        spec="REQUIRED VECTOR" />
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <Level              spec="REQUIRED NONE">
+      <Box              spec="REQUIRED NONE"
+                        attribute1="label     REQUIRED STRING">
+        <lower          spec="REQUIRED VECTOR" />
+        <upper          spec="REQUIRED VECTOR" />
+        <resolution     spec="REQUIRED VECTOR" />
+        <patches        spec="REQUIRED VECTOR" />
+        <extraCells     spec="REQUIRED VECTOR" />
+      </Box>
+    </Level>
+
+  </Grid>
+
+  <PhysicalConstants    spec="REQUIRED NONE">
+    <gravity            spec="REQUIRED VECTOR" />
+    <reference_pressure spec="REQUIRED DOUBLE" />
+  </PhysicalConstants>
+
+
+</Uintah_specification>
