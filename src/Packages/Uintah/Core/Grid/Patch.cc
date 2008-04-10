@@ -52,7 +52,6 @@ Patch::Patch(const Level* level,
   }
    
   d_hasCoarsefineInterfaceFace = false;
-  d_hasBoundaryFaces = false;
 
   // DON'T call setBCType here     
   d_patchState.xminus=None;
@@ -119,11 +118,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  d_BoundaryFaces.clear();
   d_coarseFineInterfaceFaces.clear();
-
-  for (FaceType face = startFace; face <= endFace; face = nextFace(face))
-    d_CornerCells[face].clear();
 
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)) {
@@ -325,30 +320,6 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
       return;
     }
 
-   // If this face has a BCType of Patch::None, make sure
-   // that it is in the list of d_BoundaryFaces, otherwise, make
-   // sure that it is not in this list.
-   
-   vector<FaceType>::iterator faceIdx = d_BoundaryFaces.begin();
-   vector<FaceType>::iterator faceEnd = d_BoundaryFaces.end();
-
-   while (faceIdx != faceEnd) {
-     if (*faceIdx == face) break;
-     faceIdx++;
-   }
-
-   if (newbc == Patch::None) {
-     if(faceIdx == d_BoundaryFaces.end()){
-       d_BoundaryFaces.push_back(face);
-       d_hasBoundaryFaces = true;
-     }
-   } else {
-     if (faceIdx != d_BoundaryFaces.end()) {
-       d_BoundaryFaces.erase(faceIdx);
-     }
-   }
-   
-   
    //__________________________________
    //  set the coarse fine interface faces
    vector<FaceType>::iterator face_Idx = d_coarseFineInterfaceFaces.begin();
@@ -1801,77 +1772,6 @@ void Patch::finalizePatch()
   d_patchState.gridIndex=d_newGridIndex;
   //set the level index
   
-  //////////
-  // Calculate with of this patches cells are on the corner
-  // of the domain and keep a list of these cells for each
-  // face of the patch.
-
-  IntVector low,hi;
-  low = getLowIndex();
-  hi  = getHighIndex() - IntVector(1,1,1);  
-
-  IntVector patchNeighborLow  = neighborsLow();
-  IntVector patchNeighborHigh = neighborsHigh();
-
-  for (FaceType face=startFace;face<numFaces;face++)
-  {
-  
-    //if this face has a neighbor it has no corners
-    if(getBCType(face)==Neighbor)
-      continue;
- 
-    IntVector axes = faceAxes(face);
-    int P_dir = axes[0];  // principal direction
-    int dir1  = axes[1];  // other vector directions
-    int dir2  = axes[2]; 
-
-    //__________________________________
-    // main index for that face plane
-    int plusMinus = faceDirection(face)[P_dir];
-    int main_index = 0;
-    if( plusMinus == 1 ) { // plus face
-      main_index = hi[P_dir];
-    } else {               // minus faces
-      main_index = low[P_dir];
-    }
-
-    //__________________________________
-    // Looking down on the face examine 
-    // each corner (clockwise) and if there
-    // are no neighboring patches then set the
-    // index
-    // 
-    // Top-right corner
-    IntVector corner(-9,-9,-9);
-    if ( patchNeighborHigh[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
-      corner[P_dir] = main_index;
-      corner[dir1]  = hi[dir1];
-      corner[dir2]  = hi[dir2];
-      d_CornerCells[face].push_back(corner);
-    }
-    // bottom-right corner
-    if ( patchNeighborLow[dir1] == 1 && patchNeighborHigh[dir2] == 1) {
-      corner[P_dir] = main_index;
-      corner[dir1]  = low[dir1];
-      corner[dir2]  = hi[dir2];
-      d_CornerCells[face].push_back(corner);
-    } 
-    // bottom-left corner
-    if ( patchNeighborLow[dir1] == 1 && patchNeighborLow[dir2] == 1) {
-      corner[P_dir] = main_index;
-      corner[dir1]  = low[dir1];
-      corner[dir2]  = low[dir2];
-      d_CornerCells[face].push_back(corner);
-    } 
-    // Top-left corner
-    if ( patchNeighborHigh[dir1] == 1 && patchNeighborLow[dir2] == 1) {
-      corner[P_dir] = main_index;
-      corner[dir1]  = hi[dir1];
-      corner[dir2]  = low[dir2];
-      d_CornerCells[face].push_back(corner);
-    } 
-  }
-
 #if SCI_ASSERTION_LEVEL>0
   ASSERT(getLow()==getExtraCellLowIndex__New());
   ASSERT(getHigh()==getExtraCellHighIndex__New());
@@ -1993,73 +1893,6 @@ void Patch::finalizePatch()
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getEdgeCellIterator__New(yplus,zminus));
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus));
 
-#if 0
-  const vector<FaceType> *bfaces1=getBoundaryFaces();
-  vector<FaceType> bfaces2;
-  getBoundaryFaces__New(bfaces2);
-
-  ASSERT(bfaces1->size()==bfaces2.size());
-
-  for(unsigned int i=0;i<bfaces1->size();i++)
-  {
-    //search for face in other vector since order may vary
-    bool found=false;
-    for(unsigned int j=0;j<bfaces2.size();j++)
-    {
-      if((*bfaces1)[i]==bfaces2[j])
-      {
-        found=true;
-      }
-    }  
-    ASSERT(found);
-  } 
- 
-  if(d_extraCells==IntVector(1,1,1))
-  {
-    for(int face=0;face<6;face++)
-    {
-      const vector<IntVector> ccells1=getCornerCells(static_cast<FaceType>(face));
-      vector<IntVector> ccells2;
-      getCornerCells__New(ccells2,static_cast<FaceType>(face));
-/*  
-      if(ccells1.size()!=ccells2.size())
-      {
-        cout << "face:" << face << endl;
-
-        for(int f=0;f<6;f++)
-        {
-          cout << "BC for face" << f << ":"  << getBCType(static_cast<FaceType>(f)) << endl;
-        }
-        cout << "old corner cells\n";
-        for(unsigned int i=0;i<ccells1.size();i++)
-        {
-          cout << ccells1[i] << endl;
-        }
-        cout << "new corner cells\n";
-        for(unsigned int i=0;i<ccells2.size();i++)
-        {
-          cout << ccells2[i] << endl;
-        }
-      }
-*/    
-      ASSERT(ccells1.size()==ccells2.size());
-
-      for(unsigned int i=0;i<ccells1.size();i++)
-      {
-        //search for face in other vector since order may vary
-        bool found=false;
-        for(unsigned int j=0;j<ccells2.size();j++)
-        {
-          if(ccells1[i]==ccells2[j])
-          {
-            found=true;
-          }
-        }  
-        ASSERT(found);
-      }
-    }
-  }
-#endif
   const vector<FaceType> *cfaces1=getCoarseFineInterfaceFaces();
   vector<FaceType> cfaces2;
   getCoarseFaces(cfaces2);
@@ -2098,7 +1931,6 @@ int Patch::getGridIndex() const
   return index;
 
 }
-
 
 /**
 * sets the vector cells equal to the list of cells that at the intersection of three faces extra cells
