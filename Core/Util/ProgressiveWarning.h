@@ -30,6 +30,18 @@
 /*
  *  ProgressiveWarning.h
  *
+ *    To the best of my understanding, this class will print out a given
+ *    error message based on the number of times the warning is invoked
+ *    (occurs).  This depends on the settings given to the  warning object.
+ *    For example:
+ *
+ *       ProgressiveWarning warn( msg, 10 );
+ *       warn.invoke();
+ *    
+ *    Would print out the 1st, 10th, 100th, 1000th... etc time the warning
+ *    is invoked.  A 'warn( msg, 2)' would display the 1st, 2nd, 4th, 8th,
+ *    16th, etc.
+ *
  *  Written by:
  *   Bryan Worthen
  *   SCI Institute
@@ -66,7 +78,8 @@ DESCRIPTION
   public:
     //! Pass the message to output as a warning.  The multiplier is the amount to multiply the
     //! next occurence by when we output the warning.  -1 will mean to only output once.
-    //! Output to stream.
+    //! Output to stream.  'Multiplier' should not be set to '1'... and will be updated to '2' if
+    //! '1' is specified.
     ProgressiveWarning(std::string message, int multiplier = -1, std::ostream& stream = std::cerr);
 
     //! Invoke the warning numTimes times.  If we've hit this enough times, output the warning message.
