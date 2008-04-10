@@ -2408,10 +2408,8 @@ void MPMICE::refineCoarseFineInterface(const ProcessorGroup*,
       // - Find the walls with symmetry BC and double NC_CCweight
       NC_CCweight.initialize(0.125);
       vector<Patch::FaceType>::const_iterator iter;
-      vector<Patch::FaceType> bf;
-      patch->getBoundaryFaces(bf);
-      
-      for (iter  = bf.begin(); iter != bf.end(); ++iter){
+      for (iter  = patch->getBoundaryFaces()->begin();
+           iter != patch->getBoundaryFaces()->end(); ++iter){
         Patch::FaceType face = *iter;
         int mat_id = 0;
         if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
@@ -2616,10 +2614,8 @@ MPMICE::refine(const ProcessorGroup*,
       //   double NC_CCweight
       NC_CCweight.initialize(0.125);
       vector<Patch::FaceType>::const_iterator iter;
-      vector<Patch::FaceType> bf;
-      patch->getBoundaryFaces(bf);
-      
-      for (iter  = bf.begin(); iter != bf.end(); ++iter){
+      for (iter  = patch->getBoundaryFaces()->begin();
+           iter != patch->getBoundaryFaces()->end(); ++iter){
         Patch::FaceType face = *iter;
         int mat_id = 0;
         if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
