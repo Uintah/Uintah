@@ -10,17 +10,20 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondReader.h>
+
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/ProgressiveWarning.h>
+
 #include <TauProfilerForSCIRun.h>
+
 #include <iostream>
 #include <algorithm>
 #include <map>
@@ -359,6 +362,23 @@ Point Level::positionToIndex(const Point& p) const
     int x = binary_search(p.x(), d_facePosition[0], d_facePosition[0].low(), d_facePosition[0].high());
     int y = binary_search(p.y(), d_facePosition[1], d_facePosition[1].low(), d_facePosition[1].high());
     int z = binary_search(p.z(), d_facePosition[2], d_facePosition[2].low(), d_facePosition[2].high());
+
+    //#if SCI_ASSERTION_LEVEL > 0
+    //    if( ( x == d_facePosition[0].high() ) ||
+    //        ( y == d_facePosition[1].high() ) ||
+    //        ( z == d_facePosition[2].high() ) ) {
+    //      static ProgressiveWarning warn( "positionToIndex called with too large a point.", -1 );
+    //    }
+    //#endif
+
+    // If p.x() == the value of the last position in
+    // d_facePosition[0], then the binary_search returns the "high()"
+    // value... and the interpolation below segfaults due to trying to
+    // go to x+1.  The following check prevents this from happening.
+    x = min( x, d_facePosition[0].high()-2 );
+    y = min( y, d_facePosition[1].high()-2 );
+    z = min( z, d_facePosition[2].high()-2 );
+
     double xfrac = (p.x() - d_facePosition[0][x]) / (d_facePosition[0][x+1] - d_facePosition[0][x]);
     double yfrac = (p.y() - d_facePosition[1][y]) / (d_facePosition[1][y+1] - d_facePosition[1][y]);
     double zfrac = (p.z() - d_facePosition[2][z]) / (d_facePosition[2][z+1] - d_facePosition[2][z]);
