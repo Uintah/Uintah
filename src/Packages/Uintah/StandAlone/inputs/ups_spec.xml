@@ -117,5 +117,16 @@
     <reference_pressure spec="REQUIRED DOUBLE" />
   </PhysicalConstants>
 
+  <Scheduler>
+    <VarTracker           spec="REQUIRED NONE">
+      <start_time         spec="REQUIRED DOUBLE" />
+      <end_time           spec="REQUIRED DOUBLE" />
+      <start_index        spec="REQUIRED VECTOR" />
+      <end_index          spec="REQUIRED VECTOR" />
+      <var                spec="MULTIPLE NONE"
+                          attribute1="label REQUIRED STRING"
+                          attribute2="dw    REQUIRED STRING 'NewDW, OldDW'" />
+    </VarTracker>
+  </Scheduler>
 
 </Uintah_specification>
