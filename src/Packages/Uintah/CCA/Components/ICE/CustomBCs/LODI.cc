@@ -106,10 +106,8 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
     //_________________________________
     // Iterate over just the boundary faces
     vector<Patch::FaceType>::const_iterator itr;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-
-    for (itr  = bf.begin(); itr != bf.end(); ++itr){
+    for (itr  = patch->getBoundaryFaces()->begin(); 
+         itr != patch->getBoundaryFaces()->end(); ++itr){
       Patch::FaceType face = *itr;
       //__________________________________
       //  if Lodi face then keep track of the patch
@@ -530,10 +528,9 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {
@@ -599,9 +596,9 @@ void computeNu(CCVariable<Vector>& nu,
     
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch, face, sharedState) ) {
@@ -692,8 +689,7 @@ void computeNu(CCVariable<Vector>& nu,
   // Need a clever way to figure out the r and rr indicies
   //  for the two different directions
 
-      vector<IntVector> corner;
-      patch->getCornerCells(corner,face);
+      const vector<IntVector> corner = patch->getCornerCells(face);
       vector<IntVector>::const_iterator itr;
       for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
         IntVector c = *itr;
@@ -760,10 +756,8 @@ void  lodi_bc_preprocess( const Patch* patch,
   // only work on those faces that have lodi bcs
   // and are on the edge of the computational domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {
@@ -1028,8 +1022,7 @@ void FaceDensity_LODI(const Patch* patch,
 
   //__________________________________
   // C O R N E R S    
-  vector<IntVector> corner;
-  patch->getCornerCells(conrner,face);
+  const vector<IntVector> corner = patch->getCornerCells(face);
   vector<IntVector>::const_iterator itr;
   
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
@@ -1279,8 +1272,7 @@ double time = sharedState->getElapsedTime();
   }  
   //________________________________________________________
   // C O R N E R S
-  vector<IntVector> corner;
-  patch->getCornerCells(corner,face);
+  const vector<IntVector> corner = patch->getCornerCells(face);
   vector<IntVector>::const_iterator itr;
   
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
@@ -1510,8 +1502,7 @@ void FaceTemp_LODI(const Patch* patch,
  
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> corner;
-  patch->getCornerCells(corner,face);
+  const vector<IntVector> corner = patch->getCornerCells(face);
   vector<IntVector>::const_iterator itr;
   
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {

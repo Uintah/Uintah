@@ -387,9 +387,8 @@ void setBC(T& vel_FC,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
 

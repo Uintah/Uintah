@@ -144,10 +144,9 @@ void meanFreePath(DataWarehouse* new_dw,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_MicroSlip_face(patch,face, sharedState) ) {

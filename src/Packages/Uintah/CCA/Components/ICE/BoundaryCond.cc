@@ -51,9 +51,8 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
                    const Patch* patch)        
 { 
   vector<Patch::FaceType>::const_iterator itr;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  for (itr  = bf.begin(); itr != bf.end(); ++itr){
+  for (itr  = patch->getBoundaryFaces()->begin(); 
+       itr != patch->getBoundaryFaces()->end(); ++itr){
     Patch::FaceType face = *itr;
     
     int mat_id = 0; // hard coded for pressure
@@ -217,9 +216,8 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
 { 
   BC_doing << "set_imp_DelP_BC "<< endl;
   vector<Patch::FaceType>::const_iterator itr;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  for (itr  = bf.begin(); itr != bf.end(); ++itr){
+  for (itr  = patch->getBoundaryFaces()->begin(); 
+       itr != patch->getBoundaryFaces()->end(); ++itr){
     Patch::FaceType face = *itr;
     
     int mat_id = 0; // hard coded for pressure
@@ -364,10 +362,9 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
   
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     if(is_LODI_face(patch, face, sharedState) || gravity.length() > 0) {
@@ -448,10 +445,9 @@ void setBC(CCVariable<double>& press_CC,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
 
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
@@ -468,7 +464,8 @@ void setBC(CCVariable<double>& press_CC,
   //  N O N  -  L O D I
   //__________________________________
   // Iterate over the faces encompassing the domain
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
    
@@ -616,9 +613,8 @@ void setBC(CCVariable<double>& var_CC,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
 
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
@@ -638,7 +634,8 @@ void setBC(CCVariable<double>& var_CC,
   //  N O N  -  L O D I
   //__________________________________
   // Iterate over the faces encompassing the domain
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
           
     bool IveSetBC = false;
@@ -737,9 +734,8 @@ void setBC(CCVariable<Vector>& var_CC,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     bool is_velBC_lodi   =  patch->haveBC(face,mat_id,"LODI","Velocity");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
@@ -755,7 +751,8 @@ void setBC(CCVariable<Vector>& var_CC,
   //  N O N  -  L O D I
   //__________________________________
   // Iterate over the faces encompassing the domain
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
     
@@ -850,10 +847,9 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
                 
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
   
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
        

@@ -323,9 +323,8 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
     //_________________________________
     // Iterate over just the boundary faces
     vector<Patch::FaceType>::const_iterator itr;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-    for (itr  = bf.begin(); itr != bf.end(); ++itr){
+    for (itr  = patch->getBoundaryFaces()->begin(); 
+         itr != patch->getBoundaryFaces()->end(); ++itr){
       Patch::FaceType face = *itr;
       //__________________________________
       //  if Lodi face then keep track of the patch
@@ -699,9 +698,9 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
-  vector<Patch::FaceType> bf;
-  patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
     
     if (is_LODI_face(patch,face, sharedState) ) {
@@ -886,8 +885,7 @@ void FaceDensity_LODI(const Patch* patch,
 
   //__________________________________
   // C O R N E R S    
-  vector<IntVector> corner;
-  patch->getCornerCells(corner,face);
+  const vector<IntVector> corner = patch->getCornerCells(face);
   vector<IntVector>::const_iterator itr;
   
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
@@ -986,8 +984,7 @@ void FaceVel_LODI(const Patch* patch,
   }  
   //________________________________________________________
   // C O R N E R S
-  vector<IntVector> corner;
-  patch->getCornerCells(corner,face);
+  const vector<IntVector> corner = patch->getCornerCells(face);
   vector<IntVector>::const_iterator itr;
   
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
@@ -1076,8 +1073,7 @@ void FaceTemp_LODI(const Patch* patch,
  
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> corner;
-  patch->getCornerCells(corner,face);
+  const vector<IntVector> corner = patch->getCornerCells(face);
   vector<IntVector>::const_iterator itr;
   
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
@@ -1156,8 +1152,7 @@ void FacePress_LODI(const Patch* patch,
  
   //________________________________________________________
   // C O R N E R S    
-  vector<IntVector> corner;
-  patch->getCornerCells(corner,face);
+  const vector<IntVector> corner = patch->getCornerCells(face);
   vector<IntVector>::const_iterator itr;
   
   for(itr = corner.begin(); itr != corner.end(); ++ itr ) {

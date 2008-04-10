@@ -739,10 +739,9 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
     //__________________________________
     //  set boundary conditions
     vector<Patch::FaceType>::const_iterator iter;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-
-    for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  
+    for (iter  = patch->getBoundaryFaces()->begin(); 
+         iter != patch->getBoundaryFaces()->end(); ++iter){
       Patch::FaceType face = *iter;
       for(CellIterator itr = patch->getFaceCellIterator(face, "plusEdgeCells"); 
           !itr.done();  itr++){
