@@ -1344,15 +1344,6 @@ WARNING
 
      void getFaceCells(FaceType face, int offset, IntVector& l,
                        IntVector& h) const;
-/*
-     const vector<FaceType>* getBoundaryFaces() const 
-     { return &d_BoundaryFaces; }
-     
-     //////////
-     // Return the list of corner cells for the given face.
-     const vector<IntVector> getCornerCells(const Patch::FaceType face) const { return d_CornerCells[face]; }
-*/
-
 
      const vector<FaceType>* getCoarseFineInterfaceFaces() const 
      { return &d_coarseFineInterfaceFaces; }
@@ -1360,13 +1351,6 @@ WARNING
      bool hasCoarseFineInterfaceFace() const
      { return d_hasCoarsefineInterfaceFace;}
      
-     /*
-     bool hasBoundaryFaces() const
-     { 
-        return d_hasBoundaryFaces;
-     }     
-     */
-
      static const int MAX_PATCH_SELECT = 32;
      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
 
@@ -1639,18 +1623,9 @@ WARNING
      map<Patch::FaceType,BCDataArray* > array_bcs;
 
      //////////
-     // Keep track of faces on the edge of the domain
-     vector<FaceType> d_BoundaryFaces;
-     bool d_hasBoundaryFaces;
-
-     //////////
      // Keep track of faces on the edge of a courseFineInterface
      vector<FaceType> d_coarseFineInterfaceFaces;
      bool d_hasCoarsefineInterfaceFace;
-
-     //////////
-     // Keep track of cells on the corner of the domain
-     vector<IntVector> d_CornerCells[Patch::numFaces];
 
      //////////
      // add a method for the user to mark a patch face (for his own purposes)
