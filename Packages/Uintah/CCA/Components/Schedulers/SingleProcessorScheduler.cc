@@ -123,7 +123,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     double start = Time::currentSeconds();
     DetailedTask* task = dts->getTask( i );
     
-    taskdbg << d_myworld->myrank() << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
+    taskdbg << d_myworld->myrank() << " SPS: Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
     if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -135,7 +135,7 @@ SingleProcessorScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
     task->done(dws);
     
-    taskdbg << d_myworld->myrank() << " Completed task: "; printTask(taskdbg, task); taskdbg << '\n';
+    taskdbg << d_myworld->myrank() << " SPS: Completed task: "; printTask(taskdbg, task); taskdbg << '\n';
     double delT = Time::currentSeconds()-start;
     long long flop_count = 0;
 #ifdef USE_PERFEX_COUNTERS
