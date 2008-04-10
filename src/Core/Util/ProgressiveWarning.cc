@@ -1,6 +1,8 @@
 #include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/DebugStream.h>
 
+#include <iostream>
+
 namespace SCIRun {
 
 static DebugStream dbg("ProgressiveWarning", true);
@@ -10,6 +12,11 @@ ProgressiveWarning::ProgressiveWarning(std::string message, int multiplier /* =-
 {
   d_message = message;
   d_multiplier = multiplier;
+
+  if( d_multiplier == 1 ) {
+    std::cout << "Warning: ProgressiveWarning multiplier may not be set to 1... changing to 2.\n";
+    d_multiplier = 2;
+  }
 
   if (stream == std::cerr)
     out = &dbg;
