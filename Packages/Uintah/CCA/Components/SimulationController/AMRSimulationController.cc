@@ -225,6 +225,7 @@ AMRSimulationController::run()
      // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
      //   Needs to be done before advanceDataWarehouse
      if (d_reduceUda) currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
+
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
@@ -330,7 +331,7 @@ AMRSimulationController::run()
 #endif
      t += delt;
      TAU_DB_DUMP();
-   }
+   } // end while ( time )
 
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
    delt_vartype delt_var;
@@ -340,8 +341,9 @@ AMRSimulationController::run()
    calcWallTime();
    printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep(),delt,t);
 
-   //d_ups->releaseDocument();
-}
+   // d_ups->releaseDocument();
+
+} // end run()
 
 //______________________________________________________________________
 void
@@ -831,7 +833,7 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
       }
     }
   } while(!success);
-}
+} // end executeTimestep()
 
 void
 AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
