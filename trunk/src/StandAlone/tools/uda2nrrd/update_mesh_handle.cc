@@ -1,8 +1,8 @@
 
-#include <StandAlone/tools/uda2nrrd/update_mesh_handle.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/update_mesh_handle.h>
 
-#include <StandAlone/tools/uda2nrrd/bc.h>
-#include <StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/bc.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
 
 bool 
 update_mesh_handle( LevelP& level,

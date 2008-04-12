@@ -1,8 +1,10 @@
 #ifndef UDA2NRRD_PARTICLES_H
 #define UDA2NRRD_PARTICLES_H
 
-#include <StandAlone/tools/uda2nrrd/Args.h>
-#include <StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include "particleData.h"
+
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
 
 #include <stdlib.h>
 
@@ -52,6 +54,7 @@ handleParticleData( QueryInfo & qinfo );
 
 void
 saveParticleData( std::vector<ParticleDataContainer> & data,
-                  const std::string                  & filename );
+                  const std::string                  & filename,
+				  variables & varColln );
 
 #endif // UDA2NRRD_PARTICLES_H

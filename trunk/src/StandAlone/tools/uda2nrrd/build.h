@@ -1,11 +1,11 @@
 #ifndef UDA2NRRD_BUILD_FUNCTIONS_H
 #define UDA2NRRD_BUILD_FUNCTIONS_H
 
-#include <StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
 
-#include <StandAlone/tools/uda2nrrd/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
 
-#include <SCIRun/Core/Datatypes/Field.h>
+#include <Core/Datatypes/Field.h>
 
 using namespace SCIRun;
 using namespace Uintah;

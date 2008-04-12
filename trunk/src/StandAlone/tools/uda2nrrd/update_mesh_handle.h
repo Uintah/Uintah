@@ -1,18 +1,18 @@
 #ifndef UDA2NRRD_UPDATE_MESH_HANDLE_H
 #define UDA2NRRD_UPDATE_MESH_HANDLE_H
 
-#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
-#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
 
-#include <Core/Grid/Level.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
-#include <StandAlone/tools/uda2nrrd/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
 
-#include <SCIRun/Core/Geometry/IntVector.h>
-#include <SCIRun/Core/Geometry/Point.h>
-#include <SCIRun/Core/Geometry/BBox.h>
+class SCIRun::BBox;
+class SCIRun::IntVector;
+class SCIRun::Point;
 
 typedef SCIRun::LatVolMesh<SCIRun::HexTrilinearLgn<SCIRun::Point> > LVMesh;
 typedef LVMesh::handle_type LVMeshHandle;

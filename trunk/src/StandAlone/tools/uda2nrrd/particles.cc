@@ -1,7 +1,7 @@
 
-#include <StandAlone/tools/uda2nrrd/particles.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/particles.h>
 
-#include <SCIRun/Core/Geometry/Point.h>
+#include <Core/Geometry/Point.h>
 
 using namespace SCIRun;
 
@@ -78,8 +78,8 @@ handleParticleData<Point>( QueryInfo & qinfo )
     if( dataZ[ pos ] < min[2] ) { min[2] = dataZ[ pos ]; }
   }
 
-  printf("%s (%d):  min/max: %f / %f, %f / %f, %f / %f\n", 
-         qinfo.varname.c_str(), (int)dataX.size(), min[0], max[0], min[1], max[1], min[2], max[2] );
+  // printf("%s (%d):  min/max: %f / %f, %f / %f, %f / %f\n", 
+  //       qinfo.varname.c_str(), (int)dataX.size(), min[0], max[0], min[1], max[1], min[2], max[2] );
 
   ParticleDataContainer result;
 
@@ -139,7 +139,7 @@ handleParticleData<Vector>( QueryInfo & qinfo )
     if( data[ pos ] < min ) { min = data[ pos ]; }
   }
 
-  printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
+  // printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
 
   ParticleDataContainer result( qinfo.varname, floatArray, data.size() );
 
@@ -198,7 +198,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo )
     if( data[ pos ] < min ) { min = data[ pos ]; }
   }
 
-  printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
+  // printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
 
   // vardata.name = string(var+" Trace/3");
   // vardata2.name = string(var+" Equivalent");
@@ -281,7 +281,7 @@ handleParticleData( QueryInfo & qinfo )
     if( data[ pos ] < min ) { min = data[ pos ]; }
   }
 
-  printf("%s (%d):  min/max: %f / %f\n", name.c_str(), (int)data.size(), min, max);
+  // printf("%s (%d):  min/max: %f / %f\n", name.c_str(), (int)data.size(), min, max);
 
   ParticleDataContainer result( name, floatArray, data.size() );
 
@@ -292,17 +292,18 @@ handleParticleData( QueryInfo & qinfo )
 
 void
 saveParticleData( vector<ParticleDataContainer> & particleVars,
-                  const string                  & filename )
+                  const string                  & filename, 
+				  variables & varColln  ) // New parameter
 {
 
-  string header = filename + ".nhdr";
+  /*string header = filename + ".nhdr";
 
   FILE * out = fopen( header.c_str(), "wb" );
 
   if( !out ) {
     cerr << "ERROR: Could not open '" << header << "' for writing.\n";
     return;
-  }
+  }*/
 
   unsigned int numParticles = particleVars[0].numParticles;
   unsigned int numVars      = 0;
@@ -330,7 +331,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
   //////////////////////
   // Write NRRD Header:
 
-  fprintf( out, "NRRD0001\n"
+  /*fprintf( out, "NRRD0001\n"
                 "# Complete NRRD file format specification at:\n"
                 "# http://teem.sourceforge.net/nrrd/format.html\n"
                 "type: float\n"
@@ -361,38 +362,60 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
   if( !out ) {
     cerr << "ERROR: Could not open '" << rawfile << "' for writing.\n";
     return;
-  }
+  }*/
 
   //////////////////////
   // Write NRRD Data:
 
   for( unsigned int particle = 0; particle < numParticles; particle++ ) {
-
+	
+	variable varData;
+	unknownData& dataRef = varData.data;
+	
     for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
 
       size_t wrote = -1;
 
       if( particleVars[cnt].data != NULL ) {
 
-        wrote = fwrite( &particleVars[cnt].data[particle], sizeof(float), 1, out );
+        // wrote = fwrite( &particleVars[cnt].data[particle], sizeof(float), 1, out );
+		// cout << "cnt: " << cnt << " " << particleVars[cnt].name.c_str() << " " << particleVars[cnt].data[particle] << "\n";
+		// if (cnt == 1)
+		// 	varData.volume = particleVars[cnt].data[particle];
+		// else if (cnt == 2)
+		// 	varData.stress = particleVars[cnt].data[particle];
+
+		nameVal nameValObj;
+		
+		nameValObj.name = particleVars[cnt].name;
+		nameValObj.value = particleVars[cnt].data[particle];
+
+		dataRef.push_back(nameValObj);	
         
       } else {
-        wrote = fwrite( &particleVars[cnt].x[particle], sizeof(float), 1, out );
-        wrote = fwrite( &particleVars[cnt].y[particle], sizeof(float), 1, out );
-        wrote = fwrite( &particleVars[cnt].z[particle], sizeof(float), 1, out );
-      }
+        // wrote = fwrite( &particleVars[cnt].x[particle], sizeof(float), 1, out );
+        // wrote = fwrite( &particleVars[cnt].y[particle], sizeof(float), 1, out );
+        // wrote = fwrite( &particleVars[cnt].z[particle], sizeof(float), 1, out );
+		varData.x = particleVars[cnt].x[particle];
+		varData.y = particleVars[cnt].y[particle];
+		varData.z = particleVars[cnt].z[particle];
+		
+        // cout << particleVars[cnt].z[particle] << " " << varData.z << endl;
+	  }
 
-      if( wrote != 1 ) {
+      /*if( wrote != 1 ) {
         cerr << "ERROR: Wrote out " << wrote << " floats instead of just one...\n";
         fclose(out);
         return;
-      }
+      }*/
     }
+	
+	varColln.push_back(varData);
+    // cout << endl << endl;
   }
-
-  fclose(out);
+  // fclose(out);
   
-  cout << "\nDone writing out particle NRRD: " << filename << ".{raw,nhdr}\n\n";
+  // cout << "\nDone writing out particle NRRD: " << filename << ".{raw,nhdr}\n\n";
 }
 
 

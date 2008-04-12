@@ -1,9 +1,9 @@
 #ifndef UDA2NRRD_QUERY_INFO_H
 #define UDA2NRRD_QUERY_INFO_H
 
-#include <Core/Util/ConsecutiveRangeSet.h>
+#include <Core/Containers/ConsecutiveRangeSet.h>
 
-#include <Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 
 using namespace Uintah;
 

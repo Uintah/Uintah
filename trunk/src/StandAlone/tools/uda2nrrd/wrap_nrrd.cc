@@ -3,20 +3,20 @@
 
 ////// 
 // For templates instantiations to be found, these includes must remain in this order:
-#include <Core/Math/Matrix3.h>
-#include <SCIRun/Core/Basis/Constant.h> 
-#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
-#include <SCIRun/Core/Datatypes/LatVolMesh.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Basis/Constant.h> 
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
 // End in-order templates.
 //////
 
-#include <StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
 
-#include <SCIRun/Core/Datatypes/Field.h>
-#include <SCIRun/Core/Datatypes/GenericField.h>
-#include <SCIRun/Core/Geometry/Vector.h>
-#include <SCIRun/Core/Geometry/Point.h>
-#include <SCIRun/Core/Util/TypeDescription.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Util/TypeDescription.h>
 
 using namespace SCIRun;
 using namespace Uintah;

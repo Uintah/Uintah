@@ -1,26 +1,26 @@
 
 /////////////////
 // Due to template instantiation ordering problems, these 2 includes must be first:
-#include <Core/Math/Matrix3.h>
-#include <SCIRun/Core/Basis/Constant.h> 
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Basis/Constant.h> 
 // End template needed .h files
 /////////////////
 
-#include <StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
 
-#include <StandAlone/tools/uda2nrrd/Args.h>
-#include <StandAlone/tools/uda2nrrd/build.h>
-#include <StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/build.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
 
-#include <Dataflow/Modules/Selectors/PatchToField.h>
+#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 
-#include <SCIRun/Core/Geometry/Vector.h>
+#include <Core/Geometry/Vector.h>
 
-#include <SCIRun/Core/Containers/FData.h>
-#include <SCIRun/Core/Datatypes/Field.h>
-#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/GenericField.h>
 
-#include <SCIRun/Core/Util/FileUtils.h>
+#include <Core/Util/FileUtils.h>
 
 #include <teem/nrrd.h>
 
@@ -38,7 +38,9 @@ handleData( QueryInfo &    qinfo,
             LVMeshHandle   mesh_handle,
             int            basis_order,
             const string & filename,
-            const Args   & args )
+            const Args   & args,
+			cellVals& cellValColln,
+			bool dataReq )
 {
   typedef GenericField<LVMesh, ConstantBasis<T>,
                        FData3d<T, LVMesh> > LVFieldCB;
@@ -107,7 +109,8 @@ handleData( QueryInfo &    qinfo,
 #endif
 
   if( nrrd ) { // Save the NRRD to a file.
-    string filetype = args.attached_header ? ".nrrd": ".nhdr";
+    // No more needed 
+    /*string filetype = args.attached_header ? ".nrrd": ".nhdr";
 
     if( !args.quiet ) cout << "Writing nrrd file: " << filename + filetype << "\n";
 
@@ -128,7 +131,29 @@ handleData( QueryInfo &    qinfo,
       } else {
         if( !args.quiet ) cout << "Done writing nrrd file\n";
       }
-    }
+    }*/
+
+    // Coying the values from the nrrd directly. This at some time should be changed
+	// to avoid the double doing and data should be copied directy from the source.
+
+	unsigned int x = cellValColln.x = nrrd->axis[0].size;
+	unsigned int y = cellValColln.y = nrrd->axis[1].size;
+	unsigned int z = cellValColln.z = nrrd->axis[2].size;
+	  
+	if (dataReq) {
+	  cellValColln.cellValVec = new typeDouble();
+	  typeDouble* cellValVecPtr = cellValColln.cellValVec;
+	  for (unsigned int i = 0; i < x; ++i) {
+	    double* rowData = (double*)(nrrd->data) + i * y * z;
+	    for (unsigned int j = 0; j < y; ++j) {
+		  double* cellData = rowData + j * z;
+		  for (unsigned int k = 0; k < z; ++k) {
+		    cellValVecPtr->push_back(cellData[k]);
+		  }
+	    }
+	  }
+	}       
+		
     // nrrdNuke deletes the nrrd and the data inside the nrrd
     nrrdNuke( nrrd );
   } else {
@@ -146,7 +171,9 @@ void
 handleVariable( QueryInfo &qinfo, IntVector &low, IntVector& hi,
                 IntVector &range, BBox &box,
                 const string &filename,
-                const Args & args )
+                const Args & args,
+				cellVals& cellVallColln,
+				bool dataReq )
 {
   LVMeshHandle mesh_handle;
   switch( qinfo.type->getType() ) {
@@ -154,31 +181,31 @@ handleVariable( QueryInfo &qinfo, IntVector &low, IntVector& hi,
     mesh_handle = scinew LVMesh(range.x(), range.y(),
                                  range.z(), box.min(),
                                  box.max());
-    handleData<CCVariable<T>, T>( qinfo, low, mesh_handle, 0, filename, args );
+    handleData<CCVariable<T>, T>( qinfo, low, mesh_handle, 0, filename, args, cellVallColln, dataReq );
     break;
   case Uintah::TypeDescription::NCVariable:
     mesh_handle = scinew LVMesh(range.x(), range.y(),
                                  range.z(), box.min(),
                                  box.max());
-    handleData<NCVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<NCVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq );
     break;
   case Uintah::TypeDescription::SFCXVariable:
     mesh_handle = scinew LVMesh(range.x(), range.y()-1,
                                  range.z()-1, box.min(),
                                  box.max());
-    handleData<SFCXVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<SFCXVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq );
     break;
   case Uintah::TypeDescription::SFCYVariable:
     mesh_handle = scinew LVMesh(range.x()-1, range.y(),
                                  range.z()-1, box.min(),
                                  box.max());
-    handleData<SFCYVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<SFCYVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq );
     break;
   case Uintah::TypeDescription::SFCZVariable:
     mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
                                  range.z(), box.min(),
                                  box.max());
-    handleData<SFCZVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<SFCZVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq );
     break;
   default:
     cerr << "Type is unknown.\n";
@@ -321,12 +348,14 @@ templateInstantiationForGetCC()
   const Args * args = NULL;
   LVMeshHandle mesh_handle;
   string       filename;
+  cellVals     cellVallColln;
+  bool		   dataReq;	
 
-  handleVariable<Vector> ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<double> ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<int>    ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<float>  ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<Matrix3>( *qinfo, low, hi, range, box, "", *args );
+  handleVariable<Vector> ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq );
+  handleVariable<double> ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq );
+  handleVariable<int>    ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq );
+  handleVariable<float>  ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq );
+  handleVariable<Matrix3>( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq );
 
   templateInstantiationForGetCCHelper<Vector>();
   templateInstantiationForGetCCHelper<int>();

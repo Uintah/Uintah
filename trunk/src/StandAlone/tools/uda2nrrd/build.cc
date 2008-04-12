@@ -1,17 +1,17 @@
 
-#include <Core/Math/Matrix3.h> // Must be before include of Constant.h
-#include <SCIRun/Core/Basis/Constant.h>               // Must be before include of HexTrilinearLgn.h
-#include <SCIRun/Core/Basis/HexTrilinearLgn.h>
-#include <SCIRun/Core/Datatypes/LatVolMesh.h>
-#include <SCIRun/Core/Datatypes/MultiLevelField.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h> // Must be before include of Constant.h
+#include <Core/Basis/Constant.h>               // Must be before include of HexTrilinearLgn.h
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Datatypes/MultiLevelField.h>
 
-#include <StandAlone/tools/uda2nrrd/build.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/build.h>
 
-#include <StandAlone/tools/uda2nrrd/handleVariable.h>
-#include <StandAlone/tools/uda2nrrd/update_mesh_handle.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/update_mesh_handle.h>
 
-#include <Core/Grid/Box.h>
-#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 
 #include <map>
 

@@ -2,7 +2,7 @@
 #ifndef UDA2NRRD_BC_FUNCTIONS_H
 #define UDA2NRRD_BC_FUNCTIONS_H
 
-#include <SCIRun/Core/Geometry/IntVector.h>
+#include <Core/Geometry/IntVector.h>
 
 bool is_periodic_bcs( SCIRun::IntVector cellir,
                       SCIRun::IntVector ir );

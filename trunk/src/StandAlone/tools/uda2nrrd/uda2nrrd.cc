@@ -10,44 +10,46 @@
  *  Copyright (C) 2003-2007 U of U
  */
 
-#include <StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include "particleData.h"
 
-#include <StandAlone/tools/uda2nrrd/Args.h>
-#include <StandAlone/tools/uda2nrrd/bc.h>
-#include <StandAlone/tools/uda2nrrd/handleVariable.h>
-#include <StandAlone/tools/uda2nrrd/particles.h>
-#include <StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
 
-#include <Core/Math/Matrix3.h>
-#include <SCIRun/Core/Basis/Constant.h>
-#include <SCIRun/Core/Datatypes/Datatype.h>
-#include <SCIRun/Core/Datatypes/Field.h>
-#include <SCIRun/Core/Datatypes/GenericField.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/bc.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/particles.h>
+#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
 
-#include <SCIRun/Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Basis/Constant.h>
+#include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/GenericField.h>
 
-#include <SCIRun/Core/Geometry/IntVector.h>
-#include <SCIRun/Core/Geometry/Point.h>
-#include <SCIRun/Core/Geometry/BBox.h>
+#include <Core/Math/MinMax.h>
 
-#include <SCIRun/Core/OS/Dir.h>
-#include <SCIRun/Core/Thread/Thread.h>
-#include <SCIRun/Core/Thread/Semaphore.h>
-#include <SCIRun/Core/Util/DynamicLoader.h>
-#include <SCIRun/Core/Persistent/Pstreams.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/BBox.h>
+
+#include <Core/OS/Dir.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Util/DynamicLoader.h>
+#include <Core/Persistent/Pstreams.h>
 
 
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 
 #include <sci_hash_map.h>
 #include <teem/nrrd.h>
@@ -65,6 +67,17 @@ using namespace std;
 using namespace Uintah;
 
 Args args;
+
+/*int main() {
+  return 0;
+}
+
+extern "C"
+int incr(int a)
+{
+	int b = a + 1;
+	return b;
+}*/
 
 void
 usage( const string& badarg, const string& progname )
@@ -109,9 +122,91 @@ usage( const string& badarg, const string& progname )
 }
 
 /////////////////////////////////////////////////////////////////////
+extern "C"
+double*
+getBBox(const string& input_uda_name, int timeStepNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
 
-int
-main(int argc, char** argv)
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  
+  LevelP level;
+  BBox box;
+  
+  level = grid->getLevel(0);
+  level->getSpatialRange(box);
+
+  Point min = box.min();
+  Point max = box.max();
+  
+  double *minMaxArr = new double[6];
+  
+  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
+  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
+  
+  return minMaxArr;
+} 
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+int*
+getTimeSteps(const string& input_uda_name) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  
+  // Get the times and indices.
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  archive->queryTimesteps(index, times);
+  
+  int* noTimeSteps = new int(index.size());
+  return noTimeSteps;
+} 
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+udaVars*
+getVarList(const string& input_uda_name) {
+  // cout << "In getVarList\n";
+  
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  udaVars* udaVarList = new udaVars();
+
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
+  
+  cout << sizeof(vars) << endl;
+  // cout << "Memory allotted\n";
+
+  // cout << "Call to queryVariables\n";
+  archive->queryVariables(vars, types);
+  // cout << "Successfull \n";
+  
+  cout << sizeof(vars) << endl;
+  
+  // cout << "Pushing vars:  " << vars.size() << "\n";  
+  
+  for (int i = 0; i < vars.size(); i++) {
+    udaVarList->push_back(vars[i]);
+    // cout << udaVarList->size() << endl; 
+  }
+  
+  // cout << "Pushed vars\n";
+  
+  return udaVarList;
+} 
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+timeStep*
+processData(int argc, char argv[][128], int timeStepNo, bool dataReq) // add a third arguement here
 {
   /*
    * Default values
@@ -134,6 +229,8 @@ main(int argc, char** argv)
   int level_index = 0;
 
   bool do_particles = false;
+  
+  // cout << argc << " " << *(argv[5]) << endl;
   
   /*
    * Parse arguments
@@ -340,10 +437,15 @@ main(int argc, char** argv)
       }
     }
 
+	// Create a vector of clas timeStep. This is where we store all time step data.
+	// udaData *dataBank = new udaData(); // No longer needed
+
     ////////////////////////////////////////////////////////
     // Loop over each timestep
-    for( unsigned long time = time_step_lower; time <= time_step_upper; time += tinc ) {
-        
+    // for( unsigned long time = time_step_lower; time <= time_step_upper; time += tinc ) {
+
+      unsigned long time = time_step_lower + timeStepNo * tinc;
+
       /////////////////////////////
       // Figure out the filename
 
@@ -358,10 +460,18 @@ main(int argc, char** argv)
       if (level_index >= grid->numLevels() || level_index < 0) {
         cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
         cerr << "Trying next timestep.\n";
-        continue;
+        exit(1); 
+		// continue;
       }
     
       vector<ParticleDataContainer> particleDataArray;
+	  
+	  // Create a timeStep object, corresponding to every time step.
+	  timeStep* timeStepObjPtr = new timeStep();
+
+	  // Storing the time step name/ no.
+	  timeStepObjPtr->name.assign(filename_num + 1);
+	  timeStepObjPtr->no = index[time];
 
       LevelP level;
 
@@ -378,7 +488,7 @@ main(int argc, char** argv)
         variable_name = vars[var_index];
         
         if( !args.quiet ) {
-          cout << "Extracting data for " << vars[var_index] << ": " << types[var_index]->getName() << "\n";
+          // cout << "Extracting data for " << vars[var_index] << ": " << types[var_index]->getName() << "\n";
         }
 
         //////////////////////////////////////////////////
@@ -404,7 +514,7 @@ main(int argc, char** argv)
                 // The particles are on this level...
                 found_particle_level = true;
                 level = particleLevel;
-                cout << "Found the PARTICLES on level " << lev << ".\n";
+                // cout << "Found the PARTICLES on level " << lev << ".\n";
               }
             }
           }
@@ -559,19 +669,24 @@ main(int argc, char** argv)
             
           switch (subtype->getType()) {
           case Uintah::TypeDescription::double_type:
-            handleVariable<double>( qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<double>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq );
             break;
           case Uintah::TypeDescription::float_type:
-            handleVariable<float>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<float>(qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq );
             break;
           case Uintah::TypeDescription::int_type:
-            handleVariable<int>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<int>(qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq );
             break;
           case Uintah::TypeDescription::Vector:
-            handleVariable<Vector>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<Vector>(qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq );
             break;
           case Uintah::TypeDescription::Matrix3:
-            handleVariable<Matrix3>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<Matrix3>(qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq );
             break;
           case Uintah::TypeDescription::bool_type:
           case Uintah::TypeDescription::short_int_type:
@@ -587,11 +702,20 @@ main(int argc, char** argv)
         }
       } // end variables loop
 
-      if( do_particles ) {
-        saveParticleData( particleDataArray, filename );
-      }
+	  // Passing the 'variables', a vector member variable to the function. This is where all the particles, along with the variables, 
+	  // get stored. 
 
-    } // end time step loop
+      if( do_particles ) {
+        timeStepObjPtr->varColln = new variables();
+        saveParticleData( particleDataArray, filename, *(timeStepObjPtr->varColln) );
+      }
+	  
+	  // Adding time step object to the data bank 
+	  // dataBank->push_back(timeStepObj);
+
+	  return timeStepObjPtr;
+
+    // } // end time step loop
     
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << "\n";
@@ -601,3 +725,4 @@ main(int argc, char** argv)
     exit(1);
   }
 }
+
