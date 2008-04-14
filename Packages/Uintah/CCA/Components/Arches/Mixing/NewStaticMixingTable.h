@@ -36,7 +36,7 @@ POSSIBLE REVISIONS
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
-
+#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
 #include   <string>
@@ -58,7 +58,8 @@ public:
   //
   NewStaticMixingTable( bool calcReactingScalar,
                         bool calcEnthalpy,
-                        bool calcVariance );
+                        bool calcVariance,
+						const ProcessorGroup* myworld );
   
   // GROUP: Destructors :
   ///////////////////////////////////////////////////////////////////////
@@ -182,7 +183,8 @@ private:
   double d_f_stoich, d_carbon_fuel, d_carbon_air;
   bool d_calcExtraScalars;
   std::vector<ExtraScalarSolver*>* d_extraScalars;
-
+  
+  const ProcessorGroup* d_myworld;
 }; // end class NewStaticMixingTable
   
 } // end namespace Uintah
