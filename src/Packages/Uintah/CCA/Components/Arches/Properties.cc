@@ -47,12 +47,13 @@ using namespace Uintah;
 //****************************************************************************
 Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                        PhysicalConstants* phys_const, bool calcReactingScalar,
-		       bool calcEnthalpy, bool calcVariance):
+		       		   bool calcEnthalpy, bool calcVariance, const ProcessorGroup* myworld):
                        d_lab(label), d_MAlab(MAlb), 
                        d_physicalConsts(phys_const), 
                        d_calcReactingScalar(calcReactingScalar),
                        d_calcEnthalpy(calcEnthalpy),
-                       d_calcVariance(calcVariance)
+                       d_calcVariance(calcVariance),
+					   d_myworld(myworld)
 {
   d_DORadiationCalc = false;
   d_radiationCalc = false;
@@ -96,7 +97,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   else if (mixModel == "NewStaticMixingTable"){
     d_mixingModel = scinew NewStaticMixingTable(d_calcReactingScalar,
                                                 d_calcEnthalpy,
-                                                d_calcVariance);
+                                                d_calcVariance,
+												d_myworld);
     d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
     d_mixingModel->setExtraScalars(d_extraScalars);
   }
@@ -1954,27 +1956,26 @@ Properties::averageRKProps(const ProcessorGroup*,
                 d_extraScalars->at(i)->isDensityWeighted();
         for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
           for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	    for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	      IntVector currCell(colX, colY, colZ);
+	    	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	      		IntVector currCell(colX, colY, colZ);
           
-	      if (new_density[currCell] > 0.0) {
-                if (scalar_density_weighted)
-	          new_extra_scalar[currCell] = 
-                    (factor_old*old_density[currCell]*
-		    old_extra_scalar[currCell] + 
-                    factor_new*new_density[currCell]*
-		    new_extra_scalar[currCell])/
-                    (factor_divide* density_guess[currCell]);
+	      		if (new_density[currCell] > 0.0) {
+                	if (scalar_density_weighted)
+	          			new_extra_scalar[currCell] = 
+                    		(factor_old*old_density[currCell]*
+		    				 old_extra_scalar[currCell] + 
+                    		 factor_new*new_density[currCell]*
+		    				 new_extra_scalar[currCell])/
+                    		 (factor_divide* density_guess[currCell]);
                 else
-	          new_extra_scalar[currCell] = (factor_old*
-		    old_extra_scalar[currCell] + factor_new*
-		    new_extra_scalar[currCell])/(factor_divide);
+	          		new_extra_scalar[currCell] = (factor_old*
+		    				old_extra_scalar[currCell] + factor_new*
+		    				new_extra_scalar[currCell])/(factor_divide);
               }
-	    }
+	    	}
           }
         }
       }
-
   }
 }
 

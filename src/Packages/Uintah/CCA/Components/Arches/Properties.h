@@ -66,7 +66,7 @@ public:
 
       Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                  PhysicalConstants* phys_const, bool calcReactingScalar,
-		 bool calcEnthalpy, bool calcVariance);
+		 bool calcEnthalpy, bool calcVariance, const ProcessorGroup* myworld);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -285,6 +285,8 @@ private:
       bool d_calcExtraScalars;
       vector<ExtraScalarSolver*>* d_extraScalars;
       bool d_carbon_balance_es;	
+
+   	  const ProcessorGroup* d_myworld;
 }; // end class Properties
 } // End namespace Uintah
 
