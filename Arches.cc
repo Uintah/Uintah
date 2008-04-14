@@ -210,7 +210,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   // d_MAlab = multimaterial arches common labels
   d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts,
                               d_calcReactingScalar, 
-                              d_calcEnthalpy, d_calcVariance);
+                              d_calcEnthalpy, d_calcVariance, d_myworld);
 
   d_props->setCalcExtraScalars(d_calcExtraScalars);
 

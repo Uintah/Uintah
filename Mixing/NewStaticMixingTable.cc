@@ -11,7 +11,7 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
-
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/MiscMath.h>
 
 #include <fstream>
@@ -36,11 +36,13 @@ using namespace SCIRun;
 //****************************************************************************
 NewStaticMixingTable::NewStaticMixingTable( bool calcReactingScalar,
                                             bool calcEnthalpy,
-                                            bool calcVariance ) :
+                                            bool calcVariance, 
+											const ProcessorGroup* myworld) :
   MixingModel(),
   d_calcReactingScalar(calcReactingScalar),
   d_calcEnthalpy(calcEnthalpy),
-  d_calcVariance(calcVariance)
+  d_calcVariance(calcVariance),
+  d_myworld(myworld)
 {
 }
 
