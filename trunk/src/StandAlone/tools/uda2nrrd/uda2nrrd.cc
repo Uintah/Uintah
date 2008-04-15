@@ -124,6 +124,35 @@ usage( const string& badarg, const string& progname )
 /////////////////////////////////////////////////////////////////////
 extern "C"
 double*
+getMaterials(const string& input_uda_name, int timeStepNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  udaVars* udaMatlList = new udaVars();
+
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  
+  LevelP level;
+  level = grid->getLevel(0);
+
+  const Patch* patch = *(level->patchesBegin());
+  ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, time);
+
+  for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		   matlIter != matls.end(); matlIter++) {
+    udaMatlList->push_back(*matlIter);
+  }	
+  
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+double*
 getBBox(const string& input_uda_name, int timeStepNo) {
   DataArchive* archive = scinew DataArchive(input_uda_name);
 
@@ -174,31 +203,17 @@ getTimeSteps(const string& input_uda_name) {
 extern "C"
 udaVars*
 getVarList(const string& input_uda_name) {
-  // cout << "In getVarList\n";
-  
   DataArchive* archive = scinew DataArchive(input_uda_name);
   udaVars* udaVarList = new udaVars();
 
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
   
-  cout << sizeof(vars) << endl;
-  // cout << "Memory allotted\n";
-
-  // cout << "Call to queryVariables\n";
   archive->queryVariables(vars, types);
-  // cout << "Successfull \n";
-  
-  cout << sizeof(vars) << endl;
-  
-  // cout << "Pushing vars:  " << vars.size() << "\n";  
   
   for (int i = 0; i < vars.size(); i++) {
     udaVarList->push_back(vars[i]);
-    // cout << udaVarList->size() << endl; 
   }
-  
-  // cout << "Pushed vars\n";
   
   return udaVarList;
 } 
