@@ -123,10 +123,10 @@ usage( const string& badarg, const string& progname )
 
 /////////////////////////////////////////////////////////////////////
 extern "C"
-double*
-getMaterials(const string& input_uda_name, int timeStepNo) {
+varMatls*
+getMaterials(const string& input_uda_name, const string& variable_name, int timeStepNo) {
   DataArchive* archive = scinew DataArchive(input_uda_name);
-  udaVars* udaMatlList = new udaVars();
+  varMatls* varMatlList = new varMatls();
 
   vector<int> index;
   vector<double> times;
@@ -141,13 +141,14 @@ getMaterials(const string& input_uda_name, int timeStepNo) {
   level = grid->getLevel(0);
 
   const Patch* patch = *(level->patchesBegin());
-  ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, time);
+  ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
 
   for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		   matlIter != matls.end(); matlIter++) {
-    udaMatlList->push_back(*matlIter);
+	  varMatlList->push_back(*matlIter);
   }	
   
+  return varMatlList;
 }
 
 /////////////////////////////////////////////////////////////////////

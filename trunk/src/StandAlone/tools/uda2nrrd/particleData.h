@@ -50,8 +50,8 @@ class cellVals {
 };	
 
 typedef vector<variable> variables;
-// typedef vector<double> cellVals;
 typedef vector<string> udaVars;
+typedef vector<int> varMatls;
 
 class timeStep {
  public:
