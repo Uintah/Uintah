@@ -213,6 +213,11 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
   if [ "$do_input" = "true" ]; then
     echo -n "replaced input file" >> $logfile
   fi  
+  
+  echo "Comment for the replaceLog file: "
+  read comment
+  echo -n "       Comment: $comment" >> $logfile
+  
   echo >> $logfile
 
 # change groups and permissions so (hopefully) anybody can replace them later
