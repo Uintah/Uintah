@@ -1,5 +1,22 @@
 #!/bin/sh
 
+#
+# replace_gold_standard
+#
+#   This script is used to place a new 'gold standard' uda into the
+# gold standard directory.
+#
+# Usage:
+#
+#    replace_gold_standard new_gold_uda gold_standard_dir testname force
+#        new_gold_uda      : the new uda
+#        gold_standard_dir : location of the gold standard udas
+#        testname          :
+#        force             : -f | -m 
+#                            -f : it won't ask you yes/no questions
+#                            -m : it won't ask, but will only replace memory stats
+#
+
 # echos are commented to not output so much
 
 gold_standard_dir="$1"
