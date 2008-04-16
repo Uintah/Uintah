@@ -182,6 +182,37 @@ string_Cify(const string &str)
   return result;
 }
 
+// Remove leading and trailing white space (blanks, tabs, \n, \r) from string.
+void
+collapse( string & str )
+{
+  string orig = str;
+
+  str = "";
+  
+  int start = 0;
+  for( ; start < orig.length(); start++ ) {
+    char ch = orig[ start ];
+
+    if( ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' ) {
+      break;
+    }
+  }
+
+  int end = orig.length();
+  for( ; end > start; end-- ) {
+    char ch = orig[ end-1 ];
+
+    if( ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r' ) {
+      break;
+    }
+  }
+  
+  if( start != (orig.length() ) ) {
+    str = orig.substr( start, end-start );
+  }
+}
+
 
 // replaces all occurances of 'substr' in 'str' with 'replacement'
 string 
