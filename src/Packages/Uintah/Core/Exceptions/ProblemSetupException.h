@@ -14,11 +14,13 @@
 #define UINTAH_EXCEPTIONS_PROBLEMSETUPEXCEPTION_H
 
 #include <Core/Exceptions/Exception.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <string>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/Core/Exceptions/uintahshare.h>
+
 namespace Uintah {
 
    using namespace SCIRun;
