@@ -82,6 +82,10 @@ SCISHARE vector<string> split_string(const string& str, char sep);
 SCISHARE string string_Cify(const string &str);
 
 //////////
+// Remove leading and trailing white space (blanks, tabs, \n, \r) from string.
+SCISHARE void collapse( string & str );
+
+//////////
 // Unsafe cast from string to char *, used to export strings to C functions.
 SCISHARE char* ccast_unsafe(const string &str);
 
