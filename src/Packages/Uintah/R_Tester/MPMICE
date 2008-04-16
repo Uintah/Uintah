@@ -17,17 +17,17 @@ from helpers.runSusTests import runSusTests
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 
 TESTS = [   ("massX",                 "massX.ups",                 1,  "Linux"),   \
-            ("guni2dRT",                "guni2dRT.ups",              4,  "Linux"),   \
-            ("SteadyBurn_2dRT",              "SteadyBurn_2dRT.ups",       4,  "Linux"),   \
-            ("TBurner_2dRT",             "TBurner_2dRT.ups",          4,  "Linux"),   \
+            ("guni2dRT",              "guni2dRT.ups",              4,  "Linux"),   \
+            ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Linux"),   \
+            ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Linux"),   \
             ("TRWnoz",                "TRWnoz.ups",                1,  "Linux"),   \
             ("testConvertMPMICEAdd",  "testConvertMPMICEAdd.ups",  1,  "Linux"),   \
             ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Linux"),   \
-            ("advect",         "advect.ups",                1,  "Darwin", ["doesTestRun"]),  \
+            ("advect",                "advect.ups",                1,  "Darwin", ["doesTestRun"]),  \
             ("massX",                 "massX.ups",                 1,  "Darwin", ["doesTestRun"]),  \
-            ("guni2dRT",                "guni2dRT.ups",              4,  "Darwin", ["doesTestRun"]),  \
-            ("SteadyBurn_2dRT",              "SteadyBurn_2dRT.ups",       4,  "Darwin", ["doesTestRun"]),  \
-            ("TBurner_2dRT",             "TBurner_2dRT.ups",          4,  "Darwin", ["doesTestRun"]),  \
+            ("guni2dRT",              "guni2dRT.ups",              4,  "Darwin", ["doesTestRun"]),  \
+            ("SteadyBurn_2dRT",       "SteadyBurn_2dRT.ups",       4,  "Darwin", ["doesTestRun"]),  \
+            ("TBurner_2dRT",          "TBurner_2dRT.ups",          4,  "Darwin", ["doesTestRun"]),  \
             ("TRWnoz",                "TRWnoz.ups",                1,  "Darwin", ["doesTestRun"]),  \
             ("testConvertMPMICEAdd",  "testConvertMPMICEAdd.ups",  1,  "Darwin", ["doesTestRun"]),  \
             ("advect_2L_MI",          "advect_2L_MI.ups",          1,  "Darwin", ["doesTestRun"]),  \
