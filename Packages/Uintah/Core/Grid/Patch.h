@@ -944,10 +944,10 @@ WARNING
       //for each face 
         //if we don't have a neigbor add that face to the boundary vector
       if(getBCType(xminus)==None) faces.push_back(xminus);
-      if(getBCType(yminus)==None) faces.push_back(yminus);
-      if(getBCType(zminus)==None) faces.push_back(zminus);
       if(getBCType(xplus)==None) faces.push_back(xplus);
+      if(getBCType(yminus)==None) faces.push_back(yminus);
       if(getBCType(yplus)==None) faces.push_back(yplus);
+      if(getBCType(zminus)==None) faces.push_back(zminus);
       if(getBCType(zplus)==None) faces.push_back(zplus);
     }
     
@@ -964,10 +964,10 @@ WARNING
       //for each face 
         //if we don't have a neigbor add that face to the boundary vector
       if(getBCType(xminus)==Coarse) faces.push_back(xminus);
-      if(getBCType(yminus)==Coarse) faces.push_back(yminus);
-      if(getBCType(zminus)==Coarse) faces.push_back(zminus);
       if(getBCType(xplus)==Coarse) faces.push_back(xplus);
+      if(getBCType(yminus)==Coarse) faces.push_back(yminus);
       if(getBCType(yplus)==Coarse) faces.push_back(yplus);
+      if(getBCType(zminus)==Coarse) faces.push_back(zminus);
       if(getBCType(zplus)==Coarse) faces.push_back(zplus);
     }
   
