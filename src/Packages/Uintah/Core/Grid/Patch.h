@@ -937,7 +937,7 @@ WARNING
     /**
      * sets the vector faces equal to the list of faces that are on the boundary
      */
-    inline void getBoundaryFaces__New(vector<FaceType>& faces) const
+    inline void getBoundaryFaces(vector<FaceType>& faces) const
     { 
       faces.clear();
 
@@ -974,7 +974,7 @@ WARNING
     /**
      * sets the vector cells equal to the list of cells that are in the corners
      */
-    void getCornerCells__New(vector<IntVector> & cells, const FaceType &face) const;
+    void getCornerCells(vector<IntVector> & cells, const FaceType &face) const;
 
     /**
      * Returns the principal axis along a face and

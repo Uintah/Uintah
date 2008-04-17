@@ -1994,7 +1994,7 @@ void Patch::finalizePatch()
 
   const vector<FaceType> *bfaces1=getBoundaryFaces();
   vector<FaceType> bfaces2;
-  getBoundaryFaces__New(bfaces2);
+  getBoundaryFaces(bfaces2);
 
   ASSERT(bfaces1->size()==bfaces2.size());
 
@@ -2018,7 +2018,7 @@ void Patch::finalizePatch()
     {
       const vector<IntVector> ccells1=getCornerCells(static_cast<FaceType>(face));
       vector<IntVector> ccells2;
-      getCornerCells__New(ccells2,static_cast<FaceType>(face));
+      getCornerCells(ccells2,static_cast<FaceType>(face));
 /*  
       if(ccells1.size()!=ccells2.size())
       {
@@ -2101,7 +2101,7 @@ int Patch::getGridIndex() const
 /**
 * sets the vector cells equal to the list of cells that at the intersection of three faces extra cells
 */
-void Patch::getCornerCells__New(vector<IntVector> & cells, const FaceType& face) const
+void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
 {
   //set bounds for loops below
   int xstart=0,xend=2;
