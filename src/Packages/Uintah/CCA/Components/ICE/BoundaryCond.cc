@@ -53,7 +53,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
   vector<Patch::FaceType>::const_iterator itr;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  for (itr  = patch->getBoundaryFaces()->begin(); itr != patch->getBoundaryFaces()->end(); ++itr){
+  for (itr  = bf.begin(); itr != bf.end(); ++itr){
     Patch::FaceType face = *itr;
     
     int mat_id = 0; // hard coded for pressure
