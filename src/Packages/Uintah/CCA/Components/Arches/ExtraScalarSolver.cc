@@ -97,6 +97,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("density_weighted",d_scalar_density_weighted,true);
   db->getWithDefault("useforDensity",d_scalar_useforden,false);
   db->getWithDefault("carbon_balance", d_carbon_balance, false);
+  db->getWithDefault("sulfur_balance", d_sulfur_balance, false);  
   db->getWithDefault("clip_value", d_clipValue, 100000000000.0);
   db->getWithDefault("noisy_clipping", d_noisyClipping, false);
 
