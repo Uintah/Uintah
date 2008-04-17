@@ -199,6 +199,9 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   if (co2rate_index != -1){
     outStream.d_co2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2rate_index);
   }
+  if (so2rate_index != -1){
+	outStream.d_so2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so2rate_index);
+  }
 }
 
 double
@@ -491,6 +494,8 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
             //there has to be a better way to do this!
             if ( myname == "rate_CO2" )
               co2rate_index = ii;
+			if ( myname == "rate_SO2" )
+			  so2rate_index = ii;		  
           }
         }
       }
@@ -603,8 +608,10 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
   cout << "CH4 index is "  << ch4_index  << endl;
   cout << "sootFV index is "  << soot_index  << endl;
 
-  cout << "CO2 rxn rate index is " << co2rate_index << endl;
-  cout << "SO2 rxn rate index is " << so2rate_index << endl;
+  if (co2rate_index != -1)	
+  	cout << "CO2 rxn rate index is " << co2rate_index << endl;
+  if (so2rate_index != -1)	
+  	cout << "SO2 rxn rate index is " << so2rate_index << endl;
 
   // Not sure if we care about units in runtime, read them just in case
   vars_units= vector<string>(d_varscount);

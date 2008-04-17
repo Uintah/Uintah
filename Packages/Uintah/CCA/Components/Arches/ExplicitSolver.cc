@@ -746,6 +746,12 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   	tsk->requires(Task::OldDW, d_lab->d_co2RateLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS); //old one to copy into new one
   }
+  if (d_sulfur_balance_es){	
+  	//SO2 Rate term for SO2 scalar equation 
+  	tsk->computes(d_lab->d_so2RateLabel); //new one
+  	tsk->requires(Task::OldDW, d_lab->d_so2RateLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS); //old one to copy into new one
+  }
 
   tsk->computes(d_lab->d_scalarBoundarySrcLabel);		
   tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
@@ -1975,6 +1981,16 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     co2Rate.initialize(0.0);
     co2Rate.copyData(co2Rate_old);
     }
+    if (d_sulfur_balance_es){  
+    constCCVariable<double> so2Rate_old;
+    old_dw->get(so2Rate_old, d_lab->d_so2RateLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+   
+    CCVariable<double> so2Rate;
+    new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+    so2Rate.initialize(0.0);
+    so2Rate.copyData(so2Rate_old);
+    }
 
 	CCVariable<double> scalarBoundarySrc;
 	CCVariable<double> enthalpyBoundarySrc;
@@ -2034,6 +2050,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_carbonEfficiencyLabel);
   tsk->computes(d_lab->d_carbonEfficiencyESLabel);
   tsk->computes(d_lab->d_sulfurEfficiencyLabel);
+  tsk->computes(d_lab->d_sulfurEfficiencyESLabel);
   tsk->computes(d_lab->d_CO2FlowRateLabel);
   tsk->computes(d_lab->d_SO2FlowRateLabel);
   tsk->computes(d_lab->d_scalarFlowRateLabel);

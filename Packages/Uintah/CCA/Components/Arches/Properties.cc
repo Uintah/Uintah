@@ -334,11 +334,10 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_sootFVINLabel);
     }
 
-    if (d_carbon_balance_es){	
+    if (d_carbon_balance_es)	
     	tsk->modifies(d_lab->d_co2RateLabel);
-
-    //tsk->modifies(d_lab->d_so2RateLabel);
-    }
+	if (d_sulfur_balance_es)
+		tsk->modifies(d_lab->d_so2RateLabel);		
 
   }
   else {
@@ -395,7 +394,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 
     if (d_carbon_balance_es)	
     	tsk->modifies(d_lab->d_co2RateLabel);
-    //tsk->modifies(d_lab->d_so2RateLabel);
+	if (d_sulfur_balance_es)
+		tsk->modifies(d_lab->d_so2RateLabel);		
   
     //tsk->modifies(d_lab->d_tabReactionRateLabel);
   }
@@ -674,9 +674,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
       if (d_carbon_balance_es)	
       	new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
-      //new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
-      //new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
-
+	  if (d_sulfur_balance_es)
+		new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+			  	
     }
     else {
       new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
@@ -745,7 +745,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
       if (d_carbon_balance_es)
       	new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
-      //new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+	  if (d_sulfur_balance_es)
+		new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);	  	
 
     }
     drhodf.initialize(0.0);
@@ -803,7 +804,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     
     if (d_carbon_balance_es)
     	co2Rate.initialize(0.0);
-    //so2Rate.initialize(0.0);
+	if (d_sulfur_balance_es)
+		so2Rate.initialize(0.0);		
     }
 
     if (d_MAlab && !initialize) {
@@ -989,8 +991,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
 	  if (d_carbon_balance_es)
 	  	co2Rate[currCell] = outStream.getCO2RATE();
-	  //so2Rate[currCell] = outStream.getSO2RATE();
-	   
+	  if (d_sulfur_balance_es)
+		so2Rate[currCell] = outStream.getSO2RATE();	  	
 
 	}
       }
