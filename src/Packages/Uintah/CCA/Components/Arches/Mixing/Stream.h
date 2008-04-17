@@ -148,7 +148,8 @@ namespace Uintah {
 
       inline double getCO2RATE() const { 
 	      return d_co2rate; }
-      inline double getSO2RATE() const { return d_so2rate; }
+      inline double getSO2RATE() const { 
+		  return d_so2rate; }
 
 
       inline double getCO() const {

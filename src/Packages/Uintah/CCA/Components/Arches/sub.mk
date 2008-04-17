@@ -28,7 +28,8 @@ SRCS     += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/ExtraScalarSrc.cc \
         $(SRCDIR)/ExtraScalarSrcFactory.cc \
         $(SRCDIR)/ZeroExtraScalarSrc.cc \
-	$(SRCDIR)/CO2RateSrc.cc \
+		$(SRCDIR)/CO2RateSrc.cc \
+		$(SRCDIR)/SO2RateSrc.cc \
         $(SRCDIR)/SmagorinskyModel.cc \
         $(SRCDIR)/ScaleSimilarityModel.cc \
         $(SRCDIR)/IncDynamicProcedure.cc \

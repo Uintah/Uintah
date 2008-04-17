@@ -159,6 +159,10 @@ public:
     	      return d_carbon_balance;
       }
 
+	  inline const bool doSulfurBalance(){
+			  return d_sulfur_balance;
+	  }
+
 protected:
 
 
@@ -252,7 +256,8 @@ private:
       ExtraScalarSrc* d_extraScalarSrc;
       vector<ExtraScalarSrc*> d_extraScalarSources;
       vector<string> d_tabSrcNames;
-      bool d_carbon_balance; 
+      bool d_carbon_balance;
+	  bool d_sulfur_balance; 
 	  double d_clipValue;
 	  bool d_noisyClipping;
 
