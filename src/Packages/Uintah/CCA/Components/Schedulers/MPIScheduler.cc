@@ -947,8 +947,11 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     int netrestart;
     MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR,
                   d_myworld->getComm());
-    if(netrestart)
+    if(netrestart) {
       dws[dws.size()-1]->restartTimestep();
+      if (dws[0])
+        dws[0]->setRestarted();
+    }
   }
 
   finalizeTimestep();

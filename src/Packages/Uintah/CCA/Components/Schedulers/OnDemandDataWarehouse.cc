@@ -99,6 +99,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
      d_isInitializationDW(isInitializationDW)
 {
   restart = false;
+  hasRestarted_ = false;
   aborted = false;
 }
 
@@ -362,6 +363,10 @@ void
 OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, const VarLabel* pos_var,
                                                   int iteration)
 {
+  if (hasRestarted_)
+    // if we did a timestep restart, we've already done this
+    return;
+
   ParticleExchangeVar& recvs = dts->getParticleRecvs();
   ParticleExchangeVar& sends = dts->getParticleSends();
 
