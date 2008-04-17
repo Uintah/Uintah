@@ -240,6 +240,7 @@ public:
    virtual bool timestepRestarted();
    virtual void abortTimestep();
    virtual void restartTimestep();
+   void setRestarted() {hasRestarted_ = true;}
 
    void logMemoryUse(ostream& out, unsigned long& total, const std::string& tag);
 
@@ -374,6 +375,9 @@ private:
 
    bool aborted;
    bool restart;
+
+   // whether the OldDW involved has been restarted (the new DWs are cleared out)
+   bool hasRestarted_;
 };
 
 } // end namespace Uintah
