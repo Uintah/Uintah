@@ -52,7 +52,6 @@ CO2RateSrc::problemSetup(const ProblemSpecP& params)
 	//Initialize
  	setTableIndex(-1);
 
-
 	//warning
 	cout << "** WARNING! **\n";
 	cout << "   The CO2Rate Source term requires that carbon_balance_es be set to true! \n";
@@ -91,7 +90,7 @@ CO2RateSrc::sched_addExtraScalarSrc(SchedulerP& sched,
 void 
 CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
-				      const MaterialSubset*,
+					  const MaterialSubset*,
 				      DataWarehouse*,
 				      DataWarehouse* new_dw,
 				      const TimeIntegratorLabel* timelabels)
@@ -110,23 +109,16 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 	Vector dx = patch->dCell();
 	double vol = dx.x()*dx.y()*dx.z();
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-
     constCCVariable<double> CO2rate;
     new_dw->get(CO2rate, d_lab->d_co2RateLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+	matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-    	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	Box pBox = patch->getInteriorBox();
 
-	      IntVector currCell(colX, colY, colZ);
+	for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
 
-          scalarNonlinSrc[currCell] = -1.0*CO2rate[currCell]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
-
-        }
-      }
-    }
+		scalarNonlinSrc[*iter] += CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
+	
+	}
   }
 }
