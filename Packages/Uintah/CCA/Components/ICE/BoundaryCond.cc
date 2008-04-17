@@ -138,7 +138,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         cout <<"Face: "<< patch->getFaceName(face) << " one_or_zero " << one_or_zero
              <<"\t child " << child  <<" NumChildren "<<numChildren 
              <<"\t BC kind "<< bc_kind
-             <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1)
+             <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
 	      << endl;
         #endif
       } // if (bc_kind !=notSet)
