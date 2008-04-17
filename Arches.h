@@ -310,6 +310,7 @@ private:
     vector<ExtraScalarSolver*> d_extraScalars;
 
     bool d_carbon_balance_es;	
+    bool d_sulfur_balance_es;	
     
 
 }; // end class Arches
