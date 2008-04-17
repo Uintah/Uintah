@@ -50,15 +50,23 @@
 
 <Uintah_specification> 
 
+  <Meta                 spec="OPTIONAL NONE">
+    <title              spec="OPTIONAL STRING" />
+  </Meta>
+
   <Time                 spec="REQUIRED NONE">
-    <maxTime            spec="REQUIRED DOUBLE 'positive'" />
-    <initTime           spec="REQUIRED DOUBLE 'positive'" />
-    <deltMin            spec="REQUIRED DOUBLE '0.0000001, 1000'" />
-    <deltMax            spec="REQUIRED DOUBLE '0.0000001, 1000'" />
-    <timestepMultiplier spec="REQUIRED DOUBLE 'positive'" />
+    <maxTime            spec="REQUIRED DOUBLE  'positive'" />
+    <maxTimesteps       spec="OPTIONAL INTEGER 'positive'" />
+    <initTime           spec="REQUIRED DOUBLE  'positive'" />
+    <deltMin            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
+    <deltMax            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
+    <deltInit           spec="OPTIONAL DOUBLE  'positive'" />
+    <maxDeltIncrease    spec="OPTIONAL DOUBLE  'positive'" />
+    <maxInitialDelt     spec="OPTIONAL DOUBLE  'positive'" />
+    <timestepMultiplier spec="REQUIRED DOUBLE  'positive'" />
   </Time>
 
-  <SimulationComponent  spec="REQUIRED NONE">
+  <SimulationComponent  spec="OPTIONAL NONE"> <!-- FIXME: is this really optional? -->
     <type               spec="REQUIRED STRING 'mpm, arches, ice, mpmice, mpmarches, impm'" />
   </SimulationComponent>
 
@@ -66,21 +74,38 @@
       <filebase         spec="REQUIRED STRING" />
       <outputTimestepInterval spec="REQUIRED INTEGER 'positive'" />
       <save             spec="MULTIPLE NONE"
-                        attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'">
+                        attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'"
                         attribute2="label     REQUIRED STRING 'press_equil_CC, vol_frac_CC,
                                                                sp_vol_CC, uvel_FC, vvel_FC,
                                                                wvel_FC, uvel_FCME, vvel_FCME,
                                                                wvel_FCME, delP_Dilatate, press_CC,
                                                                mom_L_ME_CC, vel_CC, rho_CC, temp_CC,
                                                                KineticEnergy, TotalIntEng'" />
-      <checkpoint       spec="REQUIRED NONE"
+      <!-- ???? IS checkpoint REALLY OPTIONAL???? -->
+      <checkpoint       spec="OPTIONAL NONE"
                         attribute1="interval  REQUIRED DOUBLE  'positive'"
                         attribute2="cycle     REQUIRED INTEGER 'positive'" />
       <outputDoubleAsFloat spec="OPTIONAL NONE" />
       <compression         spec="OPTIONAL STRING 'gzip'" />
   </DataArchiver>
 
-  <InitialConditions>   spec="REQUIRED NONE">
+  <Debug                spec="OPTIONAL NONE" >
+    <dbg_timeStart      spec="REQUIRED DOUBLE" />
+    <dbg_timeStop       spec="REQUIRED DOUBLE" />
+    <dbg_outputInterval spec="REQUIRED DOUBLE" />
+    <dbg_BeginIndex     spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
+    <dbg_EndIndex       spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
+    <dbg_Matls          spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [0,1] -->
+    <dbg_SigFigs        spec="OPTIONAL INTEGER '1, 20'" />
+    <debug              spec="MULTIPLE NONE"
+                        attribute1="label REQUIRED STRING 'switchTestConservation_abc, switchDebug_explicit_press, switchDebug_LagrangianValues,
+                                                           switchDebug_MomentumExchange_CC, switchDebug_Initialize, switchDebug_equil_press,
+                                                           switchDebug_vel_FC, switchDebug_explicit_press, switchDebug_PressFC,
+                                                           switchDebug_LagrangianValues, switchDebug_MomentumExchange_CC,
+                                                           switchDebug_Source_Sink, switchDebug_advance_advect'" />
+  </Debug>
+
+  <InitialConditions    spec="OPTIONAL NONE">
     <MPM                spec="OPTIONAL NONE" />
     <ARCHES             spec="OPTIONAL NONE" />
   </InitialConditions>
@@ -92,9 +117,10 @@
                         attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'">
         <BCType         spec="MULTIPLE NONE"
                         attribute1="id        REQUIRED STRING 'all'"
-                        attribute2="var       REQUIRED STRING 'Dirichlet'"
-                        attribute3="label     REQUIRED STRING 'Velocity'" >
-          <value        spec="REQUIRED VECTOR" />
+                        attribute2="var       REQUIRED STRING 'Dirichlet, symmetry'"
+                        attribute3="label     REQUIRED STRING 'Pressure, Velocity, Temperature, Density, Symmetric'" >
+          <value        spec="OPTIONAL STRING" /> <!-- ERROR... it is required for some, but not for Dirichlet!!!
+                                                       also, type can be different for different labels... how to handle? --> 
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -104,20 +130,29 @@
                         attribute1="label     REQUIRED STRING">
         <lower          spec="REQUIRED VECTOR" />
         <upper          spec="REQUIRED VECTOR" />
-        <resolution     spec="REQUIRED VECTOR" />
+        <resolution     spec="OPTIONAL VECTOR" />
         <patches        spec="REQUIRED VECTOR" />
         <extraCells     spec="REQUIRED VECTOR" />
       </Box>
+      <spacing          spec="OPTIONAL VECTOR" /> <!-- ????????? -->
     </Level>
 
   </Grid>
 
   <PhysicalConstants    spec="REQUIRED NONE">
     <gravity            spec="REQUIRED VECTOR" />
-    <reference_pressure spec="REQUIRED DOUBLE" />
+    <reference_pressure spec="OPTIONAL DOUBLE" />
   </PhysicalConstants>
 
-  <Scheduler>
+  <CFD                  spec="OPTIONAL NONE" >
+    <cfl                spec="REQUIRED INTEGER 'positive'" />
+    <ICE                spec="REQUIRED NONE" >
+      <advection        spec="REQUIRED NONE" 
+                        attribute1="type REQUIRED STRING 'FirstOrder'" />
+    </ICE>        
+  </CFD>
+
+  <Scheduler              spec="OPTIONAL NONE">
     <VarTracker           spec="REQUIRED NONE">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
@@ -128,5 +163,97 @@
                           attribute2="dw    REQUIRED STRING 'NewDW, OldDW'" />
     </VarTracker>
   </Scheduler>
+
+  <MPM                    spec="OPTIONAL NONE">
+    <time_integrator      spec="REQUIRED STRING 'explicit'" />
+    <interpolator         spec="REQUIRED STRING 'gimp'" />
+  </MPM>
+
+  <MaterialProperties        spec="OPTIONAL NONE">
+    <MPM                     spec="OPTIONAL NONE">
+      <material              spec="REQUIRED NONE">
+        <density             spec="REQUIRED DOUBLE" />
+        <constitutive_model  spec="REQUIRED NONE"
+                             attribute1="type    REQUIRED STRING 'comp_mooney_rivlinnnnqwerty'" >
+          <he_constant_1     spec="REQUIRED DOUBLE 'positive'" />
+          <he_constant_2     spec="REQUIRED DOUBLE 'positive'" />
+          <he_PR             spec="REQUIRED DOUBLE 'positive'" />
+        </constitutive_model>
+        <thermal_conductivity spec="REQUIRED DOUBLE 'positive'" />
+        <specific_heat        spec="REQUIRED DOUBLE 'positive'" />
+        <geom_object          spec="MULTIPLE NONE" >
+          <cylinder           spec="REQUIRED NONE"
+                              attribute1="label    REQUIRED STRING" >
+            <bottom           spec="REQUIRED VECTOR" />
+            <top              spec="REQUIRED VECTOR" />
+            <radius           spec="REQUIRED DOUBLE 'positive2'" />
+          </cylinder>
+          <res                spec="REQUIRED VECTOR" />
+          <velocity           spec="REQUIRED VECTOR" />
+          <temperature        spec="REQUIRED DOUBLE" />
+        </geom_object>
+      </material>
+      <contact                spec="REQUIRED NONE" >
+        <type                 spec="REQUIRED STRING 'null'" />
+        <materials            spec="REQUIRED STRING" /> <!-- THIS IS WRONG.  What is [0]? -->
+      </contact>
+    </MPM>
+
+    <ICE                      spec="OPTIONAL NONE" > 
+      <material               spec="MULTIPLE NONE"
+                              attribute1="name REQUIRED STRING" >
+        <EOS                  spec="REQUIRED NONE"
+                              attribute1="type REQUIRED STRING 'ideal_gas'" />
+        <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
+        <thermal_conductivity spec="REQUIRED DOUBLE 'positive'" />
+        <specific_heat        spec="REQUIRED DOUBLE 'positive'" />
+        <gamma                spec="REQUIRED DOUBLE 'positive'" />
+
+        <geom_object          spec="MULTIPLE NONE" >
+          <cylinder           spec="OPTIONAL NONE"
+                              attribute1="label    REQUIRED STRING" >
+            <bottom           spec="REQUIRED VECTOR" />
+            <top              spec="REQUIRED VECTOR" />
+            <radius           spec="REQUIRED DOUBLE 'positive2'" />
+          </cylinder>
+
+          <box                spec="OPTIONAL NONE"
+                              attribute1="label    REQUIRED STRING" />
+
+          <difference         spec="OPTIONAL NONE" >
+            <box              spec="MULTIPLE NONE"
+                              attribute1="label REQUIRED STRING" >
+              <min            spec="REQUIRED VECTOR" />
+              <max            spec="REQUIRED VECTOR" />
+            </box>
+          </difference>
+
+          <res                spec="REQUIRED VECTOR" />
+          <velocity           spec="REQUIRED VECTOR" />
+          <temperature        spec="REQUIRED DOUBLE" />
+          <density            spec="REQUIRED DOUBLE" />
+          <pressure           spec="REQUIRED DOUBLE" />
+
+        </geom_object>
+      </material>
+    </ICE>
+
+    <exchange_properties      spec="OPTIONAL NONE" >
+      <exchange_coefficients  spec="REQUIRED NONE" >
+        <momentum             spec="REQUIRED STRING" /> <!-- FIXME: not string, HOW TO HANDLE [1.0,1.0] -->
+        <heat                 spec="REQUIRED STRING" /> <!-- FIXME: not string, HOW TO HANDLE [1.0,1.0] -->
+      </exchange_coefficients>
+    </exchange_properties>
+
+  </MaterialProperties>
+
+  <Models                     spec="OPTIONAL NONE" >
+    <Model                    spec="REQUIRED NONE"
+                              attribute1="type REQUIRED STRING" >
+      <fromMaterial           spec="REQUIRED STRING 'source'" />
+      <toMaterial             spec="REQUIRED STRING 'destination'" />
+      <rate                   spec="REQUIRED DOUBLE" />
+    </Model>
+  </Models>
 
 </Uintah_specification>
