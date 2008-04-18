@@ -45,7 +45,7 @@
 #ifndef SCI_project_ExecConverter_h
 #define SCI_project_ExecConverter_h 1
 
-#include <unistd.h>
+#include <unistd.h> // for 'unlink()'
 
 #include <Core/Persistent/Pstreams.h>
 
