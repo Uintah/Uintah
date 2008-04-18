@@ -192,7 +192,7 @@ collapse( string & str )
 
   str = "";
   
-  int start = 0;
+  unsigned int start = 0;
   for( ; start < orig.length(); start++ ) {
     char ch = orig[ start ];
 
@@ -201,7 +201,7 @@ collapse( string & str )
     }
   }
 
-  int end = orig.length();
+  unsigned int end = orig.length();
   for( ; end > start; end-- ) {
     char ch = orig[ end-1 ];
 
