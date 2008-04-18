@@ -329,8 +329,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     print "Test Timer: %d:%d:%d" %(hours,minutes,seconds)
     
     # If the test passed put an svn revision stamp in the goldstandard
+    # user root is running the cronjob
     user = environ['USER']
-    if failcode == 0 and user == "csafe-tester":
+    print "Failcode %i user %s" %(failcode,user)
+    
+    if failcode == 0 and (user == "csafe-tester" or user == "root"):
       print "Updating the svn revision file %s" %svn_revision
       svn_file = "%s/%s/%s/svn_revision" % (gold_standard,ALGO,testname)
       system( "echo 'This test last passed with %s'> %s" %(svn_revision, svn_file))  
