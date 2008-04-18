@@ -43,10 +43,14 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+
+#include <unistd.h> // for usleep()
+
 #include <iostream>
 #include <sstream>
+
 #ifdef _WIN32
-#include <Windows.h>
+#  include <Windows.h>
 #endif
 
 namespace SCIRun {
