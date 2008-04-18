@@ -68,17 +68,6 @@ using namespace Uintah;
 
 Args args;
 
-/*int main() {
-  return 0;
-}
-
-extern "C"
-int incr(int a)
-{
-	int b = a + 1;
-	return b;
-}*/
-
 void
 usage( const string& badarg, const string& progname )
 {
@@ -222,7 +211,7 @@ getVarList(const string& input_uda_name) {
 /////////////////////////////////////////////////////////////////////
 extern "C"
 timeStep*
-processData(int argc, char argv[][128], int timeStepNo, bool dataReq) // add a third arguement here
+processData(int argc, char argv[][128], int timeStepNo, bool dataReq, int matlNo, bool matlClassfication) // add a third arguement here
 {
   /*
    * Default values
@@ -654,25 +643,25 @@ processData(int argc, char argv[][128], int timeStepNo, bool dataReq) // add a t
 
           switch (subtype->getType()) {
           case Uintah::TypeDescription::double_type:
-            data = handleParticleData<double>( qinfo );
+            data = handleParticleData<double>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::float_type:
-            data = handleParticleData<float>( qinfo );
+            data = handleParticleData<float>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::int_type:
-            data = handleParticleData<int>( qinfo );
+            data = handleParticleData<int>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::long64_type:
-            data = handleParticleData<long64>( qinfo );
+            data = handleParticleData<long64>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::Point:
-            data = handleParticleData<Point>( qinfo );
+            data = handleParticleData<Point>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::Vector:
-            data = handleParticleData<Vector>( qinfo );
+            data = handleParticleData<Vector>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::Matrix3:
-            data = handleParticleData<Matrix3>( qinfo );
+            data = handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication );
             break;
           default:
             cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";

@@ -144,32 +144,29 @@ handleData( QueryInfo &    qinfo,
 	  
 	if (dataReq) {
 
-	cout << "here\n";
+	/*cout << "here\n";
     for( unsigned int cnt = 0; cnt < x * y * z; cnt++ ) {
 	   double * data = (double*)nrrd->data;
 	   cout << cnt << ": " << &data[cnt] << " -- ";
 	   cout.flush();
 	   cout << data[cnt] << "\n";
-	}
+	}*/
 
-
-	  // cellValColln.cellValVec = new typeDouble();
-	  // typeDouble* cellValVecPtr = cellValColln.cellValVec;
 	  typeDouble* cellValVecPtr = new typeDouble();   
-	  for (unsigned int i = x-1; i >= 0; ++i) {
+	  for (unsigned int i = 0; i < x; ++i) {
 	    double* rowData = (double*)(nrrd->data) + i * y * z;
-		if (rowData == NULL) { cout << "rowData: NULL"; exit(1); }
-	    for (unsigned int j = y-1; j >= 0; ++j) {
+		// if (rowData == NULL) { cout << "rowData: NULL"; exit(1); }
+	    for (unsigned int j = 0; j < y; ++j) {
 	      double* cellData = rowData + j * z;
-		  cout << "cellData: " << cellData << "\n";
-	      if (cellData == NULL) { cout << "cellData: NULL"; exit(1); } 
-		  for (unsigned int k = z -1 ; k >= 0; ++k) {
-		    if( i > 150 && j > 160 && k > 10 ) {
-		    cout << &cellData[k] << ": " << i << " " << j << " " << k << " ";
-			cout.flush(); 
-			cout << "cellData[k]: " << cellData[k] << "\n";
-			}
-//		    cellValVecPtr->push_back(cellData[k]);
+		  // cout << "cellData: " << cellData << "\n";
+	      // if (cellData == NULL) { cout << "cellData: NULL"; exit(1); } 
+		  for (unsigned int k = 0 ; k < z; ++k) {
+		    // if( i > 150 && j > 160 && k > 10 ) {
+		    // cout << &cellData[k] << ": " << i << " " << j << " " << k << " ";
+			// cout.flush(); 
+			// cout << "cellData[k]: " << cellData[k] << "\n";
+			// }
+		    cellValVecPtr->push_back(cellData[k]);
 		  }
 	    }
 	  }

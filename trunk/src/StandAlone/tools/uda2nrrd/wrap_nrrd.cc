@@ -124,8 +124,11 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose )
     size[1] = source->fdata().dim3();
     size[2] = source->fdata().dim2();
     size[3] = source->fdata().dim1();
+
+    cout << size[0] << " " << size[1] << " " << size[2] << endl;   
   
     unsigned int num_vec = source->fdata().size();
+	cout << num_vec << endl;
     double *data = new double[num_vec*3];
     if (!data) {
       cerr << "Cannot allocate memory ("<<num_vec*3*sizeof(double)<<" byptes) for temp storage of vectors\n";

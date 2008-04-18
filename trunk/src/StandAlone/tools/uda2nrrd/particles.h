@@ -50,7 +50,7 @@ struct ParticleDataContainer {
 
 template<class PartT>
 ParticleDataContainer
-handleParticleData( QueryInfo & qinfo );
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication );
 
 void
 saveParticleData( std::vector<ParticleDataContainer> & data,

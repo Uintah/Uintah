@@ -22,7 +22,7 @@ machineIsBigEndian()
 
 template<>
 ParticleDataContainer
-handleParticleData<Point>( QueryInfo & qinfo )
+handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication )
 {
   vector<float> dataX, dataY, dataZ;
 
@@ -35,6 +35,8 @@ handleParticleData<Point>( QueryInfo & qinfo )
     for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
 
       int matl = *matlIter;
+      if (matlClassfication && (matl != matlNo))
+	    continue;
 
       ParticleVariable<Point> value;
       qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
@@ -96,7 +98,7 @@ handleParticleData<Point>( QueryInfo & qinfo )
 
 template<>
 ParticleDataContainer
-handleParticleData<Vector>( QueryInfo & qinfo )
+handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication )
 {
   vector<float> data;
 
@@ -109,6 +111,8 @@ handleParticleData<Vector>( QueryInfo & qinfo )
     for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
 
       int matl = *matlIter;
+	  if (matlClassfication && (matl != matlNo))
+	    continue;
 
       ParticleVariable<Vector> value;
       qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
@@ -148,7 +152,7 @@ handleParticleData<Vector>( QueryInfo & qinfo )
 
 template<>
 ParticleDataContainer
-handleParticleData<Matrix3>( QueryInfo & qinfo )
+handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication )
 {
   vector<float> data;
 
@@ -161,6 +165,8 @@ handleParticleData<Matrix3>( QueryInfo & qinfo )
     for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
 
       int matl = *matlIter;
+	  if (matlClassfication && (matl != matlNo))
+	    continue;
 
       ParticleVariable<Matrix3> value;
       qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
@@ -212,7 +218,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo )
 
 template<class PartT>
 ParticleDataContainer
-handleParticleData( QueryInfo & qinfo )
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication )
 {
   vector<float> data;
 
@@ -239,6 +245,8 @@ handleParticleData( QueryInfo & qinfo )
     for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
 
       int matl = *matlIter;
+	  if (matlClassfication && (matl != matlNo))
+	    continue;
 
       ParticleVariable<PartT> value;
       qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
@@ -428,12 +436,14 @@ void
 templateInstantiationForParticlesCC()
 {
   QueryInfo  * qinfo = NULL;
+  int matlNo = 0;
+  bool matlClassfication = false;
 
-  handleParticleData<int>    ( *qinfo );
-  handleParticleData<long64> ( *qinfo );
-  handleParticleData<float>  ( *qinfo );
-  handleParticleData<double> ( *qinfo );
-  handleParticleData<Point>  ( *qinfo );
-  handleParticleData<Vector> ( *qinfo );
-  handleParticleData<Matrix3>( *qinfo );
+  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication );
+  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication );
+  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication );
+  handleParticleData<double> ( *qinfo, matlNo, matlClassfication );
+  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication );
+  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication );
+  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication );
 }
