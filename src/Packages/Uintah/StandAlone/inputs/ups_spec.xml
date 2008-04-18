@@ -23,7 +23,7 @@
 
        need: OPTIONAL, REQUIRED, MULTIPLE   (Probably need MULTIPLE-REQ and MULTIPLE-OPT.
                                              Currently MULTIPLE means 0 or more...)
-       type: DOUBLE, INTEGER, STRING, VECTOR, NONE (NONE means the tag doesn't have any
+       type: DOUBLE, INTEGER, STRING, VECTOR, NO_DATA (NO_DATA means the tag doesn't have any
                                                     data (text) but can have attributes and/or
                                                     sub-tags.)
 
@@ -50,11 +50,11 @@
 
 <Uintah_specification> 
 
-  <Meta                 spec="OPTIONAL NONE">
+  <Meta                 spec="OPTIONAL NO_DATA">
     <title              spec="OPTIONAL STRING" />
   </Meta>
 
-  <Time                 spec="REQUIRED NONE">
+  <Time                 spec="REQUIRED NO_DATA">
     <maxTime            spec="REQUIRED DOUBLE  'positive'" />
     <maxTimesteps       spec="OPTIONAL INTEGER 'positive'" />
     <initTime           spec="REQUIRED DOUBLE  'positive'" />
@@ -66,14 +66,15 @@
     <timestepMultiplier spec="REQUIRED DOUBLE  'positive'" />
   </Time>
 
-  <SimulationComponent  spec="OPTIONAL NONE"> <!-- FIXME: is this really optional? -->
+  <SimulationComponent  spec="OPTIONAL NO_DATA"> <!-- FIXME: is this really optional? -->
     <type               spec="REQUIRED STRING 'mpm, arches, ice, mpmice, mpmarches, impm'" />
   </SimulationComponent>
 
-  <DataArchiver         spec="REQUIRED NONE">
+  <DataArchiver         spec="REQUIRED NO_DATA">
       <filebase         spec="REQUIRED STRING" />
-      <outputTimestepInterval spec="REQUIRED INTEGER 'positive'" />
-      <save             spec="MULTIPLE NONE"
+      <outputInterval   spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: only one of these should be allowed... -->
+      <outputTimestepInterval spec="OPTIONAL INTEGER 'positive'" />
+      <save             spec="MULTIPLE NO_DATA"
                         attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'"
                         attribute2="label     REQUIRED STRING 'press_equil_CC, vol_frac_CC,
                                                                sp_vol_CC, uvel_FC, vvel_FC,
@@ -82,14 +83,14 @@
                                                                mom_L_ME_CC, vel_CC, rho_CC, temp_CC,
                                                                KineticEnergy, TotalIntEng'" />
       <!-- ???? IS checkpoint REALLY OPTIONAL???? -->
-      <checkpoint       spec="OPTIONAL NONE"
+      <checkpoint       spec="OPTIONAL NO_DATA"
                         attribute1="interval  REQUIRED DOUBLE  'positive'"
                         attribute2="cycle     REQUIRED INTEGER 'positive'" />
-      <outputDoubleAsFloat spec="OPTIONAL NONE" />
+      <outputDoubleAsFloat spec="OPTIONAL NO_DATA" />
       <compression         spec="OPTIONAL STRING 'gzip'" />
   </DataArchiver>
 
-  <Debug                spec="OPTIONAL NONE" >
+  <Debug                spec="OPTIONAL NO_DATA" >
     <dbg_timeStart      spec="REQUIRED DOUBLE" />
     <dbg_timeStop       spec="REQUIRED DOUBLE" />
     <dbg_outputInterval spec="REQUIRED DOUBLE" />
@@ -97,7 +98,7 @@
     <dbg_EndIndex       spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
     <dbg_Matls          spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [0,1] -->
     <dbg_SigFigs        spec="OPTIONAL INTEGER '1, 20'" />
-    <debug              spec="MULTIPLE NONE"
+    <debug              spec="MULTIPLE NO_DATA"
                         attribute1="label REQUIRED STRING 'switchTestConservation_abc, switchDebug_explicit_press, switchDebug_LagrangianValues,
                                                            switchDebug_MomentumExchange_CC, switchDebug_Initialize, switchDebug_equil_press,
                                                            switchDebug_vel_FC, switchDebug_explicit_press, switchDebug_PressFC,
@@ -105,17 +106,17 @@
                                                            switchDebug_Source_Sink, switchDebug_advance_advect'" />
   </Debug>
 
-  <InitialConditions    spec="OPTIONAL NONE">
-    <MPM                spec="OPTIONAL NONE" />
-    <ARCHES             spec="OPTIONAL NONE" />
+  <InitialConditions    spec="OPTIONAL NO_DATA">
+    <MPM                spec="OPTIONAL NO_DATA" />
+    <ARCHES             spec="OPTIONAL NO_DATA" />
   </InitialConditions>
 
-  <Grid                 spec="REQUIRED NONE">
+  <Grid                 spec="REQUIRED NO_DATA">
 
-    <BoundaryConditions spec="REQUIRED NONE">
-      <Face             spec="MULTIPLE NONE"
+    <BoundaryConditions spec="OPTIONAL NO_DATA">
+      <Face             spec="MULTIPLE NO_DATA"
                         attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'">
-        <BCType         spec="MULTIPLE NONE"
+        <BCType         spec="MULTIPLE NO_DATA"
                         attribute1="id        REQUIRED STRING 'all'"
                         attribute2="var       REQUIRED STRING 'Dirichlet, symmetry'"
                         attribute3="label     REQUIRED STRING 'Pressure, Velocity, Temperature, Density, Symmetric'" >
@@ -125,8 +126,8 @@
       </Face>
     </BoundaryConditions>
 
-    <Level              spec="REQUIRED NONE">
-      <Box              spec="REQUIRED NONE"
+    <Level              spec="REQUIRED NO_DATA">
+      <Box              spec="REQUIRED NO_DATA"
                         attribute1="label     REQUIRED STRING">
         <lower          spec="REQUIRED VECTOR" />
         <upper          spec="REQUIRED VECTOR" />
@@ -139,89 +140,199 @@
 
   </Grid>
 
-  <PhysicalConstants    spec="REQUIRED NONE">
+  <PhysicalConstants    spec="OPTIONAL NO_DATA"> <!-- FIXME: REALLY OPTIONAL??? -->
     <gravity            spec="REQUIRED VECTOR" />
     <reference_pressure spec="OPTIONAL DOUBLE" />
+    <ideal_gas_constant spec="OPTIONAL DOUBLE" />
+    <pressure           spec="OPTIONAL DOUBLE" />
+    <viscosity          spec="OPTIONAL DOUBLE" />
   </PhysicalConstants>
 
-  <CFD                  spec="OPTIONAL NONE" >
-    <cfl                spec="REQUIRED INTEGER 'positive'" />
-    <ICE                spec="REQUIRED NONE" >
-      <advection        spec="REQUIRED NONE" 
-                        attribute1="type REQUIRED STRING 'FirstOrder'" />
+  <CFD                                  spec="OPTIONAL NO_DATA" >
+
+    <cfl                                spec="OPTIONAL INTEGER 'positive'" /> <!-- FIX ME: REALLY OPTIONAL??? -->
+    <ICE                                spec="OPTIONAL NO_DATA" >
+      <advection                        spec="REQUIRED NO_DATA" 
+                                           attribute1="type REQUIRED STRING 'FirstOrder'" />
     </ICE>        
+
+    <ARCHES                             spec="OPTIONAL NO_DATA" >
+      <grow_dt                          spec="REQUIRED DOUBLE 'positive'" />
+      <variable_dt                      spec="REQUIRED BOOLEAN" />
+      <nonlinear_solver                 spec="REQUIRED STRING 'explicit'" />
+      <turbulence_model                 spec="REQUIRED STRING 'compdynamicprocedure'" />
+      <transport_mixture_fraction       spec="REQUIRED BOOLEAN" />
+      <transport_enthalpy               spec="REQUIRED BOOLEAN" />
+      <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
+      <Turbulence                       spec="REQUIRED NO_DATA" >
+        <turbulentPrandtlNumber         spec="REQUIRED DOUBLE 'positive'" />
+      </Turbulence>
+      <Properties                       spec="REQUIRED NO_DATA" >
+        <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel'" />
+        <ColdflowMixingModel            spec="REQUIRED NO_DATA" >
+          <Stream                       spec="MULTIPLE NO_DATA" >
+            <density                    spec="REQUIRED DOUBLE 'positive'" />
+            <temperature                spec="REQUIRED DOUBLE" />
+          </Stream>
+        </ColdflowMixingModel>
+      </Properties>
+
+      <BoundaryConditions               spec="REQUIRED NO_DATA" >
+        <FlowInlet                      spec="MULTIPLE NO_DATA" >
+          <InletVelocity                spec="REQUIRED DOUBLE" />
+          <mixture_fraction             spec="REQUIRED DOUBLE" />
+          <geom_object                  spec="REQUIRED NO_DATA" >
+            <box                        spec="OPTIONAL NO_DATA"
+                                           attribute1="label REQUIRED STRING" >
+              <min                      spec="OPTIONAL VECTOR" />
+              <max                      spec="OPTIONAL VECTOR" />
+            </box>
+            <cylinder                   spec="OPTIONAL NO_DATA"
+                                           attribute1="label    REQUIRED STRING" >
+              <bottom                   spec="REQUIRED VECTOR" />
+              <top                      spec="REQUIRED VECTOR" />
+              <radius                   spec="REQUIRED DOUBLE 'positive'" />
+            </cylinder>
+
+          </geom_object>
+        </FlowInlet>
+
+        <PressureBC                     spec="REQUIRED NO_DATA" >
+          <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <geom_object                  spec="REQUIRED NO_DATA" >
+            <box                        spec="MULTIPLE NO_DATA"
+                                           attribute1="label    REQUIRED STRING" >
+              <min                      spec="OPTIONAL VECTOR" />
+              <max                      spec="OPTIONAL VECTOR" />
+            </box>
+          </geom_object>
+        </PressureBC>
+
+        <OutletBC                       spec="REQUIRED NO_DATA" >
+          <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
+          <geom_object                  spec="REQUIRED NO_DATA" >
+            <box                        spec="OPTIONAL NO_DATA"
+                                           attribute1="label    REQUIRED STRING" >
+              <min                      spec="OPTIONAL VECTOR" />
+              <max                      spec="OPTIONAL VECTOR" />
+            </box>
+          </geom_object>
+        </OutletBC>
+      </BoundaryConditions>
+
+      <!-- FIXME: What is the different between this and the other PhysicalConstants? -->
+      <PhysicalConstants                spec="REQUIRED NO_DATA" >
+        <gravity                        spec="REQUIRED VECTOR" />
+        <ref_point                      spec="REQUIRED VECTOR" />
+        <viscosity                      spec="REQUIRED DOUBLE" />
+      </PhysicalConstants>
+
+      <ExplicitSolver                   spec="REQUIRED NO_DATA" >
+        <timeIntegratorType             spec="REQUIRED STRING 'RK2SSP'" />
+        <probe_data                     spec="REQUIRED BOOLEAN" />
+
+        <PressureSolver                 spec="REQUIRED NO_DATA" >
+          <linear_solver                spec="REQUIRED STRING 'hypre'" />
+          <LinearSolver                 spec="REQUIRED NO_DATA" >
+            <res_tol                    spec="REQUIRED DOUBLE" />
+            <ksptype                    spec="REQUIRED STRING 'cg'" />
+            <pctype                     spec="REQUIRED STRING 'pfmg" />
+            <max_iter                   spec="REQUIRED INTEGER 'positive'" />
+          </LinearSolver>
+        </PressureSolver>
+
+        <MomentumSolver                 spec="REQUIRED NO_DATA" >
+          <convection_scheme            spec="REQUIRED STRING 'central'" />
+        </MomentumSolver>
+
+        <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
+          <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
+        </MixtureFractionSolver>
+
+      </ExplicitSolver>
+
+    </ARCHES>
+
   </CFD>
 
-  <Scheduler              spec="OPTIONAL NONE">
-    <VarTracker           spec="REQUIRED NONE">
+  <Scheduler              spec="OPTIONAL NO_DATA">
+    <VarTracker           spec="REQUIRED NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
       <start_index        spec="REQUIRED VECTOR" />
       <end_index          spec="REQUIRED VECTOR" />
-      <var                spec="MULTIPLE NONE"
+      <var                spec="MULTIPLE NO_DATA"
                           attribute1="label REQUIRED STRING"
                           attribute2="dw    REQUIRED STRING 'NewDW, OldDW'" />
     </VarTracker>
   </Scheduler>
 
-  <MPM                    spec="OPTIONAL NONE">
+  <MPM                    spec="OPTIONAL NO_DATA" >
     <time_integrator      spec="REQUIRED STRING 'explicit'" />
     <interpolator         spec="REQUIRED STRING 'gimp'" />
+    <DoExplicitHeatConduction spec="OPTIONAL BOOLEAN" />
   </MPM>
 
-  <MaterialProperties        spec="OPTIONAL NONE">
-    <MPM                     spec="OPTIONAL NONE">
-      <material              spec="REQUIRED NONE">
-        <density             spec="REQUIRED DOUBLE" />
-        <constitutive_model  spec="REQUIRED NONE"
-                             attribute1="type    REQUIRED STRING 'comp_mooney_rivlinnnnqwerty'" >
-          <he_constant_1     spec="REQUIRED DOUBLE 'positive'" />
-          <he_constant_2     spec="REQUIRED DOUBLE 'positive'" />
-          <he_PR             spec="REQUIRED DOUBLE 'positive'" />
+  <MaterialProperties               spec="OPTIONAL NO_DATA">
+    <MPM                            spec="OPTIONAL NO_DATA">
+      <material                     spec="REQUIRED NO_DATA">
+        <density                    spec="REQUIRED DOUBLE" />
+        <heat_transfer_coefficient  spec="OPTIONAL DOUBLE" />
+        <constitutive_model         spec="REQUIRED NO_DATA"
+                                       attribute1="type    REQUIRED STRING 'comp_mooney_rivlinnnnqwerty'" >
+          <he_constant_1            spec="REQUIRED DOUBLE 'positive'" />
+          <he_constant_2            spec="REQUIRED DOUBLE 'positive'" />
+          <he_PR                    spec="REQUIRED DOUBLE 'positive'" />
         </constitutive_model>
-        <thermal_conductivity spec="REQUIRED DOUBLE 'positive'" />
-        <specific_heat        spec="REQUIRED DOUBLE 'positive'" />
-        <geom_object          spec="MULTIPLE NONE" >
-          <cylinder           spec="REQUIRED NONE"
-                              attribute1="label    REQUIRED STRING" >
-            <bottom           spec="REQUIRED VECTOR" />
-            <top              spec="REQUIRED VECTOR" />
-            <radius           spec="REQUIRED DOUBLE 'positive2'" />
+        <thermal_conductivity       spec="REQUIRED DOUBLE 'positive'" />
+        <specific_heat              spec="REQUIRED DOUBLE 'positive'" />
+        <geom_object                spec="MULTIPLE NO_DATA" >
+          <cylinder                 spec="OPTIONAL NO_DATA"
+                                       attribute1="label    REQUIRED STRING" >
+            <bottom                 spec="REQUIRED VECTOR" />
+            <top                    spec="REQUIRED VECTOR" />
+            <radius                 spec="REQUIRED DOUBLE 'positive2'" />
           </cylinder>
-          <res                spec="REQUIRED VECTOR" />
-          <velocity           spec="REQUIRED VECTOR" />
-          <temperature        spec="REQUIRED DOUBLE" />
+          <box                      spec="OPTIONAL NO_DATA"
+                                       attribute1="label    REQUIRED STRING" >
+              <min            spec="OPTIONAL VECTOR" />
+              <max            spec="OPTIONAL VECTOR" />
+          </box>
+          <res                      spec="REQUIRED VECTOR" />
+          <velocity                 spec="REQUIRED VECTOR" />
+          <temperature              spec="REQUIRED DOUBLE" />
         </geom_object>
       </material>
-      <contact                spec="REQUIRED NONE" >
-        <type                 spec="REQUIRED STRING 'null'" />
-        <materials            spec="REQUIRED STRING" /> <!-- THIS IS WRONG.  What is [0]? -->
+      <contact                      spec="REQUIRED NO_DATA" >
+        <type                       spec="REQUIRED STRING 'null, single_velocity'" />
+        <materials                  spec="REQUIRED STRING" /> <!-- THIS IS WRONG.  What is [0]? -->
       </contact>
+      <thermal_contact              spec="OPTIONAL NO_DATA" />
     </MPM>
 
-    <ICE                      spec="OPTIONAL NONE" > 
-      <material               spec="MULTIPLE NONE"
+    <ICE                      spec="OPTIONAL NO_DATA" > 
+      <material               spec="MULTIPLE NO_DATA"
                               attribute1="name REQUIRED STRING" >
-        <EOS                  spec="REQUIRED NONE"
+        <EOS                  spec="REQUIRED NO_DATA"
                               attribute1="type REQUIRED STRING 'ideal_gas'" />
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <thermal_conductivity spec="REQUIRED DOUBLE 'positive'" />
         <specific_heat        spec="REQUIRED DOUBLE 'positive'" />
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
 
-        <geom_object          spec="MULTIPLE NONE" >
-          <cylinder           spec="OPTIONAL NONE"
+        <geom_object          spec="MULTIPLE NO_DATA" >
+          <cylinder           spec="OPTIONAL NO_DATA"
                               attribute1="label    REQUIRED STRING" >
             <bottom           spec="REQUIRED VECTOR" />
             <top              spec="REQUIRED VECTOR" />
             <radius           spec="REQUIRED DOUBLE 'positive2'" />
           </cylinder>
 
-          <box                spec="OPTIONAL NONE"
+          <box                spec="OPTIONAL NO_DATA"
                               attribute1="label    REQUIRED STRING" />
 
-          <difference         spec="OPTIONAL NONE" >
-            <box              spec="MULTIPLE NONE"
+          <difference         spec="OPTIONAL NO_DATA" >
+            <box              spec="MULTIPLE NO_DATA"
                               attribute1="label REQUIRED STRING" >
               <min            spec="REQUIRED VECTOR" />
               <max            spec="REQUIRED VECTOR" />
@@ -238,8 +349,8 @@
       </material>
     </ICE>
 
-    <exchange_properties      spec="OPTIONAL NONE" >
-      <exchange_coefficients  spec="REQUIRED NONE" >
+    <exchange_properties      spec="OPTIONAL NO_DATA" >
+      <exchange_coefficients  spec="REQUIRED NO_DATA" >
         <momentum             spec="REQUIRED STRING" /> <!-- FIXME: not string, HOW TO HANDLE [1.0,1.0] -->
         <heat                 spec="REQUIRED STRING" /> <!-- FIXME: not string, HOW TO HANDLE [1.0,1.0] -->
       </exchange_coefficients>
@@ -247,13 +358,23 @@
 
   </MaterialProperties>
 
-  <Models                     spec="OPTIONAL NONE" >
-    <Model                    spec="REQUIRED NONE"
+  <Models                     spec="OPTIONAL NO_DATA" >
+    <Model                    spec="REQUIRED NO_DATA"
                               attribute1="type REQUIRED STRING" >
       <fromMaterial           spec="REQUIRED STRING 'source'" />
       <toMaterial             spec="REQUIRED STRING 'destination'" />
       <rate                   spec="REQUIRED DOUBLE" />
     </Model>
   </Models>
+
+  <PhysicalBC                 spec="OPTIONAL NO_DATA" >
+    <MPM                      spec="REQUIRED NO_DATA" >
+      <force                  spec="MULTIPLE NO_DATA" >
+        <lower                spec="REQUIRED VECTOR" />
+        <upper                spec="REQUIRED VECTOR" />
+        <force_density        spec="REQUIRED VECTOR" />
+      </force>
+    </MPM>
+  </PhysicalBC>
 
 </Uintah_specification>
