@@ -100,12 +100,13 @@ class avtudaReaderFileFormat : public avtMTSDFileFormat
 	string folder;
 	
 	void *libHandle;
-	char *error, arr2d[7][128];
+	char *error, arr2d[128][128];
 	
-	timeStep* (*processData)(int, char[][128], int, bool);
+	timeStep* (*processData)(int, char[][128], int, bool, int, bool);
 	udaVars* (*getVarList)(const string&);
 	int* (*getTimeSteps)(const string&);
 	double* (*getBBox)(const string&, int);
+    varMatls* (*getMaterials)(const string&, const string&, int);
 
     virtual void           PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
 };

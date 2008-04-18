@@ -42,6 +42,7 @@
 
 #include <avtudaReaderFileFormat.h>
 
+#include <stdio.h>
 #include <dlfcn.h>
 #include <string>
 
@@ -89,6 +90,7 @@ avtudaReaderFileFormat::avtudaReaderFileFormat(const char *filename)
 	
 	libHandle = dlopen("/home/collab/sshankar/SVN/SCIRun/build/lib/libPackages_Uintah_StandAlone_tools_uda2nrrd.so", RTLD_NOW); // The dylib locn should be changed
 	if (!libHandle) {
+	    cerr << "The library libuda2nrrd could not be located!!!"; 
 		EXCEPTION1(InvalidDBTypeException, "The library libuda2nrrd could not be located!!!");
 	}
 
@@ -178,7 +180,7 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
     int nblocks = 1;  // <-- this must be 1 for MTSD
     int block_origin = 0;
     int spatial_dimension = 3;
-    int topological_dimension = 0;
+    int topological_dimension;
     double *extents = NULL;
     //
     // Here's the call that tells the meta-data object that we have a mesh:
@@ -187,12 +189,12 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
     //                    spatial_dimension, topological_dimension);
     //
 
-	string meshname = "mesh_particle";
+	// string meshname = "mesh_particle";
 
 	//
     // AVT_RECTILINEAR_MESH, AVT_CURVILINEAR_MESH, AVT_UNSTRUCTURED_MESH,
     // AVT_POINT_MESH, AVT_SURFACE_MESH, AVT_UNKNOWN_MESH
-	avtMeshType mt = AVT_POINT_MESH;
+	avtMeshType mt;
     //
     // int nblocks = 1;  // <-- this must be 1 for MTSD
     // int block_origin = 0;
@@ -202,13 +204,18 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
     //
     // Here's the call that tells the meta-data object that we have a mesh:
     //
-    AddMeshToMetaData(md, meshname, mt, extents, nblocks, block_origin,
-                       spatial_dimension, topological_dimension);
+    // AddMeshToMetaData(md, meshname, mt, extents, nblocks, block_origin,
+    //                    spatial_dimension, topological_dimension);
     //
 
 	*(void **)(&getVarList) = dlsym(libHandle, "getVarList");
 	if((error = dlerror()) != NULL) {
 		EXCEPTION1(InvalidDBTypeException, "The function getVarList could be located in the library!!!");
+	}
+
+	*(void **)(&getMaterials) = dlsym(libHandle, "getMaterials");
+	if((error = dlerror()) != NULL) {
+		EXCEPTION1(InvalidDBTypeException, "The function getMaterials could be located in the library!!!");
 	}
 
 	udaVars* udaVarsPtr = (*getVarList)(folder);
@@ -217,30 +224,64 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 	for (int i = 0; i < udaVarsObj.size(); i++) {
 	  if (udaVarsObj[i].find("p.") == string::npos) {
 	    string varname = udaVarsObj[i];
-	    string mesh_for_this_var = string("mesh_");
-		mesh_for_this_var.append(varname);
-		
-		cout << varname << " " << mesh_for_this_var << endl;
-		
-		mt = AVT_RECTILINEAR_MESH;
-		topological_dimension = 1;
-		AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
-                          spatial_dimension, topological_dimension);
-		
-		avtCentering cent = AVT_ZONECENT;
-		AddScalarVarToMetaData(md, varname, mesh_for_this_var, cent);
+        varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
+	    varMatls& varMatlsObj = *(varMatlsPtr); 
+	    for (int j = 0; j < varMatlsObj.size(); j++) {
+			char buffer[128];
+			string newVarname = varname;
+			sprintf(buffer, "%d", j);
+			newVarname.append("/");
+			newVarname.append(buffer);
+			
+			string mesh_for_this_var = string("mesh_");
+			mesh_for_this_var.append(newVarname);
+
+			cout << newVarname << " " << mesh_for_this_var << endl;
+			
+			mt = AVT_RECTILINEAR_MESH;
+			topological_dimension = 1;
+			AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
+							  spatial_dimension, topological_dimension);
+			
+			avtCentering cent = AVT_ZONECENT;
+			AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
+		}
 	  }	
 	}
 	
 	for (int i = 0; i < udaVarsObj.size(); i++) {
 	  if (udaVarsObj[i].find("p.") != string::npos && udaVarsObj[i].compare("p.x") != 0) {
-	    string mesh_for_this_var = string("mesh_particle");
-		string varname = udaVarsObj[i];
+        string varname = udaVarsObj[i];
+        varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
+	    varMatls& varMatlsObj = *(varMatlsPtr); 
+        bool addStar = false;
+	    for (int j = 0; j < varMatlsObj.size(); j++) {
+			char buffer[128];
+			string newVarname = varname;
+			sprintf(buffer, "%d", j);
+			newVarname.append("/");
+			
+			if (j == 0 && addStar == false) {
+			  newVarname.append("*");
+			  j--;
+			  addStar = true;
+			}    
+			else
+			  newVarname.append(buffer);
+			
+			string mesh_for_this_var = string("mesh_particle_");
+			mesh_for_this_var.append(newVarname);
 
-		cout << varname << endl;
-		
-		avtCentering cent = AVT_NODECENT;
-		AddScalarVarToMetaData(md, varname, mesh_for_this_var, cent);
+			cout << newVarname << " " << mesh_for_this_var << endl;
+			
+			mt = AVT_POINT_MESH;
+			topological_dimension = 0;
+			AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
+							  spatial_dimension, topological_dimension);
+			
+			avtCentering cent = AVT_NODECENT;
+			AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
+		}
 	  }	
 	}
 
@@ -338,15 +379,20 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
     // YOU MUST IMPLEMENT THIS
 	// timeState is btwn 0 and timeSteps - 1
 
-	if (strcmp(meshname, "mesh_particle") != 0) {
-		cout << "\nIn GetMesh\n";
-		cout << string(meshname) << " ";
+	string meshName(meshname);
 
-        string meshName(meshname);
-		
-		size_t found = meshName.find("_");
-		string varname = meshName.substr(found + 1);
-		cout << varname << endl;
+	if (meshName.find("mesh_particle") == string::npos) { // volume data
+		cout << "\nIn GetMesh\n";
+		cout << meshName << " ";
+
+        size_t found1 = meshName.find("_");
+		size_t found2 = meshName.find("/");
+
+		string varName = meshName.substr(found1 + 1, found2 - (found1 + 1));
+		string matlNo = meshName.substr(found2 + 1);
+
+		cout << varName << endl;
+		cout << matlNo << endl;
 
 		*(void **)(&getBBox) = dlsym(libHandle, "getBBox");
 		if((error = dlerror()) != NULL) {
@@ -364,11 +410,13 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 		strcpy(arr2d[1], "-uda");
 		strcpy(arr2d[2], folder.c_str());
 		strcpy(arr2d[3], "-v");
-		strcpy(arr2d[4], varname.c_str());
-		strcpy(arr2d[5], "-o");
-		strcpy(arr2d[6], "test"); // anything will do
+		strcpy(arr2d[4], varName.c_str());
+		strcpy(arr2d[5], "-m");
+		strcpy(arr2d[6], matlNo.c_str());
+		strcpy(arr2d[7], "-o");
+		strcpy(arr2d[8], "test"); // anything will do
 
-		timeStep *timeStepObjPtr = (*processData)(7, arr2d, timestate, false);
+		timeStep *timeStepObjPtr = (*processData)(9, arr2d, timestate, false, 0, false);
 	    timeStep &timeStepObj = *timeStepObjPtr;
 
 		cellVals& cellValColln = *(timeStepObj.cellValColln);
@@ -424,9 +472,19 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 
 		return rgrid; 
 	}
-	else if (strcmp(meshname, "mesh_particle") == 0) {
+	else if (meshName.find("mesh_particle") != string::npos) { // particle data
 		cout << "\nIn GetMesh\n";
-		cout << string(meshname) << endl;
+		cout << meshName << endl;
+
+		size_t found = meshName.find("/");
+		string matl = meshName.substr(found + 1);
+		
+		int matlNo = 0;
+		
+		if (matl.compare("*") != 0)
+		  matlNo = atoi(matl.c_str());
+
+		cout << matlNo << endl;
 
 		*(void **)(&processData) = dlsym(libHandle, "processData");
 		if((error = dlerror()) != NULL) {
@@ -440,8 +498,18 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 		strcpy(arr2d[4], "-o");
 		strcpy(arr2d[5], "test"); // anything will do
 
-		timeStep *timeStepObjPtr = (*processData)(6, arr2d, timestate, false);
-	    timeStep &timeStepObj = *timeStepObjPtr;
+		timeStep *timeStepObjPtr;
+		
+		if (matl.compare("*") == 0) {
+		  timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false); 
+		  cout << "All data\n";
+        }
+        else {
+		  timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true);
+		  cout << "Some data\n";
+		}  
+
+		timeStep &timeStepObj = *timeStepObjPtr;
 
 		variables& varCollnRef = *(timeStepObj.varColln);
 
@@ -573,15 +641,25 @@ avtudaReaderFileFormat::GetVar(int timestate, const char *varname)
 	vtkFloatArray *rv = vtkFloatArray::New();
 
 	if (varName.find("p.") == string::npos) {
+	    size_t found = varName.find("/");
+		
+		string matlNo = varName.substr(found + 1);
+		varName = varName.substr(0, found);
+
+		cout << varName << endl;
+		cout << matlNo << endl;
+	
 		strcpy(arr2d[0], "uda2nrrd"); // anything will do
 		strcpy(arr2d[1], "-uda");
 		strcpy(arr2d[2], folder.c_str());
 		strcpy(arr2d[3], "-v");
 		strcpy(arr2d[4], varName.c_str());
-		strcpy(arr2d[5], "-o");
-		strcpy(arr2d[6], "test"); // anything will do
+		strcpy(arr2d[5], "-m");
+		strcpy(arr2d[6], matlNo.c_str());
+		strcpy(arr2d[7], "-o");
+		strcpy(arr2d[8], "test"); // anything will do
 
-		timeStep *timeStepObjPtr = (*processData)(7, arr2d, timestate, true);
+		timeStep *timeStepObjPtr = (*processData)(9, arr2d, timestate, true, 0, false);
 	    timeStep &timeStepObj = *timeStepObjPtr;
 		
 		cellVals& cellValColln = *(timeStepObj.cellValColln);
@@ -594,6 +672,19 @@ avtudaReaderFileFormat::GetVar(int timestate, const char *varname)
 		}
 	}
 	else {
+		size_t found = varName.find("/");
+		
+		string matl = varName.substr(found + 1);
+		varName = varName.substr(0, found);
+
+		int matlNo = 0;
+		
+		if (matl.compare("*") != 0)
+		  matlNo = atoi(matl.c_str());
+
+		cout << varName << endl;
+		cout << matlNo << endl;
+		
 		strcpy(arr2d[0], "uda2nrrd"); // anything will do
 		strcpy(arr2d[1], "-uda");
 		strcpy(arr2d[2], folder.c_str());
@@ -601,8 +692,18 @@ avtudaReaderFileFormat::GetVar(int timestate, const char *varname)
 		strcpy(arr2d[4], "-o");
 		strcpy(arr2d[5], "test"); // anything will do
 
-		timeStep *timeStepObjPtr = (*processData)(6, arr2d, timestate, false);
-	    timeStep &timeStepObj = *timeStepObjPtr;
+		timeStep *timeStepObjPtr;
+		
+		if (matl.compare("*") == 0) {
+		  timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false); 
+		  cout << "All data\n";
+		}  
+        else { 
+		  timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true);
+		  cout << "Some data\n";
+		}  
+	    
+		timeStep &timeStepObj = *timeStepObjPtr;
 
 		variables& varColln = *(timeStepObj.varColln);
 
@@ -612,6 +713,8 @@ avtudaReaderFileFormat::GetVar(int timestate, const char *varname)
 		  ntuples = (varColln.size() / PARTICLE_INTERVAL) + 1;
 		else
 		  ntuples = varColln.size() / PARTICLE_INTERVAL;
+
+		cout << ntuples << endl;
 		
 		//
 		// If you do have a scalar variable, here is some code that may be helpful.
@@ -624,7 +727,7 @@ avtudaReaderFileFormat::GetVar(int timestate, const char *varname)
 			unknownData& dataRef = varRef.data;
 			
 			for (int j = 0;  j < dataRef.size(); j++) {
-				if (strcmp(varname, dataRef[j].name.c_str()) == 0)
+				if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
 					rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
 			}
 		}
