@@ -460,10 +460,10 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
                                            
  /*`==========TESTING==========*/    
 #ifdef SPEW                
-                        
+    vector<Patch::FaceType> cf;
+    patch->getCoarseFaces(cf);
     vector<Patch::FaceType>::const_iterator itr;  
-    for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
-         itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
+    for (itr = cf.begin(); itr != cf.end(); ++itr){
       Patch::FaceType patchFace = *itr;
       string name = patch->getFaceName(patchFace);
 

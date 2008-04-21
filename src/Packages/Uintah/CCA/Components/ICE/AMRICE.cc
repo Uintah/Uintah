@@ -399,9 +399,10 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         // Interpolator test
 #if 0
         const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+        vector<Patch::FaceType> cf;
+        finePatch->getCoarseFaces(cf);
         vector<Patch::FaceType>::const_iterator iter;  
-        for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-             iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+        for (iter  = cf.begin(); iter != cf.end(); ++iter){
           Patch::FaceType face = *iter;
           testInterpolators<double>(fine_new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,
                               finePatch, face, "CFI");
@@ -1275,7 +1276,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
         //__________________________________
         //   compute the correction
         // one_zero:  used to increment the CFI counter.
-        if(finePatch->hasCoarseFineInterfaceFace() ){
+        if(finePatch->hasCoarseFaces() ){
           cout_doing << d_myworld->myrank()
                      << "  coarsePatch " << coarsePatch->getID()
                      <<" finepatch " << finePatch->getID()<< endl;
@@ -1577,7 +1578,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
         //__________________________________
         // Apply the correction
         // one_zero:  used to increment the CFI counter.
-        if(finePatch->hasCoarseFineInterfaceFace() ){
+        if(finePatch->hasCoarseFaces() ){
           int one_zero = 1;
           refluxOperator_applyCorrectionFluxes<double>(mass_adv,   "mass",    indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
@@ -1664,9 +1665,10 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
       const Patch* finePatch = finePatches[p];
     
 
+      vector<Patch::FaceType> cf;
+      finePatch->getCoarseFaces(cf);
       vector<Patch::FaceType>::const_iterator iter;  
-      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      for (iter  = cf.begin(); iter != cf.end(); ++iter){
         Patch::FaceType patchFace = *iter;
           
         finePatch->setFaceMark(0, patchFace, 0);
@@ -1705,9 +1707,10 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
       const Patch* finePatch = finePatches[p];
     
 
+      vector<Patch::FaceType> cf;
+      finePatch->getCoarseFaces(cf);
       vector<Patch::FaceType>::const_iterator iter;  
-      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+      for (iter  = cf.begin(); iter != cf.end(); ++iter){
         Patch::FaceType patchFace = *iter;
             
         bool isRight_CP_FP_pair = false;
@@ -1765,11 +1768,12 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
     for(int p=0;p<finePatches.size();p++){  
       const Patch* finePatch = finePatches[p]; 
          
-      if(finePatch->hasCoarseFineInterfaceFace() ){
+      if(finePatch->hasCoarseFaces() ){
 
+        vector<Patch::FaceType> cf;
+        finePatch->getCoarseFaces(cf);
         vector<Patch::FaceType>::const_iterator iter;  
-        for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-             iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+        for (iter  = cf.begin(); iter != cf.end(); ++iter){
           Patch::FaceType patchFace = *iter;
           
           //This makes sure that the processor that "touched" the cell is also

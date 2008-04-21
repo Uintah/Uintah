@@ -123,8 +123,7 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
   // Iterate over the coarsefine interface faces
   // use one-sided first order differencing to compute the gradient
  vector<Patch::FaceType>  faces;
- faces.insert(faces.end(), patch->getCoarseFineInterfaceFaces()->begin(),
-                           patch->getCoarseFineInterfaceFaces()->end());                           
+ patch->getCoarseFaces(faces);
  
  vector<Patch::FaceType>::const_iterator f_iter;   
  
@@ -235,8 +234,7 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
   //__________________________________
   //Coarse fine interface faces
   vector<Patch::FaceType>  faces;
-  faces.insert(faces.end(), patch->getCoarseFineInterfaceFaces()->begin(),
-                            patch->getCoarseFineInterfaceFaces()->end());                           
+  patch->getCoarseFaces(faces);
   IntVector cl = patch->getCellLowIndex();
   IntVector ch = patch->getCellHighIndex() - IntVector(1,1,1);
   

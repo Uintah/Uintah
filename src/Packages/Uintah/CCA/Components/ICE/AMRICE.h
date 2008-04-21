@@ -254,9 +254,10 @@ void ICE::refluxOperator_applyCorrectionFluxes(
   
   //__________________________________
   // Iterate over coarsefine interface faces
+  vector<Patch::FaceType> cf;
+  finePatch->getCoarseFaces(cf);
   vector<Patch::FaceType>::const_iterator iter;  
-  for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-       iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+  for (iter  = cf.begin(); iter != cf.end(); ++iter){
     Patch::FaceType patchFace = *iter;
 
     // determine the iterator for the coarse level.
@@ -376,9 +377,10 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch,
   IntVector refineRatio = fineLevel->getRefinementRatio();
   //__________________________________
   // Iterate over coarsefine interface faces
+  vector<Patch::FaceType> cf;
+  finePatch->getCoarseFaces(cf);
   vector<Patch::FaceType>::const_iterator iter;  
-  for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-       iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+  for (iter  = cf.begin(); iter != cf.end(); ++iter){
     Patch::FaceType face = *iter;
 
     //__________________________________
@@ -684,9 +686,10 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 
   //__________________________________
   // Iterate over coarsefine interface faces
+  vector<Patch::FaceType> cf;
+  finePatch->getCoarseFaces(cf);
   vector<Patch::FaceType>::const_iterator iter;  
-  for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-       iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+  for (iter  = cf.begin(); iter != cf.end(); ++iter){
     Patch::FaceType patchFace = *iter;
     
     if (!do_x && (patchFace == Patch::xminus || patchFace == Patch::xplus))
