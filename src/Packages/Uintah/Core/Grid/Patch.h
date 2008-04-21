@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
@@ -14,6 +15,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
+
 #undef None
 
 #include <sgi_stl_warnings_off.h>
@@ -1103,6 +1105,77 @@ WARNING
       }
     }
     */
+     
+    /**
+     * Returns the cell spacing Vector(dx,dy,dz)
+     */
+    inline Vector dCell() const
+    {
+      // This will need to change for stretched grids
+      return getLevel()->dCell();
+    }
+     
+    /**
+     * Returns the level that the patch lives on
+     */
+    inline const Level* getLevel__New() const 
+    {
+      return d_grid[d_patchState.gridIndex]->getLevel(d_patchState.levelIndex).get_rep();
+    }
+
+    /**
+     * Returns the domain coordinates of the node idx
+     */
+    inline Point getNodePosition(const IntVector& idx) const 
+    {
+      return getLevel()->getNodePosition(idx);
+    }
+
+    /**
+     * Returns the domain coordinates of the cell idx
+     */
+    inline Point getCellPosition(const IntVector& idx) const 
+    {
+      return getLevel()->getCellPosition(idx);
+    }
+    
+    //Below for Fracture *************************************************
+    
+    /**
+     * Returns the 8 nodes found around the point pos
+     */
+    void findCellNodes(const Point& pos, IntVector ni[8]) const;
+    
+    /**
+     * Returns the 27 nodes found around the point pos
+     */
+    void findCellNodes27(const Point& pos, IntVector ni[27]) const;
+ 
+    /**
+     * Returns true if the point p is contained within the patch
+     * including extra cells
+     */
+    inline bool containsPointInExtraCells(const Point& p) const {
+      IntVector l(getNodeLowIndex());
+      IntVector h(getNodeHighIndex());
+      Point lp = getNodePosition(l);
+      Point hp = getNodePosition(h);
+      return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
+        && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+    }
+    /**
+     * Returns true if the point p is contained within the patch
+     * excluding extra cells
+     */
+    inline bool containsPoint__New(const Point& p) const {
+      IntVector l(getInteriorNodeLowIndex());
+      IntVector h(d_inHighIndex);
+      Point lp = getNodePosition(l);
+      Point hp = getNodePosition(h);
+      return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
+       && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+    }
+     //Above for Fracture *************************************************
     /**************End New Public Interace****************/
    
     /*
@@ -1140,10 +1213,6 @@ WARNING
       return (high.x() -  low.x()) * (high.y() - low.y()) * (high.z() - low.z());
     } 
 
-     //Below for Fracture *************************************************
-     void findCellNodes(const Point& pos,IntVector ni[8]) const;
-     void findCellNodes27(const Point& pos,IntVector ni[27]) const;
- 
      //determine if a point is in the patch
      inline bool containsPoint(const Point& p) const {
        IntVector l(getNodeLowIndex());
@@ -1162,7 +1231,7 @@ WARNING
        return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
          && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
      }
-     //Above for Fracture *************************************************
+
 
      //////////
      // Finalize the patch.  This is called crom Level::setBCTypes()
@@ -1172,11 +1241,6 @@ WARNING
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
                                                bool mustExist);
      
-
-     //////////
-     // Insert Documentation Here:  
-     Vector dCell() const;
-
      //////////
      // Find the closest node index to a point
      int findClosestNode(const Point& pos, IntVector& idx) const;
@@ -1368,14 +1432,13 @@ WARNING
        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
          && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
      }
-     
+
      //////////
      // Insert Documentation Here:
      Point nodePosition(const IntVector& idx) const;
 
      Point cellPosition(const IntVector& idx) const;
-
-
+ 
      Box getGhostBox(const IntVector& lowOffset,
                      const IntVector& highOffset) const;
      
@@ -1385,9 +1448,6 @@ WARNING
        return d_id;
      }
      
-     inline const Level* getLevel() const {
-       return d_level;
-     }
      void getFace(FaceType face, const IntVector& insideOffset,
                   const IntVector& outsideOffset,
                   IntVector& l, IntVector& h) const;
@@ -1403,12 +1463,7 @@ WARNING
      void getFaceCells(FaceType face, int offset, IntVector& l,
                        IntVector& h) const;
 
-     const vector<FaceType>* getCoarseFineInterfaceFaces() const 
-     { return &d_coarseFineInterfaceFaces; }
-
-     bool hasCoarseFineInterfaceFace() const
-     { return d_hasCoarsefineInterfaceFace;}
-  
+     
      static const int MAX_PATCH_SELECT = 32; 
      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
 
@@ -1561,6 +1616,17 @@ WARNING
 
      IntVector getCellFORTLowIndex() const;
      IntVector getCellFORTHighIndex() const;
+     
+     inline const Level* getLevel() const {
+       return d_level;
+     }
+     
+     const vector<FaceType>* getCoarseFineInterfaceFaces() const 
+     { return &d_coarseFineInterfaceFaces; }
+
+     bool hasCoarseFineInterfaceFace() const
+     { return d_hasCoarsefineInterfaceFace;}
+  
 
 
 
