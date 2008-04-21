@@ -282,7 +282,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     int level = hpatch.getLevel();
     
     // Looking down
-    if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
+    if ((level > 0) && (patch->hasCoarseFaces())) {
       hpatch.makeGraphConnections(_graph,DoingFineToCoarse);
     } 
     // Looking up
@@ -340,7 +340,7 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     int level = hpatch.getLevel();
     
     // Looking Down
-    if ((level > 0) && (patch->hasCoarseFineInterfaceFace())) {
+    if ((level > 0) && (patch->hasCoarseFaces())) {
       hpatch.makeConnections(_HA, _A_dw, _A_label,
                              _stencilSize, DoingFineToCoarse);
     }
@@ -521,9 +521,10 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
     for(int i = 0; i < finePatches.size(); i++){  
       const Patch* finePatch = finePatches[i];
 
+      vector<Patch::FaceType> cf;
+      finePatch->getCoarseFaces(cf);
       vector<Patch::FaceType>::const_iterator iter; 
-      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter) {
+      for (iter  = cf.begin(); iter != cf.end(); ++iter) {
 
         Patch::FaceType face = *iter;                   
         IntVector offset = finePatch->faceDirection(face);
@@ -794,10 +795,10 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
         counter_coarse.initialize(stencilSize );
       } 
 
-
+      vector<Patch::FaceType> cf;
+      finePatch->getCoarseFaces(cf);
       vector<Patch::FaceType>::const_iterator iter; 
-      for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-           iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter) {
+      for (iter  = cf.begin(); iter != cf.end(); ++iter) {
 
         Patch::FaceType face = *iter;                   
         IntVector offset = finePatch->faceDirection(face);

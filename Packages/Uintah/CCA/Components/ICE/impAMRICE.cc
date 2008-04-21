@@ -693,7 +693,7 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];       
 
-        if(finePatch->hasCoarseFineInterfaceFace() ){
+        if(finePatch->hasCoarseFaces() ){
           refluxOperator_computeCorrectionFluxes<double>("vol_frac", indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
@@ -741,7 +741,7 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];
         
-        if(finePatch->hasCoarseFineInterfaceFace() ){
+        if(finePatch->hasCoarseFaces() ){
 
           int one_zero = 1;
           refluxOperator_applyCorrectionFluxes<double>(
@@ -1055,7 +1055,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
     for(int i=0; i < finePatches.size();i++){  
       const Patch* finePatch = finePatches[i];        
 
-      if(finePatch->hasCoarseFineInterfaceFace() ){
+      if(finePatch->hasCoarseFaces() ){
       
         // A_CFI_weights_fine equals A for now. Higher order
         // ghost node interpolation can be developed at
@@ -1072,9 +1072,10 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
 
         //__________________________________
         // Iterate over coarsefine interface faces
+        vector<Patch::FaceType> cf;
+        finePatch->getCoarseFaces(cf);
         vector<Patch::FaceType>::const_iterator iter;  
-        for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
-             iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+        for (iter  = cf.begin(); iter != cf.end(); ++iter){
           Patch::FaceType patchFace = *iter;
 
           // determine the iterator on the coarse level.

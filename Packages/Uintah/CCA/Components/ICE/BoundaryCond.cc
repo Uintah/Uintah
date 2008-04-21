@@ -156,13 +156,14 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
   BC_dbg << *patch << " ";
   patch->printPatchBCs(BC_dbg);
 
-  if(patch->hasCoarseFineInterfaceFace() ){  
+  if(patch->hasCoarseFaces() ){  
     cout << " Matrix BC at coarse/Fine interfaces " << endl;
     //__________________________________
     // Iterate over coarsefine interface faces
+    vector<Patch::FaceType> cf;
+    patch->getCoarseFaces(cf);
     vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
-         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+    for (iter  = cf.begin(); iter != cf.end(); ++iter){
       Patch::FaceType face = *iter;
 
       const Level* fineLevel = patch->getLevel();
@@ -275,13 +276,14 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
   BC_dbg << *patch << " ";
   patch->printPatchBCs(BC_dbg);
 
-  if(patch->hasCoarseFineInterfaceFace() ){  
+  if(patch->hasCoarseFaces() ){  
     BC_dbg << " BC at coarse/Fine interfaces " << endl;
     //__________________________________
     // Iterate over coarsefine interface faces
+    vector<Patch::FaceType> cf;
+    patch->getCoarseFaces(cf);
     vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
-         iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+    for (iter  =cf.begin(); iter != cf.end(); ++iter){
       Patch::FaceType face = *iter;
 
       const Level* fineLevel = patch->getLevel();
