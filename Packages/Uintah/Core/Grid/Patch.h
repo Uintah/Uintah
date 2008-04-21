@@ -933,6 +933,36 @@ WARNING
           return None;
       }
     }
+    
+    /**
+     * sets the vector faces equal to the list of faces that have neighbors
+     */
+    inline void getNeighborFaces(vector<FaceType>& faces) const
+    { 
+      faces.clear();
+
+      //for each face 
+        //if we don't have a neigbor add that face to the boundary vector
+      if(getBCType(xminus)==Neighbor) faces.push_back(xminus);
+      if(getBCType(xplus)==Neighbor) faces.push_back(xplus);
+      if(getBCType(yminus)==Neighbor) faces.push_back(yminus);
+      if(getBCType(yplus)==Neighbor) faces.push_back(yplus);
+      if(getBCType(zminus)==Neighbor) faces.push_back(zminus);
+      if(getBCType(zplus)==Neighbor) faces.push_back(zplus);
+    }
+    
+    /**
+     * Returns true if a neighbor face exists on this patch
+     */
+    bool inline hasNeighborFaces() const
+    { 
+      return getBCType(xminus)==Neighbor || 
+             getBCType(xplus)==Neighbor ||
+             getBCType(yminus)==Neighbor ||
+             getBCType(yplus)==Neighbor ||
+             getBCType(zminus)==Neighbor ||
+             getBCType(zplus)==Neighbor;
+    }
 
     /**
      * sets the vector faces equal to the list of faces that are on the boundary
@@ -942,7 +972,7 @@ WARNING
       faces.clear();
 
       //for each face 
-        //if we don't have a neigbor add that face to the boundary vector
+        //if the face condition is none add that face to the boundary vector
       if(getBCType(xminus)==None) faces.push_back(xminus);
       if(getBCType(xplus)==None) faces.push_back(xplus);
       if(getBCType(yminus)==None) faces.push_back(yminus);
@@ -950,6 +980,20 @@ WARNING
       if(getBCType(zminus)==None) faces.push_back(zminus);
       if(getBCType(zplus)==None) faces.push_back(zplus);
     }
+    
+    /**
+     * Returns true if a boundary face exists on this patch
+     */
+    bool inline hasBoundaryFaces() const
+    { 
+      return getBCType(xminus)==None || 
+             getBCType(xplus)==None ||
+             getBCType(yminus)==None ||
+             getBCType(yplus)==None ||
+             getBCType(zminus)==None ||
+             getBCType(zplus)==None;
+    }
+     
     
     /**
      * sets the vector faces equal to the list of faces that are coarse.
@@ -970,6 +1014,21 @@ WARNING
       if(getBCType(zminus)==Coarse) faces.push_back(zminus);
       if(getBCType(zplus)==Coarse) faces.push_back(zplus);
     }
+     
+    /**
+     * Returns true if a coarse face exists on this patch
+     */
+    bool inline hasCoarseFaces() const
+    { 
+      return getBCType(xminus)==Coarse || 
+             getBCType(xplus)==Coarse ||
+             getBCType(yminus)==Coarse ||
+             getBCType(yplus)==Coarse ||
+             getBCType(zminus)==Coarse ||
+             getBCType(zplus)==Coarse;
+    }
+     
+
   
     /**
      * sets the vector cells equal to the list of cells that are in the corners
@@ -1015,7 +1074,6 @@ WARNING
        d_grid[d_newGridIndex]=grid;
      }
      
-
 
     /*
     void setBCType(FaceType face, BCType newbc)
@@ -1347,10 +1405,10 @@ WARNING
 
      const vector<FaceType>* getCoarseFineInterfaceFaces() const 
      { return &d_coarseFineInterfaceFaces; }
-    
+
      bool hasCoarseFineInterfaceFace() const
      { return d_hasCoarsefineInterfaceFace;}
-     
+  
      static const int MAX_PATCH_SELECT = 32; 
      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
 
