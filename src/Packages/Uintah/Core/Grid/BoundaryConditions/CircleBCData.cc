@@ -74,10 +74,3 @@ void CircleBCData::determineIteratorLimits(Patch::FaceType face,
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
 }
 
-void CircleBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
-{
-#if 0
-  cout << "Circle determineSFLimits()" << endl;
-#endif
-  BCGeomBase::determineSFLimits(face,patch);
-}

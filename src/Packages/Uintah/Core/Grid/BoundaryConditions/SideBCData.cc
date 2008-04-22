@@ -83,15 +83,25 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
     nb.push_back(*bound);
   }
 
+
+#if 1
   setBoundaryIterator(b);
   setNBoundaryIterator(nb);
+#endif
+  setBoundaryIterator(b.begin(),b.end());
+  setNBoundaryIterator(nb.begin(),nb.end());
 
+
+#if 0
   determineSFLimits(face,patch);
+#endif
+
 #endif  
 
   
 }
 
+#if 0
 void SideBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
 {
 #if 0
@@ -100,3 +110,4 @@ void SideBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
 #endif
   return;
 }
+#endif

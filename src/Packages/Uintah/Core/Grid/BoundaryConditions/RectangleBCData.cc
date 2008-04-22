@@ -91,11 +91,3 @@ void RectangleBCData::determineIteratorLimits(Patch::FaceType face,
 }
 
 
-void RectangleBCData::determineSFLimits(Patch::FaceType face, 
-					const Patch* patch)
-{
-#if 0
-  cout << "RectangleBC determineSFLimits()" << endl;
-#endif
-  BCGeomBase::determineSFLimits(face,patch);
-}

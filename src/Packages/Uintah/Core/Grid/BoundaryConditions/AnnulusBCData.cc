@@ -86,10 +86,3 @@ void AnnulusBCData::determineIteratorLimits(Patch::FaceType face,
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
 }
 
-void AnnulusBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
-{
-#if 0
-  cout << "Annulus determineSFLimits()" << endl;
-#endif
-  BCGeomBase::determineSFLimits(face,patch);
-}
