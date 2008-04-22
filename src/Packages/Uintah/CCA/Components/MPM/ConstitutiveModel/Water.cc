@@ -242,13 +242,14 @@ void Water::computeStressTensor(const PatchSubset* patches,
 
       // get the hydrostatic part of the stress
       //p = bulk*(pow(vol_orig/pvolume_deformed[idx],gamma) - 1.0);
-      p = bulk*(pow(J,-gamma) - 1.0);
+      double jtotheminusgamma = pow(J,-gamma);
+      p = bulk*(jtotheminusgamma - 1.0);
 
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = Identity*(-p) + Shear;
 
       Vector pvelocity_idx = pvelocity[idx];
-      c_dil = sqrt((bulk)/rho_cur);
+      c_dil = sqrt((gamma*jtotheminusgamma*bulk)/rho_cur);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
