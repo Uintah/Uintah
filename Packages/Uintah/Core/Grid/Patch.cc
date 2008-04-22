@@ -184,27 +184,6 @@ Point Patch::cellPosition(const IntVector& idx) const {
   return d_level->getCellPosition(idx);
 }
 
-int Patch::findClosestNode(const Point& pos, IntVector& idx) const
-{
-  int p[3];
-  idx = d_level->getCellIndex(pos);
-  Point cellP = d_level->getCellPosition(idx);
-  for(int i=0;i<3;++i) {
-    if( pos(i)>cellP(i) ) {
-      idx[i]++;
-      p[i] = 1;
-    }
-    else p[i] = 0;
-  }
-  return p[0]+p[1]*2+p[2]*4;
-}
-
-bool Patch::findCell(const Point& pos, IntVector& ci) const
-{
-   ci = d_level->getCellIndex(pos);
-   return containsCell(ci);
-}
-
 void Patch::findCellsFromNode( const IntVector& nodeIndex,
                                IntVector cellIndex[8]) const
 {
@@ -1854,25 +1833,6 @@ void Patch::finalizePatch()
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getEdgeCellIterator__New(yplus,zminus));
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus));
 
-  const vector<FaceType> *cfaces1=getCoarseFineInterfaceFaces();
-  vector<FaceType> cfaces2;
-  getCoarseFaces(cfaces2);
-
-  ASSERT(cfaces1->size()==cfaces2.size());
-
-  for(unsigned int i=0;i<cfaces1->size();i++)
-  {
-    //search for face in other vector since order may vary
-    bool found=false;
-    for(unsigned int j=0;j<cfaces2.size();j++)
-    {
-      if((*cfaces1)[i]==cfaces2[j])
-      {
-        found=true;
-      }
-    }  
-    ASSERT(found);
-  }
   ASSERT(d_grid[d_patchState.gridIndex]!=0);
   ASSERT(getLevel()==getLevel__New());
 
