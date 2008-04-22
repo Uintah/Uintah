@@ -9,6 +9,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <typeinfo>
+#include <iterator>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -55,10 +56,16 @@ namespace Uintah {
     /// Set the cell centered boundary iterators
     void setBoundaryIterator(std::vector<IntVector>& b);
 
+    void setBoundaryIterator(std::vector<IntVector>::iterator b, 
+                             std::vector<IntVector>::iterator e);
+
     /// Set the node centered boundary iterators
     void setNBoundaryIterator(std::vector<IntVector>& b);
 
-#if 1
+    void setNBoundaryIterator(std::vector<IntVector>::iterator b, 
+                              std::vector<IntVector>::iterator e);
+
+#if 0
     /// Set the face centered iterators for the x component
     void setSFCXIterator(std::vector<IntVector>& i);
 
@@ -73,9 +80,16 @@ namespace Uintah {
     /// Return the cell centered boundary iterators
     void getBoundaryIterator(std::vector<IntVector>*& b_ptr);
 
+    void getBoundaryIterator(std::vector<IntVector>::iterator b_ptr, 
+                             std::vector<IntVector>::iterator e_ptr);
+
     /// Return the node centered boundary iterators
     void getNBoundaryIterator(std::vector<IntVector>*& b_ptr);
 
+    void getNBoundaryIterator(std::vector<IntVector>::iterator b_ptr,
+                              std::vector<IntVector>::iterator e_ptr);
+
+#if 0
     ///  Return the face centered iterators for the x component
     void getSFCXIterator(std::vector<IntVector>*& i_ptr);
 
@@ -84,6 +98,7 @@ namespace Uintah {
 
     ///  Return the face centered iterators for the z component
     void getSFCZIterator(std::vector<IntVector>*& i_ptr);
+#endif
 
     /// Determine if a point is inside the geometry where the boundary
     /// condition is applied.
@@ -97,16 +112,13 @@ namespace Uintah {
     virtual void determineIteratorLimits(Patch::FaceType face, 
 					 const Patch* patch, 
 					 vector<Point>& test_pts);
-
-    ///  Determine the face centered iterators (x,y,z).
-    virtual void determineSFLimits(Patch::FaceType face, 
-				   const Patch* patch);
     
     /// Print out the iterators for the boundary.
     void printLimits() const;
 
   protected:
     std::vector<IntVector> boundary,nboundary,sfcx,sfcy,sfcz;
+    std::vector<IntVector>::iterator b_b,b_e,nb_b,nb_e;
 
   };
 

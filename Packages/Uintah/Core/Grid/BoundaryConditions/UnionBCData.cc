@@ -150,7 +150,9 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
     cout << "Size of boundary_itr = " << boundary_itr.size() << endl;
 #endif
     (*bc)->setBoundaryIterator(boundary_itr);
+#if 0
     (*bc)->determineSFLimits(face,patch);
+#endif
   }
     
   IntVector ln,hn;
@@ -163,42 +165,5 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
   
   setNBoundaryIterator(nb);
 
-  determineSFLimits(face,patch);
-
 }
 
-void UnionBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
-{
-#if 0
-  cout << "UnionBC determineSFLimits()" << endl;
-#endif
-  vector<IntVector> sfx,sfy,sfz;
-  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
-       bc != child.end(); ++bc) {
-    vector<IntVector> *x_itr_ptr;
-    vector<IntVector> *y_itr_ptr;
-    vector<IntVector> *z_itr_ptr;
-    (*bc)->getSFCXIterator(x_itr_ptr);
-    (*bc)->getSFCYIterator(y_itr_ptr);
-    (*bc)->getSFCZIterator(z_itr_ptr);
-    copy(x_itr_ptr->begin(), x_itr_ptr->end(), back_inserter(sfx));
-    copy(y_itr_ptr->begin(), y_itr_ptr->end(), back_inserter(sfy));
-    copy(z_itr_ptr->begin(), z_itr_ptr->end(), back_inserter(sfz));
-  }
-#if 0
-  setSFCXIterator(sfx);
-  setSFCXIterator(sfy);
-  setSFCXIterator(sfz);
-#endif 
-#if 0
-  for (vector<IntVector>::const_iterator it = sfcx.begin(); it != sfcx.end();
-       ++it) 
-    cout << "sfcx = " << *it << endl;
-  for (vector<IntVector>::const_iterator it = sfcy.begin(); it != sfcy.end();
-       ++it) 
-    cout << "sfcy = " << *it << endl;
-  for (vector<IntVector>::const_iterator it = sfcz.begin(); it != sfcz.end();
-       ++it) 
-    cout << "sfcz = " << *it << endl;
-#endif
-}

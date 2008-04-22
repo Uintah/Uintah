@@ -64,9 +64,6 @@ namespace Uintah {
     virtual void determineIteratorLimits(Patch::FaceType face,
 					 const Patch* patch, 
 					 vector<Point>& test_pts);
-
-    /// Determine the face centered iterators
-    virtual void determineSFLimits(Patch::FaceType face, const Patch* patch);
     
   private:
     BCData d_bc;

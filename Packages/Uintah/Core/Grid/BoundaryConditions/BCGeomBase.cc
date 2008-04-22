@@ -34,6 +34,22 @@ void BCGeomBase::setNBoundaryIterator(vector<IntVector>& b)
 {
   nboundary = b;
 }
+
+void BCGeomBase::setBoundaryIterator(vector<IntVector>::iterator b,
+                                     vector<IntVector>::iterator e)
+{
+  b_b = b;
+  b_e = e;
+}
+
+void BCGeomBase::setNBoundaryIterator(vector<IntVector>::iterator b,
+                                      vector<IntVector>::iterator e)
+{
+  nb_b = b;
+  nb_e = e;
+}
+
+
 #if 0
 void BCGeomBase::setSFCXIterator(vector<IntVector>& i)
 {
@@ -59,7 +75,7 @@ void BCGeomBase::getNBoundaryIterator(vector<IntVector>*& b_ptr)
 {
   b_ptr = &nboundary;
 }
-#if 1
+#if 0
 void BCGeomBase::getSFCXIterator(vector<IntVector>*& i_ptr)
 {
   i_ptr = &sfcx;
@@ -103,217 +119,6 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
 
   setBoundaryIterator(b);
   setNBoundaryIterator(nb);
-
-  determineSFLimits(face,patch);
-}
-
-void BCGeomBase::determineSFLimits(Patch::FaceType face, const Patch* patch)
-{
-#if 0
-  cout << "BCGeomBase determineSFLimits()" << endl;
-  cout << "Face = " << face << endl;
-#endif
-  set<int> same_x, same_y, same_z;
-  for (vector<IntVector>::const_iterator it = boundary.begin(); 
-       it != boundary.end(); ++it) {
-#if 0
-    cout << "boundary = " << *it << endl;
-#endif
-    same_x.insert((*it).x());
-    same_y.insert((*it).y());
-    same_z.insert((*it).z());
-  }
-
-  // Look at the extents for the components of the boundary iterator that 
-  // are orthogonal to the face, i.e. x face, look at the extents for 
-  // y and z.  We add 1 in each direction to come up with the extra iterators
-  // that need to be added to the boundary.  For the component that is parallel
-  // to the face, we use the iterators for the boundary adjusting the index,
-  // so that it will be the "inside" face of the boundary cells.
-
-  vector<IntVector> x_iterator;
-  vector<IntVector> y_iterator;
-  vector<IntVector> z_iterator;
-  //  vector<IntVector> sfx,sfy,sfz;
-
-  if (face == Patch::xplus || face == Patch::xminus) {
-    for (set<int>::const_iterator y = same_y.begin(); y != same_y.end(); ++y) {
-      vector<IntVector> same_y_element;
-      for (vector<IntVector>::const_iterator it = boundary.begin();
-	   it != boundary.end(); ++it) {
-	if (*y == (*it).y())
-	  same_y_element.push_back(*it);
-      }
-      // Find the biggest element and add (0,0,1)
-      sort(same_y_element.begin(),same_y_element.end(),ltiv_z());
-      z_iterator.push_back(same_y_element.back()+IntVector(0,0,1));
-    }
-    // add the boundary elements to the z_iterator
-    copy(boundary.begin(),boundary.end(),back_inserter(z_iterator));
-    
-    for (set<int>::const_iterator z = same_z.begin(); z != same_z.end(); ++z) {
-      vector<IntVector> same_z_element;
-      for (vector<IntVector>::const_iterator it = boundary.begin();
-	   it != boundary.end(); ++it) {
-	if (*z == (*it).z())
-	  same_z_element.push_back(*it);
-      }
-      // Find the biggest element and add (0,1,0)
-      sort(same_z_element.begin(),same_z_element.end(),ltiv_y());
-      y_iterator.push_back(same_z_element.back()+IntVector(0,1,0));
-    }
-    
-    // add the boundary element to the y_iterator
-    copy(boundary.begin(),boundary.end(),back_inserter(y_iterator));
-    
-  }
-
-  if (face == Patch::yplus || face == Patch::yminus) {
-    for (set<int>::const_iterator z = same_z.begin(); z != same_z.end(); ++z) {
-      vector<IntVector> same_z_element;
-      for (vector<IntVector>::const_iterator it = boundary.begin();
-	   it != boundary.end(); ++it) {
-	if (*z == (*it).z())
-	  same_z_element.push_back(*it);
-      }
-      // Find the biggest element and add (1,0,0)
-      sort(same_z_element.begin(),same_z_element.end(),ltiv_x());
-      x_iterator.push_back(same_z_element.back()+IntVector(1,0,0));
-    }
-    // add the boundary elements to the x_iterator
-    copy(boundary.begin(),boundary.end(),back_inserter(x_iterator));
-    
-    for (set<int>::const_iterator x = same_x.begin(); x != same_x.end(); ++x) {
-      vector<IntVector> same_x_element;
-      for (vector<IntVector>::const_iterator it = boundary.begin();
-	   it != boundary.end(); ++it) {
-	if (*x == (*it).x())
-	  same_x_element.push_back(*it);
-      }
-      // Find the biggest element and add (0,1,0)
-      sort(same_x_element.begin(),same_x_element.end(),ltiv_z());
-      z_iterator.push_back(same_x_element.back()+IntVector(0,0,1));
-    }
-    // add the boundary element to the y_iterator
-    copy(boundary.begin(),boundary.end(),back_inserter(z_iterator));
-        
-  }
-  if (face == Patch::zplus || face == Patch::zminus) {
-    for (set<int>::const_iterator y = same_y.begin(); y != same_y.end(); ++y) {
-      vector<IntVector> same_y_element;
-      for (vector<IntVector>::const_iterator it = boundary.begin();
-	   it != boundary.end(); ++it) {
-	if (*y == (*it).y())
-	  same_y_element.push_back(*it);
-      }
-      // Find the biggest element and add (1,0,0)
-      sort(same_y_element.begin(),same_y_element.end(),ltiv_x());
-      x_iterator.push_back(same_y_element.back()+IntVector(1,0,0));
-    }
-    // add the boundary elements to the x_iterator
-    copy(boundary.begin(),boundary.end(),back_inserter(x_iterator));
-    
-    for (set<int>::const_iterator x = same_x.begin(); x != same_x.end(); ++x) {
-      vector<IntVector> same_x_element;
-      for (vector<IntVector>::const_iterator it = boundary.begin();
-	   it != boundary.end(); ++it) {
-	if (*x == (*it).x())
-	  same_x_element.push_back(*it);
-      }
-      // Find the biggest element and add (0,1,0)
-      sort(same_x_element.begin(),same_x_element.end(),ltiv_y());
-      y_iterator.push_back(same_x_element.back()+IntVector(0,1,0));
-    }
-    // add the boundary element to the y_iterator
-    copy(boundary.begin(),boundary.end(),back_inserter(y_iterator));
-    
-  }
-
-#if 0
-  switch(face) {
-  case Patch::xminus:
-    {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfcx),
-		bind2nd(plus<IntVector>(),IntVector(1,0,0)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
-		bind2nd(plus<IntVector>(),IntVector(1,0,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
-		bind2nd(plus<IntVector>(),IntVector(1,0,0)));
-      break;
-    }
-  case Patch::xplus:
-    {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfcx),
-		bind2nd(plus<IntVector>(),IntVector(-1,0,0)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
-		bind2nd(plus<IntVector>(),IntVector(-1,0,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
-		bind2nd(plus<IntVector>(),IntVector(-1,0,0)));
-      break;
-    }
-  case Patch::yminus:
-    {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfcy),
-		bind2nd(plus<IntVector>(),IntVector(0,1,0)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
-		bind2nd(plus<IntVector>(),IntVector(0,1,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
-		bind2nd(plus<IntVector>(),IntVector(0,1,0)));
-      break;
-    }
-  case Patch::yplus:
-    {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfcy),
-		bind2nd(plus<IntVector>(),IntVector(0,-1,0)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
-		bind2nd(plus<IntVector>(),IntVector(0,-1,0)));
-      transform(z_iterator.begin(),z_iterator.end(),back_inserter(sfcz),
-		bind2nd(plus<IntVector>(),IntVector(0,-1,0)));
-      break;
-    }
-  case Patch::zminus:
-    {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfcz),
-		bind2nd(plus<IntVector>(),IntVector(0,0,1)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
-		bind2nd(plus<IntVector>(),IntVector(0,0,1)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
-		bind2nd(plus<IntVector>(),IntVector(0,0,1)));
-      break;
-    }
-  case Patch::zplus:
-    {
-      transform(boundary.begin(),boundary.end(),back_inserter(sfcz),
-		bind2nd(plus<IntVector>(),IntVector(0,0,-1)));
-      transform(x_iterator.begin(),x_iterator.end(),back_inserter(sfcx),
-		bind2nd(plus<IntVector>(),IntVector(0,0,-1)));
-      transform(y_iterator.begin(),y_iterator.end(),back_inserter(sfcy),
-		bind2nd(plus<IntVector>(),IntVector(0,0,-1)));
-      break;
-    }
-  default:
-    break;
-  }
-#endif
-#if 0
-  setSFCXIterator(sfx);
-  setSFCYIterator(sfy);
-  setSFCZIterator(sfz);
-#endif
-#if 0
-  cout << "Size of sfcx = " << sfcx.size() << endl;
-  for (vector<IntVector>::const_iterator it = sfcx.begin(); it != sfcx.end();
-       ++it) 
-    cout << "sfcx = " << *it << endl;
-  cout << "Size of sfcy = " << sfcy.size() << endl;
-  for (vector<IntVector>::const_iterator it = sfcy.begin(); it != sfcy.end();
-       ++it) 
-    cout << "sfcy = " << *it << endl;
-  cout << "Size of sfcz = " << sfcz.size() << endl;
-  for (vector<IntVector>::const_iterator it = sfcz.begin(); it != sfcz.end();
-       ++it) 
-    cout << "sfcz = " << *it << endl;
-#endif
 
 }
 
