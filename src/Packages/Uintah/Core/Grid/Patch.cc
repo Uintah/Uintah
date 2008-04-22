@@ -51,8 +51,6 @@ Patch::Patch(const Level* level,
       ids.set(d_id+1);
   }
    
-  d_hasCoarsefineInterfaceFace = false;
-
   // DON'T call setBCType here     
   d_patchState.xminus=None;
   d_patchState.yminus=None;
@@ -118,8 +116,6 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  d_coarseFineInterfaceFaces.clear();
-
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)) {
     delete array_bcs[face];
@@ -305,27 +301,6 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
       throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
       return;
     }
-
-   //__________________________________
-   //  set the coarse fine interface faces
-   vector<FaceType>::iterator face_Idx = d_coarseFineInterfaceFaces.begin();
-   vector<FaceType>::iterator face_End = d_coarseFineInterfaceFaces.end();
-
-   while (face_Idx != face_End) {
-     if (*face_Idx == face) break;
-     face_Idx++;
-   }
-
-   if (newbc == Patch::Coarse ) {
-     if(face_Idx == d_coarseFineInterfaceFaces.end()){  
-       d_coarseFineInterfaceFaces.push_back(face);
-       d_hasCoarsefineInterfaceFace = true;
-     }
-   } else {
-     if (face_Idx != d_coarseFineInterfaceFaces.end()) {
-       d_coarseFineInterfaceFaces.erase(face_Idx);
-     }
-   }  
 
    if (newbc != Patch::Neighbor ) {
      // assign patch's extra cells here (doesn't happen in 
