@@ -1621,15 +1621,6 @@ WARNING
        return d_level;
      }
      
-     const vector<FaceType>* getCoarseFineInterfaceFaces() const 
-     { return &d_coarseFineInterfaceFaces; }
-
-     bool hasCoarseFineInterfaceFace() const
-     { return d_hasCoarsefineInterfaceFace;}
-  
-
-
-
      /***********************End old interface********************************************************************/
 
    protected:
@@ -1745,11 +1736,6 @@ WARNING
      int d_id; // Patch ID
      
      map<Patch::FaceType,BCDataArray* > array_bcs;
-
-     //////////
-     // Keep track of faces on the edge of a courseFineInterface
-     vector<FaceType> d_coarseFineInterfaceFaces;
-     bool d_hasCoarsefineInterfaceFace;
 
      //////////
      // add a method for the user to mark a patch face (for his own purposes)
