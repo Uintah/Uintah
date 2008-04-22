@@ -184,6 +184,28 @@ Point Patch::cellPosition(const IntVector& idx) const {
   return d_level->getCellPosition(idx);
 }
 
+int Patch::findClosestNode(const Point& pos, IntVector& idx) const
+{
+  int p[3];
+  idx = d_level->getCellIndex(pos);
+  Point cellP = d_level->getCellPosition(idx);
+  for(int i=0;i<3;++i) {
+    if( pos(i)>cellP(i) ) {
+      idx[i]++;
+      p[i] = 1;
+    }
+    else p[i] = 0;
+  }
+  return p[0]+p[1]*2+p[2]*4;
+}
+
+bool Patch::findCell(const Point& pos, IntVector& ci) const
+{
+   ci = d_level->getCellIndex(pos);
+   return containsCell(ci);
+}
+
+
 void Patch::findCellsFromNode( const IntVector& nodeIndex,
                                IntVector cellIndex[8]) const
 {
