@@ -13,6 +13,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Util        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
+	Core/Containers                  \
 	Core/Util                        \
 	Core/XMLUtil                     \
 	Core/Exceptions

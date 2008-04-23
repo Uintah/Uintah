@@ -146,7 +146,10 @@ SCIRunInit(string packages) {
     }
   }
 
-  vector <string> package = split_string(package_list, ',');
+  vector<char> separators;
+  separators.push_back( ',' );
+
+  vector<string> package = split_string( package_list, separators );
   typedef void *(*PackageInitFunc)(void *);
 
   for (unsigned int i = 0; i < package.size(); ++i) {

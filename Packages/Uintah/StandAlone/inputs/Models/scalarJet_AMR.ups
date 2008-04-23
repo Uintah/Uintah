@@ -15,12 +15,12 @@
    <Time>
        <maxTime>            2            </maxTime>
        <initTime>           0.0          </initTime>
-       <delt_min>           0.0          </delt_min>
-       <delt_max>           0.1          </delt_max>
+       <deltMin>           0.0          </deltMin>
+       <deltMax>           0.1          </deltMax>
        <delt_init>          1.0e-6       </delt_init>
        <max_delt_increase>  1.0          </max_delt_increase>
-       <timestep_multiplier> 1           </timestep_multiplier>
-       <!--<max_Timesteps>      1          </max_Timesteps> -->
+       <timestepMultiplier> 1           </timestepMultiplier>
+       <!--<maxTimesteps>      1          </maxTimesteps> -->
        <override_restart_delt> 1e-6      </override_restart_delt>
    </Time>
     <!--____________________________________________________________________-->

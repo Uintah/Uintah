@@ -10,9 +10,9 @@
    <Time>
        <maxTime>0.8</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.00001</delt_min>
-       <delt_max>0.02</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <deltMin>0.00001</deltMin>
+       <deltMax>0.02</deltMax>
+       <timestepMultiplier>0.8</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>DCB4patch2mat.uda</filebase>

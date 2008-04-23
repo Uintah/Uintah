@@ -11,12 +11,12 @@
    <Time>
        <maxTime>            100       </maxTime>
        <initTime>           0.0       </initTime>
-       <delt_min>           0.0       </delt_min>
-       <delt_max>           0.1     </delt_max>
+       <deltMin>           0.0       </deltMin>
+       <deltMax>           0.1     </deltMax>
        <delt_init>          1.0e-7    </delt_init>
        <max_delt_increase>  0.5      </max_delt_increase>
-       <!-- <max_Timesteps>    10        </max_Timesteps> -->
-       <timestep_multiplier> 1        </timestep_multiplier>
+       <!-- <maxTimesteps>    10        </maxTimesteps> -->
+       <timestepMultiplier> 1        </timestepMultiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->

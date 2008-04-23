@@ -44,8 +44,8 @@
 #define SCI_Core_StringUtil_h 1
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
+#include   <string>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Containers/share.h>
@@ -74,8 +74,8 @@ SCISHARE string basename(const string &path);
 // Return directory name
 SCISHARE string pathname(const string &path);
 
-// Split a string into multiple parts, separated by the character sep
-SCISHARE vector<string> split_string(const string& str, char sep);
+// Split a string into multiple parts, separated by any of the separator characters.
+SCISHARE vector<string> split_string( const string & str, const vector<char> & separators );
 
 /////////
 // C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.

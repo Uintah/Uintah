@@ -9,8 +9,8 @@ SRCS     += \
 
 PSELIBS := \
 	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Util \
-	Core/Exceptions \
+	Packages/Uintah/Core/Util       \
+	Core/Exceptions                 \
 	Core/Thread
 
 LIBS := $(XML2_LIBRARY) 

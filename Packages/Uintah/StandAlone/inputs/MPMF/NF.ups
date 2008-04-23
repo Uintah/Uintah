@@ -12,9 +12,9 @@
    <Time>
        <maxTime>400.0e-3</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.0</delt_min>
-       <delt_max>8.0e-3</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <deltMin>0.0</deltMin>
+       <deltMax>8.0e-3</deltMax>
+       <timestepMultiplier>0.8</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>NF.uda</filebase>

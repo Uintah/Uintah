@@ -10,9 +10,9 @@
    <Time>
        <maxTime>10.</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.0001</delt_min>
-       <delt_max>0.05</delt_max>
-       <timestep_multiplier>0.2</timestep_multiplier>
+       <deltMin>0.0001</deltMin>
+       <deltMax>0.05</deltMax>
+       <timestepMultiplier>0.2</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>bicrystal.uda</filebase>

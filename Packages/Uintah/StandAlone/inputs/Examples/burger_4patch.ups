@@ -10,9 +10,9 @@
    <Time>
        <maxTime>1</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.00000</delt_min>
-       <delt_max>1</delt_max>
-       <timestep_multiplier>1</timestep_multiplier>
+       <deltMin>0.00000</deltMin>
+       <deltMax>1</deltMax>
+       <timestepMultiplier>1</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>burger.uda</filebase>

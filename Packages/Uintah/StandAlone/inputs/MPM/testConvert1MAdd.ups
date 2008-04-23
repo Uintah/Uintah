@@ -10,10 +10,10 @@
    <Time>
      <maxTime>1.560e-5</maxTime>
      <initTime>0.0</initTime>
-     <delt_min>1.e-10</delt_min>
-     <delt_max>1.e-6</delt_max>
-     <timestep_multiplier>0.1</timestep_multiplier>
-     <!-- <max_Timesteps>300</max_Timesteps> -->
+     <deltMin>1.e-10</deltMin>
+     <deltMax>1.e-6</deltMax>
+     <timestepMultiplier>0.1</timestepMultiplier>
+     <!-- <maxTimesteps>300</maxTimesteps> -->
    </Time>
    <DataArchiver>
      <filebase>testConvertAdd.uda</filebase>

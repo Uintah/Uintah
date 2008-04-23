@@ -26,12 +26,12 @@
    <Time>
        <maxTime>            0.1e-2      </maxTime>
        <initTime>           0.0         </initTime>
-       <delt_min>           0.0         </delt_min>
-       <delt_max>           1.0         </delt_max>
+       <deltMin>           0.0         </deltMin>
+       <deltMax>           1.0         </deltMax>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  2.0         </max_delt_increase>
-       <!--<max_Timesteps>     120       </max_Timesteps> -->
-       <timestep_multiplier>1.0         </timestep_multiplier>
+       <!--<maxTimesteps>     120       </maxTimesteps> -->
+       <timestepMultiplier>1.0         </timestepMultiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--   B O U N D A R Y   C O N D I T I O N S                            -->

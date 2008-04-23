@@ -10,9 +10,9 @@
    <Time>
        <maxTime>0.4</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.0</delt_min>
-       <delt_max>0.004</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <deltMin>0.0</deltMin>
+       <deltMax>0.004</deltMax>
+       <timestepMultiplier>0.8</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>DCBIII.uda</filebase>

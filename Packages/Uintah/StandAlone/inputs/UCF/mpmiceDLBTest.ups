@@ -19,10 +19,10 @@
    <Time>
        <maxTime>            0.01       </maxTime>
        <initTime>           0.0         </initTime>
-       <delt_min>           0.0         </delt_min>
-       <delt_max>           1.0         </delt_max>
+       <deltMin>           0.0         </deltMin>
+       <deltMax>           1.0         </deltMax>
        <delt_init>          1.0e-4      </delt_init>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <timestepMultiplier>0.8         </timestepMultiplier>
    </Time>
    
    <LoadBalancer>

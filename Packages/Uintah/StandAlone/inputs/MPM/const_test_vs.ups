@@ -13,9 +13,9 @@
    <Time>
        <maxTime>.001</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>2.e-8</delt_min>
-       <delt_max>2.e-5</delt_max>
-       <timestep_multiplier>0.3</timestep_multiplier>
+       <deltMin>2.e-8</deltMin>
+       <deltMax>2.e-5</deltMax>
+       <timestepMultiplier>0.3</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>const_test_vs.uda</filebase>
