@@ -131,7 +131,7 @@ for arg in $*; do
             ALL=yes
             ;;
         -main)
-            echo; echo "Running mpm, ice, and mpmice tests . . ."
+            echo; echo "Scheduling mpm, ice, and mpmice tests . . ."
             do_ice=1
             do_mpm=1
             do_mpmf=1
@@ -141,56 +141,56 @@ for arg in $*; do
             do_mpmarches=1
             do_examples=1;;
         -ar)
-            echo; echo "Running the arches tests . . ."
+            echo "Scheduling the arches tests . . ."
             do_arches=1;;
         -ice_amr)
-            echo; echo "Running the ICE AMR tests . . ."
+            echo "Scheduling the ICE AMR tests . . ."
             do_ice_amr=1;;
         -e)
-            echo; echo "Running the examples tests . . ."
+            echo "Scheduling the examples tests . . ."
             do_examples=1;;
         -i) 
-            echo; echo "Running the ice tests . . ."
+            echo "Scheduling the ice tests . . ."
             do_ice=1;;
         -m)
-            echo; echo "Running the mpm tests . . ."
+            echo "Scheduling the mpm tests . . ."
             do_mpm=1;;
         -mf)
-            echo; echo "Running the mpmfracture tests . . ."
+            echo "Scheduling the mpmfracture tests . . ."
             do_mpmf=1;;
         -models)
-            echo; echo "Running the models tests . . ."
+            echo "Scheduling the models tests . . ."
             do_models=1;;
         -ma)
-            echo; echo "Running the mpmarches tests . . ."
+            echo "Scheduling the mpmarches tests . . ."
             do_mpmarches=1;;
         -sm)
-            echo; echo "Running the smpm tests . . ."
+            echo "Scheduling the smpm tests . . ."
             do_smpm=1;;
         -mi)
-            echo; echo "Running the mpmice tests . . ."
+            echo "Scheduling the mpmice tests . . ."
             do_mpmice=1;;
         -mpmice_amr)
-            echo; echo "Running the MPMICE AMR tests . . ."
+            echo "Scheduling the MPMICE AMR tests . . ."
             do_mpmice_amr=1;;
         -im)
-            echo; echo "Running the implicit mpm tests . . ."
+            echo "Scheduling the implicit mpm tests . . ."
             do_impm=1
             MPI_RUN="yes";;
         -clean)
-            echo; echo "Removing *.out *.compare and *.uda files . . ."
+            echo "Removing *.out *.compare and *.uda files . . ."
             do_remove=1;;
         -dbg)
-            echo; echo "Using the dbg TestData . . ."
+            echo "Using the dbg TestData . . ."
             DIR=dbg;;
         -opt)
-            echo; echo "Using the opt TestData . . ."
+            echo "Using the opt TestData . . ."
             DIR=opt;;
         -nompi)
-            echo; echo "Not using mpi . . ."
+            echo "Not using mpi . . ."
             MPI_RUN="no";;
         -restart)
-            echo; echo "Doing restart tests . . ."
+            echo "Doing restart tests . . ."
             do_restart=1;;
         -mem)
             echo; echo "Doing memory leak . . ."
@@ -242,12 +242,6 @@ fi
 
 
 REMOVE () {
-   if test -a chem.bin; then
-      rm -f chem.bin
-   fi  
-   if test -a input.dtd; then
-      rm -f input.dtd
-   fi
    rm -rf $results
 }
 
@@ -320,7 +314,7 @@ compare_results () {
     
     uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
     goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
-    echo "Comparing $uda results against $goldStandard"
+    echo "Comparing $uda results against '$goldStandard'"
     
     echo "../compare_uda $goldStandard $uda" > $n.compare 2>&1
     ../compare_uda $goldStandard $uda >> $n.compare 2>&1
@@ -476,8 +470,6 @@ arches_test () {
     for n in $arches_test_cases; do
         echo; echo "Running mpirun -np 1 sus -arches $INPUTS/$CASE/$n.ups"
         uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        cp $INPUTS/ARCHES/chem_bins/chem_meth.linux.bin chem.bin
-        cp $INPUTS/ARCHES/input.dtd input.dtd
         mpirun -np 1 sus -arches -mpi $INPUTS/$CASE/$n.ups &> $n.out
         success=`grep "successfully" $n.out`
         if test -n "$success"; then 
@@ -500,8 +492,6 @@ mpmarches_test () {
 
         uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
         cd $results
-#       cp $INPUTS/MPMARCHES/chem_hept_westbrook.linux.bin chem.bin
-        cp ../$INPUTS/MPMARCHES/input.dtd input.dtd
         cp ../$INPUTS/ARCHES/StaticMixingTables/JP-8/NAE.rxn.new NAE.rxn.new
         cd ../
 
