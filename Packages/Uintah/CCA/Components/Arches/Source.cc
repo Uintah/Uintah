@@ -143,8 +143,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc ,
 
 // ++ jeremy ++
 	if (d_boundaryCondition->getNumSourceBndry() > 0){	
-    	Box pBox = patch->getInteriorBox();
-		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 			vars->uVelNonlinearSrc[*iter] += vars->umomBoundarySrc[*iter];
 		}
 	}
@@ -172,8 +171,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc ,
 
 // ++ jeremy ++
 	if (d_boundaryCondition->getNumSourceBndry() > 0){	
-    	Box pBox = patch->getInteriorBox();
-		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 			vars->vVelNonlinearSrc[*iter] += vars->vmomBoundarySrc[*iter];
 		}
 	}
@@ -200,8 +198,7 @@ Source::calculateVelocitySource(const ProcessorGroup* pc ,
 
 // ++ jeremy ++ 
 	if (d_boundaryCondition->getNumSourceBndry() > 0){	
-    	Box pBox = patch->getInteriorBox();
-		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 			vars->wVelNonlinearSrc[*iter] += vars->wmomBoundarySrc[*iter];
 		}
 	}
@@ -282,8 +279,7 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
 
 // Here we need to add the boundary source term if there are some.
 	if (d_boundaryCondition->getNumSourceBndry() > 0){
-    	Box pBox = patch->getInteriorBox();
-		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 			vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
 		}
 	}
@@ -369,8 +365,7 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
 
 // ++ jeremy ++
 	if (d_boundaryCondition->getNumSourceBndry() > 0) {
-    	Box pBox = patch->getInteriorBox();
-		for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 			vars->scalarNonlinearSrc[*iter] += vars->enthalpyBoundarySrc[*iter];
 		}
 	}
