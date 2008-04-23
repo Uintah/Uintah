@@ -1197,15 +1197,15 @@ WARNING
     * sets the array cellIndex equal to the 8 cells
     * that contribute to the node nodeIndex.
     */
-    void findCellsFromNode( const IntVector& nodeIndex,
-                             IntVector cellIndex[8]) const;
+    static void findCellsFromNode( const IntVector& nodeIndex,
+                             IntVector cellIndex[8]);
      
     /**
      * sets the array nodeIndex equal to the 8 nodes that this
      * cell contributes to
      */
-    void findNodesFromCell( const IntVector& cellIndex,
-                             IntVector nodeIndex[8]) const;
+    static void findNodesFromCell( const IntVector& cellIndex,
+                             IntVector nodeIndex[8]);
 
      
     /**************End New Public Interace****************/

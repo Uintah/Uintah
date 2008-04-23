@@ -185,7 +185,7 @@ Point Patch::cellPosition(const IntVector& idx) const {
 }
 
 void Patch::findCellsFromNode( const IntVector& nodeIndex,
-                               IntVector cellIndex[8]) const
+                               IntVector cellIndex[8]) 
 {
    int ix = nodeIndex.x();
    int iy = nodeIndex.y();
@@ -202,7 +202,7 @@ void Patch::findCellsFromNode( const IntVector& nodeIndex,
 }
 
 void Patch::findNodesFromCell( const IntVector& cellIndex,
-                               IntVector nodeIndex[8]) const
+                               IntVector nodeIndex[8])
 {
    int ix = cellIndex.x();
    int iy = cellIndex.y();
