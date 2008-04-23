@@ -1175,7 +1175,39 @@ WARNING
       return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
        && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
     }
-     //Above for Fracture *************************************************
+    //Above for Fracture *************************************************
+     
+    /**
+     * Returns the cell that contains the point pos
+     */
+    inline bool findCell(const Point& pos, IntVector& ci) const
+    {
+      ci=getLevel()->getCellIndex(pos);
+      return containsCell(ci);
+    }
+     
+    /**
+     * Must be called prior to using certain patch features.
+     * Currently this sets the gridIndex.
+     */
+    void finalizePatch();
+     
+     
+    /**
+    * sets the array cellIndex equal to the 8 cells
+    * that contribute to the node nodeIndex.
+    */
+    void findCellsFromNode( const IntVector& nodeIndex,
+                             IntVector cellIndex[8]) const;
+     
+    /**
+     * sets the array nodeIndex equal to the 8 nodes that this
+     * cell contributes to
+     */
+    void findNodesFromCell( const IntVector& cellIndex,
+                             IntVector nodeIndex[8]) const;
+
+     
     /**************End New Public Interace****************/
    
     /*
@@ -1213,55 +1245,9 @@ WARNING
       return (high.x() -  low.x()) * (high.y() - low.y()) * (high.z() - low.z());
     } 
 
-     //determine if a point is in the patch
-     inline bool containsPoint(const Point& p) const {
-       IntVector l(getNodeLowIndex());
-       IntVector h(getNodeHighIndex());
-       Point lp = nodePosition(l);
-       Point hp = nodePosition(h);
-       return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
-         && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
-     }
-     //determine if a point is in the patch's real cells
-     inline bool containsPointInRealCells(const Point& p) const {
-       IntVector l(getInteriorNodeLowIndex());
-       IntVector h(d_inHighIndex);
-       Point lp = nodePosition(l);
-       Point hp = nodePosition(h);
-       return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
-         && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
-     }
-
-
-     //////////
-     // Finalize the patch.  This is called crom Level::setBCTypes()
-     // which is called from Level::finalizeLevel()
-     void finalizePatch();
 
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
                                                bool mustExist);
-     
-     //////////
-     // Find the closest node index to a point
-     int findClosestNode(const Point& pos, IntVector& idx) const;
-     
-     //////////
-     // Find the index of a cell contaning the given Point. 
-     bool findCell(const Point& pos, IntVector& ci) const;
-     
-     //////////
-     // Find the 8 neighboring cell indexes according to a 
-     // given node index.
-     //    --tan
-     void findCellsFromNode( const IntVector& nodeIndex,
-                             IntVector cellIndex[8]) const;
-     
-     //////////
-     // Find the 8 neighboring node indexes according to a 
-     // given cell index.
-     //    --tan
-     void findNodesFromCell( const IntVector& cellIndex,
-                             IntVector nodeIndex[8]) const;
      
      // This function will return all cells that are intersected by
      // the box.  This is based on the fact that boundaries of cells
@@ -1620,6 +1606,27 @@ WARNING
      inline const Level* getLevel() const {
        return d_level;
      }
+     
+     //determine if a point is in the patch
+     inline bool containsPoint(const Point& p) const {
+       IntVector l(getNodeLowIndex());
+       IntVector h(getNodeHighIndex());
+       Point lp = nodePosition(l);
+       Point hp = nodePosition(h);
+       return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
+         && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+     }
+     //determine if a point is in the patch's real cells
+     inline bool containsPointInRealCells(const Point& p) const {
+       IntVector l(getInteriorNodeLowIndex());
+       IntVector h(d_inHighIndex);
+       Point lp = nodePosition(l);
+       Point hp = nodePosition(h);
+       return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
+         && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+     }
+
+
      
      /***********************End old interface********************************************************************/
 
