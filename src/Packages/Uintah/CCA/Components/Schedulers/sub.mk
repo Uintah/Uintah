@@ -34,10 +34,11 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
-	Core/Geometry                    \
 	Core/Containers                  \
-	Core/Thread                      \
 	Core/Exceptions                  \
+	Core/Geometry                    \
+	Core/OS                          \
+	Core/Thread                      \
 	Core/Util
 
 LIBS := $(XML2_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(PERFEX_LIBRARY)
