@@ -285,7 +285,7 @@ run_test () {
 
     mem_check
 
-    echo; echo "Running $MPI sus $opts $input_file"
+    echo; echo "Running: $MPI sus $opts $input_file"
     $MPI ../sus $opts $input_file &> $n.out
     rm $input_file
 
@@ -316,6 +316,7 @@ compare_results () {
     goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
     echo "Comparing $uda results against '$goldStandard'"
     
+    echo "Running command: ../compare_uda gs: $goldStandard ud: $uda"
     echo "../compare_uda $goldStandard $uda" > $n.compare 2>&1
     ../compare_uda $goldStandard $uda >> $n.compare 2>&1
     
@@ -335,7 +336,7 @@ run_restart () {
 
         uda_new=`echo $uda | tr -d "/"`
 
-        echo; echo "Running $MPI sus $opts -restart -t 0 -copy $uda_new.000"
+        echo; echo "Running: $MPI sus $opts -restart -t 0 -copy $uda_new.000"
         $MPI ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
         success=`grep "successfully" $n.out_restart`
         if test -n "$success"; then 
@@ -468,7 +469,7 @@ arches_test () {
     echo; echo "Testing $arches_test_cases"
     
     for n in $arches_test_cases; do
-        echo; echo "Running mpirun -np 1 sus -arches $INPUTS/$CASE/$n.ups"
+        echo; echo "Running: mpirun -np 1 sus -arches $INPUTS/$CASE/$n.ups"
         uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
         mpirun -np 1 sus -arches -mpi $INPUTS/$CASE/$n.ups &> $n.out
         success=`grep "successfully" $n.out`
@@ -500,8 +501,6 @@ mpmarches_test () {
         MPI='mpirun -np 1'
         run_test
 
-#       mpirun -np 1 sus -mpmarches $INPUTS/$CASE/$n.ups &> $n.out
-        
         compare_results
         run_restart
         MPI=""
@@ -512,8 +511,17 @@ examples_test () {
     echo; echo "Testing $examples_test_cases"
     
     for n in $examples_test_cases; do
+        echo; echo "Running: ./sus -poisson1 $INPUTS/$CASE/$n.ups"
         run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+        ./sus -poisson1 $INPUTS/$CASE/$n.ups &> $n.out
+        success=`grep "successfully" $n.out`
+        if test -n "$success"; then 
+            echo $success
+        else
+            echo; echo "FAILURE running sus . . ."
+            continue
+        fi
+
         compare_results
         run_restart
         MPI=""
@@ -606,4 +614,6 @@ if test "$do_remove" -eq 1; then
     REMOVE
 fi
 
+echo
 echo "Ending tests at:   `date`"
+echo
