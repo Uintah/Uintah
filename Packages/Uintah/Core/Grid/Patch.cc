@@ -601,9 +601,24 @@ void Patch::setExtraIndices(const IntVector& l, const IntVector& h)
 // This function will return all cells that are intersected by the
 // box.  This is based on the fact that boundaries of cells are closed
 // on the bottom and open on the top.
+CellIterator
+Patch::getCellIterator(const Box& b) const
+{
+   Point l = d_level->positionToIndex(b.lower());
+   Point u = d_level->positionToIndex(b.upper());
+   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
+   // high is the inclusive upper bound on the index.  In order for
+   // the iterator to work properly we need in increment all the
+   // indices by 1.
+   IntVector high(RoundDown(u.x())+1, RoundDown(u.y())+1, RoundDown(u.z())+1);
+   low = Max(low, getCellLowIndex());
+   high = Min(high, getCellHighIndex());
+   return CellIterator(low, high);
+}
 
 // This function works on the assumption that we want all the cells
 // whose centers lie on or within the box.
+/*
 CellIterator
 Patch::getCellCenterIterator(const Box& b) const
 {
@@ -629,6 +644,18 @@ Patch::getCellCenterIterator(const Box& b) const
 #endif
    low = Max(low, getCellLowIndex());
    high = Min(high, getCellHighIndex());
+   return CellIterator(low, high);
+}
+*/
+CellIterator
+Patch::getExtraCellIterator(const Box& b) const
+{
+   Point l = d_level->positionToIndex(b.lower());
+   Point u = d_level->positionToIndex(b.upper());
+   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
+   IntVector high(RoundUp(u.x()),  RoundUp(u.y()),   RoundUp(u.z()));
+   low = Min(low, getCellLowIndex());
+   high = Max(high, getCellHighIndex());
    return CellIterator(low, high);
 }
 
@@ -702,6 +729,7 @@ Patch::getSFCZIterator(const int offset) const
 //__________________________________
 // Selects which iterator to use
 //  based on direction
+/*
 CellIterator
 Patch::getSFCIterator(const int dir, const int offset) const
 {
@@ -715,6 +743,7 @@ Patch::getSFCIterator(const int dir, const int offset) const
     SCI_THROW(InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2", __FILE__, __LINE__));
   }
 } 
+*/
 /*****************************************************
  * Returns a face cell iterator
  *  face specifies which face will be returned
@@ -1124,6 +1153,7 @@ NodeIterator Patch::getNodeIterator() const
 // contained by the bounding box.  If a dimension of the widget is
 // degenerate (has a thickness of 0) the nearest node in that
 // dimension is used.
+/*
 NodeIterator
 Patch::getNodeIterator(const Box& b) const
 {
@@ -1164,7 +1194,12 @@ Patch::getNodeIterator(const Box& b) const
    high = Min(high, getNodeHighIndex());
    return NodeIterator(low, high);
 }
-
+*/
+/**
+ * Replace this with getExtraNodeIterator__New()
+ *  this assumes when using gimp or 3rdorderBS the extra cells = IntVector(1,1,1)
+ *  when not using gimp or 3rdorderBS the extracells=IntVector(0,0,0)
+ */
 NodeIterator Patch::getNodeIterator(const string& interp_type) const
 {
   if(interp_type!="gimp" && interp_type!="3rdorderBS"){
