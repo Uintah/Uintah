@@ -992,8 +992,8 @@ DataArchive::TimeData::init()
 
         // get level info out of the xml file: should be lX/pxxxxx.xml
         unsigned level = 0;
-        unsigned start = datafile.find_first_of("l",0, datafile.length()-3);
-        unsigned end = datafile.find_first_of("/");
+        string::size_type start = datafile.find_first_of("l",0, datafile.length()-3);
+        string::size_type end = datafile.find_first_of("/");
         if (start != string::npos && end != string::npos && end > start && end-start <= 2)
           level = atoi(datafile.substr(start+1, end-start).c_str());
 
