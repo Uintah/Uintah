@@ -195,6 +195,7 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
     // AVT_RECTILINEAR_MESH, AVT_CURVILINEAR_MESH, AVT_UNSTRUCTURED_MESH,
     // AVT_POINT_MESH, AVT_SURFACE_MESH, AVT_UNKNOWN_MESH
 	avtMeshType mt;
+    avtCentering cent;
     //
     // int nblocks = 1;  // <-- this must be 1 for MTSD
     // int block_origin = 0;
@@ -224,6 +225,11 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 	for (int i = 0; i < udaVarsObj.size(); i++) {
 	  if (udaVarsObj[i].find("p.") == string::npos) {
 	    string varname = udaVarsObj[i];
+		size_t found = varname.find("/");
+		
+		string vartype = varname.substr(found + 1);
+		varname = varname.substr(0, found);
+  
         varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
 	    varMatls& varMatlsObj = *(varMatlsPtr); 
 	    for (int j = 0; j < varMatlsObj.size(); j++) {
@@ -233,7 +239,18 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 			newVarname.append("/");
 			newVarname.append(buffer);
 			
-			string mesh_for_this_var = string("mesh_");
+			string mesh_for_this_var;
+			
+			if (vartype.find("NC") != string::npos) {
+			  cent = AVT_NODECENT;
+			  mesh_for_this_var.append("NC"); 
+			}  
+			else if (vartype.find("CC") != string::npos) {  
+			  cent = AVT_ZONECENT;
+			  mesh_for_this_var.append("CC"); 
+			}  
+			
+			mesh_for_this_var.append("mesh_");
 			mesh_for_this_var.append(newVarname);
 
 			cout << newVarname << " " << mesh_for_this_var << endl;
@@ -243,15 +260,30 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 			AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
 							  spatial_dimension, topological_dimension);
 			
-			avtCentering cent = AVT_ZONECENT;
-			AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
+			
+			if (vartype.find("NC") != string::npos)
+			  cent = AVT_NODECENT;
+			else if (vartype.find("CC") != string::npos)  
+			  cent = AVT_ZONECENT;
+			  
+		    // Face centered variables not suppoted yet
+			
+			if (vartype.find("Vector") != string::npos) 
+			  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
+			else  
+			  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
 		}
 	  }	
 	}
 	
 	for (int i = 0; i < udaVarsObj.size(); i++) {
-	  if (udaVarsObj[i].find("p.") != string::npos && udaVarsObj[i].compare("p.x") != 0) {
+	  if (udaVarsObj[i].find("p.") != string::npos && udaVarsObj[i].find("p.x") == string::npos) {
         string varname = udaVarsObj[i];
+		size_t found = varname.find("/");
+		
+		string vartype = varname.substr(found + 1);
+		varname = varname.substr(0, found);
+		
         varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
 	    varMatls& varMatlsObj = *(varMatlsPtr); 
         bool addStar = false;
@@ -279,8 +311,11 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 			AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
 							  spatial_dimension, topological_dimension);
 			
-			avtCentering cent = AVT_NODECENT;
-			AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
+			cent = AVT_NODECENT;
+			if (vartype.find("Vector") != string::npos) 
+			  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
+			else  
+			  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
 		}
 	  }	
 	}
@@ -420,17 +455,27 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 	    timeStep &timeStepObj = *timeStepObjPtr;
 
 		cellVals& cellValColln = *(timeStepObj.cellValColln);
-
+		
 		int ndims = 3; 
-		int dims[3] = {cellValColln.x + 1, cellValColln.y + 1, cellValColln.z + 1}; 
-		vtkFloatArray *coords[3] = {0,0,0}; 
-
+		int dims[3] = {cellValColln.x + 1, cellValColln.y + 1, cellValColln.z + 1}; // for node centered -> remove +1
+		vtkFloatArray *coords[3] = {0,0,0};
+		
 		double dx, dy, dz;
-		dx = (minMaxArr[3] - minMaxArr[0]) / cellValColln.x;
+		dx = (minMaxArr[3] - minMaxArr[0]) / cellValColln.x; // for node centered -> -1
 		dy = (minMaxArr[4] - minMaxArr[1]) / cellValColln.y;
 		dz = (minMaxArr[5] - minMaxArr[2]) / cellValColln.z;
-	
-			
+		
+		if (meshName.find("NC") != string::npos) {
+		  cout << "NC Mesh\n";
+		  dims[0] = dims[0] - 1;
+		  dims[1] = dims[1] - 1;
+		  dims[2] = dims[2] - 1;
+		  		
+		  dx = (minMaxArr[3] - minMaxArr[0]) / (cellValColln.x - 1);
+		  dy = (minMaxArr[4] - minMaxArr[1]) / (cellValColln.y - 1);
+		  dz = (minMaxArr[5] - minMaxArr[2]) / (cellValColln.z - 1);
+		}  
+		
 		// Read the X coordinates from the file. 
 		coords[0] = vtkFloatArray::New(); 
 		coords[0]->SetNumberOfTuples(dims[0]); 
@@ -762,8 +807,7 @@ avtudaReaderFileFormat::GetVar(int timestate, const char *varname)
 vtkDataArray *
 avtudaReaderFileFormat::GetVectorVar(int timestate, const char *varname)
 {
-	return NULL;
-    // YOU MUST IMPLEMENT THIS
+	// YOU MUST IMPLEMENT THIS
     //
     // If you have a file format where variables don't apply (for example a
     // strictly polygonal format like the STL (Stereo Lithography) format,
@@ -771,6 +815,136 @@ avtudaReaderFileFormat::GetVectorVar(int timestate, const char *varname)
     //
     // EXCEPTION1(InvalidVariableException, varname);
     //
+	
+	cout << "\nIn GetVectorVar\n";
+	
+	string varName(varname);
+	
+	*(void **)(&processData) = dlsym(libHandle, "processData");
+	if((error = dlerror()) != NULL) {
+		EXCEPTION1(InvalidDBTypeException, "The function processData could be located in the library!!!");
+	}
+
+	vtkFloatArray *rv = vtkFloatArray::New();
+
+	if (varName.find("p.") == string::npos) {
+	    size_t found = varName.find("/");
+		
+		string matlNo = varName.substr(found + 1);
+		varName = varName.substr(0, found);
+
+		cout << varName << endl;
+		cout << matlNo << endl;
+	
+		strcpy(arr2d[0], "uda2nrrd"); // anything will do
+		strcpy(arr2d[1], "-uda");
+		strcpy(arr2d[2], folder.c_str());
+		strcpy(arr2d[3], "-v");
+		strcpy(arr2d[4], varName.c_str());
+		strcpy(arr2d[5], "-m");
+		strcpy(arr2d[6], matlNo.c_str());
+		strcpy(arr2d[7], "-o");
+		strcpy(arr2d[8], "test"); // anything will do
+
+		timeStep *timeStepObjPtr = (*processData)(9, arr2d, timestate, true, 0, false);
+	    timeStep &timeStepObj = *timeStepObjPtr;
+		
+		cellVals& cellValColln = *(timeStepObj.cellValColln);
+		typeDouble& cellValVec = *(cellValColln.cellValVec);
+
+		int ncomps = 3;  // This is the rank of the vector - typically 2 or 3.
+		int ntuples = cellValVec.size() / 3; // this is the number of entries in the variable.
+		
+		cout << ncomps << " " << cellValVec.size() << " " << ntuples << endl;
+
+		rv->SetNumberOfComponents(ncomps);
+		rv->SetNumberOfTuples(ntuples);
+
+		double* one_entry = new double[ncomps];
+		unsigned int count = 0;
+		
+		for (unsigned int i = 0; i < ntuples; ++i) {
+		  for (unsigned int j = 0; j < ncomps; ++j) {
+		    one_entry[j] = cellValVec[count++];
+		  }
+
+		  rv->SetTuple(i, one_entry); 
+		}
+
+		delete [] one_entry;
+	}
+    else {
+		size_t found = varName.find("/");
+		
+		string matl = varName.substr(found + 1);
+		varName = varName.substr(0, found);
+
+		int matlNo = 0;
+		
+		if (matl.compare("*") != 0)
+		  matlNo = atoi(matl.c_str());
+
+		cout << varName << endl;
+		cout << matlNo << endl;
+		
+		strcpy(arr2d[0], "uda2nrrd"); // anything will do
+		strcpy(arr2d[1], "-uda");
+		strcpy(arr2d[2], folder.c_str());
+		strcpy(arr2d[3], "-p");
+		strcpy(arr2d[4], "-o");
+		strcpy(arr2d[5], "test"); // anything will do
+
+		timeStep *timeStepObjPtr;
+		
+		if (matl.compare("*") == 0) {
+		  timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false); 
+		  cout << "All data\n";
+		}  
+        else { 
+		  timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true);
+		  cout << "Some data\n";
+		}  
+	    
+		timeStep &timeStepObj = *timeStepObjPtr;
+
+		variables& varColln = *(timeStepObj.varColln);
+
+		int ntuples = 0;
+        int ncomps = 3;  // This is the rank of the vector - typically 2 or 3.
+
+		if ((varColln.size() % PARTICLE_INTERVAL) != 0) 
+		  ntuples = (varColln.size() / PARTICLE_INTERVAL) + 1;
+		else
+		  ntuples = varColln.size() / PARTICLE_INTERVAL;
+
+		
+		cout << ncomps << " " << ntuples << endl;
+
+		rv->SetNumberOfComponents(ncomps);
+		rv->SetNumberOfTuples(ntuples);
+		
+		float* one_entry = new float[ncomps];
+		//
+		// If you do have a scalar variable, here is some code that may be helpful.
+		//
+		
+		// int ntuples = varColln.size(); // this is the number of entries in the variable.
+		for (int i = 0 ; i < ntuples ; i++) {
+			variable& varRef = varColln[i * PARTICLE_INTERVAL];
+			vecValData& vecDataRef = varRef.vecData;
+			
+			for (int j = 0;  j < vecDataRef.size(); j++) {
+				if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
+				  one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
+				  rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
+				}	
+			}
+		}
+
+		delete [] one_entry;
+	}
+
+	cout << "Out GetVectorVar\n";
 
     //
     // If you do have a vector variable, here is some code that may be helpful.
@@ -792,7 +966,6 @@ avtudaReaderFileFormat::GetVectorVar(int timestate, const char *varname)
     //      rv->SetTuple(i, one_entry); 
     // }
     //
-    // delete [] one_entry;
-    // return rv;
+    return rv;
     //
 }
