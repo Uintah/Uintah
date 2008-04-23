@@ -1152,7 +1152,6 @@ NodeIterator Patch::getNodeIterator() const
 // contained by the bounding box.  If a dimension of the widget is
 // degenerate (has a thickness of 0) the nearest node in that
 // dimension is used.
-/*
 NodeIterator
 Patch::getNodeIterator(const Box& b) const
 {
@@ -1193,7 +1192,6 @@ Patch::getNodeIterator(const Box& b) const
    high = Min(high, getNodeHighIndex());
    return NodeIterator(low, high);
 }
-*/
 /**
  * Replace this with getExtraNodeIterator__New()
  *  this assumes when using gimp or 3rdorderBS the extra cells = IntVector(1,1,1)
