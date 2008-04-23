@@ -139,21 +139,29 @@ handleData( QueryInfo &    qinfo,
 	unsigned int x = cellValColln.x = nrrd->axis[0].size;
 	unsigned int y = cellValColln.y = nrrd->axis[1].size;
 	unsigned int z = cellValColln.z = nrrd->axis[2].size;
+	unsigned int w = nrrd->axis[3].size; // may be present in the case of vectors
 
-        cout << x << "|" << y << "|" << z << endl;
+	cout << x << "|" << y << "|" << z << "|" << w << endl;
+	
+	unsigned int numComponents;
+	
+	if (w == 0)
+	  numComponents = x * y * z;
+	else { 
+	  cellValColln.x = y;
+	  cellValColln.y = z;
+	  cellValColln.z = w;
+	  numComponents = x * y * z * w;
+	}  
 	  
 	if (dataReq) {
-
-	/*cout << "here\n";
-    for( unsigned int cnt = 0; cnt < x * y * z; cnt++ ) {
-	   double * data = (double*)nrrd->data;
-	   cout << cnt << ": " << &data[cnt] << " -- ";
-	   cout.flush();
-	   cout << data[cnt] << "\n";
-	}*/
-
 	  typeDouble* cellValVecPtr = new typeDouble();   
-	  for (unsigned int i = 0; i < x; ++i) {
+	  for( unsigned int cnt = 0; cnt < numComponents; cnt++ ) {
+	    double* data = (double*)nrrd->data;
+		cellValVecPtr->push_back(data[cnt]);
+	  }
+	  
+	  /*for (unsigned int i = 0; i < x; ++i) {
 	    double* rowData = (double*)(nrrd->data) + i * y * z;
 		// if (rowData == NULL) { cout << "rowData: NULL"; exit(1); }
 	    for (unsigned int j = 0; j < y; ++j) {
@@ -169,7 +177,8 @@ handleData( QueryInfo &    qinfo,
 		    cellValVecPtr->push_back(cellData[k]);
 		  }
 	    }
-	  }
+	  }*/
+	  
 	  cout << "Data in cellValVecPtr pushed\n";
 	  cout << "Assigning cellValVecPtr ptr\n";
 	  cellValColln.cellValVec = cellValVecPtr;

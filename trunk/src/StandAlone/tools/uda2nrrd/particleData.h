@@ -14,24 +14,39 @@ class nameVal {
 
 typedef vector<nameVal> unknownData;
 
+// Vector variables
+class vecVal {
+ public:
+	string name;
+	float x;
+	float y;
+	float z;
+	vecVal(){};
+	~vecVal(){};
+};
+
+typedef vector<vecVal> vecValData;
+
 class variable {
  public:
 	float x;
 	float y;
 	float z;
 	unknownData data;
-	// float volume; // Could replace these by a vector having a <string name, float value> pair as data items 
-	// float stress; // 
-	variable(){};
-	~variable(){};
+    vecValData vecData;
+	variable() {
+	  // vecData = NULL;
+	};
+	~variable() { 
+	  // if (vecData) delete vecData;
+	};
 	variable(const variable &obj)
 	{
 		this->x = obj.x;
 		this->y = obj.y;
 		this->z = obj.z;
 		this->data = obj.data;	
-		// this->volume = obj.volume;
-		// this->stress = obj.stress;	
+		this->vecData = obj.vecData;	
 	}
 };
 

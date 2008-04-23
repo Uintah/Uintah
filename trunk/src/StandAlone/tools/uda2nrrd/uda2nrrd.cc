@@ -202,7 +202,9 @@ getVarList(const string& input_uda_name) {
   archive->queryVariables(vars, types);
   
   for (int i = 0; i < vars.size(); i++) {
-    udaVarList->push_back(vars[i]);
+    string nameType = vars[i] + "/" + types[i]->getName(); 
+    udaVarList->push_back(nameType);
+    cout << vars[i] << " " << types[i]->getName() << endl;
   }
   
   return udaVarList;
