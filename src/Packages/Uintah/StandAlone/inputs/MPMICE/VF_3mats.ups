@@ -8,12 +8,12 @@
    <Time>
         <maxTime>     1.0     </maxTime>
         <initTime>    0.0     </initTime>
-        <delt_min>    1.e-9   </delt_min>
-        <delt_max>    1.e-1   </delt_max>
+        <deltMin>    1.e-9   </deltMin>
+        <deltMax>    1.e-1   </deltMax>
         <delt_init>   1.e-8   </delt_init>
-<!--        <max_Timesteps> 1    </max_Timesteps> -->
+<!--        <maxTimesteps> 1    </maxTimesteps> -->
         <max_delt_increase>  1.0 </max_delt_increase>
-        <timestep_multiplier>0.5 </timestep_multiplier>
+        <timestepMultiplier>0.5 </timestepMultiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->

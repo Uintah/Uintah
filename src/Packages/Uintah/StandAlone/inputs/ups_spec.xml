@@ -50,6 +50,51 @@
 
 <Uintah_specification> 
 
+  <!--===========================================================-->
+  <!-- Begin Common Block -->
+  <CommonTags>
+    <!-- 
+       Tags in this <CommonTags> block are used more than once in the
+       Uintah_specification.  In the Uintah_specification, they
+       should just be referenced as <tag/>.  Optionally, if the 
+       OPTIONAL/REQUIRED spec has changed, they can be referred to as
+       <tag spec="NEW_VALUE">
+    -->
+
+    <cylinder                   spec="OPTIONAL NO_DATA"
+                                   attribute1="label    REQUIRED STRING"
+                                   children="ALL_OR_NONE" >
+      <bottom                   spec="REQUIRED VECTOR" />
+      <top                      spec="REQUIRED VECTOR" />
+      <radius                   spec="REQUIRED DOUBLE 'positive'" />
+    </cylinder>
+
+    <box                        spec="OPTIONAL NO_DATA"
+                                   attribute1="label REQUIRED STRING"
+                                   children="ALL_OR_NONE" >
+      <min                      spec="OPTIONAL VECTOR" />
+      <max                      spec="OPTIONAL VECTOR" />
+    </box>
+
+    <geom_object                spec="REQUIRED NO_DATA" >
+      <box/>
+      <cylinder/>
+
+      <res                      spec="REQUIRED VECTOR" />
+      <velocity                 spec="REQUIRED VECTOR" />
+      <temperature              spec="REQUIRED DOUBLE" />
+      <density                  spec="OPTIONAL DOUBLE" /> <!-- FIXME: is this really optional? -->
+      <pressure                 spec="OPTIONAL DOUBLE" /> <!-- FIXME: is this really optional? -->
+
+      <difference               spec="OPTIONAL NO_DATA" >
+        <box                    spec="MULTIPLE" />
+      </difference>
+    </geom_object>
+
+  </CommonTags>
+  <!-- End Common Block -->
+  <!--===========================================================-->
+
   <Meta                 spec="OPTIONAL NO_DATA">
     <title              spec="OPTIONAL STRING" />
   </Meta>
@@ -70,18 +115,17 @@
     <type               spec="REQUIRED STRING 'mpm, arches, ice, mpmice, mpmarches, impm'" />
   </SimulationComponent>
 
-  <DataArchiver         spec="REQUIRED NO_DATA">
+  <DataArchiver         spec="REQUIRED NO_DATA"
+                                   children="ONE_OF(outputInterval, outputTimestepInterval)" >
       <filebase         spec="REQUIRED STRING" />
       <outputInterval   spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: only one of these should be allowed... -->
       <outputTimestepInterval spec="OPTIONAL INTEGER 'positive'" />
       <save             spec="MULTIPLE NO_DATA"
-                        attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'"
-                        attribute2="label     REQUIRED STRING 'press_equil_CC, vol_frac_CC,
-                                                               sp_vol_CC, uvel_FC, vvel_FC,
-                                                               wvel_FC, uvel_FCME, vvel_FCME,
-                                                               wvel_FCME, delP_Dilatate, press_CC,
-                                                               mom_L_ME_CC, vel_CC, rho_CC, temp_CC,
-                                                               KineticEnergy, TotalIntEng'" />
+                        attribute1="label     REQUIRED STRING 
+                            'press_equil_CC, vol_frac_CC, sp_vol_CC, uvel_FC, vvel_FC, wvel_FC, uvel_FCME, vvel_FCME,
+                             wvel_FCME, delP_Dilatate, press_CC, mom_L_ME_CC, vel_CC, rho_CC, temp_CC,
+                             KineticEnergy, TotalIntEng, TotalMass, StrainEnergy, CenterOfMassPosition,
+                             CenterOfMassVelocity, p.x, p.volume, p.stress, g.mass, g.stressFS'" />
       <!-- ???? IS checkpoint REALLY OPTIONAL???? -->
       <checkpoint       spec="OPTIONAL NO_DATA"
                         attribute1="interval  REQUIRED DOUBLE  'positive'"
@@ -128,7 +172,7 @@
 
     <Level              spec="REQUIRED NO_DATA">
       <Box              spec="REQUIRED NO_DATA"
-                        attribute1="label     REQUIRED STRING">
+                           attribute1="label     REQUIRED STRING">
         <lower          spec="REQUIRED VECTOR" />
         <upper          spec="REQUIRED VECTOR" />
         <resolution     spec="OPTIONAL VECTOR" />
@@ -181,42 +225,17 @@
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
           <InletVelocity                spec="REQUIRED DOUBLE" />
           <mixture_fraction             spec="REQUIRED DOUBLE" />
-          <geom_object                  spec="REQUIRED NO_DATA" >
-            <box                        spec="OPTIONAL NO_DATA"
-                                           attribute1="label REQUIRED STRING" >
-              <min                      spec="OPTIONAL VECTOR" />
-              <max                      spec="OPTIONAL VECTOR" />
-            </box>
-            <cylinder                   spec="OPTIONAL NO_DATA"
-                                           attribute1="label    REQUIRED STRING" >
-              <bottom                   spec="REQUIRED VECTOR" />
-              <top                      spec="REQUIRED VECTOR" />
-              <radius                   spec="REQUIRED DOUBLE 'positive'" />
-            </cylinder>
-
-          </geom_object>
+          <geom_object/>
         </FlowInlet>
 
         <PressureBC                     spec="REQUIRED NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
-          <geom_object                  spec="REQUIRED NO_DATA" >
-            <box                        spec="MULTIPLE NO_DATA"
-                                           attribute1="label    REQUIRED STRING" >
-              <min                      spec="OPTIONAL VECTOR" />
-              <max                      spec="OPTIONAL VECTOR" />
-            </box>
-          </geom_object>
+          <geom_object/>
         </PressureBC>
 
         <OutletBC                       spec="REQUIRED NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
-          <geom_object                  spec="REQUIRED NO_DATA" >
-            <box                        spec="OPTIONAL NO_DATA"
-                                           attribute1="label    REQUIRED STRING" >
-              <min                      spec="OPTIONAL VECTOR" />
-              <max                      spec="OPTIONAL VECTOR" />
-            </box>
-          </geom_object>
+          <geom_object/>
         </OutletBC>
       </BoundaryConditions>
 
@@ -279,29 +298,14 @@
         <density                    spec="REQUIRED DOUBLE" />
         <heat_transfer_coefficient  spec="OPTIONAL DOUBLE" />
         <constitutive_model         spec="REQUIRED NO_DATA"
-                                       attribute1="type    REQUIRED STRING 'comp_mooney_rivlinnnnqwerty'" >
+                                       attribute1="type    REQUIRED STRING 'comp_mooney_rivlin" >
           <he_constant_1            spec="REQUIRED DOUBLE 'positive'" />
           <he_constant_2            spec="REQUIRED DOUBLE 'positive'" />
           <he_PR                    spec="REQUIRED DOUBLE 'positive'" />
         </constitutive_model>
         <thermal_conductivity       spec="REQUIRED DOUBLE 'positive'" />
         <specific_heat              spec="REQUIRED DOUBLE 'positive'" />
-        <geom_object                spec="MULTIPLE NO_DATA" >
-          <cylinder                 spec="OPTIONAL NO_DATA"
-                                       attribute1="label    REQUIRED STRING" >
-            <bottom                 spec="REQUIRED VECTOR" />
-            <top                    spec="REQUIRED VECTOR" />
-            <radius                 spec="REQUIRED DOUBLE 'positive2'" />
-          </cylinder>
-          <box                      spec="OPTIONAL NO_DATA"
-                                       attribute1="label    REQUIRED STRING" >
-              <min            spec="OPTIONAL VECTOR" />
-              <max            spec="OPTIONAL VECTOR" />
-          </box>
-          <res                      spec="REQUIRED VECTOR" />
-          <velocity                 spec="REQUIRED VECTOR" />
-          <temperature              spec="REQUIRED DOUBLE" />
-        </geom_object>
+        <geom_object                spec="MULTIPLE" />
       </material>
       <contact                      spec="REQUIRED NO_DATA" >
         <type                       spec="REQUIRED STRING 'null, single_velocity'" />
@@ -320,32 +324,7 @@
         <specific_heat        spec="REQUIRED DOUBLE 'positive'" />
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
 
-        <geom_object          spec="MULTIPLE NO_DATA" >
-          <cylinder           spec="OPTIONAL NO_DATA"
-                              attribute1="label    REQUIRED STRING" >
-            <bottom           spec="REQUIRED VECTOR" />
-            <top              spec="REQUIRED VECTOR" />
-            <radius           spec="REQUIRED DOUBLE 'positive2'" />
-          </cylinder>
-
-          <box                spec="OPTIONAL NO_DATA"
-                              attribute1="label    REQUIRED STRING" />
-
-          <difference         spec="OPTIONAL NO_DATA" >
-            <box              spec="MULTIPLE NO_DATA"
-                              attribute1="label REQUIRED STRING" >
-              <min            spec="REQUIRED VECTOR" />
-              <max            spec="REQUIRED VECTOR" />
-            </box>
-          </difference>
-
-          <res                spec="REQUIRED VECTOR" />
-          <velocity           spec="REQUIRED VECTOR" />
-          <temperature        spec="REQUIRED DOUBLE" />
-          <density            spec="REQUIRED DOUBLE" />
-          <pressure           spec="REQUIRED DOUBLE" />
-
-        </geom_object>
+        <geom_object/>
       </material>
     </ICE>
 

@@ -155,6 +155,7 @@ usage( const std::string & message,
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
       cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
+      cerr << "-validate              : Verifies the .ups file is valid and quits!\n";
       cerr << "\n\n";
     }
   quit();
@@ -211,6 +212,7 @@ main( int argc, char** argv )
   string component;
   string solver;
   IntVector layout(1,1,1);
+  bool   onlyValidateUps = false;
 
   // Checks to see if user is running an MPI version of sus.
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
@@ -238,73 +240,75 @@ main( int argc, char** argv )
     * Parse arguments
     */
   for(int i=1;i<argc;i++){
-    string s=argv[i];
-    if( (s == "-help") || (s == "-h") ) {
+    string arg = argv[i];
+    if( (arg == "-help") || (arg == "-h") ) {
       usage( "", "", argv[0]);
-    } else if(s == "-AMR" || s == "-amr"){
+    } else if(arg == "-AMR" || arg == "-amr"){
       do_AMR=true;
-    } else if(s == "-nthreads"){
+    } else if(arg == "-nthreads"){
       cerr << "reading number of threads\n";
       if(++i == argc){
         usage("You must provide a number of threads for -nthreads",
-              s, argv[0]);
+              arg, argv[0]);
       }
       numThreads = atoi(argv[i]);
-    } else if(s == "-threadmpi"){
+    } else if(arg == "-threadmpi"){
       //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread
-    } else if(s == "-solver") {
+    } else if(arg == "-solver") {
       if(++i == argc){
         usage("You must provide a solver name for -solver",
-              s, argv[0]);
+              arg, argv[0]);
       }
       solver = argv[i];
-    } else if(s == "-mpi") {
+    } else if(arg == "-mpi") {
       Uintah::Parallel::forceMPI();
-    } else if(s == "-nompi") {
+    } else if(arg == "-nompi") {
       Uintah::Parallel::forceNoMPI();
-    } else if (s == "-emit_taskgraphs") {
+    } else if (arg == "-emit_taskgraphs") {
       emit_graphs = true;
-    } else if(s == "-restart") {
+    } else if(arg == "-restart") {
       restart=true;
-    } else if(s == "-handle_mpi_errors") {
+    } else if(arg == "-handle_mpi_errors") {
       // handled in Parallel.cc
-    } else if(s == "-uda_suffix") {
+    } else if(arg == "-uda_suffix") {
       if (i < argc-1)
         udaSuffix = atoi(argv[++i]);
       else
         usage("You must provide a suffix number for -uda_suffix",
-              s, argv[0]);
-    } else if(s == "-nocopy") { // default anyway, but that's fine
+              arg, argv[0]);
+    } else if(arg == "-nocopy") { // default anyway, but that's fine
       restartFromScratch = true;
-    } else if(s == "-copy") {
+    } else if(arg == "-copy") {
       restartFromScratch = false;
       restartRemoveOldDir = false;
-    } else if(s == "-move") {
+    } else if(arg == "-move") {
       restartFromScratch = false;
       restartRemoveOldDir = true;
-    } else if(s == "-t") {
+    } else if(arg == "-t") {
       if (i < argc-1)
         restartTimestep = atoi(argv[++i]);
-    } else if(s == "-layout") {
+    } else if(arg == "-layout") {
       if(++i == argc)
         usage("You must provide a vector arg for -layout",
-              s, argv[0]);
+              arg, argv[0]);
       int ii,jj,kk;
       if(sscanf(argv[i], "%dx%dx%d", &ii, &jj, &kk) != 3)
         usage("Error parsing -layout", argv[i], argv[0]);
       layout = IntVector(ii,jj,kk);
-    } else if(s == "-svnDiff") {
+    } else if(arg == "-svnDiff") {
       do_svnDiff = true;
-    } else if(s == "-svnStat") {
+    } else if(arg == "-svnStat") {
       do_svnStat = true;
-    }else if (s[0] == '-') {
+    } else if(arg == "-validate") {
+      onlyValidateUps = true;
+    } else if (arg[0] == '-') {
       // component name - must be the only remaining option with a hyphen
       if (component.length() > 0) {
         char errorMsg[256];
-        sprintf(errorMsg, "Cannot specify both -%s and %s", component.c_str(), s.c_str());
+        sprintf(errorMsg, "Cannot specify both -%s and %s", component.c_str(), arg.c_str());
         usage(errorMsg, argv[i], argv[0]);
       } else {
-        component = s.substr(1,s.length()); // strip off the -
+        component = arg.substr(1, arg.length()); // strip off the -
         if (component == "combine_patches")
           combine_patches = true;
         else if (component == "reduce_uda")
@@ -312,7 +316,7 @@ main( int argc, char** argv )
       }
     } else {
       if(filename!="") {
-        usage("", s, argv[0]);
+        usage("", arg, argv[0]);
       } else if( argv[i][0] == '-' ) { // Don't allow 'filename' to begin with '-'.
         usage("Error!  It appears that the filename you specified begins with a '-'.\n"
               "        This is not allowed.  Most likely there is problem with your\n"
@@ -434,9 +438,11 @@ main( int argc, char** argv )
     // Read input file
     ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
     ProblemSpecP ups = reader->readInputFile();
-    if(ups->getNodeName() != "Uintah_specification")
-      throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
 
+    if( onlyValidateUps ) {
+      cout << "\nValidation of .ups File finished... good bye.\n\n";
+      Thread::exitAll(1);      
+    }
 
     //if the AMR block is defined default to turning amr on
     if (!do_AMR)
@@ -518,8 +524,9 @@ main( int argc, char** argv )
 
     sched->setStartAddr( start_addr );
     
-    if (reg) 
+    if (reg) {
       reg->attachPort("scheduler", sched);
+    }
     sched->addReference();
     
     if (emit_graphs) 
@@ -551,7 +558,7 @@ main( int argc, char** argv )
   } catch (Exception& e) {
     
     cerrLock.lock();
-    cout << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << '\n';
+    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
     if(e.stackTrace())
       stackDebug << "Stack trace: " << e.stackTrace() << '\n';
     cerrLock.unlock();
@@ -597,7 +604,7 @@ main( int argc, char** argv )
 
   if (thrownException) {
     if( Uintah::Parallel::getMPIRank() == 0 ) {
-      cout << "An exception was thrown... Goodbye.\n";
+      cout << "\n\nAn exception was thrown... Goodbye.\n\n";
     }
     Thread::exitAll(1);
   }

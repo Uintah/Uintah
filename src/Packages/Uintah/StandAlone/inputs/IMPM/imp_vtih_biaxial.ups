@@ -10,9 +10,9 @@
    <Time>
        <maxTime>3.0</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>2.e-6</delt_min>
-       <delt_max>2.e-2</delt_max>
-       <timestep_multiplier>1.0</timestep_multiplier>
+       <deltMin>2.e-6</deltMin>
+       <deltMax>2.e-2</deltMax>
+       <timestepMultiplier>1.0</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>implicit_viscoelastic_bi.uda</filebase>

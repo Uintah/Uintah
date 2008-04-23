@@ -10,10 +10,10 @@
    <Time>
        <maxTime>30.0</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.00001</delt_min>
-       <delt_max>.1</delt_max>
+       <deltMin>0.00001</deltMin>
+       <deltMax>.1</deltMax>
        <max_initial_delt>.01</max_initial_delt>
-       <timestep_multiplier>.5</timestep_multiplier>
+       <timestepMultiplier>.5</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>cfd.uda</filebase>

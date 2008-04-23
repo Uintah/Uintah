@@ -120,23 +120,44 @@ ccast_unsafe(const string &str)
   return result;
 }
 
+static
+bool
+is_separator( char ch, vector<char> separators )
+{
+  for( int pos = 0; pos < separators.size(); pos++ ) {
+    if( ch == separators[ pos ] ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 vector<string>
-split_string(const std::string& str, char sep)
+split_string(const std::string& str, const vector<char> & separators)
 {
   vector<string> result;
-  string s(str);
-  while(s != ""){
-    unsigned long first = s.find(sep);
-    if(first < s.size()){
-      if( first != 0 ) {
-        result.push_back(s.substr(0, first));
+  int begin = 0;
+
+  bool validDataFound = false;
+
+  for( int pos = 0; pos < str.length(); pos++ ) {
+    if( is_separator( str[pos], separators ) ) {
+      validDataFound = false;
+      if( pos > begin ) {
+        result.push_back( str.substr( begin, (pos-begin) ) );
+        begin = pos + 1;
       }
-      s = s.substr(first+1);
-    } else {
-      result.push_back(s);
-      break;
+      else if( !validDataFound ) {
+        begin++;
+      }
+    } 
+    else {
+      validDataFound = true;
     }
+  }
+  if( begin != str.length() ) {
+    int size = str.length() - begin + 1;
+    result.push_back( str.substr( begin, size ) );
   }
   return result;
 }

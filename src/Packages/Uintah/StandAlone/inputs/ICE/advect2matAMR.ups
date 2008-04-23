@@ -20,11 +20,11 @@
    <Time>
        <maxTime>            0.02         </maxTime>
        <initTime>           0.0         </initTime>
-       <delt_min>           0.0         </delt_min>
-       <delt_max>           1.0         </delt_max>
+       <deltMin>           0.0         </deltMin>
+       <deltMax>           1.0         </deltMax>
        <delt_init>          1.0e-4      </delt_init>
-       <max_Timesteps>     50           </max_Timesteps>
-       <timestep_multiplier>1.0         </timestep_multiplier>
+       <maxTimesteps>     50           </maxTimesteps>
+       <timestepMultiplier>1.0         </timestepMultiplier>
    </Time>
    
     <!--____________________________________________________________________-->

@@ -487,7 +487,11 @@ canonicalize(const string & fname )
   // use unix paths internally to keep things simpler
   convertToUnixPath(filename);
   filename = replace_substring(filename, "//", "/");
-  vector<string> entries, newentries = split_string(filename, '/');
+
+  vector<char> separators;
+  separators.push_back( '\'' );
+
+  vector<string> entries, newentries = split_string( filename, separators );
   while (newentries.size() != entries.size()) {
     entries = newentries;
     newentries.clear();
@@ -645,7 +649,11 @@ changeExtension( const string & filename, const string &extension)
 
   pair<string,string> dirfile = split_filename(filename);
   if (dirfile.second.size()) {
-    vector<string> fileext = split_string(dirfile.second, '.');
+
+    vector<char> separators;
+    separators.push_back( '.' );
+
+    vector<string> fileext = split_string( dirfile.second, separators );
     fname = dirfile.first;
     for (size_t i = 0; i < fileext.size()-1; ++i) {
       fname = fname + fileext[i] + ".";

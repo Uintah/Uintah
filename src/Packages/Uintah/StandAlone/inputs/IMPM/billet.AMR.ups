@@ -16,9 +16,9 @@
    <Time>
        <maxTime>0.5</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>0.025</delt_min>
-       <delt_max>0.025</delt_max>
-       <timestep_multiplier>1.0</timestep_multiplier>
+       <deltMin>0.025</deltMin>
+       <deltMax>0.025</deltMax>
+       <timestepMultiplier>1.0</timestepMultiplier>
    </Time>
    <DataArchiver>
         <filebase>billet.static.uda</filebase>

@@ -13,9 +13,9 @@
   <Time>
     <maxTime>3.0e-4</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>0.0</delt_min>
-    <delt_max>1.e-5</delt_max>
-    <timestep_multiplier>0.5</timestep_multiplier>
+    <deltMin>0.0</deltMin>
+    <deltMax>1.e-5</deltMax>
+    <timestepMultiplier>0.5</timestepMultiplier>
   </Time>
   <DataArchiver>
     <filebase>adiCuZA4000s696K.uda</filebase>
