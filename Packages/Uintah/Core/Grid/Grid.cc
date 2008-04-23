@@ -770,63 +770,58 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
         // If the value of the norm nf_ is too high, then user chose a 
         // bad number of processors, warn them.
-      if( nf_ > 3 ) {
-        cout << "\n********************\n";
-        cout << "*\n";
-        cout << "* WARNING:\n";
-        cout << "* The patch to processor ratio you chose\n";
-        cout << "* does not factor well into patches.  Consider\n";
-        cout << "* using a differnt number of processors.\n";
-        cout << "*\n";
-        cout << "********************\n\n";
-      }
-  
-      if(pg->myrank() == 0) {
-        cout << "Patch layout: \t\t(" << patches.x() << ","
-             << patches.y() << "," << patches.z() << ")\n";
-      }
-      
-      IntVector refineRatio = level->getRefinementRatio();
-      level->setPatchDistributionHint(patches);
-      for(int i=0;i<patches.x();i++){
-        for(int j=0;j<patches.y();j++){
-          for(int k=0;k<patches.z();k++){
-            IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
-            IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
-            IntVector inStartCell(startcell);
-            IntVector inEndCell(endcell);
-
-            // this algorithm for finding extra cells is not sufficient for AMR
-            // levels - it only finds extra cells on the domain boundary.  The only 
-            // way to find extra cells for them is to do neighbor queries, so we will
-            // potentially adjust extra cells in Patch::setBCType (called from Level::setBCTypes)
-            startcell -= IntVector(startcell.x() == anchorCell.x() ? extraCells.x():0,
-                                   startcell.y() == anchorCell.y() ? extraCells.y():0,
-                                   startcell.z() == anchorCell.z() ? extraCells.z():0);
-            endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
-                                 endcell.y() == highPointCell.y() ? extraCells.y():0,
-                                 endcell.z() == highPointCell.z() ? extraCells.z():0);
-
-            
-            if (inStartCell.x() % refineRatio.x() || inEndCell.x() % refineRatio.x() || 
-                inStartCell.y() % refineRatio.y() || inEndCell.y() % refineRatio.y() || 
-                inStartCell.z() % refineRatio.z() || inEndCell.z() % refineRatio.z()) {
-              ostringstream desc;
-              desc << "The finer patch boundaries (" << inStartCell << "->" << inEndCell 
-                   << ") do not coincide with a coarse cell"
-                   << "\n(i.e., they are not divisible by te refinement ratio " << refineRatio << ')';
-              throw InvalidGrid(desc.str(),__FILE__,__LINE__);
-
-            }
-
-            Patch* p = level->addPatch(startcell, endcell,
-                                       inStartCell, inEndCell);
-          }
+        if( nf_ > 3 ) {
+          cout << "\n********************\n";
+          cout << "*\n";
+          cout << "* WARNING:\n";
+          cout << "* The patch to processor ratio you chose\n";
+          cout << "* does not factor well into patches.  Consider\n";
+          cout << "* using a differnt number of processors.\n";
+          cout << "*\n";
+          cout << "********************\n\n";
         }
-      }
+  
+        if(pg->myrank() == 0) {
+          cout << "Patch layout: \t\t(" << patches.x() << ","
+               << patches.y() << "," << patches.z() << ")\n";
+        }
       
-      }
-      
+        IntVector refineRatio = level->getRefinementRatio();
+        level->setPatchDistributionHint(patches);
+        for(int i=0;i<patches.x();i++){
+          for(int j=0;j<patches.y();j++){
+            for(int k=0;k<patches.z();k++){
+              IntVector startcell = resolution*IntVector(i,j,k)/patches+lowCell;
+              IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
+              IntVector inStartCell(startcell);
+              IntVector inEndCell(endcell);
+              
+              // this algorithm for finding extra cells is not sufficient for AMR
+              // levels - it only finds extra cells on the domain boundary.  The only 
+              // way to find extra cells for them is to do neighbor queries, so we will
+              // potentially adjust extra cells in Patch::setBCType (called from Level::setBCTypes)
+              startcell -= IntVector(startcell.x() == anchorCell.x() ? extraCells.x():0,
+                                     startcell.y() == anchorCell.y() ? extraCells.y():0,
+                                     startcell.z() == anchorCell.z() ? extraCells.z():0);
+              endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
+                                   endcell.y() == highPointCell.y() ? extraCells.y():0,
+                                   endcell.z() == highPointCell.z() ? extraCells.z():0);
+            
+              if (inStartCell.x() % refineRatio.x() || inEndCell.x() % refineRatio.x() || 
+                  inStartCell.y() % refineRatio.y() || inEndCell.y() % refineRatio.y() || 
+                  inStartCell.z() % refineRatio.z() || inEndCell.z() % refineRatio.z()) {
+                ostringstream desc;
+                desc << "The finer patch boundaries (" << inStartCell << "->" << inEndCell 
+                     << ") do not coincide with a coarse cell"
+                     << "\n(i.e., they are not divisible by te refinement ratio " << refineRatio << ')';
+                throw InvalidGrid(desc.str(),__FILE__,__LINE__);
+              }
+              level->addPatch(startcell, endcell, inStartCell, inEndCell);
+            }
+          }
+        } // end for(int i=0;i<patches.x();i++){
+      } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
+
       if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
