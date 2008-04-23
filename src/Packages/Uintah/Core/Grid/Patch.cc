@@ -601,20 +601,6 @@ void Patch::setExtraIndices(const IntVector& l, const IntVector& h)
 // This function will return all cells that are intersected by the
 // box.  This is based on the fact that boundaries of cells are closed
 // on the bottom and open on the top.
-CellIterator
-Patch::getCellIterator(const Box& b) const
-{
-   Point l = d_level->positionToIndex(b.lower());
-   Point u = d_level->positionToIndex(b.upper());
-   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
-   // high is the inclusive upper bound on the index.  In order for
-   // the iterator to work properly we need in increment all the
-   // indices by 1.
-   IntVector high(RoundDown(u.x())+1, RoundDown(u.y())+1, RoundDown(u.z())+1);
-   low = Max(low, getCellLowIndex());
-   high = Min(high, getCellHighIndex());
-   return CellIterator(low, high);
-}
 
 // This function works on the assumption that we want all the cells
 // whose centers lie on or within the box.
@@ -643,18 +629,6 @@ Patch::getCellCenterIterator(const Box& b) const
 #endif
    low = Max(low, getCellLowIndex());
    high = Min(high, getCellHighIndex());
-   return CellIterator(low, high);
-}
-
-CellIterator
-Patch::getExtraCellIterator(const Box& b) const
-{
-   Point l = d_level->positionToIndex(b.lower());
-   Point u = d_level->positionToIndex(b.upper());
-   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
-   IntVector high(RoundUp(u.x()),  RoundUp(u.y()),   RoundUp(u.z()));
-   low = Min(low, getCellLowIndex());
-   high = Max(high, getCellHighIndex());
    return CellIterator(low, high);
 }
 

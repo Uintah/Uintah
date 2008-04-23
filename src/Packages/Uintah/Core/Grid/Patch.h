@@ -1305,22 +1305,10 @@ WARNING
                                                bool mustExist);
      
      /**
-      *  This function will return all cells that are intersected by
-      *  the box.  This is based on the fact that boundaries of cells
-      *  are closed on the bottom and open on the top.
-      */
-     CellIterator getCellIterator(const Box& b) const;
-     
-     /**
       * This function works on the assumption that we want all the cells
       * whose centers lie on or within the box.
       */
      CellIterator getCellCenterIterator(const Box& b) const;
-     
-     // Insert Documentation Here:  
-     CellIterator getExtraCellIterator(const Box& b) const;
-     
-
      
      //__________________________________
      //   I C E - M P M I C E   S T U F F 
