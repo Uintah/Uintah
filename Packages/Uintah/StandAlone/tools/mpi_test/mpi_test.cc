@@ -61,11 +61,11 @@ stringstream error_stream;
 
 struct Args {
   bool testFileSystem;
-  bool verbose;
+  int  verbose;
 
   Args() :
     testFileSystem( true ),
-    verbose( false )
+    verbose( 0 )
   {}
 
 } args;
@@ -116,6 +116,7 @@ usage( const string & prog, const string & badArg )
     cout << "                   of additional MPI calls (to send verbose information) which\n";
     cout << "                   could possibly hang and/or cause the outcome to be somewhat\n";
     cout << "                   different from the non-verbose execution.)\n";
+    cout << "         -vv   - Be very verbose... see -v warning...\n";
     cout << "\n";
   }
   exit(1);
@@ -130,7 +131,10 @@ parseArgs( int argc, char *argv[] )
       args.testFileSystem = false;
     }
     else if( arg == "-v" ) {
-      args.verbose = true;
+      args.verbose = 1;
+    }
+    else if( arg == "-vv" ) {
+      args.verbose = 2;
     }
     else {
       usage( argv[0], arg );
@@ -601,14 +605,20 @@ point2pointsync_test()
 
   for( int pp = 0; pp < procs; pp++ ) {
     if( pp == rank ) { // sending
-      for(int p=0;p<procs;p++) {
-        MPI_Send(&rank,1,MPI_INT,p,p,MPI_COMM_WORLD);
+      for( int p = 0; p < procs; p++ ) {
+        MPI_Send( &rank, 1, MPI_INT, p, p, MPI_COMM_WORLD );
+        if( rank == 0 && ( args.verbose > 1 )) {
+          cout << "Proc 0 finished MPI_Send to rank: " << p << "\n";
+        }
       }
     }
     else { // recieving
       MPI_Status status;
       message=-1;
       MPI_Recv(&message,1,MPI_INT,pp,rank,MPI_COMM_WORLD,&status);
+      if( rank == 0 && ( args.verbose > 1 ) ) {
+        cout << "Proc 0 just MPI_Recv'd from rank: " << pp << "\n";
+      }
       if( message != pp ) {
         pass = false;
         error_stream << "     rank " << rank << ": point to point sync from  " << pp << " is invalid\n";
