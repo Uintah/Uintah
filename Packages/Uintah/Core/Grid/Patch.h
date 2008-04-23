@@ -1336,7 +1336,7 @@ WARNING
      // contained by the bounding box.  If a dimension of the widget
      // is degenerate (has a thickness of 0) the nearest node in that
      // dimension is used.
-     //NodeIterator getNodeIterator(const Box& b) const;
+     NodeIterator getNodeIterator(const Box& b) const;
 
      // Get a larger set of nodes if using GIMP
      NodeIterator getNodeIterator(const string& interp_type) const;
