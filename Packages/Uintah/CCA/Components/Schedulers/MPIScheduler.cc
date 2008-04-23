@@ -778,6 +778,22 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   while( numTasksDone < ntasks) {
     i++;
 
+    // 
+    // The following checkMemoryUse() is commented out to allow for
+    // maintaining the same functionality as before this commit...
+    // In other words, so that memory highwater checking is only done
+    // at the end of a timestep, and not between tasks... Once the
+    // RT settles down we will uncomment this section and then
+    // memory use checks will occur before every task.
+    //
+    // Note, the results (memuse, highwater, maxMemUse) from the following
+    // checkMemoryUse call are not used... the call, however, records
+    // the maxMemUse for future reference, and that is why we are calling
+    // it.
+    //
+    //unsigned long memuse, highwater, maxMemUse;
+    //checkMemoryUse( memuse, highwater, maxMemUse );
+
     DetailedTask * task = 0;
     // normal case - NOT using the queued task-receiving structure
     // run the task right after initiating the receives

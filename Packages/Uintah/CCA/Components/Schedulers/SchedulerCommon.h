@@ -10,18 +10,22 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <iosfwd>
-#include <set>
+#include   <iosfwd>
+#include   <set>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
-  using namespace std;
-  class Output;
-  class DetailedTask;
-  class DetailedTasks;
-  class TaskGraph;
-  class LocallyComputedPatchVarMap;
+
+using namespace std;
+
+class Output;
+class DetailedTask;
+class DetailedTasks;
+class TaskGraph;
+class LocallyComputedPatchVarMap;
+
 /**************************************
 
 CLASS
@@ -60,6 +64,16 @@ WARNING
                               SimulationStateP& state);
 
     virtual void doEmitTaskGraphDocs();
+
+    virtual void checkMemoryUse( unsigned long & memuse, unsigned long & highwater,
+                                 unsigned long & maxMemUse );
+    // sbrk memory start location (for memory tracking)
+    virtual void   setStartAddr( char * start ) { start_addr = start; }
+    virtual char * getStartAddr() { return start_addr; }
+    virtual void   resetMaxMemValue();
+
+    // For calculating memory usage when sci-malloc is disabled...
+    static char* start_addr;
 
     //////////
     // Insert Documentation Here:
@@ -232,6 +246,9 @@ WARNING
 
     SchedulerCommon(const SchedulerCommon&);
     SchedulerCommon& operator=(const SchedulerCommon&);
+
+    // Maximum memory use as sampled across a given timestep.
+    unsigned long d_maxMemUse;
 
     ProblemSpecP m_graphDoc;
     ProblemSpecP m_nodes;

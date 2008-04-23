@@ -355,7 +355,7 @@ main( int argc, char** argv )
   #endif
 
 #ifndef _WIN32
-  SimulationController::start_addr = (char*)sbrk(0);
+  char * start_addr = (char*)sbrk(0);
   mode_t mask_gor = 0022;
   umask(mask_gor);
 #endif
@@ -515,6 +515,8 @@ main( int argc, char** argv )
     ctl->attachPort("scheduler", sched);
     lbc->attachPort("scheduler", sched);
     comp->attachPort("scheduler", sched);
+
+    sched->setStartAddr( start_addr );
     
     if (reg) 
       reg->attachPort("scheduler", sched);

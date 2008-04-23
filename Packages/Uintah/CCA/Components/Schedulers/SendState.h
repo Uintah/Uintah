@@ -41,19 +41,26 @@ namespace Uintah {
 
   class SendState {
   public:
+
     SendState();
     ~SendState();
+
     ParticleSubset* find_sendset(int dest, const Patch*, int matl, 
                                  IntVector low, IntVector high, int dwid = 0) const;
-    void add_sendset(ParticleSubset* pset, int dest, const Patch*, int matl,  
-                     IntVector low, IntVector high, int dwid = 0);
+    void add_sendset( ParticleSubset* pset, int dest, const Patch*, int matl,  
+                      IntVector low, IntVector high, int dwid = 0 );
+
+    void reset(); // Clears out all sendsets...
 
     void print();
+
   private:
+
     typedef map<pair<PSPatchMatlGhost, int>, ParticleSubset*> maptype;
     maptype sendSubsets;
     SendState(const SendState&);
     SendState& operator=(const SendState&);
+
    };
 } // End namespace Uintah
 

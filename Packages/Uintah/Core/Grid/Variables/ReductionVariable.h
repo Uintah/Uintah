@@ -63,12 +63,15 @@ WARNING
     }
     virtual ReductionVariableBase* clone() const;
     virtual void copyPointer(Variable&);
+
     virtual void reduce(const ReductionVariableBase&);
-    virtual void print(std::ostream& out)
-    { out << value; }
+
+    virtual void print(std::ostream& out) const { out << value; }
+
     virtual void emitNormal(std::ostream& out, const IntVector& /*l*/,
 			    const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
     { out.write((char*)&value, sizeof(double)); }
+
     virtual void readNormal(std::istream& in, bool swapBytes)
     {
       in.read((char*)&value, sizeof(double));

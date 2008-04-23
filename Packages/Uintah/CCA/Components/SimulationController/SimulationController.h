@@ -72,9 +72,6 @@ class DataArchive;
       //! that this run is a combinePatches run.
       void doCombinePatches(std::string fromDir, bool reduceUda);
      
-      // for calculating memory usage when sci-malloc is disabled.
-      static char* start_addr;
-
    protected:
 
       double getWallTime     ( void );

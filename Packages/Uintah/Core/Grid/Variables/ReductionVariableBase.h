@@ -51,7 +51,7 @@ WARNING
       virtual void copyPointer(Variable&) = 0;
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
-      virtual void print(ostream&) = 0;
+      virtual void print(ostream&) const = 0;
       virtual void getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op) = 0;
       virtual void getMPIData(vector<char>& buf, int& index) = 0;
       virtual void putMPIData(vector<char>& buf, int& index) = 0;

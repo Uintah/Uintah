@@ -65,6 +65,12 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& prob_spec, 
                               SimulationStateP& state) = 0;
     
+    virtual void checkMemoryUse( unsigned long & memuse, unsigned long & highwater,
+                                 unsigned long & maxMemUse ) = 0;
+    virtual void   setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
+    virtual char * getStartAddr() = 0;
+    virtual void resetMaxMemValue() = 0;
+
     //////////
     // Insert Documentation Here:
     virtual void initialize(int numOldDW = 1, int numNewDW = 1) = 0;
