@@ -295,9 +295,10 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
       // proc may already have it (since in most cases particle data comes from the old dw)
       // if lb is non-null, that means the particle data is on the old dw
       if (lb && lb->getOldProcessorAssignment(0, patch, 0) == dest) {
-        if (this == old_dw)
-          // just return - we don't need to know how many particles are there OR send any particle data
+        if (this == old_dw) {
+          // We don't need to know how many particles there are OR send any particle data...
           return;
+        }
         ASSERT(old_dw->haveParticleSubset(matlIndex, patch));
         sendset = old_dw->getParticleSubset(matlIndex, patch);
       }
@@ -326,8 +327,9 @@ OnDemandDataWarehouse::sendMPI(DependencyBatch* batch,
           }
         }
         old_dw->ss_.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
-        //cout << d_myworld->myrank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << endl;
-        }
+        // cout << d_myworld->myrank() << "  NO SENDSET: " << patch->getID() << " matl " << matlIndex 
+        //      << " " << low << " " << high << "\n";
+      }
       ASSERT(sendset);
       if( sendset->numParticles() > 0) {
         var->getMPIBuffer(buffer, sendset);
@@ -363,9 +365,10 @@ void
 OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, const VarLabel* pos_var,
                                                   int iteration)
 {
-  if (hasRestarted_)
-    // if we did a timestep restart, we've already done this
+  if( hasRestarted_ ) {
+    // If this DW is being used for a timestep restart, then it has already done this...
     return;
+  }
 
   ParticleExchangeVar& recvs = dts->getParticleRecvs();
   ParticleExchangeVar& sends = dts->getParticleSends();
@@ -381,7 +384,8 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
     set<PSPatchMatlGhost>& r = iter->second;
     if (r.size() > 0) {
       recvdata[data_index].resize(r.size());
-      //particles << d_myworld->myrank() << " Posting PARTICLES receives for " << r.size() << " subsets from proc " << iter->first << " index " << data_index <<  endl;
+      // particles << d_myworld->myrank() << " Posting PARTICLES receives for " << r.size() 
+      //           << " subsets from proc " << iter->first << " index " << data_index <<  endl;
       MPI_Request req;
       MPI_Irecv(&(recvdata[data_index][0]), r.size(), MPI_INT, iter->first, 16666,
                 d_myworld->getComm(), &req);
@@ -404,17 +408,21 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
           // not used
           data[i] = -2;
         }
-        else if (pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0 && lb->getOldProcessorAssignment(0, pmg.patch_, 0) == iter->first)
+        else if ( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0 &&
+                  lb->getOldProcessorAssignment(0, pmg.patch_, 0) == iter->first ) {
           // signify that the recving proc already has this data.  Only use for the FirstIteration after a LB
           // send -1 rather than force the recving end above to iterate through its set
           data[i] = -1; 
+        }
         else {
           if(!d_varDB.exists(pos_var, pmg.matl_, pmg.patch_)) {
-            cout << d_myworld->myrank() << "  Naughty: patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " id " << pmg.dwid_  << endl;
+            cout << d_myworld->myrank() << "  Naughty: patch " << pmg.patch_->getID() << " matl " << pmg.matl_ 
+                 << " id " << pmg.dwid_  << endl;
             SCI_THROW(UnknownVariable(pos_var->getName(), getID(), pmg.patch_, pmg.matl_,
                                       "in exchangeParticleQuantities", __FILE__, __LINE__));
           } 
-          ASSERT(!ss_.find_sendset(iter->first, pmg.patch_, pmg.matl_, pmg.low_, pmg.high_, d_generation)); // make sure sendset is unique
+          // Make sure sendset is unique...
+          ASSERT(!ss_.find_sendset(iter->first, pmg.patch_, pmg.matl_, pmg.low_, pmg.high_, d_generation)); 
           ParticleSubset* sendset = scinew ParticleSubset(0, pmg.matl_, pmg.patch_, pmg.low_, pmg.high_);
           constParticleVariable<Point> pos;
           get(pos, pos_var, pmg.matl_, pmg.patch_);
@@ -428,9 +436,12 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
           ss_.add_sendset(sendset, iter->first, pmg.patch_, pmg.matl_, pmg.low_, pmg.high_, d_generation);
           data[i] = sendset->numParticles();
         }
-        particles2 << d_myworld->myrank() << " Sending PARTICLES to proc " << iter->first << ": patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " low " << pmg.low_ << " high " << pmg.high_ << " index " << i << ": " << senddata[data_index][i] << " particles\n";
+        particles2 << d_myworld->myrank() << " Sending PARTICLES to proc " << iter->first << ": patch " 
+                   << pmg.patch_->getID() << " matl " << pmg.matl_ << " low " << pmg.low_ << " high "
+                   << pmg.high_ << " index " << i << ": " << senddata[data_index][i] << " particles\n";
       }
-      //particles << d_myworld->myrank() << " Sending PARTICLES: " << s.size() << " subsets to proc " << iter->first << " index " << data_index << endl;
+      // particles << d_myworld->myrank() << " Sending PARTICLES: " << s.size() << " subsets to proc " 
+      //           << iter->first << " index " << data_index << endl;
       MPI_Request req;
       MPI_Isend(&(senddata[data_index][0]), s.size(), MPI_INT, iter->first, 16666,
                 d_myworld->getComm(), &req);
@@ -451,27 +462,31 @@ OnDemandDataWarehouse::exchangeParticleQuantities(DetailedTasks* dts, LoadBalanc
       int i = 0;
       for (set<PSPatchMatlGhost>::iterator riter = r.begin(); riter != r.end(); riter++, i++) {
         const PSPatchMatlGhost& pmg = *riter;
-        particles2 << d_myworld->myrank() << " Recving PARTICLES from proc " << iter->first << ": patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " low " << pmg.low_ << " high " << pmg.high_ << ": " << data[i] << endl;
-        if (data[i] == -2)
+        particles2 << d_myworld->myrank() << " Recving PARTICLES from proc " << iter->first << ": patch " 
+                   << pmg.patch_->getID() << " matl " << pmg.matl_ << " low " << pmg.low_ << " high " << pmg.high_ 
+                   << ": " << data[i] << "\n";
+        if (data[i] == -2) {
           continue;
+        }
         if (data[i] == -1) {
           ASSERT(pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0 && haveParticleSubset(pmg.matl_, pmg.patch_));
           continue;
         }
         
-        int& foreign_particles = d_foreignParticleQuantities[make_pair(pmg.matl_, pmg.patch_)];
+        int & foreign_particles = d_foreignParticleQuantities[make_pair(pmg.matl_, pmg.patch_)];
         ParticleSubset* subset = createParticleSubset(data[i], pmg.matl_, pmg.patch_, pmg.low_, pmg.high_);
 
         // make room for other multiple subsets pointing into one variable - additional subsets 
         // referenced at the index above the last index of the previous subset
         if (data[i] > 0 && foreign_particles > 0) {
-          //cout << d_myworld->myrank() << "  adjusting particles by " << foreign_particles << endl;
+          // cout << d_myworld->myrank() << "  adjusting particles by " << foreign_particles << endl;
           for (ParticleSubset::iterator iter = subset->begin(); iter != subset->end(); iter++) {
             *iter = *iter + foreign_particles;
           }
         }
         foreign_particles += data[i];
-        //cout << d_myworld->myrank() << "  Setting foreign particles of patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " " << foreign_particles << endl;
+        // cout << d_myworld->myrank() << "  Setting foreign particles of patch " << pmg.patch_->getID() 
+        //      << " matl " << pmg.matl_ << " " << foreign_particles << endl;
       }
       data_index++;
     }
@@ -856,14 +871,17 @@ OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
   d_lock.writeUnlock();
 }
 
-void OnDemandDataWarehouse::printParticleSubsets()
+void
+OnDemandDataWarehouse::printParticleSubsets()
 {
+  cout << "----------------------------------------------\n";
+  cout << "-- Particle Subsets: \n\n";
   psetDBType::iterator iter;
   cout << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
     cout << d_myworld->myrank() << " " <<*(iter->second) << endl;
   }
-  
+  cout << "----------------------------------------------\n";
 }
 
 ParticleSubset*
@@ -1784,12 +1802,12 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
        var = d_levelDB.get(label, matlIndex, level);
    }
    IntVector l, h;
-   if(patch)
-     // save with the boundary layer, otherwise restarting from the DataArchive
-     // won't work.
-     patch->computeVariableExtents(label->typeDescription()->getType(),
-				   label->getBoundaryLayer(), Ghost::None, 0,
-				   l, h);
+   if(patch) {
+     // Save with the boundary layer, otherwise restarting from the DataArchive won't work.
+     patch->computeVariableExtents( label->typeDescription()->getType(),
+                                    label->getBoundaryLayer(), Ghost::None, 0,
+                                    l, h );
+   }
    else
      l=h=IntVector(-1,-1,-1);
    if (var == NULL) {
@@ -2574,34 +2592,41 @@ OnDemandDataWarehouse::checkAccesses(RunningTaskInfo* currentTaskInfo,
 
 
 // For timestep abort/restart
-bool OnDemandDataWarehouse::timestepAborted()
+bool
+OnDemandDataWarehouse::timestepAborted()
 {
   return aborted;
 }
 
-bool OnDemandDataWarehouse::timestepRestarted()
+bool
+OnDemandDataWarehouse::timestepRestarted()
 {
   return restart;
 }
 
-void OnDemandDataWarehouse::abortTimestep()
+void
+OnDemandDataWarehouse::abortTimestep()
 {
   // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
-  if (d_myworld->size() == 0)
-    aborted=true;
+  if (d_myworld->size() == 0) {
+    aborted = true;
+  }
 }
 
-void OnDemandDataWarehouse::restartTimestep()
+void
+OnDemandDataWarehouse::restartTimestep()
 {
-  restart=true;
+  restart = true;
 }
 
-void OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const
+void
+OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatl<Level> >& vars ) const
 {
   d_levelDB.getVarLabelMatlTriples(vars);
 }
 
-void OnDemandDataWarehouse::print()
+void
+OnDemandDataWarehouse::print()
 {
   cout << d_myworld->myrank() << " VARIABLES in DW " << getID() << "\n"
        << d_myworld->myrank() << " Variable Patch Material\n"

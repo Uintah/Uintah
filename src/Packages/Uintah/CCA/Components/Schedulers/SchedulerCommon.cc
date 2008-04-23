@@ -23,6 +23,7 @@
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Thread/Time.h>
@@ -47,10 +48,11 @@ using namespace std;
 
 #undef UINTAHSHARE
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#define UINTAHSHARE __declspec(dllimport)
+#  define UINTAHSHARE __declspec(dllimport)
 #else
-#define UINTAHSHARE
+#  define UINTAHSHARE
 #endif
+
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
 extern UINTAHSHARE SCIRun::Mutex       cerrLock;
@@ -58,9 +60,13 @@ extern DebugStream mixedDebug;
 
 static DebugStream dbg("SchedulerCommon", false);
 
+// for calculating memory usage when sci-malloc is disabled.
+char * SchedulerCommon::start_addr = NULL;
+
+
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld, Output* oport)
   : UintahParallelComponent(myworld), m_outPort(oport),
-    m_graphDoc(NULL), m_nodes(NULL)
+    d_maxMemUse( 0 ), m_graphDoc(NULL), m_nodes(NULL)
 {
   d_generation = 0;
   numOldDWs = 0;
@@ -97,6 +103,51 @@ SchedulerCommon::~SchedulerCommon()
   label_matls_.clear();
 
   delete m_locallyComputedPatchVarMap;
+}
+
+void
+SchedulerCommon::checkMemoryUse( unsigned long & memuse, 
+                                 unsigned long & highwater,
+                                 unsigned long & maxMemUse )
+{
+  highwater = 0; 
+  memuse = 0;
+
+#if !defined(DISABLE_SCI_MALLOC)
+  size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
+         nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
+         highwater_mmap, bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks;
+  
+  GetGlobalStats( DefaultAllocator(),
+                  nalloc, sizealloc, nfree, sizefree,
+                  nfillbin, nmmap, sizemmap, nmunmap,
+                  sizemunmap, highwater_alloc, highwater_mmap,
+                  bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks );
+  memuse = sizealloc - sizefree;
+  highwater = highwater_mmap;
+
+#elif !defined(_WIN32)
+
+  if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
+    memuse = ProcessInfo::GetMemoryResident();
+    printf("1) memuse is %d\n", (int)memuse);
+  } else {
+    memuse = (char*)sbrk(0)-start_addr;
+    printf("2) memuse is %d\n", (int)memuse);
+  }
+#endif
+
+  if( memuse > d_maxMemUse ) {
+    printf("Max memuse increased\n");
+    d_maxMemUse = memuse;
+  }
+  maxMemUse = d_maxMemUse;
+}
+
+void
+SchedulerCommon::resetMaxMemValue()
+{
+  d_maxMemUse = 0;
 }
 
 void
@@ -209,14 +260,35 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
       track->getWithDefault("end_index", trackingEndIndex_, IntVector(-9,-9,-9));
       track->getWithDefault("patchid", trackingPatchID_, -1);
 
+      if( d_myworld->myrank() == 0 ) {
+        cout << "\n";
+        cout << "-----------------------------------------------------------\n";
+        cout << "-- Initializing VarTracker...\n";
+        cout << "--  Running from time " << trackingStartTime_  << " to " << trackingEndTime_ << "\n";
+        cout << "--  for indices: " << trackingStartIndex_ << " to " << trackingEndIndex_ << "\n";
+      }
+
       ProblemSpecP location = track->findBlock("locations");
       if (location) {
         trackingVarsPrintLocation_ = 0;
         map<string,string> attributes;
         location->getAttributes(attributes);
-        if (attributes["before_comm"] == "true") trackingVarsPrintLocation_ |= PRINT_BEFORE_COMM;
-        if (attributes["before_exec"] == "true") trackingVarsPrintLocation_ |= PRINT_BEFORE_EXEC;
-        if (attributes["after_exec"] == "true") trackingVarsPrintLocation_ |= PRINT_AFTER_EXEC;
+        if (attributes["before_comm"] == "true") {
+          trackingVarsPrintLocation_ |= PRINT_BEFORE_COMM;
+          if( d_myworld->myrank() == 0 ) { cout << "--  Printing variable information before communication.\n"; }
+        }
+        if (attributes["before_exec"] == "true") {
+          trackingVarsPrintLocation_ |= PRINT_BEFORE_EXEC;
+          if( d_myworld->myrank() == 0 ) { cout << "--  Printing variable information before task execution.\n"; }
+        }
+        if (attributes["after_exec"] == "true") {
+          trackingVarsPrintLocation_ |= PRINT_AFTER_EXEC;
+          if( d_myworld->myrank() == 0 ) { cout << "--  Printing variable information after task execution.\n"; }
+        }
+      }
+      else {
+        // "locations" not specified
+        if( d_myworld->myrank() == 0 ) { cout << "--  Defaulting to printing variable information after task execution.\n"; }
       }
 
       for (ProblemSpecP var=track->findBlock("var"); var != 0; var = var->findNextBlock("var")) {
@@ -225,58 +297,132 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
         string name = attributes["label"];
         trackingVars_.push_back(name);
         string dw = attributes["dw"];
-        if (dw == "OldDW") trackingDWs_.push_back(Task::OldDW);
-        else if (dw == "NewDW") trackingDWs_.push_back(Task::NewDW);
-        else if (dw == "CoarseNewDW") trackingDWs_.push_back(Task::CoarseNewDW);
-        else if (dw == "CoarseOldDW") trackingDWs_.push_back(Task::CoarseOldDW);
-        else if (dw == "ParentOldDW") trackingDWs_.push_back(Task::ParentOldDW);
-        else if (dw == "ParentOldDW") trackingDWs_.push_back(Task::ParentNewDW);
-        else trackingDWs_.push_back(Task::NewDW);
+
+        if (dw == "OldDW") {
+          trackingDWs_.push_back(Task::OldDW);
+        }
+        else if (dw == "NewDW") {
+          trackingDWs_.push_back(Task::NewDW);
+        }
+        else if (dw == "CoarseNewDW") {
+          trackingDWs_.push_back(Task::CoarseNewDW);
+        }
+        else if (dw == "CoarseOldDW") {
+          trackingDWs_.push_back(Task::CoarseOldDW);
+        }
+        else if (dw == "ParentOldDW") {
+          trackingDWs_.push_back(Task::ParentOldDW);
+        }
+        else if (dw == "ParentOldDW") {
+          trackingDWs_.push_back(Task::ParentNewDW);
+        }
+        else {
+          // This error message most likely can go away once the .ups validation is put into place:
+          printf( "WARNING: Hit switch statement default... using NewDW... (This could possibly be"
+                  "an error in input file specifciation.)\n" );
+          trackingDWs_.push_back(Task::NewDW);
+        }
+        if( d_myworld->myrank() == 0 ) {
+          cout << "--  Tracking variable '" << name << "' in DataWarehouse '" << dw << "'\n";
+        }
       }
       for (ProblemSpecP task=track->findBlock("task"); task != 0; task = task->findNextBlock("task")) {
         map<string,string> attributes;
         task->getAttributes(attributes);
         string name = attributes["name"];
         trackingTasks_.push_back(name);
+        if( d_myworld->myrank() == 0 ) { cout << "--  Tracking variables for specific task: " << name << "\n"; }
       }      
+      if( d_myworld->myrank() == 0 ) {
+        cout << "-----------------------------------------------------------\n\n";
+      }
+    }
+    else { // Tracking not specified
+      // This 'else' won't be necessary once the .ups files are validated... but for now.
+      cout << "<VarTracker> not specified in .ups file... no variable tracking will take place.\n";
     }
   }
   noScrubVars_.insert("refineFlag");
   noScrubVars_.insert("refinePatchFlag");
 }
+//
+// handleError()
+//
+// The following routine is designed to only print out a given error
+// once per error type per variable.  handleError is used by
+// printTrackedVars() with each type of error ('errorPosition')
+// condition specifically enumerated (by an integer running from 0 to 7).
+//
+// Returns true if the error message is displayed.
+//
+bool
+handleError( int errorPosition, const string & errorMessage, const string & variableName ) 
+{
+  static vector< map<string,bool> * > errorsReported( 8 );
+
+  map<string, bool> * varToReportedMap = errorsReported[ errorPosition ];
+
+  if( varToReportedMap == NULL ) {
+    varToReportedMap = new map<string, bool>;
+    errorsReported[ errorPosition ] = varToReportedMap;
+  }
+
+  bool reported = (*varToReportedMap)[ variableName ];
+  if( !reported ) {
+    (*varToReportedMap)[ variableName ] = true;
+    cout << errorMessage << "\n";
+    return true;
+  }
+  return false;
+}
 
 void
-SchedulerCommon::printTrackedVars(DetailedTask* dt, int when)
+SchedulerCommon::printTrackedVars( DetailedTask* dt, int when )
 {
   bool printedHeader = false;
+
   LoadBalancer* lb = getLoadBalancer();
  
-  unsigned t;
-  for (t = 0; t < trackingTasks_.size(); t++) {
-    if (trackingTasks_[t] == dt->getTask()->getName())
+  unsigned taskNum;
+  for (taskNum = 0; taskNum < trackingTasks_.size(); taskNum++) {
+    if (trackingTasks_[taskNum] == dt->getTask()->getName())
       break;
   }
 
-  // print for all tasks unless one is specified (but disclude DataArchiver tasks)
-  if ((t == trackingTasks_.size() && trackingTasks_.size() != 0) || 
+  // Print for all tasks unless one is specified (but disclude DataArchiver tasks)
+  if ((taskNum == trackingTasks_.size() && trackingTasks_.size() != 0) || 
       ((string(dt->getTask()->getName())).substr(0,12) == "DataArchiver"))
     return;
 
-  if (d_sharedState && (trackingStartTime_ > d_sharedState->getElapsedTime() || trackingEndTime_ < d_sharedState->getElapsedTime()))
+  if( d_sharedState && ( trackingStartTime_ > d_sharedState->getElapsedTime() ||
+                         trackingEndTime_ < d_sharedState->getElapsedTime() ) ) {
     return;
+  }
 
   for (int i = 0; i < (int) trackingVars_.size(); i++) {
     bool printedVarName = false;
 
     // that DW may not have been mapped....
     if (dt->getTask()->mapDataWarehouse(trackingDWs_[i]) < 0 || 
-        dt->getTask()->mapDataWarehouse(trackingDWs_[i]) >= (int) dws.size())
+        dt->getTask()->mapDataWarehouse(trackingDWs_[i]) >= (int) dws.size()) {
+      ostringstream mesg;
+      mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
+           << ") DW is out of range.\n";
+      handleError( 0, mesg.str(), trackingVars_[i] );
+
       continue;
+    }
 
     OnDemandDataWarehouseP dw = dws[dt->getTask()->mapDataWarehouse(trackingDWs_[i])];
-    
-    if (dw == 0) // old on initialization timestep
+
+    if (dw == 0) { // old on initialization timestep
+      ostringstream mesg;
+      mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i] 
+           << ") because DW is NULL.  Requested DW was: " 
+           << dt->getTask()->mapDataWarehouse(trackingDWs_[i]) << "\n";
+      handleError( 1, mesg.str(), trackingVars_[i] );
       continue;
+    }
 
     // get the level here, as the grid can be different between the old and new DW
     
@@ -297,25 +443,44 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, int when)
 
     cout.precision(16);
 
-    if (!label)
+    if (!label) {
+      ostringstream mesg;
+      mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
+           << ") because label is NULL.\n";
+      handleError( 2, mesg.str(), trackingVars_[i] );
       continue;
+    }
 
     const PatchSubset* patches = dt->getPatches();
     
     // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-    if (dt->getTask()->getType() != Task::OncePerProc && (!patches || getLevel(patches)->getIndex() != levelnum))
+    if( dt->getTask()->getType() != Task::OncePerProc && (!patches || getLevel(patches)->getIndex() != levelnum) ) {
+      ostringstream mesg;
+      mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
+           << ") because patch is non-standard.\n";
+      handleError( 3, mesg.str(), trackingVars_[i] );
       continue;
+    }
+
     for (int p = 0; patches && p < patches->size(); p++) {
 
       const Patch* patch = patches->get(p);
-      if (trackingPatchID_ != -1 && trackingPatchID_ != patch->getID())
-	continue;
+      if (trackingPatchID_ != -1 && trackingPatchID_ != patch->getID()) {
+        ostringstream mesg;
+        mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
+             << ") because patch ID does not match.\n" 
+             << "            (Error only printed once.)\n"
+             << "         Tracking Patch ID: " << trackingPatchID_ << ", patch id: " << patch->getID() << "\n";
+        handleError( 4, mesg.str(), trackingVars_[i] );
+        continue;
+      }
 
       // don't print ghost patches (dw->get will yell at you)
       if ((trackingDWs_[i] == Task::OldDW && lb->getOldProcessorAssignment(0,patch,0) != d_myworld->myrank()) ||
-          (trackingDWs_[i] == Task::NewDW && lb->getPatchwiseProcessorAssignment(patch) != d_myworld->myrank()))
+          (trackingDWs_[i] == Task::NewDW && lb->getPatchwiseProcessorAssignment(patch) != d_myworld->myrank())) {
         continue;
-      
+      }
+
       const TypeDescription* td = label->typeDescription();
       Patch::VariableBasis basis = patch->translateTypeToBasis(td->getType(), false);
       IntVector start = 
@@ -325,14 +490,37 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, int when)
 
       // loop over matls too
       for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
-        if (!dw->exists(label, m, patch))
+
+        if (!dw->exists(label, m, patch)) {
+          ostringstream mesg;
+          mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i] 
+               << ") because it does not exist in DW.\n"
+               << "            Patch is: " << *patch << "\n";
+          if( handleError( 5, mesg.str(), trackingVars_[i] ) ) {
+            cout << "         DW contains (material: " << m << ")\n";
+            dw->print();
+          }
           continue;
-        if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z()))
-          continue;        
+        }
+        if (!(start.x() < end.x() && start.y() < end.y() && start.z() < end.z())) {
+          ostringstream mesg;
+          mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i] 
+               << ") because the start is greater than the end location:\n"
+               << "start: " << start << "\n"
+               << "end: " << start << "\n";
+          handleError( 6, mesg.str(), trackingVars_[i] );
+          continue;
+        }
         if (td->getSubType()->getType() != TypeDescription::double_type &&
-            td->getSubType()->getType() != TypeDescription::Vector)
+            td->getSubType()->getType() != TypeDescription::Vector) {
           // only allow *Variable<double> and *Variable<Vector> for now
+          ostringstream mesg;
+          mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
+               << ") because its type is not supported:\n"
+               << "             " << td->getName() << "\n";
+          handleError( 7, mesg.str(), trackingVars_[i] );
           continue;
+        }
 
         // pending the task that allocates the var, we may not have allocated it yet
         GridVariableBase* v;
@@ -405,11 +593,11 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, int when)
         }
         break;
         default: break;
-        }
-      }
-    }
-  }
-}
+        } // end case variable type
+      } // end for m(aterials)
+    } // end for p(atches)
+  } // end for i : trackingVars.size()
+} // end printTrackedVars()
 
 LoadBalancer*
 SchedulerCommon::getLoadBalancer()

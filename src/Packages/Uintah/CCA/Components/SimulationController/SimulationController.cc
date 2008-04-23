@@ -56,9 +56,6 @@ namespace Uintah {
      double_int(): val(0), loc(-1) {}
   };
 
-  // for calculating memory usage when sci-malloc is disabled.
-  char* SimulationController::start_addr = NULL;
-
   double stdDeviation(double sum_of_x, double sum_of_x_squares, int n)
   {
     return sqrt((n*sum_of_x_squares - sum_of_x*sum_of_x)/(n*n));
@@ -450,30 +447,8 @@ toHumanUnits( unsigned long value )
 void
 SimulationController::printSimulationStats ( int timestep, double delt, double time )
 {
-  // get memory stats for output
-#if !defined(DISABLE_SCI_MALLOC)
-  size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
-    nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-    highwater_mmap, bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks;
-  
-  GetGlobalStats(DefaultAllocator(),
-                 nalloc, sizealloc, nfree, sizefree,
-                 nfillbin, nmmap, sizemmap, nmunmap,
-                 sizemunmap, highwater_alloc, highwater_mmap,
-                 bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks);
-  unsigned long memuse = sizealloc - sizefree;
-  unsigned long highwater = highwater_mmap;
-#elif !defined(_WIN32)
-  unsigned long memuse = 0;
-  if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
-    memuse = ProcessInfo::GetMemoryResident();
-  } else {
-    memuse = (char*)sbrk(0)-start_addr;
-  }
-  unsigned long highwater = 0;
-#else
-  unsigned long highwater = 0, memuse = 0;
-#endif
+  unsigned long memuse, highwater, maxMemUse;
+  d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
   
   // get memory stats for each proc if MALLOC_PERPROC is in the environent
   if ( getenv( "MALLOC_PERPROC" ) ) {
@@ -499,7 +474,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     *mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed() << "   ";
     *mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident() << "   ";
 #ifndef _WIN32
-    *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - start_addr << "   ";
+    *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
 #endif
 #ifndef DISABLE_SCI_MALLOC
     *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
@@ -789,6 +764,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     d_prevWallTime = d_wallTime;
   }
   d_n++;
-}
+
+  // Reset mem use tracking variable for next iteration
+  d_scheduler->resetMaxMemValue();
+
+} // end printSimulationStats()
   
 } // namespace Uintah {
