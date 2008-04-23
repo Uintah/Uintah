@@ -372,7 +372,7 @@ fileSystem_test()
     bool raid3 = testFilesystem( "/usr/csafe/raid3", error_stream, rank );
     bool raid4 = testFilesystem( "/usr/csafe/raid4", error_stream, rank );
     bool home  = testFilesystem( ".",                error_stream, rank );
-    pass = raid1 && raid2 && raid3 && raid4;
+    pass = raid1 && raid2 && raid3 && raid4 && home;
   } 
   else {
     // On other systems, (at least for now) just check the file system of the current dir.
@@ -603,12 +603,18 @@ point2pointsync_test()
   int pass = true;
   int message;
 
+  if( rank == 0 && ( args.verbose > 1 )) {
+    cout << "\nBeginning point 2 point sync tests...\n\n";
+  }
+
   for( int pp = 0; pp < procs; pp++ ) {
     if( pp == rank ) { // sending
       for( int p = 0; p < procs; p++ ) {
-        MPI_Send( &rank, 1, MPI_INT, p, p, MPI_COMM_WORLD );
-        if( rank == 0 && ( args.verbose > 1 )) {
-          cout << "Proc 0 finished MPI_Send to rank: " << p << "\n";
+        if( p != pp ) { // Don't send to our self...
+          MPI_Send( &rank, 1, MPI_INT, p, p, MPI_COMM_WORLD );
+          if( rank == 0 && ( args.verbose > 1 )) {
+            cout << "Proc 0 finished MPI_Send to rank: " << p << "\n";
+          }
         }
       }
     }
