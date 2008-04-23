@@ -1305,10 +1305,22 @@ WARNING
                                                bool mustExist);
      
      /**
+      *  This function will return all cells that are intersected by
+      *  the box.  This is based on the fact that boundaries of cells
+      *  are closed on the bottom and open on the top.
+      */
+     CellIterator getCellIterator(const Box& b) const;
+     
+     /**
       * This function works on the assumption that we want all the cells
       * whose centers lie on or within the box.
       */
-     CellIterator getCellCenterIterator(const Box& b) const;
+     //CellIterator getCellCenterIterator(const Box& b) const;
+     
+     // Insert Documentation Here:  
+     CellIterator getExtraCellIterator(const Box& b) const;
+     
+
      
      //__________________________________
      //   I C E - M P M I C E   S T U F F 
@@ -1317,14 +1329,14 @@ WARNING
      CellIterator getEdgeCellIterator(const FaceType& face0, 
                                 const FaceType& face1,
                                 const string& domain="minusCornerCells") const;
-     CellIterator getSFCIterator( const int dir, const int offset = 0) const;
+     //CellIterator getSFCIterator( const int dir, const int offset = 0) const;
      CellIterator addGhostCell_Iter(CellIterator hi_lo, const int nCells) const;
      
      // This will return an iterator which will include all the nodes
      // contained by the bounding box.  If a dimension of the widget
      // is degenerate (has a thickness of 0) the nearest node in that
      // dimension is used.
-     NodeIterator getNodeIterator(const Box& b) const;
+     //NodeIterator getNodeIterator(const Box& b) const;
 
      // Get a larger set of nodes if using GIMP
      NodeIterator getNodeIterator(const string& interp_type) const;
