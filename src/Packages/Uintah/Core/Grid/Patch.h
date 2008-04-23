@@ -1315,7 +1315,7 @@ WARNING
       * This function works on the assumption that we want all the cells
       * whose centers lie on or within the box.
       */
-     //CellIterator getCellCenterIterator(const Box& b) const;
+     CellIterator getCellCenterIterator(const Box& b) const;
      
      // Insert Documentation Here:  
      CellIterator getExtraCellIterator(const Box& b) const;

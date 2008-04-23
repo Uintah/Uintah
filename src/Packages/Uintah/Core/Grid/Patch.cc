@@ -618,7 +618,6 @@ Patch::getCellIterator(const Box& b) const
 
 // This function works on the assumption that we want all the cells
 // whose centers lie on or within the box.
-/*
 CellIterator
 Patch::getCellCenterIterator(const Box& b) const
 {
@@ -646,7 +645,7 @@ Patch::getCellCenterIterator(const Box& b) const
    high = Min(high, getCellHighIndex());
    return CellIterator(low, high);
 }
-*/
+
 CellIterator
 Patch::getExtraCellIterator(const Box& b) const
 {
