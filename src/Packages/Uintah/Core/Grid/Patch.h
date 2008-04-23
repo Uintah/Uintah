@@ -1206,6 +1206,61 @@ WARNING
      */
     static void findNodesFromCell( const IntVector& cellIndex,
                              IntVector nodeIndex[8]);
+     
+    /**
+     * Returns true if the node idx is owned by this patch
+     * including extra cells
+     */
+     inline bool containsNode(const IntVector& idx) const {
+       IntVector l(getExtraNodeLowIndex__New());
+       IntVector h(getExtraNodeHighIndex__New());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+    /**
+     * Returns true if the cell idx is owned by this patch
+     * including extra cells
+     */
+     inline bool containsCell(const IntVector& idx) const {
+       IntVector l(getExtraCellLowIndex__New());
+       IntVector h(getExtraCellHighIndex__New());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+    /**
+     * Returns true if the SFCX idx is owned by this patch
+     * including extra cells
+     */
+     inline bool containsSFCX(const IntVector& idx) const {
+       IntVector l(getExtraSFCXLowIndex__New());
+       IntVector h(getExtraSFCXHighIndex__New());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+    /**
+     * Returns true if the SFCY idx is owned by this patch
+     * including extra cells
+     */
+     inline bool containsSFCY(const IntVector& idx) const {
+       IntVector l(getExtraSFCYLowIndex__New());
+       IntVector h(getExtraSFCYHighIndex__New());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
+     
+    /**
+     * Returns true if the SFCZ idx is owned by this patch
+     * including extra cells
+     */
+     inline bool containsSFCZ(const IntVector& idx) const {
+       IntVector l(getExtraSFCZLowIndex__New());
+       IntVector h(getExtraSFCZHighIndex__New());
+       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+     }
 
      
     /**************End New Public Interace****************/
@@ -1249,15 +1304,23 @@ WARNING
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
                                                bool mustExist);
      
-     // This function will return all cells that are intersected by
-     // the box.  This is based on the fact that boundaries of cells
-     // are closed on the bottom and open on the top.
+     /**
+      *  This function will return all cells that are intersected by
+      *  the box.  This is based on the fact that boundaries of cells
+      *  are closed on the bottom and open on the top.
+      */
      CellIterator getCellIterator(const Box& b) const;
-     // This function works on the assumption that we want all the cells
-     // whose centers lie on or within the box.
+     
+     /**
+      * This function works on the assumption that we want all the cells
+      * whose centers lie on or within the box.
+      */
      CellIterator getCellCenterIterator(const Box& b) const;
+     
      // Insert Documentation Here:  
      CellIterator getExtraCellIterator(const Box& b) const;
+     
+
      
      //__________________________________
      //   I C E - M P M I C E   S T U F F 
@@ -1374,51 +1437,6 @@ WARNING
      IntVector neighborsLow() const;
      IntVector neighborsHigh() const;
      
-     //////////
-     // Insert Documentation Here:
-     inline bool containsNode(const IntVector& idx) const {
-       IntVector l(getNodeLowIndex());
-       IntVector h(getNodeHighIndex());
-       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-     }
-     
-     //////////
-     // Insert Documentation Here:
-     inline bool containsCell(const IntVector& idx) const {
-       IntVector l(getCellLowIndex());
-       IntVector h(getCellHighIndex());
-       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-     }
-     
-     //////////
-     // Insert Documentation Here:
-     inline bool containsSFCX(const IntVector& idx) const {
-       IntVector l(getSFCXLowIndex());
-       IntVector h(getSFCXHighIndex());
-       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-     }
-     
-     //////////
-     // Insert Documentation Here:
-     inline bool containsSFCY(const IntVector& idx) const {
-       IntVector l(getSFCYLowIndex());
-       IntVector h(getSFCYHighIndex());
-       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-     }
-     
-     //////////
-     // Insert Documentation Here:
-     inline bool containsSFCZ(const IntVector& idx) const {
-       IntVector l(getSFCZLowIndex());
-       IntVector h(getSFCZHighIndex());
-       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-     }
-
      //////////
      // Insert Documentation Here:
      Point nodePosition(const IntVector& idx) const;
