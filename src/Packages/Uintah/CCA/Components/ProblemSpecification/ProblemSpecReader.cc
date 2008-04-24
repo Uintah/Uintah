@@ -932,20 +932,22 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
       validate( uintahSpec_, prob_spec.get_rep() );
     }
     catch( ProblemSetupException & pse ) {
-      cout << "\n";
-      cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
-      cout << "!! WARNING: Your .ups file did not parse successfully...\n";
-      cout << "!!          Soon this will be a fatal error... please\n";
-      cout << "!!          fix your .ups file or update the ups_spec.xml\n";
-      cout << "!!          specification.  Reason for failure is:\n";
-      cout << "\n";
-      // Hack to cut the word 'exception' out of the error message...
-      string msg = pse.message();
-      msg = msg.substr( msg.find( "thrown:" ) + 8 );
-      cout << msg << "\n";
-      cout << "\n";
-      cout << "!!\n";
-      cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+      if( Parallel::getMPIRank() == 0 ) {
+        cout << "\n";
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
+        cout << "!! WARNING: Your .ups file did not parse successfully...\n";
+        cout << "!!          Soon this will be a fatal error... please\n";
+        cout << "!!          fix your .ups file or update the ups_spec.xml\n";
+        cout << "!!          specification.  Reason for failure is:\n";
+        cout << "\n";
+        // Hack to cut the word 'exception' out of the error message...
+        string msg = pse.message();
+        msg = msg.substr( msg.find( "thrown:" ) + 8 );
+        cout << msg << "\n";
+        cout << "\n";
+        cout << "!!\n";
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+      }
     }
   }
 }
@@ -1044,41 +1046,41 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
       string str = child->getNodeName();
       // look for the include tag
       if (str == "include") {
-        map<string, string> attributes;
-        child->getAttributes(attributes);
-        string href = attributes["href"];
+	map<string, string> attributes;
+	child->getAttributes(attributes);
+	string href = attributes["href"];
 
-        // not absolute path, append href to directory
-        if (href[0] != '/')
-          href = directory + href;
-        if (href == "")
-          throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
-        
-        // open the file, read it, and replace the index node
-        ProblemSpecReader *psr = scinew ProblemSpecReader(href);
-        ProblemSpecP include = psr->readInputFile();
-        delete psr;
-        // nodes to be substituted must be enclosed in a 
-        // "Uintah_Include" node
+	// not absolute path, append href to directory
+	if (href[0] != '/')
+	  href = directory + href;
+	if (href == "")
+	  throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
+	
+	// open the file, read it, and replace the index node
+	ProblemSpecReader *psr = scinew ProblemSpecReader(href);
+	ProblemSpecP include = psr->readInputFile();
+	delete psr;
+	// nodes to be substituted must be enclosed in a 
+	// "Uintah_Include" node
 
-        if (include->getNodeName() == "Uintah_Include" || 
-            include->getNodeName() == "Uintah_specification") {
-          ProblemSpecP incChild = include->getFirstChild();
-          while (incChild != 0) {
-            //make include be created from same document that created params
-            ProblemSpecP newnode = child->importNode(incChild, true);
-            resolveIncludes(newnode);
-            xmlAddPrevSibling(child->getNode(), newnode->getNode());
-            incChild = incChild->getNextSibling();
-          }
-          ProblemSpecP temp = child->getNextSibling();
-          params->removeChild(child);
-          child = temp;
-          continue;
-        }
-        else {
-          throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
-        }
+	if (include->getNodeName() == "Uintah_Include" || 
+	    include->getNodeName() == "Uintah_specification") {
+	  ProblemSpecP incChild = include->getFirstChild();
+	  while (incChild != 0) {
+	    //make include be created from same document that created params
+	    ProblemSpecP newnode = child->importNode(incChild, true);
+	    resolveIncludes(newnode);
+	    xmlAddPrevSibling(child->getNode(), newnode->getNode());
+	    incChild = incChild->getNextSibling();
+	  }
+	  ProblemSpecP temp = child->getNextSibling();
+	  params->removeChild(child);
+	  child = temp;
+	  continue;
+	}
+	else {
+	  throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
+	}
       }
       // recurse on child's children
       resolveIncludes(child);
