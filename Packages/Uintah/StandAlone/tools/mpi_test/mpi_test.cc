@@ -387,11 +387,11 @@ fileSystem_test()
       cout << "   completed the test.  '<name (-rank)>' correspond to processors that failed file system check.\n";
       cout << "\n";
 
-      vector<int>    messages(procs);
-      MPI_Request  * rrequest = new MPI_Request[ procs ];    
+      vector<int>    messages(procs-1);
+      MPI_Request  * rrequest = new MPI_Request[ procs-1 ];
 
       for( int proc = 1; proc < procs; proc++ ) {    
-        MPI_Irecv( &messages[proc], 1, MPI_INT, proc, proc, MPI_COMM_WORLD, &rrequest[proc] );
+        MPI_Irecv( &messages[proc-1], 1, MPI_INT, proc, proc, MPI_COMM_WORLD, &rrequest[proc-1] );
       }
       bool done = false;
       int  totalCompleted = 0;
@@ -402,8 +402,8 @@ fileSystem_test()
 
       int          totalPassed = (int)pass, totalFailed = (int)(!pass);
       int          numCompleted = -1;
-      int        * completedBuffer = new int[ procs ]; // Passed to MPI
-      MPI_Status * status = new MPI_Status[ procs ];
+      int        * completedBuffer = new int[ procs-1 ]; // Passed to MPI
+      MPI_Status * status = new MPI_Status[ procs-1 ];
 
       usleep(1000000);//testing
 
@@ -416,9 +416,7 @@ fileSystem_test()
 
         // See if any processors have reported their status...
         //
-        // Not sure why we have to use 'procs' instead of 'procs-1', but it
-        // doesn't work unless you do...
-        MPI_Testsome( procs, rrequest, &numCompleted, completedBuffer, status );
+        MPI_Testsome( procs-1, rrequest, &numCompleted, completedBuffer, status );
 
         if( numCompleted > 0 ) {
           for( int pos = 0; pos < numCompleted; pos++ ) {
