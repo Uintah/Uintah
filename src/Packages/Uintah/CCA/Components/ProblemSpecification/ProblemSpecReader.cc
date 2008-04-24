@@ -939,7 +939,10 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
       cout << "!!          fix your .ups file or update the ups_spec.xml\n";
       cout << "!!          specification.  Reason for failure is:\n";
       cout << "\n";
-      cout << pse.message() << "\n";
+      // Hack to cut the word 'exception' out of the error message...
+      string msg = pse.message();
+      msg = msg.substr( msg.find( "thrown:" ) + 8 );
+      cout << msg << "\n";
       cout << "\n";
       cout << "!!\n";
       cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
