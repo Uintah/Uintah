@@ -61,9 +61,9 @@ static DebugStream dbg( "ProblemSpecReader" );
 // Prints out 2 spaces for each level of indentation.
 static
 void
-indent( ostream & out, int level )
+indent( ostream & out, unsigned int level )
 {
-  for( int pos = 0; pos < level; pos++ ) {
+  for( unsigned int pos = 0; pos < level; pos++ ) {
     out << "  ";
   }
 }
@@ -77,6 +77,7 @@ toString( const vector<string> & vec )
   for( unsigned int pos = 0; pos < vec.size(); pos++ ) {
     result += vec[ pos ] + "\n";
   }
+  return result;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +91,7 @@ toString( const vector<string> & vec )
 // MULTIPLE = 0 or more occurrences
 enum need_e { OPTIONAL, REQUIRED, MULTIPLE, INVALID_NEED };
 // VECTORs are specified as [0.0,0.0,0.0]
-enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA };
+enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, INVALID_TYPE };
 
 ostream &
 operator<<( ostream & out, const need_e & need )
@@ -131,6 +132,7 @@ getNeed( const string & needStr )
   else {
     cout << "Error: need (" << needStr << ") did not parse correctly... "
          << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
+    return INVALID_NEED;
   }
 }
 
@@ -158,6 +160,7 @@ getType( const string & typeStr )
   else {
     cout << "Error: type (" << typeStr << ") did not parse correctly... "
          << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
+    return INVALID_TYPE;
   }
 }
 
@@ -187,6 +190,8 @@ struct ProblemSpecReader::AttributeAndTagBase {
     }
   }
 
+  virtual ~AttributeAndTagBase() {}
+
   const Tag *    parent_;
   string         name_;
   need_e         need_;
@@ -198,7 +203,7 @@ struct ProblemSpecReader::AttributeAndTagBase {
 
   string getCompleteName();
 
-  virtual void print( bool /* recursively = false */, int level = 0, bool isTag ) { 
+  virtual void print( bool /* recursively = false */, unsigned int level = 0, bool isTag = false ) { 
 
     // Fill is used to pad the Tag names so they line up better...
     if( level > 14 ) {
@@ -217,7 +222,7 @@ struct ProblemSpecReader::AttributeAndTagBase {
          << (isTag ? ">" : "" ) 
          << fill << " - " << need_ << " - " << type_ << " - VVs: "
          << (validValues_.size() == 0 ? "" : "'" );
-    for( int pos = 0; pos < validValues_.size(); pos++ ) {
+    for( unsigned int pos = 0; pos < validValues_.size(); pos++ ) {
       dbg << validValues_[pos] << " ";
     }
     dbg << (validValues_.size() == 0 ? "" : "'" )
@@ -231,7 +236,7 @@ struct ProblemSpecReader::Attribute : public ProblemSpecReader::AttributeAndTagB
   Attribute( const string & name, need_e need, type_e type, const string & validValues, const Tag * parent ) :
     AttributeAndTagBase( name, need, type, validValues, parent ) {}
 
-  virtual void print( bool recursively, int level, bool isTag = false ) {
+  virtual void print( bool recursively, unsigned int level, bool isTag = false ) {
     AttributeAndTagBase::print( recursively, level, isTag );
     dbg << "\n";
   }
@@ -267,7 +272,7 @@ struct ProblemSpecReader::Tag : public ProblemSpecReader::AttributeAndTagBase {
     attributes_ = tag->attributes_;
   }
 
-  virtual void print( bool recursively = false, int level = 0, bool isTag = true ) {
+  virtual void print( bool recursively = false, unsigned int level = 0, bool isTag = true ) {
 
     AttributeAndTagBase::print( recursively, level, isTag );
 
@@ -303,7 +308,7 @@ ProblemSpecReader::findAttribute( Tag * root, const string & attrName )
 {
   vector<Attribute*> & attribs = root->attributes_;
 
-  for( int pos = 0; pos < attribs.size(); pos++ ) {
+  for( unsigned int pos = 0; pos < attribs.size(); pos++ ) {
     if( attribs[ pos ]->name_ == attrName ) {
       return attribs[ pos ];
     }
@@ -316,7 +321,7 @@ ProblemSpecReader::findSubTag( Tag * root, const string & tagName )
 {
   vector<Tag*> & tags = root->subTags_;
 
-  for( int pos = 0; pos < tags.size(); pos++ ) {
+  for( unsigned int pos = 0; pos < tags.size(); pos++ ) {
     if( tags[ pos ]->name_ == tagName ) {
       return tags[ pos ];
     }
@@ -739,15 +744,22 @@ ProblemSpecReader::validateText( AttributeAndTagBase * root, const string & text
     }
     break;
   case VECTOR:
-    double val1, val2, val3;
-    int    num = sscanf( text.c_str(), "[%lf,%lf,%lf]", &val1, &val2, &val3 );
-    if( num != 3 ) {
-      throw ProblemSetupException( classType + " ('" + completeName + "') should have a Vector value (but has: '" +
-                                   text + "').  Please fix XML in .ups file or correct validation Tag list.",
-                                   __FILE__, __LINE__ );
+    {
+      double val1, val2, val3;
+      int    num = sscanf( text.c_str(), "[%lf,%lf,%lf]", &val1, &val2, &val3 );
+      if( num != 3 ) {
+        throw ProblemSetupException( classType + " ('" + completeName + "') should have a Vector value (but has: '" +
+                                     text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                     __FILE__, __LINE__ );
+      }
     }
     break;
+  case NO_DATA:
+    // Already handled above...
+  case INVALID_TYPE:
+    break;
   }
+
 } // end validateText()
 
 void
@@ -774,7 +786,7 @@ ProblemSpecReader::validateAttribute( Tag * root, xmlAttr * attr )
 }
 
 void
-ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, int level /* = 0 */ )
+ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int level /* = 0 */ )
 {
   if( !uintahSpec_ ) {
     return;
@@ -876,7 +888,7 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, int level /* = 
   }
 
   // Verify that all REQUIRED attributes were found:
-  for( int pos = 0; pos < root->attributes_.size(); pos++ ) {
+  for( unsigned int pos = 0; pos < root->attributes_.size(); pos++ ) {
     Attribute * attr = root->attributes_[ pos ];
     if( attr->need_ == REQUIRED && attr->occurrences_ == 0 ) {
       throw ProblemSetupException( string( "Required attribute '" ) + attr->getCompleteName() +
@@ -886,7 +898,7 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, int level /* = 
   }
 
   // Verify that all REQUIRED tags were found:
-  for( int pos = 0; pos < root->subTags_.size(); pos++ ) {
+  for( unsigned int pos = 0; pos < root->subTags_.size(); pos++ ) {
     Tag * tag = root->subTags_[ pos ];
     if( tag->need_ == REQUIRED && tag->occurrences_ == 0 ) {
       throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
@@ -908,7 +920,6 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
   if( !uintahSpec_ ) {
     parseValidationFile();
 
-    bool debug = true;
     if( dbg.active() ) {
       dbg << "-----------------------------------------------------------------\n";
       dbg << "-- uintah spec: \n";
@@ -977,8 +988,8 @@ ProblemSpecReader::readInputFile()
     if ( !getInfo( d_upsFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
       // Find the directory this file is in...
       string directory = d_upsFilename;
-      int index;
-      for( index = (int)directory.length()-1; index >= 0; --index ) {
+      unsigned int index;
+      for( index = directory.length()-1; index >= 0; --index ) {
         //strip off characters after last /
         if (directory[index] == '/')
           break;
@@ -1068,7 +1079,6 @@ ProblemSpecReader::resolveIncludes(ProblemSpecP params)
       resolveIncludes(child);
     }
     child = child->getNextSibling();
-
-  }
+  } // end while (child != 0)
 
 } // end resolveIncludes()

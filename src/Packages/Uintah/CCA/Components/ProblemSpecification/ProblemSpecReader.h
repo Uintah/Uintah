@@ -52,7 +52,7 @@ namespace Uintah {
     void        parseValidationFile();
     void        validateProblemSpec( ProblemSpecP & prob_spec );
 
-    void        validate( Tag * root, const ProblemSpec * ps, int level = 0 );
+    void        validate( Tag * root, const ProblemSpec * ps, unsigned int level = 0 );
 
     void        parseTag( Tag * parent, const xmlNode * xmlTag );
 
