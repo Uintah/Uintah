@@ -8,7 +8,7 @@ class SineMMS : public MMS {
 
 public:
   SineMMS(double A, double viscosity, double p_ref);
-  ~SineMMS();
+  virtual ~SineMMS();
 
   double pressure( double x, double y, double z, double time );
   double uVelocity( double x, double y, double z, double time );

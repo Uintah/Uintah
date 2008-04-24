@@ -437,7 +437,7 @@ main( int argc, char** argv )
     //__________________________________
     // Read input file
     ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
-    ProblemSpecP ups = reader->readInputFile();
+    ProblemSpecP ups = reader->readInputFile( true /* validate */ );
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";

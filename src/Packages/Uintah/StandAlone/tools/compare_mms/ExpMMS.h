@@ -8,7 +8,7 @@ class ExpMMS : public MMS {
 
 public:
   ExpMMS(double A, double viscosity, double p_ref);
-  ~ExpMMS();
+  virtual ~ExpMMS();
 
   double pressure( double x, double y, double z, double time );
   double uVelocity( double x, double y, double z, double time );

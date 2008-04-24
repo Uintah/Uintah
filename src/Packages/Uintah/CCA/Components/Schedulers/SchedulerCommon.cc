@@ -130,15 +130,15 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
 
   if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
     memuse = ProcessInfo::GetMemoryResident();
-    printf("1) memuse is %d\n", (int)memuse);
+    // printf("1) memuse is %d\n", (int)memuse);
   } else {
     memuse = (char*)sbrk(0)-start_addr;
-    printf("2) memuse is %d\n", (int)memuse);
+    // printf("2) memuse is %d\n", (int)memuse);
   }
 #endif
 
   if( memuse > d_maxMemUse ) {
-    printf("Max memuse increased\n");
+    // printf("Max memuse increased\n");
     d_maxMemUse = memuse;
   }
   maxMemUse = d_maxMemUse;

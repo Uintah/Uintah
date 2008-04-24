@@ -22,7 +22,7 @@ namespace Uintah {
     ~ProblemSpecReader();
 
     // be sure to call releaseDocument on this ProblemSpecP
-    virtual ProblemSpecP readInputFile();
+    virtual ProblemSpecP readInputFile( bool validate = false );
 
     virtual std::string getInputFile() { return d_upsFilename; }
     // replaces <include> tag with xml file tree

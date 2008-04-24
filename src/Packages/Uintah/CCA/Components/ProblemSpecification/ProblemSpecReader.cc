@@ -53,7 +53,7 @@ using namespace SCIRun;
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-static DebugStream dbg( "ProblemSpecReader" );
+static DebugStream dbg( "ProblemSpecReader", false );
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Utility Functions:
@@ -966,7 +966,7 @@ ProblemSpecReader::~ProblemSpecReader()
 }
 
 ProblemSpecP
-ProblemSpecReader::readInputFile()
+ProblemSpecReader::readInputFile( bool validate /* = false */ )
 {
   if (d_xmlData != 0)
     return d_xmlData;
@@ -1012,7 +1012,9 @@ ProblemSpecReader::readInputFile()
 
   resolveIncludes(prob_spec);
 
-  validateProblemSpec( prob_spec );
+  if( validate ) {
+    validateProblemSpec( prob_spec );
+  }
 
   d_xmlData = prob_spec;
   return prob_spec;
