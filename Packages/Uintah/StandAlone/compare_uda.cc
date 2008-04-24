@@ -62,22 +62,22 @@ void print(std::ostream& out, const SCIRun::Point& t)
 
 void usage(const std::string& badarg, const std::string& progname)
 {
-    if(badarg != "")
-	cerr << "\nError parsing argument: " << badarg << '\n';
-    cerr << "\nUsage: " << progname 
-	 << " [options] <archive file 1> <archive file 2>\n\n";
-    cerr << "Valid options are:\n";
-    cerr << "  -h[elp]\n";
-    cerr << "  -abs_tolerance [double] (allowable absolute difference of any number, default: 1e-9)\n";
-    cerr << "  -rel_tolerance [double] (allowable relative difference of any number, default: 1e-6)\n";
-    cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
-    cerr << "  -skip_unknown_types (skip variable comparisons" 
-	  << " of unknown types without error)\n";
-    cerr << "  -ignoreVariable [string] (skip this variable)\n";
-    cerr << "  -dont_sort  (don't sort the variable names before comparing them)";
-    cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
-	 << "      for a comparison to fail.\n\n";
-    Thread::exitAll(1);
+  if(badarg != "")
+    cerr << "\nError parsing argument: " << badarg << '\n';
+  cerr << "\nUsage: " << progname 
+       << " [options] <archive file 1> <archive file 2>\n\n";
+  cerr << "Valid options are:\n";
+  cerr << "  -h[elp]\n";
+  cerr << "  -abs_tolerance [double] (allowable absolute difference of any number, default: 1e-9)\n";
+  cerr << "  -rel_tolerance [double] (allowable relative difference of any number, default: 1e-6)\n";
+  cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
+  cerr << "  -skip_unknown_types (skip variable comparisons" 
+       << " of unknown types without error)\n";
+  cerr << "  -ignoreVariable [string] (skip this variable)\n";
+  cerr << "  -dont_sort  (don't sort the variable names before comparing them)";
+  cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
+       << "      for a comparison to fail.\n\n";
+  Thread::exitAll(1);
 }
 
 // I don't want to have to pass these parameters all around, so
@@ -105,25 +105,25 @@ void tolerance_failure()
 }
 
 void displayProblemLocation(const string& var, int matl,
-			    const Patch* patch, double time)
+                            const Patch* patch, double time)
 {
   cerr << "Time: " << time << endl <<
     "Variable: " << var << endl <<
-  "Material: " << matl << endl;
+    "Material: " << matl << endl;
   if (patch != 0)
     cerr << "Patch: " << patch->getID() <<endl;   
 
 }
 
 void displayProblemLocation(const string& var, int matl,
-			    const Patch* patch, const Patch* patch2,
-			    double time)
+                            const Patch* patch, const Patch* patch2,
+                            double time)
 {
   cerr << "Time: " << time << " "<<
-          "Patch1: " << patch->getID() << " " <<
-          "Patch2: " << patch2->getID() << " " <<
-          "Material: " << matl << " " <<
-          "Variable: " << var << endl;
+    "Patch1: " << patch->getID() << " " <<
+    "Patch2: " << patch2->getID() << " " <<
+    "Material: " << matl << " " <<
+    "Variable: " << var << endl;
 }
 
 bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
@@ -148,13 +148,13 @@ bool compare(float a, float b, double abs_tolerance, double rel_tolerance)
 }
 
 bool compare(long64 a, long64 b, double /* abs_tolerance */,
-	     double /* rel_tolerance */)
+             double /* rel_tolerance */)
 {
   return (a == b); // longs should use an exact comparison
 }
 
 bool compare(int a, int b, double /* abs_tolerance */,
-	     double /* rel_tolerance */)
+             double /* rel_tolerance */)
 {
   return (a == b); // int should use an exact comparison
 }
@@ -170,11 +170,11 @@ bool compare(Point a, Point b, double abs_tolerance, double rel_tolerance)
 { return compare(a.asVector(), b.asVector(), abs_tolerance, rel_tolerance); }
 
 bool compare(const Matrix3& a, const Matrix3& b, double abs_tolerance,
-	     double rel_tolerance)
+             double rel_tolerance)
 {
-//  for (int i = 0; i < 3; i++)
-//    for (int j = 0; j < 3; j++)
-//      if (!compare(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
+  //  for (int i = 0; i < 3; i++)
+  //    for (int j = 0; j < 3; j++)
+  //      if (!compare(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
   // Comparing element by element is overly sensitive to code changes
   // The following is a hopefully more informative metric of agreement
   if(!compare(a.Norm(), b.Norm(), abs_tolerance, rel_tolerance)){
@@ -215,8 +215,8 @@ public:
   void gather(ParticleSubset* gatherSubset);
 
   bool compare(MaterialParticleVarData& data2, int matl,
-	       double time1, double time2,
-	       double abs_tolerance, double rel_tolerance);
+               double time1, double time2,
+               double abs_tolerance, double rel_tolerance);
 
   void createPatchMap();
   
@@ -234,9 +234,9 @@ public:
 private:
   template <class T> bool 
   compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
-	  ParticleVariable<T>* value2, int matl,
-	  double time1, double time2,
-	  double abs_tolerance, double rel_tolerance);
+          ParticleVariable<T>* value2, int matl,
+          double time1, double time2,
+          double abs_tolerance, double rel_tolerance);
   
   string name_;
   // vector elements each represent a patch -- doesn't matter which
@@ -271,7 +271,7 @@ public:
   }
       
   void compare(MaterialParticleData& data2, double time1, double time2,
-	       double abs_tolerance, double rel_tolerance);
+               double abs_tolerance, double rel_tolerance);
   
   void setMatl(int matl)
   { matl_ = matl; }
@@ -288,9 +288,9 @@ MaterialParticleVarData::~MaterialParticleVarData()
 {
   vector<ParticleVariableBase*>::iterator iter = particleVars_.begin();
   for ( ; iter != particleVars_.end(); iter++)
-  {
-    delete *iter;
-  }
+    {
+      delete *iter;
+    }
   if (name_ == "p.particleID")
     delete patchMap_;
 }
@@ -302,9 +302,9 @@ void MaterialParticleData::createPatchMap()
 
   map<string, MaterialParticleVarData>::iterator varIter = vars_.begin();
   for ( ; varIter != vars_.end(); varIter++)
-  {
-    (*varIter).second.setParticleIDData(particleIDs_);
-  }
+    {
+      (*varIter).second.setParticleIDData(particleIDs_);
+    }
 }
 
 void MaterialParticleVarData::createPatchMap()
@@ -329,8 +329,8 @@ void MaterialParticleVarData::createPatchMap()
 }
 
 void MaterialParticleData::compare(MaterialParticleData& data2, double time1,
-				   double time2, double abs_tolerance,
-				   double rel_tolerance)
+                                   double time2, double abs_tolerance,
+                                   double rel_tolerance)
 {
   if (vars_.size() == 0)
     return; // nothing to compare -- all good
@@ -343,27 +343,27 @@ void MaterialParticleData::compare(MaterialParticleData& data2, double time1,
   data2.sort();
 
   if (!particleIDs_->compare(*data2.particleIDs_, matl_, time1, time2,
-			     abs_tolerance, rel_tolerance))
-  {
-    cerr << "ParticleIDs do not match\n";
-    abort_uncomparable();
-  }
+                             abs_tolerance, rel_tolerance))
+    {
+      cerr << "ParticleIDs do not match\n";
+      abort_uncomparable();
+    }
   
   map<string, MaterialParticleVarData>::iterator varIter = vars_.begin();
   map<string, MaterialParticleVarData>::iterator varIter2 =
     data2.vars_.begin();
   for ( ; (varIter != vars_.end()) && (varIter2 != data2.vars_.end()) ;
-	varIter++, varIter2++)
-  {
-    // should catch this earlier -- vars/materials do not match
-    ASSERT((*varIter).first == (*varIter2).first); 
+        varIter++, varIter2++)
+    {
+      // should catch this earlier -- vars/materials do not match
+      ASSERT((*varIter).first == (*varIter2).first); 
 
-    if ((*varIter).first == "p.particleID")
-      continue; // already compared
+      if ((*varIter).first == "p.particleID")
+        continue; // already compared
     
-    (*varIter).second.compare((*varIter2).second, matl_, time1, time2,
-			      abs_tolerance, rel_tolerance);
-  }
+      (*varIter).second.compare((*varIter2).second, matl_, time1, time2,
+                                abs_tolerance, rel_tolerance);
+    }
   // should catch this earlier -- vars/materials do not match
   ASSERT((varIter == vars_.end()) && (varIter2 == data2.vars_.end()));
 }
@@ -394,7 +394,7 @@ void MaterialParticleData::sort()
     long64* pID = (long64*)pIDs->getBasePointer();
     ParticleSubset* subset = pIDs->getParticleSubset();
     for (ParticleSubset::iterator iter = subset->begin();
-	 iter != subset->end(); iter++) {
+         iter != subset->end(); iter++) {
       idIndices.push_back(ID_Index(*(pID++), base + *iter));
     }
     base = (particleIndex)idIndices.size();
@@ -425,7 +425,7 @@ void MaterialParticleData::gather(ParticleSubset* gatherSubset)
 }
 
 void MaterialParticleVarData::add(ParticleVariableBase* pvb,
-				  const Patch* patch)
+                                  const Patch* patch)
 {
   particleVars_.push_back(pvb);
   subsets_.push_back(pvb->getParticleSubset());
@@ -445,61 +445,61 @@ void MaterialParticleVarData::gather(ParticleSubset* gatherSubset)
 
 bool MaterialParticleVarData::
 compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
-	double abs_tolerance, double rel_tolerance)
+        double abs_tolerance, double rel_tolerance)
 {
   cerr << "\tVariable: " << name_ << ", comparing via particle ids" << endl;
   ASSERT(particleVars_.size() == 1 && subsets_.size() == 1 &&
-	 data2.particleVars_.size() == 1 && data2.subsets_.size() == 1);
+         data2.particleVars_.size() == 1 && data2.subsets_.size() == 1);
   ParticleVariableBase* pvb1 = particleVars_[0];
   ParticleVariableBase* pvb2 = data2.particleVars_[0];
 
   // type checks should have been made earlier
   ASSERT(pvb1->virtualGetTypeDescription() ==
-	 pvb2->virtualGetTypeDescription());
+         pvb2->virtualGetTypeDescription());
 
   switch (pvb1->virtualGetTypeDescription()->getSubType()->getType())
-  {
-  case Uintah::TypeDescription::double_type:
-    return compare(data2, dynamic_cast<ParticleVariable<double>*>(pvb1),
-		   dynamic_cast<ParticleVariable<double>*>(pvb2), matl,
-		   time1, time2, abs_tolerance, rel_tolerance);
-  case Uintah::TypeDescription::float_type:
-    return compare(data2, dynamic_cast<ParticleVariable<float>*>(pvb1),
-		   dynamic_cast<ParticleVariable<float>*>(pvb2), matl,
-		   time1, time2, abs_tolerance, rel_tolerance);
-  case Uintah::TypeDescription::long64_type:
-    return compare(data2, dynamic_cast<ParticleVariable<long64>*>(pvb1),
-		   dynamic_cast<ParticleVariable<long64>*>(pvb2), matl,
-		   time1, time2, abs_tolerance, rel_tolerance);
-  case Uintah::TypeDescription::int_type:
-    return compare(data2, dynamic_cast<ParticleVariable<int>*>(pvb1),
-		   dynamic_cast<ParticleVariable<int>*>(pvb2), matl,
-		   time1, time2, abs_tolerance, rel_tolerance);
-  case Uintah::TypeDescription::Point:
-    return compare(data2, dynamic_cast<ParticleVariable<Point>*>(pvb1),
-		   dynamic_cast<ParticleVariable<Point>*>(pvb2), matl,
-		   time1, time2, abs_tolerance, rel_tolerance);
-  case Uintah::TypeDescription::Vector:
-    return compare(data2, dynamic_cast<ParticleVariable<Vector>*>(pvb1),
-		   dynamic_cast<ParticleVariable<Vector>*>(pvb2), matl,
-		   time1, time2, abs_tolerance, rel_tolerance);
-  case Uintah::TypeDescription::Matrix3:
-    return compare(data2, dynamic_cast<ParticleVariable<Matrix3>*>(pvb1),
-		   dynamic_cast<ParticleVariable<Matrix3>*>(pvb2), matl,
-		   time1, time2, abs_tolerance, rel_tolerance);
-  default:
-    cerr << "MaterialParticleVarData::gather: ParticleVariable of unsupported type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
-    Thread::exitAll(-1);
-  }
+    {
+    case Uintah::TypeDescription::double_type:
+      return compare(data2, dynamic_cast<ParticleVariable<double>*>(pvb1),
+                     dynamic_cast<ParticleVariable<double>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::float_type:
+      return compare(data2, dynamic_cast<ParticleVariable<float>*>(pvb1),
+                     dynamic_cast<ParticleVariable<float>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::long64_type:
+      return compare(data2, dynamic_cast<ParticleVariable<long64>*>(pvb1),
+                     dynamic_cast<ParticleVariable<long64>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::int_type:
+      return compare(data2, dynamic_cast<ParticleVariable<int>*>(pvb1),
+                     dynamic_cast<ParticleVariable<int>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::Point:
+      return compare(data2, dynamic_cast<ParticleVariable<Point>*>(pvb1),
+                     dynamic_cast<ParticleVariable<Point>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::Vector:
+      return compare(data2, dynamic_cast<ParticleVariable<Vector>*>(pvb1),
+                     dynamic_cast<ParticleVariable<Vector>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
+    case Uintah::TypeDescription::Matrix3:
+      return compare(data2, dynamic_cast<ParticleVariable<Matrix3>*>(pvb1),
+                     dynamic_cast<ParticleVariable<Matrix3>*>(pvb2), matl,
+                     time1, time2, abs_tolerance, rel_tolerance);
+    default:
+      cerr << "MaterialParticleVarData::gather: ParticleVariable of unsupported type: " << pvb1->virtualGetTypeDescription()->getName() << '\n';
+      Thread::exitAll(-1);
+    }
   return 0;
 }
 
 template <class T>
 bool MaterialParticleVarData::
 compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
-	ParticleVariable<T>* value2, int matl,
-	double time1, double /*time2*/, double abs_tolerance,
-	double rel_tolerance)
+        ParticleVariable<T>* value2, int matl,
+        double time1, double /*time2*/, double abs_tolerance,
+        double rel_tolerance)
 {
   bool passes = true;
   ParticleSubset* pset1 = value1->getParticleSubset();
@@ -517,14 +517,14 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
   // sort/gather achieves.
   for (int i = 0; i < pset1->numParticles(); i++) {
     if (!(::compare((*value1)[i], (*value2)[i], abs_tolerance,
-		    rel_tolerance))) {
+                    rel_tolerance))) {
       if (name_ != "p.particleID") {
-	ASSERT(getParticleID(i) == data2.getParticleID(i));
+        ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
       cerr << "DIFFERENCE on particle id= " << getParticleID(i) << endl;
       IntVector origin((int)(getParticleID(i) >> 16) & 0xffff,
-		       (int)(getParticleID(i) >> 32) & 0xffff,
-		       (int)(getParticleID(i) >> 48) & 0xffff);
+                       (int)(getParticleID(i) >> 32) & 0xffff,
+                       (int)(getParticleID(i) >> 48) & 0xffff);
       cerr << "(Originating from " << origin << ")\n";
       const Patch* patch1 = getPatch(i);
       const Patch* patch2 = data2.getPatch(i);
@@ -558,14 +558,14 @@ const Patch* MaterialParticleVarData::getPatch(particleIndex index)
 }
 
 /*
-typedef struct{
+  typedef struct{
   vector<ParticleVariable<double> > pv_double_list;
   vector<ParticleVariable<float> > pv_float_list;
   vector<ParticleVariable<Point> > pv_point_list;
   vector<ParticleVariable<Vector> > pv_vector_list;
   vector<ParticleVariable<Matrix3> > pv_matrix3_list;
   ParticleVariable<Point> p_x;
-} MaterialPatchParticleData;
+  } MaterialPatchParticleData;
 */
 
 typedef map<int, MaterialParticleData> MaterialParticleDataMap;
@@ -583,9 +583,9 @@ string replaceChar(string s, char old, char newch) {
 
 
 void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
-		     DataArchive* da, vector<string> vars,
-		     vector<const Uintah::TypeDescription*> types,
-		     LevelP level, int timestep)
+                     DataArchive* da, vector<string> vars,
+                     vector<const Uintah::TypeDescription*> types,
+                     LevelP level, int timestep)
 {
   Level::const_patchIterator iter;
   for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
@@ -595,44 +595,44 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
       const Uintah::TypeDescription* td = types[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
       if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
-	ConsecutiveRangeSet matls = da->queryMaterials(var, patch, timestep);
-	for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
-	     matlIter != matls.end(); matlIter++){
-	  int matl = *matlIter;
-	  // Add a new MaterialPatchData for each matl for this next patch.
-	  MaterialParticleData& data = matlParticleDataMap[matl];
-	  data.setMatl(matl);
-	  ParticleVariableBase* pvb = NULL;
-	  switch(subtype->getType()){
-	  case Uintah::TypeDescription::double_type:
-	    pvb = scinew ParticleVariable<double>();
-	    break;
-	  case Uintah::TypeDescription::float_type:
-	    pvb = scinew ParticleVariable<float>();
-	    break;
-	  case Uintah::TypeDescription::long64_type:
-	    pvb = scinew ParticleVariable<long64>();
-	    break;
-	  case Uintah::TypeDescription::int_type:
-	    pvb = scinew ParticleVariable<int>();
-	    break;
-	  case Uintah::TypeDescription::Point:
-	    pvb = scinew ParticleVariable<Point>();
-	    break;
-	  case Uintah::TypeDescription::Vector:
-	    pvb = scinew ParticleVariable<Vector>(); 
-	    break;
-	  case Uintah::TypeDescription::Matrix3:
-	    pvb = scinew ParticleVariable<Matrix3>();
-	    break;
-	  default:
-	    cerr << "addParticleData: ParticleVariable of unsupported type: " 
-		 << subtype->getName() << '\n';
-	    Thread::exitAll(-1);
-	  }
-	  da->query(*pvb, var, matl, patch, timestep);
-	  data[var].add(pvb, patch); // will add one for each patch
-	}
+        ConsecutiveRangeSet matls = da->queryMaterials(var, patch, timestep);
+        for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+             matlIter != matls.end(); matlIter++){
+          int matl = *matlIter;
+          // Add a new MaterialPatchData for each matl for this next patch.
+          MaterialParticleData& data = matlParticleDataMap[matl];
+          data.setMatl(matl);
+          ParticleVariableBase* pvb = NULL;
+          switch(subtype->getType()){
+          case Uintah::TypeDescription::double_type:
+            pvb = scinew ParticleVariable<double>();
+            break;
+          case Uintah::TypeDescription::float_type:
+            pvb = scinew ParticleVariable<float>();
+            break;
+          case Uintah::TypeDescription::long64_type:
+            pvb = scinew ParticleVariable<long64>();
+            break;
+          case Uintah::TypeDescription::int_type:
+            pvb = scinew ParticleVariable<int>();
+            break;
+          case Uintah::TypeDescription::Point:
+            pvb = scinew ParticleVariable<Point>();
+            break;
+          case Uintah::TypeDescription::Vector:
+            pvb = scinew ParticleVariable<Vector>(); 
+            break;
+          case Uintah::TypeDescription::Matrix3:
+            pvb = scinew ParticleVariable<Matrix3>();
+            break;
+          default:
+            cerr << "addParticleData: ParticleVariable of unsupported type: " 
+                 << subtype->getName() << '\n';
+            Thread::exitAll(-1);
+          }
+          da->query(*pvb, var, matl, patch, timestep);
+          data[var].add(pvb, patch); // will add one for each patch
+        }
       }
     }
   }
@@ -644,9 +644,9 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 
 template <class T>
 void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
-		      int matl, const Patch* patch1, const Patch* patch2,
-		      double time, int timestep, double abs_tolerance,
-		      double rel_tolerance)
+                      int matl, const Patch* patch1, const Patch* patch2,
+                      double time, int timestep, double abs_tolerance,
+                      double rel_tolerance)
 {
   ParticleVariable<T> value1;
   ParticleVariable<T> value2;
@@ -668,7 +668,7 @@ void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
   
   for ( ; iter1 != pset1->end() && iter2 != pset2->end(); iter1++, iter2++) {
     if (!compare(value1[*iter1], value2[*iter2], abs_tolerance,
-		 rel_tolerance)) {
+                 rel_tolerance)) {
       cerr << "\nValues differ too much.\n";
       displayProblemLocation(var, matl, patch1, time);    
       cerr << filebase1 << ":\n";
@@ -689,12 +689,12 @@ void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
 #endif  
 
 /*
-template <class Field, class Iterator>
-void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
-		   int matl, const Patch* patch1, const Patch* patch2,
-		   double time, double time2, double abs_tolerance,
-		   double rel_tolerance, Iterator iter1, Iterator iter2)
-{
+  template <class Field, class Iterator>
+  void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
+  int matl, const Patch* patch1, const Patch* patch2,
+  double time, double time2, double abs_tolerance,
+  double rel_tolerance, Iterator iter1, Iterator iter2)
+  {
   Field value1;
   Field value2;
   da1->query(value1, var, matl, patch1, time);
@@ -702,30 +702,30 @@ void compareFields(DataArchive* da1, DataArchive* da2, const string& var,
   IntVector dx1(value1.getHighIndex() - value1.getLowIndex());
   IntVector dx2(value2.getHighIndex() - value2.getLowIndex());
   if (value1.getHighIndex() != value2.getHighIndex() ||
-      value1.getLowIndex() != value2.getLowIndex()) {
-    cerr << "Inconsistent variable grid ranges.\n";
-    displayProblemLocation(var, matl, patch1, time);    
-    cerr << filebase1 << ": " << value1.getLowIndex() << " - " <<
-      value1.getHighIndex() << endl;
-    cerr << filebase2 << ": " << value2.getLowIndex() << " - " <<
-      value2.getHighIndex() << endl;
-    abort_uncomparable();
+  value1.getLowIndex() != value2.getLowIndex()) {
+  cerr << "Inconsistent variable grid ranges.\n";
+  displayProblemLocation(var, matl, patch1, time);    
+  cerr << filebase1 << ": " << value1.getLowIndex() << " - " <<
+  value1.getHighIndex() << endl;
+  cerr << filebase2 << ": " << value2.getLowIndex() << " - " <<
+  value2.getHighIndex() << endl;
+  abort_uncomparable();
   }
   
   for ( ; !iter1.done() && !iter2.done(); iter1++, iter2++ ) {
-    if (!compare(value1[*iter1], value2[*iter2], abs_tolerance,
-		 rel_tolerance)) {
-      cerr << "\nValues differ too much.\n";
-      displayProblemLocation(var, matl, patch1, time);    
-      cerr << filebase1 << ":\n" << value1[*iter1] << endl;
-      cerr << filebase2 << ":\n" << value2[*iter2] << endl;
-      tolerance_failure();
-    }
+  if (!compare(value1[*iter1], value2[*iter2], abs_tolerance,
+  rel_tolerance)) {
+  cerr << "\nValues differ too much.\n";
+  displayProblemLocation(var, matl, patch1, time);    
+  cerr << filebase1 << ":\n" << value1[*iter1] << endl;
+  cerr << filebase2 << ":\n" << value2[*iter2] << endl;
+  tolerance_failure();
+  }
   }
 
   // this should be true if both sets are the same size
   ASSERT(iter1.done() && iter2.done());
-}
+  }
 */
 
 class FieldComparator
@@ -735,15 +735,15 @@ public:
   virtual ~FieldComparator() {};
   virtual void
   compareFields(DataArchive* da1, DataArchive* da2, const string& var,
-		ConsecutiveRangeSet matls, const Patch* patch,
-		const Array3<const Patch*>& patch2Map,
-		double time, int timestep, double abs_tolerance,
-		double rel_tolerance) = 0;
+                ConsecutiveRangeSet matls, const Patch* patch,
+                const Array3<const Patch*>& patch2Map,
+                double time, int timestep, double abs_tolerance,
+                double rel_tolerance) = 0;
 
   static FieldComparator*
   makeFieldComparator(const Uintah::TypeDescription* td,
-		      const Uintah::TypeDescription* subtype,
-		      const Patch* patch);
+                      const Uintah::TypeDescription* subtype,
+                      const Patch* patch);
 };
 
 template <class Field, class Iterator>
@@ -756,17 +756,17 @@ public:
   
   virtual void
   compareFields(DataArchive* da1, DataArchive* da2, const string& var,
-		ConsecutiveRangeSet matls, const Patch* patch,
-		const Array3<const Patch*>& patch2Map,
-		double time, int timestep, double abs_tolerance,
-		double rel_tolerance);
+                ConsecutiveRangeSet matls, const Patch* patch,
+                const Array3<const Patch*>& patch2Map,
+                double time, int timestep, double abs_tolerance,
+                double rel_tolerance);
 private:
   Iterator begin_;
 };
 
 FieldComparator* FieldComparator::
 makeFieldComparator(const Uintah::TypeDescription* td,
-		    const Uintah::TypeDescription* subtype, const Patch* patch)
+                    const Uintah::TypeDescription* subtype, const Patch* patch)
 {
   switch(td->getType()){
   case Uintah::TypeDescription::ParticleVariable:
@@ -777,22 +777,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
-	SpecificFieldComparator<NCVariable<double>, NodeIterator>(iter);
+        SpecificFieldComparator<NCVariable<double>, NodeIterator>(iter);
     case Uintah::TypeDescription::float_type:
       return scinew
-	SpecificFieldComparator<NCVariable<float>, NodeIterator>(iter);
+        SpecificFieldComparator<NCVariable<float>, NodeIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
-	SpecificFieldComparator<NCVariable<int>, NodeIterator>(iter);
+        SpecificFieldComparator<NCVariable<int>, NodeIterator>(iter);
     case Uintah::TypeDescription::Point:
       return scinew
-	SpecificFieldComparator<NCVariable<Point>, NodeIterator>(iter);
+        SpecificFieldComparator<NCVariable<Point>, NodeIterator>(iter);
     case Uintah::TypeDescription::Vector:
       return scinew
-	SpecificFieldComparator<NCVariable<Vector>, NodeIterator>(iter);
+        SpecificFieldComparator<NCVariable<Vector>, NodeIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
       return scinew
-	SpecificFieldComparator<NCVariable<Matrix3>, NodeIterator>(iter);
+        SpecificFieldComparator<NCVariable<Matrix3>, NodeIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: NC Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
@@ -803,22 +803,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
-	SpecificFieldComparator<CCVariable<double>, CellIterator>(iter);
+        SpecificFieldComparator<CCVariable<double>, CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
       return scinew
-	SpecificFieldComparator<CCVariable<float>, CellIterator>(iter);
+        SpecificFieldComparator<CCVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
-	SpecificFieldComparator<CCVariable<int>, CellIterator>(iter);
+        SpecificFieldComparator<CCVariable<int>, CellIterator>(iter);
     case Uintah::TypeDescription::Point:
       return scinew
-	SpecificFieldComparator<CCVariable<Point>, CellIterator>(iter);
+        SpecificFieldComparator<CCVariable<Point>, CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
       return scinew
-	SpecificFieldComparator<CCVariable<Vector>, CellIterator>(iter);
+        SpecificFieldComparator<CCVariable<Vector>, CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
       return scinew
-	SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
+        SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: CC Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
@@ -829,22 +829,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
-	SpecificFieldComparator<SFCXVariable<double>, CellIterator>(iter);
+        SpecificFieldComparator<SFCXVariable<double>, CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
       return scinew
-	SpecificFieldComparator<SFCXVariable<float>, CellIterator>(iter);
+        SpecificFieldComparator<SFCXVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
-	SpecificFieldComparator<SFCXVariable<int>, CellIterator>(iter);
+        SpecificFieldComparator<SFCXVariable<int>, CellIterator>(iter);
     case Uintah::TypeDescription::Point:
       return scinew
-	SpecificFieldComparator<SFCXVariable<Point>, CellIterator>(iter);
+        SpecificFieldComparator<SFCXVariable<Point>, CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
       return scinew
-	SpecificFieldComparator<SFCXVariable<Vector>, CellIterator>(iter);
+        SpecificFieldComparator<SFCXVariable<Vector>, CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
       return scinew
-	SpecificFieldComparator<SFCXVariable<Matrix3>, CellIterator>(iter);
+        SpecificFieldComparator<SFCXVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCX Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
@@ -855,22 +855,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
-	SpecificFieldComparator<SFCYVariable<double>, CellIterator>(iter);
+        SpecificFieldComparator<SFCYVariable<double>, CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
       return scinew
-	SpecificFieldComparator<SFCYVariable<float>, CellIterator>(iter);
+        SpecificFieldComparator<SFCYVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
-	SpecificFieldComparator<SFCYVariable<int>, CellIterator>(iter);
+        SpecificFieldComparator<SFCYVariable<int>, CellIterator>(iter);
     case Uintah::TypeDescription::Point:
       return scinew
-	SpecificFieldComparator<SFCYVariable<Point>, CellIterator>(iter);
+        SpecificFieldComparator<SFCYVariable<Point>, CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
       return scinew
-	SpecificFieldComparator<SFCYVariable<Vector>, CellIterator>(iter);
+        SpecificFieldComparator<SFCYVariable<Vector>, CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
       return scinew
-	SpecificFieldComparator<SFCYVariable<Matrix3>, CellIterator>(iter);
+        SpecificFieldComparator<SFCYVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCY Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
@@ -881,22 +881,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
-	SpecificFieldComparator<SFCZVariable<double>, CellIterator>(iter);
+        SpecificFieldComparator<SFCZVariable<double>, CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
       return scinew
-	SpecificFieldComparator<SFCZVariable<float>, CellIterator>(iter);
+        SpecificFieldComparator<SFCZVariable<float>, CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
       return scinew
-	SpecificFieldComparator<SFCZVariable<int>, CellIterator>(iter);
+        SpecificFieldComparator<SFCZVariable<int>, CellIterator>(iter);
     case Uintah::TypeDescription::Point:
       return scinew
-	SpecificFieldComparator<SFCZVariable<Point>, CellIterator>(iter);
+        SpecificFieldComparator<SFCZVariable<Point>, CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
       return scinew
-	SpecificFieldComparator<SFCZVariable<Vector>, CellIterator>(iter);
+        SpecificFieldComparator<SFCZVariable<Vector>, CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
       return scinew
-	SpecificFieldComparator<SFCZVariable<Matrix3>, CellIterator>(iter);
+        SpecificFieldComparator<SFCZVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
       Thread::exitAll(-1);
@@ -912,16 +912,16 @@ makeFieldComparator(const Uintah::TypeDescription* td,
 template <class Field, class Iterator>
 void SpecificFieldComparator<Field, Iterator>::
 compareFields(DataArchive* da1, DataArchive* da2, const string& var,
-	      ConsecutiveRangeSet matls, const Patch* patch,
-	      const Array3<const Patch*>& patch2Map,
-	      double time1, int timestep, double abs_tolerance,
-	      double rel_tolerance)
+              ConsecutiveRangeSet matls, const Patch* patch,
+              const Array3<const Patch*>& patch2Map,
+              double time1, int timestep, double abs_tolerance,
+              double rel_tolerance)
 {
   Field* pField2;
   bool firstMatl = true;
   
   for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		matlIter != matls.end(); matlIter++){
+       matlIter != matls.end(); matlIter++){
     int matl = *matlIter;
     Field field;
     da1->query(field, var, matl, patch, timestep);
@@ -932,29 +932,29 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
       const Patch* patch2 = patch2Map[*iter];
       findIter = patch2FieldMap.find(patch2);
       if (findIter == patch2FieldMap.end()) {
-	if (firstMatl) { // check only needs to be made the first round
-	  ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
-	  ASSERT(matls == matls2); // check should have been made previously
-	}
-	pField2 = scinew Field();
-	patch2FieldMap[patch2] = pField2;
-	da2->query(*pField2, var, matl, patch2, timestep);
+        if (firstMatl) { // check only needs to be made the first round
+          ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
+          ASSERT(matls == matls2); // check should have been made previously
+        }
+        pField2 = scinew Field();
+        patch2FieldMap[patch2] = pField2;
+        da2->query(*pField2, var, matl, patch2, timestep);
       }
       else {
-	pField2 = (*findIter).second;
+        pField2 = (*findIter).second;
       }
       if (!compare(field[*iter], (*pField2)[*iter], abs_tolerance,
-		   rel_tolerance)) {
-	cerr << "DIFFERENCE " << *iter << "  ";
-	displayProblemLocation(var, matl, patch, patch2, time1);
+                   rel_tolerance)) {
+        cerr << "DIFFERENCE " << *iter << "  ";
+        displayProblemLocation(var, matl, patch, patch2, time1);
  
-       cerr << filebase1 << " (1)\t\t" << filebase2 << " (2)"<<endl;
-       print(cerr, field[*iter]);
-       cerr << "\t\t";
-       print(cerr, (*pField2)[*iter]);
-       cerr << endl;
+        cerr << filebase1 << " (1)\t\t" << filebase2 << " (2)"<<endl;
+        print(cerr, field[*iter]);
+        cerr << "\t\t";
+        print(cerr, (*pField2)[*iter]);
+        cerr << endl;
 
-	tolerance_failure();
+        tolerance_failure();
       }
     }
 
@@ -973,7 +973,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 // The same doesn't work if you used cells because nodes can go beyond
 // cells (when there is no neighbor on the greater side).
 void buildPatchMap(LevelP level, const string& filebase,
-		   Array3<const Patch*>& patchMap, double time)
+                   Array3<const Patch*>& patchMap, double time)
 {
   const PatchSet* allPatches = level->allPatches();
   const PatchSubset* patches = allPatches->getUnion();
@@ -998,16 +998,16 @@ void buildPatchMap(LevelP level, const string& filebase,
     ASSERT(Min(patch->getNodeLowIndex(), low) == low);
     ASSERT(Max(patch->getNodeHighIndex(), high) == high);
     patchMap.rewindow(patch->getNodeLowIndex(),
-		      patch->getNodeHighIndex());
+                      patch->getNodeHighIndex());
     for (Array3<const Patch*>::iterator iter = patchMap.begin();
-	 iter != patchMap.end(); iter++) {
+         iter != patchMap.end(); iter++) {
       if (*iter != 0) {
         static ProgressiveWarning pw("Two patches on the same grid overlap", 10);
         if (pw.invoke())
           cerr << "Patches " << patch->getID() << " and " 
                << (*iter)->getID() << " overlap on the same file at time " << time
                << " in " << filebase << " at index " << iter.getIndex() << endl;
-	//abort_uncomparable();
+        //abort_uncomparable();
         
         // in some cases, we can have overlapping patches, where an extra cell/node 
         // overlaps an interior cell/node of another patch.  We prefer the interior
@@ -1022,7 +1022,7 @@ void buildPatchMap(LevelP level, const string& filebase,
         }
       }
       else
-	*iter = patch;
+        *iter = patch;
     }
   }
   patchMap.rewindow(low, high);
@@ -1042,15 +1042,15 @@ main(int argc, char** argv)
     string s = argv[i];
     if(s == "-abs_tolerance"){
       if (++i == argc)
-	usage("-abs_tolerance, no value given", argv[0]);
+        usage("-abs_tolerance, no value given", argv[0]);
       else
-	abs_tolerance = atof(argv[i]);
+        abs_tolerance = atof(argv[i]);
     }
     else if(s == "-rel_tolerance"){
       if (++i == argc)
-	usage("-rel_tolerance, no value given", argv[0]);
+        usage("-rel_tolerance, no value given", argv[0]);
       else
-	rel_tolerance = atof(argv[i]);
+        rel_tolerance = atof(argv[i]);
     }
     else if(s == "-as_warnings") {
       tolerance_as_warnings = true;
@@ -1073,13 +1073,13 @@ main(int argc, char** argv)
     }
     else {
       if (filebase1 != "") {
-	if (filebase2 != "")
-	  usage(s, argv[0]);
-	else
-	  filebase2 = argv[i];
+        if (filebase2 != "")
+          usage(s, argv[0]);
+        else
+          filebase2 = argv[i];
       }
       else
-	filebase1 = argv[i];
+        filebase1 = argv[i];
     }
   }
 
@@ -1163,21 +1163,21 @@ main(int argc, char** argv)
     
     for (unsigned int i = 0; i < vars.size(); i++) {
       if (vars[i] != vars2[i]) {
-	cerr << "Variable " << vars[i] << " in " << filebase1
-	     << " does not match\n";
-	cerr << "variable " << vars2[i] << " in " << filebase2 << endl;
-	abort_uncomparable();
+        cerr << "Variable " << vars[i] << " in " << filebase1
+             << " does not match\n";
+        cerr << "variable " << vars2[i] << " in " << filebase2 << endl;
+        abort_uncomparable();
       }
       
       if (types[i] != types2[i]) {
-	cerr << "Variable " << vars[i]
-	     << " does not have the same type in both uda directories.\n";
-	cerr << "In " << filebase1 << " its type is " << types[i]->getName()
-	     << endl;
-	cerr << "In " << filebase2 << " its type is " << types2[i]->getName()
-	     << endl;
-	abort_uncomparable();
-      }	
+        cerr << "Variable " << vars[i]
+             << " does not have the same type in both uda directories.\n";
+        cerr << "In " << filebase1 << " its type is " << types[i]->getName()
+             << endl;
+        cerr << "In " << filebase2 << " its type is " << types2[i]->getName()
+             << endl;
+        abort_uncomparable();
+      } 
     }
       
     vector<int> index;
@@ -1191,11 +1191,11 @@ main(int argc, char** argv)
 
     for(unsigned long t = 0; t < times.size() && t < times2.size(); t++){
       if (!compare(times[t], times2[t], abs_tolerance, rel_tolerance)) {
-	cerr << "Timestep at time " << times[t] << " in " << filebase1
-	     << " does not match\n";
-	cerr << "timestep at time " << times2[t] << " in " << filebase2
-	     << " within the allowable tolerance.\n";
-	abort_uncomparable();
+        cerr << "Timestep at time " << times[t] << " in " << filebase1
+             << " does not match\n";
+        cerr << "timestep at time " << times2[t] << " in " << filebase2
+             << " within the allowable tolerance.\n";
+        abort_uncomparable();
       }
       
       double time1 = times[t];
@@ -1205,298 +1205,299 @@ main(int argc, char** argv)
       GridP grid2 = da2->queryGrid(t);
 
       if (grid->numLevels() != grid2->numLevels()) {
-	cerr << "Grid at time " << time1 << " in " << filebase1
-	     << " has " << grid->numLevels() << " levels.\n";
-	cerr << "Grid at time " << time2 << " in " << filebase2
-	     << " has " << grid2->numLevels() << " levels.\n";
-	abort_uncomparable();
+        cerr << "Grid at time " << time1 << " in " << filebase1
+             << " has " << grid->numLevels() << " levels.\n";
+        cerr << "Grid at time " << time2 << " in " << filebase2
+             << " has " << grid2->numLevels() << " levels.\n";
+        abort_uncomparable();
       }
 
       // do some consistency checking first
       bool hasParticleIDs = false;
       bool hasParticleData = false;
       for(int v=0;v<(int)vars.size();v++){
-	std::string var = vars[v];
-	if (var == "p.particleID")
-	  hasParticleIDs = true;
-	if (types[v]->getType() == Uintah::TypeDescription::ParticleVariable)
-	  hasParticleData = true;
+        std::string var = vars[v];
+        if (var == "p.particleID")
+          hasParticleIDs = true;
+        if (types[v]->getType() == Uintah::TypeDescription::ParticleVariable)
+          hasParticleData = true;
 
-	for(int l=0;l<grid->numLevels();l++){
-	  LevelP level = grid->getLevel(l);
-	  LevelP level2 = grid2->getLevel(l);
-	  ConsecutiveRangeSet matls;
-	  bool first = true;
-	  Level::const_patchIterator iter;
-	  for(iter = level->patchesBegin();
-	      iter != level->patchesEnd(); iter++) {
-	    const Patch* patch = *iter;
-	    if (first) {
-	      matls = da1->queryMaterials(var, patch, t);
-	    }
-	    else if (matls != da1->queryMaterials(var, patch, t)) {
-	      cerr << "The material set is not consistent for variable "
-		   << var << " across patches at time " << time1 << endl;
-	      cerr << "Previously was: " << matls << endl;
-	      cerr << "But on patch " << patch->getID() << ": " <<
-		da1->queryMaterials(var, patch, t) << endl;
-	      abort_uncomparable();
-	    }
-	    first = false;
-	  }
-	  ASSERT(!first); /* More serious problems would show up if this
-			     assertion would fail */
-	  for(iter = level2->patchesBegin();
-	      iter != level2->patchesEnd(); iter++) {
-	    const Patch* patch = *iter;
-	    if (matls != da2->queryMaterials(var, patch, t)) {
-	      cerr << "Inconsistent material sets for variable "
-		   << var << " on patch2 = " << patch->getID()
-		   << ", time " << time1 << endl;
-	      cerr << filebase1 << " (1) has material set: " << matls << ".\n";
-	      cerr << filebase2 << " (2) has material set: "
-		   << da2->queryMaterials(var, patch, t) << ".\n";
-	      abort_uncomparable();  
-	    }
-	  }
-	}
+        for(int l=0;l<grid->numLevels();l++){
+          LevelP level = grid->getLevel(l);
+          LevelP level2 = grid2->getLevel(l);
+          ConsecutiveRangeSet matls;
+          bool first = true;
+          Level::const_patchIterator iter;
+          for(iter = level->patchesBegin();
+              iter != level->patchesEnd(); iter++) {
+            const Patch* patch = *iter;
+            if (first) {
+              matls = da1->queryMaterials(var, patch, t);
+            }
+            else if (matls != da1->queryMaterials(var, patch, t)) {
+              cerr << "The material set is not consistent for variable "
+                   << var << " across patches at time " << time1 << endl;
+              cerr << "Previously was: " << matls << endl;
+              cerr << "But on patch " << patch->getID() << ": " <<
+                da1->queryMaterials(var, patch, t) << endl;
+              abort_uncomparable();
+            }
+            first = false;
+          }
+          ASSERT(!first); /* More serious problems would show up if this
+                             assertion would fail */
+          for(iter = level2->patchesBegin();
+              iter != level2->patchesEnd(); iter++) {
+            const Patch* patch = *iter;
+            if (matls != da2->queryMaterials(var, patch, t)) {
+              cerr << "Inconsistent material sets for variable "
+                   << var << " on patch2 = " << patch->getID()
+                   << ", time " << time1 << endl;
+              cerr << filebase1 << " (1) has material set: " << matls << ".\n";
+              cerr << filebase2 << " (2) has material set: "
+                   << da2->queryMaterials(var, patch, t) << ".\n";
+              abort_uncomparable();  
+            }
+          }
+        }
       }
 
       /* COMPARE PARTICLE VARIABLES */
       if (hasParticleData && !hasParticleIDs) {
-	// Compare particle variables without p.particleID -- patches
-	// must be consistent.
-	cerr << "Particle data exists without p.particleID output.\n";
-	cerr << "There must be patch consistency in order to do this comparison.\n";
-	cerr << "In order to make a comparison between udas with different\n"
-	     << "number or distribution of patches, you must either output\n"
-	     << "p.particleID or don't output any particle variables at all.\n";
-	cerr << endl;
-	
-	for(int v=0;v<(int)vars.size();v++){
-	  std::string var = vars[v];
-	  const Uintah::TypeDescription* td = types[v];
-	  const Uintah::TypeDescription* subtype = td->getSubType();
-	  cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
-	  if (td->getName() == string("-- unknown type --")) {
-	    cerr << "\t\tParticleVariable of unknown type";
-	    if (strict_types) {
-	      cerr << ".\nQuitting.\n";
-	      Thread::exitAll(-1);
-	    }
-	    cerr << "; skipping comparison...\n";
-	    continue;
-	  }
-	  for(int l=0;l<grid->numLevels();l++){
-	    LevelP level = grid->getLevel(l);
-	    LevelP level2 = grid2->getLevel(l);
-	    if (level->numPatches() != level2->numPatches()) {
-	      cerr << "Inconsistent number of patches on level " << l <<
-		" at time " << time1 << ":" << endl;
-	      cerr << filebase1 << " has " << level->numPatches()
-		   << " patches.\n";
-	      cerr << filebase2 << " has " << level2->numPatches()
-		   << " patches.\n";
-	      abort_uncomparable();
-	    }
+        // Compare particle variables without p.particleID -- patches
+        // must be consistent.
+        cerr << "Particle data exists without p.particleID output.\n";
+        cerr << "There must be patch consistency in order to do this comparison.\n";
+        cerr << "In order to make a comparison between udas with different\n"
+             << "number or distribution of patches, you must either output\n"
+             << "p.particleID or don't output any particle variables at all.\n";
+        cerr << endl;
+        
+        for(int v=0;v<(int)vars.size();v++){
+          std::string var = vars[v];
+          const Uintah::TypeDescription* td = types[v];
+          const Uintah::TypeDescription* subtype = td->getSubType();
+          cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
+          if (td->getName() == string("-- unknown type --")) {
+            cerr << "\t\tParticleVariable of unknown type";
+            if (strict_types) {
+              cerr << ".\nQuitting.\n";
+              Thread::exitAll(-1);
+            }
+            cerr << "; skipping comparison...\n";
+            continue;
+          }
+          for(int l=0;l<grid->numLevels();l++){
+            LevelP level = grid->getLevel(l);
+            LevelP level2 = grid2->getLevel(l);
+            if (level->numPatches() != level2->numPatches()) {
+              cerr << "Inconsistent number of patches on level " << l <<
+                " at time " << time1 << ":" << endl;
+              cerr << filebase1 << " has " << level->numPatches()
+                   << " patches.\n";
+              cerr << filebase2 << " has " << level2->numPatches()
+                   << " patches.\n";
+              abort_uncomparable();
+            }
 
-	  
-	    Level::const_patchIterator iter2 = level2->patchesBegin();
-	    for(Level::const_patchIterator iter = level->patchesBegin();
-		iter != level->patchesEnd(); iter++, iter2++){
-	      const Patch* patch = *iter;
-	      const Patch* patch2 = *iter2;
+          
+            Level::const_patchIterator iter2 = level2->patchesBegin();
+            for(Level::const_patchIterator iter = level->patchesBegin();
+                iter != level->patchesEnd(); iter++, iter2++){
+              const Patch* patch = *iter;
+              const Patch* patch2 = *iter2;
 
-	      if (patch->getID() != patch2->getID()) {
-		cerr << "Inconsistent patch ids on level " << l
-		     << " at time " << time1 << endl;
-		cerr << filebase1 << " has patch id " << patch->getID()
-		     << " where\n";
-		cerr << filebase2 << " has patch id " << patch2->getID() << endl;
-		abort_uncomparable();  
-	      }
-	    
-	      cerr << "\t\tPatch: " << patch->getID() << "\n";
+              if (patch->getID() != patch2->getID()) {
+                cerr << "Inconsistent patch ids on level " << l
+                     << " at time " << time1 << endl;
+                cerr << filebase1 << " has patch id " << patch->getID()
+                     << " where\n";
+                cerr << filebase2 << " has patch id " << patch2->getID() << endl;
+                abort_uncomparable();  
+              }
+            
+              cerr << "\t\tPatch: " << patch->getID() << "\n";
 
-	      if (!compare(patch->getBox().lower(), patch2->getBox().lower(),
-			   abs_tolerance, rel_tolerance) ||
-		  !compare(patch->getBox().upper(), patch2->getBox().upper(),
-			   abs_tolerance, rel_tolerance)) {
-		cerr << "Inconsistent patch bounds on patch " << patch->getID()
-		     << " at time " << time1 << endl;
-		cerr << filebase1 << " has bounds " << patch->getBox().lower()
-		     << " - " << patch->getBox().upper() << ".\n";
-		cerr << filebase2 << " has bounds " << patch2->getBox().lower()
-		     << " - " << patch2->getBox().upper() << ".\n";
-		cerr << "Difference is: " << patch->getBox().lower() - patch2->getBox().lower() << " - " << patch->getBox().upper() - patch2->getBox().upper() << endl;
-		abort_uncomparable();  
-	      }
+              if (!compare(patch->getBox().lower(), patch2->getBox().lower(),
+                           abs_tolerance, rel_tolerance) ||
+                  !compare(patch->getBox().upper(), patch2->getBox().upper(),
+                           abs_tolerance, rel_tolerance)) {
+                cerr << "Inconsistent patch bounds on patch " << patch->getID()
+                     << " at time " << time1 << endl;
+                cerr << filebase1 << " has bounds " << patch->getBox().lower()
+                     << " - " << patch->getBox().upper() << ".\n";
+                cerr << filebase2 << " has bounds " << patch2->getBox().lower()
+                     << " - " << patch2->getBox().upper() << ".\n";
+                cerr << "Difference is: " << patch->getBox().lower() - patch2->getBox().lower() << " - " << patch->getBox().upper() - patch2->getBox().upper() << endl;
+                abort_uncomparable();  
+              }
 
-	      ConsecutiveRangeSet matls = da1->queryMaterials(var, patch,t);
-	      ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2,t);
-	      ASSERT(matls == matls2); // should have already been checked
-	      // loop over materials
-	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
-		  matlIter != matls.end(); matlIter++){
-		int matl = *matlIter;
-		cerr << "\t\t\tMaterial: " << matl << "\n";
-		if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
-		  switch(subtype->getType()){
-		  case Uintah::TypeDescription::double_type:
-		    compareParticles<double>(da1, da2, var, matl, patch, patch2,
-					     time1, t, abs_tolerance, rel_tolerance);
-		    break;
-		  case Uintah::TypeDescription::float_type:
-		    compareParticles<float>(da1, da2, var, matl, patch, patch2,
-					     time1, t, abs_tolerance, rel_tolerance);
-		    break;
-		  case Uintah::TypeDescription::int_type:
-		    compareParticles<int>(da1, da2, var, matl, patch, patch2,
+              ConsecutiveRangeSet matls = da1->queryMaterials(var, patch,t);
+              ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2,t);
+              ASSERT(matls == matls2); // should have already been checked
+              // loop over materials
+              for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  matlIter != matls.end(); matlIter++){
+                int matl = *matlIter;
+                cerr << "\t\t\tMaterial: " << matl << "\n";
+                if (td->getType() == Uintah::TypeDescription::ParticleVariable) {
+                  switch(subtype->getType()){
+                  case Uintah::TypeDescription::double_type:
+                    compareParticles<double>(da1, da2, var, matl, patch, patch2,
+                                             time1, t, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::float_type:
+                    compareParticles<float>(da1, da2, var, matl, patch, patch2,
+                                            time1, t, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::int_type:
+                    compareParticles<int>(da1, da2, var, matl, patch, patch2,
                                           time1, t, abs_tolerance, rel_tolerance);
-		    break;
-		  case Uintah::TypeDescription::Point:
-		    compareParticles<Point>(da1, da2, var, matl, patch, patch2,
-					    time1, t, abs_tolerance, rel_tolerance);
-		    break;
-		  case Uintah::TypeDescription::Vector:
-		    compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
-					     time1, t, abs_tolerance, rel_tolerance);
-		    break;
-		  case Uintah::TypeDescription::Matrix3:
-		    compareParticles<Matrix3>(da1, da2, var, matl, patch, patch2,
-					      time1, t, abs_tolerance, rel_tolerance);
-		    break;
-		  default:
-		    cerr << "main: ParticleVariable of unsupported type: " << subtype->getName() << '\n';
-		    Thread::exitAll(-1);
-		  }
-		}
-	      }
-	    }
-	  }
-	}
+                    break;
+                  case Uintah::TypeDescription::Point:
+                    compareParticles<Point>(da1, da2, var, matl, patch, patch2,
+                                            time1, t, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::Vector:
+                    compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
+                                             time1, t, abs_tolerance, rel_tolerance);
+                    break;
+                  case Uintah::TypeDescription::Matrix3:
+                    compareParticles<Matrix3>(da1, da2, var, matl, patch, patch2,
+                                              time1, t, abs_tolerance, rel_tolerance);
+                    break;
+                  default:
+                    cerr << "main: ParticleVariable of unsupported type: " << subtype->getName() << '\n';
+                    Thread::exitAll(-1);
+                  }
+                }
+              }
+            }
+          }
+        }
       }
       else if (hasParticleIDs) {
-	// Compare Particle variables with p.particleID -- patches don't
-	// need to be cosistent.  It will gather and sort the particles
-	// so they can be compared in particleID order.
-	for(int l=0;l<grid->numLevels();l++){
-	  LevelP level = grid->getLevel(l);
-	  LevelP level2 = grid2->getLevel(l);
-	  MaterialParticleDataMap matlParticleDataMap1;
-	  MaterialParticleDataMap matlParticleDataMap2;
-	  addParticleData(matlParticleDataMap1, da1, vars, types, level,
-			  t);
-	  addParticleData(matlParticleDataMap2, da2, vars2, types2, level2,
-			  t);
-	  MaterialParticleDataMap::iterator matlIter;
-	  MaterialParticleDataMap::iterator matlIter2;
-	  
-	  matlIter = matlParticleDataMap1.begin();
-	  matlIter2 = matlParticleDataMap2.begin();
-	  for (; (matlIter != matlParticleDataMap1.end()) &&
-		 (matlIter2 != matlParticleDataMap2.end());
-	       matlIter++, matlIter2++) {
-	    // This assert should already have been check above whan comparing
-	    // material sets.
-	    ASSERT((*matlIter).first == (*matlIter).first);
-	    (*matlIter).second.compare((*matlIter2).second, time1, time2,
-				       abs_tolerance, rel_tolerance);
-	  }
-	  // This assert should already have been check above whan comparing
-	  // material sets.
-	  ASSERT(matlIter == matlParticleDataMap1.end() &&
-		 matlIter2 == matlParticleDataMap2.end());
-	}
+        // Compare Particle variables with p.particleID -- patches don't
+        // need to be cosistent.  It will gather and sort the particles
+        // so they can be compared in particleID order.
+        for(int l=0;l<grid->numLevels();l++){
+          LevelP level = grid->getLevel(l);
+          LevelP level2 = grid2->getLevel(l);
+          MaterialParticleDataMap matlParticleDataMap1;
+          MaterialParticleDataMap matlParticleDataMap2;
+          addParticleData(matlParticleDataMap1, da1, vars, types, level,
+                          t);
+          addParticleData(matlParticleDataMap2, da2, vars2, types2, level2,
+                          t);
+          MaterialParticleDataMap::iterator matlIter;
+          MaterialParticleDataMap::iterator matlIter2;
+          
+          matlIter = matlParticleDataMap1.begin();
+          matlIter2 = matlParticleDataMap2.begin();
+          for (; (matlIter != matlParticleDataMap1.end()) &&
+                 (matlIter2 != matlParticleDataMap2.end());
+               matlIter++, matlIter2++) {
+            // This assert should already have been check above whan comparing
+            // material sets.
+            ASSERT((*matlIter).first == (*matlIter).first);
+            (*matlIter).second.compare((*matlIter2).second, time1, time2,
+                                       abs_tolerance, rel_tolerance);
+          }
+          // This assert should already have been check above whan comparing
+          // material sets.
+          ASSERT(matlIter == matlParticleDataMap1.end() &&
+                 matlIter2 == matlParticleDataMap2.end());
+        }
       }
 
-	
+        
       for(int v=0;v<(int)vars.size();v++){
-	std::string var = vars[v];
-	const Uintah::TypeDescription* td = types[v];
-	const Uintah::TypeDescription* subtype = td->getSubType();
-	if (td->getType() == Uintah::TypeDescription::ParticleVariable)
-	  continue;
-	cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
-	if (td->getName() == string("-- unknown type --")) {
-	  cerr << "\t\tParticleVariable of unknown type";
-	  if (strict_types) {
-	    cerr << ".\nQuitting.\n";
-	    Thread::exitAll(-1);
-	  }
-	  cerr << "; skipping comparison...\n";
-	  continue;
-	}
-	
-	for(int l=0;l<grid->numLevels();l++){
-	  LevelP level = grid->getLevel(l);
-	  LevelP level2 = grid2->getLevel(l);
-	 
-    //check patch coverage
-    deque<Region> region1, region2, difference1, difference2;
+        std::string var = vars[v];
+        const Uintah::TypeDescription* td = types[v];
+        const Uintah::TypeDescription* subtype = td->getSubType();
+        if (td->getType() == Uintah::TypeDescription::ParticleVariable)
+          continue;
+        cerr << "\tVariable: " << var << ", type " << td->getName() << "\n";
+        if (td->getName() == string("-- unknown type --")) {
+          cerr << "\t\tParticleVariable of unknown type";
+          if (strict_types) {
+            cerr << ".\nQuitting.\n";
+            Thread::exitAll(-1);
+          }
+          cerr << "; skipping comparison...\n";
+          continue;
+        }
+        
+        for(int l=0;l<grid->numLevels();l++){
+          LevelP level = grid->getLevel(l);
+          LevelP level2 = grid2->getLevel(l);
+         
+          //check patch coverage
+          deque<Region> region1, region2, difference1, difference2;
 
-    for(int i=0;i<level->numPatches();i++)
-    {
-      const Patch* patch=level->getPatch(i);
-      region1.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
-    }
-    for(int i=0;i<level2->numPatches();i++)
-    {
-      const Patch* patch=level2->getPatch(i);
-      region2.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
-    }
-    difference1=Region::difference(region1,region2);
-    difference2=Region::difference(region1,region2);
+          for(int i=0;i<level->numPatches();i++)
+            {
+              const Patch* patch=level->getPatch(i);
+              region1.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
+            }
+          for(int i=0;i<level2->numPatches();i++)
+            {
+              const Patch* patch=level2->getPatch(i);
+              region2.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
+            }
 
-    if(!difference1.empty() || !difference2.empty())
-    {
-        cerr << "Patches on level:" << l << " do not cover the same area\n";
-        abort_uncomparable();
-    }
-	  // map nodes to patches in level and level2 respectively
-	  Array3<const Patch*> patchMap;
-	  Array3<const Patch*> patch2Map;
-	  
-	  buildPatchMap(level, filebase1, patchMap, time1);
-	  buildPatchMap(level2, filebase2, patch2Map, time2);
-	  
-	  for (Array3<const Patch*>::iterator nodePatchIter = patchMap.begin();
-	       nodePatchIter != patchMap.end(); nodePatchIter++) {
-	    IntVector index = nodePatchIter.getIndex();
-	    if ((patchMap[index] == 0 && patch2Map[index] != 0) ||
-		(patch2Map[index] == 0 && patchMap[index] != 0)) {
-	      cerr << "Inconsistent patch coverage on level " << l
-		   << " at time " << time1 << endl;
-	      if (patchMap[index] != 0) {
-		cerr << index << " is covered by " << filebase1 << endl
-		     << " and not " << filebase2 << endl;
-	      }
-	      else {
-		cerr << index << " is covered by " << filebase2 << endl
-		     << " and not " << filebase1 << endl;
-	      }
-	      abort_uncomparable();
-	    }
-	  }
-	  
-	  Level::const_patchIterator iter;
-	  
-	  for(iter = level->patchesBegin();
-	      iter != level->patchesEnd(); iter++) {
-	    const Patch* patch = *iter;
+          difference1 = Region::difference(region1,region2);
+          difference2 = Region::difference(region1,region2);
+
+          if(!difference1.empty() || !difference2.empty())
+            {
+              cerr << "Patches on level:" << l << " do not cover the same area\n";
+              abort_uncomparable();
+            }
+          // map nodes to patches in level and level2 respectively
+          Array3<const Patch*> patchMap;
+          Array3<const Patch*> patch2Map;
+          
+          buildPatchMap(level, filebase1, patchMap, time1);
+          buildPatchMap(level2, filebase2, patch2Map, time2);
+          
+          for (Array3<const Patch*>::iterator nodePatchIter = patchMap.begin();
+               nodePatchIter != patchMap.end(); nodePatchIter++) {
+            IntVector index = nodePatchIter.getIndex();
+            if ((patchMap[index] == 0 && patch2Map[index] != 0) ||
+                (patch2Map[index] == 0 && patchMap[index] != 0)) {
+              cerr << "Inconsistent patch coverage on level " << l
+                   << " at time " << time1 << endl;
+              if (patchMap[index] != 0) {
+                cerr << index << " is covered by " << filebase1 << endl
+                     << " and not " << filebase2 << endl;
+              }
+              else {
+                cerr << index << " is covered by " << filebase2 << endl
+                     << " and not " << filebase1 << endl;
+              }
+              abort_uncomparable();
+            }
+          }
+          
+          Level::const_patchIterator iter;
+          
+          for(iter = level->patchesBegin();
+              iter != level->patchesEnd(); iter++) {
+            const Patch* patch = *iter;
  
-	    ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, t);
+            ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, t);
 
-	    FieldComparator* comparator =
-	      FieldComparator::makeFieldComparator(td, subtype, patch);
-	    if (comparator != 0) {
-	      comparator->compareFields(da1, da2, var, matls, patch,
-					patch2Map, time1, t,
-					abs_tolerance, rel_tolerance);
-	      delete comparator;
-	    }
-	  }
-	}
+            FieldComparator* comparator =
+              FieldComparator::makeFieldComparator(td, subtype, patch);
+            if (comparator != 0) {
+              comparator->compareFields(da1, da2, var, matls, patch,
+                                        patch2Map, time1, t,
+                                        abs_tolerance, rel_tolerance);
+              delete comparator;
+            }
+          }
+        }
       }
     }
     if (times.size() != times2.size()) {

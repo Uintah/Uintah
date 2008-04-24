@@ -118,7 +118,7 @@ main( int argc, char *argv[] )
     } else if(s == "-matl"){
       d_matl = atoi(argv[i]);
     }else if(s == "-verbose"){
-      d_verbose == true;
+      d_verbose = true;
     } else if(s == "-v") {
       if(++i == argc){
         usage("You must provide a variable name for -v",
@@ -159,7 +159,7 @@ main( int argc, char *argv[] )
   double A;
   double dyVis;
   double p_ref;
-  double cu, cv, cw, cp;
+  double cu = -1, cv = -1, cw = -1, cp = -1;
   Vector resolution;
    
   //__________________________________

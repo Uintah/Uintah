@@ -8,7 +8,7 @@ class LinearMMS : public MMS {
 
 public:
   LinearMMS(double cu, double cv, double cw, double cp, double p_ref);
-  ~LinearMMS();
+  virtual ~LinearMMS();
 
   double pressure( double x, double y, double z, double time );
   double uVelocity( double x, double y, double z, double time );

@@ -989,13 +989,17 @@ DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, Pro
   }
 
   if (d_myworld->myrank() == 0) {
-    int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
     dbg << d_myworld->myrank() << " check after restart: " << d_checkAfterRestart << "\n";
-    /*if (lb.active()) {
+#if 0
+    int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
+    if (lb.active()) {
       for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
-        lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
+        lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " 
+           << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " 
+           << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
       }
-    }*/
+    }
+#endif
   }
 }
 
@@ -1220,7 +1224,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
         d_oldAssignmentBasePatch = d_assignmentBasePatch;
       }
       if (lb.active()) {
-        int num_procs = (int)d_myworld->size();
+        // int num_procs = (int)d_myworld->size();
         int myrank = d_myworld->myrank();
         if (myrank == 0) {
           LevelP curLevel = grid->getLevel(0);

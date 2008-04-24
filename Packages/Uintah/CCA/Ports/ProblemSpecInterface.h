@@ -44,7 +44,7 @@ WARNING
       ProblemSpecInterface();
       virtual ~ProblemSpecInterface();
       
-      virtual ProblemSpecP readInputFile() = 0;
+      virtual ProblemSpecP readInputFile( bool validate = false ) = 0;
       virtual std::string getInputFile() = 0;
       
    private:
