@@ -124,7 +124,7 @@ static
 bool
 is_separator( char ch, vector<char> separators )
 {
-  for( int pos = 0; pos < separators.size(); pos++ ) {
+  for( unsigned int pos = 0; pos < separators.size(); pos++ ) {
     if( ch == separators[ pos ] ) {
       return true;
     }
@@ -136,11 +136,11 @@ vector<string>
 split_string(const std::string& str, const vector<char> & separators)
 {
   vector<string> result;
-  int begin = 0;
+  unsigned int begin = 0;
 
   bool validDataFound = false;
 
-  for( int pos = 0; pos < str.length(); pos++ ) {
+  for( unsigned int pos = 0; pos < str.length(); pos++ ) {
     if( is_separator( str[pos], separators ) ) {
       validDataFound = false;
       if( pos > begin ) {
