@@ -9,8 +9,7 @@ ProblemSetupException::ProblemSetupException(const std::string& msg, const char*
     : d_msg(msg)
 {
   std::ostringstream s;
-  s << "A ProblemSetup exception was thrown.\n"
-    << file << ":" << line << "\n" << d_msg;
+  s << "ProblemSetupException thrown: " << file << ", line: " << line << "\n" << d_msg;
   d_msg = s.str();
 
 #ifdef EXCEPTIONS_CRASH
