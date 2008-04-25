@@ -24,12 +24,12 @@
    <Time>
        <maxTime>            2.76        </maxTime>
        <initTime>           0.0         </initTime>
-       <deltMin>           0.0         </deltMin>
-       <deltMax>           1e-3        </deltMax>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1e-3        </delt_max>
        <delt_init>          1.0e-6      </delt_init>
        <max_delt_increase>  1.0         </max_delt_increase>
-       <timestepMultiplier>1.0         </timestepMultiplier>
-       <!--<maxTimesteps>     2         </maxTimesteps>-->
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <!--<max_Timesteps>     2         </max_Timesteps>-->
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->

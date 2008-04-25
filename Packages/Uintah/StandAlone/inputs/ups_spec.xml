@@ -103,12 +103,12 @@
     <maxTime            spec="REQUIRED DOUBLE  'positive'" />
     <maxTimesteps       spec="OPTIONAL INTEGER 'positive'" />
     <initTime           spec="REQUIRED DOUBLE  'positive'" />
-    <deltMin            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
-    <deltMax            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
-    <deltInit           spec="OPTIONAL DOUBLE  'positive'" />
-    <maxDeltIncrease    spec="OPTIONAL DOUBLE  'positive'" />
-    <maxInitialDelt     spec="OPTIONAL DOUBLE  'positive'" />
-    <timestepMultiplier spec="REQUIRED DOUBLE  'positive'" />
+    <delt_min            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
+    <delt_max            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
+    <delt_init           spec="OPTIONAL DOUBLE  'positive'" />
+    <max_delt_increase    spec="OPTIONAL DOUBLE  'positive'" />
+    <max_initial_delt     spec="OPTIONAL DOUBLE  'positive'" />
+    <timestep_multiplier spec="REQUIRED DOUBLE  'positive'" />
   </Time>
 
   <SimulationComponent  spec="OPTIONAL NO_DATA"> <!-- FIXME: is this really optional? -->

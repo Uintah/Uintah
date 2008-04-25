@@ -10,9 +10,9 @@
    <Time>
        <maxTime>200.e-6</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>0.0</deltMin>
-       <deltMax>0.002</deltMax>
-       <timestepMultiplier>0.8</timestepMultiplier>
+       <delt_min>0.0</delt_min>
+       <delt_max>0.002</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>frictionCrack.uda</filebase>

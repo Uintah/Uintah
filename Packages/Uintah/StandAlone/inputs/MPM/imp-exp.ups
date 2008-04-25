@@ -30,10 +30,10 @@
   <Time>
      <maxTime>3.e-6</maxTime>
      <initTime>0.0</initTime>
-     <deltMin>5.e-8</deltMin>
-     <deltMax>5.e-8</deltMax>
-     <maxTimesteps>     100          </maxTimesteps>
-     <timestepMultiplier>1.0</timestepMultiplier>
+     <delt_min>5.e-8</delt_min>
+     <delt_max>5.e-8</delt_max>
+     <max_Timesteps>     100          </max_Timesteps>
+     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
 
   <DataArchiver>

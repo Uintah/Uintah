@@ -19,17 +19,17 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   ProblemSpecP time_ps = params->findBlock("Time");
   time_ps->require("maxTime", maxTime);
   time_ps->require("initTime", initTime);
-  time_ps->require("deltMin", delt_min);
-  time_ps->require("deltMax", delt_max);
-  time_ps->require("timestepMultiplier", delt_factor);
-  if(!time_ps->get("deltInit", max_initial_delt)
-     && !time_ps->get("maxInitialDelt", max_initial_delt))
+  time_ps->require("delt_min", delt_min);
+  time_ps->require("delt_max", delt_max);
+  time_ps->require("timestep_multiplier", delt_factor);
+  if(!time_ps->get("delt_init", max_initial_delt)
+     && !time_ps->get("max_initial_delt", max_initial_delt))
     max_initial_delt = DBL_MAX;
-  if(!time_ps->get("initialDeltRange", initial_delt_range))
+  if(!time_ps->get("initial_delt_range", initial_delt_range))
     initial_delt_range = 0;
-  if(!time_ps->get("maxDeltIncrease", max_delt_increase))
+  if(!time_ps->get("max_delt_increase", max_delt_increase))
     max_delt_increase=1.e99;
-  if(!time_ps->get("maxWallTime",max_wall_time))
+  if(!time_ps->get("max_wall_time",max_wall_time))
     max_wall_time=0;
 
   {
