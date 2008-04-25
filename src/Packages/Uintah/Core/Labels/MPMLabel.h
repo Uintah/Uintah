@@ -87,6 +87,7 @@ using std::vector;
       const VarLabel* gTemperatureNoBCLabel; //for heat conduction
       const VarLabel* gTemperatureStarLabel; //for heat conduction
       const VarLabel* gdTdtLabel;
+      const VarLabel* gHeatFluxLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gExternalHeatFluxLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
