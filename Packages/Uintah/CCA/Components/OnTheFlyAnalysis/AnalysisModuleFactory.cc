@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/pointExtract.h>
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/vorticity.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -38,6 +39,8 @@ AnalysisModule* AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
       return (scinew pointExtract(module_ps,sharedState, dataArchiver));
     } else if (module == "vorticity") {
       return (scinew vorticity(module_ps,sharedState, dataArchiver));
+    } else if (module == "flatPlate_heatFlux") {
+      return (scinew flatPlate_heatFlux(module_ps,sharedState, dataArchiver));
     } else {
       throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
     }
@@ -45,6 +48,4 @@ AnalysisModule* AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
   } else {
     return 0;
   }
-
-
 }
