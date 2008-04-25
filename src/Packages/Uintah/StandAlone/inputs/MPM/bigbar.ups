@@ -9,17 +9,17 @@
        <title>Slender Bar Three Point Bending Problem</title>
    </Meta>
   
-   <SimulationComponent>
+  <SimulationComponent>
          <type> mpm </type>
    </SimulationComponent>
 
    <Time>
        <maxTime>0.01</maxTime>
-       <maxTimesteps> 10 </maxTimesteps>
+        <max_Timesteps> 10 </max_Timesteps>
        <initTime>0.0</initTime>
-       <deltMin>0.00001</deltMin>
-       <deltMax>0.001</deltMax>
-       <timestepMultiplier>0.8</timestepMultiplier>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.001</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
 
    <DataArchiver>

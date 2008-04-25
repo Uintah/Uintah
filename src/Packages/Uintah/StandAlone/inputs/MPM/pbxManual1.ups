@@ -10,9 +10,9 @@
    <Time>
        <maxTime>0.2</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>0.000001</deltMin>
-       <deltMax>0.01</deltMax>
-       <timestepMultiplier>0.8</timestepMultiplier>
+       <delt_min>0.000001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>pbxManual1.uda</filebase>

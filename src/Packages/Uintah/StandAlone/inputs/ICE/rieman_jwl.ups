@@ -14,10 +14,10 @@
    <Time>
        <maxTime>            0.001      </maxTime>
        <initTime>           0.0         </initTime>
-       <deltMin>           2.4e-05         </deltMin>
-       <deltMax>           2.4e-05         </deltMax>
+       <delt_min>           2.4e-05         </delt_min>
+       <delt_max>           2.4e-05         </delt_max>
        <delt_init>          2.4e-05      </delt_init>
-       <timestepMultiplier>1.0         </timestepMultiplier>
+       <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->

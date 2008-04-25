@@ -16,12 +16,12 @@
    <Time>
        <maxTime>            1.0        </maxTime>
        <initTime>           0.0        </initTime>
-       <deltMin>           0.0        </deltMin>
-       <deltMax>           0.00025    </deltMax> <!--- you MUST manually compute what this should be-->
+       <delt_min>           0.0        </delt_min>
+       <delt_max>           0.00025    </delt_max> <!--- you MUST manually compute what this should be-->
        <delt_init>          1.0e-5     </delt_init>
        <max_delt_increase>  1.0        </max_delt_increase>
-       <maxTimesteps>      10000       </maxTimesteps>
-       <timestepMultiplier>1.0        </timestepMultiplier>
+       <max_Timesteps>      10000       </max_Timesteps>
+       <timestep_multiplier>1.0        </timestep_multiplier>
    </Time>
    
     <!--____________________________________________________________________-->

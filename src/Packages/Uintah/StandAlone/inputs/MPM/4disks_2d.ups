@@ -10,9 +10,9 @@
    <Time>
        <maxTime>10.</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>0.005</deltMin>
-       <deltMax>0.5</deltMax>
-       <timestepMultiplier>0.8</timestepMultiplier>
+       <delt_min>0.005</delt_min>
+       <delt_max>0.5</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>4disks_2d.uda</filebase>

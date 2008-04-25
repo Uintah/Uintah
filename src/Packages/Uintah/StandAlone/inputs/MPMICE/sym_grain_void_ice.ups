@@ -10,10 +10,10 @@
    <Time>
        <maxTime>0.6</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>1.e-9</deltMin>
-       <deltMax>0.006</deltMax>
+       <delt_min>1.e-9</delt_min>
+       <delt_max>0.006</delt_max>
        <delt_init>          0.00001     </delt_init>
-       <timestepMultiplier>.4</timestepMultiplier>
+       <timestep_multiplier>.4</timestep_multiplier>
    </Time>
        <MPM>
        <time_integrator>explicit</time_integrator>

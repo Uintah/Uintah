@@ -10,9 +10,9 @@
    <Time>
        <maxTime>1.0</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>1.e-1</deltMin>
-       <deltMax>1.e-1</deltMax>
-       <timestepMultiplier>1.0</timestepMultiplier>
+       <delt_min>1.e-1</delt_min>
+       <delt_max>1.e-1</delt_max>
+       <timestep_multiplier>1.0</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>const_test_tih_cnh_implicit.uda</filebase>

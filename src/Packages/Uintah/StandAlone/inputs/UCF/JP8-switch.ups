@@ -69,12 +69,12 @@
   <Time>
     <maxTime>            1.0         </maxTime>
     <initTime>           0.0         </initTime>
-    <deltMin>           1.0e-19     </deltMin>
-    <deltMax>           0.5         </deltMax>
+    <delt_min>           1.0e-19     </delt_min>
+    <delt_max>           0.5         </delt_max>
     <delt_init>          1.0e-7      </delt_init>
     <max_delt_increase>  0.5         </max_delt_increase>
-    <timestepMultiplier>1.0         </timestepMultiplier>
-    <!--<maxTimesteps>      10         </maxTimesteps>-->
+    <timestep_multiplier>1.0         </timestep_multiplier>
+    <!--<max_Timesteps>      10         </max_Timesteps>-->
   </Time>
 
   <!--  Use the following if you want to restart on a different

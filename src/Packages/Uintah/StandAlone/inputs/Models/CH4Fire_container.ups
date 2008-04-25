@@ -46,12 +46,12 @@
    <Time>
        <maxTime>            1.0         </maxTime>
        <initTime>           0.0         </initTime>
-       <deltMin>           1.0e-15     </deltMin>
-       <deltMax>           1.0e-4      </deltMax>
+       <delt_min>           1.0e-15     </delt_min>
+       <delt_max>           1.0e-4      </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  0.15        </max_delt_increase>
-       <timestepMultiplier>0.5         </timestepMultiplier>
-       <!--<maxTimesteps>      10         </maxTimesteps>-->
+       <timestep_multiplier>0.5         </timestep_multiplier>
+       <!--<max_Timesteps>      10         </max_Timesteps>-->
    </Time>
    
     <!--____________________________________________________________________-->

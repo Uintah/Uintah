@@ -13,9 +13,9 @@
    <Time>
        <maxTime>.10</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>2.e-6</deltMin>
-       <deltMax>2.e-3</deltMax>
-       <timestepMultiplier>0.8</timestepMultiplier>
+       <delt_min>2.e-6</delt_min>
+       <delt_max>2.e-3</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>const_test_hypo.uda</filebase>

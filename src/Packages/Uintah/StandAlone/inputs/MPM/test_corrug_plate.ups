@@ -15,9 +15,9 @@
   <Time>
     <maxTime>0.0016</maxTime>
     <initTime>0.0</initTime>
-    <deltMin>1.0e-10</deltMin>
-    <deltMax>1.0</deltMax>
-    <timestepMultiplier>0.8</timestepMultiplier>
+    <delt_min>1.0e-10</delt_min>
+    <delt_max>1.0</delt_max>
+    <timestep_multiplier>0.8</timestep_multiplier>
   </Time>
 
   <DataArchiver>

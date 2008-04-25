@@ -13,15 +13,15 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>             1          </maxTime>
-       <initTime>            0.0        </initTime>
-       <deltMin>             0.00001    </deltMin>
-       <deltMax>             1.e-2      </deltMax>
-       <deltInit>            1.0e-5     </deltInit>
-       <maxDeltIncrease>     0.5        </maxDeltIncrease>       
-       <maxInitialDelt>      1.e-4      </maxInitialDelt>
-       <timestepMultiplier>  0.8        </timestepMultiplier>
-       <maxTimesteps>       50          </maxTimesteps>
+       <maxTime>            1          </maxTime>
+       <initTime>           0.0        </initTime>
+       <delt_min>           0.0        </delt_min>
+       <delt_max>           1.e-2      </delt_max>
+       <delt_init>          1.0e-5     </delt_init>
+       <max_delt_increase>  0.5        </max_delt_increase>       
+       <max_initial_delt>   1.e-4      </max_initial_delt>
+       <timestep_multiplier>0.8        </timestep_multiplier>
+       <max_Timesteps>      50         </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->

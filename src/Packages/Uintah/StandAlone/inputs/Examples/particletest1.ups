@@ -10,9 +10,9 @@
    <Time>
        <maxTime>1000.0</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>1</deltMin>
-       <deltMax>1</deltMax>
-       <timestepMultiplier>1</timestepMultiplier>
+       <delt_min>1</delt_min>
+       <delt_max>1</delt_max>
+       <timestep_multiplier>1</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>particletest1.uda</filebase>

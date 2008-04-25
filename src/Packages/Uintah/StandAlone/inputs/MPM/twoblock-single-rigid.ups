@@ -14,9 +14,9 @@
     <Time>
         <maxTime>3.0</maxTime>
         <initTime>0.0</initTime>
-        <deltMin>1.e-4</deltMin>
-        <deltMax>1.e-2</deltMax>
-        <timestepMultiplier>.5</timestepMultiplier>
+        <delt_min>1.e-4</delt_min>
+        <delt_max>1.e-2</delt_max>
+        <timestep_multiplier>.5</timestep_multiplier>
     </Time>
     <MPM>
         <time_integrator>explicit</time_integrator>

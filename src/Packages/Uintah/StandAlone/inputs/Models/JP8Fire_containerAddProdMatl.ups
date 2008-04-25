@@ -42,13 +42,13 @@
    <Time>
        <maxTime>            1.0         </maxTime>
        <initTime>           0.0         </initTime>
-       <deltMin>           1.0e-19     </deltMin>
-       <deltMax>           1.0e-4      </deltMax>
+       <delt_min>           1.0e-19     </delt_min>
+       <delt_max>           1.0e-4      </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>  0.15        </max_delt_increase>
-       <timestepMultiplier>0.4         </timestepMultiplier>
+       <timestep_multiplier>0.4         </timestep_multiplier>
        <override_restart_delt> 2.5e-10   </override_restart_delt>
-       <!--<maxTimesteps>      10         </maxTimesteps>-->
+       <!--<max_Timesteps>      10         </max_Timesteps>-->
    </Time>
 
 <!--  Use the following if you want to restart on a different

@@ -8,10 +8,10 @@
    <Time>
        <maxTime>0.2</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>0.00001</deltMin>
-       <deltMax>0.001</deltMax>
-       <maxTimesteps>3000000</maxTimesteps>
-       <timestepMultiplier>0.4</timestepMultiplier>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.001</delt_max>
+       <max_Timesteps>3000000</max_Timesteps>
+       <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
    <DataArchiver>
        <filebase>Drop.uda</filebase>

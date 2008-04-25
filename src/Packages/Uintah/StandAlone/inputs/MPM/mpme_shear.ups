@@ -10,9 +10,9 @@
    <Time>
        <maxTime>2.0</maxTime>
        <initTime>0.0</initTime>
-       <deltMin>2.e-5</deltMin>
-       <deltMax>2.e-4</deltMax>
-       <timestepMultiplier>0.8</timestepMultiplier>
+       <delt_min>2.e-5</delt_min>
+       <delt_max>2.e-4</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>mpme_shear.uda</filebase>

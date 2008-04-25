@@ -17,11 +17,11 @@
    <Time>
        <maxTime>            4.00e-5    </maxTime>
        <initTime>           0.0        </initTime>
-       <deltMin>           2.4e-14    </deltMin>
-       <deltMax>           2.0e-06    </deltMax>
+       <delt_min>           2.4e-14    </delt_min>
+       <delt_max>           2.0e-06    </delt_max>
        <delt_init>          1.8e-09    </delt_init>
-       <maxTimesteps>     50000      </maxTimesteps>
-       <timestepMultiplier>0.5        </timestepMultiplier>
+       <max_Timesteps>     50000      </max_Timesteps>
+       <timestep_multiplier>0.5        </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
