@@ -110,23 +110,14 @@ SO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 	Vector dx = patch->dCell();
 	double vol = dx.x()*dx.y()*dx.z();
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-
     constCCVariable<double> SO2rate;
     new_dw->get(SO2rate, d_lab->d_so2RateLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-    	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-	      IntVector currCell(colX, colY, colZ);
-
-          scalarNonlinSrc[currCell] += SO2rate[currCell]*vol*64000; //64000 = conversion from mol/cm^3/s to kg/m^3/s
-
-        }
-      }
-    }
+	for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    
+	      scalarNonlinSrc[*iter] += SO2rate[*iter]*vol*64000; //64000 = conversion from mol/cm^3/s to kg/m^3/s
+	
+	}
   }
 }
