@@ -204,6 +204,9 @@ MPMLabel::MPMLabel()
   gdTdtLabel = VarLabel::create("g.dTdt",
 			NCVariable<double>::getTypeDescription());
 
+  gHeatFluxLabel = VarLabel::create("g.HeatFlux",
+			NCVariable<Vector>::getTypeDescription());
+
   gExternalHeatRateLabel = VarLabel::create("g.externalHeatRate",
 			NCVariable<double>::getTypeDescription());
 
@@ -601,6 +604,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gTemperatureStarLabel);
   VarLabel::destroy(gTemperatureRateLabel);
   VarLabel::destroy(gdTdtLabel);
+  VarLabel::destroy(gHeatFluxLabel);
   VarLabel::destroy(gExternalHeatRateLabel);
   VarLabel::destroy(gExternalHeatFluxLabel);
   VarLabel::destroy(NC_CCweightLabel);
