@@ -464,6 +464,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeStressTensor(            sched, patches, matls);
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeInternalHeatRate(      sched, patches, matls);
+    scheduleComputeNodalHeatFlux(         sched, patches, matls);
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
@@ -831,7 +832,16 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalHeatRate\t\t\t\t");
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
-
+void SerialMPM::scheduleComputeNodalHeatFlux(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+{  
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeNodalHeatFlux\t\t\t\t");
+  heatConductionModel->scheduleComputeNodalHeatFlux(sched,patches,matls);
+}
 void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls)

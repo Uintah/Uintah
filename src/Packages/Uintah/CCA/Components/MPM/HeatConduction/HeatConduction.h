@@ -20,6 +20,9 @@ namespace Uintah {
 
     void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
                                          const MaterialSet*);
+                                         
+    void scheduleComputeNodalHeatFlux(SchedulerP&, const PatchSet*,
+                                      const MaterialSet*);
     
     void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
                                     const MaterialSet*);
@@ -32,7 +35,13 @@ namespace Uintah {
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
-    
+                                 
+    void computeNodalHeatFlux(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* ,
+                              DataWarehouse* /*old_dw*/,
+                              DataWarehouse* new_dw);
+                                                  
     void solveHeatEquations(const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,

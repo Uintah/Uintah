@@ -52,6 +52,7 @@ MPMFlags::MPMFlags()
   d_extraSolverFlushes = 0;  // Have PETSc do more flushes to save memory
   d_doImplicitHeatConduction = false;
   d_doExplicitHeatConduction = true;
+  d_computeNodalHeatFlux = false;
   d_doTransientImplicitHeatConduction = true;
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
@@ -132,7 +133,32 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
       else d_doErosion = true;
     }
   }
+  
+  // d_doComputeHeatFlux
+  // set to true if the label g.HeatFlux is saved or 
+  // flatPlat_heatFlux analysis module is used.
+  ProblemSpecP DA_ps = root->findBlock("DataArchiver");
+  for(ProblemSpecP label_iter = DA_ps->findBlock("save"); label_iter != 0;
+                   label_iter = label_iter->findNextBlock("save")){
+    map<string,string> labelName;
+    label_iter->getAttributes(labelName);
+    if(labelName["label"] == "g.HeatFlux"){
+      d_computeNodalHeatFlux = true;
+      cout << " I found g.HeatFlux " << endl;
+    }
+  }
+  ProblemSpecP da_ps = root->findBlock("DataAnalysis");
 
+  if (da_ps) {
+    ProblemSpecP module_ps = da_ps->findBlock("Module");
+    map<string,string> attributes;
+    module_ps->getAttributes(attributes);
+    if ( attributes["name"]== "flatPlate_heatFlux") {
+      d_computeNodalHeatFlux = true;
+      cout << " I found flatPlate_heatFlux " << endl;
+    }
+  }
+  
   delete d_interpolator;
 
   if(d_interpolator_type=="linear"){

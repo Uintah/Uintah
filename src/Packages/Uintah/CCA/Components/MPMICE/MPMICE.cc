@@ -467,6 +467,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
    
   d_mpm->scheduleComputeInternalForce(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(     sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeNodalHeatFlux(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSolveEquationsMotion(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSolveHeatEquations(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleIntegrateAcceleration(       sched, mpm_patches, mpm_matls);
