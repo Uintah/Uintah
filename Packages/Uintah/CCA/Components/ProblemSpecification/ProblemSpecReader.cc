@@ -201,7 +201,7 @@ struct ProblemSpecReader::AttributeAndTagBase {
 
   ///////////////////////////////////
 
-  string getCompleteName();
+  string getCompleteName() const;
 
   virtual void print( bool /* recursively = false */, unsigned int level = 0, bool isTag = false ) { 
 
@@ -291,7 +291,7 @@ struct ProblemSpecReader::Tag : public ProblemSpecReader::AttributeAndTagBase {
 };
 
 string
-ProblemSpecReader::AttributeAndTagBase::getCompleteName() 
+ProblemSpecReader::AttributeAndTagBase::getCompleteName() const
 {
   string      result = name_;
   const Tag * tag = parent_;
@@ -332,8 +332,10 @@ ProblemSpecReader::findSubTag( Tag * root, const string & tagName )
 // Chops up 'validValues' (based on ','s) and verifies that 'value' is in the list.
 // (If validValues is empty, then 'value' is considered valid by definition.)
 bool
-ProblemSpecReader::validateString( const string & value, const vector<string> & validValues )
+ProblemSpecReader::validateString( const AttributeAndTagBase * tag, const string & value )
 {
+  const vector<string> & validValues = tag->validValues_;
+
   if( validValues.size() == 0 ) {
     return true;
   }
@@ -348,7 +350,7 @@ ProblemSpecReader::validateString( const string & value, const vector<string> & 
 }
 
 bool
-ProblemSpecReader::validateBoolean( const string & value )
+ProblemSpecReader::validateBoolean( const AttributeAndTagBase * tag, const string & value )
 {
   if( value == "true" || value == "false" ) {
     return true;
@@ -360,8 +362,10 @@ ProblemSpecReader::validateBoolean( const string & value )
 // for more info on 'validValues'. An empty validValues means anything is valid.
 // 
 void
-ProblemSpecReader::validateDouble( double value, const vector<string> & validValues )
+ProblemSpecReader::validateDouble( const AttributeAndTagBase * tag, double value )
 {
+  const vector<string> validValues = tag->validValues_;
+
   if( validValues.size() == 0 ) {
     return;
   }
@@ -369,9 +373,10 @@ ProblemSpecReader::validateDouble( double value, const vector<string> & validVal
   if( validValues.size() == 1 ) {
     if( validValues[0] == "positive" ) {
       if( value < 0 ) {
+        string completeName = tag->getCompleteName();
         ostringstream error;
         error << setprecision(12);
-        error << "Specified value '" << value << "' is not 'positive' (as required).";
+        error << "<" << completeName << ">: Specified value '" << value << "' is not 'positive' (as required).";
         throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
       }
     }
@@ -381,15 +386,17 @@ ProblemSpecReader::validateDouble( double value, const vector<string> & validVal
     sscanf( validValues[0].c_str(), "%lf", &min );
     sscanf( validValues[1].c_str(), "%lf", &max );
     if( value < min || value > max ) {
+      string completeName = tag->getCompleteName();
       ostringstream error;
       error << setprecision(12);
-      error << "Specified value '" << value << "' is outside of valid range (" << min << ", " << max << ")";
+      error << "<" << completeName << "> - " << "Specified value '" << value << "' is outside of valid range (" 
+            << min << ", " << max << ")";
       throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
     }
   }
   else {
-    // FIXME... more descriptive and catch and add correct file/line
-    throw ProblemSetupException( "Invalid 'validValues' string.", NULL, 0 );
+    string completeName = tag->getCompleteName();
+    throw ProblemSetupException( completeName + " - Invalid 'validValues' string.", __FILE__, __LINE__ );
   }
 }
 
@@ -665,12 +672,12 @@ ProblemSpecReader::parseValidationFile()
 }
 
 void
-ProblemSpecReader::validateText( AttributeAndTagBase * root, const string & text )
+ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string & text )
 {
   string classType = "Attribute";
-  string completeName = root->getCompleteName();
+  const string completeName = root->getCompleteName();
 
-  Tag * testIfTag = dynamic_cast<Tag*>( root );
+  const Tag * testIfTag = dynamic_cast<const Tag*>( root );
   if( testIfTag ) {
     classType == "Tag";
   }
@@ -709,7 +716,7 @@ ProblemSpecReader::validateText( AttributeAndTagBase * root, const string & text
                                      __FILE__, __LINE__ );
       } 
       else {
-        validateDouble( value, root->validValues_ );
+        validateDouble( root, value );
       }
     }
     break;
@@ -725,19 +732,19 @@ ProblemSpecReader::validateText( AttributeAndTagBase * root, const string & text
                                      __FILE__, __LINE__ );
       }
       else {
-        validateDouble( (double)value, root->validValues_ );
+        validateDouble( root, (double)value );
       }
     }
     break;
   case STRING:
-    if( !validateString( text, root->validValues_ ) ) {
+    if( !validateString( root, text ) ) {
       throw ProblemSetupException( "Invalid string value for " + classType + ": " + completeName + ". '" + 
                                    text + "' not found in this list:\n" + toString( root->validValues_ ),
                                    __FILE__, __LINE__ );
     }
     break;
   case BOOLEAN:
-    if( !validateBoolean( text ) ) {
+    if( !validateBoolean( root, text ) ) {
       throw ProblemSetupException( "Invalid boolean string value for " + classType + " <" + completeName +
                                    ">.  Value must be either 'true', or 'false', but '" + text + "' was found...",
                                    __FILE__, __LINE__ );

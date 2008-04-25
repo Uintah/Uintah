@@ -57,10 +57,10 @@ namespace Uintah {
     void        parseTag( Tag * parent, const xmlNode * xmlTag );
 
     void        validateAttribute( Tag * root, xmlAttr * attr );
-    void        validateText( AttributeAndTagBase * root, const string & text );
-    bool        validateString( const string & value, const vector<string> & validValues );
-    bool        validateBoolean( const string & value );
-    void        validateDouble( double value, const vector<string> & validValues );
+    void        validateText( const AttributeAndTagBase * root, const string & text );
+    bool        validateString( const AttributeAndTagBase * tag, const string & value );
+    bool        validateBoolean( const AttributeAndTagBase * tag, const string & value );
+    void        validateDouble( const AttributeAndTagBase * tag, double value );
 
     Attribute * findAttribute( Tag * root, const string & attrName );
     Tag *       findSubTag( Tag * root, const string & tagName );
