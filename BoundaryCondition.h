@@ -232,6 +232,8 @@ public:
       void sched_cellTypeInit(SchedulerP&, const PatchSet* patches,
 			      const MaterialSet* matls);
 
+	  void	sched_computeInletAreaBCSource(SchedulerP& sched, const PatchSet* patches,
+				       							  const MaterialSet* matls);
       ////////////////////////////////////////////////////////////////////////
       // Initialize inlet area
       // Details here
@@ -291,8 +293,6 @@ public:
 								              const MaterialSubset*,
 									  		  DataWarehouse* old_dw,
 											  DataWarehouse* new_dw);
-
-
 
       ////////////////////////////////////////////////////////////////////////
       // Actually compute velocity BC terms
@@ -840,6 +840,8 @@ private:
 		double area_x; //total area with normals in the x-direction
 		double area_y; //total area with normals in the y-direction
 		double area_z; //total area with normals in the z-direction
+		VarLabel* total_area_label; //total area of all directions
+		double summed_area;
 		//Normal information
 		Vector normal;
 		//Flux information
@@ -959,7 +961,6 @@ private:
 	  std::vector<BCSourceInfo* > d_sourceBoundaryInfo;
 	  int d_numSourceBoundaries;
 	  bool d_doAreaCalcforSourceBoundaries;
-
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

@@ -230,8 +230,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (d_calcExtraScalars) d_boundaryCondition->setExtraScalars(&d_extraScalars);
   d_boundaryCondition->problemSetup(db);
 
-	  
-
   d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
   d_sulfur_balance_es = d_boundaryCondition->getSulfurBalanceES();
   d_props->setCarbonBalanceES(d_carbon_balance_es);	
@@ -561,10 +559,6 @@ Arches::paramInit(const ProcessorGroup* pg,
 {
     double old_delta_t = 0.0;
     new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
-
-  //get inlet area information for BC Sources
-  if (d_boundaryCondition->getSrcBoundaryAreaCalc())
-		 d_boundaryCondition->computeInletAreaBCSource(pg, patches, matls, old_dw, new_dw); 
 
   // ....but will only compute for computational domain
   for (int p = 0; p < patches->size(); p++) {
