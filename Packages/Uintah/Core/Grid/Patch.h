@@ -1255,13 +1255,28 @@ WARNING
      * Returns true if the SFCZ idx is owned by this patch
      * including extra cells
      */
-     inline bool containsSFCZ(const IntVector& idx) const {
-       IntVector l(getExtraSFCZLowIndex__New());
-       IntVector h(getExtraSFCZHighIndex__New());
-       return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
-     }
+    inline bool containsSFCZ(const IntVector& idx) const {
+      IntVector l(getExtraSFCZLowIndex__New());
+      IntVector h(getExtraSFCZHighIndex__New());
+      return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
+        && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+    }
 
+    /**
+     * Returns the closest node to the point pos.  This node
+     * is not guarenteed to be owned by this patch.
+     */
+    inline IntVector findClosestNode(const Point& pos) const
+    {
+      IntVector idx = getLevel()->getCellIndex(pos);
+      Point cellP = getLevel()->getCellPosition(idx);
+      for(int i=0;i<3;++i) {
+        if( pos(i)>cellP(i) ) {
+          idx[i]++;
+        }
+      }
+      return idx;
+    }
      
     /**************End New Public Interace****************/
    
