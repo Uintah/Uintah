@@ -300,26 +300,9 @@ void flatPlate_heatFlux::doAnalysis(const ProcessorGroup* pg,
     for(int c = 0; c< 4; c++){
       
       if(patch->containsPoint(d_corner_pt[c]) ){
-
-        IntVector nodes[8];
-        patch->findCellNodes(d_corner_pt[c],nodes);
+        IntVector n = patch->findClosestNode(d_corner_pt[c]);
         
-        //__________________________________
-        //  Stolen from patch.h findClosestsNode
-        int p[3];
-        const Level* level = getLevel(patches);
-        IntVector idx = level->getCellIndex(d_corner_pt[c]);
-        Point cellP = level->getCellPosition(idx);
-        
-        for(int i=0;i<3;++i) {
-          if( d_corner_pt[c](i)>cellP(i) ) {
-            idx[i]++;
-            p[i] = 1;
-          }
-          else p[i] = 0;
-        }
-        int n = p[0]+p[1]*2+p[2]*4;    
-        gHeatRate[nodes[n]] = cornerSurfaceArea * gHeatFlux[nodes[n]];
+        gHeatRate[n] = cornerSurfaceArea * gHeatFlux[n];
       }
     }
     
