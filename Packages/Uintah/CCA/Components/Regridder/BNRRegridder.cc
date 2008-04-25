@@ -249,9 +249,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
     return oldGrid;
   }
 
-  //update the patch grid pointer
-  Patch::setNextGrid(GridP(newGrid));
-
   //finalize the grid
   TAU_PROFILE_TIMER(finalizetimer, "BNRRegridder::finalize grid", "", TAU_USER);
   TAU_PROFILE_START(finalizetimer);

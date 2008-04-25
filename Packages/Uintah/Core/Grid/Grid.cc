@@ -119,6 +119,9 @@ Grid::Grid()
   ares_ = 0;
   bres_ = 0;
   cres_ = 0;
+
+  //set the patch pointer so that all new patches point to this grid
+  Patch::setGrid(this);
 }
 
 Grid::~Grid()
@@ -316,7 +319,6 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
    ProblemSpecP grid_ps = params->findBlock("Grid");
    if(!grid_ps)
       return;
-   Patch::setNextGrid(GridP(this));
 
    // anchor/highpoint on the grid
    Point anchor(DBL_MAX, DBL_MAX, DBL_MAX);

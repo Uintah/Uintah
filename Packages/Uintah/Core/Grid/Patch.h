@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_Patch_H
 
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
@@ -1065,18 +1064,25 @@ WARNING
      /**
       * Sets the static pointer to the new grid
       */
-     static inline void setNextGrid(GridP grid)
+     static inline void setGrid(Grid* grid)
      {
-       //update the index
-       d_newGridIndex=(d_newGridIndex+1)%2;
-
        //set the grid pointer 
-       //all patches that call finalize patch after
-       //this point will point to this grid
+       //all patches that are created after this point
+       //before incrementGrid is called will point to this
+       //grid
        d_grid[d_newGridIndex]=grid;
      }
-     
-
+    
+    /**
+     * Increments the grid index.
+     * This should be called after a new grid is 
+     * created and is going to be kept
+     */
+    static inline void incrementGrid()
+    {
+       //update the index
+       d_newGridIndex=(d_newGridIndex+1)%2;
+    }
     /*
     void setBCType(FaceType face, BCType newbc)
     {
@@ -1732,7 +1738,7 @@ WARNING
        * Patches store an index into this array to specify
        * their grid. 
        */
-      static GridP d_grid[2];
+      static Grid* d_grid[2];
 
       /**
        *  The index of the new grid.  All new patches

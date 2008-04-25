@@ -27,7 +27,7 @@ using namespace std;
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
 IntVector Patch::d_extraCells;
-GridP Patch::d_grid[2]={0,0};
+Grid* Patch::d_grid[2]={0,0};
 int Patch::d_newGridIndex=0;
 
 
@@ -59,6 +59,9 @@ Patch::Patch(const Level* level,
   d_patchState.yplus=None;
   d_patchState.zplus=None;
 
+  
+  //set the grid index
+  d_patchState.gridIndex=d_newGridIndex;
   //set the level index
   d_patchState.levelIndex=levelIndex;
 
@@ -110,6 +113,8 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   d_patchState.yplus=realPatch->getBCType(yplus);
   d_patchState.zplus=realPatch->getBCType(zplus);
   
+  //set the level index
+  d_patchState.gridIndex=realPatch->d_patchState.gridIndex;
   //set the level index
   d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 }
@@ -1711,10 +1716,6 @@ IntVector Patch::getInteriorHighIndexWithBoundary(VariableBasis basis) const
 void Patch::finalizePatch()
 {
   TAU_PROFILE("Patch::finalizePatch()", " ", TAU_USER);
-  
-  //set the grid index
-  d_patchState.gridIndex=d_newGridIndex;
-  //set the level index
   
 #if SCI_ASSERTION_LEVEL>0
   ASSERT(getLow()==getExtraCellLowIndex__New());

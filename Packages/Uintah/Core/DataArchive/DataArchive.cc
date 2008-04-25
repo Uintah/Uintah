@@ -250,7 +250,6 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
                         __FILE__, __LINE__);
   int numLevels = -1234;
   GridP grid = scinew Grid;
-  Patch::setNextGrid(grid);
   int levelIndex = -1;
   for(ProblemSpecP n = gridnode->getFirstChild(); n != 0; n=n->getNextSibling()){
     if(n->getNodeName() == "numLevels") {
