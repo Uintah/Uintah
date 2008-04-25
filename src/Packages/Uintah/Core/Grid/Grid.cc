@@ -109,7 +109,7 @@ void StretchSpec::fillCells(int& start, int lowExtra, int highExtra, OffsetArray
   }
 }
 
-Grid::Grid()
+Grid::Grid(bool addToPatch)
 {
   // Initialize values that may be uses for the autoPatching calculations
   af_ = 0;
@@ -120,8 +120,11 @@ Grid::Grid()
   bres_ = 0;
   cres_ = 0;
 
-  //set the patch pointer so that all new patches point to this grid
-  Patch::setGrid(this);
+  if(addToPatch)
+  {
+    //set the patch pointer so that all new patches point to this grid
+    Patch::setGrid(this);
+  }
 }
 
 Grid::~Grid()

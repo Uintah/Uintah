@@ -414,6 +414,8 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
   d_lock.unlock();
   grid->performConsistencyCheck();
 
+  Patch::incrementGrid();
+
   timedata.d_grid = grid;
 
   ASSERTEQ(grid->numLevels(), numLevels);

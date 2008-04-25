@@ -608,7 +608,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
     // if we do the two passes, then we need to have one processor do the work and broadcast it, as 
     // the superpatch functionality does not produce consistent results across processors
 
-    Grid bogusGrid;
+    Grid bogusGrid(false);
     Level* addToLevel = newLevel.get_rep();
 #if 1
     if (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx] || d_myworld->myrank() == 0) {
