@@ -330,7 +330,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     # If the test passed put an svn revision stamp in the goldstandard
     # user root is running the cronjob
-    user = environ['USER']
+    user = getoutput("whoami");
     print "Failcode %i user %s" %(failcode,user)
     
     if failcode == 0 and (user == "csafe-tester" or user == "root"):
