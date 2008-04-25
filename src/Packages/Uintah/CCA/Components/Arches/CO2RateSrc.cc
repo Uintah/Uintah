@@ -5,7 +5,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -113,9 +112,7 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     new_dw->get(CO2rate, d_lab->d_co2RateLabel, 
 	matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-	Box pBox = patch->getInteriorBox();
-
-	for (CellIterator iter=patch->getCellCenterIterator(pBox); !iter.done(); iter++){
+	for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 
 		scalarNonlinSrc[*iter] += CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
 	
