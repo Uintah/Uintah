@@ -258,6 +258,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 			 "not supported: " + d_mms, __FILE__, __LINE__);
 
     d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();	
+	d_numSourceBoundaries = d_boundaryCondition->getNumSourceBndry();
   }
 }
 
@@ -303,6 +304,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			   	      d_timeIntegratorLabels[curr_level]);
 
   	if (d_boundaryCondition->getNumSourceBndry() > 0){
+			d_boundaryCondition->sched_computeInletAreaBCSource(sched, patches, matls);
 			d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 			d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
 			//add other ones here too.
@@ -574,6 +576,13 @@ int ExplicitSolver::noSolve(const LevelP& level,
   //                     viscosityIN
 
   sched_setInitialGuess(sched, patches, matls);
+
+  if (d_boundaryCondition->getNumSourceBndry() > 0){
+			d_boundaryCondition->sched_computeInletAreaBCSource(sched, patches, matls);
+			d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls, d_timeIntegratorLabels[0]);
+			d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls, d_timeIntegratorLabels[0]);
+			//add other ones here too.
+  }
 
   //setting initial guess for extra scalars
   if (d_calcExtraScalars){

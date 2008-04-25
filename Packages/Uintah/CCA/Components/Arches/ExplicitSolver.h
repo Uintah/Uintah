@@ -214,6 +214,9 @@ public:
 	  inline void setSulfurBalanceES(bool sulfur_balance_es){
 		d_sulfur_balance_es = sulfur_balance_es;
 	  }
+	  inline void setNumSourceBoundaries(int numSourceBoundaries){
+		d_numSourceBoundaries = numSourceBoundaries;
+	  }
 
 protected :
 
@@ -418,6 +421,7 @@ private:
 
     bool d_carbon_balance_es;
 	bool d_sulfur_balance_es;
+	int d_numSourceBoundaries;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
