@@ -217,6 +217,9 @@ namespace Uintah {
     if(grid->numLevels() == 0){
       throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
     }
+   
+    //This grid is being kept and all patches are created so we can now increment the grid index in patch
+    Patch::incrementGrid();
     
     // Print out meta data
     if (d_myworld->myrank() == 0){

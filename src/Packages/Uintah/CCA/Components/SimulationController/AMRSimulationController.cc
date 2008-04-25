@@ -626,6 +626,11 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep());
+  if(oldGrid != currentGrid)
+  {
+    //A new grid was created thus increment the grid index in patch
+    Patch::incrementGrid();
+  }
   double regridTime = Time::currentSeconds() - start;
   d_sharedState->regriddingTime += regridTime;
   d_sharedState->setRegridTimestep(false);
