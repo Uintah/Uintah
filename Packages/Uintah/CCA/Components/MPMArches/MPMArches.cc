@@ -1052,6 +1052,7 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   d_mpm->scheduleComputeInternalForce(sched, patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(sched, patches, mpm_matls);
+  d_mpm->scheduleComputeNodalHeatFlux(sched, patches, mpm_matls);
   scheduleSolveEquationsMotion(sched, patches, mpm_matls);
   scheduleSolveHeatEquations(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateAcceleration(sched, patches, mpm_matls);

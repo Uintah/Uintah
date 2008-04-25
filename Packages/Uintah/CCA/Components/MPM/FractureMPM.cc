@@ -322,6 +322,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeStressTensor(            sched, patches, matls);
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeInternalHeatRate(      sched, patches, matls);
+    scheduleComputeNodalHeatFlux(         sched, patches, matls);
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }

@@ -381,6 +381,9 @@ protected:
 
   virtual void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
+                                          
+  virtual void scheduleComputeNodalHeatFlux(SchedulerP&, const PatchSet*,
+					       const MaterialSet*);
 
   virtual void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
 					    const MaterialSet*);
