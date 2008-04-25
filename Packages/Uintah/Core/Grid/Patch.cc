@@ -37,7 +37,7 @@ Patch::Patch(const Level* level,
        unsigned int levelIndex,  int id)
     : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
     
-      d_realPatch(0),d_level(level),  d_level_index(-1),
+      d_realPatch(0), d_level_index(-1),
       d_lowIndex(lowIndex),d_highIndex(highIndex),
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
       d_id( id )
@@ -78,8 +78,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       d_highIndex__New(realPatch->d_inHighIndex+virtualOffset),
       
 
-      d_realPatch(realPatch), d_level(realPatch->d_level),
-      d_level_index(realPatch->d_level_index),
+      d_realPatch(realPatch), d_level_index(realPatch->d_level_index),
       d_lowIndex(realPatch->d_lowIndex + virtualOffset), 
       d_highIndex(realPatch->d_highIndex + virtualOffset),
 
@@ -93,8 +92,13 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   d_id = -1000 * realPatch->d_id; // temporary
   int index = 1;
   int numVirtualPatches = 0;
+  
+  //set the level index
+  d_patchState.gridIndex=realPatch->d_patchState.gridIndex;
+  //set the level index
+  d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 
-  for (Level::const_patchIterator iter = d_level->allPatchesBegin(); iter != d_level->allPatchesEnd(); iter++) {
+  for (Level::const_patchIterator iter = getLevel()->allPatchesBegin(); iter != getLevel()->allPatchesEnd(); iter++) {
     if ((*iter)->d_realPatch == d_realPatch) {
       ++index;
       if (++numVirtualPatches >= 27)
@@ -112,11 +116,6 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   d_patchState.xplus=realPatch->getBCType(xplus);
   d_patchState.yplus=realPatch->getBCType(yplus);
   d_patchState.zplus=realPatch->getBCType(zplus);
-  
-  //set the level index
-  d_patchState.gridIndex=realPatch->d_patchState.gridIndex;
-  //set the level index
-  d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 }
 
 Patch::~Patch()
@@ -133,7 +132,7 @@ Patch::~Patch()
 */
 void Patch::findCellNodes(const Point& pos, IntVector ni[8]) const
 {
-  Point cellpos = getLevel__New()->positionToIndex(pos);
+  Point cellpos = getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
@@ -152,7 +151,7 @@ void Patch::findCellNodes(const Point& pos, IntVector ni[8]) const
  */
 void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 {
-  Point cellpos = getLevel__New()->positionToIndex(pos);
+  Point cellpos = getLevel()->positionToIndex(pos);
   int ix = Floor(cellpos.x());
   int iy = Floor(cellpos.y());
   int iz = Floor(cellpos.z());
@@ -182,11 +181,11 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 
 
 Point Patch::nodePosition(const IntVector& idx) const {
-  return d_level->getNodePosition(idx);
+  return getLevel()->getNodePosition(idx);
 }
 
 Point Patch::cellPosition(const IntVector& idx) const {
-  return d_level->getCellPosition(idx);
+  return getLevel()->getCellPosition(idx);
 }
 
 void Patch::findCellsFromNode( const IntVector& nodeIndex,
@@ -609,8 +608,8 @@ void Patch::setExtraIndices(const IntVector& l, const IntVector& h)
 CellIterator
 Patch::getCellIterator(const Box& b) const
 {
-   Point l = d_level->positionToIndex(b.lower());
-   Point u = d_level->positionToIndex(b.upper());
+   Point l = getLevel()->positionToIndex(b.lower());
+   Point u = getLevel()->positionToIndex(b.upper());
    IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
    // high is the inclusive upper bound on the index.  In order for
    // the iterator to work properly we need in increment all the
@@ -627,8 +626,8 @@ CellIterator
 Patch::getCellCenterIterator(const Box& b) const
 {
 #if 1
-   Point l = d_level->positionToIndex(b.lower());
-   Point u = d_level->positionToIndex(b.upper());
+   Point l = getLevel()->positionToIndex(b.lower());
+   Point u = getLevel()->positionToIndex(b.upper());
    // If we subtract 0.5 from the bounding box locations we can treat
    // the code just like we treat nodes.
    l -= Vector(0.5, 0.5, 0.5);
@@ -641,8 +640,8 @@ Patch::getCellCenterIterator(const Box& b) const
   // This is the old code, which doesn't really follow the
   // specifiaction, but works the way some people have gotten used to
   // it working.
-   Point l = d_level->positionToIndex(b.lower());
-   Point u = d_level->positionToIndex(b.upper());
+   Point l = getLevel()->positionToIndex(b.lower());
+   Point u = getLevel()->positionToIndex(b.upper());
    IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
    IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
 #endif
@@ -654,8 +653,8 @@ Patch::getCellCenterIterator(const Box& b) const
 CellIterator
 Patch::getExtraCellIterator(const Box& b) const
 {
-   Point l = d_level->positionToIndex(b.lower());
-   Point u = d_level->positionToIndex(b.upper());
+   Point l = getLevel()->positionToIndex(b.lower());
+   Point u = getLevel()->positionToIndex(b.upper());
    IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
    IntVector high(RoundUp(u.x()),  RoundUp(u.y()),   RoundUp(u.z()));
    low = Min(low, getCellLowIndex());
@@ -1137,8 +1136,8 @@ Patch::addGhostCell_Iter(CellIterator hi_lo, const int nCells) const
 Box Patch::getGhostBox(const IntVector& lowOffset,
 		       const IntVector& highOffset) const
 {
-   return Box(d_level->getNodePosition(d_lowIndex+lowOffset),
-	      d_level->getNodePosition(d_highIndex+highOffset));
+   return Box(getLevel()->getNodePosition(d_lowIndex+lowOffset),
+	      getLevel()->getNodePosition(d_highIndex+highOffset));
 }
 
 NodeIterator Patch::getNodeIterator() const
@@ -1161,8 +1160,8 @@ NodeIterator
 Patch::getNodeIterator(const Box& b) const
 {
   // Determine if we are dealing with a 2D box.
-   Point l = d_level->positionToIndex(b.lower());
-   Point u = d_level->positionToIndex(b.upper());
+   Point l = getLevel()->positionToIndex(b.lower());
+   Point u = getLevel()->positionToIndex(b.upper());
    int low_x, low_y, low_z, high_x, high_y, high_z;
    if (l.x() != u.x()) {
      // Get the nodes that are included
@@ -1463,7 +1462,7 @@ void Patch::computeVariableExtents(VariableBasis basis,
   IntVector lowOffset, highOffset;
   getGhostOffsets(basis, gtype, numGhostCells, lowOffset, highOffset);
   computeExtents(basis, boundaryLayer, lowOffset, highOffset, low, high);
-  d_level->selectPatches(low, high, neighbors);
+  getLevel()->selectPatches(low, high, neighbors);
 }
 
 void Patch::computeVariableExtents(Uintah::TypeDescription::Type basis,
@@ -1527,11 +1526,11 @@ void Patch::getOtherLevelPatches(int levelOffset,
   // include in the final low/high
   IntVector gc(numGhostCells, numGhostCells, numGhostCells);
 
-  const LevelP& otherLevel = d_level->getRelativeLevel(levelOffset);
+  const LevelP& otherLevel = getLevel()->getRelativeLevel(levelOffset);
   IntVector low = 
-    otherLevel->getCellIndex(d_level->getCellPosition(getLowIndex()));
+    otherLevel->getCellIndex(getLevel()->getCellPosition(getLowIndex()));
   IntVector high =
-    otherLevel->getCellIndex(d_level->getCellPosition(getHighIndex()));
+    otherLevel->getCellIndex(getLevel()->getCellPosition(getHighIndex()));
 
   if (levelOffset < 0) {
     // we don't grab enough in the high direction if the fine extra cell
@@ -1599,11 +1598,11 @@ Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type t
 }
 
 Box Patch::getBox() const {
-  return d_level->getBox(d_lowIndex, d_highIndex);
+  return getLevel()->getBox(d_lowIndex, d_highIndex);
 }
 
 Box Patch::getInteriorBox() const {
-  return d_level->getBox(d_inLowIndex, d_inHighIndex);
+  return getLevel()->getBox(d_inLowIndex, d_inHighIndex);
 }
 
 IntVector Patch::neighborsLow() const
@@ -1838,17 +1837,14 @@ void Patch::finalizePatch()
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getEdgeCellIterator__New(yplus,zminus));
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus));
 
-  ASSERT(d_grid[d_patchState.gridIndex]!=0);
-  ASSERT(getLevel()==getLevel__New());
-
 #endif 
 }
 
 int Patch::getGridIndex() const 
 {
   int index = d_level_index;
-  int levelid = d_level->getIndex();
-  GridP grid = d_level->getGrid();
+  int levelid = getLevel()->getIndex();
+  GridP grid = getLevel()->getGrid();
 
   // add up all the patches in the preceding levels
   for ( int i = 0; i < levelid && i < grid->numLevels(); i++) {

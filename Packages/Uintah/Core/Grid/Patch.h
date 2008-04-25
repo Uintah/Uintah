@@ -1124,7 +1124,7 @@ WARNING
     /**
      * Returns the level that the patch lives on
      */
-    inline const Level* getLevel__New() const 
+    inline const Level* getLevel() const 
     {
       return d_grid[d_patchState.gridIndex]->getLevel(d_patchState.levelIndex).get_rep();
     }
@@ -1642,10 +1642,6 @@ WARNING
      IntVector getCellFORTLowIndex() const;
      IntVector getCellFORTHighIndex() const;
      
-     inline const Level* getLevel() const {
-       return d_level;
-     }
-     
      //determine if a point is in the patch
      inline bool containsPoint(const Point& p) const {
        IntVector l(getNodeLowIndex());
@@ -1758,7 +1754,6 @@ WARNING
      // (wrap-around from periodic boundary conditions).
      const Patch* d_realPatch;
      
-     const Level* d_level; // I live in this grid level;
      int d_level_index;  // I'm at this index in the Level vector;
      
      // used only by friend class Level
