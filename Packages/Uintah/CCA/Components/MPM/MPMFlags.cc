@@ -134,19 +134,24 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     }
   }
   
-  // d_doComputeHeatFlux
+  // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 
   // flatPlat_heatFlux analysis module is used.
+  //
+  // orginal problem spec
   ProblemSpecP DA_ps = root->findBlock("DataArchiver");
-  for(ProblemSpecP label_iter = DA_ps->findBlock("save"); label_iter != 0;
-                   label_iter = label_iter->findNextBlock("save")){
-    map<string,string> labelName;
-    label_iter->getAttributes(labelName);
-    if(labelName["label"] == "g.HeatFlux"){
-      d_computeNodalHeatFlux = true;
-      cout << " I found g.HeatFlux " << endl;
+  if(DA_ps){
+    for(ProblemSpecP label_iter = DA_ps->findBlock("save"); label_iter != 0;
+                     label_iter = label_iter->findNextBlock("save")){
+      map<string,string> labelName;
+
+      label_iter->getAttributes(labelName);
+      if(labelName["label"] == "g.HeatFlux"){
+        d_computeNodalHeatFlux = true;
+      }
     }
   }
+
   ProblemSpecP da_ps = root->findBlock("DataAnalysis");
 
   if (da_ps) {
@@ -155,9 +160,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     module_ps->getAttributes(attributes);
     if ( attributes["name"]== "flatPlate_heatFlux") {
       d_computeNodalHeatFlux = true;
-      cout << " I found flatPlate_heatFlux " << endl;
     }
   }
+  // restart problem spec
+  mpm_flag_ps->get("computeNodalHeatFlux",d_computeNodalHeatFlux);
   
   delete d_interpolator;
 
@@ -228,6 +234,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoImplicitHeatConduction", d_doImplicitHeatConduction);
   ps->appendElement("DoTransientImplicitHeatConduction", d_doTransientImplicitHeatConduction);
   ps->appendElement("DoExplicitHeatConduction", d_doExplicitHeatConduction);
+  ps->appendElement("computeNodalHeatFlux",d_computeNodalHeatFlux);
   ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
   ps->appendElement("do_grid_reset",      d_doGridReset);
   ps->appendElement("minimum_particle_mass",    d_min_part_mass);
