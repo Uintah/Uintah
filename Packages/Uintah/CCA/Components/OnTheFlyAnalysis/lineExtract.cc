@@ -609,21 +609,25 @@ void lineExtract::createFile(string& filename)
 }
 //______________________________________________________________________
 // create the directory structure   lineName/LevelIndex
-void lineExtract::createDirectory(string& lineName, string& levelIndex)
+//
+void
+lineExtract::createDirectory(string& lineName, string& levelIndex)
 {
   DIR *check = opendir(lineName.c_str());
-  if ( check == NULL){
+  if ( check == NULL ) {
     cout << Parallel::getMPIRank() << "lineExtract:Making directory " << lineName << endl;
     MKDIR( lineName.c_str(), 0777 );
+  } else {
+    closedir(check);
   }
-  closedir(check);
   
   // level index
   string path = lineName + "/" + levelIndex;
   check = opendir(path.c_str());
-  if ( check == NULL){
+  if ( check == NULL ) {
     cout << "lineExtract:Making directory " << path << endl;
     MKDIR( path.c_str(), 0777 );
-  }  
-  closedir(check);
+  } else {
+    closedir(check);
+  }
 }
