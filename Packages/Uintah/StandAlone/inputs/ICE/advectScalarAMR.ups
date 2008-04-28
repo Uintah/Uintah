@@ -174,7 +174,7 @@
       <save label="sum_scalar_f"/>
       <save label="mag_grad_scalar-f"/>
       <save label="refineFlag"/> 
-      <checkpoint interval="0.005" cycle="2"/>"
+      <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
   <Debug>

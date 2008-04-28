@@ -140,7 +140,7 @@
       <save label="scalar-f"/>
       <save label="sum_scalar_f"/>
       <save label="TotalMass"/>
-      <checkpoint interval="0.005" cycle="2"/>"
+      <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
    
    <Debug>
