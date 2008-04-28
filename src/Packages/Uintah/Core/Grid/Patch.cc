@@ -594,17 +594,12 @@ Patch::toString() const
   return string( str );
 }
 
-/*
-void Patch::setExtraIndices(const IntVector& l, const IntVector& h)
-{
-  d_lowIndex = l;
-  d_highIndex = h;
-}
-*/
-
-// This function will return all cells that are intersected by the
-// box.  This is based on the fact that boundaries of cells are closed
-// on the bottom and open on the top.
+/**
+ * This function will return an iterator that touches all cells
+ *  that are are partially or fully within the region formed
+ *  by intersecting the box b and this patch (including extra cells).
+ *  The region is inclusive on the + faces
+ */
 CellIterator
 Patch::getCellIterator(const Box& b) const
 {
@@ -615,51 +610,33 @@ Patch::getCellIterator(const Box& b) const
    // the iterator to work properly we need in increment all the
    // indices by 1.
    IntVector high(RoundDown(u.x())+1, RoundDown(u.y())+1, RoundDown(u.z())+1);
-   low = Max(low, getCellLowIndex());
-   high = Min(high, getCellHighIndex());
+   low = Max(low, getExtraCellLowIndex__New());
+   high = Min(high, getExtraCellHighIndex__New());
    return CellIterator(low, high);
 }
 
-// This function works on the assumption that we want all the cells
-// whose centers lie on or within the box.
+/**
+ *  This function will return an iterator that touches all cells
+ *  whose centers are within the region formed
+ *  by intersecting the box b and this patch (including extra cells).
+ *  The region is inclusive on the + faces
+ */
 CellIterator
 Patch::getCellCenterIterator(const Box& b) const
 {
-#if 1
-   Point l = getLevel()->positionToIndex(b.lower());
-   Point u = getLevel()->positionToIndex(b.upper());
-   // If we subtract 0.5 from the bounding box locations we can treat
-   // the code just like we treat nodes.
-   l -= Vector(0.5, 0.5, 0.5);
-   u -= Vector(0.5, 0.5, 0.5);
-   // This will return an empty iterator when the box is degerate.
-   IntVector low(RoundUp(l.x()), RoundUp(l.y()), RoundUp(l.z()));
-   IntVector high(RoundDown(u.x()) + 1, RoundDown(u.y()) + 1,
-		  RoundDown(u.z()) + 1);
-#else
-  // This is the old code, which doesn't really follow the
-  // specifiaction, but works the way some people have gotten used to
-  // it working.
-   Point l = getLevel()->positionToIndex(b.lower());
-   Point u = getLevel()->positionToIndex(b.upper());
-   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
-   IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
-#endif
-   low = Max(low, getCellLowIndex());
-   high = Min(high, getCellHighIndex());
-   return CellIterator(low, high);
-}
-
-CellIterator
-Patch::getExtraCellIterator(const Box& b) const
-{
-   Point l = getLevel()->positionToIndex(b.lower());
-   Point u = getLevel()->positionToIndex(b.upper());
-   IntVector low(RoundDown(l.x()), RoundDown(l.y()), RoundDown(l.z()));
-   IntVector high(RoundUp(u.x()),  RoundUp(u.y()),   RoundUp(u.z()));
-   low = Min(low, getCellLowIndex());
-   high = Max(high, getCellHighIndex());
-   return CellIterator(low, high);
+  Point l = getLevel()->positionToIndex(b.lower());
+  Point u = getLevel()->positionToIndex(b.upper());
+  // If we subtract 0.5 from the bounding box locations we can treat
+  // the code just like we treat nodes.
+  l -= Vector(0.5, 0.5, 0.5);
+  u -= Vector(0.5, 0.5, 0.5);
+  // This will return an empty iterator when the box is degerate.
+  IntVector low(RoundUp(l.x()), RoundUp(l.y()), RoundUp(l.z()));
+  IntVector high(RoundDown(u.x()) + 1, RoundDown(u.y()) + 1,
+      RoundDown(u.z()) + 1);
+  low = Max(low, getExtraCellLowIndex__New());
+  high = Min(high, getExtraCellHighIndex__New());
+  return CellIterator(low, high);
 }
 
 CellIterator
@@ -1152,10 +1129,14 @@ NodeIterator Patch::getNodeIterator() const
   return NodeIterator(low, hi);
 }
 
-// This will return an iterator which will include all the nodes
-// contained by the bounding box.  If a dimension of the widget is
-// degenerate (has a thickness of 0) the nearest node in that
-// dimension is used.
+/**
+* This will return an iterator which will include all the nodes
+* contained by the bounding box which also intersect the patch.
+* If a dimension of the widget is degenerate (has a thickness of 0)
+* the nearest node in that dimension is used.
+*
+* The patch region includes extra nodes
+*/
 NodeIterator
 Patch::getNodeIterator(const Box& b) const
 {
@@ -1192,8 +1173,8 @@ Patch::getNodeIterator(const Box& b) const
    }
    IntVector low(low_x, low_y, low_z);
    IntVector high(high_x, high_y, high_z);
-   low = Max(low, getNodeLowIndex());
-   high = Min(high, getNodeHighIndex());
+   low = Max(low, getExtraNodeLowIndex__New());
+   high = Min(high, getExtraNodeHighIndex__New());
    return NodeIterator(low, high);
 }
 /**
