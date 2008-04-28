@@ -186,7 +186,7 @@
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>      
-      <checkpoint interval="0.005" cycle="2"/>"
+      <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
   <Debug>

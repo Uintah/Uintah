@@ -183,7 +183,7 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/>  
       <save label="temp_CC"/>    
-      <checkpoint timestepInterval="5" cycle="2"/>"
+      <checkpoint timestepInterval="5" cycle="2"/>
    </DataArchiver>
 
   <Debug>

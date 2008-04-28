@@ -141,7 +141,7 @@
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
 
-      <checkpoint interval="0.0005" cycle="2"/>"     
+      <checkpoint interval="0.0005" cycle="2"/>     
    </DataArchiver>
    
    <Debug>
