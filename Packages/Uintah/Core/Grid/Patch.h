@@ -14,6 +14,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Containers/SuperBox.h>
 
 #undef None
 
@@ -843,6 +844,15 @@ WARNING
       {
         return d_extraCells;
       }
+      
+      /** 
+       * Returns the number of cells in the range of low to high.
+       * This should only be used by SuperBox code
+       */
+      static inline int getVolume(const IntVector& low, const IntVector& high)
+      {
+        return (high.x() -  low.x()) * (high.y() - low.y()) * (high.z() - low.z());
+      } 
 
       /**
        * Returns the number of cells excluding extra cells
@@ -1326,29 +1336,6 @@ WARNING
       /**************End New Public Interace****************/
 
       void setBCType(FaceType face, BCType newbc);
-
-      /********************
-        The following are needed in order to use Patch as a Box in
-        Core/Container/SuperBox.h (see
-        Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
-       *********************/
-
-      inline int getVolume() const
-      { return getVolume(getLow(), getHigh()); }
-
-      inline int getArea(int side) const
-      {
-        int area = 1;
-        for (int i = 0; i < 3; i++)
-          if (i != side)
-            area *= getHigh()[i] - getLow()[i];
-        return area;
-      }
-
-      static inline int getVolume(const IntVector& low, const IntVector& high)
-      {
-        return (high.x() -  low.x()) * (high.y() - low.y()) * (high.z() - low.z());
-      } 
 
 
       static VariableBasis translateTypeToBasis(TypeDescription::Type type,
@@ -1843,8 +1830,6 @@ WARNING
       Patch* createVirtualPatch(const IntVector& offset) const
       { return scinew Patch(this, offset); }
     private:
-
-
       /**
        * This struct will tightly store data that the patch needs
        * elements will only use the number of bits necessary for its
@@ -1942,6 +1927,43 @@ WARNING
       //////////
       // add a method for the user to mark a patch face (for his own purposes)
       mutable int d_faceMarks[4*numFaces];
+      
+      
+      /********************
+        The following are needed in order to use Patch as a Box in
+        Core/Container/SuperBox.h (see
+        Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
+
+        These are private so that other people don't try to use them.  Please
+        use the other more descriptive queries.
+       *********************/
+    
+      friend class SCIRun::InternalAreaSuperBoxEvaluator<const Uintah::Patch*, int>;
+      friend class SCIRun::SuperBox<const Patch*, IntVector, int, int,
+                 SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+      friend class SCIRun::BasicBox<const Patch*, IntVector, int, int, 
+             SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+      
+      /** 
+       * Returns the number of cells in a patch including extraCells.
+       * This should only be used by SuperBox code
+       */
+      inline int getVolume() const
+      { return getVolume(getLow(), getHigh()); }
+
+      /** 
+       * Returns the number of cells on a patches face including extraCells.
+       * This should only be used by SuperBox code.  side specifies the dimension.
+       */
+      inline int getArea(int side) const
+      {
+        int area = 1;
+        for (int i = 0; i < 3; i++)
+          if (i != side)
+            area *= getHigh()[i] - getLow()[i];
+        return area;
+      }
+
      
    }; // end class Patch
    

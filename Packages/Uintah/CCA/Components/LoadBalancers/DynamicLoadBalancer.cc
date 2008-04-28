@@ -1145,7 +1145,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
       {
         for(int p = 0; p < grid->getLevel(l)->numPatches(); p++)
         {
-          costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getVolume()*d_cellCost);
+          costs[l].push_back(d_patchCost+grid->getLevel(l)->getPatch(p)->getNumExtraCells()*d_cellCost);
         }
       }
       if (d_collectParticles && d_scheduler->get_dw(0) != 0) 
