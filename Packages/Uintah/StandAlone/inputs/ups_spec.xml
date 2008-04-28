@@ -99,16 +99,16 @@
     <title              spec="OPTIONAL STRING" />
   </Meta>
 
-  <Time                 spec="REQUIRED NO_DATA">
-    <maxTime            spec="REQUIRED DOUBLE  'positive'" />
-    <maxTimesteps       spec="OPTIONAL INTEGER 'positive'" />
-    <initTime           spec="REQUIRED DOUBLE  'positive'" />
-    <delt_min            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
-    <delt_max            spec="REQUIRED DOUBLE  '0.0000001, 1000'" />
-    <delt_init           spec="OPTIONAL DOUBLE  'positive'" />
+  <Time                   spec="REQUIRED NO_DATA">
+    <maxTime              spec="REQUIRED DOUBLE  'positive'" />
+    <maxTimesteps         spec="OPTIONAL INTEGER 'positive'" />
+    <initTime             spec="REQUIRED DOUBLE  'positive'" />
+    <delt_min             spec="REQUIRED DOUBLE  'positive'" />
+    <delt_max             spec="REQUIRED DOUBLE  'positive'" />
+    <delt_init            spec="OPTIONAL DOUBLE  'positive'" />
     <max_delt_increase    spec="OPTIONAL DOUBLE  'positive'" />
     <max_initial_delt     spec="OPTIONAL DOUBLE  'positive'" />
-    <timestep_multiplier spec="REQUIRED DOUBLE  'positive'" />
+    <timestep_multiplier  spec="REQUIRED DOUBLE  'positive'" />
   </Time>
 
   <SimulationComponent  spec="OPTIONAL NO_DATA"> <!-- FIXME: is this really optional? -->
@@ -161,8 +161,8 @@
       <Face             spec="MULTIPLE NO_DATA"
                         attribute1="side      REQUIRED STRING 'x-, x+, y-, y+, z-, z+'">
         <BCType         spec="MULTIPLE NO_DATA"
-                        attribute1="id        REQUIRED STRING 'all'"
-                        attribute2="var       REQUIRED STRING 'Dirichlet, symmetry'"
+                        attribute1="id        REQUIRED STRING '0,1,2,3,5,6,all'"
+                        attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry'"
                         attribute3="label     REQUIRED STRING 'Pressure, Velocity, Temperature, Density, Symmetric'" >
           <value        spec="OPTIONAL STRING" /> <!-- ERROR... it is required for some, but not for Dirichlet!!!
                                                        also, type can be different for different labels... how to handle? --> 
