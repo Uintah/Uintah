@@ -1409,14 +1409,16 @@ WARNING
       const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
       const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-          const string& type,
-          vector<IntVector>*& b_ptr,
-          vector<IntVector>*& nb_ptr,
-          int child) const ;
+                                            const string& type,
+                                            vector<IntVector>*& b_ptr,
+                                            vector<IntVector>*& nb_ptr,
+                                            int child) const ;
 
       bool haveBC(FaceType face,int mat_id,const string& bc_type,
-          const string& bc_variable) const;
-
+                  const string& bc_variable) const;
+      
+      void initializeBoundaryConditions();
+      
       bool atEdge(FaceType face) const;
       static FaceType nextFace(FaceType face) {
         return (FaceType)((int)face+1);
@@ -1436,10 +1438,16 @@ WARNING
 
       Point cellPosition(const IntVector& idx) const;
 
+
+
       Box getGhostBox(const IntVector& lowOffset,
           const IntVector& highOffset) const;
 
+
+
+
       string toString() const;
+
 
       inline int getID() const {
         return d_id;
@@ -1922,7 +1930,8 @@ WARNING
 
       int d_id; // Patch ID
 
-      map<Patch::FaceType,BCDataArray* > array_bcs;
+      typedef map<Patch::FaceType, BCDataArray* > BCDataArrayMap;
+      BCDataArrayMap* d_arrayBCS;
 
       //////////
       // add a method for the user to mark a patch face (for his own purposes)
