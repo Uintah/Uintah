@@ -827,6 +827,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps,LoadBalancer* lb)
     //if we have a lb then only apply bcs this processors patches
     if(lb==0 || lb->getPatchwiseProcessorAssignment(patch)==Parallel::getMPIRank())
     {
+      patch->initializeBoundaryConditions();
       for(Patch::FaceType face_side = Patch::startFace; 
           face_side <= Patch::endFace; face_side=Patch::nextFace(face_side)) {
         if (patch->getBCType(face_side) == Patch::None) {
