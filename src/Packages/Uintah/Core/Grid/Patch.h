@@ -1039,8 +1039,6 @@ WARNING
           getBCType(zplus)==Coarse;
       }
 
-
-
       /**
        * sets the vector cells equal to the list of cells that are in the corners
        */
@@ -1332,32 +1330,72 @@ WARNING
       NodeIterator getNodeIterator(const Box& b) const;
 
 
+      /**
+       * Returns the VariableBasis for the TypeDescription::type specified
+       * in type.  If mustExist is true this function will throw an exception
+       * if the VariableBasis does not exist for the given type.
+       */
+      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
+          bool mustExist);
+
+      /**
+       * Returns the low index for a variable of type basis with extraCells or 
+       * the boundaryLayer specified in boundaryLayer.  Having both extraCells
+       * and a boundaryLayer is an error.
+       * \todo rename to getExtraLowIndex
+       */
+      IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
+      
+      /**
+       * Returns the high index for a variable of type basis with extraCells or 
+       * the boundaryLayer specified in boundaryLayer.  Having both extraCells
+       * and a boundaryLayer is an error.
+       * \todo rename to getExtraHighIndex
+       */
+      IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
+      
+      /**
+       * Returns the low index for a variable of type basis without a 
+       * boundary layer and without extraCells.
+       * \todo rename to getLowIndex
+       */
+      IntVector getInteriorLowIndex(VariableBasis basis) const;
+      
+      /**
+       * Returns the high index for a variable of type basis without a 
+       * boundary layer and without extraCells.
+       * \todo rename to getHighIndex
+       */
+      IntVector getInteriorHighIndex(VariableBasis basis) const;
+
+      /**
+       * Returns the low index for a variable of type basis without extraCells
+       * except on the boundary of the domain.
+       * \todo rename to getLowIndexWithDomainLayer
+       */
+      IntVector getInteriorLowIndexWithBoundary(VariableBasis basis) const;
+      
+      /**
+       * Returns the high index for a variable of type basis without extraCells
+       * except on the boundary of the domain.
+       * \todo rename to getHighIndexWithDomainLayer
+       */
+      IntVector getInteriorHighIndexWithBoundary(VariableBasis basis) const;
 
       /**************End New Public Interace****************/
+      
+      /**
+       * For AMR.  When there are weird patch configurations, sometimes patches can overlap.
+       * Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
+       * If the overlap IS the intersection, set the low to be equal to the high.
+       */
+      void cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
+         IntVector& region_low, IntVector& region_high) const;
+
 
       void setBCType(FaceType face, BCType newbc);
 
 
-      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
-          bool mustExist);
-
-      //__________________________________
-      //   I C E - M P M I C E   S T U F F 
-
-      IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
-      IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
-      IntVector getInteriorLowIndex(VariableBasis basis) const;
-      IntVector getInteriorHighIndex(VariableBasis basis) const;
-
-      // do not get coarse-fine extra cells that are not the domain boundary
-      IntVector getInteriorLowIndexWithBoundary(VariableBasis basis) const;
-      IntVector getInteriorHighIndexWithBoundary(VariableBasis basis) const;
-
-      // For AMR.  When there are weird patch configurations, sometimes patches can overlap.
-      // Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
-      // If the overlap IS the intersection, set the low to be equal to the high.
-      void cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
-          IntVector& region_low, IntVector& region_high) const;
       /*
          IntVector getGhostSFCXLowIndex(const int numGC) const
          {  return d_lowIndex-getGhostSFCXLowOffset(numGC, d_bctypes); }
