@@ -38,9 +38,11 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FileUtils.h>
 
-#include <iostream>
+#include <algorithm>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
+#include <vector>
 
 #include <stdio.h>
 
