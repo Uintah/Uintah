@@ -227,16 +227,16 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
       patch_low = patch->getInteriorNodeLowIndex();
       switch (qinfo.type->getType()) {
       case Uintah::TypeDescription::SFCXVariable:
-        patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
+        patch_high = patch->getHighIndex(Patch::XFaceBased);
         break;
       case Uintah::TypeDescription::SFCYVariable:
-        patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
+        patch_high = patch->getHighIndex(Patch::YFaceBased);
         break;
       case Uintah::TypeDescription::SFCZVariable:
-        patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
+        patch_high = patch->getHighIndex(Patch::ZFaceBased);
         break;
       default:
-        patch_high = patch->getInteriorNodeHighIndex();   
+        patch_high = patch->getNodeHighIndex();   
       } 
     }
       
