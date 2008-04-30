@@ -740,8 +740,8 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
       patch->getLevel()->selectPatches(low, high, n);
       for (int i = 0; i < n.size(); i++) {
         const Patch* p = n[i];
-        IntVector low = p->getLowIndex(Patch::CellBased, IntVector(0,0,0));
-        IntVector high = p->getHighIndex(Patch::CellBased, IntVector(0,0,0));
+        IntVector low = p->getExtraLowIndex(Patch::CellBased, IntVector(0,0,0));
+        IntVector high = p->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0));
         b2.push_back(Region(low,high));
       }
       difference = Region::difference(b1, b2);

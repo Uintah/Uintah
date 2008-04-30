@@ -311,16 +311,16 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
             if (patch->getLevel()->getIndex() > 0 && patch != neighbor && req->patches_dom == Task::NormalDomain) {
               // don't scrub on AMR overlapping patches...
               IntVector l = low, h = high;
-              l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
-              h = Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), high);
+              l = Max(neighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), low);
+              h = Min(neighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), high);
               patch->cullIntersection(basis, req->var->getBoundaryLayer(), neighbor->getRealPatch(), l, h);
               if (l == h)
                 continue; 
             }
             if (req->patches_dom == Task::FineLevel) {
               // don't count if it only overlaps extra cells
-              IntVector l = patch->getLowIndex(basis, IntVector(0,0,0)), h = patch->getHighIndex(basis, IntVector(0,0,0));
-              IntVector fl = neighbor->getInteriorLowIndex(basis), fh = neighbor->getInteriorHighIndex(basis);
+              IntVector l = patch->getExtraLowIndex(basis, IntVector(0,0,0)), h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
+              IntVector fl = neighbor->getLowIndex(basis), fh = neighbor->getHighIndex(basis);
               IntVector il = Max(l, neighbor->getLevel()->mapCellToCoarser(fl));
               IntVector ih = Min(h, neighbor->getLevel()->mapCellToCoarser(fh));
               if (ih.x() <= il.x() || ih.y() <= il.y() || ih.z() <= il.z()) {

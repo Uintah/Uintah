@@ -253,8 +253,8 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         n.push_back(&neighbor);
         IntVector ghost(maxGhost,maxGhost,maxGhost);
         
-        IntVector low(patch->getLowIndex(Patch::CellBased, IntVector(0,0,0)));
-        IntVector high(patch->getHighIndex(Patch::CellBased, IntVector(0,0,0)));
+        IntVector low(patch->getExtraLowIndex(Patch::CellBased, IntVector(0,0,0)));
+        IntVector high(patch->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0)));
         level->selectPatches(low-ghost, high+ghost, neighbor);
 
         if (d_sharedState->isCopyDataTimestep() && proc == me) {

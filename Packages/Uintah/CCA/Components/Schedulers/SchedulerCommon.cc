@@ -484,9 +484,9 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt, int when )
       const TypeDescription* td = label->typeDescription();
       Patch::VariableBasis basis = patch->translateTypeToBasis(td->getType(), false);
       IntVector start = 
-          Max(patch->getLowIndex(basis, IntVector(0,0,0)), trackingStartIndex_);
+          Max(patch->getExtraLowIndex(basis, IntVector(0,0,0)), trackingStartIndex_);
       IntVector end = 
-        Min(patch->getHighIndex(basis, IntVector(0,0,0)), trackingEndIndex_);
+        Min(patch->getExtraHighIndex(basis, IntVector(0,0,0)), trackingEndIndex_);
 
       // loop over matls too
       for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
@@ -1282,12 +1282,12 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             IntVector oldHighIndex;
             
             if (newLevel->getIndex() > 0) {
-              oldLowIndex = oldPatch->getInteriorLowIndexWithBoundary(basis);
-              oldHighIndex = oldPatch->getInteriorHighIndexWithBoundary(basis);
+              oldLowIndex = oldPatch->getLowIndexWithDomainLayer(basis);
+              oldHighIndex = oldPatch->getHighIndexWithDomainLayer(basis);
             }
             else {
-              oldLowIndex = oldPatch->getLowIndex(basis, label->getBoundaryLayer());
-              oldHighIndex = oldPatch->getHighIndex(basis, label->getBoundaryLayer());
+              oldLowIndex = oldPatch->getExtraLowIndex(basis, label->getBoundaryLayer());
+              oldHighIndex = oldPatch->getExtraHighIndex(basis, label->getBoundaryLayer());
             }
             
             IntVector copyLowIndex = Max(newLowIndex, oldLowIndex);
@@ -1348,8 +1348,8 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
             // collect the particles from the range encompassing this patch.  Use interior cells since
             // extracells aren't collected across processors in the data copy, and they don't matter
             // for particles anyhow (but we will have to reset the bounds to copy the data)
-            oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getInteriorLowIndexWithBoundary(Patch::CellBased),
-                                                         newPatch->getInteriorHighIndexWithBoundary(Patch::CellBased), 
+            oldsub = oldDataWarehouse->getParticleSubset(matl, newPatch->getLowIndexWithDomainLayer(Patch::CellBased),
+                                                         newPatch->getHighIndexWithDomainLayer(Patch::CellBased), 
                                                          oldLevel.get_rep(), 0, reloc_new_posLabel_);
             oldsubsets[matl] = oldsub;
             oldsub->addReference();

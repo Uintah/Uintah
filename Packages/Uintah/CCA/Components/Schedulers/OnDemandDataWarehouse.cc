@@ -1054,8 +1054,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
       }
       else {
         // if in a copy-data timestep, only grab extra cells if on domain boundary
-        newLow = Max(lowIndex, neighbor->getInteriorLowIndexWithBoundary(Patch::CellBased));
-        newHigh = Min(highIndex, neighbor->getInteriorHighIndexWithBoundary(Patch::CellBased));
+        newLow = Max(lowIndex, neighbor->getLowIndexWithDomainLayer(Patch::CellBased));
+        newHigh = Min(highIndex, neighbor->getHighIndexWithDomainLayer(Patch::CellBased));
       }
 
       Box adjustedBox = box;
@@ -1403,8 +1403,8 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
     ASSERTEQ(Min(var.getLow(), lowIndex), lowIndex);
     ASSERTEQ(Max(var.getHigh(), highIndex), highIndex);
     
-    if (var.getLow() != patch->getLowIndex(basis, label->getBoundaryLayer()) ||
-        var.getHigh() != patch->getHighIndex(basis, label->getBoundaryLayer()) ||
+    if (var.getLow() != patch->getExtraLowIndex(basis, label->getBoundaryLayer()) ||
+        var.getHigh() != patch->getExtraHighIndex(basis, label->getBoundaryLayer()) ||
         var.getBasePointer() == 0 /* place holder for ghost patch */) {
       // It wasn't allocated as part of another patch's superpatch;
       // it existed as ghost patch of another patch.. so we have no
@@ -1464,8 +1464,8 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
                      Point(superHighIndex(0), superHighIndex(1), superHighIndex(2))));
     for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
       const Patch* p = (*superPatchGroup)[i];
-      IntVector low = p->getLowIndex(basis, label->getBoundaryLayer());
-      IntVector high = p->getHighIndex(basis, label->getBoundaryLayer());
+      IntVector low = p->getExtraLowIndex(basis, label->getBoundaryLayer());
+      IntVector high = p->getExtraHighIndex(basis, label->getBoundaryLayer());
       b2.push_back(Box(Point(low(0), low(1), low(2)), Point(high(0), high(1), high(2))));
     }
     difference = Box::difference(b1, b2);
@@ -1475,7 +1475,7 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
       cout << "Box difference: " << superLowIndex << " " << superHighIndex << " with patches " << endl;
       for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
         const Patch* p = (*superPatchGroup)[i];
-        cout << p->getLowIndex(basis, label->getBoundaryLayer()) << " " << p->getHighIndex(basis, label->getBoundaryLayer()) << endl;
+        cout << p->getExtraLowIndex(basis, label->getBoundaryLayer()) << " " << p->getExtraHighIndex(basis, label->getBoundaryLayer()) << endl;
       }
 
       for (unsigned i = 0; i < difference.size(); i++) {
@@ -1524,8 +1524,8 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
   for (; iter != encompassedPatches.end(); ++iter) {
     const Patch* patchGroupMember = *iter;
     GridVariableBase* clone = var.clone();
-    IntVector groupMemberLowIndex = patchGroupMember->getLowIndex(basis, label->getBoundaryLayer());
-    IntVector groupMemberHighIndex = patchGroupMember->getHighIndex(basis, label->getBoundaryLayer());
+    IntVector groupMemberLowIndex = patchGroupMember->getExtraLowIndex(basis, label->getBoundaryLayer());
+    IntVector groupMemberHighIndex = patchGroupMember->getExtraHighIndex(basis, label->getBoundaryLayer());
     IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
     IntVector enclosedHighIndex = Min(groupMemberHighIndex, superHighIndex);
     
@@ -1642,8 +1642,8 @@ OnDemandDataWarehouse::put(GridVariableBase& var,
 			     label->getName(), __FILE__, __LINE__));
 
    // Put it in the database
-   IntVector low = patch->getLowIndex(basis, label->getBoundaryLayer());
-   IntVector high = patch->getHighIndex(basis, label->getBoundaryLayer());
+   IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
+   IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
    if (Min(var.getLow(), low) != var.getLow() ||
        Max(var.getHigh(), high) != var.getHigh()) {
      ostringstream msg_str;
@@ -1729,12 +1729,12 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     // the caller should determine whether or not he wants extra cells.
     // It will matter in AMR cases with corner-aligned patches
     if (useBoundaryCells) {
-      l = Max(patch->getLowIndex(basis, label->getBoundaryLayer()), low);
-      h = Min(patch->getHighIndex(basis, label->getBoundaryLayer()), high);
+      l = Max(patch->getExtraLowIndex(basis, label->getBoundaryLayer()), low);
+      h = Min(patch->getExtraHighIndex(basis, label->getBoundaryLayer()), high);
     }
     else {
-      l = Max(patch->getInteriorLowIndex(basis), low);
-      h = Min(patch->getInteriorHighIndex(basis), high);
+      l = Max(patch->getLowIndex(basis), low);
+      h = Min(patch->getHighIndex(basis), high);
     }
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
@@ -1761,7 +1761,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       var->copyPatch(tmpVar, l, h);
     } catch (InternalError& e) {
       cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h 
-           << " actual patch " << patch->getInteriorLowIndex(basis) << " " << patch->getInteriorHighIndex(basis) 
+           << " actual patch " << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) 
            << " var range: "  << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
       throw e;
     }
@@ -1999,8 +1999,8 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
   }
 
 
-  IntVector low = patch->getLowIndex(basis, label->getBoundaryLayer());
-  IntVector high = patch->getHighIndex(basis, label->getBoundaryLayer());
+  IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
+  IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
 
   // The data should have been put in the database,
   // windowed with this low and high.
@@ -2060,8 +2060,8 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
-        IntVector low = Max(neighbor->getLowIndex(basis, label->getBoundaryLayer()), lowIndex);
-        IntVector high = Min(neighbor->getHighIndex(basis, label->getBoundaryLayer()), highIndex);
+        IntVector low = Max(neighbor->getExtraLowIndex(basis, label->getBoundaryLayer()), lowIndex);
+        IntVector high = Min(neighbor->getExtraHighIndex(basis, label->getBoundaryLayer()), highIndex);
 
         if (patch->getLevel()->getIndex() > 0 && patch != neighbor) {
           patch->cullIntersection(basis, label->getBoundaryLayer(), neighbor, low, high);

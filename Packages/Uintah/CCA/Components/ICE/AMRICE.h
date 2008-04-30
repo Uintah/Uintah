@@ -623,12 +623,12 @@ void ICE::refluxOperator_computeCorrectionFluxes(
   xfl = yfl = zfl = finePatch->getInteriorCellLowIndex();
   xcl = ycl = zcl = coarsePatch->getInteriorCellLowIndex();
   
-  xfh = finePatch->getInteriorHighIndex(Patch::XFaceBased);
-  yfh = finePatch->getInteriorHighIndex(Patch::YFaceBased);
-  zfh = finePatch->getInteriorHighIndex(Patch::ZFaceBased);
-  xch = coarsePatch->getInteriorHighIndex(Patch::XFaceBased);
-  ych = coarsePatch->getInteriorHighIndex(Patch::YFaceBased);
-  zch = coarsePatch->getInteriorHighIndex(Patch::ZFaceBased);
+  xfh = finePatch->getHighIndex(Patch::XFaceBased);
+  yfh = finePatch->getHighIndex(Patch::YFaceBased);
+  zfh = finePatch->getHighIndex(Patch::ZFaceBased);
+  xch = coarsePatch->getHighIndex(Patch::XFaceBased);
+  ych = coarsePatch->getHighIndex(Patch::YFaceBased);
+  zch = coarsePatch->getHighIndex(Patch::ZFaceBased);
 
   // Intersection of coarse and fine patches
   xfl = Max(coarseLevel->mapCellToFiner(xcl), xfl);

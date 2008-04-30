@@ -122,8 +122,8 @@ namespace Uintah {
           Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
           IntVector ec = params->getSolveOnExtraCells() ?
             IntVector(0,0,0) : -level->getExtraCells();
-          IntVector l = patch->getLowIndex(basis, ec);
-          IntVector h1 = patch->getHighIndex(basis, ec)-IntVector(1,1,1);
+          IntVector l = patch->getExtraLowIndex(basis, ec);
+          IntVector h1 = patch->getExtraHighIndex(basis, ec)-IntVector(1,1,1);
 
           HYPRE_StructGridSetExtents(grid, l.get_pointer(), h1.get_pointer());
         }
@@ -168,8 +168,8 @@ namespace Uintah {
           Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
           IntVector ec = params->getSolveOnExtraCells() ?
             IntVector(0,0,0) : -level->getExtraCells();
-          IntVector l = patch->getLowIndex(basis, ec);
-          IntVector h = patch->getHighIndex(basis, ec);
+          IntVector l = patch->getExtraLowIndex(basis, ec);
+          IntVector h = patch->getExtraHighIndex(basis, ec);
 
           // Feed it to Hypre
           if(params->symmetric){
@@ -227,8 +227,8 @@ namespace Uintah {
           Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
           IntVector ec = params->getSolveOnExtraCells() ?
             IntVector(0,0,0) : -level->getExtraCells();
-          IntVector l = patch->getLowIndex(basis, ec);
-          IntVector h = patch->getHighIndex(basis, ec);
+          IntVector l = patch->getExtraLowIndex(basis, ec);
+          IntVector h = patch->getExtraHighIndex(basis, ec);
 
           // Feed it to Hypre
           for(int z=l.z();z<h.z();z++){
@@ -260,8 +260,8 @@ namespace Uintah {
             Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
             IntVector ec = params->getSolveOnExtraCells() ?
               IntVector(0,0,0) : -level->getExtraCells();
-            IntVector l = patch->getLowIndex(basis, ec);
-            IntVector h = patch->getHighIndex(basis, ec);
+            IntVector l = patch->getExtraLowIndex(basis, ec);
+            IntVector h = patch->getExtraHighIndex(basis, ec);
 
             // Feed it to Hypre
             for(int z=l.z();z<h.z();z++){
@@ -545,8 +545,8 @@ namespace Uintah {
           Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
           IntVector ec = params->getSolveOnExtraCells() ?
             IntVector(0,0,0) : -level->getExtraCells();
-          IntVector l = patch->getLowIndex(basis, ec);
-          IntVector h = patch->getHighIndex(basis, ec);
+          IntVector l = patch->getExtraLowIndex(basis, ec);
+          IntVector h = patch->getExtraHighIndex(basis, ec);
           CellIterator iter(l, h);
 
           typename Types::sol_type Xnew;
