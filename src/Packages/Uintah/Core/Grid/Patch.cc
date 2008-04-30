@@ -1346,12 +1346,12 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
   //   and the patch's boundary conditions are basically as though there were no patch there
 
   // use the cell-based interior to compare patch positions, but use the basis-specific one when culling the intersection
-  IntVector p_int_low(getInteriorLowIndex(Patch::CellBased)), p_int_high(getInteriorHighIndex(Patch::CellBased));
-  IntVector n_int_low(neighbor->getInteriorLowIndex(Patch::CellBased)), n_int_high(neighbor->getInteriorHighIndex(Patch::CellBased));
+  IntVector p_int_low(getLowIndex(Patch::CellBased)), p_int_high(getHighIndex(Patch::CellBased));
+  IntVector n_int_low(neighbor->getLowIndex(Patch::CellBased)), n_int_high(neighbor->getHighIndex(Patch::CellBased));
 
   // actual patch intersection
-  IntVector diff = Abs(Max(getLowIndex(Patch::CellBased, bl), neighbor->getLowIndex(Patch::CellBased, bl)) -
-                       Min(getHighIndex(Patch::CellBased, bl), neighbor->getHighIndex(Patch::CellBased, bl)));
+  IntVector diff = Abs(Max(getExtraLowIndex(Patch::CellBased, bl), neighbor->getExtraLowIndex(Patch::CellBased, bl)) -
+                       Min(getExtraHighIndex(Patch::CellBased, bl), neighbor->getExtraHighIndex(Patch::CellBased, bl)));
 
   // go through each dimension, and determine where the neighor patch is relative to this
   // if it is above or below, clamp it to the interior of the neighbor patch
@@ -1363,10 +1363,10 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
       bad_diffs++;
     // depending on the region, cull away the portion of the region that in 'this'
     if (n_int_high[dim] == p_int_low[dim]) {
-      region_high[dim] = Min(region_high[dim], neighbor->getInteriorHighIndex(basis)[dim]);
+      region_high[dim] = Min(region_high[dim], neighbor->getHighIndex(basis)[dim]);
     }
     else if (n_int_low[dim] == p_int_high[dim]) {
-      region_low[dim] = Max(region_low[dim], neighbor->getInteriorLowIndex(basis)[dim]);
+      region_low[dim] = Max(region_low[dim], neighbor->getLowIndex(basis)[dim]);
     }
   }
   
@@ -1485,8 +1485,8 @@ void Patch::computeExtents(VariableBasis basis,
   ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
 	 highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
   
-  IntVector origLowIndex = getLowIndex(basis, IntVector(0,0,0));
-  IntVector origHighIndex = getHighIndex(basis, IntVector(0,0,0));
+  IntVector origLowIndex = getExtraLowIndex(basis, IntVector(0,0,0));
+  IntVector origHighIndex = getExtraHighIndex(basis, IntVector(0,0,0));
   low = origLowIndex - lowOffset;
   high = origHighIndex + highOffset;
 
@@ -1612,7 +1612,7 @@ IntVector Patch::neighborsHigh() const
 * the boundaryLayer specified in boundaryLayer.  Having both extraCells
 * and a boundaryLayer is an error.
 */
-IntVector Patch::getLowIndex(VariableBasis basis,
+IntVector Patch::getExtraLowIndex(VariableBasis basis,
 			     const IntVector& boundaryLayer) const
 {
   //both extraCells and a boundaryLayer cannot exist
@@ -1630,10 +1630,10 @@ IntVector Patch::getLowIndex(VariableBasis basis,
   case ZFaceBased:
     return getExtraSFCZLowIndex__New()-neighborsLow()*boundaryLayer;
   case AllFaceBased:
-    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)",
+    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraLowIndex(basis)",
                             __FILE__, __LINE__));
   default:
-    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)",
+    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraLowIndex(basis)",
                             __FILE__, __LINE__));
   }
 }
@@ -1643,7 +1643,7 @@ IntVector Patch::getLowIndex(VariableBasis basis,
 * the boundaryLayer specified in boundaryLayer.  Having both extraCells
 * and a boundaryLayer is an error.
 */
-IntVector Patch::getHighIndex(VariableBasis basis,
+IntVector Patch::getExtraHighIndex(VariableBasis basis,
 			      const IntVector& boundaryLayer) const
 {
   //both extraCells and a boundaryLayer cannot exist
@@ -1661,10 +1661,10 @@ IntVector Patch::getHighIndex(VariableBasis basis,
   case ZFaceBased:
     return getExtraSFCZHighIndex__New()+neighborsHigh()*boundaryLayer;
   case AllFaceBased:
-    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getLowIndex(basis)",
+    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraHighIndex(basis)",
                             __FILE__, __LINE__));
   default:
-    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getLowIndex(basis)",
+    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraIndex(basis)",
                             __FILE__, __LINE__));
   }
 }
@@ -1673,7 +1673,7 @@ IntVector Patch::getHighIndex(VariableBasis basis,
 * Returns the low index for a variable of type basis without a
 * boundary layer and without extraCells.
 */
-IntVector Patch::getInteriorLowIndex(VariableBasis basis) const
+IntVector Patch::getLowIndex(VariableBasis basis) const
 {
   switch (basis) {
   case CellBased:
@@ -1699,7 +1699,7 @@ IntVector Patch::getInteriorLowIndex(VariableBasis basis) const
 * Returns the high index for a variable of type basis without a
 * boundary layer and without extraCells.
 */
-IntVector Patch::getInteriorHighIndex(VariableBasis basis) const
+IntVector Patch::getHighIndex(VariableBasis basis) const
 {
   switch (basis) {
   case CellBased:
@@ -1725,10 +1725,10 @@ IntVector Patch::getInteriorHighIndex(VariableBasis basis) const
 * Returns the low index for a variable of type basis without extraCells
 * except on the boundary of the domain.
 */
-IntVector Patch::getInteriorLowIndexWithBoundary(VariableBasis basis) const
+IntVector Patch::getLowIndexWithDomainLayer(VariableBasis basis) const
 {
-  IntVector inlow = getInteriorLowIndex(basis);
-  IntVector low = getLowIndex(basis, IntVector(0,0,0));
+  IntVector inlow = getLowIndex(basis);
+  IntVector low = getExtraLowIndex(basis, IntVector(0,0,0));
   if (getBCType(xminus) == None) inlow[0] = low[0];
   if (getBCType(yminus) == None) inlow[1] = low[1];
   if (getBCType(zminus) == None) inlow[2] = low[2];
@@ -1739,10 +1739,10 @@ IntVector Patch::getInteriorLowIndexWithBoundary(VariableBasis basis) const
 * Returns the high index for a variable of type basis without extraCells
 * except on the boundary of the domain.
 */
-IntVector Patch::getInteriorHighIndexWithBoundary(VariableBasis basis) const
+IntVector Patch::getHighIndexWithDomainLayer(VariableBasis basis) const
 {
-  IntVector inhigh = getInteriorHighIndex(basis);
-  IntVector high = getHighIndex(basis, IntVector(0,0,0));
+  IntVector inhigh = getHighIndex(basis);
+  IntVector high = getExtraHighIndex(basis, IntVector(0,0,0));
   if (getBCType(xplus) == None) inhigh[0] = high[0];
   if (getBCType(yplus) == None) inhigh[1] = high[1];
   if (getBCType(zplus) == None) inhigh[2] = high[2];

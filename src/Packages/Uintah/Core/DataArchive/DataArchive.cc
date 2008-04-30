@@ -684,8 +684,8 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
     }
     IntVector l, h;
 
-    l = Max(patch->getInteriorLowIndex(basis), low);
-    h = Min(patch->getInteriorHighIndex(basis), high);
+    l = Max(patch->getLowIndex(basis), low);
+    h = Min(patch->getHighIndex(basis), high);
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
     GridVariableBase* tmpVar = gridvar->cloneType();
@@ -700,7 +700,7 @@ void DataArchive::queryRegion(Variable& var, const string& name, int matlIndex,
       gridvar->copyPatch(tmpVar, l, h);
     } catch (InternalError& e) {
       cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h 
-           << " actual patch " << patch->getInteriorLowIndex(basis) << " " << patch->getInteriorHighIndex(basis) 
+           << " actual patch " << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) 
            << " var range: "  << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
       throw e;
     }

@@ -1051,8 +1051,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           low = Max(low, otherLevelLow);
           if (req->patches_dom == Task::FineLevel) {
             // don't coarsen the extra cells
-            low = patch->getInteriorLowIndex(basis);
-            high = patch->getInteriorHighIndex(basis);
+            low = patch->getLowIndex(basis);
+            high = patch->getHighIndex(basis);
           }
           high = Min(high, otherLevelHigh);
 
@@ -1082,8 +1082,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 	for(int i=0;i<neighbors.size();i++){
 	  const Patch* neighbor=neighbors[i];
           Patch::selectType fromNeighbors;
-	  IntVector l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
-	  IntVector h = Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), high);
+	  IntVector l = Max(neighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), low);
+	  IntVector h = Min(neighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), high);
 	  if (neighbor->isVirtual()) {
 	    l -= neighbor->getVirtualOffset();
 	    h -= neighbor->getVirtualOffset();	    
@@ -1094,8 +1094,8 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
             // the grid assigned to the old dw should be the old grid.
             // This should really only impact things required from the OldDW.
             LevelP fromLevel = sc->get_dw(0)->getGrid()->getLevel(patch->getLevel()->getIndex());
-            fromLevel->selectPatches(Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l),
-                                     Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h),
+            fromLevel->selectPatches(Max(neighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l),
+                                     Min(neighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h),
                                      fromNeighbors);
           }
           else
@@ -1111,12 +1111,12 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 
             if (req->patches_dom == Task::OtherGridDomain && fromNeighbor->getLevel()->getIndex() > 0) {
               // DON'T send extra cells (unless they're on the domain boundary)
-              from_l = Max(fromNeighbor->getInteriorLowIndexWithBoundary(basis), l);
-              from_h = Min(fromNeighbor->getInteriorHighIndexWithBoundary(basis), h);
+              from_l = Max(fromNeighbor->getLowIndexWithDomainLayer(basis), l);
+              from_h = Min(fromNeighbor->getHighIndexWithDomainLayer(basis), h);
             }
             else {
-              from_l = Max(fromNeighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l);
-              from_h = Min(fromNeighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h);
+              from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);
+              from_h = Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h);
             }
             if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->patches_dom == Task::NormalDomain) {
               // cull annoying overlapping AMR patch dependencies

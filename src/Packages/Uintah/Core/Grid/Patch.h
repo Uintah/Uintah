@@ -1342,45 +1342,39 @@ WARNING
        * Returns the low index for a variable of type basis with extraCells or 
        * the boundaryLayer specified in boundaryLayer.  Having both extraCells
        * and a boundaryLayer is an error.
-       * \todo rename to getExtraLowIndex
        */
-      IntVector getLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
+      IntVector getExtraLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
       
       /**
        * Returns the high index for a variable of type basis with extraCells or 
        * the boundaryLayer specified in boundaryLayer.  Having both extraCells
        * and a boundaryLayer is an error.
-       * \todo rename to getExtraHighIndex
        */
-      IntVector getHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
+      IntVector getExtraHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
       
       /**
        * Returns the low index for a variable of type basis without a 
        * boundary layer and without extraCells.
-       * \todo rename to getLowIndex
        */
-      IntVector getInteriorLowIndex(VariableBasis basis) const;
+      IntVector getLowIndex(VariableBasis basis) const;
       
       /**
        * Returns the high index for a variable of type basis without a 
        * boundary layer and without extraCells.
-       * \todo rename to getHighIndex
        */
-      IntVector getInteriorHighIndex(VariableBasis basis) const;
+      IntVector getHighIndex(VariableBasis basis) const;
 
       /**
        * Returns the low index for a variable of type basis without extraCells
        * except on the boundary of the domain.
-       * \todo rename to getLowIndexWithDomainLayer
        */
-      IntVector getInteriorLowIndexWithBoundary(VariableBasis basis) const;
+      IntVector getLowIndexWithDomainLayer(VariableBasis basis) const;
       
       /**
        * Returns the high index for a variable of type basis without extraCells
        * except on the boundary of the domain.
-       * \todo rename to getHighIndexWithDomainLayer
        */
-      IntVector getInteriorHighIndexWithBoundary(VariableBasis basis) const;
+      IntVector getHighIndexWithDomainLayer(VariableBasis basis) const;
 
       /**************End New Public Interace****************/
       

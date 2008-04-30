@@ -100,8 +100,8 @@ public:
       Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
       IntVector ec = params->getSolveOnExtraCells() ?
 	IntVector(0,0,0) : -level->getExtraCells();
-      IntVector l = patch->getLowIndex(basis, ec);
-      IntVector h = patch->getHighIndex(basis, ec);
+      IntVector l = patch->getExtraLowIndex(basis, ec);
+      IntVector h = patch->getExtraHighIndex(basis, ec);
       CellIterator iter(l, h);
 
       IntVector size = h-l;
