@@ -289,12 +289,12 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
       cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
 
-      cerr<<"getHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
-      cerr<<"getHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
-      cerr<<"getHighIndex(Patch::ZFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::ZFaceBased, IntVector(0,0,0))<<"\n\n";
-      cerr<<"getInteriorHighIndex(Patch::XFaceBased) = "<<patch->getInteriorHighIndex(Patch::XFaceBased)<<"\n";
-      cerr<<"getInteriorHighIndex(Patch::YFaceBased) = "<<patch->getInteriorHighIndex(Patch::YFaceBased)<<"\n";
-      cerr<<"getInteriorHighIndex(Patch::ZFaceBased) = "<<patch->getInteriorHighIndex(Patch::ZFaceBased)<<"\n\n";
+      cerr<<"getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getExtraHighIndex(Patch::ZFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::ZFaceBased, IntVector(0,0,0))<<"\n\n";
+      cerr<<"getHighIndex(Patch::XFaceBased) = "<<patch->getHighIndex(Patch::XFaceBased)<<"\n";
+      cerr<<"getHighIndex(Patch::YFaceBased) = "<<patch->getHighIndex(Patch::YFaceBased)<<"\n";
+      cerr<<"getHighIndex(Patch::ZFaceBased) = "<<patch->getHighIndex(Patch::ZFaceBased)<<"\n\n";
 #endif
     if(sfield->basis_order() == 0){
       patch_low = patch->getInteriorCellLowIndex();
@@ -303,13 +303,13 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       patch_low = patch->getInteriorNodeLowIndex();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
-        patch_high = patch->getInteriorHighIndex(Patch::XFaceBased);
+        patch_high = patch->getHighIndex(Patch::XFaceBased);
         break;
       case TypeDescription::SFCYVariable:
-        patch_high = patch->getInteriorHighIndex(Patch::YFaceBased);
+        patch_high = patch->getHighIndex(Patch::YFaceBased);
         break;
       case TypeDescription::SFCZVariable:
-        patch_high = patch->getInteriorHighIndex(Patch::ZFaceBased);
+        patch_high = patch->getHighIndex(Patch::ZFaceBased);
         break;
       default:
         patch_high = patch->getInteriorNodeHighIndex();   
@@ -337,12 +337,12 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n";
       cerr<<"Patch low position is "<< patch->cellPosition(patch->getCellLowIndex())<<"\n";
       cerr<<"Patch high position is "<< patch->cellPosition(patch->getCellHighIndex())<<"\n";
-      cerr<<"getHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
-      cerr<<"getHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
-      cerr<<"getHighIndex(Patch::ZFaceBased, IntVector(0,0,0)) = "<<patch->getHighIndex(Patch::ZFaceBased, IntVector(0,0,0))<<"\n\n";
-      cerr<<"getInteriorHighIndex(Patch::XFaceBased) = "<<patch->getInteriorHighIndex(Patch::XFaceBased)<<"\n";
-      cerr<<"getInteriorHighIndex(Patch::YFaceBased) = "<<patch->getInteriorHighIndex(Patch::YFaceBased)<<"\n";
-      cerr<<"getInteriorHighIndex(Patch::ZFaceBased) = "<<patch->getInteriorHighIndex(Patch::ZFaceBased)<<"\n\n";
+      cerr<<"getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
+      cerr<<"getExtraHighIndex(Patch::ZFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::ZFaceBased, IntVector(0,0,0))<<"\n\n";
+      cerr<<"getHighIndex(Patch::XFaceBased) = "<<patch->getHighIndex(Patch::XFaceBased)<<"\n";
+      cerr<<"getHighIndex(Patch::YFaceBased) = "<<patch->getHighIndex(Patch::YFaceBased)<<"\n";
+      cerr<<"getHighIndex(Patch::ZFaceBased) = "<<patch->getHighIndex(Patch::ZFaceBased)<<"\n\n";
 
       BBox b;
       qinfo.grid->getInteriorSpatialRange(b);
@@ -356,13 +356,13 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       patch_low = patch->getNodeLowIndex();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
-        patch_high = patch->getHighIndex(Patch::XFaceBased,IntVector(0,0,0));
+        patch_high = patch->getExtraHighIndex(Patch::XFaceBased,IntVector(0,0,0));
         break;
       case TypeDescription::SFCYVariable:
-        patch_high = patch->getHighIndex(Patch::YFaceBased,IntVector(0,0,0));
+        patch_high = patch->getExtraHighIndex(Patch::YFaceBased,IntVector(0,0,0));
         break;
       case TypeDescription::SFCZVariable:
-        patch_high = patch->getHighIndex(Patch::ZFaceBased,IntVector(0,0,0));
+        patch_high = patch->getExtraHighIndex(Patch::ZFaceBased,IntVector(0,0,0));
         break;
       default:
         patch_high = patch->getNodeHighIndex();   
