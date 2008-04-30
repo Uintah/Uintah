@@ -93,15 +93,23 @@ public:
 
       typename Types::sol_type X;
       if(modifies_x)
-	new_dw->getModifiable(X, X_label, matl, patch);
+        new_dw->getModifiable(X, X_label, matl, patch);
       else
-	new_dw->allocateAndPut(X, X_label, matl, patch);
-      
+        new_dw->allocateAndPut(X, X_label, matl, patch);
+
       Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-      IntVector ec = params->getSolveOnExtraCells() ?
-	IntVector(0,0,0) : -level->getExtraCells();
-      IntVector l = patch->getExtraLowIndex(basis, ec);
-      IntVector h = patch->getExtraHighIndex(basis, ec);
+
+      IntVector l,h;
+      if(params->getSolveOnExtraCells())
+      {
+        l = patch->getExtraLowIndex(basis, IntVector(0,0,0));
+        h = patch->getExtraHighIndex(basis, IntVector(0,0,0));
+      }
+      else
+      {
+        l = patch->getLowIndex(basis);
+        h = patch->getHighIndex(basis);
+      }
       CellIterator iter(l, h);
 
       IntVector size = h-l;
@@ -113,94 +121,94 @@ public:
       Array1<double> b(totsize);
 
       for(CellIterator i(iter); !i.done(); i++){
-	IntVector idx = *i;
-	IntVector idx2 = idx-l;
-	int row = idx2.x()+idx2.y()*size.x()+idx2.z()*size.x()*size.y();
-	b[row] = B[idx];
-	const Stencil7& S = A[idx];
-	a(row, row) = S.p;
-	if(idx.x() > l.x()){
-	  a(row, row-1) = S.w;
-	} else {
-	  ASSERTEQ(S.w, 0);
-	}
-	if(idx.x() < h.x()-1){
-	  a(row, row+1) = S.e;
-	} else {
-	  ASSERTEQ(S.e, 0);
-	}
-	if(idx.y() > l.y()){
-	  a(row, row-size.x()) = S.s;
-	} else {
-	  ASSERTEQ(S.s, 0);
-	}
-	if(idx.y() < h.y()-1){
-	  a(row, row+size.x()) = S.n;
-	} else {
-	  ASSERTEQ(S.n, 0);
-	}
-	if(idx.z() > l.z()){
-	  a(row, row-size.x()*size.y()) = S.b;
-	} else {
-	  ASSERTEQ(S.b, 0);
-	}
-	if(idx.z() < h.z()-1){
-	  a(row, row+size.x()*size.y()) = S.t;
-	} else {
-	  ASSERTEQ(S.t, 0);
-	}
+        IntVector idx = *i;
+        IntVector idx2 = idx-l;
+        int row = idx2.x()+idx2.y()*size.x()+idx2.z()*size.x()*size.y();
+        b[row] = B[idx];
+        const Stencil7& S = A[idx];
+        a(row, row) = S.p;
+        if(idx.x() > l.x()){
+          a(row, row-1) = S.w;
+        } else {
+          ASSERTEQ(S.w, 0);
+        }
+        if(idx.x() < h.x()-1){
+          a(row, row+1) = S.e;
+        } else {
+          ASSERTEQ(S.e, 0);
+        }
+        if(idx.y() > l.y()){
+          a(row, row-size.x()) = S.s;
+        } else {
+          ASSERTEQ(S.s, 0);
+        }
+        if(idx.y() < h.y()-1){
+          a(row, row+size.x()) = S.n;
+        } else {
+          ASSERTEQ(S.n, 0);
+        }
+        if(idx.z() > l.z()){
+          a(row, row-size.x()*size.y()) = S.b;
+        } else {
+          ASSERTEQ(S.b, 0);
+        }
+        if(idx.z() < h.z()-1){
+          a(row, row+size.x()*size.y()) = S.t;
+        } else {
+          ASSERTEQ(S.t, 0);
+        }
       }
 
       // Check for symmetry
       for(int i=0;i<totsize;i++){
-	for(int j=i+1;j<totsize;j++){
-	  ASSERTEQ(a(i, j), a(j, i));
-	}
+        for(int j=i+1;j<totsize;j++){
+          ASSERTEQ(a(i, j), a(j, i));
+        }
       }
 
       int rows = totsize;
       for(int i=0;i<rows;i++)
-	x[i]=b[i];
+        x[i]=b[i];
 
       // Gauss-Jordan with no pivoting
       for(int i=0;i<rows;i++){
-	ASSERT(a(i, i) != 0);
-	double denom=1./a(i, i);
-	x[i]*=denom;
-	for(int j=0;j<rows;j++){
-	  a(i, j)*=denom;
-	}
-	flops += rows+1;
-	memrefs += (rows+1)*sizeof(double);
-	for(int j=i+1;j<rows;j++){
-	  double factor=a(j, i);
-	  x[j]-=factor*x[i];
-	  flops += 2*rows+2;
-	  memrefs += (2*rows+3)*sizeof(double);
-	  for(int k=0;k<rows;k++){
-	    a(j, k)-=factor*a(i, k);
-	  }
-	}
+        ASSERT(a(i, i) != 0);
+        double denom=1./a(i, i);
+        x[i]*=denom;
+        for(int j=0;j<rows;j++){
+          a(i, j)*=denom;
+        }
+        flops += rows+1;
+        memrefs += (rows+1)*sizeof(double);
+        for(int j=i+1;j<rows;j++){
+          double factor=a(j, i);
+          x[j]-=factor*x[i];
+          flops += 2*rows+2;
+          memrefs += (2*rows+3)*sizeof(double);
+          for(int k=0;k<rows;k++){
+            a(j, k)-=factor*a(i, k);
+          }
+        }
       }
 
       // Back-substitution
       for(int i=1;i<rows;i++){
-	for(int j=0;j<i;j++){
-	  double factor=a(j, i);
-	  x[j]-=factor*x[i];
-	  memrefs += (2*rows+2)*sizeof(double);
-	  flops += (2*rows+2)*sizeof(double);
-	  for(int k=0;k<rows;k++){
-	    a(j, k)-=factor*a(i, k);
-	  }
-	}
+        for(int j=0;j<i;j++){
+          double factor=a(j, i);
+          x[j]-=factor*x[i];
+          memrefs += (2*rows+2)*sizeof(double);
+          flops += (2*rows+2)*sizeof(double);
+          for(int k=0;k<rows;k++){
+            a(j, k)-=factor*a(i, k);
+          }
+        }
       }
 
       for(CellIterator i(iter); !i.done(); i++){
-	IntVector idx = *i;
-	IntVector idx2 = idx-l;
-	int row = idx2.x()+idx2.y()*size.x()+idx2.z()*size.x()*size.y();
-	X[idx] = x[row];
+        IntVector idx = *i;
+        IntVector idx2 = idx-l;
+        int row = idx2.x()+idx2.y()*size.x()+idx2.z()*size.x()*size.y();
+        X[idx] = x[row];
       }
     }
     double dt=Time::currentSeconds()-tstart;
