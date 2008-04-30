@@ -50,10 +50,10 @@ namespace Uintah {
 
       USE_IF_ASSERTS_ON( Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(), true); )
 
-      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getLowIndex(basis, req->var->getBoundaryLayer())) ==
-				fromPatch->getLowIndex(basis, req->var->getBoundaryLayer())));
-      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getHighIndex(basis, req->var->getBoundaryLayer())) ==
-				fromPatch->getHighIndex(basis, req->var->getBoundaryLayer())));
+      ASSERT(fromPatch == 0 || (Min(low, fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())) ==
+				fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())));
+      ASSERT(fromPatch == 0 || (Max(high, fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())) ==
+				fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())));
       toTasks.push_back(toTask);
     }
 
