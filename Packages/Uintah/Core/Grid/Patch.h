@@ -1453,6 +1453,7 @@ WARNING
         getGhostOffsets(translateTypeToBasis(basis, basisMustExist),
             gtype, numGhostCells, l, h);
       }
+      /*
       inline IntVector getNNodes() const {
         return getNodeHighIndex()-getNodeLowIndex();
       }
@@ -1462,7 +1463,7 @@ WARNING
       }
 
       long totalCells() const;
-
+      */
       void performConsistencyCheck() const;
 
       void printPatchBCs(std::ostream& out) const;

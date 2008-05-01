@@ -246,13 +246,13 @@ namespace Uintah {
     return out;
   }
 }
-
+/*
 long Patch::totalCells() const
 {
    IntVector res(d_highIndex-d_lowIndex);
    return res.x()*res.y()*res.z();
 }
-
+*/
 void
 Patch::performConsistencyCheck() const
 {

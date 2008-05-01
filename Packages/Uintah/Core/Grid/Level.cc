@@ -294,7 +294,7 @@ long Level::totalCells() const
 {
   long total=0;
   for(int i=0;i<(int)d_realPatches.size();i++)
-    total+=d_realPatches[i]->totalCells();
+    total+=d_realPatches[i]->getNumExtraCells();
   return total;
 }
 
