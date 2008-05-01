@@ -176,13 +176,6 @@
       <checkpoint cycle = "4" interval = "0.05"/>
    </DataArchiver>
 
-   <Debug>
-       <dbg_GnuPlot>false</dbg_GnuPlot>
-       <dbg_var1>  0     </dbg_var1>
-       <dbg_var2>  0     </dbg_var2>
-       <dbg_SigFigs>5    </dbg_SigFigs>
-       <dbg_Level>  0    </dbg_Level>
-    </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->

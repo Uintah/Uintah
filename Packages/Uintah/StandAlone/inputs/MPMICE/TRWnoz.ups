@@ -154,30 +154,6 @@
       <checkpoint cycle = "2" timestepInterval = "50"/>
    </DataArchiver>
 
-<!--    <Debug>
-     <dbg_timeStart>       0.0        </dbg_timeStart>
-     <dbg_timeStop>        1.1        </dbg_timeStop>
-     <dbg_outputInterval>  0.00005       </dbg_outputInterval>
-   
-     <dbg_BeginIndex>      [0,0,0]    </dbg_BeginIndex>
-     <dbg_EndIndex>        [101,1,1]  </dbg_EndIndex>
-     <dbg_SigFigs>         16         </dbg_SigFigs>
-     <dbg_Matls>           [0,1]    </dbg_Matls>
-     <dbg_GnuPlot>         true       </dbg_GnuPlot> 
- 
-     <debug label = "switchDebug_explicit_press"/>
-     <debug label = "switchDebug_advance_advect"/> -->
-     <!--
-     <debug label = "switchDebug_Initialize"/>
-     <debug label = "switchDebug_vel_FC"/>           
-     <debug label = "switchDebug_explicit_press"/>   
-     <debug label = "switchDebug_PressFC"/>          
-     <debug label = "switchDebug_LagrangianValues"/> 
-     <debug label = "switchDebug_MomentumExchange_CC"/> 
-     <debug label = "switchDebug_Source_Sink"/>       
-     <debug label = "switchDebug_advance_advect"/>  
-     
-    </Debug>-->
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->

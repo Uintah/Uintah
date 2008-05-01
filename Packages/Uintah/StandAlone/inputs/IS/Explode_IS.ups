@@ -318,8 +318,6 @@
     <checkpoint walltimeStart="1500" walltimeInterval="1800" cycle="4"/>
   </DataArchiver>
 
-  <Debug>
-  </Debug>
 
   <!--____________________________________________________________________-->
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
