@@ -72,8 +72,6 @@
      <!-- 300 timesteps at 6 sec. per time (step 3L amr) -->
   </DataArchiver>
 
-  <Debug>
-  </Debug>
 
   <!--____________________________________________________________________-->
   <!--    I  C  E / M P M     P  A  R  A  M  E  T  E  R  S                -->

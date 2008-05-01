@@ -100,8 +100,6 @@
     <filebase>HTContainer_arches_mpmice.uda</filebase>
   </DataArchiver>
 
-  <Debug>
-  </Debug>
 
   <MPM>
     <time_integrator>               implicit </time_integrator>

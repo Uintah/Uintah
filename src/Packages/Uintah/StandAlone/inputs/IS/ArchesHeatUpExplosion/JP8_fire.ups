@@ -61,8 +61,6 @@
     <checkpoint cycle="4" timestepInterval="1"/>
   </DataArchiver>
 
-  <Debug>
-  </Debug>
 
   <!--____________________________________________________________________-->
   <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->

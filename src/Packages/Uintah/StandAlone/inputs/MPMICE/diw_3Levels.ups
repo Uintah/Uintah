@@ -149,27 +149,6 @@
       <save label = "p.temperature"   levels = "-1"/>
    </DataArchiver>
 
-   <Debug>
-     <dbg_timeStart>       2.00    </dbg_timeStart>
-     <dbg_timeStop>        2.0     </dbg_timeStop>
-     <dbg_outputInterval>  1e-9    </dbg_outputInterval>
-     <dbg_BeginIndex>     [[16,6,-1]]</dbg_BeginIndex>
-     <dbg_EndIndex>       [[18,9,2]]</dbg_EndIndex>
-     <dbg_Level>          [0]       </dbg_Level>
-     <dbg_Matls>           [0 1]    </dbg_Matls>
-     <dbg_SigFigs>         3       </dbg_SigFigs>
-     <!--
-     <debug label = "switchDebug_Initialize"/>
-     <debug label = "switchDebug_equil_press"/>
-     <debug label = "switchDebug_vel_FC"/>           
-     <debug label = "switchDebug_explicit_press"/>   
-     <debug label = "switchDebug_PressFC"/>          
-     <debug label = "switchDebug_LagrangianValues"/> 
-     <debug label = "switchDebug_MomentumExchange_CC"/> 
-     <debug label = "switchDebug_Source_Sink"/>       
-     <debug label = "switchDebug_advance_advect"/>  
-     -->
-   </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
