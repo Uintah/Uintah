@@ -158,8 +158,8 @@ build_multi_level_field( QueryInfo &qinfo, const Args & args )
         if( args.remove_boundary ){
           patch_low = (*patch_it)->getInteriorNodeLowIndex();
           patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
-          pbox.extend((*patch_it)->getInteriorBox().lower());
-          pbox.extend((*patch_it)->getInteriorBox().upper());
+          pbox.extend((*patch_it)->getBox().lower());
+          pbox.extend((*patch_it)->getBox().upper());
         } else {
           patch_low = (*patch_it)->getLowIndex();
           patch_high = (*patch_it)->getHighIndex(); 
