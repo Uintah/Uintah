@@ -369,11 +369,13 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
           r->get("interiorLowIndex", inLowIndex);
           r->get("interiorHighIndex", inHighIndex);
           long totalCells;
-          if(!r->get("totalCells", totalCells))
-            throw InternalError("DataArchive::queryGrid:Error parsing patch total cells",
-                                __FILE__, __LINE__);
-          Patch* patch = level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
-          ASSERTEQ(patch->totalCells(), totalCells);
+          if(!r->get("totalCells", totalCells)) {
+            throw InternalError( "DataArchive::queryGrid:Error parsing patch total cells",
+                                 __FILE__, __LINE__ );
+          }
+          /*Patch* patch = */ 
+          level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
+          // ASSERTEQ(patch->totalCells(), totalCells);
           PatchData pi;
           r->get("proc", pi.proc); // defaults to -1 if not available
           timedata.d_patchInfo[levelIndex].push_back(pi);
