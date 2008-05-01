@@ -549,14 +549,14 @@ void Relocate::finalizeCommunication()
 
 const Patch* findFinePatch(const Point& pos, const Patch* guess, Level* fineLevel)
 {
-  if (guess && guess->getBox().contains(pos))
+  if (guess && guess->getExtraBox().contains(pos))
     return guess;
   return fineLevel->getPatchFromPoint(pos);
 }
 
 const Patch* findCoarsePatch(const Point& pos, const Patch* guess, Level* coarseLevel)
 {
-  if (guess && guess->getBox().contains(pos))
+  if (guess && guess->getExtraBox().contains(pos))
     return guess;
   return coarseLevel->getPatchFromPoint(pos);
 }
@@ -654,7 +654,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           }
           else {
             // not to delete or keep, so relocate it - add it to a scatter record
-            if (prevToPatch && prevToPatch->getBox().contains(px[idx]))
+            if (prevToPatch && prevToPatch->getExtraBox().contains(px[idx]))
               // optimization - check if particle went to the same patch as the previous relocated particle
               toPatch = prevToPatch;
             else {

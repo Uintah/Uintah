@@ -345,9 +345,9 @@ void pointExtract::doAnalysis(const ProcessorGroup* pg,
         // associated with this patch
         Point the_pt = d_points[p]->thePt;
         
-        Box patchDomain = patch->getBox();
+        Box patchDomain = patch->getExtraBox();
         if(level->getIndex() > 0){ // ignore extra cells on fine patches
-          patchDomain = patch->getInteriorBox();
+          patchDomain = patch->getBox();
         }
         // intersection
         the_pt = Max(patchDomain.lower(), the_pt);

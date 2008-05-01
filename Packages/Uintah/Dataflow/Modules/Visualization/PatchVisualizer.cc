@@ -526,7 +526,7 @@ void PatchVisualizer::execute()
     int i = 0;
     for(iter=level->patchesBegin();iter != level->patchesEnd(); iter++){
       const Patch* patch=*iter;
-      Box box = patch->getInteriorBox();
+      Box box = patch->getBox();
 //       patch_list[i].first = box;
 //       patch_list[i].second = 
 //         archive->queryPatchwiseProcessor( patch, timestep); 

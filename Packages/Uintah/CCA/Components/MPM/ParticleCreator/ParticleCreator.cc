@@ -66,7 +66,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     particleIndex count = 0;
     GeometryPieceP piece = (*obj)->getPiece();
     Box b1 = piece->getBoundingBox();
-    Box b2 = patch->getBox();
+    Box b2 = patch->getExtraBox();
     Box b = b1.intersect(b2);
     if(b.degenerate()) {
       count = 0;
@@ -463,7 +463,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
 {
   geompoints::key_type key(patch,obj);
   GeometryPieceP piece = obj->getPiece();
-  Box b2 = patch->getBox();
+  Box b2 = patch->getExtraBox();
   IntVector ppc = obj->getNumParticlesPerCell();
   Vector dxpp = patch->dCell()/ppc;
   Vector dcorner = dxpp*0.5;
@@ -586,7 +586,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   geomvecs::key_type   fiberkey(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
-  Box b2 = patch->getBox();
+  Box b2 = patch->getExtraBox();
   Box b = b1.intersect(b2);
   if(b.degenerate()) return 0;
   

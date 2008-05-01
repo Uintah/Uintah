@@ -238,7 +238,7 @@ void flatPlate_heatFlux::doAnalysis(const ProcessorGroup* pg,
     Point start_pt = d_plane[0]->startPt;
     Point end_pt   = d_plane[0]->endPt;
     
-    Box patchDomain = patch->getInteriorBox();
+    Box patchDomain = patch->getBox();
     // intersection
     start_pt = Max(patchDomain.lower(), start_pt);
     end_pt   = Min(patchDomain.upper(), end_pt);

@@ -661,7 +661,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 	        for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
 	          const Patch* patch = *patchIter;
 	          amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
-		        << ": box=" << patch->getBox()
+		        << ": box=" << patch->getExtraBox()
 		        << ", lowIndex=" << patch->getCellLowIndex() << ", highIndex="
 		        << patch->getCellHighIndex() << ")" << endl;
 	        }

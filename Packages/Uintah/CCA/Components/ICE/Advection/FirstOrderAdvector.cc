@@ -333,7 +333,7 @@ void FirstOrderAdvector::q_FC_PlusFaces(
   CellIterator Yiter=patch->getFaceCellIterator(Patch::yplus,"minusEdgeCells");
   CellIterator Ziter=patch->getFaceCellIterator(Patch::zplus,"minusEdgeCells");
   
-  IntVector patchOnBoundary = patch->neighborsHigh();
+  IntVector patchOnBoundary = patch->noNeighborsHigh();
   // only work on patches that are at the edge of the computational domain
   
   if (patchOnBoundary.x() == 1 ){

@@ -185,10 +185,16 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 }
 
 
+/**
+ * Returns the position of the node idx in domain coordinates.
+ */
 Point Patch::nodePosition(const IntVector& idx) const {
   return getLevel()->getNodePosition(idx);
 }
 
+/**
+ * Returns the position of the cell idx in domain coordinates.
+ */
 Point Patch::cellPosition(const IntVector& idx) const {
   return getLevel()->getCellPosition(idx);
 }
@@ -233,7 +239,7 @@ namespace Uintah {
   {
     out.setf(ios::scientific,ios::floatfield);
     out.precision(4);
-    out << "(Patch " << r.getID() << ": box=" << r.getBox()
+    out << "(Patch " << r.getID() << ": box=" << r.getExtraBox()
         << ", lowIndex=" << r.getCellLowIndex() << ", highIndex=" 
         << r.getCellHighIndex() << ")";
     out.setf(ios::scientific ,ios::floatfield);
@@ -588,7 +594,7 @@ Patch::toString() const
 {
   char str[ 1024 ];
 
-  Box box(getBox());
+  Box box(getExtraBox());
   sprintf( str, "[ [%2.2f, %2.2f, %2.2f] [%2.2f, %2.2f, %2.2f] ]",
 	   box.lower().x(), box.lower().y(), box.lower().z(),
 	   box.upper().x(), box.upper().y(), box.upper().z() );
@@ -1553,7 +1559,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
   // have grabbed more patches than we wanted, so refine them here
   
   for (int i = 0; i < patches.size(); i++) {
-    if (levelOffset < 0 || getBox().overlaps(patches[i]->getBox())) {
+    if (levelOffset < 0 || getExtraBox().overlaps(patches[i]->getExtraBox())) {
       selected_patches.push_back(patches[i]);
     }
   }
@@ -1585,22 +1591,28 @@ Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type t
   }
 }
 
+/**
+* Returns a Box in domain coordinates of the patch including extra cells
+*/
+Box Patch::getExtraBox() const {
+  return getLevel()->getBox(getExtraCellLowIndex__New(), getExtraCellHighIndex__New());
+}
+
+/**
+* Returns a Box in domain coordinates of the patch excluding extra cells
+*/
 Box Patch::getBox() const {
-  return getLevel()->getBox(d_lowIndex, d_highIndex);
+  return getLevel()->getBox(getCellLowIndex__New(),getCellHighIndex__New());
 }
 
-Box Patch::getInteriorBox() const {
-  return getLevel()->getBox(d_inLowIndex, d_inHighIndex);
-}
-
-IntVector Patch::neighborsLow() const
+IntVector Patch::noNeighborsLow() const
 {
   return IntVector(getBCType(xminus) == Neighbor? 0:1,
 		   getBCType(yminus) == Neighbor? 0:1,
 		   getBCType(zminus) == Neighbor? 0:1);
 }
 
-IntVector Patch::neighborsHigh() const
+IntVector Patch::noNeighborsHigh() const
 {
   return IntVector(getBCType(xplus) == Neighbor? 0:1,
 		   getBCType(yplus) == Neighbor? 0:1,
@@ -1620,15 +1632,15 @@ IntVector Patch::getExtraLowIndex(VariableBasis basis,
 
   switch (basis) {
   case CellBased:
-    return getExtraCellLowIndex__New()-neighborsLow()*boundaryLayer;
+    return getExtraCellLowIndex__New()-noNeighborsLow()*boundaryLayer;
   case NodeBased:
-    return getExtraNodeLowIndex__New()-neighborsLow()*boundaryLayer;
+    return getExtraNodeLowIndex__New()-noNeighborsLow()*boundaryLayer;
   case XFaceBased:
-    return getExtraSFCXLowIndex__New()-neighborsLow()*boundaryLayer;
+    return getExtraSFCXLowIndex__New()-noNeighborsLow()*boundaryLayer;
   case YFaceBased:
-    return getExtraSFCYLowIndex__New()-neighborsLow()*boundaryLayer;
+    return getExtraSFCYLowIndex__New()-noNeighborsLow()*boundaryLayer;
   case ZFaceBased:
-    return getExtraSFCZLowIndex__New()-neighborsLow()*boundaryLayer;
+    return getExtraSFCZLowIndex__New()-noNeighborsLow()*boundaryLayer;
   case AllFaceBased:
     SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraLowIndex(basis)",
                             __FILE__, __LINE__));
@@ -1651,15 +1663,15 @@ IntVector Patch::getExtraHighIndex(VariableBasis basis,
   
   switch (basis) {
   case CellBased:
-    return getExtraCellHighIndex__New()+neighborsHigh()*boundaryLayer;
+    return getExtraCellHighIndex__New()+noNeighborsHigh()*boundaryLayer;
   case NodeBased:
-    return getExtraNodeHighIndex__New()+neighborsHigh()*boundaryLayer;
+    return getExtraNodeHighIndex__New()+noNeighborsHigh()*boundaryLayer;
   case XFaceBased:
-    return getExtraSFCXHighIndex__New()+neighborsHigh()*boundaryLayer;
+    return getExtraSFCXHighIndex__New()+noNeighborsHigh()*boundaryLayer;
   case YFaceBased:
-    return getExtraSFCYHighIndex__New()+neighborsHigh()*boundaryLayer;
+    return getExtraSFCYHighIndex__New()+noNeighborsHigh()*boundaryLayer;
   case ZFaceBased:
-    return getExtraSFCZHighIndex__New()+neighborsHigh()*boundaryLayer;
+    return getExtraSFCZHighIndex__New()+noNeighborsHigh()*boundaryLayer;
   case AllFaceBased:
     SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraHighIndex(basis)",
                             __FILE__, __LINE__));

@@ -773,8 +773,8 @@ void getBoundaryEdges(const Patch* patch,
                       const Patch::FaceType face,
                       vector<Patch::FaceType>& face0)
 {
-  IntVector patchNeighborLow  = patch->neighborsLow();
-  IntVector patchNeighborHigh = patch->neighborsHigh();
+  IntVector patchNeighborLow  = patch->noNeighborsLow();
+  IntVector patchNeighborHigh = patch->noNeighborsHigh();
   
   //__________________________________
   // Looking down on the face, examine 

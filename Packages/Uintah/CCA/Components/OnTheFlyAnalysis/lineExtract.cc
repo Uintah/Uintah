@@ -438,9 +438,9 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         Point start_pt = d_lines[l]->startPt;
         Point end_pt   = d_lines[l]->endPt;
         
-        Box patchDomain = patch->getBox();
+        Box patchDomain = patch->getExtraBox();
         if(level->getIndex() > 0){ // ignore extra cells on fine patches
-          patchDomain = patch->getInteriorBox();
+          patchDomain = patch->getBox();
         }
         // intersection
         start_pt = Max(patchDomain.lower(), start_pt);

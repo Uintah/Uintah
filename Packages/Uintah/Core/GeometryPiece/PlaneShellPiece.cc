@@ -107,7 +107,7 @@ int
 PlaneShellPiece::returnParticleCount(const Patch* patch)
 {
   // Get the bounding patch box
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   // The normal to the xy-plane
   Vector n0(0.0, 0.0, 1.0);
@@ -169,7 +169,7 @@ PlaneShellPiece::createParticles(const Patch* patch,
   cout << "Calling plane shell particle creator" << endl;
 
   // Get the bounding patch box
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   // Angle of rotation
   Vector n0(0.0, 0.0, 1.0); // The normal to the xy-plane

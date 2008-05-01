@@ -163,8 +163,8 @@ build_multi_level_field( QueryInfo &qinfo, const Args & args )
         } else {
           patch_low = (*patch_it)->getLowIndex();
           patch_high = (*patch_it)->getHighIndex(); 
-          pbox.extend((*patch_it)->getBox().lower());
-          pbox.extend((*patch_it)->getBox().upper());
+          pbox.extend((*patch_it)->getExtraBox().lower());
+          pbox.extend((*patch_it)->getExtraBox().upper());
         }
         // ***** This seems like a hack *****
         range = patch_high - patch_low + IntVector(1,1,1); 

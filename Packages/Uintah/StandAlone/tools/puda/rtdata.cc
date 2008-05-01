@@ -231,8 +231,8 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                       }   
                     }
                         
-                    Point b_min = patch->getBox().lower();
-                    Point b_max = patch->getBox().upper();
+                    Point b_min = patch->getExtraBox().lower();
+                    Point b_max = patch->getExtraBox().upper();
                         
                     // write the header file
                     fprintf(headerfile, "%d %d %d\n",dim.x(), dim.y(), dim.z());
@@ -273,8 +273,8 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                       }   
                     }
                         
-                    Point b_min = patch->getBox().lower();
-                    Point b_max = patch->getBox().upper();
+                    Point b_min = patch->getExtraBox().lower();
+                    Point b_max = patch->getExtraBox().upper();
                         
                     // write the header file
                     fprintf(headerfile, "%d %d %d\n",dim.x(), dim.y(), dim.z());
@@ -343,8 +343,8 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                       }   
                     }
                         
-                    Point b_min = patch->getBox().lower();
-                    Point b_max = patch->getBox().upper();
+                    Point b_min = patch->getExtraBox().lower();
+                    Point b_max = patch->getExtraBox().upper();
                         
                     // write the header file
                     fprintf(headerfile, "%d %d %d\n",dim.x(), dim.y(), dim.z());
@@ -385,8 +385,8 @@ Uintah::rtdata( DataArchive * da, CommandLineFlags & clf )
                       }   
                     }
                         
-                    Point b_min = patch->getBox().lower();
-                    Point b_max = patch->getBox().upper();
+                    Point b_min = patch->getExtraBox().lower();
+                    Point b_max = patch->getExtraBox().upper();
                         
                     // write the header file
                     fprintf(headerfile, "%d %d %d\n",dim.x(), dim.y(), dim.z());

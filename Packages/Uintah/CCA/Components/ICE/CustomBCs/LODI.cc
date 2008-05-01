@@ -658,8 +658,8 @@ void computeNu(CCVariable<Vector>& nu,
         CellIterator edgeIter =  
                 patch->getEdgeCellIterator(face, face0, "minusCornerCells");
 
-        IntVector patchNeighborLow  = patch->neighborsLow();
-        IntVector patchNeighborHigh = patch->neighborsHigh();
+        IntVector patchNeighborLow  = patch->noNeighborsLow();
+        IntVector patchNeighborHigh = patch->noNeighborsHigh();
         
         IntVector lo = edgeIter.begin();
         IntVector hi = edgeIter.end();
@@ -857,8 +857,8 @@ void getBoundaryEdges(const Patch* patch,
                       const Patch::FaceType face,
                       vector<Patch::FaceType>& face0)
 {
-  IntVector patchNeighborLow  = patch->neighborsLow();
-  IntVector patchNeighborHigh = patch->neighborsHigh();
+  IntVector patchNeighborLow  = patch->noNeighborsLow();
+  IntVector patchNeighborHigh = patch->noNeighborsHigh();
   
   //__________________________________
   // Looking down on the face, examine 

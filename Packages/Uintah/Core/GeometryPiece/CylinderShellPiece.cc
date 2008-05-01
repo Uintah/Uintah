@@ -100,7 +100,7 @@ int
 CylinderShellPiece::returnParticleCount(const Patch* patch)
 {
   // Get the patch box
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   // Find the direction of the normal to the base 
   Vector normal = d_top - d_bottom;
@@ -165,7 +165,7 @@ CylinderShellPiece::createParticles(const Patch* patch,
 				  particleIndex start)
 {
   // Get the patch box
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   // Find the direction of the normal to the base 
   Vector normal = d_top - d_bottom;

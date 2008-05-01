@@ -211,7 +211,7 @@ void PatchDataVisualizer::execute()
     int i = 0;
     for(iter=level->patchesBegin();iter != level->patchesEnd(); iter++){
       const Patch* patch=*iter;
-      Box box = patch->getBox();
+      Box box = patch->getExtraBox();
 
       // extract the data we need
       PatchData data;
