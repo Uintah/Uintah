@@ -22,13 +22,27 @@ jp8cyl_40cube_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
                               "jp8cyl.ups", \
                               ["<patches>[2,2,2]</patches>", "<resolution>[40,40,40]</resolution>", \
                                "<maxTime>0.5</maxTime>"])
+#  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
+#  flags: 
+#       no_uda_comparison:      - skip the uda comparisons
+#       no_memoryTest:          - skip all memory checks
+#       no_restart:             - skip the restart tests
+#       no_dbg:                 - skip all debug compilation tests
+#       no_opt:                 - skip all optimized compilation tests
+#       do_performance_test:    - Run the performance test
+#       doesTestRun:            - Checks if a test successfully runs
+#       abs_tolerance=XXX       - absolute tolerance used in comparisons
+#       rel_tolerance=XXX       - relative tolerance used in comparisons
+#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+
+
 
 UNUSED_TESTS = [("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "chem_meth"), \
                 ("matest_heptwb_cyl_8p", matest_heptwb_cyl_8p_ups, "", 8, "ALL","chem_meth"), \
                 ("matest_heptwb_cyl_8patch", matest_heptwb_cyl_8patch_ups, "", 8, "ALL","chem_meth") \
                 ]
  
-TESTS = [ ("jp8cyl", "jp8cyl.ups", 1.1, "None", "chem_meth"), \
+TESTS = [ ("jp8cyl", "jp8cyl.ups", 1.1, "Linux", "chem_meth"), \
           ("jp8cyl_8p", jp8cyl_8p_ups, 8, "None","chem_meth"), \
           ("jp8cyl_40cube_8p", jp8cyl_40cube_8p_ups, 8, "None","chem_meth") \
     	]
