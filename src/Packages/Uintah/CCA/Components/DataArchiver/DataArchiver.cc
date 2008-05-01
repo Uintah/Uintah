@@ -1328,10 +1328,10 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
             patchElem->appendElement("interiorLowIndex", patch->getInteriorCellLowIndex());
           if (patch->getCellHighIndex() != patch->getInteriorCellHighIndex())
             patchElem->appendElement("interiorHighIndex", patch->getInteriorCellHighIndex());
-          patchElem->appendElement("nnodes", patch->getNNodes());
+          patchElem->appendElement("nnodes", patch->getNumExtraNodes());
           patchElem->appendElement("lower", box.lower());
           patchElem->appendElement("upper", box.upper());
-          patchElem->appendElement("totalCells", patch->totalCells());
+          patchElem->appendElement("totalCells", patch->getNumExtraCells());
         }
       }
       
