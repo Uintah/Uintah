@@ -844,7 +844,7 @@ WARNING
       {
         return d_extraCells;
       }
-      
+
       /** 
        * Returns the number of cells in the range of low to high.
        * This should only be used by SuperBox code
@@ -1344,20 +1344,20 @@ WARNING
        * and a boundaryLayer is an error.
        */
       IntVector getExtraLowIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
-      
+
       /**
        * Returns the high index for a variable of type basis with extraCells or 
        * the boundaryLayer specified in boundaryLayer.  Having both extraCells
        * and a boundaryLayer is an error.
        */
       IntVector getExtraHighIndex(VariableBasis basis, const IntVector& boundaryLayer /*= IntVector(0,0,0)*/) const;
-      
+
       /**
        * Returns the low index for a variable of type basis without a 
        * boundary layer and without extraCells.
        */
       IntVector getLowIndex(VariableBasis basis) const;
-      
+
       /**
        * Returns the high index for a variable of type basis without a 
        * boundary layer and without extraCells.
@@ -1369,14 +1369,12 @@ WARNING
        * except on the boundary of the domain.
        */
       IntVector getLowIndexWithDomainLayer(VariableBasis basis) const;
-      
+
       /**
        * Returns the high index for a variable of type basis without extraCells
        * except on the boundary of the domain.
        */
       IntVector getHighIndexWithDomainLayer(VariableBasis basis) const;
-
-      /**************End New Public Interace****************/
       
       /**
        * For AMR.  When there are weird patch configurations, sometimes patches can overlap.
@@ -1384,7 +1382,43 @@ WARNING
        * If the overlap IS the intersection, set the low to be equal to the high.
        */
       void cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
-         IntVector& region_low, IntVector& region_high) const;
+          IntVector& region_low, IntVector& region_high) const;
+
+      /**
+       * Returns a Box in domain coordinates of the patch including extra cells
+       */
+      Box getExtraBox() const;
+      
+      /**
+       * Returns a Box in domain coordinates of the patch excluding extra cells
+       */
+      Box getBox() const;
+
+      /**
+       * Returns an IntVector with 0 or 1 depending on
+       * if there are neighboring patches on the low faces.  
+       */
+      IntVector noNeighborsLow() const;
+      
+      /**
+       * Returns an IntVector with 0 or 1 depending on
+       * if there are neighboring patches on high low faces.  
+       */
+      IntVector noNeighborsHigh() const;
+      
+      /**
+       * Returns the position of the node idx in domain coordinates.
+       */
+      Point nodePosition(const IntVector& idx) const;
+
+      /**
+       * Returns the position of the cell idx in domain coordinates.
+       */
+      Point cellPosition(const IntVector& idx) const;
+
+
+
+      /**************End New Public Interace****************/
 
 
       void setBCType(FaceType face, BCType newbc);
@@ -1419,10 +1453,6 @@ WARNING
         getGhostOffsets(translateTypeToBasis(basis, basisMustExist),
             gtype, numGhostCells, l, h);
       }
-
-      Box getBox() const;
-      Box getInteriorBox() const;
-
       inline IntVector getNNodes() const {
         return getNodeHighIndex()-getNodeLowIndex();
       }
@@ -1441,34 +1471,20 @@ WARNING
       const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
       const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-                                            const string& type,
-                                            vector<IntVector>*& b_ptr,
-                                            vector<IntVector>*& nb_ptr,
-                                            int child) const ;
+          const string& type,
+          vector<IntVector>*& b_ptr,
+          vector<IntVector>*& nb_ptr,
+          int child) const ;
 
       bool haveBC(FaceType face,int mat_id,const string& bc_type,
-                  const string& bc_variable) const;
-      
+          const string& bc_variable) const;
+
       void initializeBoundaryConditions();
-      
+
       bool atEdge(FaceType face) const;
       static FaceType nextFace(FaceType face) {
         return (FaceType)((int)face+1);
       }
-
-      //__________________________________
-      // returns and IntVector with 0 or 1 depending on
-      // if there are neighboring patches.  Low examines
-      // the minus faces and High the plus faces
-
-      IntVector neighborsLow() const;
-      IntVector neighborsHigh() const;
-
-      //////////
-      // Insert Documentation Here:
-      Point nodePosition(const IntVector& idx) const;
-
-      Point cellPosition(const IntVector& idx) const;
 
 
 
@@ -1700,7 +1716,7 @@ WARNING
        * in the header file alone
        */
       CellIterator getCellIterator(const IntVector gc = IntVector(0,0,0)) const;
-      
+
       /**
        * No need to replace old name and new name will be the same thus I can change it over
        * in the header file alone
@@ -1791,14 +1807,14 @@ WARNING
        * the face.
        */
       IntVector getSFCZFORTHighIndex() const;
-     
+
       /**
-      * Replace with getFortranCellLowIndex__New()
-      */
+       * Replace with getFortranCellLowIndex__New()
+       */
       IntVector getCellFORTLowIndex() const;
       /**
-      * Replace with getFortranCellHighIndex__New()
-      */
+       * Replace with getFortranCellHighIndex__New()
+       */
       IntVector getCellFORTHighIndex() const;
 
       /**
@@ -1813,7 +1829,7 @@ WARNING
         return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
           && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
       }
-      
+
       /**
        * determine if a point is in the patch
        * Replace with containsPoint__New()
@@ -1968,8 +1984,8 @@ WARNING
       //////////
       // add a method for the user to mark a patch face (for his own purposes)
       mutable int d_faceMarks[4*numFaces];
-      
-      
+
+
       /********************
         The following are needed in order to use Patch as a Box in
         Core/Container/SuperBox.h (see
@@ -1978,13 +1994,13 @@ WARNING
         These are private so that other people don't try to use them.  Please
         use the other more descriptive queries.
        *********************/
-    
+
       friend class SCIRun::InternalAreaSuperBoxEvaluator<const Uintah::Patch*, int>;
       friend class SCIRun::SuperBox<const Patch*, IntVector, int, int,
-                 SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+             SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
       friend class SCIRun::BasicBox<const Patch*, IntVector, int, int, 
              SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
-      
+
       /** 
        * Returns the number of cells in a patch including extraCells.
        * This should only be used by SuperBox code

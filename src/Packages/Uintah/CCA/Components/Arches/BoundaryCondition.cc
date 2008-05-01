@@ -375,7 +375,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     cellType.initialize(-1);
     
     // Find the geometry of the patch
-    Box patchBox = patch->getBox();
+    Box patchBox = patch->getExtraBox();
 
     int celltypeval;
     // initialization for pressure boundary
@@ -463,7 +463,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
     if (d_intrusionBoundary) {
-      Box patchInteriorBox = patch->getInteriorBox();
+      Box patchInteriorBox = patch->getBox();
       int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
       for (int ii = 0; ii < nofGeomPieces; ii++) {
         GeometryPieceP  piece = d_intrusionBC->d_geomPiece[ii];
@@ -814,7 +814,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
     IntVector domHi = cellType.getFortHighIndex();
     
     // Get the geometry of the patch
-    Box patchBox = patch->getBox();
+    Box patchBox = patch->getExtraBox();
     
     // Go thru the number of inlets
     for (int ii = 0; ii < d_numInlets; ii++) {
@@ -2491,7 +2491,7 @@ BoundaryCondition::computeInletAreaBCSource(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Box patchInteriorBox = patch->getInteriorBox();
+    Box patchInteriorBox = patch->getBox();
 	
 	int nofBoundaryPieces = (int)d_sourceBoundaryInfo.size();
 
@@ -2608,7 +2608,7 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Box patchInteriorBox = patch->getInteriorBox();
+    Box patchInteriorBox = patch->getBox();
 
 	SFCXVariable<double> umomSource;
 	SFCYVariable<double> vmomSource;
@@ -2909,7 +2909,7 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Box patchInteriorBox = patch->getInteriorBox();
+    Box patchInteriorBox = patch->getBox();
 
 	//assuming a uniform mesh!
 	Vector dx = patch->dCell();
@@ -6381,7 +6381,7 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
     if (d_inletBoundary) {
       double time = 0.0;
       double ramping_factor;
-      Box patchInteriorBox = patch->getInteriorBox();
+      Box patchInteriorBox = patch->getBox();
       for (int indx = 0; indx < d_numInlets; indx++) {
         sum_vartype area_var;
         new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
@@ -6446,7 +6446,7 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
 		              matlIndex, patch);
         string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
         if (d_inletBoundary) {
-          Box patchInteriorBox = patch->getInteriorBox();
+          Box patchInteriorBox = patch->getBox();
           for (int indx = 0; indx < d_numInlets; indx++) {
             FlowInlet* fi = d_flowInlets[indx];
             if (fi->d_prefill) {

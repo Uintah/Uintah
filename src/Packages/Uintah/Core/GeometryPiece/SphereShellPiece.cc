@@ -74,7 +74,7 @@ SphereShellPiece::getBoundingBox() const
 int 
 SphereShellPiece::returnParticleCount(const Patch* patch)
 {
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   double dtheta = M_PI/((double) d_numLat);
   double theta = dtheta/2.;
@@ -124,7 +124,7 @@ SphereShellPiece::createParticles(const Patch* patch,
                                   ParticleVariable<Vector>& psiz,
                                   particleIndex start)
 {
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   double dtheta =     M_PI/((double) d_numLat);
   double theta = dtheta/2.;

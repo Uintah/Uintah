@@ -1318,7 +1318,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
           int proc = lb->getOutputProc(patch);
           procOnLevel[l][proc] = 1;
 
-          Box box = patch->getBox();
+          Box box = patch->getExtraBox();
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
           patchElem->appendElement("id", patch->getID());
           patchElem->appendElement("proc", proc);

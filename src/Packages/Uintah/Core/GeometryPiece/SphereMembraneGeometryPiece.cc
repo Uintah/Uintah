@@ -79,7 +79,7 @@ SphereMembraneGeometryPiece::getBoundingBox() const
 int
 SphereMembraneGeometryPiece::returnParticleCount(const Patch* patch)
 {
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);
@@ -130,7 +130,7 @@ int SphereMembraneGeometryPiece::createParticles(const Patch* patch,
                                                  ParticleVariable<Vector>& psiz,
                                                  particleIndex start)
 {
-  Box b = patch->getBox();
+  Box b = patch->getExtraBox();
 
   double PI     = 3.14159265359;
   double dtheta =     PI/((double) d_numLat);

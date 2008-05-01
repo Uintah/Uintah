@@ -1318,17 +1318,17 @@ main(int argc, char** argv)
             
               cerr << "\t\tPatch: " << patch->getID() << "\n";
 
-              if (!compare(patch->getBox().lower(), patch2->getBox().lower(),
+              if (!compare(patch->getExtraBox().lower(), patch2->getExtraBox().lower(),
                            abs_tolerance, rel_tolerance) ||
-                  !compare(patch->getBox().upper(), patch2->getBox().upper(),
+                  !compare(patch->getExtraBox().upper(), patch2->getExtraBox().upper(),
                            abs_tolerance, rel_tolerance)) {
                 cerr << "Inconsistent patch bounds on patch " << patch->getID()
                      << " at time " << time1 << endl;
-                cerr << filebase1 << " has bounds " << patch->getBox().lower()
-                     << " - " << patch->getBox().upper() << ".\n";
-                cerr << filebase2 << " has bounds " << patch2->getBox().lower()
-                     << " - " << patch2->getBox().upper() << ".\n";
-                cerr << "Difference is: " << patch->getBox().lower() - patch2->getBox().lower() << " - " << patch->getBox().upper() - patch2->getBox().upper() << endl;
+                cerr << filebase1 << " has bounds " << patch->getExtraBox().lower()
+                     << " - " << patch->getExtraBox().upper() << ".\n";
+                cerr << filebase2 << " has bounds " << patch2->getExtraBox().lower()
+                     << " - " << patch2->getExtraBox().upper() << ".\n";
+                cerr << "Difference is: " << patch->getExtraBox().lower() - patch2->getExtraBox().lower() << " - " << patch->getExtraBox().upper() - patch2->getExtraBox().upper() << endl;
                 abort_uncomparable();  
               }
 

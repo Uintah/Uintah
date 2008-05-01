@@ -73,7 +73,7 @@ ParticleSubset* MembraneParticleCreator::createParticles(MPMMaterial* matl,
     particleIndex count = 0;
     GeometryPieceP piece = (*obj)->getPiece();
     Box b1 = piece->getBoundingBox();
-    Box b2 = patch->getBox();
+    Box b2 = patch->getExtraBox();
     Box b = b1.intersect(b2);
     if(b.degenerate())
       count = 0;

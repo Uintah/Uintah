@@ -479,13 +479,13 @@ FieldExtractorAlgoT<T>::build_multi_level_field( QueryInfo& qinfo,
         if( remove_boundary ==1 ){
           patch_low = (*patch_it)->getInteriorNodeLowIndex();
           patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
-          pbox.extend((*patch_it)->getInteriorBox().lower());
-          pbox.extend((*patch_it)->getInteriorBox().upper());
+          pbox.extend((*patch_it)->getBox().lower());
+          pbox.extend((*patch_it)->getBox().upper());
         } else {
           patch_low = (*patch_it)->getLowIndex();
           patch_high = (*patch_it)->getHighIndex(); 
-          pbox.extend((*patch_it)->getBox().lower());
-          pbox.extend((*patch_it)->getBox().upper());
+          pbox.extend((*patch_it)->getExtraBox().lower());
+          pbox.extend((*patch_it)->getExtraBox().upper());
         }
         // ***** This seems like a hack *****
         range = patch_high - patch_low + IntVector(1,1,1); 
@@ -532,13 +532,13 @@ FieldExtractorAlgoT<T>::build_multi_level_field( QueryInfo& qinfo,
         if( remove_boundary ==1 ){
           patch_low = (*patch_it)->getInteriorNodeLowIndex();
           patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
-          pbox.extend((*patch_it)->getInteriorBox().lower());
-          pbox.extend((*patch_it)->getInteriorBox().upper());
+          pbox.extend((*patch_it)->getBox().lower());
+          pbox.extend((*patch_it)->getBox().upper());
         } else {
           patch_low = (*patch_it)->getLowIndex();
           patch_high = (*patch_it)->getHighIndex(); 
-          pbox.extend((*patch_it)->getBox().lower());
-          pbox.extend((*patch_it)->getBox().upper());
+          pbox.extend((*patch_it)->getExtraBox().lower());
+          pbox.extend((*patch_it)->getExtraBox().upper());
         }
         // ***** This seems like a hack *****
         range = patch_high - patch_low + IntVector(1,1,1); 

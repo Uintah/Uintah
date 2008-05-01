@@ -164,7 +164,7 @@ Patch* Level::getPatchFromPoint(const Point& p)
 {
   for(int i=0;i<(int)d_realPatches.size();i++){
     Patch* r = d_realPatches[i];
-    if( r->getBox().contains( p ) )
+    if( r->getExtraBox().contains( p ) )
       return r;
   }
   return 0;
@@ -276,8 +276,8 @@ void Level::getSpatialRange(BBox& b) const
 {
   for(int i=0;i<(int)d_realPatches.size();i++){
     Patch* r = d_realPatches[i];
-    b.extend(r->getBox().lower());
-    b.extend(r->getBox().upper());
+    b.extend(r->getExtraBox().lower());
+    b.extend(r->getExtraBox().upper());
   }
 }
 
@@ -285,8 +285,8 @@ void Level::getInteriorSpatialRange(BBox& b) const
 {
   for(int i=0;i<(int)d_realPatches.size();i++){
     Patch* r = d_realPatches[i];
-    b.extend(r->getInteriorBox().lower());
-    b.extend(r->getInteriorBox().upper());
+    b.extend(r->getBox().lower());
+    b.extend(r->getBox().upper());
   }
 }
 
@@ -491,7 +491,7 @@ bool Level::containsPoint(const Point& p) const
    for(const_patchIterator iter=d_realPatches.begin();
        iter != d_realPatches.end(); iter++){
       const Patch* patch = *iter;
-      if(patch->getBox().contains(p))
+      if(patch->getExtraBox().contains(p))
          return true;
    }
    return false;
@@ -703,7 +703,7 @@ void Level::setBCTypes()
   //for each of my patches
   for(iter=startpatch,idx=0; iter != endpatch; iter++,idx++){
     Patch* patch = *iter;
-    //cout << "Patch bounding box = " << patch->getBox() << endl;
+    //cout << "Patch bounding box = " << patch->getExtraBox() << endl;
     // See if there are any neighbors on the 6 faces
     int bitfield=0;
     for(Patch::FaceType face = Patch::startFace;

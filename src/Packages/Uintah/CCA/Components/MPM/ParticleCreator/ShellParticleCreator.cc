@@ -79,7 +79,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
     // If the geometry piece is outside the patch, look
     // for the next geometry piece
     GeometryPieceP piece = (*obj)->getPiece();
-    Box b = (piece->getBoundingBox()).intersect(patch->getBox());
+    Box b = (piece->getBoundingBox()).intersect(patch->getExtraBox());
     if (b.degenerate()) {
       count = 0;
       continue;
@@ -150,9 +150,9 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
           if (fabs(x) < 1.0e-15) x = 0.0;
           if (fabs(y) < 1.0e-15) y = 0.0;
           if (fabs(z) < 1.0e-15) z = 0.0;
-	  double px = patch->getBox().upper().x();
-	  double py = patch->getBox().upper().y();
-	  double pz = patch->getBox().upper().z();
+	  double px = patch->getExtraBox().upper().x();
+	  double py = patch->getExtraBox().upper().y();
+	  double pz = patch->getExtraBox().upper().z();
           if (fabs(px) < 1.0e-15) px = 0.0;
           if (fabs(py) < 1.0e-15) py = 0.0;
           if (fabs(pz) < 1.0e-15) pz = 0.0;
@@ -162,7 +162,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
           position[pidx] = Point(x,y,z);
 	  if (!patch->findCell(position[pidx],cell_idx)) {
 	    cerr << "Pidx = " << pidx << " Pos = " << position[pidx]
-                 << " patch BBox = " << patch->getBox()
+                 << " patch BBox = " << patch->getExtraBox()
                  << " cell_idx = " << cell_idx
                  << " low = " << patch->getCellLowIndex()
                  << " high = " << patch->getCellHighIndex()
