@@ -246,13 +246,7 @@ namespace Uintah {
     return out;
   }
 }
-/*
-long Patch::totalCells() const
-{
-   IntVector res(d_highIndex-d_lowIndex);
-   return res.x()*res.y()*res.z();
-}
-*/
+
 void
 Patch::performConsistencyCheck() const
 {
@@ -1522,9 +1516,9 @@ void Patch::getOtherLevelPatches(int levelOffset,
 
   const LevelP& otherLevel = getLevel()->getRelativeLevel(levelOffset);
   IntVector low = 
-    otherLevel->getCellIndex(getLevel()->getCellPosition(getLowIndex()));
+    otherLevel->getCellIndex(getLevel()->getCellPosition(getExtraCellLowIndex__New()));
   IntVector high =
-    otherLevel->getCellIndex(getLevel()->getCellPosition(getHighIndex()));
+    otherLevel->getCellIndex(getLevel()->getCellPosition(getExtraCellHighIndex__New()));
 
   if (levelOffset < 0) {
     // we don't grab enough in the high direction if the fine extra cell
@@ -1532,7 +1526,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
 
     // refinement ratio between the two levels
     IntVector crr = otherLevel->getRelativeLevel(1)->getRefinementRatio();
-    IntVector highIndex = getHighIndex();
+    IntVector highIndex = getExtraCellHighIndex__New();
     IntVector offset((highIndex.x() % crr.x()) == 0 ? 0 : 1,
                      (highIndex.y() % crr.y()) == 0 ? 0 : 1,
                      (highIndex.z() % crr.z()) == 0 ? 0 : 1);
@@ -1564,7 +1558,11 @@ void Patch::getOtherLevelPatches(int levelOffset,
     }
   }
 }
-
+/**
+ * Returns the VariableBasis for the TypeDescription::type specified
+ * in type.  If mustExist is true this function will throw an exception
+ * if the VariableBasis does not exist for the given type.
+ */
 Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type type,
 						 bool mustExist)
 {
@@ -1889,6 +1887,11 @@ void Patch::finalizePatch()
 #endif 
 }
 
+/**
+ * Returns the index that this patch would be
+ * if all of the levels were taken into account
+ * This query is O(L) where L is the number of levels.
+ */
 int Patch::getGridIndex() const 
 {
   int index = d_level_index;
