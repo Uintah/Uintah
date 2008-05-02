@@ -338,17 +338,12 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
       timedata.d_matlInfo.push_back(vector<bool>());
 
       int numPatches = -1234;
-      long totalCells = 0;
       IntVector periodicBoundaries(0, 0, 0);      
       for(ProblemSpecP r = n->getFirstChild(); r != 0; r=r->getNextSibling()){
         if(r->getNodeName() == "numPatches" ||
            r->getNodeName() == "numRegions") {
           if(!r->get(numPatches))
             throw InternalError("DataArchive::queryGrid:Error parsing numRegions",
-                                __FILE__, __LINE__);
-        } else if(r->getNodeName() == "totalCells") {
-          if(!r->get(totalCells))
-            throw InternalError("DataArchive::queryGrid:Error parsing totalCells",
                                 __FILE__, __LINE__);
         } else if(r->getNodeName() == "Patch" ||
                   r->getNodeName() == "Region") {
@@ -368,13 +363,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
           IntVector inHighIndex = highIndex;
           r->get("interiorLowIndex", inLowIndex);
           r->get("interiorHighIndex", inHighIndex);
-          long totalCells;
-          if(!r->get("totalCells", totalCells)) {
-            throw InternalError( "DataArchive::queryGrid:Error parsing patch total cells",
-                                 __FILE__, __LINE__ );
-          }
-          Patch* patch = level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
-           ASSERTEQ(patch->getNumExtraCells(), totalCells);
+          level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
           PatchData pi;
           r->get("proc", pi.proc); // defaults to -1 if not available
           timedata.d_patchInfo[levelIndex].push_back(pi);
@@ -391,7 +380,6 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
         }
       }
       ASSERTEQ(level->numPatches(), numPatches);
-      ASSERTEQ(level->totalCells(), totalCells);
       
       if(periodicBoundaries != IntVector(0, 0, 0)){
         level->finalizeLevel(periodicBoundaries.x() != 0,
