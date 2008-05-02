@@ -270,6 +270,8 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 			
 			if (vartype.find("Vector") != string::npos) 
 			  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
+            else if (vartype.find("Matrix3") != string::npos)
+			  AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
 			else  
 			  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
 		}
@@ -312,8 +314,11 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 							  spatial_dimension, topological_dimension);
 			
 			cent = AVT_NODECENT;
+
 			if (vartype.find("Vector") != string::npos) 
 			  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
+            else if (vartype.find("Matrix3") != string::npos)
+			  AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
 			else  
 			  AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
 		}
@@ -851,9 +856,18 @@ avtudaReaderFileFormat::GetVectorVar(int timestate, const char *varname)
 		
 		cellVals& cellValColln = *(timeStepObj.cellValColln);
 		typeDouble& cellValVec = *(cellValColln.cellValVec);
+        int dim = cellValColln.dim;
+		
+		int ncomps /*= 3*/;  // This is the rank of the vector - typically 2 or 3.
 
-		int ncomps = 3;  // This is the rank of the vector - typically 2 or 3.
-		int ntuples = cellValVec.size() / 3; // this is the number of entries in the variable.
+        if (dim == 5) // Tensors
+		  ncomps = 9;
+		else if (dim == 4) // Vectors
+		  ncomps = 3;
+		// else if (dim == 3) // Scalars + Tensors
+		  // ncomps = 1; // This case would lead to problem as it has not been added to meta data
+
+		int ntuples = cellValVec.size() / ncomps; // this is the number of entries in the variable.
 		
 		cout << ncomps << " " << cellValVec.size() << " " << ntuples << endl;
 
@@ -908,15 +922,28 @@ avtudaReaderFileFormat::GetVectorVar(int timestate, const char *varname)
 		timeStep &timeStepObj = *timeStepObjPtr;
 
 		variables& varColln = *(timeStepObj.varColln);
-
+		
 		int ntuples = 0;
-        int ncomps = 3;  // This is the rank of the vector - typically 2 or 3.
+        int ncomps = 0;  // Vector -> 3, Tensor ->  9
+		
+		// Detemine whether we have a vector or a tensor
+		
+		udaVars* udaVarsPtr = (*getVarList)(folder);
+	    udaVars& udaVarsObj = *(udaVarsPtr);
+		
+		for (int k = 0; k < udaVarsObj.size(); k++) {
+		  if (udaVarsObj[k].find(varName) != string::npos) { // should be a vector or a tensor
+		    if (udaVarsObj[k].find("Vector") != string::npos)
+			  ncomps = 3;
+			else if (udaVarsObj[k].find("Matrix3") != string::npos)   
+			  ncomps = 9;
+		  }
+	    }	  	   
 
 		if ((varColln.size() % PARTICLE_INTERVAL) != 0) 
 		  ntuples = (varColln.size() / PARTICLE_INTERVAL) + 1;
 		else
 		  ntuples = varColln.size() / PARTICLE_INTERVAL;
-
 		
 		cout << ncomps << " " << ntuples << endl;
 
@@ -929,16 +956,40 @@ avtudaReaderFileFormat::GetVectorVar(int timestate, const char *varname)
 		//
 		
 		// int ntuples = varColln.size(); // this is the number of entries in the variable.
-		for (int i = 0 ; i < ntuples ; i++) {
-			variable& varRef = varColln[i * PARTICLE_INTERVAL];
-			vecValData& vecDataRef = varRef.vecData;
 			
-			for (int j = 0;  j < vecDataRef.size(); j++) {
-				if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
-				  one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
-				  rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-				}	
-			}
+		if (ncomps == 3) { // Vectors
+			for (int i = 0 ; i < ntuples ; i++) {
+				variable& varRef = varColln[i * PARTICLE_INTERVAL];
+				vecValData& vecDataRef = varRef.vecData;
+				
+				for (int j = 0;  j < vecDataRef.size(); j++) {
+					if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
+					  one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
+					  rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
+					}	
+				}
+			}		
+		}
+		else if (ncomps == 9) { // Tensors
+			for (int i = 0 ; i < ntuples ; i++) {
+				variable& varRef = varColln[i * PARTICLE_INTERVAL];
+				tenValData& tenDataRef = varRef.tenData;
+
+				for (int j = 0;  j < tenDataRef.size(); j++) {
+				    if (strcmp(varName.c_str(), tenDataRef[j].name.c_str()) == 0) {
+					  one_entry[0] = (float)tenDataRef[j].mat[0][0];
+					  one_entry[1] = (float)tenDataRef[j].mat[0][1];
+					  one_entry[2] = (float)tenDataRef[j].mat[0][2];
+					  one_entry[3] = (float)tenDataRef[j].mat[1][0];
+					  one_entry[4] = (float)tenDataRef[j].mat[1][1];
+					  one_entry[5] = (float)tenDataRef[j].mat[1][2];
+					  one_entry[6] = (float)tenDataRef[j].mat[2][0];
+					  one_entry[7] = (float)tenDataRef[j].mat[2][1];
+					  one_entry[8] = (float)tenDataRef[j].mat[2][2];
+					  rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
+					}	
+				}
+			}		
 		}
 
 		delete [] one_entry;
