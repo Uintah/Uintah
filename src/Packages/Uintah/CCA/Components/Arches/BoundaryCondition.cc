@@ -136,28 +136,28 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
   db->getWithDefault("carbon_balance_es", d_carbon_balance_es, false);
   db->getWithDefault("sulfur_balance_es", d_sulfur_balance_es, false);
-
  //--- instrusions with boundary sources -----
  if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
-
 	for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");
 		 intrusionbcs_db != 0; intrusionbcs_db = intrusionbcs_db->findNextBlock("IntrusionWithBCSource")){
-				 
 			d_sourceBoundaryInfo.push_back(scinew BCSourceInfo(d_calcVariance, d_reactingScalarSolve));
+
 			d_sourceBoundaryInfo[d_numSourceBoundaries]->problemSetup(intrusionbcs_db);
 			if (d_sourceBoundaryInfo[d_numSourceBoundaries]->doAreaCalc)
 				d_doAreaCalcforSourceBoundaries = true; //there has to be a better way
 					
 			//compute the density and other properties for this inlet stream
+			cout << "HERE I AM " << endl;
 			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_initEnthalpy = true;
 			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_scalarDisp=0.0;
+			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_mixVarVariance.push_back(0.0);
 			d_props->computeInletProperties(d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction,
 											d_sourceBoundaryInfo[d_numSourceBoundaries]->calcStream);
-				
 			++d_numSourceBoundaries;
 
 	}
- }
+  }
+ 
 
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
@@ -2675,14 +2675,17 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 					Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
 					Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
 					Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
+					Point p_ymm = patch->cellPosition(*iter - IntVector(0,2,0));
 					Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
 					Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
+					Point p_zmm = patch->cellPosition(*iter - IntVector(0,0,2));
 					
-					if (cellType[*iter] == d_flowfieldCellTypeVal){
+//					if (cellType[*iter] == d_flowfieldCellTypeVal){
+					if (!(piece->inside(p))){
 
 						//this is a nasty embedded set of if's....will fix in the future.
 						// x+
-						if (!(piece->inside(p_xp))){
+						if ((piece->inside(p_xp))){
 							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
 							}
 							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
@@ -2708,7 +2711,8 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 						}
 					
 						// y+ is a wall
-						if (cellType[*iter + IntVector(0,1,0)] == d_intrusionBC->d_cellTypeID){		
+//						if (cellType[*iter + IntVector(0,1,0)] == d_intrusionBC->d_cellTypeID){
+						if ((piece->inside(p_yp))){		
 							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
 							}
 							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
@@ -2732,9 +2736,12 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 						// y- is a wall
 						IntVector testi = *iter + IntVector(0,1,0);
 						IntVector testi2 = *iter;
-						if (cellType[*iter - IntVector(0,1,0)] == d_intrusionBC->d_cellTypeID && 
-								testi.y() < idxHi.y()  ){
-							
+//						if (cellType[*iter - IntVector(0,1,0)] == d_intrusionBC->d_cellTypeID && 
+//								testi.y() < idxHi.y()  ){
+						if (piece->inside(p_ym) && testi.y() < idxHi.y()){
+								//cout << "------for y- -------" << endl;
+								//cout << "  cell type - 1  =  " << cellType[*iter-IntVector(0,1,0)] << endl;
+								//cout << "  cell type + 0  =  " << cellType[*iter] << endl;						
 							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
 							}
 							else if (d_sourceBoundaryInfo[bp]->velocityType == "relative"){
@@ -2760,8 +2767,9 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 						// we have to do an additional check for patch boundaries
 						bool yminus = patch->getBCType(Patch::yminus);
 						if (yminus && testi2.y() == idxLo.y()){
-							if (cellType[*iter - IntVector(0,2,0)] == d_intrusionBC->d_cellTypeID && 
-								cellType[*iter - IntVector(0,1,0)] != d_intrusionBC->d_cellTypeID){	
+//							if (cellType[*iter - IntVector(0,2,0)] == d_intrusionBC->d_cellTypeID && 
+//								cellType[*iter - IntVector(0,1,0)] != d_intrusionBC->d_cellTypeID){
+							if (piece->inside(p_ymm) && !(piece->inside(p_ym))){	
 							
 								if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
 								}
@@ -2785,7 +2793,8 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 							}
 						}
 						// z+ is a wall
-						if (cellType[*iter + IntVector(0,0,1)] == d_intrusionBC->d_cellTypeID){
+//						if (cellType[*iter + IntVector(0,0,1)] == d_intrusionBC->d_cellTypeID){
+						if (piece->inside(p_zp)){
 
 							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
 							}
@@ -2810,8 +2819,9 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 						}
 						// z- is a wall
 						testi = *iter + IntVector(0,0,1);
-						if (cellType[*iter - IntVector(0,0,1)] == d_intrusionBC->d_cellTypeID && 
-								testi.z() < idxHi.z()){
+//						if (cellType[*iter - IntVector(0,0,1)] == d_intrusionBC->d_cellTypeID && 
+//								testi.z() < idxHi.z()){
+						if (piece->inside(p_zm) && testi.z() < idxHi.z()){
 
 							if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
 							}
@@ -2837,8 +2847,9 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 						// we have to do an additional check for patch boundaries
 						bool zminus = patch->getBCType(Patch::zminus);
 						if (zminus && testi2.z() == idxLo.z()){
-							if (cellType[*iter - IntVector(0,0,2)] == d_intrusionBC->d_cellTypeID && 
-								cellType[*iter - IntVector(0,0,1)] != d_intrusionBC->d_cellTypeID){ 	
+//							if (cellType[*iter - IntVector(0,0,2)] == d_intrusionBC->d_cellTypeID && 
+//								cellType[*iter - IntVector(0,0,1)] != d_intrusionBC->d_cellTypeID){
+							if (piece->inside(p_zmm) && !(piece->inside(p_zm))){ 	
 							
 								if (d_sourceBoundaryInfo[bp]->velocityType == "absolute"){		
 								}
