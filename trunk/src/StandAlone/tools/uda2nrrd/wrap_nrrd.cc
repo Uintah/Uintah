@@ -125,6 +125,9 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose )
     size[2] = source->fdata().dim2();
     size[3] = source->fdata().dim1();
 
+	cout << "In wrap_nrrd\n";
+	cout << size[0] << " " << size[1] << " " << size[2] << " " << size[3] << endl; 	
+
     unsigned int num_vec = source->fdata().size();
 	cout << num_vec << endl;
     double *data = new double[num_vec*3];

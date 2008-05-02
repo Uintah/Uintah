@@ -136,23 +136,50 @@ handleData( QueryInfo &    qinfo,
     // Coying the values from the nrrd directly. This at some time should be changed
 	// to avoid the double doing and data should be copied directy from the source.
 
-	unsigned int x = cellValColln.x = nrrd->axis[0].size;
-	unsigned int y = cellValColln.y = nrrd->axis[1].size;
-	unsigned int z = cellValColln.z = nrrd->axis[2].size;
-	unsigned int w = nrrd->axis[3].size; // may be present in the case of vectors
+	unsigned int dim = cellValColln.dim = nrrd->dim;
+	
+	cout << "Nrrd has " << dim << " dimensions\n";
+	
+	vector<int> dimension;
+	unsigned int numComponents = 1;
+	
+	for (unsigned int i = 0; i < dim; i++) {
+	  numComponents *= nrrd->axis[i].size;
+	}  
+	
+	if (dim == 5) { // Tensors (rank 2): max dimension
+	  cellValColln.x = nrrd->axis[2].size;
+	  cellValColln.y = nrrd->axis[3].size;
+	  cellValColln.z = nrrd->axis[4].size;
+	}
+	else if (dim == 4) { // Vectors
+	  cellValColln.x = nrrd->axis[1].size;
+	  cellValColln.y = nrrd->axis[2].size;
+	  cellValColln.z = nrrd->axis[3].size;
+	}
+	else if (dim == 3) { // Scalars + Tensors (rank 0)
+	  cellValColln.x = nrrd->axis[0].size;
+	  cellValColln.y = nrrd->axis[1].size;
+	  cellValColln.z = nrrd->axis[2].size;
+	}
 
-	cout << x << "|" << y << "|" << z << "|" << w << endl;
+	// unsigned int x = cellValColln.x = nrrd->axis[0].size;
+	// unsigned int y = cellValColln.y = nrrd->axis[1].size;
+	// unsigned int z = cellValColln.z = nrrd->axis[2].size;
+	// unsigned int w = nrrd->axis[3].size; // may be present in the case of vectors
+
+	// cout << x << "|" << y << "|" << z << "|" << w << endl;
 	
-	unsigned int numComponents;
+	// unsigned int numComponents;
 	
-	if (w == 0)
+	/*if (w == 0)
 	  numComponents = x * y * z;
 	else { 
 	  cellValColln.x = y;
 	  cellValColln.y = z;
 	  cellValColln.z = w;
 	  numComponents = x * y * z * w;
-	}  
+	}*/  
 	  
 	if (dataReq) {
 	  typeDouble* cellValVecPtr = new typeDouble();   

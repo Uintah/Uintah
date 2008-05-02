@@ -25,7 +25,17 @@ class vecVal {
 	~vecVal(){};
 };
 
+// Tensor variables
+class tenVal {
+ public:
+	string name;
+	double mat[3][3];
+	tenVal(){};
+	~tenVal(){};
+};
+
 typedef vector<vecVal> vecValData;
+typedef vector<tenVal> tenValData;
 
 class variable {
  public:
@@ -34,6 +44,7 @@ class variable {
 	float z;
 	unknownData data;
     vecValData vecData;
+    tenValData tenData;
 	variable() {
 	  // vecData = NULL;
 	};
@@ -46,7 +57,8 @@ class variable {
 		this->y = obj.y;
 		this->z = obj.z;
 		this->data = obj.data;	
-		this->vecData = obj.vecData;	
+		this->vecData = obj.vecData;
+		this->tenData = obj.tenData;
 	}
 };
 
@@ -54,7 +66,7 @@ typedef vector<double> typeDouble;
 
 class cellVals {
  public:
-	int x, y, z;
+	int x, y, z, dim;
 	typeDouble* cellValVec;
 	cellVals() {
 	  cellValVec = NULL;

@@ -212,14 +212,13 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
   ParticleDataContainer result;
 
   result.name = qinfo.varname;
-
   result.x = floatArrayX;
   result.y = floatArrayY;
   result.z = floatArrayZ;
-
+  result.type = 1;
   result.numParticles = dataX.size();
 
-  cout << "Everything fine\n";	
+  cout << "Out handleParticleData<Vector>\n";	
 
   return result;
 } // end handleParticleData<Vector>
@@ -228,7 +227,9 @@ template<>
 ParticleDataContainer
 handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication )
 {
+  cout << "In handleParticleData<Matrix3>\n";
   vector<float> data;
+  matrixVec* matrixRep = new matrixVec();
 
   // Loop over each patch and get the data from the data archive.
   Level::const_patchIterator patch_it;
@@ -258,6 +259,9 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
         for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
           float temp_value = (float)(value[*iter].Trace()/3.0); // Trace 3
           // float temp_value = (float)(sqrt(1.5*(value[*iter]-one*temp_value).NormSquared())); // Equivalent 
+		  
+		  // pushing individual matrices into the repository
+		  matrixRep->push_back(value[*iter]);
           
           data.push_back( temp_value );
         }
@@ -285,7 +289,17 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 
   // TODO: just doing trace 3 right now... update to to both...
 
-  ParticleDataContainer result( qinfo.varname + " Trace/3", floatArray, data.size() );
+  // ParticleDataContainer result( qinfo.varname + " Trace/3", floatArray, data.size() );
+
+  ParticleDataContainer result;
+
+  result.name = qinfo.varname;
+  result.data = floatArray;
+  result.matrixRep = matrixRep;
+  result.type = 2;
+  result.numParticles = data.size();
+  
+  cout << "Out handleParticleData<Matrix3>\n";
 
   return result;
 }
@@ -454,6 +468,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 	variable varData;
 	unknownData& dataRef = varData.data;
 	vecValData& vecDataRef = varData.vecData;
+    tenValData& tenDataRef = varData.tenData;
 	
     for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
 
@@ -474,6 +489,23 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 		nameValObj.value = particleVars[cnt].data[particle];
 
 		dataRef.push_back(nameValObj);	
+		
+		// With tensor data we also have the Trace value and data != NULL in that case
+		if ( particleVars[cnt].type == 2 ) { // Tensor data 
+		  tenVal tenValObj;
+		  matrixVec* matrixRepPtr = particleVars[cnt].matrixRep;
+		  matrixVec& matrixRepRef = *(matrixRepPtr);
+		  
+		  tenValObj.name = particleVars[cnt].name;
+		  
+		  for (unsigned int i = 0; i < 3; i++) {
+		    for (unsigned int j = 0; j < 3; j++) {
+			  tenValObj.mat[i][j] =  matrixRepRef[particle](i, j);
+			}
+	      }		  
+			  	  
+		  tenDataRef.push_back(tenValObj);
+		}
         
       } else {
         // wrote = fwrite( &particleVars[cnt].x[particle], sizeof(float), 1, out );
@@ -485,11 +517,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 		  varData.y = particleVars[cnt].y[particle];
 		  varData.z = particleVars[cnt].z[particle];
 		}
-		else { // Vector data
-		  /*if (varData.vecData == NULL) { // The first iteration
-		    varData.vecData = new vecValData();
-	      }*/
-
+		else if ( particleVars[cnt].type == 1 ) { // Vector data
 		  vecVal vecValObj;
 		 
 		  vecValObj.name = particleVars[cnt].name;
@@ -498,7 +526,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 		  vecValObj.z = particleVars[cnt].z[particle];  
 
 		  vecDataRef.push_back(vecValObj);
-		}  
+		}
 		
         // cout << particleVars[cnt].z[particle] << " " << varData.z << endl;
 	  }

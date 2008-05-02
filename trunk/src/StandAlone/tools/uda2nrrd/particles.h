@@ -15,6 +15,9 @@
 //
 // If 'data' is NULL, then the data is in the x, y, and z arrays. 
 //
+
+typedef vector<Matrix3> matrixVec;
+
 struct ParticleDataContainer {
   ParticleDataContainer() :
     name( "name not set" ),
@@ -36,6 +39,10 @@ struct ParticleDataContainer {
   float      * data;
   float      * x, * y, * z;
   unsigned int numParticles;
+  
+  // Addition
+  matrixVec* matrixRep; // matrix repository
+  int type; // 1 -> Vectors, 2 -> Tensors
 };
 
 //
