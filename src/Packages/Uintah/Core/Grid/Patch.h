@@ -125,6 +125,10 @@ WARNING
           }
         private:
       };
+      
+      static const int MAX_PATCH_SELECT = 32; 
+      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+
 
       /**************New Public Interaface*******************
        *
@@ -1329,7 +1333,6 @@ WARNING
        */
       NodeIterator getNodeIterator(const Box& b) const;
 
-
       /**
        * Returns the VariableBasis for the TypeDescription::type specified
        * in type.  If mustExist is true this function will throw an exception
@@ -1416,8 +1419,68 @@ WARNING
        */
       Point cellPosition(const IntVector& idx) const;
 
+      /**
+       * Returns the next face.  Alternativly the ++ operator also 
+       * works on the face.
+       */
+      static inline FaceType nextFace(FaceType face) {
+        return (FaceType)((int)face+1);
+      }
+
+      /**
+       * prints the patch boundary conditions to to ostream out.
+       */
+      void printPatchBCs(std::ostream& out) const;
+
+      /**
+       * returns a string with patch information
+       */
+      string toString() const;
+     
+      /**
+       * returns a unique patch id
+       */
+      inline int getID() const {
+        return d_id;
+      }
+      
+      /**
+       * Returns the patches on the level offset by levelOffset of this level
+       * that overlap with this patch.
+       */
+      void getOtherLevelPatches(int levelOffset, selectType& patches, int numGhostCells = 0)
+        const;
+      
+      /**
+       * Returns the patches on the finer level that overlap
+       * this patch
+       **/
+      void inline getFineLevelPatches(selectType& finePatches) const
+      { getOtherLevelPatches(1, finePatches); }
+
+      /**
+       * Returns the patches on the coarser level that overlap
+       * this patch
+       **/
+      void inline getCoarseLevelPatches(selectType& coarsePatches) const
+      { getOtherLevelPatches(-1, coarsePatches); }
+      
+      /**
+       * Returns an IntVector which has a -1 or +1 on the component of 
+       * the dimension that the face is on.  a -1 indicates a minus face 
+       * and a +1 indicates a plus face.
+       */
+      IntVector faceDirection(FaceType face) const;
 
 
+      /**
+       * Returns the index that this patch would be
+       * if all of the levels were taken into account.
+       * This query is O(L) where L is the number of levels.
+       */
+      int getGridIndex() const;
+
+      
       /**************End New Public Interace****************/
 
 
@@ -1453,20 +1516,10 @@ WARNING
         getGhostOffsets(translateTypeToBasis(basis, basisMustExist),
             gtype, numGhostCells, l, h);
       }
-      /*
-      inline IntVector getNNodes() const {
-        return getNodeHighIndex()-getNodeLowIndex();
-      }
-
-      inline IntVector getNInteriorNodes() const {
-        return getInteriorNodeHighIndex()-getInteriorNodeLowIndex();
-      }
-
-      long totalCells() const;
-      */
+      
       void performConsistencyCheck() const;
 
-      void printPatchBCs(std::ostream& out) const;
+      /*****Boundary condition code to be worked on by John******/
       void setArrayBCValues(FaceType face, BCDataArray* bc);
 
       const BCDataArray* getBCDataArray(Patch::FaceType face) const;
@@ -1482,31 +1535,15 @@ WARNING
 
       void initializeBoundaryConditions();
 
-      bool atEdge(FaceType face) const;
-      static FaceType nextFace(FaceType face) {
-        return (FaceType)((int)face+1);
-      }
-
-
+      /*****end boundary condition ****/
 
       Box getGhostBox(const IntVector& lowOffset,
           const IntVector& highOffset) const;
 
 
-
-
-      string toString() const;
-
-
-      inline int getID() const {
-        return d_id;
-      }
-
       void getFace(FaceType face, const IntVector& insideOffset,
           const IntVector& outsideOffset,
           IntVector& l, IntVector& h) const;
-
-      IntVector faceDirection(FaceType face) const;
 
       void getFaceNodes(FaceType face, int offset, IntVector& l,
           IntVector& h) const;
@@ -1516,11 +1553,6 @@ WARNING
 
       void getFaceCells(FaceType face, int offset, IntVector& l,
           IntVector& h) const;
-
-
-      static const int MAX_PATCH_SELECT = 32; 
-      typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
-
 
       void computeVariableExtents(VariableBasis basis,
           const IntVector& boundaryLayer,
@@ -1551,22 +1583,9 @@ WARNING
           const IntVector& highOffset,
           IntVector& low, IntVector& high) const;
 
-      /* Get overlapping patches on other levels. */
-
-      void getFineLevelPatches(selectType& finePatches) const
-      { getOtherLevelPatches(1, finePatches); }
-
-      void getCoarseLevelPatches(selectType& coarsePatches) const
-      { getOtherLevelPatches(-1, coarsePatches); }
-
-      void getOtherLevelPatches(int levelOffset, selectType& patches, int numGhostCells = 0)
-        const;
 
       // get the index into the Level::d_patches array
       int getLevelIndex() const { return d_level_index; }
-
-      // get the index this patch would be if all levels were taken into account
-      int getGridIndex() const;
 
       // true for wrap around patches (periodic boundary conditions) that
       // represent other real patches.
@@ -1945,6 +1964,13 @@ WARNING
        */
       static int d_newGridIndex;
 
+      /**
+       * A unique patch id.
+       * If more storage is needed then the id could be moved into 
+       * the patch state with less bits.
+       */
+      int d_id;
+
 
       //****************End of new private Interace**************/
 
@@ -1976,8 +2002,6 @@ WARNING
       IntVector d_inLowIndex;
       IntVector d_inHighIndex;
       IntVector d_nodeHighIndex;
-
-      int d_id; // Patch ID
 
       typedef map<Patch::FaceType, BCDataArray* > BCDataArrayMap;
       BCDataArrayMap* d_arrayBCS;
