@@ -3,7 +3,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Arches Methane Plume Multi Patch Run with Radiation</title>
+	<title>MPMArches Methane in a Pipe test</title>
    </Meta>
 
    <SimulationComponent>
