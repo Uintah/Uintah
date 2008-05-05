@@ -7370,7 +7370,7 @@ if test "$pkg_Uintah" = "yes"; then
 
 
 
-  if test "$BUILD_ARCHES" = no -a test "$BUILD_RADIATION" = no; then
+  if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
     sci_required_fortran=no
   fi
   sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
