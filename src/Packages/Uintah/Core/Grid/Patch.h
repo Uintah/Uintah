@@ -280,6 +280,15 @@ WARNING
       {
         return getCellLowIndex__New();
       }
+      
+      /**
+       * Returns the staggared face centered on X cell low index excluding extra cells.
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getSFCXLowIndex__New(int ngc) const 
+      {
+        return getCellLowIndex__New(ngc);
+      }
 
       /**
        * Returns the staggared face centered on X cell high index excluding extra cells
@@ -288,6 +297,16 @@ WARNING
       {
         return getCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
       }
+      
+      /**
+       * Returns the staggared face centered on X cell high index excluding extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getSFCXHighIndex__New(int ngc) const
+      {
+        return getCellHighIndex__New(ngc)+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
+      }
+
 
       /**
        * Returns the staggared face centered on Y cell low index excluding extra cells
@@ -296,6 +315,16 @@ WARNING
       {
         return getCellLowIndex__New();
       }
+      
+      /**
+       * Returns the staggared face centered on Y cell low index excluding extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getSFCYLowIndex__New(int ngc) const 
+      {
+        return getCellLowIndex__New(ngc);
+      }
+
 
       /**
        * Returns the staggared face centered on Y cell high index excluding extra cells
@@ -303,6 +332,15 @@ WARNING
       inline IntVector getSFCYHighIndex__New() const
       {
         return getCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
+      }
+
+      /**
+       * Returns the staggared face centered on Y cell high index excluding extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getSFCYHighIndex__New(int ngc) const
+      {
+        return getCellHighIndex__New(ngc)+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
       }
 
       /**
@@ -314,11 +352,29 @@ WARNING
       }
 
       /**
+       * Returns the staggared face centered on Z cell low index excluding extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      IntVector getSFCZLowIndex__New(int ngc) const 
+      {
+        return getCellLowIndex__New(ngc);
+      }
+
+      /**
        * Returns the staggared face centered on Z cell high index excluding extra cells
        */
       IntVector getSFCZHighIndex__New() const
       {
         return getCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
+      }
+
+      /**
+       * Returns the staggared face centered on Z cell high index excluding extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      IntVector getSFCZHighIndex__New(int ngc) const
+      {
+        return getCellHighIndex__New(ngc)+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
       }
 
       /**
@@ -330,11 +386,29 @@ WARNING
       }
 
       /**
+       * Returns the staggared face centered on X cell low index including extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getExtraSFCXLowIndex__New(int ngc) const 
+      {
+        return getExtraCellLowIndex__New(ngc);
+      }
+
+      /**
        * Returns the staggared face centered on X cell high index including extra cells
        */
       inline IntVector getExtraSFCXHighIndex__New() const
       {
         return getExtraCellHighIndex__New()+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
+      }
+      
+      /**
+       * Returns the staggared face centered on X cell high index including extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getExtraSFCXHighIndex__New(int ngc) const
+      {
+        return getExtraCellHighIndex__New(ngc)+IntVector(getBCType(xplus) == Neighbor?0:1, 0, 0);
       }
 
       /**
@@ -344,6 +418,16 @@ WARNING
       {
         return getExtraCellLowIndex__New();
       }
+      
+      /**
+       * Returns the staggared face centered on Y cell low index including extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getExtraSFCYLowIndex__New(int ngc) const 
+      {
+        return getExtraCellLowIndex__New(ngc);
+      }
+
 
       /**
        * Returns the staggared face centered on Y cell high index including extra cells
@@ -351,6 +435,15 @@ WARNING
       inline IntVector getExtraSFCYHighIndex__New() const
       {
         return getExtraCellHighIndex__New()+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
+      }
+
+      /**
+       * Returns the staggared face centered on Y cell high index including extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getExtraSFCYHighIndex__New(int ngc) const
+      {
+        return getExtraCellHighIndex__New(ngc)+IntVector(0, getBCType(yplus) == Neighbor?0:1, 0);
       }
 
       /**
@@ -362,11 +455,29 @@ WARNING
       }
 
       /**
+       * Returns the staggared face centered on Z cell low index including extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getExtraSFCZLowIndex__New(int ngc) const 
+      {
+        return getExtraCellLowIndex__New(ngc);
+      }
+
+      /**
        * Returns the staggared face centered on Z cell high index including extra cells
        */
       inline IntVector getExtraSFCZHighIndex__New() const
       {
         return getExtraCellHighIndex__New()+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
+      }
+
+      /**
+       * Returns the staggared face centered on Z cell high index including extra cells
+       * ngc specifies the number of ghost cells.
+       */
+      inline IntVector getExtraSFCZHighIndex__New(int ngc) const
+      {
+        return getExtraCellHighIndex__New(ngc)+IntVector(0,0, getBCType(zplus) == Neighbor?0:1);
       }
 
 
