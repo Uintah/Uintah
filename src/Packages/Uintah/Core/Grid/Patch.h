@@ -2114,8 +2114,7 @@ WARNING
       IntVector d_inHighIndex;
       IntVector d_nodeHighIndex;
 
-      typedef map<Patch::FaceType, BCDataArray* > BCDataArrayMap;
-      BCDataArrayMap* d_arrayBCS;
+      vector<BCDataArray*>* d_arrayBCS;
 
       //////////
       // add a method for the user to mark a patch face (for his own purposes)

@@ -34,13 +34,12 @@ int Patch::d_newGridIndex=0;
 Patch::Patch(const Level* level,
 	     const IntVector& lowIndex, const IntVector& highIndex,
 	     const IntVector& inLowIndex, const IntVector& inHighIndex, 
-       unsigned int levelIndex,  int id)
-    : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
-    
-      d_realPatch(0), d_level_index(-1),
-      d_lowIndex(lowIndex),d_highIndex(highIndex),
-      d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
-      d_id( id ),d_arrayBCS(0)
+             unsigned int levelIndex,  int id)
+  : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
+    d_realPatch(0), d_level_index(-1),
+    d_lowIndex(lowIndex),d_highIndex(highIndex),
+    d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
+    d_id( id ),d_arrayBCS(0)
 {
   
   if(d_id == -1){
@@ -121,7 +120,7 @@ Patch::~Patch()
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)) {
-    if (d_arrayBCS)
+    if ( d_arrayBCS)
       delete (*d_arrayBCS)[face];
   }
 
@@ -328,11 +327,7 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
  
 const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 {
-  BCDataArrayMap::const_iterator itr = d_arrayBCS->find(face);
-  if (itr != d_arrayBCS->end())
-    return itr->second;
-  else
-    return 0;
+  return (*d_arrayBCS)[face];
 }
 
 const BoundCondBase*
@@ -343,11 +338,11 @@ Patch::getArrayBCValues(Patch::FaceType face,
 			vector<IntVector>*& nbound_ptr,
 			int child) const
 {
-  BCDataArrayMap::const_iterator itr=d_arrayBCS->find(face); 
-  if (itr != d_arrayBCS->end()) {
-    const BoundCondBase* bc = itr->second->getBoundCondData(mat_id,type,child);
-    itr->second->getBoundaryIterator( mat_id,bound_ptr,  child);
-    itr->second->getNBoundaryIterator(mat_id,nbound_ptr, child);
+  BCDataArray* bcd = (*d_arrayBCS)[face];
+  if (bcd) {
+    const BoundCondBase* bc = bcd->getBoundCondData(mat_id,type,child);
+    bcd->getBoundaryIterator(mat_id,bound_ptr,child);
+    bcd->getNBoundaryIterator(mat_id,nbound_ptr,child);
     return bc;
   } else
     return 0;
@@ -357,9 +352,9 @@ bool
 Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
               const string& bc_variable) const
 {
-  BCDataArrayMap::const_iterator itr=d_arrayBCS->find(face); 
+  BCDataArray* itr = (*d_arrayBCS)[face];
 
-  if (itr != d_arrayBCS->end()) {
+  if ( itr ) {
 #if 0
     cout << "Inside haveBC" << endl;
     ubc->print();
@@ -367,8 +362,8 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
     BCDataArray::bcDataArrayType::const_iterator v_itr;
     vector<BCGeomBase*>::const_iterator it;
     
-    v_itr = itr->second->d_BCDataArray.find(mat_id);
-    if (v_itr != itr->second->d_BCDataArray.end()) { 
+    v_itr = itr->d_BCDataArray.find(mat_id);
+    if (v_itr != itr->d_BCDataArray.end()) { 
       for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
       BCData bc;
       (*it)->getBCData(bc);
@@ -378,8 +373,8 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
       }
     } 
     // Check the mat_it = "all" case
-    v_itr = itr->second->d_BCDataArray.find(-1);
-    if (v_itr != itr->second->d_BCDataArray.end()) {
+    v_itr = itr->d_BCDataArray.find(-1);
+    if (v_itr != itr->d_BCDataArray.end()) {
       for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
 	BCData bc;
 	(*it)->getBCData(bc);
@@ -1992,5 +1987,7 @@ void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) cons
 
 void Patch::initializeBoundaryConditions()
 {
-  d_arrayBCS = scinew BCDataArrayMap();
+  d_arrayBCS = scinew vector<BCDataArray*>(6);
+  for (unsigned int i = 0; i< 6; ++i)
+    (*d_arrayBCS)[i] = 0;
 }
