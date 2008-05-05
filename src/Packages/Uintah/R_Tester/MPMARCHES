@@ -42,10 +42,12 @@ UNUSED_TESTS = [("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "
                 ("matest_heptwb_cyl_8patch", matest_heptwb_cyl_8patch_ups, "", 8, "ALL","chem_meth") \
                 ]
  
-TESTS = [ ("jp8cyl", "jp8cyl.ups", 1.1, "Linux", "chem_meth"), \
-          ("jp8cyl_8p", jp8cyl_8p_ups, 8, "None","chem_meth"), \
-          ("jp8cyl_40cube_8p", jp8cyl_40cube_8p_ups, 8, "None","chem_meth") \
-    	]
+# TESTS = [ ("jp8cyl", "jp8cyl.ups", 1.1, "Linux", "chem_meth"), \
+#          ("jp8cyl_8p", jp8cyl_8p_ups, 8, "None","chem_meth"), \
+#          ("jp8cyl_40cube_8p", jp8cyl_40cube_8p_ups, 8, "None","chem_meth") \
+#    	]
+TESTS = ["mpmpipe_test", "pipe.ups", 1.1, "Linux", ["doesTestRun"]
+] 
 
 def chemfile (test):
     return test[4]
