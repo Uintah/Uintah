@@ -81,19 +81,19 @@ WARNING
       UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
       enum BCType {
-        None,
-        Symmetry,
-        Coarse,
-        Neighbor
+        None=0,
+        Symmetry=1,
+        Coarse=2,
+        Neighbor=3
       };
 
       enum FaceType {
-        xminus,
-        xplus,
-        yminus,
-        yplus,
-        zminus,
-        zplus,
+        xminus=0,
+        xplus=1,
+        yminus=2,
+        yplus=3,
+        zminus=4,
+        zplus=5,
         startFace = xminus,
         endFace = zplus,
         numFaces, // 6
@@ -1043,17 +1043,17 @@ WARNING
         switch(face)
         {
           case xminus:
-            return d_patchState.xminus;
+            return static_cast<BCType>(d_patchState.xminus);
           case yminus:
-            return d_patchState.yminus;
+            return static_cast<BCType>(d_patchState.yminus);
           case zminus:
-            return d_patchState.zminus;
+            return static_cast<BCType>(d_patchState.zminus);
           case xplus:
-            return d_patchState.xplus;
+            return static_cast<BCType>(d_patchState.xplus);
           case yplus:
-            return d_patchState.yplus;
+            return static_cast<BCType>(d_patchState.yplus);
           case zplus:
-            return d_patchState.zplus;
+            return static_cast<BCType>(d_patchState.zplus);
           default:
             throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
             return None;
@@ -2069,12 +2069,12 @@ WARNING
       struct PatchState
       {
         //The boundary conditions for each face
-        BCType xminus : 2;
-        BCType xplus : 2;
-        BCType yminus : 2;
-        BCType yplus : 2;
-        BCType zminus : 2;
-        BCType zplus : 2;
+        unsigned int xminus : 2;
+        unsigned int xplus : 2;
+        unsigned int yminus : 2;
+        unsigned int yplus : 2;
+        unsigned int zminus : 2;
+        unsigned int zplus : 2;
         unsigned int gridIndex : 1; //The grid index for this patch
         unsigned int levelIndex : 3; //The level index for this patch (max of 8 levels)
       };
