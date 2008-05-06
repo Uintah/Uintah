@@ -238,6 +238,30 @@
     <ICE                                spec="OPTIONAL NO_DATA" >
       <advection                        spec="REQUIRED NO_DATA" 
                                            attribute1="type REQUIRED STRING 'FirstOrder, SecondOrder'" />
+      <TimeStepControl                  spec="OPTIONAL NO_DATA">
+        <Scheme_for_delT_calc           spec="REQUIRED STRING 'aggressive, conservative'" />
+        <knob_for_speedSound            spec="REQUIRED DOUBLE '0,1 '"/>
+      </TimeStepControl>
+      <ImplicitSolver                   spec="OPTIONAL NO_DATA">
+        <max_outer_iterations           spec="REQUIRED INTEGER 'positive'"/>
+        <outer_iteration_tolerance      spec="REQUIRED DOUBLE 'positive'"/>
+        <iters_before_timestep_restart  spec="REQUIRED INTEGER 'positive'"/>
+       <!--    TO BE FILLED IN TODD
+        <Parameters variable="implicitPressure">
+         <norm>     LInfinity  </norm>
+         <criteria> Absolute   </criteria>
+         <solver>         cg      </solver>
+         <preconditioner> pfmg    </preconditioner>
+         <tolerance>      1.e-10  </tolerance>
+         <maxiterations>  7500    </maxiterations>
+         <npre>           1       </npre>
+         <npost>          1       </npost>
+         <skip>           0       </skip>
+         <jump>           0       </jump>
+        </Parameters> -->
+      </ImplicitSolver>
+      
+      
     </ICE>        
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
