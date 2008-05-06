@@ -88,19 +88,34 @@ readSymbolLocations( char * filename )
     int maxLength = strlen( line );
 
     Info_S * info = new Info_S();
-    char * name, * address;
-    name = new char[ maxLength ];
-    address = new char[ maxLength ];
 
-    int numRead = sscanf( line, "%s %c %s", address, &info->type, name );
+    char * name, * moreName, * address;
+
+    name     = new char[ maxLength ];
+    moreName = new char[ maxLength ];
+    address  = new char[ maxLength ];
+
+    // 'moreName' is used when the symbol name has a blank space
+    // separated return value (otherwise we would just get 'void')...
+    // (Actually, there are many symbols that have multiple blanks in them...
+    //  we might want to be smarter about this... but by handling a single blank
+    //  usually we get enough info that we don't need the entire symobl...)
+
+    int numRead = sscanf( line, "%s %c %s %s", address, &info->type, name, moreName );
 
     if( numRead < 3 ) {
-      printf( "Skipping invalid line. Reason: Failed to parse this symbol... '%s'\n", line );
+      printf( "Skipping invalid line. Reason: Failed to parse this line: '%s'\n", line );
       continue;
     }
 
     sscanf( address, "%x", &info->address );
-    info->name = name;
+
+    if( numRead == 4 ) {
+      info->name = string( name ) + " " + moreName;
+    }
+    else {
+      info->name = name;
+    }
 
     if( info->address != 0 ) {
       infoVector.push_back( info );
