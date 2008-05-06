@@ -11,6 +11,7 @@ SRCS     += $(SRCDIR)/EquationOfState.cc \
 	$(SRCDIR)/JWLC.cc     \
 	$(SRCDIR)/Gruneisen.cc     \
 	$(SRCDIR)/Tillotson.cc     \
+	$(SRCDIR)/Thomsen_Hartka_water.cc     \
 	$(SRCDIR)/Murnahan.cc
 
 PSELIBS := \
