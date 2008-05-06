@@ -85,9 +85,9 @@ const int ALIGN=16;
 // the compiler will generate warnings (so we use %ld for that case as
 // well)
 #  if defined(SCI_64BITS) || defined(__APPLE__)
-#    define UCONV "%ld"
+#    define UCONV "%lu"
 #  else
-#    define UCONV "%d"
+#    define UCONV "%u"
 #  endif
 
 namespace SCIRun {
