@@ -264,22 +264,22 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
   switch(face)
   {
     case xminus:
-      d_patchState.xminus=newbc;
+      d_patchState.xminus=static_cast<unsigned int>(newbc);
       break;
     case yminus:
-      d_patchState.yminus=newbc;
+      d_patchState.yminus=static_cast<unsigned int>(newbc);
       break;
     case zminus:
-      d_patchState.zminus=newbc;
+      d_patchState.zminus=static_cast<unsigned int>(newbc);
       break;
     case xplus:
-      d_patchState.xplus=newbc;
+      d_patchState.xplus=static_cast<unsigned int>(newbc);
       break;
     case yplus:
-      d_patchState.yplus=newbc;
+      d_patchState.yplus=static_cast<unsigned int>(newbc);
       break;
     case zplus:
-      d_patchState.zplus=newbc;
+      d_patchState.zplus=static_cast<unsigned int>(newbc);
       break;
     default:
       //we should throw an exception here but for some reason this doesn't compile
