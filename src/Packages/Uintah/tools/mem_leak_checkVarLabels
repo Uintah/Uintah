@@ -6,8 +6,7 @@
 #   is useful in finding memory leaks.
 #   usage;    mem_leak_checkVarLabels <Arches/ICE/MPMICE/MPMLabels.cc>
 #
-#  NOTE: This script need gnu grep to work.  Simply
-#  setenv GNUGREP <path to gnu grep>
+#  NOTE: This script need gnu grep to work.
 #_____________________________________________________________________.
 
 set file = $argv
@@ -16,10 +15,11 @@ if ($#argv != 1) then
   exit(1)
 endif
 
-set test = `printenv GNUGREP`
-if ( $test == ""  ) then
-  echo " you need to set the path to gnu grep"
-  echo " setenv GNUGREP <path to gnu grep> "
+
+grep --version | grep -q GNU
+if ( $status != 0  ) then
+  echo "This script uses gnu grep"
+  echo "Please use a machine that has gnu grep"
   exit(1)
 endif
 
@@ -28,11 +28,11 @@ echo "I'm examing the following variables \n "
 
 
 foreach XXX ( $varLabels[*]:q )
-  set has_comment = `echo $XXX | $GNUGREP -c "/"`
+  set has_comment = `echo $XXX | grep -c "/"`
   # only check if there isn't a comment in front of the variable
   if ( $has_comment == 0 ) then
     echo $XXX
-    set numHits = `$GNUGREP -w -c "$XXX" $file`
+    set numHits = `grep -w -c "$XXX" $file`
     if ( $numHits < 2 ) then
      echo "$XXX ------------------ has been created but hasn't been destroyed"
     endif
