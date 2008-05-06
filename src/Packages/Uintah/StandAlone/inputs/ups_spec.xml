@@ -120,6 +120,11 @@
       <filebase         spec="REQUIRED STRING" />
       <outputInterval   spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: only one of these should be allowed... -->
       <outputTimestepInterval spec="OPTIONAL INTEGER 'positive'" />
+
+     <!-- HACK: until we know what to do about checking the label names-->
+      <save             spec="MULTIPLE NO_DATA"
+                        attribute1="label  OPTIONAL STRING"/>
+<!--
       <save             spec="MULTIPLE NO_DATA"
                         attribute1="label     REQUIRED STRING 
                             'press_equil_CC, vol_frac_CC, sp_vol_CC, uvel_FC, vvel_FC, wvel_FC, uvel_FCME, vvel_FCME,
@@ -127,6 +132,7 @@
                              scalar-f, speedSound_CC, temp_CC,
                              KineticEnergy, TotalIntEng, TotalMass, StrainEnergy, CenterOfMassPosition,
                              CenterOfMassVelocity, p.x, p.volume, p.stress, g.mass, g.stressFS'" />
+-->
       <!-- ???? IS checkpoint REALLY OPTIONAL???? -->
       <checkpoint       spec="OPTIONAL NO_DATA"
                         attribute1="interval  REQUIRED DOUBLE  'positive'"
