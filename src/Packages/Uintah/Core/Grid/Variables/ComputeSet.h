@@ -7,13 +7,15 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/Util/constHandle.h>
+
 #include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <algorithm>
-#include <sstream>
+#include   <vector>
+#include   <algorithm>
+#include   <sstream>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
+
 namespace Uintah {
 
   using SCIRun::InternalError;
@@ -493,8 +495,8 @@ WARNING
 
 } // end namespace Uintah
 
-#ifdef __PGI
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet_special.cc>
+#if defined( __PGI ) && !defined( REDSTORM )
+#  include <Packages/Uintah/Core/Grid/Variables/ComputeSet_special.cc>
 #endif
 
 

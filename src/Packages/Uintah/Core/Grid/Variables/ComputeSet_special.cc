@@ -1,6 +1,13 @@
 #ifndef Uintah_Core_Grid_ComputeSet_special_cc
 #define Uintah_Core_Grid_ComputeSet_special_cc
 
+//
+// ComputeSet_special.cc
+//
+//    Note, ComputeSet_special.cc is #include'd direclty in
+// ComputeSet.h when using the PGI compilers...
+//
+
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <algorithm>
