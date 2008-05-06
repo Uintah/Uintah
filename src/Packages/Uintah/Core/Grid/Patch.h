@@ -1590,6 +1590,93 @@ WARNING
        * This query is O(L) where L is the number of levels.
        */
       int getGridIndex() const;
+     
+
+      /** The following functions should be looked at and verified.  Right now they are obscure. **/
+      
+      /**
+       * Passes back the low and high offsets for the given ghost cell
+       * scenario.  Note: you should subtract the lowOffset (the offsets
+       * should be >= 0 in each dimension).
+       */
+      static void getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
+          int numGhostCells,
+          IntVector& lowOffset, IntVector& highOffset);
+      
+      /**
+       * Passes back the low and high offsets for the given ghost cell
+       * scenario.  Note: you should subtract the lowOffset (the offsets
+       * should be >= 0 in each dimension).
+       */
+      static void getGhostOffsets(TypeDescription::Type basis,
+          Ghost::GhostType gtype, int numGhostCells,
+          IntVector& l, IntVector& h)
+      {
+        bool basisMustExist = (gtype != Ghost::None);
+        getGhostOffsets(translateTypeToBasis(basis, basisMustExist),
+            gtype, numGhostCells, l, h);
+      }
+      
+      /**
+       * Computes the variables extents (high and low points)
+       * for the given basis, boundary layer, and ghost cells.
+       * Neighboring patches are returned in neighbors.
+       */
+      void computeVariableExtents(VariableBasis basis,
+          const IntVector& boundaryLayer,
+          Ghost::GhostType gtype, int numGhostCells,
+          selectType& neighbors,
+          IntVector& low, IntVector& high) const;
+      
+      /**
+       * Computes the variables extents (high and low points)
+       * for the given basis, boundary layer, and ghost cells
+       * Neighboring patches are returned in neighbors.
+       */
+      void computeVariableExtents(TypeDescription::Type basis,
+          const IntVector& boundaryLayer,
+          Ghost::GhostType gtype, int numGhostCells,
+          selectType& neighbors,
+          IntVector& low, IntVector& high) const;
+
+      /**
+       * Computes the variables extents (high and low points)
+       * for the given basis, boundary layer, and ghost cells
+       */
+      void computeVariableExtents(VariableBasis basis,
+          const IntVector& boundaryLayer,
+          Ghost::GhostType gtype, int numGhostCells,
+          IntVector& low, IntVector& high) const;
+
+      /**
+       * Computes the variables extents (high and low points)
+       * for the given basis, boundary layer, and ghost cells
+       */
+      void computeVariableExtents(TypeDescription::Type basis,
+          const IntVector& boundaryLayer,
+          Ghost::GhostType gtype, int numGhostCells,
+          IntVector& low, IntVector& high) const;
+
+      /**
+       * helper for computeVariableExtents but also used externally
+       */
+      void computeExtents(VariableBasis basis,
+          const IntVector& boundaryLayer,
+          const IntVector& lowOffset,
+          const IntVector& highOffset,
+          IntVector& low, IntVector& high) const;
+
+      /**
+       * Verifies that the patch is valid
+       */
+      void performConsistencyCheck() const;
+     
+      /**
+       * Returns the box including the ghostCells specified
+       * in lowOffset and highOffset
+       */
+      Box getGhostBox(const IntVector& lowOffset,
+          const IntVector& highOffset) const;
 
       
       /**************End New Public Interace****************/
@@ -1613,22 +1700,6 @@ WARNING
          {  return d_highIndex+getGhostSFCZHighOffset(numGC, d_bctypes); }
          */
 
-      // Passes back the low and high offsets for the given ghost cell
-      // schenario.  Note: you should subtract the lowOffset (the offsets
-      // should be >= 0 in each dimension).
-      static void getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
-          int numGhostCells,
-          IntVector& lowOffset, IntVector& highOffset);
-      static void getGhostOffsets(TypeDescription::Type basis,
-          Ghost::GhostType gtype, int numGhostCells,
-          IntVector& l, IntVector& h)
-      {
-        bool basisMustExist = (gtype != Ghost::None);
-        getGhostOffsets(translateTypeToBasis(basis, basisMustExist),
-            gtype, numGhostCells, l, h);
-      }
-      
-      void performConsistencyCheck() const;
 
       /*****Boundary condition code to be worked on by John******/
       void setArrayBCValues(FaceType face, BCDataArray* bc);
@@ -1648,9 +1719,9 @@ WARNING
 
       /*****end boundary condition ****/
 
-      Box getGhostBox(const IntVector& lowOffset,
-          const IntVector& highOffset) const;
 
+      /***This section is functions that have yet to be migrated to the new interface.
+       * It also includes functions that may be removed from patch in the future*/
 
       void getFace(FaceType face, const IntVector& insideOffset,
           const IntVector& outsideOffset,
@@ -1664,35 +1735,6 @@ WARNING
 
       void getFaceCells(FaceType face, int offset, IntVector& l,
           IntVector& h) const;
-
-      void computeVariableExtents(VariableBasis basis,
-          const IntVector& boundaryLayer,
-          Ghost::GhostType gtype, int numGhostCells,
-          selectType& neighbors,
-          IntVector& low, IntVector& high) const;
-      void computeVariableExtents(TypeDescription::Type basis,
-          const IntVector& boundaryLayer,
-          Ghost::GhostType gtype, int numGhostCells,
-          selectType& neighbors,
-          IntVector& low, IntVector& high) const;
-
-      void computeVariableExtents(VariableBasis basis,
-          const IntVector& boundaryLayer,
-          Ghost::GhostType gtype, int numGhostCells,
-          IntVector& low, IntVector& high) const;
-
-      void computeVariableExtents(TypeDescription::Type basis,
-          const IntVector& boundaryLayer,
-          Ghost::GhostType gtype, int numGhostCells,
-          IntVector& low, IntVector& high) const;
-
-      // helper for computeVariableExtents but also used externally
-      // (in GhostOffsetVarMap)
-      void computeExtents(VariableBasis basis,
-          const IntVector& boundaryLayer,
-          const IntVector& lowOffset,
-          const IntVector& highOffset,
-          IntVector& low, IntVector& high) const;
 
 
       // get the index into the Level::d_patches array
@@ -1717,6 +1759,8 @@ WARNING
       void setFaceMark(int markType, FaceType face, int mark) const { d_faceMarks[markType*numFaces + face] = mark; }
       int getFaceMark(int markType, FaceType face) const { return d_faceMarks[markType*numFaces + face]; }
 
+      /*  End the section of unupdated functions */
+      
       /***********************Old Interface that is been implemented in new interface*******************************/
 
       /**
