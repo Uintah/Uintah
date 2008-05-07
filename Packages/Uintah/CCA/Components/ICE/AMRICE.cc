@@ -913,8 +913,8 @@ void AMRICE::iteratorTest(const Patch* finePatch,
     const Patch* coarsePatch = coarsePatches[i];
     // iterator should hit the cells over the intersection of the fine and coarse patches
 
-    IntVector cl = coarsePatch->getLowIndex();
-    IntVector ch = coarsePatch->getHighIndex();
+    IntVector cl = coarsePatch->getCellLowIndex__New();
+    IntVector ch = coarsePatch->getCellHighIndex__New();
          
     IntVector fl_tmp = coarseLevel->mapCellToFiner(cl);
     IntVector fh_tmp = coarseLevel->mapCellToFiner(ch);

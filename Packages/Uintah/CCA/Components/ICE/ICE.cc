@@ -2025,8 +2025,8 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_norm<< "patch low and high index: "<<patch->getID()<<
-          patch->getCellLowIndex()  << 
-          patch->getCellHighIndex() << endl;
+          patch->getExtraCellLowIndex__New()  << 
+          patch->getExtraCellHighIndex__New() << endl;
   }
 
   const Level* level = getLevel(patches);
