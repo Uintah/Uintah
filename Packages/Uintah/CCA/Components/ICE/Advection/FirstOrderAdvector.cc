@@ -441,13 +441,10 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-    
-    int offset=0;  // 0=Compute all faces in computational domain
-                   // 1=Skip the faces at the border between interior and gc
                        
-    CellIterator XFC_iter = patch->getSFCXIterator(offset);
-    CellIterator YFC_iter = patch->getSFCYIterator(offset);
-    CellIterator ZFC_iter = patch->getSFCZIterator(offset);
+    CellIterator XFC_iter = patch->getSFCXIterator__New();
+    CellIterator YFC_iter = patch->getSFCYIterator__New();
+    CellIterator ZFC_iter = patch->getSFCZIterator__New();
     
     q_FC_flux_operator<SFCXVariable<T>, T>(XFC_iter, adj_offset[0],LEFT,
                                            q_CC,q_X_FC_flux); 
