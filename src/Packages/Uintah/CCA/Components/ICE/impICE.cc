@@ -606,12 +606,11 @@ void ICE::setupRHS(const ProcessorGroup*,
       new_dw->allocateAndPut(vol_fracZ_FC, lb->vol_fracZ_FCLabel,  indx,patch);
       
       // lowIndex is the same for all vel_FC
-      IntVector lowIndex(patch->getSFCXLowIndex());
+      IntVector lowIndex(patch->getExtraSFCXLowIndex__New());
       double nan= getNan();
-      vol_fracX_FC.initialize(nan, lowIndex,patch->getSFCXHighIndex());
-      vol_fracY_FC.initialize(nan, lowIndex,patch->getSFCYHighIndex());
-      vol_fracZ_FC.initialize(nan, lowIndex,patch->getSFCZHighIndex()); 
-      
+      vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex__New());
+      vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex__New());
+      vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex__New());     
       new_dw->get(uvel_FC,    lb->uvel_FCMELabel,     indx,patch,gac, 2);       
       new_dw->get(vvel_FC,    lb->vvel_FCMELabel,     indx,patch,gac, 2);       
       new_dw->get(wvel_FC,    lb->wvel_FCMELabel,     indx,patch,gac, 2);       
