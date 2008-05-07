@@ -67,7 +67,7 @@ void Murnahan::computeTempCC(const Patch* patch,
                              Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       Temp[c]= 300.0;
     }

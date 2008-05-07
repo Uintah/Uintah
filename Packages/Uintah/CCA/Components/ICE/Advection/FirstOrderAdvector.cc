@@ -93,7 +93,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getExtraCellIterator();
+  CellIterator iter = patch->getExtraCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   
   bool error = false;

@@ -111,7 +111,7 @@ void TST::computeTempCC(const Patch* patch,
   double sp_v, n1, n2, d1;  
   double P; 
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       sp_v = 1.0/rhoM[c];
       P = press[c];

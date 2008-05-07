@@ -430,7 +430,7 @@ void ICE::setupMatrix(const ProcessorGroup*,
 
     //__________________________________
     //  Initialize A
-    for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
+    for(CellIterator iter(patch->getExtraCellIterator__New()); !iter.done(); iter++){
       IntVector c = *iter;
       Stencil7&  A_tmp=A[c];
       A_tmp.p = 0.0; 
@@ -836,7 +836,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     //__________________________________
     //  add delP to press_equil
     //  AMR:  hit the extra cells, you need to update the pressure in these cells
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) { 
       IntVector c = *iter;
       sum_imp_delP[c] = sum_imp_delP_old[c] + imp_delP[c];
       press_CC[c] = press_equil[c] + sum_imp_delP[c];
@@ -922,7 +922,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
       new_dw->get(rho_CC,      lb->rho_CCLabel,    indx,patch,gn,0);
       //__________________________________
       //  compute sum_rho_CC used by press_FC
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+      for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done();iter++){
         IntVector c = *iter;
         sum_rho_CC[c] += rho_CC[c];
       } 

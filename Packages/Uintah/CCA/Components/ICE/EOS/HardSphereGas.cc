@@ -43,7 +43,7 @@ void HardSphereGas::computeTempCC(const Patch* patch,
                              Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       Temp[c]= press[c]/ ( (gamma[c] - 1.0) * cv[c] * rho_micro[c]/(1-b*rho_micro[c]) );
     }

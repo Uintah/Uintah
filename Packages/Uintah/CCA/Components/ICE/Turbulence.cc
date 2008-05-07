@@ -82,7 +82,7 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
     
   setBC(turb_viscosity, "zeroNeumann",  patch, d_sharedState, indx, new_dw);
   // make copy of turb_viscosity for visualization.
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+  for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done();iter++){
     IntVector c = *iter;    
     turb_viscosity_copy[c] = turb_viscosity[c];         
   }
