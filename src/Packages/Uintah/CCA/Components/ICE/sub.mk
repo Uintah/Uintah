@@ -5,7 +5,6 @@ SRCDIR   := Packages/Uintah/CCA/Components/ICE
 
 SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/AMRICE.cc \
-       $(SRCDIR)/ICERF.cc \
        $(SRCDIR)/ICEDebug.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
