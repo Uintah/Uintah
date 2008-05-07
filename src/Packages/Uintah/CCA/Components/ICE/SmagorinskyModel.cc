@@ -71,7 +71,7 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getCellIterator();
+  CellIterator iter = patch->getCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
@@ -106,7 +106,7 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by twe cells in ghostCells
-  CellIterator iter = patch->getCellIterator();
+  CellIterator iter = patch->getCellIterator__New();
   CellIterator iterPlus2Ghost = patch->addGhostCell_Iter(iter,2);
   
   for(CellIterator iter = iterPlus2Ghost; !iter.done(); iter++) {
@@ -181,7 +181,7 @@ void Smagorinsky_Model::computeVariance(const ProcessorGroup*,
       double mixing_length = cbrt(dx.x()*dx.y()*dx.z());
       double scale = mixing_length*mixing_length;
 
-      for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator__New();!iter.done(); iter++){
         const IntVector& c = *iter;
         
         // Compute the difference of the face centered overages,

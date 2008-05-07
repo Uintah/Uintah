@@ -757,7 +757,7 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
     
     //__________________________________
     // apply reflux correction to rhs
-    for(CellIterator iter=coarsePatch->getCellIterator(); !iter.done();iter++) {
+    for(CellIterator iter=coarsePatch->getCellIterator__New(); !iter.done();iter++) {
       IntVector c = *iter;
       rhs[c] += sumRefluxCorrection[c]; 
     }

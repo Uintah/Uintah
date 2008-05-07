@@ -1903,7 +1903,7 @@ void AMRICE::compute_Mag_gradient( constCCVariable<double>& q_CC,
                                     const Patch* patch) 
 {                  
   Vector dx = patch->dCell(); 
-  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+  for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
     IntVector c = *iter;
     Vector grad_q_CC;
     for(int dir = 0; dir <3; dir ++ ) { 
@@ -1926,7 +1926,7 @@ void AMRICE::compute_Mag_Divergence( constCCVariable<Vector>& q_CC,
   Vector dx = patch->dCell(); 
   
 
-  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+  for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
     IntVector c = *iter;
     Vector Divergence_q_CC;
     for(int dir = 0; dir <3; dir ++ ) { 
@@ -1950,7 +1950,7 @@ void AMRICE::set_refineFlags( constCCVariable<double>& mag_grad_q_CC,
                               const Patch* patch) 
 {                  
   PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-  for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+  for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
     IntVector c = *iter;
     if( mag_grad_q_CC[c] > threshold){
       refineFlag[c] = true;

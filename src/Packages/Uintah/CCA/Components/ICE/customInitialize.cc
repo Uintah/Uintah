@@ -87,7 +87,7 @@ void customInitialization(const Patch* patch,
       double R_sqr = R * R;
       double p_ref  = 101325;        // assumed reference pressure
      
-      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
         IntVector c = *iter;
         Point pt = patch->cellPosition(c);
 

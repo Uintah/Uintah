@@ -58,7 +58,7 @@ void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
   computeSmagCoeff(new_dw, patch, vel_CC, uvel_FC, vvel_FC, wvel_FC, 
                    indx, d_sharedState, term, meanSIJ);
 
-  CellIterator iter = patch->getCellIterator();
+  CellIterator iter = patch->getCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);   
   
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
@@ -75,7 +75,7 @@ template <class T> void DynamicModel::applyFilter(const Patch* patch,
                                                   CCVariable<T>& var_hat)
 { 
 
-  CellIterator iter = patch->getCellIterator();
+  CellIterator iter = patch->getCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);  
     
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {   
@@ -126,7 +126,7 @@ void DynamicModel::applyFilter(const Patch* patch,
                                SCIRun::StaticArray<CCVariable<double> >& var_hat)
 { 
 
-  CellIterator iter = patch->getCellIterator();
+  CellIterator iter = patch->getCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);  
     
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {   
@@ -200,7 +200,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   d_smag.computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, 
                            indx, d_sharedState, new_dw, SIJ);
 
-  CellIterator iter = patch->getCellIterator();
+  CellIterator iter = patch->getCellIterator__New();
   CellIterator iterPlusGhost  = patch->addGhostCell_Iter(iter,1);
   CellIterator iterPlus2Ghost = patch->addGhostCell_Iter(iter,2);
     
@@ -356,7 +356,7 @@ void DynamicModel::computeVariance(const ProcessorGroup*,
       old_dw->get(f, s->scalar, matl, patch, Ghost::AroundCells, 1);
       new_dw->allocateAndPut(fvar, s->scalarVariance, matl, patch);
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
         const IntVector& c = *iter;
 
         double sum_f = 0;
