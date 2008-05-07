@@ -1678,7 +1678,39 @@ WARNING
       Box getGhostBox(const IntVector& lowOffset,
           const IntVector& highOffset) const;
 
-      
+      /**
+       * Returns true if a patch is virtual.
+       * Virtual patches exist beyond periiodic boundaries and 
+       * point to real patches on the other side of the domain
+       */
+      bool isVirtual() const
+      { return d_realPatch != 0; }
+
+      /**
+       * Returns a pointer to the real patch.
+       * If the patch is virtual it will return a pointer
+       * to a patch on the opposite side of the domain.  If the 
+       * patch is real it will return a pointer to itself.
+       */
+      const Patch* getRealPatch() const
+      { return isVirtual() ? d_realPatch : this; }
+
+      /**
+       * Returns the offset between the virtual patch and the real patch 
+       * in index coordinates.
+       */ 
+      IntVector getVirtualOffset() const
+      { return getCellLowIndex__New() - getRealPatch()->getCellLowIndex__New(); }
+
+      /**
+       * Returns the offset between the virtual patch and the real patch 
+       * in domain coordinates.
+       */
+      Vector getVirtualOffsetVector() const
+      { return cellPosition(getCellLowIndex__New()) -
+        cellPosition(getRealPatch()->getCellLowIndex__New()); 
+      }     
+
       /**************End New Public Interace****************/
 
 
@@ -1723,6 +1755,8 @@ WARNING
       /***This section is functions that have yet to be migrated to the new interface.
        * It also includes functions that may be removed from patch in the future*/
 
+      void setFaceMark(int markType, FaceType face, int mark) const { d_faceMarks[markType*numFaces + face] = mark; }
+      
       void getFace(FaceType face, const IntVector& insideOffset,
           const IntVector& outsideOffset,
           IntVector& l, IntVector& h) const;
@@ -1740,23 +1774,6 @@ WARNING
       // get the index into the Level::d_patches array
       int getLevelIndex() const { return d_level_index; }
 
-      // true for wrap around patches (periodic boundary conditions) that
-      // represent other real patches.
-      bool isVirtual() const
-      { return d_realPatch != 0; }
-
-      const Patch* getRealPatch() const
-      { return isVirtual() ? d_realPatch : this; }
-
-      IntVector getVirtualOffset() const
-      { return d_lowIndex - getRealPatch()->d_lowIndex; }
-
-      Vector getVirtualOffsetVector() const
-      { return cellPosition(d_lowIndex) -
-        cellPosition(getRealPatch()->d_lowIndex); 
-      }     
-
-      void setFaceMark(int markType, FaceType face, int mark) const { d_faceMarks[markType*numFaces + face] = mark; }
       int getFaceMark(int markType, FaceType face) const { return d_faceMarks[markType*numFaces + face]; }
 
       /*  End the section of unupdated functions */
@@ -2126,6 +2143,16 @@ WARNING
        */
       int d_id;
 
+      /**This section includes members that may be phased out in the future**/
+      
+      
+      /** 
+       * A pointer to the real patch 
+       * This pointer is null for non-virtual patches.
+       * Virtual patches exist for wrap-around on periodic boundary 
+       * conditions.
+       */
+      const Patch* d_realPatch;
 
       //****************End of new private Interace**************/
 
@@ -2134,15 +2161,20 @@ WARNING
       Patch(const Patch* realPatch, const IntVector& virtualOffset);
       Patch& operator=(const Patch&);
 
-      // d_realPatch is NULL, unless this patch is a virtual patch
-      // (wrap-around from periodic boundary conditions).
-      const Patch* d_realPatch;
 
       int d_level_index;  // I'm at this index in the Level vector;
 
       // used only by friend class Level
       inline void setLevelIndex( int idx ){ d_level_index = idx;}
+      
+      vector<BCDataArray*>* d_arrayBCS;
 
+      //////////
+      // add a method for the user to mark a patch face (for his own purposes)
+      mutable int d_faceMarks[4*numFaces];
+
+      /*****************Members to be phased out*****************/
+      
       //////////
       // Locations in space of opposite box corners.
       // These are in terms of cells positioned from the level's anchor,
@@ -2157,12 +2189,8 @@ WARNING
       IntVector d_inLowIndex;
       IntVector d_inHighIndex;
       IntVector d_nodeHighIndex;
-
-      vector<BCDataArray*>* d_arrayBCS;
-
-      //////////
-      // add a method for the user to mark a patch face (for his own purposes)
-      mutable int d_faceMarks[4*numFaces];
+      
+      /******************End of members to be phased out***********/
 
 
       /********************
