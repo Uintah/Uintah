@@ -2797,10 +2797,10 @@ void ICE::computeTempFC(const ProcessorGroup*,
       new_dw->allocateAndPut(TempY_FC,lb->TempY_FCLabel,indx, patch);   
       new_dw->allocateAndPut(TempZ_FC,lb->TempZ_FCLabel,indx, patch);   
       
-      IntVector lowIndex(patch->getSFCXLowIndex());
-      TempX_FC.initialize(0.0,lowIndex,patch->getSFCXHighIndex()); 
-      TempY_FC.initialize(0.0,lowIndex,patch->getSFCYHighIndex()); 
-      TempZ_FC.initialize(0.0,lowIndex,patch->getSFCZHighIndex());
+      IntVector lowIndex(patch->getExtraSFCXLowIndex__New());
+      TempX_FC.initialize(0.0,lowIndex,patch->getExtraSFCXHighIndex__New()); 
+      TempY_FC.initialize(0.0,lowIndex,patch->getExtraSFCYHighIndex__New()); 
+      TempZ_FC.initialize(0.0,lowIndex,patch->getExtraSFCZHighIndex__New());
       
       vector<IntVector> adj_offset(3);
       adj_offset[0] = IntVector(-1, 0, 0);    // X faces
@@ -2977,10 +2977,10 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       new_dw->allocateAndPut(grad_P_YFC, lb->grad_P_YFCLabel, indx, patch);
       new_dw->allocateAndPut(grad_P_ZFC, lb->grad_P_ZFCLabel, indx, patch);   
       
-      IntVector lowIndex(patch->getSFCXLowIndex());
-      uvel_FC.initialize(0.0, lowIndex,patch->getSFCXHighIndex());
-      vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
-      wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
+      IntVector lowIndex(patch->getExtraSFCXLowIndex__New());
+      uvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex__New());
+      vvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex__New());
+      wvel_FC.initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex__New());
       
       grad_P_XFC.initialize(0.0);
       grad_P_YFC.initialize(0.0);
@@ -3307,7 +3307,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     StaticArray<SFCZVariable<double> >wvel_FCME(numMatls),sp_vol_ZFC(numMatls);
     
     // lowIndex is the same for all vel_FC
-    IntVector lowIndex(patch->getSFCXLowIndex()); 
+    IntVector lowIndex(patch->getExtraSFCXLowIndex__New()); 
     
     // Extract the momentum exchange coefficients
     FastMatrix K(numMatls, numMatls), junk(numMatls, numMatls);
@@ -3332,13 +3332,13 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_YFC[m],lb->sp_volY_FCLabel,indx, patch);   
       new_dw->allocateAndPut(sp_vol_ZFC[m],lb->sp_volZ_FCLabel,indx, patch); 
 
-      uvel_FCME[m].initialize(0.0,  lowIndex,patch->getSFCXHighIndex());
-      vvel_FCME[m].initialize(0.0,  lowIndex,patch->getSFCYHighIndex());
-      wvel_FCME[m].initialize(0.0,  lowIndex,patch->getSFCZHighIndex());
+      uvel_FCME[m].initialize(0.0,  lowIndex,patch->getExtraSFCXHighIndex__New());
+      vvel_FCME[m].initialize(0.0,  lowIndex,patch->getExtraSFCYHighIndex__New());
+      wvel_FCME[m].initialize(0.0,  lowIndex,patch->getExtraSFCZHighIndex__New());
       
-      sp_vol_XFC[m].initialize(0.0, lowIndex,patch->getSFCXHighIndex());
-      sp_vol_YFC[m].initialize(0.0, lowIndex,patch->getSFCYHighIndex());
-      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getSFCZHighIndex());     
+      sp_vol_XFC[m].initialize(0.0, lowIndex,patch->getExtraSFCXHighIndex__New());
+      sp_vol_YFC[m].initialize(0.0, lowIndex,patch->getExtraSFCYHighIndex__New());
+      sp_vol_ZFC[m].initialize(0.0, lowIndex,patch->getExtraSFCZHighIndex__New());     
     }   
     
     vector<IntVector> adj_offset(3);
@@ -3492,11 +3492,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       
            
       // lowIndex is the same for all vel_FC
-      IntVector lowIndex(patch->getSFCXLowIndex());
+      IntVector lowIndex(patch->getExtraSFCXLowIndex__New());
       double nan= getNan();
-      vol_fracX_FC.initialize(nan, lowIndex,patch->getSFCXHighIndex());
-      vol_fracY_FC.initialize(nan, lowIndex,patch->getSFCYHighIndex());
-      vol_fracZ_FC.initialize(nan, lowIndex,patch->getSFCZHighIndex()); 
+      vol_fracX_FC.initialize(nan, lowIndex,patch->getExtraSFCXHighIndex__New());
+      vol_fracY_FC.initialize(nan, lowIndex,patch->getExtraSFCYHighIndex__New());
+      vol_fracZ_FC.initialize(nan, lowIndex,patch->getExtraSFCZHighIndex__New()); 
       
           
       //---- P R I N T   D A T A ------  
