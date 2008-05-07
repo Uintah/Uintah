@@ -34,7 +34,7 @@ SecondOrderBase::mass_massVertex_ratio(const CCVariable<double>& mass_CC,
 				           const CCVariable<double>& mass_grad_y,
 				           const CCVariable<double>& mass_grad_z)
 {
-  CellIterator iter = patch->getCellIterator();
+  CellIterator iter = patch->getCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   Vector dx = patch->dCell();
   double dx_2 = dx.x()/2.0;  // distance from cell center to vertex

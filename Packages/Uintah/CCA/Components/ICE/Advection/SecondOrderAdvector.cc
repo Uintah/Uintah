@@ -37,7 +37,7 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
   // Initialize temporary variables when the grid changes
   if(isNewGrid){   
     double EVILNUM = -9.99666999e30;
-    CellIterator iter = patch->getCellIterator();
+    CellIterator iter = patch->getCellIterator__New();
     CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
     for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
       const IntVector& c = *iter;
@@ -442,7 +442,7 @@ void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
   Vector dx = patch->dCell();    // assumes equal cell spacing             
   double invVol = 1.0/(dx.x() * dx.y() * dx.z());     
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) { 
     const IntVector& c = *iter;
  
     T q_face_flux[6];

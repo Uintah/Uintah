@@ -51,7 +51,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
                    vol_fracX_FC, vol_fracY_FC, vol_fracZ_FC,
                    q_X_FC, q_Y_FC, q_Z_FC);
                    
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
     IntVector c = *iter;
     right  = c + IntVector(1,0,0);    left   = c ;    
     top    = c + IntVector(0,1,0);    bottom = c ;    
