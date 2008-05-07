@@ -18,19 +18,25 @@ TurbulenceFactory::~TurbulenceFactory()
 
 Turbulence* TurbulenceFactory::create(ProblemSpecP& ps, SimulationStateP& sharedState)
 {
-    ProblemSpecP child = ps->findBlock("turbulence");
-   
-    if(child){
-      std::string turbulence_model;
-      if(!child->getAttribute("model",turbulence_model))
-        throw ProblemSetupException("No model for turbulence", __FILE__, __LINE__); 
-    
-      if (turbulence_model == "Smagorinsky") 
-        return(scinew Smagorinsky_Model(child, sharedState));
-      else if (turbulence_model == "Germano") 
-        return(scinew DynamicModel(child, sharedState));
-      else
-        throw ProblemSetupException("Unknown turbulence model ("+turbulence_model+")", __FILE__, __LINE__);
+  ProblemSpecP turb_ps = ps->findBlock("turbulence");
+  
+  if(turb_ps){
+    std::string turbulence_model;
+    if(!turb_ps->getAttribute("model",turbulence_model)){
+      throw ProblemSetupException("No model for turbulence", __FILE__, __LINE__); 
     }
-    return 0;
+    if (turbulence_model == "Smagorinsky"){
+      return(scinew Smagorinsky_Model(turb_ps, sharedState));
+    }else if (turbulence_model == "Germano"){ 
+      return(scinew DynamicModel(turb_ps, sharedState));
+    }else{
+      ostringstream warn;
+      warn << "ERROR ICE: Unknown turbulence model ("<< turbulence_model << " )\n"
+         << "Valid models are:\n" 
+         << "Smagorinsky\n"
+         << "Germano\n" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  }
+  return 0;
 }
