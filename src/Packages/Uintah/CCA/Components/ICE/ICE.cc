@@ -653,7 +653,7 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
     setBC(speedSound, "zeroNeumann", patch, d_sharedState, indx, new_dw); 
     setBC(vel_CC,     "Velocity",    patch, d_sharedState, indx, new_dw); 
             
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       sp_vol_CC[c] = 1.0/rho_micro[c];
       vol_frac_CC[c] = rho_CC[c]*sp_vol_CC[c];  //needed for LODI BCs
@@ -2135,7 +2135,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
             
-      for (CellIterator iter = patch->getExtraCellIterator();
+      for (CellIterator iter = patch->getExtraCellIterator__New();
                                                         !iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[indx][c] = 1.0/rho_micro[indx][c];
@@ -2413,7 +2413,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // Compute rho_micro, volfrac
     for (int m = 0; m < numMatls; m++) {
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         vol_frac[m][c] = rho_CC[m][c] * sp_vol_CC[m][c];
@@ -2442,7 +2442,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   //______________________________________________________________________
   // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+    for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++) {
       IntVector c = *iter;   
       double delPress = 0.;
       bool converged  = false;
@@ -2582,7 +2582,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     // - Set BCs on rhoMicro. using press_CC 
     // - backout sp_vol_new 
     for (int m = 0; m < numMatls; m++)   {
-      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      for(CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c]; 
       }
@@ -2595,7 +2595,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     
     //__________________________________
     //  compute f_theta  
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       sumKappa[c] = 0.0;
       for (int m = 0; m < numMatls; m++) {
@@ -2689,7 +2689,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
 
     //______________________________________________________________________
     //  Main loop
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+    for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++) {
       IntVector c = *iter;
       vol_frac[c]      = 1.0;
       rho_micro[0][c]  = rho_CC_new[c] = rho_CC[c];
@@ -2816,8 +2816,8 @@ void ICE::computeTempFC(const ProcessorGroup*,
       
       if (level->getIndex() > 0) {  // Finer levels need to hit the ghost cells
         IntVector l, h;
-        l = patch->getExtraCellIterator().begin();
-        h = patch->getExtraCellIterator().end();
+        l = patch->getExtraCellIterator__New().begin();
+        h = patch->getExtraCellIterator__New().end();
         XFC_iterator = CellIterator(l + IntVector(1,0,0),h);
         YFC_iterator = CellIterator(l + IntVector(0,1,0),h);
         ZFC_iterator = CellIterator(l + IntVector(0,0,1),h);
@@ -3560,7 +3560,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
          
       //__________________________________
       //  compute sum_rho_CC used by press_FC
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+      for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done();iter++){
         IntVector c = *iter;
         sum_rho_CC[c] += rho_CC[c];
       } 
@@ -3571,7 +3571,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //  add delP to press_equil
     //  AMR:  hit the extra cells, BC aren't set an you need a valid pressure there
     // THIS COULD BE TROUBLE
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) { 
       IntVector c = *iter;
       press_CC[c] = press_equil[c];
     }
@@ -3775,7 +3775,7 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
       new_dw->get(kappa[m],       lb->compressibilityLabel,    indx,patch,gn,0);
     }
 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done();iter++){
       IntVector c = *iter;
       double total_vol=0.;
       for(int m=0;m<matls->size();m++){
@@ -4168,7 +4168,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       //__________________________________
       //  NO mass exchange
       if(d_models.size() == 0) {
-        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+        for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); 
            iter++) {
          IntVector c = *iter;
           double mass = rho_CC[c] * vol;
@@ -4198,7 +4198,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          IntVector c = *iter;
          massGain += modelMass_src[c];
         }
-        for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+        for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); 
            iter++) {
          IntVector c = *iter;
            //  must have a minimum mass
@@ -4360,7 +4360,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
        new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,    indx,patch,gn, 0);
        new_dw->get(cv,        lb->specific_heatLabel,indx,patch,gn, 0);
 
-       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+       for(CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
           IntVector c = *iter;
           alpha[m][c]=
             ice_matl->getEOS()->getAlpha(Temp_CC[m][c],sp_vol_CC[c],P[c],cv[c]);
@@ -4389,7 +4389,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
       //__________________________________
       //  compute sp_vol_L * mass
-      for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      for(CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         sp_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
@@ -4543,7 +4543,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
           setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
 
           // multiply by mass so advection is conserved
-          for(CellIterator iter=patch->getExtraCellIterator();
+          for(CellIterator iter=patch->getExtraCellIterator__New();
                           !iter.done();iter++){
             IntVector c = *iter;                            
             q_L_CC[c] *= mass_L[m][c];
@@ -4689,7 +4689,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     }
 
     // Convert momenta to velocities and internal energy to Temp
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done();iter++){
       IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
         Temp_CC[m][c] = int_eng_L[m][c]/(mass_L[m][c]*cv[m][c]);
@@ -4936,7 +4936,7 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     delete_CustomBCs(d_customBC_var_basket);
     //__________________________________
     // Convert vars. primitive-> flux 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done();iter++){
       IntVector c = *iter;
       for (int m = 0; m < numALLMatls; m++) {
         int_eng_L_ME[m][c] = Temp_CC[m][c]*cv[m][c] * mass_L[m][c];
@@ -5233,104 +5233,6 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
 
-/*`==========TESTING==========*/
-//__________________________________
-//  new patch testing  
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    IntVector ngc(1,1,1);
-    IntVector ngn(1,1,1);
-    IntVector diff1 = patch->getLow()  - patch->getExtraCellLowIndex__New();
-    IntVector diff2 = patch->getHigh() - patch->getExtraCellHighIndex__New();
-    
-    IntVector diff3 = patch->getLowIndex()  - patch->getExtraCellLowIndex__New();
-    IntVector diff4 = patch->getHighIndex() - patch->getExtraCellHighIndex__New();
-    
-    IntVector diff5 = patch->getNodeLowIndex()  - patch->getExtraNodeLowIndex__New();
-    IntVector diff6 = patch->getNodeHighIndex() - patch->getExtraNodeHighIndex__New();
-    
-    IntVector diff7 = patch->getInteriorNodeLowIndex() - patch->getNodeLowIndex__New();
-    IntVector diff8 = patch->getInteriorNodeHighIndex() - patch->getNodeHighIndex__New();
-     
-    IntVector diff9  = patch->getCellLowIndex()  - patch->getExtraCellLowIndex__New();
-    IntVector diff10 = patch->getCellHighIndex() - patch->getExtraCellHighIndex__New();
-        
-    IntVector diff11 = patch->getInteriorCellLowIndex() - patch->getCellLowIndex__New();
-    IntVector diff12 = patch->getInteriorCellHighIndex() - patch->getCellHighIndex__New();
-    int numGC  = 1;
-    IntVector diff13 = patch->getGhostCellLowIndex(numGC)  - patch->getExtraCellLowIndex__New(numGC);
-    IntVector diff14 = patch->getGhostCellHighIndex(numGC) - patch->getExtraCellHighIndex__New(numGC);          
-    
-    IntVector diff15 = patch->getCellIterator().begin() - patch->getCellIterator__New().begin();
-    IntVector diff16 = patch->getCellIterator().end() - patch->getCellIterator__New().end();
-
-    IntVector diff17 = patch->getCellIterator(ngc).begin() - patch->getCellIterator__New(numGC).begin();
-    IntVector diff18 = patch->getCellIterator(ngc).end() - patch->getCellIterator__New(numGC).end();
-        
-    IntVector diff19 = patch->getExtraCellIterator().begin() - patch->getExtraCellIterator__New().begin();
-    IntVector diff20 = patch->getExtraCellIterator().end() - patch->getExtraCellIterator__New().end();
-
-    IntVector diff21 = patch->getExtraCellIterator(ngc).begin() - patch->getExtraCellIterator__New(numGC).begin();
-    IntVector diff22 = patch->getExtraCellIterator(ngc).end() - patch->getExtraCellIterator__New(numGC).end();
-    
-    IntVector zero=IntVector(0,0,0);
-    if (diff1 != zero || diff2 != zero || diff3 != zero ||
-        diff4 != zero || diff5 != zero || diff6 != zero ||
-        diff7 != zero || diff8 != zero || diff9 != zero ||
-        diff10 != zero || diff11 != zero || diff12 != zero ||
-        diff13 != zero || diff14 != zero || diff15 != zero ||
-        diff16 != zero || diff19 != zero || diff20 != zero){
-      cout << "diff1 " << diff1 <<  " " << patch->getLow()  << " " << patch->getExtraCellLowIndex__New() << endl;
-      cout << "diff2 " << diff2 <<  " " << patch->getHigh()  << " " << patch->getExtraCellHighIndex__New() << endl;
-      
-      cout << "diff3 " << diff3 <<  " " << patch->getLowIndex()  << " " << patch->getExtraCellLowIndex__New() << endl;
-      cout << "diff4 " << diff4 <<  " " << patch->getHighIndex()  << " " << patch->getExtraCellHighIndex__New() << endl;
-      
-      cout << "diff5 " << diff5 << " " << patch->getNodeLowIndex() << " " << patch->getExtraNodeLowIndex__New() << endl;
-      cout << "diff6 " << diff6 << " " << patch->getNodeHighIndex() << " " << patch->getExtraNodeHighIndex__New() << endl;
-      
-      cout << "diff7 " << diff7 << " " << patch->getInteriorNodeLowIndex() << " " << patch->getNodeLowIndex__New() << endl;
-      cout << "diff8 " << diff8 << " " << patch->getInteriorNodeHighIndex() << " " << patch->getNodeHighIndex__New() << endl;
-      
-      cout << "diff9 " << diff9   << " " << patch->getCellLowIndex() << " " <<  patch->getExtraCellLowIndex__New()<< endl;
-      cout << "diff10 " << diff10 << " " << patch->getCellHighIndex() << " " <<  patch->getExtraCellHighIndex__New()<< endl;
-      
-      cout << "diff11 " << diff11 << " " << patch->getInteriorCellLowIndex() << " " << patch->getCellLowIndex__New() << endl;
-      cout << "diff12 " << diff12 << " " << patch->getInteriorCellHighIndex() << " " << patch->getCellHighIndex__New() << endl;
-      
-      cout << "diff13 " << diff13 << " " << patch->getGhostCellLowIndex(numGC) << " " << patch->getExtraCellLowIndex__New(numGC) << endl;
-      cout << "diff14 " << diff14 << " " << patch->getGhostCellHighIndex(numGC) << " " << patch->getExtraCellHighIndex__New(numGC) << endl;
-      
-      cout << "diff15 " << diff15 << " " << patch->getCellIterator().begin() << " " <<  patch->getCellIterator__New().begin() << endl;
-      cout << "diff16 " << diff16 << " " << patch->getCellIterator().end() << " " <<  patch->getCellIterator__New().end() << endl;
-      
-      cout << "diff19 " << diff19 << " " << patch->getExtraCellIterator().begin() << " " <<  patch->getExtraCellIterator__New().begin() << endl;
-      cout << "diff20 " << diff20 << " " << patch->getExtraCellIterator().end() << " " <<  patch->getExtraCellIterator__New().end() << endl;      
-
-      ostringstream warn;
-      int idx = level->getIndex();
-      warn<<"ICE:(L-"<<idx<<", Patch"<< patch->getID()<<"): Problem with the new patch functons";
-      throw InvalidValue(warn.str(), __FILE__, __LINE__);               
-    }
-#if 0
-    if ( diff17 != zero || diff18 != zero ||  diff21 != zero || diff22 != zero){
-      cout << "diff17 " << diff17 << " " << patch->getCellIterator(ngc).begin() << " " << patch->getCellIterator__New(numGC).begin() << endl;
-      cout << "diff18 " << diff18 << " " << patch->getCellIterator(ngc).end() << " " << patch->getCellIterator__New(numGC).end() << endl;
-      
-      cout << "diff21 " << diff21 << " " << patch->getExtraCellIterator(ngc).begin() << " " <<  patch->getExtraCellIterator__New(numGC).begin() << endl;
-      cout << "diff22 " << diff22 <<" " << patch->getExtraCellIterator(ngc).end() << " " <<  patch->getExtraCellIterator__New(numGC).end() << endl; 
-      ostringstream warn;
-      int idx = level->getIndex();
-      warn<<"ICE:(L-"<<idx<<", Patch"<< patch->getID()<<"): Problem with the new patch functons";
-      throw InvalidValue(warn.str(), __FILE__, __LINE__);               
-    }
-#endif   
-                        
-}  
-/*===========TESTING==========`*/
-
-
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
  
@@ -5462,7 +5364,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
                                
       //__________________________________
       // Compute Auxilary quantities
-      for(CellIterator iter = patch->getExtraCellIterator();
+      for(CellIterator iter = patch->getExtraCellIterator__New();
                                                         !iter.done(); iter++){
         IntVector c = *iter;
         mach[c]  = vel_CC[c].length()/speedSound[c];
@@ -5560,7 +5462,7 @@ void ICE::TestConservation(const ProcessorGroup*,
       new_dw->allocateTemporary(mass[m],patch);
       new_dw->get(rho_CC, lb->rho_CCLabel,   indx, patch, gn,0);
       
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         mass[m][c] = rho_CC[c] * cell_vol;
       }
@@ -5583,7 +5485,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         int indx = ice_matl->getDWIndex();
         new_dw->get(vel_CC, lb->vel_CCLabel,   indx, patch, gn,0);
 
-        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+        for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
           IntVector c = *iter;
           mom[c] = mass[m][c] * vel_CC[c];
         }
@@ -5609,7 +5511,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         new_dw->get(temp_CC, lb->temp_CCLabel,      indx, patch, gn,0);
         new_dw->get(cv,      lb->specific_heatLabel,indx, patch, gn,0);
         
-        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+        for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
           IntVector c = *iter;
           int_eng[c] = mass[m][c] * cv[c] * temp_CC[c];
         }
@@ -5634,7 +5536,7 @@ void ICE::TestConservation(const ProcessorGroup*,
         int indx = ice_matl->getDWIndex();
         new_dw->get(vel_CC, lb->vel_CCLabel,indx, patch, gn,0);
         
-        for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+        for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
           IntVector c = *iter;
           double vel_mag = vel_CC[c].length();
           KE[c] = 0.5 * mass[m][c] * vel_mag * vel_mag;
@@ -5715,7 +5617,7 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
   }
   //__________________________________
   // Tack on the hydrostatic pressure adjustment
-  for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+  for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++) {
     IntVector c = *iter;
     Point here = level->getCellPosition(c);
     Vector dist_from_p_ref = (here.asVector() - press_ref_pt);

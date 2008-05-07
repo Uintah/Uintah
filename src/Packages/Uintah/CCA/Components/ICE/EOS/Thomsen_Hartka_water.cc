@@ -55,7 +55,7 @@ void Thomsen_Hartka_water::computeTempCC(const Patch* patch,
                                          Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       double P           = press[c];
       double rhoM        = rho_micro[c];

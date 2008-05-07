@@ -109,7 +109,7 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getExtraCellIterator();
+  CellIterator iter = patch->getExtraCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   
   bool error = false;
@@ -488,7 +488,7 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
   // At inner patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
   // This operates over the extra cells
-  CellIterator iter = patch->getExtraCellIterator();
+  CellIterator iter = patch->getExtraCellIterator__New();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   
   if (!useCompatibleFluxes) {  // non-compatible advection 

@@ -55,7 +55,7 @@ void Gruneisen::computeTempCC(const Patch* patch,
                               Patch::FaceType face)
 {
   if(comp_domain == "WholeDomain") {
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       Temp[c]= T0 + (1./B)*((P[c]-P0) - A*(rhoM[c]/rho0-1.));
     }
