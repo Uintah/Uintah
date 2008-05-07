@@ -2805,14 +2805,11 @@ void ICE::computeTempFC(const ProcessorGroup*,
       vector<IntVector> adj_offset(3);
       adj_offset[0] = IntVector(-1, 0, 0);    // X faces
       adj_offset[1] = IntVector(0, -1, 0);    // Y faces
-      adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
+      adj_offset[2] = IntVector(0,  0, -1);   // Z faces
 
-      int offset=0;    // 0=Compute all faces in computational domain
-                       // 1=Skip the faces at the border between interior and gc
-
-      CellIterator XFC_iterator = patch->getSFCXIterator(offset);
-      CellIterator YFC_iterator = patch->getSFCYIterator(offset);
-      CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
+      CellIterator XFC_iterator = patch->getSFCXIterator__New();
+      CellIterator YFC_iterator = patch->getSFCYIterator__New();
+      CellIterator ZFC_iterator = patch->getSFCZIterator__New();
       
       if (level->getIndex() > 0) {  // Finer levels need to hit the ghost cells
         IntVector l, h;
@@ -2994,13 +2991,9 @@ void ICE::computeVel_FC(const ProcessorGroup*,
       adj_offset[1] = IntVector(0, -1, 0);    // Y faces
       adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
 
-      int offset=0;    // 0=Compute all faces in computational domain
-                       // 1=Skip the faces at the border between interior and gc
-
-      CellIterator XFC_iterator = patch->getSFCXIterator(offset);
-      CellIterator YFC_iterator = patch->getSFCYIterator(offset);
-      CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
-
+      CellIterator XFC_iterator = patch->getSFCXIterator__New();
+      CellIterator YFC_iterator = patch->getSFCYIterator__New();
+      CellIterator ZFC_iterator = patch->getSFCZIterator__New();
       //__________________________________
       //  Compute vel_FC for each face
       computeVelFace<SFCXVariable<double> >(0, XFC_iterator,
@@ -3143,12 +3136,9 @@ void ICE::updateVel_FC(const ProcessorGroup*,
       adj_offset[1] = IntVector(0, -1, 0);    // Y faces
       adj_offset[2] = IntVector(0,  0, -1);   // Z faces     
 
-      int offset=0;    // 0=Compute all faces in computational domain
-                       // 1=Skip the faces at the border between interior and gc
-
-      CellIterator XFC_iterator = patch->getSFCXIterator(offset);
-      CellIterator YFC_iterator = patch->getSFCYIterator(offset);
-      CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
+      CellIterator XFC_iterator = patch->getSFCXIterator__New();
+      CellIterator YFC_iterator = patch->getSFCYIterator__New();
+      CellIterator ZFC_iterator = patch->getSFCZIterator__New();
 
       updateVelFace<SFCXVariable<double> >(0, XFC_iterator,
                                      adj_offset[0],dx[0],delT,
@@ -3355,12 +3345,10 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
     adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-    int offset=0;   // 0=Compute all faces in computational domain
-                    // 1=Skip the faces at the border between interior and gc
-
-    CellIterator XFC_iterator = patch->getSFCXIterator(offset);
-    CellIterator YFC_iterator = patch->getSFCYIterator(offset);
-    CellIterator ZFC_iterator = patch->getSFCZIterator(offset);
+    
+    CellIterator XFC_iterator = patch->getSFCXIterator__New();
+    CellIterator YFC_iterator = patch->getSFCYIterator__New();
+    CellIterator ZFC_iterator = patch->getSFCZIterator__New();
                                 
     //__________________________________
     //  tack on exchange contribution
@@ -3671,15 +3659,15 @@ void ICE::computePressFC(const ProcessorGroup*,
          
     //__________________________________
     //  For each face compute the pressure
-    computePressFace<SFCXVariable<double> >(patch->getSFCXIterator(),
+    computePressFace<SFCXVariable<double> >(patch->getSFCXIterator__New(),
                                        adj_offset[0], sum_rho_CC, press_CC,
                                        pressX_FC);
 
-    computePressFace<SFCYVariable<double> >(patch->getSFCYIterator(),
+    computePressFace<SFCYVariable<double> >(patch->getSFCYIterator__New(),
                                        adj_offset[1], sum_rho_CC, press_CC,
                                        pressY_FC);
 
-    computePressFace<SFCZVariable<double> >(patch->getSFCZIterator(),
+    computePressFace<SFCZVariable<double> >(patch->getSFCZIterator__New(),
                                        adj_offset[2], sum_rho_CC, press_CC,
                                        pressZ_FC); 
    //---- P R I N T   D A T A ------ 

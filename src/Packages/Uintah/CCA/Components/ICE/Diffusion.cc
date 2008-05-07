@@ -144,19 +144,19 @@ void q_flux_allFaces(DataWarehouse* new_dw,
   IntVector low,hi; 
   IntVector offset = IntVector(1,1,1) - patch->noNeighborsHigh();
        
-  low = patch->getSFCXIterator().begin();    // X Face iterator
-  hi  = patch->getSFCXIterator().end();
+  low = patch->getSFCXIterator__New().begin();    // X Face iterator
+  hi  = patch->getSFCXIterator__New().end();
   hi[0] += offset[0];
   CellIterator X_FC_iterLimits(low,hi);
          
-  low = patch->getSFCYIterator().begin();   // Y Face iterator
-  hi  = patch->getSFCYIterator().end();
+  low = patch->getSFCYIterator__New().begin();   // Y Face iterator
+  hi  = patch->getSFCYIterator__New().end();
   hi[1] += offset[1];
 
   CellIterator Y_FC_iterLimits(low,hi); 
         
-  low = patch->getSFCZIterator().begin();   // Z Face iterator
-  hi  = patch->getSFCZIterator().end();
+  low = patch->getSFCZIterator__New().begin();   // Z Face iterator
+  hi  = patch->getSFCZIterator__New().end();
   hi[2] += offset[2];
   
   CellIterator Z_FC_iterLimits(low,hi);            
@@ -207,7 +207,7 @@ void computeTauX( const Patch* patch,
   // on the left patches to include the right face
   // of the cell at the patch boundary. 
   // We compute tau_ZZ[right]-tau_XX[left] on each patch
-  CellIterator hi_lo = patch->getSFCXIterator();
+  CellIterator hi_lo = patch->getSFCXIterator__New();
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
@@ -336,7 +336,7 @@ void computeTauY( const Patch* patch,
   // on the bottom patches to include the top face
   // of the cell at the patch boundary. 
   // We compute tau_YY[top]-tau_YY[bot] on each patch
-  CellIterator hi_lo = patch->getSFCYIterator();
+  CellIterator hi_lo = patch->getSFCYIterator__New();
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
@@ -464,7 +464,7 @@ void computeTauZ( const Patch* patch,
   // on the back patches to include the front face
   // of the cell at the patch boundary. 
   // We compute tau_ZZ[front]-tau_ZZ[back] on each patch
-  CellIterator hi_lo = patch->getSFCZIterator();
+  CellIterator hi_lo = patch->getSFCZIterator__New();
   IntVector low,hi; 
   low = hi_lo.begin();
   hi  = hi_lo.end();
