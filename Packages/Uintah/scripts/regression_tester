@@ -145,7 +145,8 @@ for arg in $*; do
             do_arches=1;;
         -ice_amr)
             echo "Scheduling the ICE AMR tests . . ."
-            do_ice_amr=1;;
+            do_ice_amr=1
+            MPI_RUN="yes";;
         -e)
             echo "Scheduling the examples tests . . ."
             do_examples=1;;
