@@ -561,11 +561,11 @@ void    ICE::symmetryTest_driver( int matl,
     IntVector low, high, high_twk;
 
     if(cellShift != IntVector(0,0,0)){  // FC variables
-      low   = patch->getInteriorCellLowIndex();
-      high  = patch->getInteriorCellHighIndex();
+      low   = patch->getCellLowIndex__New();
+      high  = patch->getCellHighIndex__New();
     }else{                              // CC variable
-      low   = patch->getCellLowIndex();
-      high  = patch->getCellHighIndex();
+      low   = patch->getExtraCellLowIndex__New();
+      high  = patch->getExtraCellHighIndex__New();
     }
 
     bool is_FC_variable = false;
@@ -703,8 +703,8 @@ void    ICE::symmetryTest_Vector( int matl,
   //__________________________________
   if ( onRightLevel && dumpThisMatl == true && d_dbgTime_to_printData ) { 
     IntVector low, high, high_twk;
-    low   = patch->getCellLowIndex();
-    high  = patch->getCellHighIndex();
+    low   = patch->getCellLowIndex__New();
+    high  = patch->getCellHighIndex__New();
 
     cerr.setf(ios::scientific,ios::floatfield);
     cerr.precision(5);
@@ -852,12 +852,12 @@ void  ICE::adjust_dbg_indices(  const int include_EC,
   // 
   IntVector lo, hi;
   if (include_EC == 1)  { 
-    low   = patch->getCellLowIndex();
-    high  = patch->getCellHighIndex();
+    low   = patch->getExtraCellLowIndex__New();
+    high  = patch->getExtraCellHighIndex__New();
   }
   if (include_EC == 0) {
-    low   = patch->getInteriorCellLowIndex();
-    high  = patch->getInteriorCellHighIndex();
+    low   = patch->getCellLowIndex__New();
+    high  = patch->getCellHighIndex__New();
   }
 
 
@@ -971,12 +971,12 @@ void    ICE::readData(const Patch* patch, int include_EC,
                                 __FILE__, __LINE__);
   
   if (include_EC == 1)  { 
-    lowIndex = patch->getCellLowIndex();
-    hiIndex  = patch->getCellHighIndex();
+    lowIndex = patch->getExtraCellLowIndex__New();
+    hiIndex  = patch->getExtraCellHighIndex__New();
   }
   if (include_EC == 0) {
-    lowIndex = patch->getInteriorCellLowIndex();
-    hiIndex  = patch->getInteriorCellHighIndex();
+    lowIndex = patch->getCellLowIndex__New();
+    hiIndex  = patch->getCellHighIndex__New();
   }
   xLo = lowIndex.x();
   yLo = lowIndex.y();
