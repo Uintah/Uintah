@@ -620,8 +620,8 @@ void ICE::refluxOperator_computeCorrectionFluxes(
   IntVector xfl, xfh, yfl, yfh, zfl, zfh, ch;
   IntVector xcl, xch, ycl, ych, zcl, zch, fh;
 
-  xfl = yfl = zfl = finePatch->getInteriorCellLowIndex();
-  xcl = ycl = zcl = coarsePatch->getInteriorCellLowIndex();
+  xfl = yfl = zfl = finePatch->getCellLowIndex__New();
+  xcl = ycl = zcl = coarsePatch->getCellLowIndex__New();
   
   xfh = finePatch->getHighIndex(Patch::XFaceBased);
   yfh = finePatch->getHighIndex(Patch::YFaceBased);
