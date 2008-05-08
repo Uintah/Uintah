@@ -136,30 +136,32 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 #endif
 
   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
+  if (!mpm_soln_ps){
+    ostringstream warn;
+    warn<<"ERROR:MPM:\n missing MPM section in the input file\n";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+ 
+  // Read all MPM flags (look in MPMFlags.cc)
+  flags->readMPMFlags(restart_mat_ps);
+  if (flags->d_integrator_type == "implicit"){
+    throw ProblemSetupException("Can't use implicit integration with -mpm",
+                                 __FILE__, __LINE__);
+  }
 
-  if(mpm_soln_ps) {
-
-    // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(restart_mat_ps);
-    if (flags->d_integrator_type == "implicit"){
-      throw ProblemSetupException("Can't use implicit integration with -mpm",
-                                   __FILE__, __LINE__);
-    }
-
-    // convert text representation of face into FaceType
-    for(std::vector<std::string>::const_iterator ftit(flags->d_bndy_face_txt_list.begin());
-        ftit!=flags->d_bndy_face_txt_list.end();ftit++) {
-        Patch::FaceType face = Patch::invalidFace;
-        for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
-            ft=Patch::nextFace(ft)) {
-          if(Patch::getFaceName(ft)==*ftit) face =  ft;
-        }
-        if(face!=Patch::invalidFace) {
-          d_bndy_traction_faces.push_back(face);
-        } else {
-          std::cerr << "warning: ignoring unknown face '" << *ftit<< "'" << std::endl;
-        }
-    }
+  // convert text representation of face into FaceType
+  for(std::vector<std::string>::const_iterator ftit(flags->d_bndy_face_txt_list.begin());
+      ftit!=flags->d_bndy_face_txt_list.end();ftit++) {
+      Patch::FaceType face = Patch::invalidFace;
+      for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
+          ft=Patch::nextFace(ft)) {
+        if(Patch::getFaceName(ft)==*ftit) face =  ft;
+      }
+      if(face!=Patch::invalidFace) {
+        d_bndy_traction_faces.push_back(face);
+      } else {
+        std::cerr << "warning: ignoring unknown face '" << *ftit<< "'" << std::endl;
+      }
   }
 
   // read in AMR flags from the main ups file

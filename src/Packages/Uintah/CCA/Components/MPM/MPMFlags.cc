@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
@@ -181,6 +182,15 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   } else if(d_interpolator_type=="4thorderBS"){
     d_interpolator = scinew BSplineInterpolator();
     d_8or27 = 64;
+  } else{
+    ostringstream warn;
+    warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
+         << "Valid options are: \n"
+         << "linear\n"
+         << "gimp\n"
+         << "3rdorderBS\n"
+         << "4thorderBS\n"<< endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
