@@ -211,7 +211,10 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           abs_tolerance = tmp[1]
         if tmp[0] == "rel_tolerance":
           rel_tolerance = tmp[1]
-
+        if flags[i] == "exactComparison":
+          abs_tolerance = 0.0
+          rel_tolerance = 0.0
+           
     if do_debug == 0 and dbg_opt == "dbg":
       continue
     if do_opt == 0 and dbg_opt == "opt":
