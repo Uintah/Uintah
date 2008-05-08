@@ -62,7 +62,7 @@
    </PhysicalConstants>
    <MPM>
       <time_integrator>explicit</time_integrator>
-      <interpolator>gimp</interpolator>
+      <interpolator>linear</interpolator>
    </MPM>
    <MaterialProperties>
 	<MPM>
