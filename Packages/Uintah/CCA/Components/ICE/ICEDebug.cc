@@ -528,8 +528,8 @@ void    ICE::symmetryTest_driver( int matl,
 
   // This only works with an even number of cells in the patch interior
   IntVector low, high, ncell;
-  low   = patch->getInteriorCellLowIndex();
-  high  = patch->getInteriorCellHighIndex();
+  low   = patch->getCellLowIndex__New();
+  high  = patch->getCellHighIndex__New();
   IntVector nCells = high - low;
  
   if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
@@ -672,8 +672,8 @@ void    ICE::symmetryTest_Vector( int matl,
 
   // The patch interior can only have an even number of cells
   IntVector low, high, ncell;
-  low   = patch->getInteriorCellLowIndex();
-  high  = patch->getInteriorCellHighIndex();
+  low   = patch->getCellLowIndex__New();
+  high  = patch->getCellHighIndex__New();
   IntVector nCells = high - low;
   
   if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
