@@ -68,13 +68,13 @@ void usage(const std::string& badarg, const std::string& progname)
        << " [options] <archive file 1> <archive file 2>\n\n";
   cerr << "Valid options are:\n";
   cerr << "  -h[elp]\n";
-  cerr << "  -abs_tolerance [double] (allowable absolute difference of any number, default: 1e-9)\n";
-  cerr << "  -rel_tolerance [double] (allowable relative difference of any number, default: 1e-6)\n";
-  cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
-  cerr << "  -skip_unknown_types (skip variable comparisons" 
-       << " of unknown types without error)\n";
+  cerr << "  -abs_tolerance [double]  (allowable absolute difference of any number, default: 1e-9)\n";
+  cerr << "  -rel_tolerance [double]  (allowable relative difference of any number, default: 1e-6)\n";
+  cerr << "  -exact                   (Perform an exact comparison, absolute/relative tolerance = 0)\n";
+  cerr << "  -as_warnings             (treat tolerance errors as warnings and continue)\n";
+  cerr << "  -skip_unknown_types      (skip variable comparisons of unknown types without error)\n";
   cerr << "  -ignoreVariable [string] (skip this variable)\n";
-  cerr << "  -dont_sort  (don't sort the variable names before comparing them)";
+  cerr << "  -dont_sort               (don't sort the variable names before comparing them)";
   cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
        << "      for a comparison to fail.\n\n";
   Thread::exitAll(1);
@@ -284,6 +284,7 @@ private:
   MaterialParticleVarData* particleIDs_; // will point to one of vars_
 };
 
+//__________________________________
 MaterialParticleVarData::~MaterialParticleVarData()
 {
   vector<ParticleVariableBase*>::iterator iter = particleVars_.begin();
@@ -295,6 +296,7 @@ MaterialParticleVarData::~MaterialParticleVarData()
     delete patchMap_;
 }
 
+//__________________________________
 void MaterialParticleData::createPatchMap()
 {
   ASSERT(particleIDs_ != 0); // should check for this before this point
@@ -307,6 +309,7 @@ void MaterialParticleData::createPatchMap()
     }
 }
 
+//__________________________________
 void MaterialParticleVarData::createPatchMap()
 {
   ASSERT(name_ == "p.particleID");
@@ -328,6 +331,7 @@ void MaterialParticleVarData::createPatchMap()
   }
 }
 
+//__________________________________
 void MaterialParticleData::compare(MaterialParticleData& data2, double time1,
                                    double time2, double abs_tolerance,
                                    double rel_tolerance)
@@ -368,6 +372,7 @@ void MaterialParticleData::compare(MaterialParticleData& data2, double time1,
   ASSERT((varIter == vars_.end()) && (varIter2 == data2.vars_.end()));
 }
 
+//__________________________________
 struct ID_Index : public pair<long64, particleIndex>
 {
   ID_Index(long64 l, particleIndex i)
@@ -376,6 +381,7 @@ struct ID_Index : public pair<long64, particleIndex>
   { return first < id2.first; }
 };
 
+//__________________________________
 void MaterialParticleData::sort()
 {
   // should have made this check earlier -- particleIDs not output
@@ -417,6 +423,7 @@ void MaterialParticleData::sort()
   gather(subset);
 }
 
+//__________________________________
 void MaterialParticleData::gather(ParticleSubset* gatherSubset)
 {
   map<string, MaterialParticleVarData>::iterator iter;
@@ -424,6 +431,7 @@ void MaterialParticleData::gather(ParticleSubset* gatherSubset)
     (*iter).second.gather(gatherSubset);
 }
 
+//__________________________________
 void MaterialParticleVarData::add(ParticleVariableBase* pvb,
                                   const Patch* patch)
 {
@@ -432,6 +440,7 @@ void MaterialParticleVarData::add(ParticleVariableBase* pvb,
   patches_.push_back(patch);
 }
 
+//__________________________________
 void MaterialParticleVarData::gather(ParticleSubset* gatherSubset)
 {
   ASSERT(particleVars_.size() > 0);
@@ -443,6 +452,7 @@ void MaterialParticleVarData::gather(ParticleSubset* gatherSubset)
   add(pvb, 0 /* all patches */);
 }
 
+//__________________________________
 bool MaterialParticleVarData::
 compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
         double abs_tolerance, double rel_tolerance)
@@ -494,6 +504,7 @@ compare(MaterialParticleVarData& data2, int matl, double time1, double time2,
   return 0;
 }
 
+//__________________________________
 template <class T>
 bool MaterialParticleVarData::
 compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
@@ -540,6 +551,7 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
   return passes;
 }
 
+//__________________________________
 long64 MaterialParticleVarData::getParticleID(particleIndex index)
 {
   ASSERT(particleIDData_ != 0);
@@ -551,6 +563,7 @@ long64 MaterialParticleVarData::getParticleID(particleIndex index)
   return (*particleIDs)[index];
 }
 
+//__________________________________
 const Patch* MaterialParticleVarData::getPatch(particleIndex index)
 {
   ASSERT(patchMap_ != 0);
@@ -570,6 +583,7 @@ const Patch* MaterialParticleVarData::getPatch(particleIndex index)
 
 typedef map<int, MaterialParticleData> MaterialParticleDataMap;
 
+//__________________________________
 // takes a string and replaces all occurances of old with newch
 string replaceChar(string s, char old, char newch) {
   string result;
@@ -582,6 +596,7 @@ string replaceChar(string s, char old, char newch) {
 }
 
 
+//__________________________________
 void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
                      DataArchive* da, vector<string> vars,
                      vector<const Uintah::TypeDescription*> types,
@@ -641,7 +656,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424 // template parameter not used in declaring arguments
 #endif  
-
+//__________________________________
 template <class T>
 void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
                       int matl, const Patch* patch1, const Patch* patch2,
@@ -764,6 +779,7 @@ private:
   Iterator begin_;
 };
 
+//__________________________________
 FieldComparator* FieldComparator::
 makeFieldComparator(const Uintah::TypeDescription* td,
                     const Uintah::TypeDescription* subtype, const Patch* patch)
@@ -909,6 +925,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
   return 0;
 }
 
+//__________________________________
 template <class Field, class Iterator>
 void SpecificFieldComparator<Field, Iterator>::
 compareFields(DataArchive* da1, DataArchive* da2, const string& var,
@@ -967,6 +984,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 }
 
 
+//__________________________________
 // map nodes to their owning patch in a level.
 // Nodes are used because I am assuming that whoever owns the node at
 // that index also owns the cell, or whatever face at that same index.
@@ -1028,7 +1046,7 @@ void buildPatchMap(LevelP level, const string& filebase,
   patchMap.rewindow(low, high);
 }
 
-
+//______________________________________________________________________
 int
 main(int argc, char** argv)
 {
@@ -1060,6 +1078,10 @@ main(int argc, char** argv)
     }
     else if(s == "-skip_unknown_types") {
       strict_types = false;
+    }
+    else if(s == "-exact") {
+      abs_tolerance = 0;
+      rel_tolerance = 0;
     }
     else if(s == "-ignoreVariable") {
       if (++i == argc){

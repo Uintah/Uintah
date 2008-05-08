@@ -92,6 +92,7 @@ do_examples=0
 do_remove=0
 do_restart=0
 do_mem=0
+compare_uda_options=""
 
 ALL=
 
@@ -119,6 +120,7 @@ usage () {
     echo "  -restart       restart and compare with the original uda.000"
     echo "  -mem           check for memory leaks"
     echo "  -clean         remove the *.out *.compare and uda directories"
+    echo "  -exact         perform an exact comparison (absolute/relative tolerance == 0)"
     echo "  -h[elp]        display this help and exit"
     echo;
     exit
@@ -196,6 +198,9 @@ for arg in $*; do
         -mem)
             echo; echo "Doing memory leak . . ."
             do_mem=1;;
+        -exact)
+            echo; echo "Doing an exact comparison test"
+            compare_uda_options="-exact";;
         *)
             usage ;;
     esac
@@ -317,9 +322,9 @@ compare_results () {
     goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
     echo "Comparing $uda results against '$goldStandard'"
     
-    echo "Running command: ../compare_uda gs: $goldStandard ud: $uda"
-    echo "../compare_uda $goldStandard $uda" > $n.compare 2>&1
-    ../compare_uda $goldStandard $uda >> $n.compare 2>&1
+    echo "Running command: ../compare_uda $compare_uda_options gs: $goldStandard ud: $uda"
+    echo "../compare_uda $compare_uda_options  $goldStandard $uda" > $n.compare 2>&1
+    ../compare_uda $compare_uda_options $goldStandard $uda >> $n.compare 2>&1
     
     compare=`grep "passed" $n.compare`
     if test -n "$compare"; then
