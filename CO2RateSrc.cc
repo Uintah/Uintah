@@ -47,6 +47,7 @@ CO2RateSrc::problemSetup(const ProblemSpecP& params)
 	// we "require" this because this source is specifically 
 	// designed for a table-read source term.
 	db->require("tableName", d_tableName);
+	db->getWithDefault("scaleFactor", d_scaleFactor, 1.0);
 
 	//Initialize
  	setTableIndex(-1);
@@ -114,7 +115,7 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
 
 	for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 
-		scalarNonlinSrc[*iter] += CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
+		scalarNonlinSrc[*iter] += d_scaleFactor*CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
 	
 	}
   }
