@@ -281,7 +281,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     #__________________________________
     # Run test and perform comparisons on the uda
-    failcode = 0   #default value
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
     rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallelism, tests_to_do, tolerances, startFrom)
     system("rm inputs")

@@ -19,8 +19,8 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
 #       no_opt:                 - skip all optimized compilation tests
 #       do_performance_test:    - Run the performance test
 #       doesTestRun:            - Checks if a test successfully runs
-#       abs_tolerance=XXX       - absolute tolerance used in comparisons
-#       rel_tolerance=XXX       - relative tolerance used in comparisons
+#       abs_tolerance=[double]  - absolute tolerance used in comparisons
+#       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 
