@@ -26,22 +26,22 @@ UNUSED = [  ]
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000) 
 
-TESTS = [   ("advect",          "advect.ups",           1, "Linux"),      \
+TESTS = [   ("advect",          "advect.ups",           1, "Linux", ["exactComparison"]),      \
             ("advect",          "advect.ups",           1, "Darwin", ["doesTestRun"]),  \
-            ("rieman_sm",       "rieman_sm.ups",        1, "Linux"),      \
+            ("rieman_sm",       "rieman_sm.ups",        1, "Linux", ["exactComparison"]),      \
             ("rieman_sm",       "rieman_sm.ups",        1, "Darwin", ["doesTestRun"]),  \
-            ("hotBlob2mat",     "hotBlob2mat.ups",      1, "Linux"),      \
+            ("hotBlob2mat",     "hotBlob2mat.ups",      1, "Linux", ["exactComparison"]),      \
             ("hotBlob2mat",     "hotBlob2mat.ups",      1, "Darwin", ["doesTestRun"]),  \
-            ("hotBlob2mat_sym", "hotBlob2mat_sym.ups",  1, "Linux"),      \
+            ("hotBlob2mat_sym", "hotBlob2mat_sym.ups",  1, "Linux", ["exactComparison"]),      \
             ("hotBlob2mat_sym", "hotBlob2mat_sym.ups",  1, "Darwin", ["doesTestRun"]),  \
-            ("impHotBlob",      "impHotBlob.ups",       1, "Linux"),      \
+            ("impHotBlob",      "impHotBlob.ups",       1, "Linux", ["exactComparison"]),      \
             ("impHotBlob",      "impHotBlob.ups",       1, "Darwin", ["doesTestRun"]),  \
-            ("hotBlob2mat8patch",   "hotBlob2mat8patch.ups", 8, "Linux"),     \
-            ("advect2matAMR",   "advect2matAMR.ups",    1, "Linux"),      \
+            ("hotBlob2mat8patch","hotBlob2mat8patch.ups", 8, "Linux",["exactComparison"]),     \
+            ("advect2matAMR",   "advect2matAMR.ups",    1, "Linux", ["exactComparison"]),      \
             ("advect2matAMR",   "advect2matAMR.ups",    1, "Darwin", ["doesTestRun"]),  \
-            ("hotBlob_AMR",     "hotBlob_AMR.ups",      4, "Linux"),  \
-            ("hotBlob_AMR_3L", hotBlob_AMR_3L_ups,      4, "Linux"),  \
-            ("impAdvectAMR",    "impAdvectAMR.ups", 1.1, "Linux")
+            ("hotBlob_AMR",     "hotBlob_AMR.ups",      4, "Linux", ["exactComparison"]),  \
+            ("hotBlob_AMR_3L", hotBlob_AMR_3L_ups,      4, "Linux", ["exactComparison"]),  \
+            ("impAdvectAMR",    "impAdvectAMR.ups", 1.1, "Linux", ["exactComparison"])
         ]
 
 exit(runSusTests(argv, TESTS, "ICE"))
