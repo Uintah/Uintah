@@ -5,23 +5,6 @@ from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root
 from helpers.modUPS import modUPS
 
-matest_heptwb_cyl_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
-                           "matest_heptwb_cyl.ups", \
-                           ["<patches>[2,2,2]</patches>"])
-
-matest_heptwb_cyl_8patch_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
-                           "matest_heptwb_cyl.ups", \
-                           ["<patches>[2,2,2]</patches>", "<resolution>[20,20,20]</resolution>", \
-                            "<maxTime>0.5</maxTime>"])
-
-jp8cyl_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
-                      "jp8cyl.ups", \
-                      ["<patches>[2,2,2]</patches>"])
-
-jp8cyl_40cube_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
-                              "jp8cyl.ups", \
-                              ["<patches>[2,2,2]</patches>", "<resolution>[40,40,40]</resolution>", \
-                               "<maxTime>0.5</maxTime>"])
 #  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
 #       no_uda_comparison:      - skip the uda comparisons
@@ -36,33 +19,9 @@ jp8cyl_40cube_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 
 
-
-UNUSED_TESTS = [("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "chem_meth"), \
-                ("matest_heptwb_cyl_8p", matest_heptwb_cyl_8p_ups, "", 8, "ALL","chem_meth"), \
-                ("matest_heptwb_cyl_8patch", matest_heptwb_cyl_8patch_ups, "", 8, "ALL","chem_meth") \
-                ]
- 
-# TESTS = [ ("jp8cyl", "jp8cyl.ups", 1.1, "Linux", "chem_meth"), \
-#          ("jp8cyl_8p", jp8cyl_8p_ups, 8, "None","chem_meth"), \
-#          ("jp8cyl_40cube_8p", jp8cyl_40cube_8p_ups, 8, "None","chem_meth") \
-#    	]
-TESTS = ["mpmpipe_test", "pipe.ups", 1.1, "Linux", ["doesTestRun"]
+TESTS = [
+        ("mpmpipe_test", "pipe.ups", 1.1, "Linux", ["doesTestRun"])
 ] 
-
-def chemfile (test):
-    return test[4]
-
-def chemfileCallback (test, susdir, inputsdir, compare_root, mode, max_parallelism):
-  ArchesInputsdir = "%s/../ARCHES" % inputsdir
-  symlink("%s/input.dtd" % (ArchesInputsdir), "input.dtd")
-  cfile = chemfile(test)
-  if platform[0:5] == "linux":
-      cfile = cfile + ".linux.bin"
-  else:
-      cfile = cfile + ".bin"
-  symlink("%s/chem_bins/%s" % (ArchesInputsdir, cfile), "chem.bin")
-  symlink("%s/StaticMixingTables/JP-8/NAE.rxn.new" % ArchesInputsdir, "NAE.rxn.new")
-  symlink("%s/betaTable" % inputsdir, "betaTable")
                      
-exit(runSusTests(argv, TESTS, "MPMARCHES", chemfileCallback))
+exit(runSusTests(argv, TESTS, "MPMARCHES"))
 
