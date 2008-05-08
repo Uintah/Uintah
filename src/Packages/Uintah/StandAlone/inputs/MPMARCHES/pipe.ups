@@ -60,7 +60,10 @@
 	<ideal_gas_constant>1.0</ideal_gas_constant>
 	<pressure>0.0</pressure>
    </PhysicalConstants>
-
+   <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator>gimp</interpolator>
+   </MPM>
    <MaterialProperties>
 	<MPM>
            <material name = "Composite Cylinder" >
