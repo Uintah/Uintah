@@ -35,9 +35,9 @@ FirstOrderAdvector::FirstOrderAdvector(DataWarehouse* new_dw,
   // Initialize temporary variables when the grid changes
   if(isNewGrid){   
     double EVILNUM = -9.99666999e30;
-    CellIterator iter = patch->getCellIterator__New();
-    CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    int NGC =1;  // number of ghostCells
+    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
+ 
       const IntVector& c = *iter;
       for(int face = TOP; face <= BACK; face++ )  {
         d_OFS[c].d_fflux[face]= EVILNUM;
@@ -92,13 +92,13 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
 
   //__________________________________
   //  At patch boundaries you need to extend
-  // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getExtraCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-  
+  // the computational footprint by one cell in ghostCells  
   bool error = false;
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
+    
     delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
     delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
@@ -142,7 +142,7 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
     vector<IntVector> badCells;
     vector<double>  badOutflux;
     
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) { 
+    for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {
       IntVector c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {

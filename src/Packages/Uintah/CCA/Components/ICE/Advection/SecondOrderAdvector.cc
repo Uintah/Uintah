@@ -36,10 +36,10 @@ SecondOrderAdvector::SecondOrderAdvector(DataWarehouse* new_dw,
   
   // Initialize temporary variables when the grid changes
   if(isNewGrid){   
-    double EVILNUM = -9.99666999e30;
-    CellIterator iter = patch->getCellIterator__New();
-    CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    double EVILNUM = -9.99666999e30;  
+    
+    int NGC =1;  // number of ghostCells
+    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {
       const IntVector& c = *iter;
 
       for(int face = TOP; face <= BACK; face++ )  {
@@ -109,11 +109,9 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getExtraCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-  
-  bool error = false;
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  bool error = false;  
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
  
     //!
@@ -194,7 +192,7 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     vector<IntVector> badCells;
     vector<double>  badOutflux;
   
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {
       const IntVector& c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {
@@ -429,13 +427,13 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& A_CC,
 _____________________________________________________________________*/
 template < class T, typename F>
 void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
-                                  const Patch* patch,
-                                  const CCVariable<T>& q_CC,                   
-                                  CCVariable<T>& q_advected,
-                                  SFCXVariable<double>& q_XFC,
-                                  SFCYVariable<double>& q_YFC,
-                                  SFCZVariable<double>& q_ZFC,
-                                  F save_q_FC)  // function is passed in
+                                       const Patch* patch,
+                                       const CCVariable<T>& q_CC,              
+                                       CCVariable<T>& q_advected,
+                                       SFCXVariable<double>& q_XFC,
+                                       SFCYVariable<double>& q_YFC,
+                                       SFCZVariable<double>& q_ZFC,
+                                       F save_q_FC)  // function is passed in
   
 {
                                  //  W A R N I N G
@@ -488,11 +486,10 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
   // At inner patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
   // This operates over the extra cells
-  CellIterator iter = patch->getExtraCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
+  int NGC =1;  // number of ghostCells
   
   if (!useCompatibleFluxes) {  // non-compatible advection 
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {  
       const IntVector& c = *iter;
 
       T Q_CC = q_CC[c];
@@ -513,7 +510,7 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
   }
   
   if (useCompatibleFluxes) {   // compatible fluxes  
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {  
       const IntVector& c = *iter;
 
       T Q_CC = q_CC[c];
@@ -543,11 +540,11 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
 _____________________________________________________________________*/
 template<class T>
 void SecondOrderAdvector::q_FC_operator(CellIterator iter, 
-                                           IntVector adj_offset,
-                                           const int face,
-                                           const CCVariable<facedata<double> >& q_OAFS,
-                                       const CCVariable<double>& q_CC,
-                                           T& q_FC)
+                                        IntVector adj_offset,
+                                        const int face,
+                                        const CCVariable<facedata<double> >& q_OAFS,
+                                        const CCVariable<double>& q_CC,
+                                        T& q_FC)
 { 
   for(;!iter.done(); iter++){
     IntVector R = *iter;      

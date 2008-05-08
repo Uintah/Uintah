@@ -101,10 +101,9 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getCellIterator();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-    
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+
+  int NGC =1;  // numer of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
     
     IntVector r = c + IntVector( 1, 0, 0);
@@ -199,9 +198,9 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
                                CCVariable<T>& q_CC_max, 
                                CCVariable<T>& q_CC_min)
 {  
-  CellIterator iter = patch->getCellIterator();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
+
     const IntVector& c = *iter;
        
     IntVector r = c + IntVector( 1, 0, 0);
@@ -285,15 +284,14 @@ SecondOrderBase::Q_vertex( const bool usingCompatibleFluxes,
                               const CCVariable<T>& q_grad_y,
                               const CCVariable<T>& q_grad_z)
 {
-  CellIterator iter = patch->getCellIterator();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   Vector dx = patch->dCell();
   double dx_2 = dx.x()/2.0;  // distance from cell center to vertex
   double dy_2 = dx.y()/2.0;
   double dz_2 = dx.z()/2.0;
+  int NGC =1;  // number of ghostCells
   
   if(!usingCompatibleFluxes) {        // non-compatible advection
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
       const IntVector& c = *iter;
 
       T xterm = q_grad_x[c] * dx_2;
@@ -313,7 +311,7 @@ SecondOrderBase::Q_vertex( const bool usingCompatibleFluxes,
     }
   }
   if(usingCompatibleFluxes) {         // compatible advection
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
       const IntVector& c = *iter;
       T xterm = q_grad_x[c] * dx_2;
       T yterm = q_grad_y[c] * dy_2;
@@ -357,11 +355,10 @@ SecondOrderBase::flux_to_primitive( const bool useCompatibleFluxes,
     " For compatible fluxes, Q_CC must be a mass-specific quantity \n", __FILE__, __LINE__);
   }
                 // compatible fluxes.
-  if(useCompatibleFluxes && is_Q_mass_specific) {
-    CellIterator iter = patch->getExtraCellIterator();
-    CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,2);
-  
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  if(useCompatibleFluxes && is_Q_mass_specific) { 
+    int NGC =2;  // number of ghostCells
+    for(CellIterator iter = patch->getExtraCellIterator__New(NGC); !iter.done(); iter++) {  
+     
       const IntVector& c = *iter;
       q_CC[c] = A_CC[c]/mass[c];
     }
@@ -411,10 +408,8 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getCellIterator();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-  
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
     const IntVector& c = *iter;
 
     T q_vrtx_max, q_vrtx_min;

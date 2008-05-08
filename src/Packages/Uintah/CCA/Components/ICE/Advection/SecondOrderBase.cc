@@ -34,14 +34,13 @@ SecondOrderBase::mass_massVertex_ratio(const CCVariable<double>& mass_CC,
 				           const CCVariable<double>& mass_grad_y,
 				           const CCVariable<double>& mass_grad_z)
 {
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   Vector dx = patch->dCell();
   double dx_2 = dx.x()/2.0;  // distance from cell center to vertex
   double dy_2 = dx.y()/2.0;
   double dz_2 = dx.z()/2.0;
   
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {
     const IntVector& c = *iter;
     double xterm = mass_grad_x[c] * dx_2;
     double yterm = mass_grad_y[c] * dy_2;
