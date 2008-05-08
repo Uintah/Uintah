@@ -89,6 +89,7 @@ private:
 
 	string	d_tableName;
 	int d_tableIndex;
+	double d_scaleFactor; 
 
 }; // End class CO2RateSrc
 } // End namespace Uintah
