@@ -57,11 +57,9 @@ void DynamicModel::computeTurbViscosity(DataWarehouse* new_dw,
  
   computeSmagCoeff(new_dw, patch, vel_CC, uvel_FC, vvel_FC, wvel_FC, 
                    indx, d_sharedState, term, meanSIJ);
-
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);   
   
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {
     IntVector c = *iter;    
     turb_viscosity[c] = d_model_constant * rho_CC[c] * term[c] * meanSIJ[c];
    }
@@ -74,11 +72,8 @@ template <class T> void DynamicModel::applyFilter(const Patch* patch,
                                                   CCVariable<T>& var,
                                                   CCVariable<T>& var_hat)
 { 
-
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);  
-    
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {   
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();
@@ -125,11 +120,8 @@ void DynamicModel::applyFilter(const Patch* patch,
                                SCIRun::StaticArray<CCVariable<double> >& var,
                                SCIRun::StaticArray<CCVariable<double> >& var_hat)
 { 
-
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);  
-    
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {   
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
     IntVector c = *iter;
 
     int i = c.x();
@@ -199,12 +191,9 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
  
   d_smag.computeStrainRate(patch, uvel_FC, vvel_FC, wvel_FC, 
                            indx, d_sharedState, new_dw, SIJ);
-
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlusGhost  = patch->addGhostCell_Iter(iter,1);
-  CellIterator iterPlus2Ghost = patch->addGhostCell_Iter(iter,2);
     
-  for(CellIterator iter = iterPlus2Ghost; !iter.done(); iter++) { 
+  int NGC =2;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
    IntVector c = *iter;
    
    vel_CC_tmp[c] = vel_CC[c];
@@ -228,7 +217,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   applyFilter(patch, SIJ,        SIJ_hat);  
   applyFilter(patch, beta,       beta_hat); 
 
-  vector<IntVector> vel_prod_comp(6);  // ignore the z component
+  vector<IntVector> vel_prod_comp(6);    // ignore the z component
   vel_prod_comp[0] = IntVector(0,0,0);   // UUvel_CC
   vel_prod_comp[1] = IntVector(1,1,0);   // VVvel_CC
   vel_prod_comp[2] = IntVector(2,2,0);   // WWvel_CC
@@ -237,19 +226,16 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
   vel_prod_comp[5] = IntVector(1,2,0);   // VWvel_CC
 
   for( int i = 0; i < 6; i++ ){
-    
     vel_prod.initialize(0.0);
     
     int comp0 = vel_prod_comp[i][0];
     int comp1 = vel_prod_comp[i][1];
-  
       
     //__________________________________
     // compute velocity products
-
-    for(CellIterator iter = iterPlus2Ghost; !iter.done(); iter++) { 
-     IntVector c = *iter;
-     vel_prod[c] = vel_CC[c][comp0] * vel_CC[c][comp1];
+    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
+      IntVector c = *iter;
+      vel_prod[c] = vel_CC[c][comp0] * vel_CC[c][comp1];
     }
     
     setBC(vel_prod,"zeroNeumann",patch, d_sharedState, indx, new_dw);
@@ -258,13 +244,15 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
     
     applyFilter(patch, vel_prod,   vel_prod_hat); 
       
-    for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+
+    NGC = 1;
+    for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
       IntVector c = *iter;
       LIJ[i][c] = vel_prod_hat[c] - vel_CC_hat[c][comp0] * vel_CC_hat[c][comp1];
     }
   }
   
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
     IntVector c = *iter;    
 
     meanSIJ_hat = 
@@ -299,7 +287,7 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
    //calculate the local Smagorinsky coefficient
    //Cs is truncated to zero in case LM is negative 
    //to inhibit the potential for diverging solutions
-   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+   for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
      IntVector c = *iter;
      if (MM[c] < 1.0e-20) {
         term[c] = 0.0;

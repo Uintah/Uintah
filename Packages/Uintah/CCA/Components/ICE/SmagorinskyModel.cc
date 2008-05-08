@@ -71,10 +71,8 @@ void Smagorinsky_Model::computeTurbViscosity(DataWarehouse* new_dw,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-  
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {  
     IntVector c = *iter;    
        
     turb_viscosity[c]=rho_CC[c] * term * 
@@ -106,10 +104,8 @@ void Smagorinsky_Model::computeStrainRate(const Patch* patch,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by twe cells in ghostCells
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlus2Ghost = patch->addGhostCell_Iter(iter,2);
-  
-  for(CellIterator iter = iterPlus2Ghost; !iter.done(); iter++) {
+  int NGC =2;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) {
     IntVector c = *iter;
     int i = c.x();
     int j = c.y();

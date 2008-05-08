@@ -89,13 +89,12 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getCellIterator__New();
-  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-
-  double maxvis = 0;
+  double maxvis  = 0;
   double maxturb = 0;
-  double maxtot = 0;
-  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
+  double maxtot  = 0;
+  
+  int NGC =1;  // number of ghostCells
+  for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
     IntVector c = *iter;    
     if(tot_viscosity[c] > maxvis)
       maxvis = tot_viscosity[c];
