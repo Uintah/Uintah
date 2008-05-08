@@ -113,8 +113,6 @@ public:
         //return d_intrusionBoundary; 
       }
 
-	  bool getSrcBoundaryAreaCalc() { return d_doAreaCalcforSourceBoundaries;}
-
       bool anyArchesPhysicalBC() { 
        return ((d_wallBoundary)||(d_inletBoundary)||(d_pressureBoundary)||(d_outletBoundary)||(d_intrusionBoundary)); }
       
@@ -569,16 +567,10 @@ public:
 	  //boundary source term methods
 	  void sched_computeScalarSourceTerm(SchedulerP& sched,
 						                   const PatchSet* patches,
-                            			   const MaterialSet* matls, const TimeIntegratorLabel* timelabels);
+                            			   const MaterialSet* matls);
 	  void sched_computeMomSourceTerm(SchedulerP& sched,
 						                   const PatchSet* patches,
-                            			   const MaterialSet* matls, const TimeIntegratorLabel* timelabels);
-
-
-
- 
-
-	
+                            			   const MaterialSet* matls);
 
 private:
 
@@ -728,6 +720,8 @@ private:
 			     const MaterialSubset* matls,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw);
+	  
+	  
 
 private:
 
@@ -842,6 +836,9 @@ private:
 		double area_z; //total area with normals in the z-direction
 		VarLabel* total_area_label; //total area of all directions
 		double summed_area;
+		bool computedArea; //a bool to tell the code if the area has 
+						   // been computed for this particular object 
+
 		//Normal information
 		Vector normal;
 		//Flux information
@@ -878,15 +875,14 @@ private:
 						     			   const PatchSubset* patches,
 						                   const MaterialSubset*,
 										   DataWarehouse*,
-										   DataWarehouse* new_dw,
-										   const TimeIntegratorLabel* timelabels);
+										   DataWarehouse* new_dw);
 								   
 	void computeMomSourceTerm(const ProcessorGroup*,
 						     			   const PatchSubset* patches,
 						                   const MaterialSubset*,
 										   DataWarehouse*,
-										   DataWarehouse* new_dw,
-										   const TimeIntegratorLabel* timelabels);
+										   DataWarehouse* new_dw);
+
 private:
 
       // const VarLabel* inputs
@@ -960,7 +956,6 @@ private:
 	  //BC source term stuff
 	  std::vector<BCSourceInfo* > d_sourceBoundaryInfo;
 	  int d_numSourceBoundaries;
-	  bool d_doAreaCalcforSourceBoundaries;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

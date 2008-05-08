@@ -295,6 +295,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
   }
 #endif
+  	if (d_boundaryCondition->getNumSourceBndry() > 0){
+			d_boundaryCondition->sched_computeInletAreaBCSource(sched, patches, matls);
+			d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls);
+			d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls);
+			//add other ones here too.
+ 	} 
 
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
@@ -302,13 +308,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if (curr_level > 0)
        sched_saveTempCopies(sched, patches, matls,
 			   	      d_timeIntegratorLabels[curr_level]);
-
-  	if (d_boundaryCondition->getNumSourceBndry() > 0){
-			d_boundaryCondition->sched_computeInletAreaBCSource(sched, patches, matls);
-			d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
-			d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
-			//add other ones here too.
- 	} 
 
     bool doing_EKT_now = false;
     if (d_EKTCorrection) {
@@ -579,8 +578,8 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   if (d_boundaryCondition->getNumSourceBndry() > 0){
 			d_boundaryCondition->sched_computeInletAreaBCSource(sched, patches, matls);
-			d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls, d_timeIntegratorLabels[0]);
-			d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls, d_timeIntegratorLabels[0]);
+			d_boundaryCondition->sched_computeScalarSourceTerm(sched, patches, matls);
+			d_boundaryCondition->sched_computeMomSourceTerm(sched, patches, matls);
 			//add other ones here too.
   }
 
