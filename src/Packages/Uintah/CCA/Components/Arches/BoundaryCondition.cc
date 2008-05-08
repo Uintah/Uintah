@@ -100,7 +100,6 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_wallBdry = 0;
   d_pressureBC = 0;
   d_outletBC = 0;
-  d_doAreaCalcforSourceBoundaries = 0;
 }
 
 //****************************************************************************
@@ -143,11 +142,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 			d_sourceBoundaryInfo.push_back(scinew BCSourceInfo(d_calcVariance, d_reactingScalarSolve));
 
 			d_sourceBoundaryInfo[d_numSourceBoundaries]->problemSetup(intrusionbcs_db);
-			if (d_sourceBoundaryInfo[d_numSourceBoundaries]->doAreaCalc)
-				d_doAreaCalcforSourceBoundaries = true; //there has to be a better way
-					
 			//compute the density and other properties for this inlet stream
-			cout << "HERE I AM " << endl;
 			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_initEnthalpy = true;
 			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_scalarDisp=0.0;
 			d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_mixVarVariance.push_back(0.0);
@@ -2347,8 +2342,10 @@ d_calcVariance(calcVariance), d_reactingScalarSolve(reactingScalarSolve)
 		totalMassFlux = 0.0;
 		totalVelocity = 0.0;
 		summed_area = 0.0;
+		computedArea = false;
  		total_area_label = VarLabel::create("flowarea",
    						   ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+
 
 }
 //****************************************************************************
@@ -2515,8 +2512,9 @@ BoundaryCondition::computeInletAreaBCSource(const ProcessorGroup*,
 			GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
 			Box geomBox = piece->getBoundingBox();
 			Box b = geomBox.intersect(patchInteriorBox);
+	
+			if (!(b.degenerate()) && !(d_sourceBoundaryInfo[bp]->computedArea)){
 
-			if (!(b.degenerate())){
 				//iterator over cells and see if a boundary source needs adding.
 				for (CellIterator iter=patch->getCellIterator__New(); 
 					!iter.done(); iter++){
@@ -2557,8 +2555,6 @@ BoundaryCondition::computeInletAreaBCSource(const ProcessorGroup*,
 				new_dw->put(sum_vartype(0), d_sourceBoundaryInfo[bp]->total_area_label);	
 		}
 
-		//Now get the totalVelocity from the the mass flux
-		//hard coded for jennifer at the moment!
 		double inlet_area;
 		inlet_area = d_sourceBoundaryInfo[bp]->area_y + d_sourceBoundaryInfo[bp]->area_z;
 
@@ -2572,14 +2568,14 @@ BoundaryCondition::computeInletAreaBCSource(const ProcessorGroup*,
 // *------------------------------------------------*
 void 
 BoundaryCondition::sched_computeMomSourceTerm(SchedulerP& sched,
-						                                      const PatchSet* patches,
-                                      						  const MaterialSet* matls,
-															  const TimeIntegratorLabel* timelabels)
+						                      const PatchSet* patches,
+                        					  const MaterialSet* matls
+											  )
  
 {
 
-	string taskname = "BoundaryCondition::computeMomSourceTerm" + timelabels->integrator_step_name;
-	Task* tsk = scinew Task(taskname, this, &BoundaryCondition::computeMomSourceTerm, timelabels);
+	string taskname = "BoundaryCondition::computeMomSourceTerm";
+	Task* tsk = scinew Task(taskname, this, &BoundaryCondition::computeMomSourceTerm);
 
 	tsk->modifies(d_lab->d_umomBoundarySrcLabel);
 	tsk->modifies(d_lab->d_vmomBoundarySrcLabel);
@@ -2601,8 +2597,8 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 								     			  const PatchSubset* patches,
 								                  const MaterialSubset*,
 												  DataWarehouse* old_dw,
-												  DataWarehouse* new_dw,
-												  const TimeIntegratorLabel* timelabels)
+												  DataWarehouse* new_dw
+												  )
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -2651,15 +2647,18 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 		
 		sum_vartype total_area;
 		double area;
-		int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-		if (nofTimeSteps < 2) {
+
+		// We only need to populate the area once
+		if (!(d_sourceBoundaryInfo[bp]->computedArea)) {
 			new_dw->get(total_area, d_sourceBoundaryInfo[bp]->total_area_label);
 			area = total_area;
 			d_sourceBoundaryInfo[bp]->summed_area = total_area;
+			d_sourceBoundaryInfo[bp]->computedArea = true;
 		}
 				
 		d_sourceBoundaryInfo[bp]->totalVelocity = d_sourceBoundaryInfo[bp]->totalMassFlux/(d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->summed_area);
-													
+
+
 		for (int gp = 0; gp < nofBoundaryPieces; gp++){
 
 			GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
@@ -2891,11 +2890,11 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 void 
 BoundaryCondition::sched_computeScalarSourceTerm(SchedulerP& sched,
 				                                  const PatchSet* patches,
-                          						  const MaterialSet* matls,
-												  const TimeIntegratorLabel* timelabels)
+                          						  const MaterialSet* matls
+												  )
 {
-	string taskname = "BoundaryCondition::computeScalarSourceTerm" + timelabels->integrator_step_name;
-	Task* tsk = scinew Task(taskname, this, &BoundaryCondition::computeScalarSourceTerm, timelabels);
+	string taskname = "BoundaryCondition::computeScalarSourceTerm";
+	Task* tsk = scinew Task(taskname, this, &BoundaryCondition::computeScalarSourceTerm);
 
 	tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
 	tsk->modifies(d_lab->d_enthalpyBoundarySrcLabel);
@@ -2913,8 +2912,8 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 						     			   const PatchSubset* patches,
 						                   const MaterialSubset*,
 										   DataWarehouse* old_dw,
-										   DataWarehouse* new_dw,
-										   const TimeIntegratorLabel* timelabels)
+										   DataWarehouse* new_dw
+										   )
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -6488,4 +6487,6 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
       }
   }
 }
+
+
 
