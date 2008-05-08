@@ -23,6 +23,7 @@ UNUSED = [  ]
 #       doesTestRun:            - Checks if a test successfully runs
 #       abs_tolerance=XXX       - absolute tolerance used in comparisons
 #       rel_tolerance=XXX       - relative tolerance used in comparisons
+#       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000) 
 
 TESTS = [   ("advect",          "advect.ups",           1, "Linux"),      \
