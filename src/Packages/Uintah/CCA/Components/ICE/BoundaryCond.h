@@ -516,7 +516,8 @@ void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)
       int p_dir = patch->faceAxes(face)[0];  //principal dir.
       Vector dx = patch->dCell();
       
-      for(CellIterator itr = patch->getFaceCellIterator(face, "minusEdgeCells"); !itr.done(); itr++){
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+      for(CellIterator itr = patch->getFaceIterator__New(face, MEC); !itr.done(); itr++){
         IntVector f_cell = *itr;
         IntVector f_adj  = f_cell  - oneCell;
         IntVector f_adj2 = f_cell  - IntVector(2,2,2)*oneCell;

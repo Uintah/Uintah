@@ -133,8 +133,8 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
     IntVector offset(0,0,0);
     offset[P_dir] = 1;
     
-    
-    CellIterator faceCells =patch->getFaceCellIterator(face, "plusEdgeCells");
+    Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+    CellIterator faceCells =patch->getFaceIterator__New(face, PEC);
     for (CellIterator itr=faceCells; !itr.done(); itr++) {
       const IntVector& c = *itr;
       q_grad_x[c] = 0.0;
@@ -236,12 +236,13 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
   patch->getCoarseFaces(faces);
   IntVector cl = patch->getCellLowIndex();
   IntVector ch = patch->getCellHighIndex() - IntVector(1,1,1);
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
   
   vector<Patch::FaceType>::const_iterator f_iter;   
   for (f_iter  = faces.begin(); f_iter != faces.end(); ++f_iter){
     Patch::FaceType face = *f_iter; 
   
-    for (CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); !iter.done(); iter++) {
+    for (CellIterator iter=patch->getFaceIterator__New(face, MEC); !iter.done(); iter++) {
       const IntVector& c = *iter;
       T max_tmp, min_tmp;
       

@@ -742,7 +742,8 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
       //__________________________________
       //  compute Li one cell in from
       // the face
-      for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+      for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
           !iter.done();iter++) {
         IntVector c = *iter - offset;
         IntVector r = c + R_offset;
@@ -848,7 +849,8 @@ void FaceDensity_LODI(const Patch* patch,
   cout_dbg << "\n____________________density"<< endl;
   //__________________________________
   //    S I D E
-  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
                                                       !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
@@ -932,7 +934,8 @@ void FaceVel_LODI(const Patch* patch,
   cout_dbg << "____________________velocity"<< endl;
   //__________________________________
   //    S I D E 
-  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
                                                       !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
@@ -1030,8 +1033,9 @@ void FaceTemp_LODI(const Patch* patch,
   cout_dbg << "\n____________________Temp"<< endl;
   
   //__________________________________
-  //    S I D E     
-  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+  //    S I D E  
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
                                                       !iter.done();iter++) {
     IntVector c = *iter;
     IntVector in = c - offset;
@@ -1118,7 +1122,8 @@ void FacePress_LODI(const Patch* patch,
   cout_dbg << "\n____________________press"<< endl; 
   
   //__________________________________ 
-  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
                                                     !iter.done();iter++) {
 
     IntVector c = *iter;

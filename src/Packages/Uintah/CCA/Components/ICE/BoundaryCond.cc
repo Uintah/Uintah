@@ -378,7 +378,9 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
       // Create an iterator that iterates over the face
       // + 2 cells inward (hydrostatic press tweak).  
       // We don't need to hit every  cell on the patch. 
-      CellIterator iter_tmp = patch->getFaceCellIterator(face, "plusEdgeCells");
+      Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+      
+      CellIterator iter_tmp = patch->getFaceIterator__New(face, PEC);
       IntVector lo = iter_tmp.begin();
       IntVector hi = iter_tmp.end();
     

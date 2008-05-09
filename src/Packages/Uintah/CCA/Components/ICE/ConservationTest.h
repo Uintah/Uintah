@@ -51,23 +51,25 @@ void  conservationTest(const Patch* patch,
     IntVector axes = patch->faceAxes(face);
     int P_dir = axes[0];  // principal direction
     double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+    
+    Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;    
 
     if (face == Patch::xminus || face == Patch::xplus) {    // X faces
-      for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+      for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
         !iter.done();iter++) {
         IntVector c = *iter;
         sum_fluxes -= plus_minus_one*uvel_FC[c]*mass_q_CC[c];
       }
     }
     if (face == Patch::yminus || face == Patch::yplus) {    // Y faces
-      for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+      for(CellIterator iter=patch->getFaceIterator__New(face, MEC);
         !iter.done();iter++) {
         IntVector c = *iter;
         sum_fluxes -= plus_minus_one*vvel_FC[c]*mass_q_CC[c];
       }
     }
     if (face == Patch::zminus || face == Patch::zplus) {    // Z faces
-      for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+      for(CellIterator iter=patch->getFaceIterator__New(face, MEC);
         !iter.done();iter++) {
         IntVector c = *iter;
         sum_fluxes -= plus_minus_one*wvel_FC[c]*mass_q_CC[c];

@@ -68,8 +68,10 @@ void Thomsen_Hartka_water::computeTempCC(const Patch* patch,
   } 
   // Although this isn't currently being used
   // keep it around it could be useful  
-  if(comp_domain == "FaceCells") {     
-    for (CellIterator iter = patch->getFaceCellIterator(face);
+  if(comp_domain == "FaceCells") {  
+    Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;   
+    
+    for (CellIterator iter = patch->getFaceIterator__New(face,MEC);
          !iter.done();iter++) {
       IntVector c = *iter;
       double P           = press[c];

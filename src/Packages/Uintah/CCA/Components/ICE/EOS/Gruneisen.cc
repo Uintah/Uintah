@@ -63,10 +63,11 @@ void Gruneisen::computeTempCC(const Patch* patch,
   // Although this isn't currently being used
   // keep it around it could be useful
   if(comp_domain == "FaceCells") {     
-   for (CellIterator iter=patch->getFaceCellIterator(face);!iter.done();iter++){
+    Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+    for (CellIterator iter=patch->getFaceIterator__New(face,MEC);!iter.done();iter++){
       IntVector c = *iter;
       Temp[c]= T0 + (1./B)*((P[c]-P0) - A*(rhoM[c]/rho0-1.));
-   }
+    }
   }
 }
 
