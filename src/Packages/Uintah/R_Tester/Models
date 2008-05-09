@@ -17,9 +17,9 @@ from helpers.runSusTests import runSusTests
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 
-TESTS = [   ("HePlume", "HePlume.ups", 1.1, "Linux"), \
-            ("HePlume", "HePlume.ups", 1.1, "Darwin", ["doesTestRun"]), \
-            ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux")
+TESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
+            ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
+            ("JP8_Radiation", "JP8_Radiation.ups", 4, "Linux",  ["exactComparison"])
     	]
 
 exit(runSusTests(argv, TESTS, "Models"))
