@@ -229,8 +229,8 @@ void LinearInterpolator::findFinerNodes(const Point& pos,
         int s = Floor(cellpos.y());
         int t = Floor(cellpos.z());
 
-        IntVector l(patch->getNodeLowIndex());
-        IntVector h(patch->getNodeHighIndex());
+        IntVector l(patch->getExtraNodeLowIndex__New());
+        IntVector h(patch->getExtraNodeHighIndex__New());
 
         int ix = max(max(l.x()-1,r),min(h.x()-1,r));
         int iy = max(max(l.y()-1,s),min(h.y()-1,s));

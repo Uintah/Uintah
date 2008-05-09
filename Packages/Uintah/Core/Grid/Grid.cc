@@ -884,8 +884,8 @@ bool Grid::operator==(const Grid& othergrid) const
     for (; iter != level->patchesEnd(); iter++, otheriter++) {
       const Patch* patch = *iter;
       const Patch* otherpatch = *otheriter;
-      if (patch->getInteriorCellLowIndex() != otherpatch->getInteriorCellLowIndex() ||
-          patch->getInteriorCellHighIndex() != otherpatch->getInteriorCellHighIndex())
+      if (patch->getCellLowIndex__New() != otherpatch->getCellLowIndex__New() ||
+          patch->getCellHighIndex__New() != otherpatch->getCellHighIndex__New())
         return false;
     }
       
@@ -911,15 +911,15 @@ bool Grid::isSimilar(const Grid& othergrid) const
     for(iter=l1->patchesBegin(); iter!=l1->patchesEnd();iter++)
     {
       const Patch* patch=*iter;
-      a1+=Region::getVolume(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex());
-      r1.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
+      a1+=Region::getVolume(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
+      r1.push_back(Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New()));
     }
     
     for(iter=l2->patchesBegin(); iter!=l2->patchesEnd();iter++)
     {
       const Patch* patch=*iter;
-      a2+=Region::getVolume(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex());
-      r2.push_back(Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex()));
+      a2+=Region::getVolume(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
+      r2.push_back(Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New()));
     }
 
     //if volumes are not the same the grids cannot be the same

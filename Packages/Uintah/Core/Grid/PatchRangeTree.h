@@ -74,7 +74,7 @@ private:
     void setPatch(const Patch* patch)
     {
       d_patch = patch;
-      d_centerTimes2 = patch->getInteriorNodeLowIndex() + patch->getInteriorNodeHighIndex();
+      d_centerTimes2 = patch->getNodeLowIndex__New() + patch->getNodeHighIndex__New();
     }
     
     int operator[](int i) const

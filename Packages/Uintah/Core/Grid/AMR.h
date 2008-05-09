@@ -739,11 +739,11 @@ template<class T>
   //  define iterator
   IntVector fl, fh;
   if(testDomain == "wholeDomain"){    
-    fl = finePatch->getInteriorCellLowIndex();
-    fh = finePatch->getInteriorCellHighIndex();
+    fl = finePatch->getCellLowIndex__New();
+    fh = finePatch->getCellHighIndex__New();
   }
   if(testDomain == "CFI" ){                                 
-    CellIterator iter_tmp = finePatch->getFaceCellIterator(patchFace, "minusEdgeCells");
+    CellIterator iter_tmp = finePatch->getFaceIterator__New(patchFace,   Patch::ExtraMinusEdgeCells);
     fl = iter_tmp.begin();
     fh = iter_tmp.end();
   }
@@ -769,8 +769,8 @@ template<class T>
     for(int i=0;i<coarsePatches.size();i++){
       const Patch* coarsePatch = coarsePatches[i];    
       new_dw->allocateTemporary(q_CoarseLevel, coarsePatch);
-      IntVector cl = coarsePatch->getCellLowIndex();
-      IntVector ch = coarsePatch->getCellHighIndex();
+      IntVector cl = coarsePatch->getExtraCellLowIndex__New();
+      IntVector ch = coarsePatch->getExtraCellHighIndex__New();
       interpolationTest_helper( q_FineLevel, q_CoarseLevel, 
                                 "initialize", t, coarseLevel,cl,ch);  
     }
@@ -793,8 +793,8 @@ template<class T>
     // colella's quadratic over just the CFI
     if(orderOfInterpolation == 2 && testDomain == "CFI"){    
     
-      IntVector ffl = finePatch->getCellLowIndex();
-      IntVector ffh = finePatch->getCellHighIndex();
+      IntVector ffl = finePatch->getExtraCellLowIndex__New();
+      IntVector ffh = finePatch->getExtraCellHighIndex__New();
       interpolationTest_helper( q_FineLevel, q_FineLevel, 
                               "initialize", t, fineLevel,ffl,ffh);
                             
