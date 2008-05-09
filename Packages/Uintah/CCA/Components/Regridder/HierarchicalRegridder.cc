@@ -108,8 +108,8 @@ void HierarchicalRegridder::problemSetup(const ProblemSpecP& params,
   IntVector low, high;
   level0->findCellIndexRange(low, high);
   const Patch* patch = level0->selectPatchForCellIndex(IntVector(0,0,0));
-  d_patchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
-  d_maxPatchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
+  d_patchSize[0] = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
+  d_maxPatchSize[0] = patch->getCellHighIndex__New() - patch->getCellLowIndex__New();
   d_patchNum[0] = calculateNumberOfPatches(d_cellNum[0], d_patchSize[0]);
   d_patchActive[0] = scinew CCVariable<int>;
   d_patchCreated[0] = scinew CCVariable<int>;
@@ -291,8 +291,8 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
   IntVector subPatchSize = d_patchSize[levelIdx+1]/d_cellRefinementRatio[levelIdx];
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    IntVector startCell = patch->getInteriorCellLowIndex();
-    IntVector endCell = patch->getInteriorCellHighIndex();
+    IntVector startCell = patch->getCellLowIndex__New();
+    IntVector endCell = patch->getCellHighIndex__New();
     IntVector latticeIdx = StartCellToLattice( startCell, levelIdx );
     IntVector realPatchSize = endCell - startCell; // + IntVector(1,1,1); // RNJ this is incorrect maybe?
     IntVector numSubPatches = realPatchSize / subPatchSize;
@@ -393,7 +393,7 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
       for (Level::const_patchIterator iter = l->patchesBegin(); iter != l->patchesEnd(); iter++) {
         const Patch* patch = *iter;
         IntVector patchRefinement = 
-          ((patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex()) / d_patchSize[i]) * 
+          ((patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) / d_patchSize[i]) * 
           d_latticeRefinementRatio[i];
         int nsp = patchRefinement.x() * patchRefinement.y() * patchRefinement.z();
         nsppp[(*iter)->getLevelIndex()] = nsp;
@@ -434,12 +434,12 @@ void HierarchicalRegridder::GatherSubPatches(const GridP& oldGrid, SchedulerP& s
         int proc = lb->getPatchwiseProcessorAssignment(patch);
 
         IntVector patchRefinement =
-          ((patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex()) / d_patchSize[i]) *
+          ((patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) / d_patchSize[i]) *
           d_latticeRefinementRatio[i];
 
 
         subpatchSorter[proc] += nsp;
-        IntVector patchIndex = patch->getInteriorCellLowIndex()/d_patchSize[i];
+        IntVector patchIndex = patch->getCellLowIndex__New()/d_patchSize[i];
 
         // create the recv buffers to put the data in
         // recvbuf ensure that the data be received in a contiguous array, and allSubpatches will
@@ -680,16 +680,16 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
         for (iter = superPatches->begin(); iter != superPatches->end(); iter++) {
           const SuperPatch* superBox = *iter;
           const Patch* firstPatch = superBox->getBoxes()[0];
-          IntVector low(firstPatch->getLowIndex()), high(firstPatch->getHighIndex());
-          IntVector in_low(firstPatch->getInteriorCellLowIndex()), in_high(firstPatch->getInteriorCellHighIndex());
+          IntVector low(firstPatch->getExtraCellLowIndex__New()), high(firstPatch->getExtraCellHighIndex__New());
+          IntVector in_low(firstPatch->getCellLowIndex__New()), in_high(firstPatch->getCellHighIndex__New());
           for (unsigned int i = 1; i < superBox->getBoxes().size(); i++) {
             // get the minimum extents containing both the expected ghost cells
             // to be needed and the given ghost cells.
             const Patch* memberPatch = superBox->getBoxes()[i];
-            low = Min(memberPatch->getLowIndex(), low);
-            high = Max(memberPatch->getHighIndex(), high);
-            in_low = Min(memberPatch->getInteriorCellLowIndex(), in_low);
-            in_high = Max(memberPatch->getInteriorCellHighIndex(), in_high);
+            low = Min(memberPatch->getExtraCellLowIndex__New(), low);
+            high = Max(memberPatch->getExtraCellHighIndex__New(), high);
+            in_low = Min(memberPatch->getCellLowIndex__New(), in_low);
+            in_high = Max(memberPatch->getCellHighIndex__New(), in_high);
           }
           finalPatches.push_back(PatchShell(low, high, in_low, in_high));
           //cout << d_myworld->myrank() << "  Adding " << low << endl;

@@ -262,7 +262,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
             // on copy data timestep we need old patches that line up with this proc's patches,
             // get the other way around at the end
             const LevelP& oldLevel = oldGrid->getLevel(l);
-            oldLevel->selectPatches(patch->getCellLowIndex()-ghost, patch->getCellHighIndex()+ghost, old);
+            oldLevel->selectPatches(patch->getExtraCellLowIndex__New()-ghost, patch->getExtraCellHighIndex__New()+ghost, old);
             n.push_back(&old);
           }
         }
@@ -317,7 +317,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         if (oldproc == me) {
           // don't get extra cells or ghost cells
 	  Patch::selectType n;
-          newLevel->selectPatches(oldPatch->getCellLowIndex()-ghost, oldPatch->getCellHighIndex()+ghost, n);
+          newLevel->selectPatches(oldPatch->getExtraCellLowIndex__New()-ghost, oldPatch->getExtraCellHighIndex__New()+ghost, n);
           d_neighbors.insert(oldPatch);
 
 	  for(int i=0;i<(int)n.size();i++){

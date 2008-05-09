@@ -113,8 +113,8 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
           //loop through the materials and add up the particles
           // the main difference between this and the above portion is that we need to grab the portion of the patch
           // that is intersected by the other patch
-          low = Max(region.getLow(), oldPatch->getLowIndex());
-          high = Min(region.getHigh(), oldPatch->getHighIndex());
+          low = Max(region.getLow(), oldPatch->getExtraCellLowIndex__New());
+          high = Min(region.getHigh(), oldPatch->getExtraCellHighIndex__New());
 
           int thisPatchParticles = 0;
           if (dw) {
@@ -318,18 +318,18 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     const Patch* patch = *iter;
    
     //calculate patchset bounds
-    high = Max(high, patch->getInteriorCellHighIndex());
-    low = Min(low, patch->getInteriorCellLowIndex());
+    high = Max(high, patch->getCellHighIndex__New());
+    low = Min(low, patch->getCellLowIndex__New());
     
     //calculate minimum patch size
-    IntVector size=patch->getInteriorCellHighIndex()-patch->getInteriorCellLowIndex();
+    IntVector size=patch->getCellHighIndex__New()-patch->getCellLowIndex__New();
     min_patch_size=min(min_patch_size,size);
     
     //create positions vector
     int proc = (patch->getLevelIndex()*d_myworld->size())/level->numPatches();
     if(d_myworld->myrank()==proc)
     {
-      Vector point=(patch->getInteriorCellLowIndex()+patch->getInteriorCellHighIndex()).asVector()/2.0;
+      Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
       for(int d=0;d<dim;d++)
       {
         positions.push_back(point[dimensions[d]]);
@@ -433,7 +433,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       regions.push_back(vector<Region>());
       for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
         const Patch* patch = grid->getLevel(l)->getPatch(p);
-        regions[l].push_back(Region(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()));
+        regions[l].push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
       }
     }
     getCosts(olddw->getGrid(), regions, patch_costs, on_regrid);
@@ -1118,7 +1118,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
         for(int p=0; p<level->numPatches();p++)
         {
           const Patch *patch=level->getPatch(p);
-          patches[p]=Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex());
+          patches[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
         }
         d_costProfiler.getWeights(l,patches,costs[l]);
       }
@@ -1231,8 +1231,8 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
           for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
-            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getHighIndex() - (*iter)->getLowIndex()) << "\n";
-            IntVector range = ((*iter)->getHighIndex() - (*iter)->getLowIndex());
+            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getGridIndex() << " " << ((*iter)->getExtraCellHighIndex__New() - (*iter)->getExtraCellLowIndex__New()) << "\n";
+            IntVector range = ((*iter)->getExtraCellHighIndex__New() - (*iter)->getExtraCellLowIndex__New());
             iter++;
             if (iter == curLevel->patchesEnd() && i+1 < d_processorAssignment.size()) {
               curLevel = curLevel->getFinerLevel();
@@ -1325,7 +1325,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     const Patch *patch=grid->getLevel(0)->getPatch(0);
 
     vector<IntVector> mps;
-    mps.push_back(patch->getInteriorCellHighIndex()-patch->getInteriorCellLowIndex());
+    mps.push_back(patch->getCellHighIndex__New()-patch->getCellLowIndex__New());
     
     d_costProfiler.setMinPatchSize(mps);
   }
