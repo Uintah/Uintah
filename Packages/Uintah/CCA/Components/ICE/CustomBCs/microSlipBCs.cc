@@ -153,8 +153,9 @@ void meanFreePath(DataWarehouse* new_dw,
     if (is_MicroSlip_face(patch,face, sharedState) ) {
       // hit the cells in once cell from the face direction
       IntVector offset = patch->faceDirection(face);
-      
-      for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+      Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+       
+      for(CellIterator iter=patch->getFaceIterator__New(face, PEC); 
           !iter.done();iter++) {
         IntVector c = *iter - offset;
         double A = sqrt(0.636620 * R * sv->Temp_CC[c]);

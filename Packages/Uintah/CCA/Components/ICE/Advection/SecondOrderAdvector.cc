@@ -584,10 +584,10 @@ void SecondOrderAdvector::q_FC_PlusFaces(
   adj_offset[0] = IntVector(-1, 0, 0);    // X faces
   adj_offset[1] = IntVector(0, -1, 0);    // Y faces
   adj_offset[2] = IntVector(0,  0, -1);   // Z faces
-
-  CellIterator Xiter=patch->getFaceCellIterator(Patch::xplus,"minusEdgeCells");
-  CellIterator Yiter=patch->getFaceCellIterator(Patch::yplus,"minusEdgeCells");
-  CellIterator Ziter=patch->getFaceCellIterator(Patch::zplus,"minusEdgeCells");
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  CellIterator Xiter=patch->getFaceIterator__New(Patch::xplus,MEC);
+  CellIterator Yiter=patch->getFaceIterator__New(Patch::yplus,MEC);
+  CellIterator Ziter=patch->getFaceIterator__New(Patch::zplus,MEC);
   
   IntVector patchOnBoundary = patch->noNeighborsHigh();
   // only work on patches that are at the edge of the computational domain
@@ -743,8 +743,10 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
 
         IntVector shift = patch->faceDirection(patchFace);
         shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
-
-        CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+        
+        Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
+        
+        CellIterator iter =patch->getFaceIterator__New(patchFace, IFC);
         IntVector begin = iter.begin() + shift;
         IntVector end   = iter.end() + shift;
 

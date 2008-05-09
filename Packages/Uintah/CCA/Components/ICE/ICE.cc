@@ -5004,7 +5004,9 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
           Material* matl = d_sharedState->getMaterial( m );
           ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
           if(ice_matl) {
-            for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells");
+            Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+            
+            for(CellIterator iter=patch->getFaceIterator__New(face, MEC);
                                                           !iter.done();iter++) {
               IntVector c = *iter;
               maxMach = Max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);

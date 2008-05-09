@@ -1344,8 +1344,9 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
                                bool& isRight_CP_FP_pair,
                                const string& whichTask)
 {
-  CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-  
+  Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
+  CellIterator f_iter=finePatch->getFaceIterator__New(patchFace, IFC);
+
   ASSERT(whichTask == "computeRefluxCorrection" || whichTask == "applyRefluxCorrection" );
 
   // find the intersection of the fine patch face iterator and underlying coarse patch

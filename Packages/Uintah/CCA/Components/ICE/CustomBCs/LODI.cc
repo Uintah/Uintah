@@ -563,7 +563,8 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
       new_dw->get(maxMach,   V_Label);
       
       //__________________________________
-      for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+      Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+      for(CellIterator iter=patch->getFaceIterator__New(face, PEC); 
           !iter.done();iter++) {
         IntVector c = *iter;
         IntVector r = c + R_offset;
@@ -772,7 +773,9 @@ void  lodi_bc_preprocess( const Patch* patch,
       // + 2 cells inward.  We don't need to hit every
       // cell on the patch.  At patch boundaries you need to extend
       // the footprint by one/two cells into the next patch
-      CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells");
+      
+      Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+      CellIterator iter=patch->getFaceIterator__New(face, PEC);
       IntVector lo = iter.begin();
       IntVector hi = iter.end();
     
@@ -933,7 +936,8 @@ void FaceDensity_LODI(const Patch* patch,
   IntVector offset = IntVector(1,1,1) - Abs(patch->faceDirection(face));
   //__________________________________
   //    S I D E   M I N U S   E D G E S
-  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
                                                       !iter.done();iter++) {
     IntVector c = *iter;
     
@@ -1084,7 +1088,8 @@ double time = sharedState->getElapsedTime();
   IntVector offset = IntVector(1,1,1) - Abs(patch->faceDirection(face));
   //__________________________________
   //    S I D E   M I N U S   E D G E S 
-  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
                                                       !iter.done();iter++) {
     IntVector c = *iter;
     //__________________________________
@@ -1367,7 +1372,8 @@ void FaceTemp_LODI(const Patch* patch,
   IntVector offset = IntVector(1,1,1) - Abs(patch->faceDirection(face));
   //__________________________________
   //    S I D E   M I N U S   E D G E S  
-  for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, MEC); 
                                                       !iter.done();iter++) {
     IntVector c = *iter;
     
@@ -1570,7 +1576,8 @@ void FacePress_LODI(const Patch* patch,
   double press_ref= sharedState->getRefPress();    
      
   //__________________________________ 
-  for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
+  Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+  for(CellIterator iter=patch->getFaceIterator__New(face, PEC); 
     !iter.done();iter++) {
     IntVector c = *iter;
 
