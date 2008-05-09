@@ -447,7 +447,7 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch,
   
   if(subCycleProgress_var > 1-1.e-10 ){  
     IntVector badCell;
-    CellIterator iter = finePatch->getExtraCellIterator();
+    CellIterator iter = finePatch->getExtraCellIterator__New();
     if( isEqual<varType>(varType(d_EVIL_NUM),iter,Q, badCell) ){
       ostringstream warn;
       warn <<"ERROR AMRICE::refine_CF_interfaceOperator "
@@ -499,7 +499,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
   bool tsr = new_dw->timestepRestarted();
   
   IntVector badCell;
-  CellIterator iter=finePatch->getCellIterator();
+  CellIterator iter=finePatch->getCellIterator__New();
   if( isEqual<T>(T(d_EVIL_NUM),iter,q_CC, badCell) && !tsr ){
     ostringstream warn;
     warn <<"ERROR AMRICE::Refine Task:CoarseToFineOperator "

@@ -234,8 +234,8 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
   //Coarse fine interface faces
   vector<Patch::FaceType>  faces;
   patch->getCoarseFaces(faces);
-  IntVector cl = patch->getCellLowIndex();
-  IntVector ch = patch->getCellHighIndex() - IntVector(1,1,1);
+  IntVector cl = patch->getExtraCellLowIndex__New();
+  IntVector ch = patch->getExtraCellHighIndex__New() - IntVector(1,1,1);
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
   
   vector<Patch::FaceType>::const_iterator f_iter;   
