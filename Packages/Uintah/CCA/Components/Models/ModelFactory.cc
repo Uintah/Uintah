@@ -10,7 +10,6 @@
 #include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
 #include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
-#include <Packages/Uintah/CCA/Components/Models/test/VorticityConfinement.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Unsteady_Burn.h>
@@ -84,8 +83,6 @@ void ModelFactory::makeModels(const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew flameSheet_rxn(d_myworld, model_ps));
     else if(type == "PassiveScalar")
       d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
-    else if(type == "VorticityConfinement")
-      d_models.push_back(scinew VorticityConfinement(d_myworld, model_ps));
     else if(type == "Radiation")
 #ifndef NO_RADIATION
       d_models.push_back(scinew RadiationDriver(d_myworld, model_ps));
