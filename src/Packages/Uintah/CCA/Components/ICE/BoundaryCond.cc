@@ -12,7 +12,6 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/fillFace.h>
 
 #include <typeinfo>
 #include <Core/Util/DebugStream.h>
