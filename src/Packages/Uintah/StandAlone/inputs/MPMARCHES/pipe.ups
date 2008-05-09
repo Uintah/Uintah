@@ -3,18 +3,18 @@
 <Uintah_specification>
 
    <Meta>
-	<title>MPMArches Methane in a Pipe test</title>
+	<title>MPMArches Helium in a Pipe test</title>
    </Meta>
 
    <SimulationComponent>
         <type> mpmarches </type>
    </SimulationComponent>
    <Time>
-	<maxTime>2.5</maxTime>
+	<maxTime>2.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
-	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.2</timestep_multiplier>
+	<delt_max>0.1</delt_max>
+	<timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -32,24 +32,12 @@
         <save label = "newCCWVelocity"/>	
         <save label = "newCCVelocity"/>
 	<save label = "scalarSP"/>
-	<save label = "scalarVarSP"/>
 	<save label = "densityCP"/>
 	<save label = "viscosityCTS"/>
-	<save label = "tempIN"/>
-        <save label = "co2IN"/>
-        <save label = "enthalpySP"/>
-        <save label = "sootFVIN"/>
-        <save label = "radiationSRCIN"/>
         <save label = "velocityDivergence"/>
         <save label = "continuityResidual"/>
         <save label = "filterdrhodt"/>
 	<save label = "cellType"/>
-        <save label = "radiationFluxEIN"/>
-        <save label = "radiationFluxWIN"/>
-        <save label = "radiationFluxNIN"/>
-        <save label = "radiationFluxSIN"/>
-        <save label = "radiationFluxTIN"/>
-        <save label = "radiationFluxBIN"/>
 	<checkpoint cycle = "2" interval = "0.2"/>
         <outputDoubleAsFloat/>
         <compression>gzip</compression>
@@ -82,12 +70,12 @@
                 <difference>
                    <cylinder label = "outer cylinder">
                      <bottom>          [-1.0, 1.5, 1.5]   </bottom>
-                     <top>              [2.0, 1.5, 1.5]   </top>
+                     <top>              [1.0, 1.5, 1.5]   </top>
                      <radius>           0.8           </radius>
                   </cylinder>
                   <cylinder label = "inner cylinder">
                      <bottom>          [-1.0, 1.5, 1.5]   </bottom>
-                     <top>              [2.0, 1.5, 1.5]   </top>
+                     <top>              [1.0, 1.5, 1.5]   </top>
                      <radius>           0.5          </radius>
                   </cylinder>
                  </difference>
@@ -181,27 +169,35 @@
 	    <grow_dt>0.05</grow_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
-    	    <turbulence_model>compdynamicprocedure</turbulence_model>
+    	    <turbulence_model>smagorinsky</turbulence_model>
             <transport_mixture_fraction>true</transport_mixture_fraction>
-            <transport_enthalpy>true</transport_enthalpy>	
-	    <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
+            <transport_enthalpy>false</transport_enthalpy>	
+	    <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
 	    <Turbulence>
 	        <variance_coefficient>0.1</variance_coefficient>
+		<cf>0.17</cf>
+	        <fac_mesh>1.0</fac_mesh>
+                <filterl>0.000001</filterl>
 	        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
 	    </Turbulence>
 
 	    <Properties>
-	        <mixing_model>NewStaticMixingTable</mixing_model>
-	        <NewStaticMixingTable>
-                  <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn.gz</inputfile>
-                  <h_fuel>-4650390.0</h_fuel>
-                  <h_air>-112.327</h_air>
-                </NewStaticMixingTable>
+	        <mixing_model>coldFlowMixingModel</mixing_model>
+	        <ColdflowMixingModel>
+		  <Stream>
+		    <density>0.133</density>
+		    <temperature>298</temperature>
+		  </Stream>
+		  <Stream>
+		    <density>1.184344</density>
+		    <temperature>298</temperature>
+		  </Stream>
+                </ColdflowMixingModel>
 	    </Properties>
 
 	    <BoundaryConditions>
 		<FlowInlet>
-		    <Flow_rate>0.04527</Flow_rate>
+		    <Flow_rate>0.10</Flow_rate>
 		    <mixture_fraction>1.0</mixture_fraction>
 		    <geom_object>
 		      <cylinder label = "inlet">
@@ -303,24 +299,6 @@
                     <convection_scheme>central-upwind</convection_scheme>
 		</MixtureFractionSolver>
 
-		<EnthalpySolver>
-                    <convection_scheme>central-upwind</convection_scheme>
-                    <radiation>true</radiation>
-                    <radiationCalcFreq>5</radiationCalcFreq>
-		    <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
-                    <discrete_ordinates>true</discrete_ordinates>
-                    <DORadiationModel>
-	            <opl>3.0</opl>
-		    <linear_solver>petsc</linear_solver>
-		    <LinearSolver>
-			<res_tol>1.0e-10</res_tol>
-		        <ksptype>gmres</ksptype>
-                        <pctype>blockjacobi</pctype>
-			<max_iter>75</max_iter>
-		    </LinearSolver>
-                    </DORadiationModel>
-		</EnthalpySolver>
-
 	    </ExplicitSolver>
 
         </ARCHES>
@@ -330,14 +308,17 @@
     <Multimaterial>
 
         <fluidThermalConductivity>0.03</fluidThermalConductivity>
-        <heatExchange>true</heatExchange>
+        <heatExchange>false</heatExchange>
         <turbulentPrandtNo>0.7</turbulentPrandtNo>
         <fluidHeatCapacity>1007.</fluidHeatCapacity>
         <IfCutCell>false</IfCutCell>
         <StationarySolid>true</StationarySolid>
         <inviscid>false</inviscid>
         <restart>true</restart>
-    
-    <fixedCellType>true</fixedCellType><fixedTemp>false</fixedTemp><TestCutCells>true</TestCutCells><stairstep>true</stairstep></Multimaterial>
+    	<fixedCellType>true</fixedCellType>
+	<fixedTemp>true</fixedTemp>
+	<TestCutCells>true</TestCutCells>
+	<stairstep>true</stairstep>
+   </Multimaterial>
 </Uintah_specification>
 
