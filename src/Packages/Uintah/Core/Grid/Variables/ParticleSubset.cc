@@ -36,8 +36,8 @@ ParticleSubset::ParticleSubset(int num_particles, int matlIndex, const Patch* pa
   init();
 
   if (patch) {
-    d_low = patch->getLowIndex();
-    d_high = patch->getHighIndex();
+    d_low = patch->getExtraCellLowIndex__New();
+    d_high = patch->getExtraCellHighIndex__New();
   }
   else {
     // don't matter...

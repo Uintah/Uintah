@@ -9,10 +9,10 @@ void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
                        IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh)
 {
   // don't coarsen the extra cells
-  fl = finePatch->getInteriorCellLowIndex();
-  fh = finePatch->getInteriorCellHighIndex();
-  cl = coarsePatch->getCellLowIndex();
-  ch = coarsePatch->getCellHighIndex();
+  fl = finePatch->getCellLowIndex__New();
+  fh = finePatch->getCellHighIndex__New();
+  cl = coarsePatch->getExtraCellLowIndex__New();
+  ch = coarsePatch->getExtraCellHighIndex__New();
   
   fl = Max(fl, coarsePatch->getLevel()->mapCellToFiner(cl));
   fh = Min(fh, coarsePatch->getLevel()->mapCellToFiner(ch));
@@ -24,13 +24,13 @@ void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
                             IntVector& cl, IntVector& ch,
                             IntVector& fl, IntVector& fh,IntVector ghost)
 {
-  cl = coarsePatch->getNodeLowIndex();
-  ch = coarsePatch->getNodeHighIndex();
+  cl = coarsePatch->getExtraNodeLowIndex__New();
+  ch = coarsePatch->getExtraNodeHighIndex__New();
   fl = coarsePatch->getLevel()->mapNodeToFiner(cl) - ghost;
   fh = coarsePatch->getLevel()->mapNodeToFiner(ch) + ghost;
 
-  fl = Max(fl, finePatch->getInteriorNodeLowIndex());
-  fh = Min(fh, finePatch->getInteriorNodeHighIndex());
+  fl = Max(fl, finePatch->getNodeLowIndex__New());
+  fh = Min(fh, finePatch->getNodeHighIndex__New());
 
   cl = Max(cl, finePatch->getLevel()->mapNodeToCoarser(fl));
   ch = Min(ch, finePatch->getLevel()->mapNodeToCoarser(fh));
@@ -61,8 +61,8 @@ void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel,
   ch = Min(ch_tmp, ch);
 
   // fine region to work over
-  fl = finePatch->getInteriorCellLowIndex();
-  fh = finePatch->getInteriorCellHighIndex();
+  fl = finePatch->getCellLowIndex__New();
+  fh = finePatch->getCellHighIndex__New();
 }
 
 //______________________________________________________________________
@@ -85,8 +85,8 @@ void getCoarseLevelRangeNodes(const Patch* finePatch, const Level* coarseLevel,
   ch = Min(ch_tmp, ch);
 
   // fine region to work over
-  fl = finePatch->getInteriorNodeLowIndex();
-  fh = finePatch->getInteriorNodeHighIndex();
+  fl = finePatch->getNodeLowIndex__New();
+  fh = finePatch->getNodeHighIndex__New();
 }
 
 //______________________________________________________________________
@@ -97,7 +97,7 @@ void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Pa
   // fine level hi & lo cell iter limits
   // coarselevel hi and low index
   const Level* fineLevel = finePatch->getLevel();
-  CellIterator iter_tmp = finePatch->getFaceCellIterator(face, "plusEdgeCells");
+  CellIterator iter_tmp = finePatch->getFaceIterator__New(face, Patch::ExtraPlusEdgeCells);
   fl = iter_tmp.begin();
   fh = iter_tmp.end();
   
@@ -197,7 +197,7 @@ void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
                                CellIterator& iter,       
                                bool& isRight_CP_FP_pair) 
 {
-  CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+  CellIterator f_iter=finePatch->getFaceIterator__New(patchFace, Patch::InteriorFaceCells);
 
   // find the intersection of the fine patch face iterator and underlying coarse patch
   IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
@@ -206,8 +206,8 @@ void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
   f_lo_face = fineLevel->mapCellToCoarser(f_lo_face);     
   f_hi_face = fineLevel->mapCellToCoarser(f_hi_face);
 
-  IntVector c_lo_patch = coarsePatch->getLowIndex(); 
-  IntVector c_hi_patch = coarsePatch->getHighIndex();
+  IntVector c_lo_patch = coarsePatch->getExtraCellLowIndex__New(); 
+  IntVector c_hi_patch = coarsePatch->getExtraCellHighIndex__New();
 
   IntVector l = Max(f_lo_face, c_lo_patch);             // intersection
   IntVector h = Min(f_hi_face, c_hi_patch);
@@ -228,8 +228,8 @@ void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
     h += offset;
   }
 
-  l = Max(l, coarsePatch->getLowIndex());
-  h = Min(h, coarsePatch->getHighIndex());
+  l = Max(l, coarsePatch->getExtraCellLowIndex__New());
+  h = Min(h, coarsePatch->getExtraCellHighIndex__New());
   
   iter=CellIterator(l,h);
   isRight_CP_FP_pair = false;
@@ -248,14 +248,14 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
                                CellIterator& iter,
                                bool& isRight_CP_FP_pair) 
 {
-  CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+  CellIterator f_iter=finePatch->getFaceIterator__New(patchFace, Patch::InteriorFaceCells);
 
   // find the intersection of the fine patch face iterator and underlying coarse patch
   IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
   IntVector f_hi_face = f_iter.end();
 
-  IntVector c_lo_patch = coarsePatch->getLowIndex(); 
-  IntVector c_hi_patch = coarsePatch->getHighIndex();
+  IntVector c_lo_patch = coarsePatch->getExtraCellLowIndex__New(); 
+  IntVector c_hi_patch = coarsePatch->getExtraCellHighIndex__New();
   
   const Level* coarseLevel = coarsePatch->getLevel();
   c_lo_patch = coarseLevel->mapCellToFiner(c_lo_patch);     
