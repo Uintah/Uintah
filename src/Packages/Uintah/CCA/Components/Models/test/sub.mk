@@ -20,7 +20,6 @@ SRCS	+= \
        $(SRCDIR)/TableInterface.cc \
        $(SRCDIR)/TableFactory.cc \
        $(SRCDIR)/TestModel.cc \
-       $(SRCDIR)/VorticityConfinement.cc \
        $(SRCDIR)/flameSheet_rxn.cc 
 #       $(SRCDIR)/Mixing2.cc
 #       $(SRCDIR)/Mixing2.cc \
