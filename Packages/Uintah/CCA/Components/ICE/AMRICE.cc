@@ -899,8 +899,8 @@ void AMRICE::iteratorTest(const Patch* finePatch,
 {
   Level::selectType coarsePatches;
   finePatch->getCoarseLevelPatches(coarsePatches); 
-  IntVector fl = finePatch->getCellLowIndex();
-  IntVector fh = finePatch->getCellHighIndex();
+  IntVector fl = finePatch->getExtraCellLowIndex__New();
+  IntVector fh = finePatch->getExtraCellHighIndex__New();
   
   CCVariable<double> hitCells;
   new_dw->allocateTemporary(hitCells, finePatch);
@@ -1392,8 +1392,8 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
     h += offset;
   }
 
-  IntVector coarse_Lo = coarsePatch->getLowIndex(); 
-  IntVector coarse_Hi = coarsePatch->getHighIndex();
+  IntVector coarse_Lo = coarsePatch->getExtraCellLowIndex__New(); 
+  IntVector coarse_Hi = coarsePatch->getExtraCellHighIndex__New();
   int y = dir[1];  // tangential directions
   int z = dir[2];  
   

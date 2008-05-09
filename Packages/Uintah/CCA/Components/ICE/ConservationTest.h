@@ -31,7 +31,7 @@ void  conservationTest(const Patch* patch,
   T zero(0.0);
   T sum_interior(zero);
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
     IntVector c = *iter;
     sum_interior += mass_q_CC[c];
   }
