@@ -37,8 +37,10 @@ Patch::Patch(const Level* level,
              unsigned int levelIndex,  int id)
   : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
     d_realPatch(0), d_level_index(-1),
+#ifndef DELETE_OLD_INTERFACE
     d_lowIndex(lowIndex),d_highIndex(highIndex),
     d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
+#endif
     d_id( id ),d_arrayBCS(0)
 {
   
@@ -64,25 +66,26 @@ Patch::Patch(const Level* level,
   //set the level index
   d_patchState.levelIndex=levelIndex;
 
+#ifndef DELETE_OLD_INTERFACE
   d_nodeHighIndex = d_highIndex+
     IntVector(getBCType(xplus) == Neighbor?0:1,
 	      getBCType(yplus) == Neighbor?0:1,
 	      getBCType(zplus) == Neighbor?0:1);
+#endif
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
     : 
-      d_lowIndex__New(realPatch->d_inLowIndex+virtualOffset),
-      d_highIndex__New(realPatch->d_inHighIndex+virtualOffset),
-      
-
+      d_lowIndex__New(realPatch->getCellLowIndex__New()+virtualOffset),
+      d_highIndex__New(realPatch->getCellHighIndex__New()+virtualOffset),
       d_realPatch(realPatch), d_level_index(realPatch->d_level_index),
+#ifndef DELETE_OLD_INTERFACE     
       d_lowIndex(realPatch->d_lowIndex + virtualOffset), 
       d_highIndex(realPatch->d_highIndex + virtualOffset),
-
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
+#endif
       d_arrayBCS(realPatch->d_arrayBCS)
 {
   //if(!ids){
@@ -239,8 +242,8 @@ namespace Uintah {
     out.setf(ios::scientific,ios::floatfield);
     out.precision(4);
     out << "(Patch " << r.getID() << ": box=" << r.getExtraBox()
-        << ", lowIndex=" << r.getCellLowIndex() << ", highIndex=" 
-        << r.getCellHighIndex() << ")";
+        << ", lowIndex=" << r.getExtraCellLowIndex__New() << ", highIndex=" 
+        << r.getExtraCellHighIndex__New() << ")";
     out.setf(ios::scientific ,ios::floatfield);
     return out;
   }
@@ -250,7 +253,7 @@ void
 Patch::performConsistencyCheck() const
 {
   // make sure that the patch's size is at least [1,1,1] 
-  IntVector res(d_highIndex-d_lowIndex);
+  IntVector res(getExtraCellHighIndex__New()-getExtraCellLowIndex__New());
   if(res.x() < 1 || res.y() < 1 || res.z() < 1) {
     ostringstream msg;
     msg << "Degenerate patch: " << toString() << " (resolution=" << res << ")";
@@ -286,7 +289,7 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
       throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
       return;
     }
-
+#ifndef DELETE_OLD_INTERFACE
    if (newbc != Patch::Neighbor ) {
      // assign patch's extra cells here (doesn't happen in 
      // Grid::problemSetup (for coarse boundaries anyway) and helps out the regridder
@@ -305,6 +308,7 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    d_nodeHighIndex = d_highIndex + IntVector(getBCType(xplus) == Neighbor?0:1,
                                              getBCType(yplus) == Neighbor?0:1,
                                              getBCType(zplus) == Neighbor?0:1);
+#endif
 }
 
 void
@@ -393,8 +397,8 @@ Patch::getFace(FaceType face, const IntVector& insideOffset,
 	       IntVector& l, IntVector& h) const
 {
   // don't count extra cells
-  IntVector ll=getInteriorCellLowIndex();
-  IntVector hh=getInteriorCellHighIndex();
+  IntVector ll=getCellLowIndex__New();
+  IntVector hh=getCellHighIndex__New();
   l=ll;
   h=hh;
   switch(face){
@@ -474,8 +478,8 @@ Patch::getFaceExtraNodes(FaceType face, int offset,IntVector& l,
 {
   // Change from getNodeLowIndex to getInteriorNodeLowIndex.  Need to do this
   // when we have extra cells.
-  IntVector lorig=l=getNodeLowIndex();
-  IntVector horig=h=getNodeHighIndex();
+  IntVector lorig=l=getExtraNodeLowIndex__New();
+  IntVector horig=h=getExtraNodeHighIndex__New();
   switch(face){
   case xminus:
     l.x(lorig.x()-offset);
@@ -511,8 +515,8 @@ Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
 {
   // Change from getNodeLowIndex to getInteriorNodeLowIndex.  Need to do this
   // when we have extra cells.
-  IntVector lorig=l=getInteriorNodeLowIndex();
-  IntVector horig=h=getInteriorNodeHighIndex();
+  IntVector lorig=l=getNodeLowIndex__New();
+  IntVector horig=h=getNodeHighIndex__New();
   switch(face){
   case xminus:
     l.x(lorig.x()-offset);
@@ -546,8 +550,8 @@ Patch::getFaceNodes(FaceType face, int offset,IntVector& l, IntVector& h) const
 void
 Patch::getFaceCells(FaceType face, int offset,IntVector& l, IntVector& h) const
 {
-   IntVector lorig=l=getCellLowIndex();
-   IntVector horig=h=getCellHighIndex();
+   IntVector lorig=l=getExtraCellLowIndex__New();
+   IntVector horig=h=getExtraCellHighIndex__New();
    switch(face){
    case xminus:
       l.x(lorig.x()-offset);
@@ -636,91 +640,6 @@ Patch::getCellCenterIterator(const Box& b) const
   return CellIterator(low, high);
 }
 
-CellIterator
-Patch::getCellIterator(const IntVector gc) const
-{
-  //   return CellIterator(getCellLowIndex(), getCellHighIndex());
-   return CellIterator(d_inLowIndex-gc, d_inHighIndex+gc);
-}
-
-
-CellIterator
-Patch::getExtraCellIterator(const IntVector gc) const
-{
-  return CellIterator(getCellLowIndex()-gc, getCellHighIndex()+gc);
-}
-
-//______________________________________________________________________
-//       I C E  /  M P M I C E   I T E R A T O R S
-//
-//  For SFCXFace Variables
-//  Iterates over all interior facing cell faces
-#if 1
-CellIterator
-Patch::getSFCXIterator(const int offset) const
-{
-  IntVector low,hi; 
-  low = d_inLowIndex;
-  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:offset,
-		   getBCType(Patch::yminus)==Neighbor?0:0,
-		   getBCType(Patch::zminus)==Neighbor?0:0);
-  hi  = d_inHighIndex + IntVector(1,0,0);
-  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?1:offset,
-		   getBCType(Patch::yplus) ==Neighbor?0:0,
-		   getBCType(Patch::zplus) ==Neighbor?0:0);
-  return CellIterator(low, hi);
-}
-//__________________________________
-//  Iterates over all interior facing cell faces
-CellIterator
-Patch::getSFCYIterator(const int offset) const
-{
-  IntVector low,hi; 
-  low = d_inLowIndex;
-  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:0,
-		   getBCType(Patch::yminus)==Neighbor?0:offset,
-		   getBCType(Patch::zminus)==Neighbor?0:0);
-  hi  = d_inHighIndex + IntVector(0,1,0);
-  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?0:0,
-		   getBCType(Patch::yplus) ==Neighbor?1:offset,
-		   getBCType(Patch::zplus) ==Neighbor?0:0);
-  return CellIterator(low, hi);
-}
-//__________________________________
-//  Iterates over all interior facing cell faces
-CellIterator
-Patch::getSFCZIterator(const int offset) const
-{
-  IntVector low,hi; 
-  low = d_inLowIndex;
-  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:0,
-		   getBCType(Patch::yminus)==Neighbor?0:0,
-		   getBCType(Patch::zminus)==Neighbor?0:offset);
-  hi  = d_inHighIndex +   IntVector(0,0,1);
-  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?0:0,
-		   getBCType(Patch::yplus) ==Neighbor?0:0,
-		   getBCType(Patch::zplus) ==Neighbor?1:offset);
-  return CellIterator(low, hi);
-}
-#endif
-//__________________________________
-// Selects which iterator to use
-//  based on direction
-/*
-CellIterator
-Patch::getSFCIterator(const int dir, const int offset) const
-{
-  if (dir == 0) {
-    return getSFCXIterator(offset);
-  } else if (dir == 1) {
-    return getSFCYIterator(offset);
-  } else if (dir == 2) {
-    return getSFCZIterator(offset);
-  } else {
-    SCI_THROW(InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2", __FILE__, __LINE__));
-  }
-} 
-*/
 /*****************************************************
  * Returns a face cell iterator
  *  face specifies which face will be returned
@@ -876,6 +795,137 @@ Patch::getFaceIterator__New(const FaceType& face, const FaceIteratorType& domain
   }
   return CellIterator(lowPt, highPt);
 }
+/**
+ * Returns an iterator to the edge of two intersecting faces.
+ * if minusCornerCells is true the edge will exclude corner cells.
+ */
+CellIterator    
+Patch::getEdgeCellIterator__New(const FaceType& face0, 
+                           const FaceType& face1,bool minusCornerCells) const
+{
+  FaceType face[2]={face0,face1};
+
+  //will contain extra cells
+  vector<IntVector>loPt(2), hiPt(2); 
+  loPt[0] = loPt[1] = getExtraCellLowIndex__New();
+  hiPt[0] = hiPt[1] = getExtraCellHighIndex__New();
+
+  int dim[2]={getFaceDimension(face0),getFaceDimension(face1)};
+
+  //return an empty iterator if trying to intersect the same dimension
+  if(dim[0]==dim[1])
+    return CellIterator(IntVector(0,0,0),IntVector(0,0,0));
+
+  for (int f = 0; f < 2 ; f++ ) {
+   
+    switch(face[f])
+    {
+        case xminus: case yminus: case zminus:
+          //restrict to face
+          hiPt[f][dim[f]]=getCellLowIndex__New()[dim[f]];
+          break;
+        case xplus: case yplus: case zplus:
+          //restrict to face
+          loPt[f][dim[f]]=getCellHighIndex__New()[dim[f]];
+          break;
+        default:
+          throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+          break;
+
+    }
+
+    //remove the corner cells by pruning the other dimension's extra cells
+    if(minusCornerCells)
+    {
+      //compute the dimension of the face not being used
+      int otherdim=3-dim[0]-dim[1];
+  
+      loPt[f][otherdim]=getCellLowIndex__New()[otherdim];
+      hiPt[f][otherdim]=getCellHighIndex__New()[otherdim];
+    }
+  }
+
+  // compute the edge low and high pt from the intersection
+  IntVector LowPt  = Max(loPt[0], loPt[1]);
+  IntVector HighPt = Min(hiPt[0], hiPt[1]);
+  
+  return CellIterator(LowPt, HighPt);
+  
+
+}
+
+Box Patch::getGhostBox(const IntVector& lowOffset,
+		       const IntVector& highOffset) const
+{
+   return Box(getLevel()->getNodePosition(getExtraCellLowIndex__New()+lowOffset),
+	      getLevel()->getNodePosition(getExtraCellHighIndex__New()+highOffset));
+}
+
+
+/**
+* This will return an iterator which will include all the nodes
+* contained by the bounding box which also intersect the patch.
+* If a dimension of the widget is degenerate (has a thickness of 0)
+* the nearest node in that dimension is used.
+*
+* The patch region includes extra nodes
+*/
+NodeIterator
+Patch::getNodeIterator(const Box& b) const
+{
+  // Determine if we are dealing with a 2D box.
+   Point l = getLevel()->positionToIndex(b.lower());
+   Point u = getLevel()->positionToIndex(b.upper());
+   int low_x, low_y, low_z, high_x, high_y, high_z;
+   if (l.x() != u.x()) {
+     // Get the nodes that are included
+     low_x = RoundUp(l.x());
+     high_x = RoundDown(u.x()) + 1;
+   } else {
+     // Get the nodes that are nearest
+     low_x = RoundDown(l.x()+0.5);
+     high_x = low_x + 1;
+   }
+   if (l.y() != u.y()) {
+     // Get the nodes that are included
+     low_y = RoundUp(l.y());
+     high_y = RoundDown(u.y()) + 1;
+   } else {
+     // Get the nodes that are nearest
+     low_y = RoundDown(l.y()+0.5);
+     high_y = low_y + 1;
+   }
+   if (l.z() != u.z()) {
+     // Get the nodes that are included
+     low_z = RoundUp(l.z());
+     high_z = RoundDown(u.z()) + 1;
+   } else {
+     // Get the nodes that are nearest
+     low_z = RoundDown(l.z()+0.5);
+     high_z = low_z + 1;
+   }
+   IntVector low(low_x, low_y, low_z);
+   IntVector high(high_x, high_y, high_z);
+   low = Max(low, getExtraNodeLowIndex__New());
+   high = Min(high, getExtraNodeHighIndex__New());
+   return NodeIterator(low, high);
+}
+
+#ifndef DELETE_OLD_INTERFACE
+CellIterator
+Patch::getCellIterator(const IntVector gc) const
+{
+  //   return CellIterator(getCellLowIndex(), getCellHighIndex());
+   return CellIterator(d_inLowIndex-gc, d_inHighIndex+gc);
+}
+
+
+CellIterator
+Patch::getExtraCellIterator(const IntVector gc) const
+{
+  return CellIterator(getCellLowIndex()-gc, getCellHighIndex()+gc);
+}
+
 //__________________________________
 //  Iterate over the GhostCells on a particular face
 // domain:  
@@ -945,64 +995,89 @@ Patch::getFaceCellIterator(const FaceType& face, const string& domain) const
   return CellIterator(lowPt, highPt);
 }
 
-/**
- * Returns an iterator to the edge of two intersecting faces.
- * if minusCornerCells is true the edge will exclude corner cells.
- */
-CellIterator    
-Patch::getEdgeCellIterator__New(const FaceType& face0, 
-                           const FaceType& face1,bool minusCornerCells) const
+
+NodeIterator Patch::getNodeIterator() const
 {
-  FaceType face[2]={face0,face1};
+  IntVector low = d_inLowIndex;
+  IntVector hi = d_inHighIndex +
+    IntVector(getBCType(xplus) == Neighbor?0:1,
+              getBCType(yplus) == Neighbor?0:1,
+              getBCType(zplus) == Neighbor?0:1);
+  //   return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
 
-  //will contain extra cells
-  vector<IntVector>loPt(2), hiPt(2); 
-  loPt[0] = loPt[1] = getExtraCellLowIndex__New();
-  hiPt[0] = hiPt[1] = getExtraCellHighIndex__New();
-
-  int dim[2]={getFaceDimension(face0),getFaceDimension(face1)};
-
-  //return an empty iterator if trying to intersect the same dimension
-  if(dim[0]==dim[1])
-    return CellIterator(IntVector(0,0,0),IntVector(0,0,0));
-
-  for (int f = 0; f < 2 ; f++ ) {
-   
-    switch(face[f])
-    {
-        case xminus: case yminus: case zminus:
-          //restrict to face
-          hiPt[f][dim[f]]=getCellLowIndex__New()[dim[f]];
-          break;
-        case xplus: case yplus: case zplus:
-          //restrict to face
-          loPt[f][dim[f]]=getCellHighIndex__New()[dim[f]];
-          break;
-        default:
-          throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
-          break;
-
-    }
-
-    //remove the corner cells by pruning the other dimension's extra cells
-    if(minusCornerCells)
-    {
-      //compute the dimension of the face not being used
-      int otherdim=3-dim[0]-dim[1];
-  
-      loPt[f][otherdim]=getCellLowIndex__New()[otherdim];
-      hiPt[f][otherdim]=getCellHighIndex__New()[otherdim];
-    }
-  }
-
-  // compute the edge low and high pt from the intersection
-  IntVector LowPt  = Max(loPt[0], loPt[1]);
-  IntVector HighPt = Min(hiPt[0], hiPt[1]);
-  
-  return CellIterator(LowPt, HighPt);
-  
-
+  return NodeIterator(low, hi);
 }
+//______________________________________________________________________
+//       I C E  /  M P M I C E   I T E R A T O R S
+//
+//  For SFCXFace Variables
+//  Iterates over all interior facing cell faces
+#if 1
+CellIterator
+Patch::getSFCXIterator(const int offset) const
+{
+  IntVector low,hi; 
+  low = d_inLowIndex;
+  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:offset,
+		   getBCType(Patch::yminus)==Neighbor?0:0,
+		   getBCType(Patch::zminus)==Neighbor?0:0);
+  hi  = d_inHighIndex + IntVector(1,0,0);
+  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?1:offset,
+		   getBCType(Patch::yplus) ==Neighbor?0:0,
+		   getBCType(Patch::zplus) ==Neighbor?0:0);
+  return CellIterator(low, hi);
+}
+//__________________________________
+//  Iterates over all interior facing cell faces
+CellIterator
+Patch::getSFCYIterator(const int offset) const
+{
+  IntVector low,hi; 
+  low = d_inLowIndex;
+  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:0,
+		   getBCType(Patch::yminus)==Neighbor?0:offset,
+		   getBCType(Patch::zminus)==Neighbor?0:0);
+  hi  = d_inHighIndex + IntVector(0,1,0);
+  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?0:0,
+		   getBCType(Patch::yplus) ==Neighbor?1:offset,
+		   getBCType(Patch::zplus) ==Neighbor?0:0);
+  return CellIterator(low, hi);
+}
+//__________________________________
+//  Iterates over all interior facing cell faces
+CellIterator
+Patch::getSFCZIterator(const int offset) const
+{
+  IntVector low,hi; 
+  low = d_inLowIndex;
+  low+=IntVector(getBCType(Patch::xminus)==Neighbor?0:0,
+		   getBCType(Patch::yminus)==Neighbor?0:0,
+		   getBCType(Patch::zminus)==Neighbor?0:offset);
+  hi  = d_inHighIndex +   IntVector(0,0,1);
+  hi -=IntVector(getBCType(Patch::xplus) ==Neighbor?0:0,
+		   getBCType(Patch::yplus) ==Neighbor?0:0,
+		   getBCType(Patch::zplus) ==Neighbor?1:offset);
+  return CellIterator(low, hi);
+}
+#endif
+//__________________________________
+// Selects which iterator to use
+//  based on direction
+/*
+CellIterator
+Patch::getSFCIterator(const int dir, const int offset) const
+{
+  if (dir == 0) {
+    return getSFCXIterator(offset);
+  } else if (dir == 1) {
+    return getSFCYIterator(offset);
+  } else if (dir == 2) {
+    return getSFCZIterator(offset);
+  } else {
+    SCI_THROW(InternalError("Patch::getSFCIterator: dir must be 0, 1, or 2", __FILE__, __LINE__));
+  }
+} 
+*/
 //__________________________________
 //  Iterate over an edge at the intersection of face0 and face1
 // if domain == minusCornerCells this subtracts off the corner cells.
@@ -1106,74 +1181,6 @@ Patch::addGhostCell_Iter(CellIterator hi_lo, const int nCells) const
    return  CellIterator(ll,hh);
 } 
 
-
-Box Patch::getGhostBox(const IntVector& lowOffset,
-		       const IntVector& highOffset) const
-{
-   return Box(getLevel()->getNodePosition(d_lowIndex+lowOffset),
-	      getLevel()->getNodePosition(d_highIndex+highOffset));
-}
-
-NodeIterator Patch::getNodeIterator() const
-{
-  IntVector low = d_inLowIndex;
-  IntVector hi = d_inHighIndex +
-    IntVector(getBCType(xplus) == Neighbor?0:1,
-              getBCType(yplus) == Neighbor?0:1,
-              getBCType(zplus) == Neighbor?0:1);
-  //   return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
-
-  return NodeIterator(low, hi);
-}
-
-/**
-* This will return an iterator which will include all the nodes
-* contained by the bounding box which also intersect the patch.
-* If a dimension of the widget is degenerate (has a thickness of 0)
-* the nearest node in that dimension is used.
-*
-* The patch region includes extra nodes
-*/
-NodeIterator
-Patch::getNodeIterator(const Box& b) const
-{
-  // Determine if we are dealing with a 2D box.
-   Point l = getLevel()->positionToIndex(b.lower());
-   Point u = getLevel()->positionToIndex(b.upper());
-   int low_x, low_y, low_z, high_x, high_y, high_z;
-   if (l.x() != u.x()) {
-     // Get the nodes that are included
-     low_x = RoundUp(l.x());
-     high_x = RoundDown(u.x()) + 1;
-   } else {
-     // Get the nodes that are nearest
-     low_x = RoundDown(l.x()+0.5);
-     high_x = low_x + 1;
-   }
-   if (l.y() != u.y()) {
-     // Get the nodes that are included
-     low_y = RoundUp(l.y());
-     high_y = RoundDown(u.y()) + 1;
-   } else {
-     // Get the nodes that are nearest
-     low_y = RoundDown(l.y()+0.5);
-     high_y = low_y + 1;
-   }
-   if (l.z() != u.z()) {
-     // Get the nodes that are included
-     low_z = RoundUp(l.z());
-     high_z = RoundDown(u.z()) + 1;
-   } else {
-     // Get the nodes that are nearest
-     low_z = RoundDown(l.z()+0.5);
-     high_z = low_z + 1;
-   }
-   IntVector low(low_x, low_y, low_z);
-   IntVector high(high_x, high_y, high_z);
-   low = Max(low, getExtraNodeLowIndex__New());
-   high = Min(high, getExtraNodeHighIndex__New());
-   return NodeIterator(low, high);
-}
 /**
  * Replace this with getExtraNodeIterator__New()
  *  this assumes when using gimp or 3rdorderBS the extra cells = IntVector(1,1,1)
@@ -1321,7 +1328,7 @@ IntVector Patch::getGhostCellHighIndex(int numGC) const
 				 getBCType(yplus) == Neighbor?numGC:0,
 				 getBCType(zplus) == Neighbor?numGC:0);
 }
-
+#endif
 /**
  * For AMR.  When there are weird patch configurations, sometimes patches can overlap.
  * Find the intersection betwen the patch and the desired dependency, and then remove the intersection.
@@ -1757,7 +1764,8 @@ IntVector Patch::getHighIndexWithDomainLayer(VariableBasis basis) const
 void Patch::finalizePatch()
 {
   TAU_PROFILE("Patch::finalizePatch()", " ", TAU_USER);
-  
+ 
+#ifndef DELETE_OLD_INTERFACE
 #if SCI_ASSERTION_LEVEL>0
   ASSERT(getLow()==getExtraCellLowIndex__New());
   ASSERT(getHigh()==getExtraCellHighIndex__New());
@@ -1880,6 +1888,7 @@ void Patch::finalizePatch()
   ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus));
 
 #endif 
+#endif
 }
 
 /**

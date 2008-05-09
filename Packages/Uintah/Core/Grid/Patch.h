@@ -27,6 +27,8 @@
 
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
 
+//#define DELETE_OLD_INTERFACE
+
 namespace Uintah {
 
   using std::string;
@@ -1285,8 +1287,8 @@ WARNING
        * including extra cells
        */
       inline bool containsPointInExtraCells(const Point& p) const {
-        IntVector l(getNodeLowIndex());
-        IntVector h(getNodeHighIndex());
+        IntVector l(getExtraNodeLowIndex__New());
+        IntVector h(getExtraNodeHighIndex__New());
         Point lp = getNodePosition(l);
         Point hp = getNodePosition(h);
         return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
@@ -1297,8 +1299,8 @@ WARNING
        * excluding extra cells
        */
       inline bool containsPoint__New(const Point& p) const {
-        IntVector l(getInteriorNodeLowIndex());
-        IntVector h(d_inHighIndex);
+        IntVector l(getNodeLowIndex__New());
+        IntVector h(getNodeHighIndex__New());
         Point lp = getNodePosition(l);
         Point hp = getNodePosition(h);
         return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
@@ -1779,18 +1781,7 @@ WARNING
       /*  End the section of unupdated functions */
       
       /***********************Old Interface that is been implemented in new interface*******************************/
-
-      /**
-       * Replace with getExtraCellLowIndex__New()
-       */
-      inline IntVector getLow() const
-      { return d_lowIndex; }
-
-      /**
-       * Replace with getExtraCellHighIndex__New()
-       */
-      inline IntVector getHigh() const
-      { return d_highIndex; }
+#ifndef DELETE_OLD_INTERFACE
 
       /**
        * Replace with getExtraCellLowIndex__New()
@@ -2058,7 +2049,7 @@ WARNING
        * you want to the get*Iterator(numGC) queries
        */
       CellIterator addGhostCell_Iter(CellIterator hi_lo, const int nCells) const;
-
+#endif
       /***********************End old interface********************************************************************/
 
     protected:
@@ -2174,7 +2165,7 @@ WARNING
       mutable int d_faceMarks[4*numFaces];
 
       /*****************Members to be phased out*****************/
-      
+#ifndef DELETE_OLD_INTERFACE      
       //////////
       // Locations in space of opposite box corners.
       // These are in terms of cells positioned from the level's anchor,
@@ -2189,7 +2180,7 @@ WARNING
       IntVector d_inLowIndex;
       IntVector d_inHighIndex;
       IntVector d_nodeHighIndex;
-      
+#endif      
       /******************End of members to be phased out***********/
 
 
@@ -2207,13 +2198,25 @@ WARNING
              SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
       friend class SCIRun::BasicBox<const Patch*, IntVector, int, int, 
              SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+      
+      /**
+       * Returns the low index including extra cells
+       */
+      inline IntVector getLow() const
+      { return getExtraCellLowIndex__New(); }
+
+      /**
+       * Returns the high index including extra cells
+       */
+      inline IntVector getHigh() const
+      { return getExtraCellHighIndex__New(); }
 
       /** 
        * Returns the number of cells in a patch including extraCells.
        * This should only be used by SuperBox code
        */
       inline int getVolume() const
-      { return getVolume(getLow(), getHigh()); }
+      { return getVolume(getExtraCellLowIndex__New(), getExtraCellHighIndex__New()); }
 
       /** 
        * Returns the number of cells on a patches face including extraCells.
@@ -2224,7 +2227,7 @@ WARNING
         int area = 1;
         for (int i = 0; i < 3; i++)
           if (i != side)
-            area *= getHigh()[i] - getLow()[i];
+            area *= getExtraCellHighIndex__New()[i] - getExtraCellLowIndex__New()[i];
         return area;
       }
 
