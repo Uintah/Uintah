@@ -182,14 +182,14 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         }
         
         //add coarse patch to cpq
-        cpq.push_back(Region(patch->getInteriorCellLowIndex(),
-                          patch->getInteriorCellHighIndex()));
+        cpq.push_back(Region(patch->getCellLowIndex__New(),
+                          patch->getCellHighIndex__New()));
 
         //add overlapping fine patches to fpq
         for(int p=0;p<fp.size();p++)
         {
-          fpq.push_back(Region(fine_level->mapCellToCoarser(fp[p]->getInteriorCellLowIndex()),
-                            fine_level->mapCellToCoarser(fp[p]->getInteriorCellHighIndex())));
+          fpq.push_back(Region(fine_level->mapCellToCoarser(fp[p]->getCellLowIndex__New()),
+                            fine_level->mapCellToCoarser(fp[p]->getCellHighIndex__New())));
         }
 
         //compute region of coarse patches that do not contain fine patches
@@ -487,15 +487,15 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
 
   LevelP level = oldGrid->getLevel(levelIdx);
 
-  IntVector minIdx = (*(level->patchesBegin()))->getCellLowIndex();
-  IntVector maxIdx = (*(level->patchesBegin()))->getCellHighIndex();
+  IntVector minIdx = (*(level->patchesBegin()))->getExtraCellLowIndex__New();
+  IntVector maxIdx = (*(level->patchesBegin()))->getExtraCellHighIndex__New();
 
   // This could be a problem because of extra cells.
   
   for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++ ) {
     const Patch* patch = *patchIter;
-    minIdx = Min( minIdx, patch->getCellLowIndex() );
-    maxIdx = Max( maxIdx, patch->getCellHighIndex() );
+    minIdx = Min( minIdx, patch->getExtraCellLowIndex__New() );
+    maxIdx = Max( maxIdx, patch->getExtraCellHighIndex__New() );
   }
 
   d_flaggedCells[levelIdx] = scinew CCVariable<int>;
@@ -518,8 +518,8 @@ void RegridderCommon::GetFlaggedCells ( const GridP& oldGrid, int levelIdx, Data
 
   for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter != level->patchesEnd(); patchIter++ ) {
     const Patch* patch = *patchIter;
-    IntVector l(patch->getCellLowIndex());
-    IntVector h(patch->getCellHighIndex());
+    IntVector l(patch->getExtraCellLowIndex__New());
+    IntVector h(patch->getExtraCellHighIndex__New());
 
     constCCVariable<int> refineFlag;
 
@@ -727,8 +727,8 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     new_dw->get(flaggedCells, to_get, 0, patch, Ghost::AroundCells, ngc);
     new_dw->allocateAndPut(dilatedFlaggedCells, to_put, 0, patch);
 
-    IntVector flagLow = patch->getLowIndex();
-    IntVector flagHigh = patch->getHighIndex();
+    IntVector flagLow = patch->getExtraCellLowIndex__New();
+    IntVector flagHigh = patch->getExtraCellHighIndex__New();
 
     if (patch->getLevel()->getIndex() > 0 && ((d_filterType == FILTER_STAR && ngc > 2) || ngc > 1)) {
       // if we go diagonally along a patch corner where there is no patch, we will need to initialize those cells
@@ -775,8 +775,8 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
 
   rdbg << "G\n";
     if (dilate_dbg.active() && patch->getLevel()->getIndex() == 1) {
-      IntVector low  = patch->getInteriorCellLowIndex();
-      IntVector high = patch->getInteriorCellHighIndex();
+      IntVector low  = patch->getCellLowIndex__New();
+      IntVector high = patch->getCellHighIndex__New();
       
       dilate_dbg << "----------------------------------------------------------------" << endl;
       dilate_dbg << "FLAGGED CELLS " << low << " " << high << endl;

@@ -116,7 +116,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   //add old level 0 to patch sets
   for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
   {
-    patch_sets[0].push_back(Region((*p)->getInteriorCellLowIndex(),(*p)->getInteriorCellHighIndex()));
+    patch_sets[0].push_back(Region((*p)->getCellLowIndex__New(),(*p)->getCellHighIndex__New()));
   }
     
   int rank=d_myworld->myrank();
@@ -337,7 +337,7 @@ void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &
       const Patch *patch=ps->get(p);
       constCCVariable<int> flags;
       dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
-      for (CellIterator ci(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()); !ci.done(); ci++)
+      for (CellIterator ci(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()); !ci.done(); ci++)
       {
         //cout << "Checking flag:" << *ci << " value is:" << flags[*ci] << endl;
         if (flags[*ci])
@@ -617,7 +617,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
 
   for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
   {
-    IntVector size=(*patch)->getInteriorCellHighIndex()-(*patch)->getInteriorCellLowIndex();
+    IntVector size=(*patch)->getCellHighIndex__New()-(*patch)->getCellLowIndex__New();
     min_size=Min(min_size,size);
   }
   d_minPatchSize.insert(d_minPatchSize.begin(),min_size);
@@ -821,8 +821,8 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
     {
       const Patch* patch = intersecting_patches[i];
 
-      IntVector int_low = Max(patch->getInteriorCellLowIndex(), low);
-      IntVector int_high = Min(patch->getInteriorCellHighIndex(), high);
+      IntVector int_low = Max(patch->getCellLowIndex__New(), low);
+      IntVector int_high = Min(patch->getCellHighIndex__New(), high);
       
       //convert to coarsened coordinates
         //multiply by refinement ratio to convert back to fine levels cell coordinates

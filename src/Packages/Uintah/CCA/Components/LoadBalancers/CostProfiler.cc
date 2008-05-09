@@ -37,8 +37,8 @@ void CostProfiler::addContribution(const PatchSubset* patches, double cost)
       int l=patch->getLevel()->getIndex();
     
       //coarsen region by minimum patch size
-      IntVector low=patch->getInteriorCellLowIndex()/d_minPatchSize[l];
-      IntVector high=patch->getInteriorCellHighIndex()/d_minPatchSize[l];
+      IntVector low=patch->getCellLowIndex__New()/d_minPatchSize[l];
+      IntVector high=patch->getCellHighIndex__New()/d_minPatchSize[l];
     
       //loop through datapoints
       for(CellIterator iter(low,high); !iter.done(); iter++)
@@ -68,7 +68,7 @@ void CostProfiler::outputError(const GridP currentGrid)
       for(int p=0; p<level->numPatches();p++)
       {
         const Patch *patch=level->getPatch(p);
-        regions[p]=Region(patch->getInteriorCellLowIndex(),patch->getInteriorCellHighIndex());
+        regions[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
       }
 
       vector<double> predictedzo_sum(regions.size(),0), predictedfo_sum(regions.size(),0), predictedso_sum(regions.size(),0), predictedto_sum(regions.size(),0), measured_sum(regions.size(),0);
@@ -249,7 +249,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       for(int p=0; p<oldgrid->getLevel(l)->numPatches(); p++) 
       {
         const Patch* patch = oldgrid->getLevel(l)->getPatch(p);
-        old_level.push_back(Region(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()));
+        old_level.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
       }
     }
     
@@ -284,7 +284,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       if(p%d_myworld->size()==d_myworld->myrank())
       {
         const Patch* patch = newgrid->getLevel(l)->getPatch(p);
-        dnew.push_back(Region(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()));
+        dnew.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
       }
     }
     
