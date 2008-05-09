@@ -984,7 +984,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
     for (int p = 0; p < myPatches->size(); p++) {
       const Patch* patch = myPatches->get(p);
-      IntVector range = patch->getHighIndex() - patch->getLowIndex();
+      IntVector range = patch->getExtraCellHighIndex__New() - patch->getExtraCellLowIndex__New();
       numCells += range.x()*range.y()*range.z();
 
       // go through all materials since getting an MPMMaterial correctly would depend on MPM

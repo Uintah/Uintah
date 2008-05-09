@@ -819,8 +819,8 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
   d_lock.writeLock();
 
   if (low == high && high == IntVector(0,0,0)) {
-    low = patch->getLowIndex();
-    high = patch->getHighIndex();
+    low = patch->getExtraCellLowIndex__New();
+    high = patch->getExtraCellHighIndex__New();
   }
 
   dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID() << " (" << low << ", " << high << ")\n";
@@ -857,8 +857,8 @@ OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
   d_lock.writeLock();
 
   if (low == high && high == IntVector(0,0,0)) {
-    low = patch->getLowIndex();
-    high = patch->getHighIndex();
+    low = patch->getExtraCellLowIndex__New();
+    high = patch->getExtraCellHighIndex__New();
   }
 
   psetDBType::key_type key(patch, matlIndex, low, high, getID());
@@ -887,7 +887,7 @@ OnDemandDataWarehouse::printParticleSubsets()
 ParticleSubset*
 OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
 {
-  return getParticleSubset(matlIndex, patch, patch->getLowIndex(), patch->getHighIndex());
+  return getParticleSubset(matlIndex, patch, patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
 }
 
 ParticleSubset*
@@ -940,7 +940,7 @@ OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
 {
   d_lock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
-   psetDBType::key_type key(realPatch, matlIndex, realPatch->getLowIndex(), realPatch->getHighIndex(), getID());
+   psetDBType::key_type key(realPatch, matlIndex, realPatch->getExtraCellLowIndex__New(), realPatch->getExtraCellHighIndex__New(), getID());
    psetDBType::iterator iter = d_delsetDB.find(key);
    if(iter == d_delsetDB.end()){
      d_lock.readUnlock();
@@ -976,8 +976,8 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
   d_lock.readLock();
 
   if (low == high && high == IntVector(0,0,0)) {
-    low = patch->getLowIndex();
-    high = patch->getHighIndex();
+    low = patch->getExtraCellLowIndex__New();
+    high = patch->getExtraCellHighIndex__New();
   }
   const Patch* realPatch = patch->getRealPatch();
 
@@ -1016,7 +1016,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   IntVector lowIndex, highIndex;
   patch->computeVariableExtents(Patch::CellBased, pos_var->getBoundaryLayer(),
 				gtype, numGhostCells, lowIndex, highIndex);
-  if(gtype == Ghost::None || (lowIndex == patch->getLowIndex() && highIndex == patch->getHighIndex())) {
+  if(gtype == Ghost::None || (lowIndex == patch->getExtraCellLowIndex__New() && highIndex == patch->getExtraCellHighIndex__New())) {
     return getParticleSubset(matlIndex, patch);
   }
 
@@ -1030,7 +1030,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
   TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
-  if (relPatch && lowIndex == relPatch->getLowIndex() && highIndex == relPatch->getHighIndex())
+  if (relPatch && lowIndex == relPatch->getExtraCellLowIndex__New() && highIndex == relPatch->getExtraCellHighIndex__New())
     neighbors.push_back(relPatch);
   else
     level->selectPatches(lowIndex, highIndex, neighbors);
@@ -1049,8 +1049,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
       IntVector newHigh; 
 
       if (level->getIndex() == 0) {
-        newLow = Max(lowIndex, neighbor->getLowIndex());
-        newHigh = Min(highIndex, neighbor->getHighIndex());
+        newLow = Max(lowIndex, neighbor->getExtraCellLowIndex__New());
+        newHigh = Min(highIndex, neighbor->getExtraCellHighIndex__New());
       }
       else {
         // if in a copy-data timestep, only grab extra cells if on domain boundary
@@ -1138,7 +1138,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
   // a null patch means that there is no patch center for the pset
   // (probably on an AMR copy data timestep)
-  if((patch && pset->getLow() == patch->getLowIndex() && pset->getHigh() == patch->getHighIndex()) ||
+  if((patch && pset->getLow() == patch->getExtraCellLowIndex__New() && pset->getHigh() == patch->getExtraCellHighIndex__New()) ||
      pset->getNeighbors().size() == 0){
     get(constVar, label, matlIndex, patch);
   }
@@ -1187,7 +1187,7 @@ OnDemandDataWarehouse::getModifiable(ParticleVariableBase& var,
    const Patch* patch = pset->getPatch();
    checkModifyAccess(label, matlIndex, patch);
    
-   if(pset->getLow() == patch->getLowIndex() && pset->getHigh() == patch->getHighIndex()){
+   if(pset->getLow() == patch->getExtraCellLowIndex__New() && pset->getHigh() == patch->getExtraCellHighIndex__New()){
      if(!d_varDB.exists(label, matlIndex, patch))
        SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
      d_varDB.get(label, matlIndex, patch, var);
@@ -1204,7 +1204,7 @@ OnDemandDataWarehouse::getParticleVariable(const VarLabel* label,
    int matlIndex = pset->getMatlIndex();
    const Patch* patch = pset->getPatch();
 
-   if(pset->getLow() == patch->getLowIndex() && pset->getHigh() == patch->getHighIndex()){
+   if(pset->getLow() == patch->getExtraCellLowIndex__New() && pset->getHigh() == patch->getExtraCellHighIndex__New()){
      return getParticleVariable(label, matlIndex, patch);
    } else {
      SCI_THROW(InternalError("getParticleVariable should not be used with ghost cells", __FILE__, __LINE__));
@@ -1268,7 +1268,7 @@ OnDemandDataWarehouse::put(ParticleVariableBase& var,
    ParticleSubset* pset = var.getParticleSubset();
    
    const Patch* patch = pset->getPatch();
-   if(pset->getLow() != patch->getLowIndex() || pset->getHigh() != patch->getHighIndex())
+   if(pset->getLow() != patch->getExtraCellLowIndex__New() || pset->getHigh() != patch->getExtraCellHighIndex__New())
      SCI_THROW(InternalError("ParticleVariable cannot use put with ghost cells", __FILE__, __LINE__));
    int matlIndex = pset->getMatlIndex();
 
@@ -1733,8 +1733,8 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       h = Min(patch->getExtraHighIndex(basis, label->getBoundaryLayer()), high);
     }
     else {
-      l = Max(patch->getLowIndex(basis), low);
-      h = Min(patch->getHighIndex(basis), high);
+      l = Max(patch->getExtraCellLowIndex__New(basis), low);
+      h = Min(patch->getExtraCellHighIndex__New(basis), high);
     }
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
@@ -1761,7 +1761,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       var->copyPatch(tmpVar, l, h);
     } catch (InternalError& e) {
       cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h 
-           << " actual patch " << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) 
+           << " actual patch " << patch->getExtraCellLowIndex__New(basis) << " " << patch->getExtraCellHighIndex__New(basis) 
            << " var range: "  << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
       throw e;
     }
@@ -1842,7 +1842,7 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
   Patch* patch = (Patch*) delset->getPatch();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
 
-  psetDBType::key_type key(patch, matlIndex, realPatch->getLowIndex(), realPatch->getHighIndex(), getID());
+  psetDBType::key_type key(patch, matlIndex, realPatch->getExtraCellLowIndex__New(), realPatch->getExtraCellHighIndex__New(), getID());
   psetDBType::iterator iter = d_delsetDB.find(key);
   ParticleSubset* currentDelset;
   if(iter != d_delsetDB.end()) {

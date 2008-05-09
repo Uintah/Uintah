@@ -65,7 +65,7 @@ namespace Uintah {
     {
       ASSERT(fromPatch != 0);
       ASSERT(toPatch != 0);
-      vectorToNeighbor = toPatch->getLowIndex() - fromPatch->getLowIndex();
+      vectorToNeighbor = toPatch->getExtraCellLowIndex__New() - fromPatch->getExtraCellLowIndex__New();
     }
 
     // Note that when the ScatterRecord going from a real patch to
@@ -243,7 +243,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
                ParticleSubset* pset)
 {
   ASSERT(to != 0);
-  IntVector vectorToNeighbor = to->getLowIndex() - from->getLowIndex();
+  IntVector vectorToNeighbor = to->getExtraCellLowIndex__New() - from->getExtraCellLowIndex__New();
   const Patch* realTo = to->getRealPatch();
 
   pair<maptype::iterator, maptype::iterator> pr =
@@ -267,7 +267,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
                const Patch* to, int matl)
 {
   ASSERT(to != 0);
-  IntVector vectorToNeighbor = to->getLowIndex() - from->getLowIndex();
+  IntVector vectorToNeighbor = to->getExtraCellLowIndex__New() - from->getExtraCellLowIndex__New();
   const Patch* realTo = to->getRealPatch();
 
   pair<maptype::iterator, maptype::iterator> pr =
@@ -600,8 +600,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       }
 
       // Particles are only allowed to be one cell out
-      IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-      IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+      IntVector l = patch->getExtraCellLowIndex__New()-IntVector(1,1,1);
+      IntVector h = patch->getExtraCellHighIndex__New()+IntVector(1,1,1);
       Patch::selectType neighbors;
       level->selectPatches(l, h, neighbors);
 
@@ -647,7 +647,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
             // do nothing - what we wanted was to set toPatch, and we'll add that to a scatterRecord
             prevToRefinePatch = toPatch;
           }
-          else if(patch->containsPointInRealCells(px[idx])){
+          else if(patch->containsPoint__New(px[idx])){
             // is particle going to a finer patch?  Note, a particle does not have to leave the current patch
             // to go to a finer patch
             keepset->addParticle(idx);
@@ -662,7 +662,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
               // and there are a limited number of neighbors, perhaps it won't matter much
               int i=0;
               for(;i<(int)neighbors.size();i++){
-                if(neighbors[i]->containsPointInRealCells(px[idx])){
+                if(neighbors[i]->containsPoint__New(px[idx])){
                   break;
                 }
               }
@@ -716,8 +716,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       const Level* level = patch->getLevel();
 
       // Particles are only allowed to be one cell out
-      IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
-      IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+      IntVector l = patch->getExtraCellLowIndex__New()-IntVector(1,1,1);
+      IntVector h = patch->getExtraCellHighIndex__New()+IntVector(1,1,1);
       Patch::selectType neighbors;
       level->selectPatches(l, h, neighbors);
 
