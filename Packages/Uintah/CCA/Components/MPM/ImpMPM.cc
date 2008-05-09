@@ -51,7 +51,6 @@
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/fillFace.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>

@@ -3,7 +3,6 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/PressureBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/fillFace.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
