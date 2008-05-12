@@ -271,7 +271,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       denom = sqrt(A*A + B*B + C*C);
     }
  
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
 
       Point pos = level->getCellPosition(c);
@@ -393,7 +393,7 @@ void LightTime::errorEstimate(const ProcessorGroup*,
     // compute gradient
     Vector dx = patch->dCell(); 
     
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       Vector grad_Fr;
       for(int dir = 0; dir <3; dir ++ ) { 
@@ -409,7 +409,7 @@ void LightTime::errorEstimate(const ProcessorGroup*,
     //__________________________________
     // set refinement flag
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       if( mag_grad_Fr[c] > d_refineCriteria){
         refineFlag[c] = true;

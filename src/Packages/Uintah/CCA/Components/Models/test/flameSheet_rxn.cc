@@ -229,7 +229,7 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                    iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
-      for(CellIterator iter = patch->getExtraCellIterator();
+      for(CellIterator iter = patch->getExtraCellIterator__New();
           !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
@@ -338,7 +338,7 @@ void flameSheet_rxn::computeModelSources(const ProcessorGroup*,
     double volume = dx.x()*dx.y()*dx.z();
     
     //__________________________________   
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
       
       double newTemp = -999;
@@ -483,7 +483,7 @@ void flameSheet_rxn::testConservation(const ProcessorGroup*,
     CCVariable<double> q_CC;
     new_dw->allocateTemporary(q_CC, patch);
 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       q_CC[c] = rho_CC[c]*cellVol*f[c];
     }

@@ -336,7 +336,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
-      for(CellIterator iter = patch->getCellIterator();
+      for(CellIterator iter = patch->getCellIterator__New();
           !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
@@ -363,12 +363,12 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
     // Save the volume fraction so that we can back out rho later
     CCVariable<double> volfrac;
     new_dw->allocateTemporary(volfrac, patch);
-    for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done(); iter++){
       const IntVector& c = *iter;
       volfrac[c] = rho_CC[c]/rho_micro[c];
     }
     
-    CellIterator iter = patch->getExtraCellIterator();
+    CellIterator iter = patch->getExtraCellIterator__New();
     table->interpolate(d_density_index,     rho_micro,   iter, ind_vars);
     table->interpolate(d_gamma_index,       gamma,       iter, ind_vars);
     table->interpolate(d_cv_index,          cv,          iter, ind_vars);
@@ -383,7 +383,7 @@ void NonAdiabaticTable::initialize(const ProcessorGroup*,
     table->interpolate(d_ref_gamma_index, ref_gamma,iter, ind_vars);
     table->interpolate(d_ref_temp_index,  ref_temp, iter, ind_vars);
     
-    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       const IntVector& c = *iter;
       // Restore the density and specific volume using the same volume
       // fractions that came from the ICE initialization process
@@ -488,7 +488,7 @@ void NonAdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
       // so that we can save it.
       new_dw->allocateAndPut(scaledvariance, d_scalar->scaledVarianceLabel,
                              indx, patch);
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
         const IntVector& c = *iter;
         double denom = f_old[c] * (1-f_old[c]);
         if(denom < 1.e-20)
@@ -503,7 +503,7 @@ void NonAdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
       ind_vars.push_back(scaledvariance);
     }
     
-    CellIterator iter = patch->getExtraCellIterator();
+    CellIterator iter = patch->getExtraCellIterator__New();
     table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
@@ -542,7 +542,7 @@ void NonAdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
     new_dw->get(variance, d_scalar->varianceLabel, indx, patch, Ghost::None, 0);
 
     new_dw->allocateTemporary(scaledvariance, patch);
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
       const IntVector& c = *iter;
       double denom = f[c] * (1-f[c]);
       if(denom < 1.e-20)
@@ -557,7 +557,7 @@ void NonAdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
         
     ind_vars.push_back(scaledvariance);
   }
-  table->interpolate(d_cv_index, cv_new, patch->getExtraCellIterator(),
+  table->interpolate(d_cv_index, cv_new, patch->getExtraCellIterator__New(),
                      ind_vars);
 } 
 
@@ -651,7 +651,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
         new_dw->get(variance, d_scalar->varianceLabel, matl, patch, gn, 0);
 
         new_dw->allocateTemporary(scaledvariance, patch);
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
           const IntVector& c = *iter;
           double denom = f_old[c] * (1-f_old[c]);
           if(denom < 1.e-20)
@@ -667,7 +667,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
         ind_vars.push_back(scaledvariance);
       }
 
-      CellIterator iter = patch->getCellIterator();
+      CellIterator iter = patch->getCellIterator__New();
       table->interpolate(d_temp_index,  flameTemp,  iter, ind_vars);
 
       CCVariable<double> ref_temp;
@@ -696,7 +696,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
       double masssum=0;
 #endif
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
         IntVector c = *iter;
 
         double mass      = rho_CC[c]*volume;
@@ -802,7 +802,7 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
         cerr << "interpolating " << tv->name << '\n';
         CCVariable<double> value;
         new_dw->allocateAndPut(value, tv->label, matl, patch);
-        CellIterator iter = patch->getCellIterator();
+        CellIterator iter = patch->getCellIterator__New();
         table->interpolate(tv->index, value, iter, ind_vars);
       }
     }
@@ -867,7 +867,7 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
     CCVariable<double> q_CC;
     new_dw->allocateTemporary(q_CC, patch);
 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       q_CC[c] = rho_CC[c]*cellVol*f[c];
     }

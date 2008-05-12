@@ -302,7 +302,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
       
       if(region->uniformInitialize){
       
-        for(CellIterator iter = patch->getExtraCellIterator();
+        for(CellIterator iter = patch->getExtraCellIterator__New();
             !iter.done(); iter++){
           IntVector c = *iter;
           Point p = patch->cellPosition(c);            
@@ -347,7 +347,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
         Point hi = region->piece->getBoundingBox().upper();
         Vector dist = hi.asVector() - lo.asVector();
         
-        for(CellIterator iter = patch->getExtraCellIterator();
+        for(CellIterator iter = patch->getExtraCellIterator__New();
             !iter.done(); iter++){
           IntVector c = *iter;
           Point p = patch->cellPosition(c);            
@@ -652,7 +652,7 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
     CCVariable<double> q_CC;
     new_dw->allocateTemporary(q_CC, patch);
 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       q_CC[c] = rho_CC[c]*cellVol*f[c];
     }
@@ -735,7 +735,7 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
     // compute gradient
     Vector dx = patch->dCell(); 
     
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       Vector grad_f;
       for(int dir = 0; dir <3; dir ++ ) {
@@ -751,7 +751,7 @@ void PassiveScalar::errorEstimate(const ProcessorGroup*,
     //__________________________________
     // set refinement flag
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       if( mag_grad_f[c] > d_scalar->refineCriteria){
         refineFlag[c] = true;

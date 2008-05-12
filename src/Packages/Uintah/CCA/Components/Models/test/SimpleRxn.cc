@@ -260,7 +260,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
-      for(CellIterator iter = patch->getExtraCellIterator();
+      for(CellIterator iter = patch->getExtraCellIterator__New();
           !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
@@ -294,7 +294,7 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     //__________________________________
     // compute thermo-transport-physical quantities
     // This MUST be identical to what's in the task modifyThermoTransport....
-    for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done(); iter++){
       IntVector c = *iter;
       double oneMinus_f = 1.0 - f[c];       
       cv[c]          = f[c]*d_cv_fuel          + oneMinus_f*d_cv_air;           
@@ -379,7 +379,7 @@ void SimpleRxn::modifyThermoTransportProperties(const ProcessorGroup*,
     old_dw->get(f_old,  d_scalar->scalar_CCLabel,  indx, patch, Ghost::None,0);
     
     //__________________________________
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
       double  f = f_old[c];
       double oneMinus_f = 1.0 - f;       
@@ -411,7 +411,7 @@ void SimpleRxn::computeSpecificHeat(CCVariable<double>& cv_new,
     constCCVariable<double> f;
     new_dw->get(f,  d_scalar->scalar_CCLabel,  indx, patch, Ghost::None,0);
 
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
       cv_new[c]  = f[c] * d_cv_fuel + (1.0 - f[c])*d_cv_air;
     }
@@ -489,7 +489,7 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
     double f_stoic= d_scalar->f_stoic;
 
     //__________________________________   
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
       //double mass_old = rho_CC_old[c]*volume;
       double f = f_old[c];
@@ -633,7 +633,7 @@ void SimpleRxn::testConservation(const ProcessorGroup*,
     CCVariable<double> q_CC;
     new_dw->allocateTemporary(q_CC, patch);
 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       q_CC[c] = rho_CC[c]*cellVol*f[c];
     }

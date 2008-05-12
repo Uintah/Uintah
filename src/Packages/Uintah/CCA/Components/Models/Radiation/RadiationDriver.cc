@@ -447,7 +447,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
                                     iter != d_geom_pieces.end(); iter++){
         GeometryPieceP piece = *iter;
         
-        for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
+        for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done(); iter++){
           IntVector c = *iter;
           Point p = patch->cellPosition(c);            
           if(piece->inside(p)) {
@@ -469,7 +469,7 @@ RadiationDriver::initialize(const ProcessorGroup*,
       constCCVariable<double> scalar_f;
       new_dw->get(scalar_f, scalar_CCLabel,indx,patch,Ghost::None,0);
 
-      for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done();  iter++){
         IntVector c = *iter;
         H2O_concentration[c] = 0.085 * scalar_f[c];
         CO2_concentration[c] = 0.18 * scalar_f[c];
@@ -613,7 +613,7 @@ RadiationDriver::computeCO2_H2O(const ProcessorGroup*,
     constCCVariable<double> scalar_f;
     old_dw->get(scalar_f, scalar_CCLabel,indx,patch,Ghost::None,0);
         
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();  iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done();  iter++){
       IntVector c = *iter;
       H2O_concentration[c] = 0.085 * scalar_f[c];   // Hardwired for JP8
       CO2_concentration[c] = 0.18 * scalar_f[c];
@@ -719,7 +719,7 @@ RadiationDriver::set_cellType(const ProcessorGroup*,
       IntVector Y(0,1,0);   // cell offsets
       IntVector Z(0,0,1);
       
-      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter; 
         if(insideSolid[c] == 1){
           vars.cellType[c] = 1;
@@ -1012,7 +1012,7 @@ RadiationDriver::computeProps(const ProcessorGroup* pc,
         int indx_S = d_matl_S->getDWIndex();
         new_dw->get(vol_frac_solid,Ilb->vol_frac_CCLabel,indx_S,patch,gn,0);
 
-        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
           IntVector c = *iter; 
           if(vol_frac_solid[c] > 0.5){
             radVars.ABSKG[c] = 1.0;
@@ -1245,7 +1245,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     
     //__________________________________
     //  Gas Phase
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       energySrc_Gas[c] += delT * cell_vol * vol_frac_gas[c] * radVars.src[c];
     }
@@ -1265,7 +1265,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
        
       emit_solid.initialize(0.0); 
        
-      for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
     //  energySrc_solid[c] += delT * cell_vol * vol_frac_solid[c] * radVars.src[c];
         energySrc_solid[c] += 100 * vol_frac_solid[c];    //  DEBUGGING
@@ -1308,7 +1308,7 @@ void RadiationDriver::solidEmission(CCVariable<double>& energySrc_solid,
   // Look at the surrounding cells, if they are not inside the absorbing solid
   // then that cell face *may* be at a gas solid interface. To be on the surface 
   // the volume fraction of the gas in the adjacent cell must be > small number.
-  for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
+  for(CellIterator iter = patch->getCellIterator__New(); !iter.done();  iter++){
     IntVector c = *iter;
     if(insideSolid[c] == 1.0){
 
