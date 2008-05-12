@@ -280,14 +280,14 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
 #if 0
       cerr<<"patch_data->getLowIndex() = "<<patch_data->getLowIndex()<<"\n";
       cerr<<"patch_data->getHighIndex() = "<<patch_data->getHighIndex()<<"\n";
-      cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
-      cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
-      cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
-      cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
-      cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
-      cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
-      cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
-      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
+      cerr<<"getExtraCellLowIndex__New() = "<< patch->getExtraCellLowIndex__New()<<"\n";
+      cerr<<"getExtraCellHighIndex__New() = "<< patch->getExtraCellHighIndex__New()<<"\n";
+      cerr<<"getCellLowIndex__New() = "<< patch->getCellLowIndex__New()<<"\n";
+      cerr<<"getCellHighIndex__New() = "<< patch->getCellHighIndex__New()<<"\n";
+      cerr<<"getExtraNodeLowIndex__New() = "<< patch->getExtraNodeLowIndex__New()<<"\n";
+      cerr<<"getExtraNodeHighIndex__New() = "<< patch->getExtraNodeHighIndex__New()<<"\n";
+      cerr<<"getNodeLowIndex__New() = "<< patch->getNodeLowIndex__New()<<"\n";
+      cerr<<"getNodeHighIndex__New() = "<< patch->getNodeHighIndex__New()<<"\n\n";
 
       cerr<<"getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
       cerr<<"getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
@@ -297,10 +297,10 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       cerr<<"getHighIndex(Patch::ZFaceBased) = "<<patch->getHighIndex(Patch::ZFaceBased)<<"\n\n";
 #endif
     if(sfield->basis_order() == 0){
-      patch_low = patch->getInteriorCellLowIndex();
-      patch_high = patch->getInteriorCellHighIndex();
+      patch_low = patch->getCellLowIndex__New();
+      patch_high = patch->getCellHighIndex__New();
     } else if(sfield->get_property("vartype", vartype)){
-      patch_low = patch->getInteriorNodeLowIndex();
+      patch_low = patch->getNodeLowIndex__New();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
         patch_high = patch->getHighIndex(Patch::XFaceBased);
@@ -312,7 +312,7 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
         patch_high = patch->getHighIndex(Patch::ZFaceBased);
         break;
       default:
-        patch_high = patch->getInteriorNodeHighIndex();   
+        patch_high = patch->getNodeHighIndex__New();   
       } 
     } else {
 //       error("getPatchData::Problem with getting vartype from field");
@@ -327,16 +327,16 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
 #if 0
       cerr<<"patch_data->getLowIndex() = "<<patch_data->getLowIndex()<<"\n";
       cerr<<"patch_data->getHighIndex() = "<<patch_data->getHighIndex()<<"\n";
-      cerr<<"getCellLowIndex() = "<< patch->getCellLowIndex()<<"\n";
-      cerr<<"getCellHighIndex() = "<< patch->getCellHighIndex()<<"\n";
-      cerr<<"getInteriorCellLowIndex() = "<< patch->getInteriorCellLowIndex()<<"\n";
-      cerr<<"getInteriorCellHighIndex() = "<< patch->getInteriorCellHighIndex()<<"\n";
-      cerr<<"getNodeLowIndex() = "<< patch->getNodeLowIndex()<<"\n";
-      cerr<<"getNodeHighIndex() = "<< patch->getNodeHighIndex()<<"\n";
-      cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
-      cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n";
-      cerr<<"Patch low position is "<< patch->cellPosition(patch->getCellLowIndex())<<"\n";
-      cerr<<"Patch high position is "<< patch->cellPosition(patch->getCellHighIndex())<<"\n";
+      cerr<<"getExtraCellLowIndex__New() = "<< patch->getExtraCellLowIndex__New()<<"\n";
+      cerr<<"getExtraCellHighIndex__New() = "<< patch->getExtraCellHighIndex__New()<<"\n";
+      cerr<<"getCellLowIndex__New() = "<< patch->getCellLowIndex__New()<<"\n";
+      cerr<<"getCellHighIndex__New() = "<< patch->getCellHighIndex__New()<<"\n";
+      cerr<<"getExtraNodeLowIndex__New() = "<< patch->getExtraNodeLowIndex__New()<<"\n";
+      cerr<<"getExtraNodeHighIndex__New() = "<< patch->getExtraNodeHighIndex__New()<<"\n";
+      cerr<<"getNodeLowIndex__New() = "<< patch->getNodeLowIndex__New()<<"\n";
+      cerr<<"getNodeHighIndex__New() = "<< patch->getNodeHighIndex__New()<<"\n";
+      cerr<<"Patch low position is "<< patch->cellPosition(patch->getExtraCellLowIndex__New())<<"\n";
+      cerr<<"Patch high position is "<< patch->cellPosition(patch->getExtraCellHighIndex__New())<<"\n";
       cerr<<"getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::XFaceBased, IntVector(0,0,0))<<"\n";
       cerr<<"getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::YFaceBased, IntVector(0,0,0))<<"\n";
       cerr<<"getExtraHighIndex(Patch::ZFaceBased, IntVector(0,0,0)) = "<<patch->getExtraHighIndex(Patch::ZFaceBased, IntVector(0,0,0))<<"\n\n";
@@ -350,10 +350,10 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       cerr<<"grid high position is "<< b.max()<<"\n\n";
 #endif
     if( sfield->basis_order() == 0) {
-      patch_low = patch->getCellLowIndex();
-      patch_high = patch->getCellHighIndex();
+      patch_low = patch->getExtraCellLowIndex__New();
+      patch_high = patch->getExtraCellHighIndex__New();
     } else if(sfield->get_property("vartype", vartype)){
-      patch_low = patch->getNodeLowIndex();
+      patch_low = patch->getExtraNodeLowIndex__New();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
         patch_high = patch->getExtraHighIndex(Patch::XFaceBased,IntVector(0,0,0));
@@ -365,7 +365,7 @@ FieldExtractorAlgoT<T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
         patch_high = patch->getExtraHighIndex(Patch::ZFaceBased,IntVector(0,0,0));
         break;
       default:
-        patch_high = patch->getNodeHighIndex();   
+        patch_high = patch->getExtraNodeHighIndex__New();   
       } 
     } else {
 //       error("getPatchData::Problem with getting vartype from field");
@@ -477,13 +477,13 @@ FieldExtractorAlgoT<T>::build_multi_level_field( QueryInfo& qinfo,
         IntVector patch_low, patch_high, range;
         BBox pbox;
         if( remove_boundary ==1 ){
-          patch_low = (*patch_it)->getInteriorNodeLowIndex();
-          patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
+          patch_low = (*patch_it)->getNodeLowIndex__New();
+          patch_high = (*patch_it)->getNodeHighIndex__New(); 
           pbox.extend((*patch_it)->getBox().lower());
           pbox.extend((*patch_it)->getBox().upper());
         } else {
-          patch_low = (*patch_it)->getLowIndex();
-          patch_high = (*patch_it)->getHighIndex(); 
+          patch_low = (*patch_it)->getExtraCellLowIndex__New();
+          patch_high = (*patch_it)->getExtraCellHighIndex__New(); 
           pbox.extend((*patch_it)->getExtraBox().lower());
           pbox.extend((*patch_it)->getExtraBox().upper());
         }
@@ -530,13 +530,13 @@ FieldExtractorAlgoT<T>::build_multi_level_field( QueryInfo& qinfo,
         IntVector patch_low, patch_high, range;
         BBox pbox;
         if( remove_boundary ==1 ){
-          patch_low = (*patch_it)->getInteriorNodeLowIndex();
-          patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
+          patch_low = (*patch_it)->getNodeLowIndex__New();
+          patch_high = (*patch_it)->getNodeHighIndex__New(); 
           pbox.extend((*patch_it)->getBox().lower());
           pbox.extend((*patch_it)->getBox().upper());
         } else {
-          patch_low = (*patch_it)->getLowIndex();
-          patch_high = (*patch_it)->getHighIndex(); 
+          patch_low = (*patch_it)->getExtraCellLowIndex__New();
+          patch_high = (*patch_it)->getExtraCellHighIndex__New(); 
           pbox.extend((*patch_it)->getExtraBox().lower());
           pbox.extend((*patch_it)->getExtraBox().upper());
         }

@@ -534,8 +534,8 @@ void PatchVisualizer::execute()
       patch_list[i].box = box;
       patch_list[i].proc_id =
         archive->queryPatchwiseProcessor( patch, timestep);
-      patch_list[i].min_idx = patch->getInteriorCellLowIndex();
-      patch_list[i].max_idx = patch->getInteriorCellHighIndex();
+      patch_list[i].min_idx = patch->getCellLowIndex__New();
+      patch_list[i].max_idx = patch->getCellHighIndex__New();
 
       // determine boundaries
       if (box.upper().x() > max.x())

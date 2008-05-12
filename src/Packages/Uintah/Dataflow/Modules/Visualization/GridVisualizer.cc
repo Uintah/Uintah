@@ -468,13 +468,11 @@ GridVisualizer::execute()
         //------------------------------------
         // for each node in the patch
         if( boundary_on ){ //include boundary cells
-          for(NodeIterator iter = NodeIterator( patch->getNodeLowIndex(),
-                                                patch->getNodeHighIndex());
-              !iter.done(); iter++){
+          for(NodeIterator iter = patch->getExtraNodeIterator__New(); !iter.done(); iter++){
             nodes->add(patch->nodePosition(*iter), node_color[color_index].get_rep());
           }
         } else {
-          for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+          for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
             nodes->add(patch->nodePosition(*iter), node_color[color_index].get_rep());
           }
         }
@@ -495,13 +493,13 @@ GridVisualizer::execute()
         //------------------------------------
         // for each node in the patch
         if(boundary_on){ // include boundary cells
-          for( CellIterator iter = patch->getExtraCellIterator();
+          for( CellIterator iter = patch->getExtraCellIterator__New();
                !iter.done(); iter++){
             nodes->add(patch->cellPosition(*iter),
                        node_color[color_index].get_rep());
           }
         } else { // don't include boundary cells
-          for(CellIterator iter = patch->getCellIterator();
+          for(CellIterator iter = patch->getCellIterator__New();
               !iter.done(); iter++){
             nodes->add(patch->cellPosition(*iter),
                        node_color[color_index].get_rep());

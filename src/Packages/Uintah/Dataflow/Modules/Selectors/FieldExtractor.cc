@@ -402,8 +402,8 @@ FieldExtractorAlgo::build_minimal_patch_grid( GridP oldGrid )
 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
         const Patch* patch = (*superIter)->getBoxes()[p];
-        inLow = Min(inLow, patch->getInteriorCellLowIndex());
-        inHigh = Max(inHigh, patch->getInteriorCellHighIndex());
+        inLow = Min(inLow, patch->getCellLowIndex__New());
+        inHigh = Max(inHigh, patch->getCellHighIndex__New());
       }
       
       Patch* newPatch =
