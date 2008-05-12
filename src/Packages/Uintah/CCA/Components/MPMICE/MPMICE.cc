@@ -1003,9 +1003,9 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
         face=Patch::nextFace(face)){
       int mat_id = 0; 
-
+      
       if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-        for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars"); 
+        for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes); 
                                                   !iter.done(); iter++) {
           NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
         }
@@ -2416,7 +2416,8 @@ void MPMICE::refineCoarseFineInterface(const ProcessorGroup*,
         Patch::FaceType face = *iter;
         int mat_id = 0;
         if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-          for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+             
+          for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes);
               !iter.done(); iter++) {
             NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
           } // cell iterator
@@ -2624,7 +2625,8 @@ MPMICE::refine(const ProcessorGroup*,
         Patch::FaceType face = *iter;
         int mat_id = 0;
         if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
-          for(CellIterator iter = patch->getFaceCellIterator(face,"NC_vars");
+        
+          for(CellIterator iter = patch->getFaceIterator__New(face,Patch::FaceNodes);
               !iter.done(); iter++) {
             NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
           }
