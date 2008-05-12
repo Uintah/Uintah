@@ -166,7 +166,7 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
       new_dw->allocateAndPut(rhs, lb_->pressure_rhs, matl, patch);
 
       //bool first = true;
-      for(CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++){
+      for(CellIterator iter(patch->getExtraCellIterator__New()); !iter.done(); iter++){
         IntVector c = *iter;
         Stencil7&  A_tmp=A[c];
         A_tmp.p = center; 

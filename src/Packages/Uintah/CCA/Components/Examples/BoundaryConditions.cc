@@ -300,9 +300,9 @@ BCRegionBase::~BCRegionBase()
 void BCRegionBase::getRange(const Patch* patch, IntVector& l, IntVector& h,
 			    const IntVector& topoffset)
 {
-  IntVector low(patch->getCellLowIndex());
-  IntVector high(patch->getCellHighIndex()+topoffset);
-  high = Min(high, patch->getNodeHighIndex());
+  IntVector low(patch->getCellLowIndex__New());
+  IntVector high(patch->getCellHighIndex__New()+topoffset);
+  high = Min(high, patch->getNodeHighIndex__New());
   if(!piece){
     l=low;
     h=high;

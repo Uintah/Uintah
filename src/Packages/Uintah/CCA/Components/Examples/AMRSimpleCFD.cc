@@ -1271,7 +1271,7 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
       Vector dx(patch->dCell());
       Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
 
-      IntVector l(patch->getCellLowIndex());
+      IntVector l(patch->getCellLowIndex__New());
       IntVector h(patch->getCellHighIndex());
 
       // don't do density on initialization estimation, we won't know enough
@@ -1416,7 +1416,7 @@ void AMRSimpleCFD::errorEstimate(const ProcessorGroup*,
 	constCCVariable<Vector> vel;
 	new_dw->get(vel, lb_->ccvelocity, matl, patch, Ghost::AroundCells, 1);
 	double inv_err_vorticity_mag = 1./err_vorticity_mag;
-	for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+	for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){
 	  IntVector idx(*iter);
 	  Vector gx, gy, gz;
 	  if(idx.x() == l.x()){
