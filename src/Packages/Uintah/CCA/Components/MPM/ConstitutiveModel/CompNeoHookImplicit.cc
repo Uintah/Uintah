@@ -166,11 +166,11 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
 
    IntVector lowIndex,highIndex;
    if(d_8or27==8){
-     lowIndex = patch->getInteriorNodeLowIndex();
-     highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+     lowIndex = patch->getNodeLowIndex__New();
+     highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
    } else if(d_8or27==27){
-     lowIndex = patch->getNodeLowIndex();
-     highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+     lowIndex = patch->getExtraNodeLowIndex__New();
+     highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
    }
 
     Array3<int> l2g(lowIndex,highIndex);

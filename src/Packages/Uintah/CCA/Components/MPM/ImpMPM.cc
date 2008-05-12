@@ -1907,8 +1907,8 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     NCVariable<double> NC_CCweight_copy;
     old_dw->get(NC_CCweight,     lb->NC_CCweightLabel,       0, patch,gac,1);
     new_dw->allocateAndPut(NC_CCweight_copy, lb->NC_CCweightLabel, 0,patch);
-    IntVector low = patch->getNodeLowIndex();
-    IntVector hi  = patch->getNodeHighIndex();
+    IntVector low = patch->getExtraNodeLowIndex__New();
+    IntVector hi  = patch->getExtraNodeHighIndex__New();
     NC_CCweight_copy.copyPatch(NC_CCweight, low,hi);
 
     for(int m = 0; m < numMatls; m++){
@@ -2306,11 +2306,11 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 
     IntVector lowIndex,highIndex;
     if(flags->d_8or27==8){
-      lowIndex = patch->getInteriorNodeLowIndex();
-      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex__New();
+      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     } else if(flags->d_8or27==27){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex__New();
+      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
     }
 
     Array3<int> l2g(lowIndex,highIndex);
@@ -2381,11 +2381,11 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
     IntVector lowIndex,highIndex;
 
     if(flags->d_8or27==8){
-      lowIndex = patch->getInteriorNodeLowIndex();
-      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex__New();
+      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     } else if(flags->d_8or27==27){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex__New();
+      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
@@ -2588,11 +2588,11 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
 
     IntVector lowIndex,highIndex;
     if(flags->d_8or27==8){
-      lowIndex = patch->getInteriorNodeLowIndex();
-      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex__New();
+      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     } else if(flags->d_8or27==27){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex__New();
+      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
@@ -2671,11 +2671,11 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 
     IntVector lowIndex,highIndex;
     if(flags->d_8or27==8){
-      lowIndex = patch->getInteriorNodeLowIndex();
-      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex__New();
+      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     } else if(flags->d_8or27==27){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex__New();
+      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
 
@@ -2825,11 +2825,11 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
     IntVector lowIndex,highIndex;
     if(flags->d_8or27==8){
-      lowIndex = patch->getInteriorNodeLowIndex();
-      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex__New();
+      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     } else if(flags->d_8or27==27){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex__New();
+      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
@@ -2945,11 +2945,11 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
 
     IntVector lowIndex,highIndex;
     if(flags->d_8or27==8){
-      lowIndex = patch->getInteriorNodeLowIndex();
-      highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getNodeLowIndex__New();
+      highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     } else if(flags->d_8or27==27){
-      lowIndex = patch->getNodeLowIndex();
-      highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+      lowIndex = patch->getExtraNodeLowIndex__New();
+      highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
     }
     Array3<int> l2g(lowIndex,highIndex);
     d_solver->copyL2G(l2g,patch);
@@ -3092,11 +3092,11 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
 
    IntVector lowIndex,highIndex;
    if(flags->d_8or27==8){
-     lowIndex = patch->getInteriorNodeLowIndex();
-     highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+     lowIndex = patch->getNodeLowIndex__New();
+     highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
    } else if(flags->d_8or27==27){
-     lowIndex = patch->getNodeLowIndex();
-     highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
+     lowIndex = patch->getExtraNodeLowIndex__New();
+     highIndex = patch->getExtraNodeHighIndex__New()+IntVector(1,1,1);
    }
    Array3<int> l2g(lowIndex,highIndex);
    d_solver->copyL2G(l2g,patch);

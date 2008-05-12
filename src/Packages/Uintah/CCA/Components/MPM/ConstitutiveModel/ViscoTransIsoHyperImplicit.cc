@@ -371,8 +371,8 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getNodeLowIndex__New();
+    IntVector highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 
