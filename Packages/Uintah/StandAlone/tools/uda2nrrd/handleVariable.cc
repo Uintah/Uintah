@@ -221,10 +221,10 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 
   if ( args.remove_boundary ) {
     if(sfield->basis_order() == 0){
-      patch_low = patch->getInteriorCellLowIndex();
-      patch_high = patch->getInteriorCellHighIndex();
+      patch_low = patch->getCellLowIndex__New();
+      patch_high = patch->getCellHighIndex__New();
     } else {
-      patch_low = patch->getInteriorNodeLowIndex();
+      patch_low = patch->getNodeLowIndex__New();
       switch (qinfo.type->getType()) {
       case Uintah::TypeDescription::SFCXVariable:
         patch_high = patch->getHighIndex(Patch::XFaceBased);
@@ -236,28 +236,28 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
         patch_high = patch->getHighIndex(Patch::ZFaceBased);
         break;
       default:
-        patch_high = patch->getNodeHighIndex();   
+        patch_high = patch->getExtraNodeHighIndex__New();   
       } 
     }
       
   } else { // Don't remove the boundary
     if( sfield->basis_order() == 0){
-      patch_low = patch->getCellLowIndex();
-      patch_high = patch->getCellHighIndex();
+      patch_low = patch->getExtraCellLowIndex__New();
+      patch_high = patch->getExtraCellHighIndex__New();
     } else {
-      patch_low = patch->getNodeLowIndex();
+      patch_low = patch->getExtraNodeLowIndex__New();
       switch (qinfo.type->getType()) {
       case Uintah::TypeDescription::SFCXVariable:
-        patch_high = patch->getSFCXHighIndex();
+        patch_high = patch->getSFCXHighIndex__New();
         break;
       case Uintah::TypeDescription::SFCYVariable:
-        patch_high = patch->getSFCYHighIndex();
+        patch_high = patch->getSFCYHighIndex__New();
         break;
       case Uintah::TypeDescription::SFCZVariable:
-        patch_high = patch->getSFCZHighIndex();
+        patch_high = patch->getSFCZHighIndex__New();
         break;
       case Uintah::TypeDescription::NCVariable:
-        patch_high = patch->getNodeHighIndex();
+        patch_high = patch->getNodeHighIndex__New();
         break;
       default:
         cerr << "build_field::unknown variable.\n";

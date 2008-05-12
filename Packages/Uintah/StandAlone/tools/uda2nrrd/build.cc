@@ -82,8 +82,8 @@ build_minimal_patch_grid( GridP oldGrid )
 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
         const Patch* patch = (*superIter)->getBoxes()[p];
-        inLow = Min(inLow, patch->getInteriorCellLowIndex());
-        inHigh = Max(inHigh, patch->getInteriorCellHighIndex());
+        inLow = Min(inLow, patch->getCellLowIndex__New());
+        inHigh = Max(inHigh, patch->getCellHighIndex__New());
       }
       
       Patch* newPatch =
@@ -156,13 +156,13 @@ build_multi_level_field( QueryInfo &qinfo, const Args & args )
         IntVector patch_low, patch_high, range;
         BBox pbox;
         if( args.remove_boundary ){
-          patch_low = (*patch_it)->getInteriorNodeLowIndex();
-          patch_high = (*patch_it)->getInteriorNodeHighIndex(); 
+          patch_low = (*patch_it)->getNodeLowIndex__New();
+          patch_high = (*patch_it)->getNodeHighIndex__New(); 
           pbox.extend((*patch_it)->getBox().lower());
           pbox.extend((*patch_it)->getBox().upper());
         } else {
-          patch_low = (*patch_it)->getLowIndex();
-          patch_high = (*patch_it)->getHighIndex(); 
+          patch_low = (*patch_it)->getExtraCellLowIndex__New();
+          patch_high = (*patch_it)->getExtraCellHighIndex__New(); 
           pbox.extend((*patch_it)->getExtraBox().lower());
           pbox.extend((*patch_it)->getExtraBox().upper());
         }
