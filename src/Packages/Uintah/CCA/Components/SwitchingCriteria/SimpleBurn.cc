@@ -99,7 +99,7 @@ void SimpleBurnCriteria::switchTest(const ProcessorGroup* group,
       old_dw->get(NC_CCweight,  Mlb->NC_CCweightLabel,  0,    patch,gac, 1);
 
       IntVector nodeIdx[8];
-      for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
+      for(CellIterator iter =patch->getCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         patch->findNodesFromCell(*iter,nodeIdx);
 
