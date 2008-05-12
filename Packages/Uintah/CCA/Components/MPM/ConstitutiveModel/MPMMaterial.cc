@@ -297,7 +297,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
    Vector dcorner = dxpp*0.5;
    double totalppc = ppc.x()*ppc.y()*ppc.z();
 
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
+  for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done();iter++){
      Point lower = patch->nodePosition(*iter) + dcorner;
      int count = 0;
      for(int ix=0;ix < ppc.x(); ix++){
