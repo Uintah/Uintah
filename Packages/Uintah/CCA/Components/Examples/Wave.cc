@@ -263,7 +263,7 @@ void Wave::timeAdvanceEuler(const ProcessorGroup*,
       Vector inv_dx2(1./(dx.x()*dx.x()), 1./(dx.y()*dx.y()), 1./(dx.z()*dx.z()));
       double maxphi = 0;
       double delt = dt;
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
         const IntVector& c = *iter;
 
         // Compute curl
@@ -321,9 +321,9 @@ void Wave::setupRK4(const ProcessorGroup*,
       new_dw->allocateAndPut(newPi, pi_label, matl, patch);
 
 
-      CellIterator iter = patch->getCellIterator();
-      newPhi.copyPatch(oldPhi, patch->getLowIndex(), patch->getHighIndex());
-      newPi.copyPatch(oldPi, patch->getLowIndex(), patch->getHighIndex());
+      CellIterator iter = patch->getCellIterator__New();
+      newPhi.copyPatch(oldPhi, patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+      newPi.copyPatch(oldPi, patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     }
   }
 }
@@ -399,7 +399,7 @@ void Wave::timeAdvanceRK4(const ProcessorGroup*,
       Vector inv_dx2(1./(dx.x()*dx.x()), 1./(dx.y()*dx.y()), 1./(dx.z()*dx.z()));
       double dtstep = dt * s->stepweight;
       double dttotal = dt * s->totalweight;
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
         const IntVector& c = *iter;
 
         // Compute curl

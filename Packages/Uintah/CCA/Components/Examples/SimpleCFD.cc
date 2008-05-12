@@ -943,7 +943,7 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
         new_dw->allocateAndPut(ccvorticitymag, lb_->ccvorticitymag, matl, patch);
         Vector dx(patch->dCell());
         Vector inv_dx(1./dx.x(), 1./dx.y(), 1./dx.z());
-        IntVector l(patch->getCellLowIndex());
+        IntVector l(patch->getCellLowIndex__New());
         IntVector h(patch->getCellHighIndex());
         if(patch->getBCType(Patch::xminus) == Patch::Neighbor)
           l -= IntVector(1,0,0);
@@ -957,7 +957,7 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
           l -= IntVector(0,0,1);
         if(patch->getBCType(Patch::zplus) == Patch::Neighbor)
           h += IntVector(0,0,1);
-        for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+        for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){
           IntVector idx(*iter);
           Vector gx, gy, gz;
           if(idx.x() == l.x()){
@@ -990,7 +990,7 @@ void SimpleCFD::applyForces(const ProcessorGroup*,
         new_dw->allocateAndPut(vcforce, lb_->vcforce, matl, patch);
         new_dw->allocateAndPut(NN, lb_->NN, matl, patch);
         Vector maxforce(0,0,0);
-        for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+        for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){
           IntVector idx(*iter);
           double gx, gy, gz;
           if(idx.x() == l.x()){
@@ -1644,7 +1644,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
       new_dw->allocateAndPut(rhs, pressure_rhs, matl, patch);
 
       // Velocity correction...
-      IntVector l(patch->getCellLowIndex());
+      IntVector l(patch->getCellLowIndex__New());
       IntVector h(patch->getCellHighIndex());
       l -= IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?1:0,
                        patch->getBCType(Patch::yminus) == Patch::Neighbor?1:0,
@@ -1657,7 +1657,7 @@ void SimpleCFD::projectVelocity(const ProcessorGroup*,
       Condition<double>* ybc = bcs.getCondition<double>("yvelocity", Patch::YFaceBased);
       Condition<double>* zbc = bcs.getCondition<double>("zvelocity", Patch::ZFaceBased);
       Condition<double>* pbc = bcs.getCondition<double>("pressure", Patch::CellBased);
-      for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+      for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){
         IntVector idx(*iter);
         BCRegion<double>* bc = pbc->get(bctype[idx]);
         switch(bc->getType()){
@@ -2237,7 +2237,7 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
         }
        
        // Advection step
-        advect(den, den_old, patch->getCellIterator(), patch, delT,
+        advect(den, den_old, patch->getCellIterator__New(), patch, delT,
                Vector(0.5, 0.5, 0.5), xvel, yvel, zvel, bctype,
                bcs.getCondition<double>("density", Patch::CellBased),
                bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
@@ -2259,7 +2259,7 @@ void SimpleCFD::advectScalars(const ProcessorGroup*,
                            getSubCycleProgress(new_dw));
         }
         
-        advect(temp, temp_old, patch->getCellIterator(), patch, delT,
+        advect(temp, temp_old, patch->getCellIterator__New(), patch, delT,
                Vector(0.5, 0.5, 0.5), xvel, yvel, zvel, bctype,
                bcs.getCondition<double>("temperature", Patch::CellBased),
                bcs.getCondition<double>("xvelocity", Patch::XFaceBased),
@@ -2326,7 +2326,7 @@ void SimpleCFD::diffuseScalar(const ProcessorGroup*,
       IntVector FN(0,1,0);
       IntVector FB(0,0,0);
       IntVector FT(0,0,1);
-      for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+      for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){
         IntVector idx(*iter);
         applybc(idx, l, h, h2, s, delt, inv_dx2, di.rate,
                 bctype, scalar_bc, xflux_bc, yflux_bc, zflux_bc,
@@ -2363,7 +2363,7 @@ void SimpleCFD::dissipateScalars(const ProcessorGroup*,
 
       double factor = 1./(1+delt*density_dissipation_);
       Condition<double>* den_bc = bcs.getCondition<double>("density", Patch::CellBased);
-      for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+      for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){
         IntVector idx(*iter);
         BCRegion<double>* bc = den_bc->get(bctype[idx]);
         switch(bc->getType()){
@@ -2439,7 +2439,7 @@ void SimpleCFD::updatebcs(const ProcessorGroup*,
       new_dw->get(den, lb_->density, matl, patch, Ghost::None, 0);
       double max=0;
       double sum=0;
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
         sum+=den[*iter];
         max = Max(den[*iter], max);
       }
@@ -2477,7 +2477,7 @@ void SimpleCFD::interpolateVelocities(const ProcessorGroup*,
       CCVariable<Vector> vel;
       new_dw->allocateAndPut(vel, lb_->ccvelocity, matl, patch);
 
-      for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+      for(CellIterator iter(patch->getCellIterator__New()); !iter.done(); iter++){
         IntVector idx(*iter);
         Vector v(xvel[idx]+xvel[idx+IntVector(1,0,0)],
                  yvel[idx]+yvel[idx+IntVector(0,1,0)],

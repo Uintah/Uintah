@@ -87,8 +87,8 @@ void Burger::initialize(const ProcessorGroup*,
       new_dw->allocateAndPut(u, lb_->u, matl, patch);
       //Initialize according to the function
       // u = sin( pi*x ) + sin( pi*2*y )
-      IntVector l = patch->getNodeLowIndex();
-      IntVector h = patch->getNodeHighIndex();
+      IntVector l = patch->getNodeLowIndex__New();
+      IntVector h = patch->getNodeHighIndex__New();
       for( NodeIterator iter(l,h); !iter.done(); iter++ ){
         Point p = patch->nodePosition(*iter);
         u[*iter] = sin( p.x() * 3.14159265358 ) + sin( p.y() * 2*3.14159265358 );
@@ -124,8 +124,8 @@ void Burger::timeAdvance(const ProcessorGroup*,
 
       NCVariable<double> newu;
       new_dw->allocateAndPut(newu, lb_->u, matl, patch);
-      IntVector l = patch->getNodeLowIndex();
-      IntVector h = patch->getNodeHighIndex(); 
+      IntVector l = patch->getNodeLowIndex__New();
+      IntVector h = patch->getNodeHighIndex__New(); 
 
       //On true edges, stay one node inside the patch
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
@@ -152,32 +152,32 @@ void Burger::timeAdvance(const ProcessorGroup*,
       //Make sure the trailing edges are updated to the same value as the adjacent interior
       // point to prevent the creation of discontinuities
       if (patch->getBCType(Patch::xplus) != Patch::Neighbor) {
-        l = patch->getNodeLowIndex();
-        h = patch->getNodeHighIndex();
+        l = patch->getNodeLowIndex__New();
+        h = patch->getNodeHighIndex__New();
         l.x( h.x()-1 );
         for (NodeIterator iter(l, h);!iter.done(); iter++){
           newu[*iter] = newu[*iter-IntVector(1,0,0)];
         }
       }
       if (patch->getBCType(Patch::yplus) != Patch::Neighbor) {
-        l = patch->getNodeLowIndex();
-        h = patch->getNodeHighIndex();
+        l = patch->getNodeLowIndex__New();
+        h = patch->getNodeHighIndex__New();
         l.y( h.y()-1 );
         for (NodeIterator iter(l, h);!iter.done(); iter++){
           newu[*iter] = newu[*iter-IntVector(0,1,0)];
         }
       }
       if (patch->getBCType(Patch::xminus) != Patch::Neighbor) {
-        l = patch->getNodeLowIndex();
-        h = patch->getNodeHighIndex();
+        l = patch->getNodeLowIndex__New();
+        h = patch->getNodeHighIndex__New();
         h.x( l.x()+1 );
         for (NodeIterator iter(l, h);!iter.done(); iter++){
           newu[*iter] = u[*iter];
         }
       }
       if (patch->getBCType(Patch::yminus) != Patch::Neighbor) {
-        l = patch->getNodeLowIndex();
-        h = patch->getNodeHighIndex();
+        l = patch->getNodeLowIndex__New();
+        h = patch->getNodeHighIndex__New();
         h.y( l.y()+1 );
         for (NodeIterator iter(l, h);!iter.done(); iter++){
           newu[*iter] = u[*iter];
