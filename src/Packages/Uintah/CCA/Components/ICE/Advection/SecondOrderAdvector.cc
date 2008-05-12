@@ -585,22 +585,22 @@ void SecondOrderAdvector::q_FC_PlusFaces(
   adj_offset[1] = IntVector(0, -1, 0);    // Y faces
   adj_offset[2] = IntVector(0,  0, -1);   // Z faces
   Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-  CellIterator Xiter=patch->getFaceIterator__New(Patch::xplus,MEC);
-  CellIterator Yiter=patch->getFaceIterator__New(Patch::yplus,MEC);
-  CellIterator Ziter=patch->getFaceIterator__New(Patch::zplus,MEC);
   
   IntVector patchOnBoundary = patch->noNeighborsHigh();
   // only work on patches that are at the edge of the computational domain
   
   if (patchOnBoundary.x() == 1 ){  
+    CellIterator Xiter=patch->getFaceIterator__New(Patch::xplus,MEC);
     q_FC_operator<SFCXVariable<double> >(Xiter, adj_offset[0],LEFT,  
                                         q_OAFS,q_CC,q_XFC);  
   }
   if (patchOnBoundary.y() == 1){
+    CellIterator Yiter=patch->getFaceIterator__New(Patch::yplus,MEC);
     q_FC_operator<SFCYVariable<double> >(Yiter, adj_offset[1],BOTTOM,
                                         q_OAFS,q_CC,q_YFC);
   }
-  if (patchOnBoundary.z() == 1){  
+  if (patchOnBoundary.z() == 1){
+    CellIterator Ziter=patch->getFaceIterator__New(Patch::zplus,MEC);
     q_FC_operator<SFCZVariable<double> >(Ziter, adj_offset[2],BACK,  
                                         q_OAFS,q_CC,q_ZFC);   
   }
