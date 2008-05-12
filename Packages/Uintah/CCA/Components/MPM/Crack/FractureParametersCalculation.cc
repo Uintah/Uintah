@@ -193,7 +193,7 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
           } // End of loop over k
         } // End of loop over particles
 
-        for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
+        for(NodeIterator iter=patch->getNodeIterator__New();!iter.done();iter++) {
           IntVector c = *iter;
           // above crack
           ggridstress[c]           /= gmass[c];

@@ -1787,7 +1787,7 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
       CCheatrate_copy.copyData(CCheatrate);
 
       // Project  CC heat rate to nodes
-      for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+      for(NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
         IntVector n = *iter;
         IntVector cIdx[8];
         patch->findCellsFromNode(n, cIdx);
@@ -2008,7 +2008,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       if(mpm_matl->getIsRigid()){
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
           IntVector c = *iter;
           gvel_old[m][c] /= gmass[m][c];
           gacc[m][c]     /= gmass[m][c];
@@ -2016,7 +2016,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       if(!mpm_matl->getIsRigid()){
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
           IntVector c = *iter;
           GMASS[c]+=gmass[m][c];
           GVOLUME[c]+=gvolume[m][c];
@@ -2032,7 +2032,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     // Single material temperature field
     if (flags->d_temp_solve == false) {
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
         IntVector c = *iter;
         gTemperature[c] /= gmassglobal[c];
       }
@@ -2247,7 +2247,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     }
     if (flags->d_interpolateParticleTempToGridEveryStep == false) {
       if(timestep>0){
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
           IntVector c = *iter;
           gTemperature[c] = gTemperatureOld[c];
         }
@@ -2257,7 +2257,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       if(!mpm_matl->getIsRigid()){
-        for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
           IntVector c = *iter;
           gmassall[m][c]=GMASS[c];
           gvolume[m][c]=GVOLUME[c];
@@ -2548,7 +2548,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
         delt_vartype dt;
         old_dw->get(dt, d_sharedState->get_delt_label(), patch->getLevel() );
 
-        for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
           IntVector c = *iter;
           if(!compare(mass_rigid[c],0.0)){
             dispNew[c] = Vector(vel_rigid[c].x()*dt*d_contact_dirs.x(),
@@ -2562,7 +2562,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
           constNCVariable<Vector> TDispOld;
           new_dw->getModifiable(TDispNew,lb->gDisplacementLabel,matl, patch);
           new_dw->get(TDispOld,lb->gDisplacementLabel,matl,patch,Ghost::None,0);
-          for (NodeIterator iter=patch->getNodeIterator(); !iter.done();iter++){
+          for (NodeIterator iter=patch->getNodeIterator__New(); !iter.done();iter++){
             IntVector c = *iter;
             TDispNew[c] = TDispOld[c] + dispNew[c];
           }
@@ -2608,7 +2608,7 @@ void ImpMPM::findFixedDOF(const ProcessorGroup*,
       new_dw->get(mass,   lb->gMassAllLabel,matlindex,patch,Ghost::None,0);
       new_dw->get(contact,lb->gContactLabel,matlindex,patch,Ghost::None,0);
 
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
         IntVector n = *iter;
         int l2g_node_num = l2g[n];
 
@@ -2699,7 +2699,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
       double v[1];
 
       int dof[3];
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector n = *iter;
         int l2g_node_num = l2g[n];
         v[0] = gmass[*iter]*(4./(dt*dt));
@@ -2791,7 +2791,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
             }
           }
         }
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
           IntVector n = *iter;
           INT_FORCE[n]+=int_force[m][n];
         }
@@ -2801,7 +2801,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
      if(!mpm_matl->getIsRigid()){
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector n = *iter;
         int_force[m][n]=INT_FORCE[n];
       }
@@ -2865,7 +2865,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
       double Q=0.;
 
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
         IntVector n = *iter;
         int l2g_node_num = l2g[n];
 
@@ -2966,7 +2966,7 @@ void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
       dispInc.initialize(Vector(0.));
 
       if (flags->d_doMechanics) {
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
           IntVector n = *iter;
           int l2g_node_num = l2g[n] - begin;
           dispInc[n] = Vector(x[l2g_node_num],x[l2g_node_num+1],x[l2g_node_num+2]);
@@ -3039,7 +3039,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       dispNew.copyData(dispNew_old);
 
       if(!mpm_matl->getIsRigid()){
-       for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+       for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
         IntVector n = *iter;
         dispNew[n] += dispInc[n];
         velocity[n] = dispNew[n]*(2./dt) - oneifdyn*velocity_old[n];
@@ -3047,7 +3047,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
       }
 
       if(d_rigid_body){  // overwrite some of the values computed above
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
           IntVector n = *iter;
           if(contact[n]==2){
             dispNew[n] = Vector((1.-d_contact_dirs.x())*dispNew[n].x() +
@@ -3066,7 +3066,7 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
         NCVariable<Vector> TDisp;
         parent_old_dw->get(TDispOld, lb->gDisplacementLabel,dwi,patch,gnone,0);
         new_dw->allocateAndPut(TDisp,lb->gDisplacementLabel,dwi,patch);
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
           IntVector n = *iter;
           TDisp[n] = TDispOld[n] + dispNew[n];
         }
@@ -3113,7 +3113,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     if(p==0)
       global_offset=l2g[lowIndex]; 
 
-    for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+    for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector n = *iter;
       int l2g_node_num = l2g[n] - global_offset;
       dispIncNorm += Dot(dispInc[n],dispInc[n]);
@@ -3201,7 +3201,7 @@ void ImpMPM::updateTotalDisplacement(const ProcessorGroup*,
       new_dw->getModifiable(TDisp,lb->gDisplacementLabel,dwi,patch);
       new_dw->get(dispNew,        lb->dispNewLabel,      dwi, patch, gnone,0);
 
-      for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+      for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
         IntVector n = *iter;
         TDisp[n] = TDispOld[n] + dispNew[n];
       }
@@ -3242,7 +3242,7 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
       double fodts = 4./(delT*delT);
       double fodt = 4./(delT);
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
         IntVector c = *iter;
         acceleration[c] = dispNew[c]*fodts - velocity[c]*fodt - acceleration[c];
       }
@@ -3523,7 +3523,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
           }
         }
        }
-       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+       for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector c = *iter;
         GSTRESS[c] += (gstress[m][c]);
         INT_FORCE[c]+=int_force[m][c];
@@ -3533,13 +3533,13 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
     // gstress will be normalized by gvolume (same for all matls)
     for(int m = 0; m < numMatls; m++){
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstress[m][c] = GSTRESS[c]/(gvolume[m][c]+1.e-200);
       }
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       if(!mpm_matl->getIsRigid()){
-       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+       for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
          IntVector n = *iter;
          int_force[m][n]=INT_FORCE[n];
        }
@@ -3548,7 +3548,7 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
     // Fill in the value for the all in one material
     // GSTRESS will be normalized by gvolumeglobal
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       GSTRESS[c] /= (GVOLUME[c]+1.e-200);
     }

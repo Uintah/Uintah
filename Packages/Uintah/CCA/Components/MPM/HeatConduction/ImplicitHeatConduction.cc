@@ -434,7 +434,7 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
       new_dw->get(gheatflux, lb->gExternalHeatFluxLabel,matlindex,patch,
                   Ghost::None,0);
       
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
         IntVector n = *iter;
         int dof = l2g[n];
         if (!compare(gheatflux[n],0.)) {
@@ -483,13 +483,13 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
       constNCVariable<double> gmass;
       new_dw->get(gmass,   lb->gMassLabel,matlindex,patch,Ghost::None,0);
 
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
         IntVector n = *iter;
         GMASS[n] += gmass[n];
       }  
     }    
 
-    for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+    for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector n = *iter;
       int dof = l2g[n];
       if (compare(GMASS[n],0.)){
@@ -633,7 +633,7 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     new_dw->get(temperature,lb->gTemperatureLabel,0,patch,Ghost::AroundCells,1);
 
 #if 0
-    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
       IntVector n = *iter;
       cout << "temperature[" << n << "]= " << temperature[n] << endl;
     }
@@ -732,7 +732,7 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
     
     new_dw->get(temperature, lb->gTemperatureStarLabel,dwi,patch,gnone,0);
     
-    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+    for (NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
       IntVector n = *iter;
       int dof[1];
       dof[0] = l2g[n];
@@ -770,7 +770,7 @@ void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
     int dwi = 0;
     new_dw->get(temperature,lb->gTemperatureLabel,dwi,patch,Ghost::None,0);
 
-    for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+    for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
       guess.push_back(temperature[*iter]);
     }
 #endif
@@ -822,7 +822,7 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
     vector<double> x;
     int begin = d_HC_solver->getSolution(x);
 
-    for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+    for (NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
       IntVector n = *iter;
       int dof = l2g[n] - begin;
       tempRate[n] = (x[dof] - temp[n])/dt;

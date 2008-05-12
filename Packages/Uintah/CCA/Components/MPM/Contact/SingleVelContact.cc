@@ -76,7 +76,7 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
       new_dw->getModifiable(gvelocity[m], lb->gVelocityLabel,dwindex, patch);
     }
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
 
       Vector centerOfMassMom(0,0,0);
@@ -135,7 +135,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
     
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
 
       centerOfMassMom=zero;

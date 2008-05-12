@@ -72,7 +72,7 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
       // -------------------------------------------------------------------
     }
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
       double numerator=0.0;
       double denominator=0.0;
       IntVector c = *iter;

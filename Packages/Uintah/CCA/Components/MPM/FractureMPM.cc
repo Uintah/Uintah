@@ -1571,7 +1571,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     }  // End loop over materials
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c]  /= gmassglobal[c];
@@ -1932,7 +1932,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 	}
       }
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstressglobal[c] += gstress[c];
         gstress[c] /= (gmass[c]+Gmass[c]); //add in addtional field
@@ -1997,7 +1997,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 #endif
     }      
       
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       gstressglobal[c] /= gmassglobal[c];
     }
