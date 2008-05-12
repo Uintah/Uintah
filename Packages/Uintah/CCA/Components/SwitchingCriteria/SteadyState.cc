@@ -115,7 +115,7 @@ void SteadyState::switchTest(const ProcessorGroup* group,
     constCCVariable<double> heatFlux;
     new_dw->get(heatFlux, heatRate_CCLabel,0,patch,Ghost::None,0);
     
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       heatFluxSum += heatFlux[*iter];
     }   
   }

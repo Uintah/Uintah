@@ -149,10 +149,8 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       //__________________________________
       // compute temp_CC_mpm in cells that contain some mass 
       // The computational domain needs to hit the ghost cells
-      
-      CellIterator iter =patch->getCellIterator();
-      CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-      for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) { 
+      int NGC = 1; // number of ghostCells
+      for(CellIterator iter = patch->getCellIterator__New(NGC); !iter.done(); iter++) { 
         IntVector c = *iter;
         patch->findNodesFromCell(*iter,nodeIdx);
 
@@ -172,7 +170,7 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       } // cell iterator    
 
       //__________________________________
-      for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
+      for(CellIterator iter =patch->getCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         patch->findNodesFromCell(*iter,nodeIdx);
 
