@@ -128,7 +128,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
         ptmp=patch->nodePosition(cell_idx);
         g_cmax=cell_idx+CellOffset(cmax[m],ptmp,dx);
 
-        for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
+        for(NodeIterator iter=patch->getNodeIterator__New();!iter.done();iter++) {
           IntVector c=*iter;
           if(c.x()>=g_cmin.x() && c.x()<=g_cmax.x() && c.y()>=g_cmin.y() &&
              c.y()<=g_cmax.y() && c.z()>=g_cmin.z() && c.z()<=g_cmax.z() )
@@ -338,7 +338,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
            } // End of loop over k
          } // End of loop patls
 
-        for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
+        for(NodeIterator iter=patch->getNodeIterator__New();!iter.done();iter++) {
           IntVector c = *iter;
           if(GCrackNorm[c].length()>1.e-16) // unit vector
               GCrackNorm[c]/=GCrackNorm[c].length();
@@ -391,7 +391,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
       cout << "\nNumber of particles around nodes:\n"
            << setw(18) << "node" << setw(20) << "gNumPatls"
            << setw(20) << "GNumPatls" << endl;
-      for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
+      for(NodeIterator iter=patch->getNodeIterator__New();!iter.done();iter++) {
         IntVector c = *iter;
         if(gNumPatls[c]+GNumPatls[c]!=0){
         cout << setw(10) << c << setw(20) << gNumPatls[c]

@@ -1123,7 +1123,7 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
     
     IntVector cIdx[8];
     // Interpolate CC pressure to nodes
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
        patch->findCellsFromNode(*iter,cIdx);
       for (int in=0;in<8;in++){
         pressNC[*iter]  += .125*pressCC[cIdx[in]];
@@ -1632,7 +1632,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       IntVector cIdx[8];
       //__________________________________
       //  
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
         for(int in=0;in<8;in++){
           gvelocity[*iter]     +=  dVdt_CC[cIdx[in]]*delT*.125;
@@ -1648,7 +1648,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
         new_dw->get(modelMass_src,Ilb->modelMass_srcLabel,indx,patch, gac,1);
         new_dw->get(mass_CC,      MIlb->cMassLabel,       indx,patch, gac,1);
 
-        for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+        for(NodeIterator iter = patch->getNodeIterator__New();!iter.done();iter++){
           patch->findCellsFromNode(*iter,cIdx);
           for (int in=0;in<8;in++){
             massBurnFraction[*iter] +=

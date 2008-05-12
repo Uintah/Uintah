@@ -498,7 +498,7 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
       }
     } // End of particle loop
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       gRotRate[*iter] /= gMass[*iter];
     }
 

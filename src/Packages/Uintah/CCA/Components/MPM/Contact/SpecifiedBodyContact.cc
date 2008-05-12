@@ -186,7 +186,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     }
     
     // Set each field's velocity equal to the requested velocity
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
 
       for(int n = 0; n < numMatls; n++){ // update rigid body here
@@ -255,7 +255,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       requested_velocity = findVelFromProfile(tcurr);
     }
     
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
       
       for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.

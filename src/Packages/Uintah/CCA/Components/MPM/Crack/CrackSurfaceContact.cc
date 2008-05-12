@@ -121,7 +121,7 @@ Crack::AdjustCrackContactInterpolated(const ProcessorGroup*,
       if(crackType[m]=="NO_CRACK") continue;  // no crack in this material
 
       // Check if there is contact. If yes, adjust velocity field
-      for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
+      for(NodeIterator iter=patch->getNodeIterator__New();!iter.done();iter++) {
         IntVector c = *iter;
 
         // Only one velocity field
@@ -315,7 +315,7 @@ Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
 
       if(crackType[m]=="NO_CRACK") continue; // No crack(s) in this material
 
-      for(NodeIterator iter=patch->getNodeIterator();!iter.done();iter++) {
+      for(NodeIterator iter=patch->getNodeIterator__New();!iter.done();iter++) {
         IntVector c = *iter;
 
         // For nodes in non-crack zone, there is no contact, just continue

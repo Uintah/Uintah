@@ -335,7 +335,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
       // Get the plastic work temperature rate due to particle deformation
       // at the grid nodes by dividing gpdTdt by the grid mass
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector c = *iter;
 
         if (cout_heat.active()) {
@@ -505,7 +505,7 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
 
       // compute the nodal temperature gradient by dividing
       // gpdTdx by the grid mass
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector n = *iter;
         gHeatFlux[n] = -kappa * gpdTdx[n]/gMass[n];
       }

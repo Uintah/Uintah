@@ -1672,7 +1672,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
     }  // End loop over materials
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector c = *iter;
       gtempglobal[c] /= gmassglobal[c];
       gvelglobal[c] /= gmassglobal[c];
@@ -2109,7 +2109,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
         }
       }
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
         IntVector c = *iter;
         gstressglobal[c] += gstress[c];
         gstress[c] /= gvolume[c];
@@ -2160,7 +2160,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       bc.setBoundaryCondition(patch,dwi,"Symmetric",internalforce,interp_type);
     }
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       gstressglobal[c] /= gvolumeglobal[c];
     }
