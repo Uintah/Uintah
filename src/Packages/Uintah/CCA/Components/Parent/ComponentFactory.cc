@@ -20,8 +20,6 @@
 #include <Packages/Uintah/CCA/Components/Examples/ParticleTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/RegridderTest.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
-#include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
-#include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
@@ -124,12 +122,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   } 
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
     return scinew SolverTest1(world);
-  } 
-  if (sim_comp == "simplecfd" || sim_comp == "SIMPLECFD") {
-    if (doAMR)
-      return scinew AMRSimpleCFD(world);
-    else
-      return scinew SimpleCFD(world);
   } 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR);
