@@ -190,8 +190,8 @@ tecplot( DataArchive *   da,
               for(Level::const_patchIterator iter = level->patchesBegin();
                   iter != level->patchesEnd(); iter++){ // patch loop
                 const Patch* patch = *iter;
-                lo = patch->getLowIndex();
-                hi = patch->getHighIndex();
+                lo = patch->getExtraCellLowIndex__New();
+                hi = patch->getExtraCellHighIndex__New();
                 cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
                 int matlNum = da->queryNumMaterials(patch, t);
                 if(numMatl < matlNum) numMatl = matlNum;
@@ -240,8 +240,8 @@ tecplot( DataArchive *   da,
                     // get anchor, spacing for current level and patch
                     Point start = level->getAnchor();
                     Vector dx = patch->dCell();
-                    IntVector lo = patch->getLowIndex();
-                    IntVector hi = patch->getHighIndex();
+                    IntVector lo = patch->getExtraCellLowIndex__New();
+                    IntVector hi = patch->getExtraCellHighIndex__New();
                     cout << "\t\tPatch: " << patch->getID() << " Over: " << lo << " to " << hi << endl;
                     ConsecutiveRangeSet matls = da->queryMaterials(ccVariable, patch, t);
                     for(ConsecutiveRangeSet::iterator matlIter = matls.begin();

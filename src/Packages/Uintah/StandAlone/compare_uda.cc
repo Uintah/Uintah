@@ -789,7 +789,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     // Particles handled differently (and previously)
     break;
   case Uintah::TypeDescription::NCVariable: {
-    NodeIterator iter = patch->getNodeIterator();
+    NodeIterator iter = patch->getNodeIterator__New();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
@@ -815,7 +815,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     }
   }
   case Uintah::TypeDescription::CCVariable: {
-    CellIterator iter = patch->getCellIterator();
+    CellIterator iter = patch->getCellIterator__New();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
@@ -841,7 +841,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     }
   }
   case Uintah::TypeDescription::SFCXVariable: {
-    CellIterator iter = patch->getSFCXIterator();
+    CellIterator iter = patch->getSFCXIterator__New();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
@@ -867,7 +867,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     }
   }
   case Uintah::TypeDescription::SFCYVariable: {
-    CellIterator iter = patch->getSFCYIterator();
+    CellIterator iter = patch->getSFCYIterator__New();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
@@ -893,7 +893,7 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     }
   }
   case Uintah::TypeDescription::SFCZVariable: {
-    CellIterator iter = patch->getSFCZIterator();
+    CellIterator iter = patch->getSFCZIterator__New();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
       return scinew
@@ -998,12 +998,12 @@ void buildPatchMap(LevelP level, const string& filebase,
   if (patches->size() == 0)
     return;
 
-  IntVector low = patches->get(0)->getNodeLowIndex();
-  IntVector high = patches->get(0)->getNodeHighIndex();
+  IntVector low = patches->get(0)->getExtraNodeLowIndex__New();
+  IntVector high = patches->get(0)->getExtraNodeHighIndex__New();
 
   for (int i = 1; i < patches->size(); i++) {
-    low = Min(low, patches->get(i)->getNodeLowIndex());
-    high = Max(high, patches->get(i)->getNodeHighIndex());
+    low = Min(low, patches->get(i)->getExtraNodeLowIndex__New());
+    high = Max(high, patches->get(i)->getExtraNodeHighIndex__New());
   }
   
   patchMap.resize(low, high);
@@ -1013,10 +1013,10 @@ void buildPatchMap(LevelP level, const string& filebase,
   for(iter = level->patchesBegin();
       iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
-    ASSERT(Min(patch->getNodeLowIndex(), low) == low);
-    ASSERT(Max(patch->getNodeHighIndex(), high) == high);
-    patchMap.rewindow(patch->getNodeLowIndex(),
-                      patch->getNodeHighIndex());
+    ASSERT(Min(patch->getExtraNodeLowIndex__New(), low) == low);
+    ASSERT(Max(patch->getExtraNodeHighIndex__New(), high) == high);
+    patchMap.rewindow(patch->getExtraNodeLowIndex__New(),
+                      patch->getExtraNodeHighIndex__New());
     for (Array3<const Patch*>::iterator iter = patchMap.begin();
          iter != patchMap.end(); iter++) {
       if (*iter != 0) {
@@ -1031,8 +1031,8 @@ void buildPatchMap(LevelP level, const string& filebase,
         // overlaps an interior cell/node of another patch.  We prefer the interior
         // one.  (if there are two overlapping interior ones (nodes or face centers only),
         // they should have the same value.
-        IntVector in_low = patch->getInteriorNodeLowIndex();
-        IntVector in_high = patch->getInteriorNodeHighIndex();
+        IntVector in_low = patch->getNodeLowIndex__New();
+        IntVector in_high = patch->getNodeHighIndex__New();
         IntVector pos = iter.getIndex();
         if (pos.x() >= in_low.x() && pos.y() >= in_low.y() && pos.z() >= in_low.z() &&
             pos.x() < in_high.x() && pos.y() < in_high.y() && pos.z() < in_high.z()) {
@@ -1460,12 +1460,12 @@ main(int argc, char** argv)
           for(int i=0;i<level->numPatches();i++)
             {
               const Patch* patch=level->getPatch(i);
-              region1.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
+              region1.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
             }
           for(int i=0;i<level2->numPatches();i++)
             {
               const Patch* patch=level2->getPatch(i);
-              region2.push_back(Region(patch->getLowIndex(),patch->getHighIndex()));
+              region2.push_back(Region(patch->getExtraCellLowIndex__New(),patch->getExtraCellHighIndex__New()));
             }
 
           difference1 = Region::difference(region1,region2);
