@@ -23,23 +23,23 @@ UNUSED = [  ("test_cyl_pene_hypo_jc_ero", "test_cyl_pene_hypo_jc_ero.ups", 1, "A
 #       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
 
 TESTS = [  
-           ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux"),    \
-           ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux"),    \
-           ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux"),    \
-           ("foam_crush",                     "foam_crush.ups",                     4,  "Linux"),    \
-           ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux"),    \
-           ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux"),    \
-           ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux"),    \
-           ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux"),    \
-           ("const_test_vs",                  "const_test_vs.ups",                  1,  "Linux"),    \
-           ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Linux"),    \
-           ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Linux"),    \
-           ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Linux"),    \
-           ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Linux"),    \
-           ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Linux"),    \
-           ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux"),    \
-           ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux"),    \
-           ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux"),    \
+           ("disks2mat4patch",                 "disks2mat4patch.ups",                4,  "Linux", ["exactComparison"]),    \
+           ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Linux", ["exactComparison"]),    \
+           ("inclined_plane_sphere",          "inclined_plane_sphere.ups",          1,  "Linux", ["exactComparison"]),    \
+           ("foam_crush",                     "foam_crush.ups",                     4,  "Linux", ["exactComparison"]),    \
+           ("periodic_disks",                 "periodic_disks.ups",                 6,  "Linux", ["exactComparison"]),    \
+           ("const_test_hypo",                "const_test_hypo.ups",                1,  "Linux", ["exactComparison"]),    \
+           ("const_test_cmr",                 "const_test_cmr.ups",                 1,  "Linux", ["exactComparison"]),    \
+           ("const_test_nhp",                 "const_test_nhp.ups",                 1,  "Linux", ["exactComparison"]),    \
+           ("const_test_vs",                  "const_test_vs.ups",                  1,  "Linux", ["exactComparison"]),    \
+           ("adiCuJC4000s696K",               "adiCuJC4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
+           ("adiCuMTS4000s696K",              "adiCuMTS4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+           ("adiCuPTW4000s696K",              "adiCuPTW4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+           ("adiCuSCG4000s696K",              "adiCuSCG4000s696K.ups",              1,  "Linux", ["exactComparison"]),    \
+           ("adiCuZA4000s696K",               "adiCuZA4000s696K.ups",               1,  "Linux", ["exactComparison"]),    \
+           ("test_corrug_plate",              "test_corrug_plate.ups",              1,  "Linux", ["exactComparison"]),    \
+           ("test_cyl_pene_no_ero",           "test_cyl_pene_no_ero.ups",           1,  "Linux", ["exactComparison"]),    \
+           ("test_gurson_beckerdrucker_mts",  "test_gurson_beckerdrucker_mts.ups",  1,  "Linux", ["exactComparison"]),    \
            
            ("disks2mat4patch",                "disks2mat4patch.ups",                4,  "Darwin", ["doesTestRun"]),    \
            ("heatcond2mat",                   "heatcond2mat.ups",                   1,  "Darwin", ["doesTestRun"]),    \
