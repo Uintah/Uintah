@@ -211,7 +211,7 @@ void Mixing::initialize(const ProcessorGroup*,
 	  //Box b2 = patch->getBox();
 	  //Box b = b1.intersect(b2);
    
-	  for(CellIterator iter = patch->getExtraCellIterator();
+	  for(CellIterator iter = patch->getExtraCellIterator__New();
 	      !iter.done(); iter++){
  
 	    Point p = patch->cellPosition(*iter);
@@ -219,11 +219,11 @@ void Mixing::initialize(const ProcessorGroup*,
 	      mf[*iter] = region->initialMassFraction;
 	  } // Over cells
 	} // Over regions
-	for(CellIterator iter = patch->getExtraCellIterator();
+	for(CellIterator iter = patch->getExtraCellIterator__New();
 	    !iter.done(); iter++)
 	  sum[*iter] += mf[*iter];
       } // Over streams
-      for(CellIterator iter = patch->getExtraCellIterator();
+      for(CellIterator iter = patch->getExtraCellIterator__New();
 	  !iter.done(); iter++){
 	if(sum[*iter] != 1.0){
 	  ostringstream msg;
@@ -307,7 +307,7 @@ void Mixing::computeModelSources(const ProcessorGroup*,
 			      matl, patch);
 
 	double max = dt*rxn->rate;
-	for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+	for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
 	  IntVector idx = *iter;
 	  double mass = density[idx]*volume;
 	  double moles_from = from_mf[idx]*mass/from->props.molecularWeight;

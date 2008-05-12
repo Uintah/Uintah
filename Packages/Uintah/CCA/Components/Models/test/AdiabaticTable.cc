@@ -384,7 +384,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
-      for(CellIterator iter = patch->getCellIterator();
+      for(CellIterator iter = patch->getCellIterator__New();
           !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c);            
@@ -396,7 +396,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     
     
     if(d_scalar->d_doTableTest){   // 1D table test problem
-      for(CellIterator iter = patch->getExtraCellIterator();
+      for(CellIterator iter = patch->getExtraCellIterator__New();
             !iter.done(); iter++){
         IntVector c = *iter;
         Point p = patch->cellPosition(c); 
@@ -421,12 +421,12 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     // Save the volume fraction so that we can back out rho later
     CCVariable<double> volfrac;
     new_dw->allocateTemporary(volfrac, patch);
-    for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done(); iter++){
       const IntVector& c = *iter;
       volfrac[c] = rho_CC[c]/rho_micro[c];
     }
     
-    CellIterator iter = patch->getExtraCellIterator();
+    CellIterator iter = patch->getExtraCellIterator__New();
     table->interpolate(d_density_index,     rho_micro,   iter, ind_vars);
     table->interpolate(d_gamma_index,       gamma,       iter, ind_vars);
     table->interpolate(d_cv_index,          cv,          iter, ind_vars);
@@ -443,7 +443,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     table->interpolate(d_ref_gamma_index, ref_gamma,iter, ind_vars);
     table->interpolate(d_ref_temp_index,  ref_temp, iter, ind_vars);
     
-    for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       const IntVector& c = *iter;
       // Restore the density and specific volume using the same volume
       // fractions that came from the ICE initialization process
@@ -542,7 +542,7 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
       computeScaledVariance(patch, new_dw, indx, f_old, ind_vars);
     }
     
-    CellIterator iter = patch->getExtraCellIterator();
+    CellIterator iter = patch->getExtraCellIterator__New();
     table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
@@ -582,10 +582,10 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
   // Hit the extra cells only on the coarsest level
   // All of the data in the extaCells should be handled by
   // refine_CFI tasks
-  CellIterator iterator = patch->getExtraCellIterator();
+  CellIterator iterator = patch->getExtraCellIterator__New();
   int levelIndex = patch->getLevel()->getIndex();
   if(d_doAMR && levelIndex != 0){
-    iterator = patch->getCellIterator();
+    iterator = patch->getCellIterator__New();
   }
   
   table->interpolate(d_cv_index, cv_new, iterator,ind_vars);
@@ -679,7 +679,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         computeScaledVariance(patch, new_dw, matl, f_old, ind_vars);
       }
 
-      CellIterator iter = patch->getExtraCellIterator();
+      CellIterator iter = patch->getExtraCellIterator__New();
       
       table->interpolate(d_temp_index,      flameTemp,  iter, ind_vars);
       CCVariable<double> ref_temp;
@@ -696,7 +696,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       double volume = dx.x()*dx.y()*dx.z();
       
       
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
         IntVector c = *iter;
 
         double mass      = rho_CC[c]*volume;
@@ -727,7 +727,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         // get co2 and h2o
         for(int i=0;i<(int)tablevalues.size();i++){
           TableValue* tv = tablevalues[i];
-          CellIterator iter = patch->getCellIterator();
+          CellIterator iter = patch->getCellIterator__New();
           if(tv->name == "CO2"){
             table->interpolate(tv->index, co2, iter, ind_vars);
           }
@@ -740,7 +740,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         cout.precision(10);
     
         cout << "                 MixtureFraction,                      temp_table,       gamma,             cv,             rho_table,      press_thermo,   (gamma-1)cv,   rho_table*temp_table,  co2,           h2o"<< endl;        
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+        for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
           IntVector c = *iter;
           double press = (rho_table[c] * cv[c] * (gamma[c]-1) * flameTemp[c]);
           double thermo = cv[c] * (gamma[c]-1);
@@ -805,7 +805,7 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         TableValue* tv = tablevalues[i];
         CCVariable<double> value;
         new_dw->allocateAndPut(value, tv->label, matl, patch);
-        CellIterator iter = patch->getExtraCellIterator();
+        CellIterator iter = patch->getExtraCellIterator__New();
         table->interpolate(tv->index, value, iter, ind_vars);
         if(patch->getID() == 0){ 
           cerr << "interpolating " << tv->name << '\n';
@@ -828,7 +828,7 @@ void AdiabaticTable::computeScaledVariance(const Patch* patch,
   new_dw->allocateAndPut(scaledvariance, d_scalar->scaledVarianceLabel,
                          indx, patch);
                          
-  for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
     const IntVector& c = *iter;
     double denom = f[c] * (1-f[c]);
     if(denom < 1.e-20){
@@ -907,7 +907,7 @@ void AdiabaticTable::testConservation(const ProcessorGroup*,
     CCVariable<double> q_CC;
     new_dw->allocateTemporary(q_CC, patch);
 
-    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) {
+    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++) {
       IntVector c = *iter;
       q_CC[c] = rho_CC[c]*cellVol*f[c];
     }
@@ -985,7 +985,7 @@ void AdiabaticTable::errorEstimate(const ProcessorGroup*,
     // compute gradient
     Vector dx = patch->dCell(); 
     
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       
       Vector grad_f;
@@ -1002,7 +1002,7 @@ void AdiabaticTable::errorEstimate(const ProcessorGroup*,
     //__________________________________
     // set refinement flag
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-    for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for(CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       if( mag_grad_f[c] > d_scalar->refineCriteria){
         refineFlag[c] = true;

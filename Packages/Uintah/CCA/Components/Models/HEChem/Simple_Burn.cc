@@ -354,7 +354,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m0);
     double cv_solid = mpm_matl->getSpecificHeat();
     
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
 
      //__________________________________
@@ -522,7 +522,7 @@ void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
   
     IntVector nodeIdx[8];
     
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       //__________________________________
       // Find if the cell contains surface:

@@ -248,7 +248,7 @@ JWLpp::checkNeedAddMaterial(const ProcessorGroup*,
 
     if(!d_active){
       bool add = false;
-      for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+      for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         if (press_CC[c] > .9*d_threshold_pressure){
           add = true;
@@ -334,7 +334,7 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     //   Misc.
     new_dw->get(press_CC,         Ilb->press_equil_CCLabel,0,  patch,gn, 0);
 
-    for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       if (press_CC[c] > d_threshold_pressure){
         //__________________________________
