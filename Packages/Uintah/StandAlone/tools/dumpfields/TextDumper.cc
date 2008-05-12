@@ -183,7 +183,7 @@ namespace Uintah {
                   CCVariable<double> svals;
                   (**diagit)(da_, patch, fieldname, matl, index_, svals);
                   
-                  for(NodeIterator iter = patch->getNodeIterator();
+                  for(NodeIterator iter = patch->getNodeIterator__New();
                       !iter.done(); iter++){
                     if(outside(*iter, minind, maxind)) continue;
                     Point xpt = patch->nodePosition(*iter);
@@ -200,7 +200,7 @@ namespace Uintah {
                   NCVariable<double> svals;
                   (**diagit)(da_, patch, fieldname, matl, index_, svals);
                   
-                  for(NodeIterator iter = patch->getNodeIterator();
+                  for(NodeIterator iter = patch->getNodeIterator__New();
                       !iter.done(); iter++){
                     if(outside(*iter, minind, maxind)) continue;
                     Point xpt = patch->nodePosition(*iter);
@@ -250,7 +250,7 @@ namespace Uintah {
                   CCVariable<Vector> vvals;
                   (**diagit)(da_, patch, fieldname, matl, index_, vvals);
                   
-                  for(NodeIterator iter = patch->getNodeIterator();
+                  for(NodeIterator iter = patch->getNodeIterator__New();
                       !iter.done(); iter++){
                     if(outside(*iter, minind, maxind)) continue;
                     Point xpt = patch->nodePosition(*iter);
@@ -269,7 +269,7 @@ namespace Uintah {
                   NCVariable<Vector> vvals;
                   (**diagit)(da_, patch, fieldname, matl, index_, vvals);
                   
-                  for(NodeIterator iter = patch->getNodeIterator();
+                  for(NodeIterator iter = patch->getNodeIterator__New();
                       !iter.done(); iter++){
                     if(outside(*iter, minind, maxind)) continue;
                     Point xpt = patch->nodePosition(*iter);
@@ -323,7 +323,7 @@ namespace Uintah {
                   CCVariable<Matrix3> tvals;
                   (**diagit)(da_, patch, fieldname, matl, index_, tvals);
                   
-                  for(NodeIterator iter = patch->getNodeIterator();
+                  for(NodeIterator iter = patch->getNodeIterator__New();
                       !iter.done(); iter++){
                     if(outside(*iter, minind, maxind)) continue;
                     Point xpt = patch->nodePosition(*iter);
@@ -348,7 +348,7 @@ namespace Uintah {
                   NCVariable<Matrix3> tvals;
                   (**diagit)(da_, patch, fieldname, matl, index_, tvals);
                   
-                  for(NodeIterator iter = patch->getNodeIterator();
+                  for(NodeIterator iter = patch->getNodeIterator__New();
                       !iter.done(); iter++){
                     if(outside(*iter, minind, maxind)) continue;
                     Point xpt = patch->nodePosition(*iter);

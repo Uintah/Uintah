@@ -110,12 +110,12 @@ getIterator( const Uintah::TypeDescription * td, const Patch * patch, bool use_e
 {
   switch( td->getType() )
     {
-    case Uintah::TypeDescription::NCVariable :    return GridIterator( patch->getNodeIterator() );
-    case Uintah::TypeDescription::CCVariable :    return (use_extra_cells ? GridIterator( patch->getExtraCellIterator() ) : 
-                                                                            GridIterator( patch->getCellIterator() ) );
-    case Uintah::TypeDescription::SFCXVariable :  return GridIterator( patch->getSFCXIterator() );
-    case Uintah::TypeDescription::SFCYVariable :  return GridIterator( patch->getSFCYIterator() );
-    case Uintah::TypeDescription::SFCZVariable :  return GridIterator( patch->getSFCZIterator() );
+    case Uintah::TypeDescription::NCVariable :    return GridIterator( patch->getNodeIterator__New() );
+    case Uintah::TypeDescription::CCVariable :    return (use_extra_cells ? GridIterator( patch->getExtraCellIterator__New() ) : 
+                                                                            GridIterator( patch->getCellIterator__New() ) );
+    case Uintah::TypeDescription::SFCXVariable :  return GridIterator( patch->getSFCXIterator__New() );
+    case Uintah::TypeDescription::SFCYVariable :  return GridIterator( patch->getSFCYIterator__New() );
+    case Uintah::TypeDescription::SFCZVariable :  return GridIterator( patch->getSFCZIterator__New() );
     default:
       cout << "ERROR: Don't know how to handle type: " << td->getName() << "\n";
       exit( 1 );

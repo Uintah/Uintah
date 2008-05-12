@@ -113,7 +113,7 @@ namespace Uintah {
               CCVariable<double> svals;
               (**diagit)(da_, patch, fieldname, matl, index_, svals);
               
-              for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
+              for(CellIterator iter = patch->getCellIterator__New();!iter.done(); iter++){
                 double val = svals[*iter];
                 
                 if(val<mat_minval) mat_minval = val;
@@ -131,7 +131,7 @@ namespace Uintah {
               NCVariable<double> svals;
               (**diagit)(da_, patch, fieldname, matl, index_, svals);
               
-              for(NodeIterator iter = patch->getNodeIterator();!iter.done(); iter++){
+              for(NodeIterator iter = patch->getNodeIterator__New();!iter.done(); iter++){
                 double val = svals[*iter];
                 
                 if(val<mat_minval) mat_minval = val;
