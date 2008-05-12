@@ -299,7 +299,7 @@ void flatPlate_heatFlux::doAnalysis(const ProcessorGroup* pg,
     
     for(int c = 0; c< 4; c++){
       
-      if(patch->containsPoint(d_corner_pt[c]) ){
+      if(patch->containsPoint__New(d_corner_pt[c]) ){
         IntVector n = patch->findClosestNode(d_corner_pt[c]);
         
         gHeatRate[n] = cornerSurfaceArea * gHeatFlux[n];
