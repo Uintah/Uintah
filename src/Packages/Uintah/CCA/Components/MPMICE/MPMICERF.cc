@@ -117,7 +117,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     // identically full after initialization
     static int tstep=1;
     if(tstep==0){
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){        
+      for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){        
         IntVector c = *iter;
         double total_mat_vol = 0.0;
         double total_ice_vol=0.0;
@@ -175,7 +175,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
 
     //__________________________________
     // Compute rho_micro,matl_press, total_vol, speedSound
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       IntVector c = *iter;
       double total_mat_vol = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
@@ -244,7 +244,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
         rho_CC_new[m].copyData(rho_CC_scratch[m]);
       }
       if(mpm_matl){
-        for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+        for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
           IntVector c = *iter;
           rho_CC_new[m][c] = mass_CC[m][c]/cell_vol;
         }
@@ -267,7 +267,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numALLMatls; m++)   {
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+      for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++) {
         IntVector c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c];
 

@@ -476,7 +476,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj)
     fineLevel = (Level*) curLevel->getFinerLevel().get_rep();
   }
 
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
     Point lower = patch->nodePosition(*iter) + dcorner;
     IntVector c = *iter;
     

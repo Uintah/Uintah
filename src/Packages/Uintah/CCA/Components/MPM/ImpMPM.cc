@@ -1830,7 +1830,7 @@ void ImpMPM::computeCCVolume(const ProcessorGroup*,
       new_dw->allocateAndPut(cvolume,      lb->cVolumeLabel, dwi,patch);
       cvolume.initialize(1.e-20);
 
-      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+      for(CellIterator iter =patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         IntVector nodeIdx[8];
         patch->findNodesFromCell(c, nodeIdx);

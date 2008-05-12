@@ -189,7 +189,7 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
     } else {
      
       // Loop thru cells and assign particles
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
 	Point lower = patch->nodePosition(*iter) + dcorner;
 	for(int ix=0;ix < ppc.x(); ix++){
 	  for(int iy=0;iy < ppc.y(); iy++){

@@ -1056,7 +1056,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);    
       setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx, new_dw);    
       setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx, new_dw);
-      for (CellIterator iter = patch->getExtraCellIterator();
+      for (CellIterator iter = patch->getExtraCellIterator__New();
                                                         !iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[c] = 1.0/rho_micro[c];
@@ -1254,7 +1254,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 #endif 
       //__________________________________
       //  compute CC Variables
-      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+      for(CellIterator iter =patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         patch->findNodesFromCell(*iter,nodeIdx);
  
@@ -1405,7 +1405,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         //                                                       gvelocity);
       }
  
-      for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+      for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();
                                                           iter++){ 
         IntVector c = *iter;
         patch->findNodesFromCell(c,nodeIdx);
@@ -1435,7 +1435,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       //__________________________________
       //  NO REACTION
       if(d_ice->d_models.size() == 0 || do_mlmpmice)  { 
-        for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+        for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();
                                                     iter++){ 
          IntVector c = *iter;
          mass_L[c]    = cmass[c];
@@ -1458,7 +1458,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
         new_dw->get(modelMom_src, Ilb->modelMom_srcLabel, indx, patch, gn, 0);
         new_dw->get(modelEng_src, Ilb->modelEng_srcLabel, indx, patch, gn, 0);
                 
-        for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
+        for(CellIterator iter = patch->getExtraCellIterator__New();!iter.done();
                                                     iter++){
           IntVector c = *iter;
           //  must have a minimum mass
@@ -1570,7 +1570,7 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
       dTdt_CC.initialize(0.0);
       dVdt_CC.initialize(Vector(0.0));
       //__________________________________
-      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
+      for(CellIterator iter =patch->getExtraCellIterator__New();!iter.done();iter++){
          IntVector c = *iter;
          if(!d_rigidMPM){
            dVdt_CC[c] = (mom_L_ME_CC[c] - (old_mom_L_CC[c]-mom_source[c]))
@@ -1796,7 +1796,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // see Docs/MPMICE.txt for explaination of why we ONlY
     // use eos evaulations for rho_micro_mpm
 
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       const IntVector& c = *iter;
       double total_mat_vol = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
@@ -1838,7 +1838,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
 
-    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
       const IntVector& c = *iter;  
       double delPress = 0.;
       bool converged  = false;
@@ -2011,7 +2011,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numALLMatls; m++)   {  
-      for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
         const IntVector& c = *iter;
         sp_vol_new[m][c] = 1.0/rho_micro[m][c];
       }
@@ -2023,7 +2023,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     } 
     //__________________________________
     //  compute f_theta  
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
       const IntVector& c = *iter;
       sumKappa[c] = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
@@ -2038,7 +2038,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 #if 0
     //__________________________________
     //  compute f_theta  (alternate)
-    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+    for (CellIterator iter=patch->getExtraCellIterator__New();!iter.done();iter++){
       const IntVector& c = *iter;
       sumKappa[c] = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
@@ -2313,7 +2313,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);
     setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx, new_dw);
     setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx, new_dw);
-    for (CellIterator iter = patch->getExtraCellIterator();
+    for (CellIterator iter = patch->getExtraCellIterator__New();
                                                       !iter.done();iter++){
       IntVector c = *iter;
       sp_vol_CC[c] = 1.0/rho_micro[c];
@@ -2662,7 +2662,7 @@ MPMICE::refine(const ProcessorGroup*,
       setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
       setBC(Temp_CC,   "Temperature",  patch, d_sharedState, dwi, new_dw);    
       setBC(vel_CC,    "Velocity",     patch, d_sharedState, dwi, new_dw);
-      for (CellIterator iter = patch->getExtraCellIterator();
+      for (CellIterator iter = patch->getExtraCellIterator__New();
            !iter.done();iter++){
         sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
       }
