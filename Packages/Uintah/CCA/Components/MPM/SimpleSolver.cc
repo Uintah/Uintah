@@ -42,8 +42,8 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     const PatchSubset* patchsub = perproc_patches->getSubset(p);
     for (int ps = 0; ps<patchsub->size(); ps++) {
     const Patch* patch = patchsub->get(ps);
-    IntVector plowIndex = patch->getInteriorNodeLowIndex();
-    IntVector phighIndex = patch->getInteriorNodeHighIndex();
+    IntVector plowIndex = patch->getNodeLowIndex__New();
+    IntVector phighIndex = patch->getNodeHighIndex__New();
 
     long nn = (phighIndex[0]-plowIndex[0])*
               (phighIndex[1]-plowIndex[1])*
@@ -59,8 +59,8 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch=patches->get(p);
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex() + IntVector(1,1,1);
+    IntVector lowIndex = patch->getNodeLowIndex__New();
+    IntVector highIndex = patch->getNodeHighIndex__New() + IntVector(1,1,1);
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalNodes=0;
@@ -70,8 +70,8 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       
-      IntVector plow = neighbor->getInteriorNodeLowIndex();
-      IntVector phigh = neighbor->getInteriorNodeHighIndex();
+      IntVector plow = neighbor->getNodeLowIndex__New();
+      IntVector phigh = neighbor->getNodeHighIndex__New();
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
       

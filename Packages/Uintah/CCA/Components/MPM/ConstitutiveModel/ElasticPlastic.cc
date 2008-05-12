@@ -1942,8 +1942,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     vector<Vector> d_S(interpolator->size());
 
     // Get patch indices for parallel solver
-    IntVector lowIndex = patch->getInteriorNodeLowIndex();
-    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    IntVector lowIndex = patch->getNodeLowIndex__New();
+    IntVector highIndex = patch->getNodeHighIndex__New()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
     solver->copyL2G(l2g,patch);
 

@@ -101,8 +101,8 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    IntVector low(patch->getInteriorNodeLowIndex());
-    IntVector high(patch->getInteriorNodeHighIndex());
+    IntVector low(patch->getNodeLowIndex__New());
+    IntVector high(patch->getNodeHighIndex__New());
 
     int ILOW=0,IHIGH=0,JLOW=0,JHIGH=0,KLOW=0,KHIGH=0;
     // First, figure out some ranges for for loops
