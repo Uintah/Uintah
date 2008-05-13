@@ -150,9 +150,6 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
     cout << "Size of boundary_itr = " << boundary_itr.size() << endl;
 #endif
     (*bc)->setBoundaryIterator(boundary_itr);
-#if 0
-    (*bc)->determineSFLimits(face,patch);
-#endif
   }
     
   IntVector ln,hn;
