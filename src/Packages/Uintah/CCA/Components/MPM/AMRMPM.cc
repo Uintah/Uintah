@@ -1469,7 +1469,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     Vector bsw = .25*Vector(-dx.x(),-dx.y(),-dx.z());
 
     cout << "Patch node high index = " << patch->getExtraNodeHighIndex__New() << endl;
-    cout << "Patch cell high index = " << patch->getCellHighIndex() << endl;
+    cout << "Patch cell high index = " << patch->getExtraCellHighIndex__New() << endl;
 
     for(NodeIterator iter = patch->getNodeIterator(interp_type);
         !iter.done();iter++){
