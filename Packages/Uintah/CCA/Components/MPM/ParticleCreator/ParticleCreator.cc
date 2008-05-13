@@ -133,7 +133,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       IntVector cell_idx;
       if (!patch->findCell(*itr,cell_idx)) continue;
 
-      if (!patch->containsPointInRealCells(*itr)) continue;
+      if (!patch->containsPoint__New(*itr)) continue;
       
       particleIndex pidx = start+count;      
       //cerr << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
@@ -618,7 +618,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     for (int ii = 0; ii < numPts; ++ii) {
       p = points->at(ii);
       if (patch->findCell(p,cell_idx)) {
-        if (patch->containsPointInRealCells(p)) {
+        if (patch->containsPoint__New(p)) {
           d_object_points[key].push_back(p);
           
           if (!vols->empty()) {
