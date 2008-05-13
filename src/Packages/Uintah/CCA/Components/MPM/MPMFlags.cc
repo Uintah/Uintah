@@ -91,7 +91,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
      cerr << "nodes8or27 is deprecated, use " << endl;
      cerr << "<interpolator>type</interpolator>" << endl;
      cerr << "where type is one of the following:" << endl;
-     cerr << "linear, gimp, 4thorderBS" << endl;
+     cerr << "linear, gimp, 3rdorderBS" << endl;
     exit(1);
   }
 

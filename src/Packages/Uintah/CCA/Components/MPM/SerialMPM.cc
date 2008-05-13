@@ -1456,6 +1456,27 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 #endif
 
     }
+    IntVector num_extra_cells=patch->getExtraCells();
+    IntVector periodic=patch->getLevel()->getPeriodicBoundaries();
+    string interp_type = flags->d_interpolator_type;
+    if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
+      if(!flags->d_with_ice){
+        ostringstream msg;
+        msg << "\n ERROR: When using <interpolator>linear</interpolator> \n"
+            << " you should also use <extraCells>[0,0,0]</extraCells> \n"
+            << " unless you are running an MPMICE case.\n";
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
+    }
+    else if((interp_type=="gimp" || interp_type=="3rdorderBS")
+                          && (num_extra_cells+periodic)!=IntVector(1,1,1)){
+        ostringstream msg;
+        msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
+            << " or <interpolator>3rdorderBS</interpolator> \n"
+            << " you must also use extraCells and/or periodicBCs such\n"
+            << " the sum of the two is [1,1,1].\n";
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
   }
 
   if (flags->d_accStrainEnergy) {
