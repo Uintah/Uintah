@@ -403,9 +403,17 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
             const TemperatureBoundCond* bc =
               dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
             if (bc->getKind() == "Dirichlet") {
-              for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end();
-                   boundary++) {
-                gtemp[*boundary] = bc->getValue();
+              if (nbound_ptr->empty()) {
+                IntVector ln(0,0,0),hn(0,0,0);
+                patch->getFaceNodes(face,0,ln,hn);
+                for(NodeIterator bound(ln,hn);!bound.done();bound++) {
+                  gtemp[*bound] = bc->getValue();
+                }
+              } else {
+                for (boundary=nbound_ptr->begin(); 
+                     boundary != nbound_ptr->end(); boundary++) {
+                  gtemp[*boundary] = bc->getValue();
+                }
               }
               IntVector l,h;
               patch->getFaceNodes(face,0,l,h);

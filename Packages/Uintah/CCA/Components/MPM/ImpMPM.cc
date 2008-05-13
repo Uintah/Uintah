@@ -2420,12 +2420,22 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               const VelocityBoundCond* bc =
                 dynamic_cast<const VelocityBoundCond*>(vel_bcs);
               if (bc->getKind() == "Dirichlet") {
-                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end();
-                     boundary++) {
-                  gvelocity_old[*boundary] = bc->getValue();
-                  gacceleration[*boundary] = bc->getValue();
-                  
+
+                if (nbound_ptr->empty()) {
+                  IntVector ln(0,0,0),hn(0,0,0);
+                  patch->getFaceNodes(face,0,ln,hn);
+                  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
+                    gvelocity_old[*bound] = bc->getValue();
+                    gacceleration[*bound] = bc->getValue();
+                  }
+                } else {
+                  for (boundary=nbound_ptr->begin(); 
+                       boundary != nbound_ptr->end(); boundary++) {
+                    gvelocity_old[*boundary] = bc->getValue();
+                    gacceleration[*boundary] = bc->getValue();
+                  }
                 }
+
                 IntVector l,h;
                 patch->getFaceNodes(face,0,l,h);
                 for(NodeIterator it(l,h); !it.done(); it++) {
@@ -2439,36 +2449,86 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               delete vel_bcs;
             }
             if (sym_bcs != 0) {
-              if (face == Patch::xplus || face == Patch::xminus)
-                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
-                     boundary++) {
-                  gvelocity_old[*boundary] = 
-                    Vector(0.,gvelocity_old[*boundary].y(),
-                           gvelocity_old[*boundary].z());
-                  gacceleration[*boundary] = 
-                    Vector(0.,gacceleration[*boundary].y(),
-                           gacceleration[*boundary].z());
+              if (face == Patch::xplus || face == Patch::xminus) {
+
+                if (nbound_ptr->empty()) {
+                  IntVector ln(0,0,0),hn(0,0,0);
+                  patch->getFaceNodes(face,0,ln,hn);
+                  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
+                    gvelocity_old[*bound] = 
+                      Vector(0.,gvelocity_old[*bound].y(),
+                             gvelocity_old[*bound].z());
+                    gacceleration[*bound] = 
+                      Vector(0.,gacceleration[*bound].y(),
+                             gacceleration[*bound].z());
+                  }
+                } else {
+
+                  for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
+                       boundary++) {
+                    gvelocity_old[*boundary] = 
+                      Vector(0.,gvelocity_old[*boundary].y(),
+                             gvelocity_old[*boundary].z());
+                    gacceleration[*boundary] = 
+                      Vector(0.,gacceleration[*boundary].y(),
+                             gacceleration[*boundary].z());
+                  }
                 }
-              if (face == Patch::yplus || face == Patch::yminus)
-                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
-                     boundary++) {
-                  gvelocity_old[*boundary] = 
-                    Vector(gvelocity_old[*boundary].x(),0.,
-                           gvelocity_old[*boundary].z());
-                  gacceleration[*boundary] = 
-                    Vector(gacceleration[*boundary].x(),0.,
-                           gacceleration[*boundary].z());
+              }
+              if (face == Patch::yplus || face == Patch::yminus) {
+
+                if (nbound_ptr->empty()) {
+                  IntVector ln(0,0,0),hn(0,0,0);
+                  patch->getFaceNodes(face,0,ln,hn);
+                  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
+                    gvelocity_old[*bound] = 
+                      Vector(gvelocity_old[*bound].x(),0.,
+                             gvelocity_old[*bound].z());
+                    gacceleration[*bound] = 
+                      Vector(gacceleration[*bound].x(),0.,
+                             gacceleration[*bound].z());
+                  }
+                } else {
+
+                  for (boundary=nbound_ptr->begin(); 
+                       boundary != nbound_ptr->end();  boundary++) {
+                    gvelocity_old[*boundary] = 
+                      Vector(gvelocity_old[*boundary].x(),0.,
+                             gvelocity_old[*boundary].z());
+                    gacceleration[*boundary] = 
+                      Vector(gacceleration[*boundary].x(),0.,
+                             gacceleration[*boundary].z());
+                  }
                 }
-              if (face == Patch::zplus || face == Patch::zminus)
-                for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
-                     boundary++) {
-                  gvelocity_old[*boundary] = 
-                    Vector(gvelocity_old[*boundary].x(),
-                           gvelocity_old[*boundary].y(),0.);
-                  gacceleration[*boundary] = 
-                    Vector(gacceleration[*boundary].x(),
-                           gacceleration[*boundary].y(),0.);
+              }
+              if (face == Patch::zplus || face == Patch::zminus) {
+
+                if (nbound_ptr->empty()) {
+                  IntVector ln(0,0,0),hn(0,0,0);
+                  patch->getFaceNodes(face,0,ln,hn);
+                  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
+                    gvelocity_old[*bound] = 
+                      Vector(gvelocity_old[*bound].x(),
+                             gvelocity_old[*bound].y(),0.);
+                    gacceleration[*bound] = 
+                      Vector(gacceleration[*bound].x(),
+                             gacceleration[*bound].y(),0.);
+                    
+                  }
+                } else {
+                  
+                  for (boundary=nbound_ptr->begin(); 
+                       boundary != nbound_ptr->end(); boundary++) {
+                    gvelocity_old[*boundary] = 
+                      Vector(gvelocity_old[*boundary].x(),
+                             gvelocity_old[*boundary].y(),0.);
+                    gacceleration[*boundary] = 
+                      Vector(gacceleration[*boundary].x(),
+                             gacceleration[*boundary].y(),0.);
+                  }
                 }
+                
+              }
               IntVector l,h;
               patch->getFaceNodes(face,0,l,h);
               for(NodeIterator it(l,h); !it.done(); it++) {
