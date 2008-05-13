@@ -663,7 +663,7 @@ Patch::getFaceIterator__New(const FaceType& face, const FaceIteratorType& domain
   //compute if we are a plus face
   bool plusface=face%2;
 
-  ASSERT(getBCType(face)!=Neighbor);
+  //ASSERT(getBCType(face)!=Neighbor);
 
   switch(domain)
   {
