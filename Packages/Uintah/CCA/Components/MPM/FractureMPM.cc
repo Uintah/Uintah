@@ -3155,12 +3155,12 @@ FractureMPM::errorEstimate(const ProcessorGroup* group,
         new_dw->get(fineErrorFlag, d_sharedState->get_refineFlag_label(), 0,
 		    finePatch, Ghost::None, 0);
 
-        IntVector fl(finePatch->getCellLowIndex());
-        IntVector fh(finePatch->getCellHighIndex());
+        IntVector fl(finePatch->getExtraCellLowIndex__New());
+        IntVector fh(finePatch->getExtraCellHighIndex__New());
         IntVector l(fineLevel->mapCellToCoarser(fl));
         IntVector h(fineLevel->mapCellToCoarser(fh));
-        l = Max(l, coarsePatch->getCellLowIndex());
-        h = Min(h, coarsePatch->getCellHighIndex());
+        l = Max(l, coarsePatch->getExtraCellLowIndex__New());
+        h = Min(h, coarsePatch->getExtraCellHighIndex__New());
 
         for(CellIterator iter(l, h); !iter.done(); iter++){
           IntVector fineStart(level->mapCellToFiner(*iter));
