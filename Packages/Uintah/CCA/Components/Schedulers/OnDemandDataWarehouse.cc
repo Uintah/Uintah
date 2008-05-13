@@ -1733,8 +1733,8 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       h = Min(patch->getExtraHighIndex(basis, label->getBoundaryLayer()), high);
     }
     else {
-      l = Max(patch->getExtraCellLowIndex__New(basis), low);
-      h = Min(patch->getExtraCellHighIndex__New(basis), high);
+      l = Max(patch->getLowIndex(basis), low);
+      h = Min(patch->getHighIndex(basis), high);
     }
     if (l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z())
       continue;
@@ -1761,7 +1761,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       var->copyPatch(tmpVar, l, h);
     } catch (InternalError& e) {
       cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h 
-           << " actual patch " << patch->getExtraCellLowIndex__New(basis) << " " << patch->getExtraCellHighIndex__New(basis) 
+           << " actual patch " << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) 
            << " var range: "  << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
       throw e;
     }
