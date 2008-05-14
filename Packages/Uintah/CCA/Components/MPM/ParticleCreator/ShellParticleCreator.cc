@@ -164,8 +164,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 	    cerr << "Pidx = " << pidx << " Pos = " << position[pidx]
                  << " patch BBox = " << patch->getExtraBox()
                  << " cell_idx = " << cell_idx
-                 << " low = " << patch->getCellLowIndex()
-                 << " high = " << patch->getCellHighIndex()
+                 << " low = " << patch->getExtraCellLowIndex__New()
+                 << " high = " << patch->getExtraCellHighIndex__New()
                  << " : Particle not in any cell." << endl;
 	    pparticleID[pidx] = 0;
           } else {
