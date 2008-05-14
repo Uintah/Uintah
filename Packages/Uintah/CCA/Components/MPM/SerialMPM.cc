@@ -1669,7 +1669,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       } // End of particle loop
 
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
         IntVector c = *iter; 
         totalmass         += gmass[c];
@@ -2256,7 +2256,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
       acceleration.initialize(Vector(0.,0.,0.));
   
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.0,0.0,0.0);
@@ -2301,7 +2301,7 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
       velocity_star.initialize(Vector(0,0,0));
 
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
                         !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
@@ -2347,7 +2347,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);!iter.done();
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();
                                                                 iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
@@ -2359,7 +2359,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
         new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
         old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
                                                                Ghost::None,0);
-        for(NodeIterator iter=patch->getNodeIterator(interp_type);
+        for(NodeIterator iter=patch->getExtraNodeIterator__New();
                          !iter.done();iter++){
            IntVector c = *iter;
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;

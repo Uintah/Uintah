@@ -571,7 +571,7 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
         GtempRate.initialize(0.0);
       }
 
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
         IntVector c = *iter;
         tempRate[c] = gdTdt[c]*((mass[c]-1.e-200)/mass[c]) +
@@ -630,7 +630,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
        GtempStar.initialize(0.0);
       }
       
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
         IntVector c = *iter;
         tempStar[c] = temp_old[c] + temp_rate[c] * delT;
@@ -648,7 +648,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
 
       // Now recompute temp_rate as the difference between the temperature
       // interpolated to the grid (no bcs applied) and the new tempStar
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
         IntVector c = *iter;
         temp_rate[c] = (tempStar[c] - temp_oldNoBC[c]) / delT;
