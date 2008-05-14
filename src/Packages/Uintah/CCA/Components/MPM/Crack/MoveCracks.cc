@@ -72,7 +72,7 @@ Crack::CrackPointSubset(const ProcessorGroup*,
       
       // Collect crack nodes in each patch
       for(int i=0; i<(int)cx[m].size(); i++) {
-        if(patch->containsPoint(cx[m][i])) {
+        if(patch->containsPointInExtraCells(cx[m][i])) {
           cnset[m][pid].push_back(i);
         }
       } 

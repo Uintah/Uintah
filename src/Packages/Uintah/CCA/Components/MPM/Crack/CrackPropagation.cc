@@ -214,7 +214,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 	      // Detect which patch new_pt resides in
               short* newPtInPatch=new short[patch_size];
               for(int k=0; k<patch_size; k++) newPtInPatch[k]=NO;
-              if(patch->containsPoint(new_pt)) newPtInPatch[pid]=YES;
+              if(patch->containsPointInExtraCells(new_pt)) newPtInPatch[pid]=YES;
 	      
               MPI_Barrier(mpi_crack_comm);
 
@@ -252,7 +252,7 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
 	    if(!newPtInMat) {
 	      short* newPtInPatch=new short[patch_size];
 	      for(int k=0; k<patch_size; k++) newPtInPatch[k]=NO;
-	      if(patch->containsPoint(new_pt)) newPtInPatch[pid]=YES;
+	      if(patch->containsPointInExtraCells(new_pt)) newPtInPatch[pid]=YES;
 	      
 	      MPI_Barrier(mpi_crack_comm);	      
              
