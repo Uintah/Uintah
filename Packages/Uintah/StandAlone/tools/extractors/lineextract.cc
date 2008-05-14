@@ -323,7 +323,7 @@ void compute_ave(ParticleVariable<T>& var,
       ave[c]    = ave[c] + var[*iter];
       count[c] += 1;      
     }
-    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
       ave[c] = ave[c]/(count[c] + 1e-100);
     }
@@ -452,8 +452,8 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
           // alternatively, we could just iterate through the patches)
           int p = 0;
           for (; p < patches.size(); p++) {
-            IntVector low  = patches[p]->getLowIndex();
-            IntVector high = patches[p]->getHighIndex();
+            IntVector low  = patches[p]->getExtraCellLowIndex__New();
+            IntVector high = patches[p]->getExtraCellHighIndex__New();
             if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
                 c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
               break;
@@ -485,8 +485,8 @@ void printData_PV(DataArchive* archive, string& variable_name, const Uintah::Typ
           int p = 0;
           
           for (; p < patches.size(); p++) {
-            IntVector low  = patches[p]->getLowIndex();
-            IntVector high = patches[p]->getHighIndex();
+            IntVector low  = patches[p]->getExtraCellLowIndex__New();
+            IntVector high = patches[p]->getExtraCellHighIndex__New();
             if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
                 c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
               break;
