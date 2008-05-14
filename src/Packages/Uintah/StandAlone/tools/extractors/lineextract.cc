@@ -304,8 +304,8 @@ void compute_ave(ParticleVariable<T>& var,
                  ParticleVariable<Point>& pos,
                  const Patch* patch) 
 {
-  IntVector lo = patch->getCellLowIndex();
-  IntVector hi = patch->getCellHighIndex();
+  IntVector lo = patch->getExtraCellLowIndex__New();
+  IntVector hi = patch->getExtraCellHighIndex__New();
   ave.allocate(lo,hi);
   T zero(0.0);
   ave.initialize(zero);
