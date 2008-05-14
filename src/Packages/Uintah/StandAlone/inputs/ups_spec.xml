@@ -231,7 +231,7 @@
   </Grid>
 
   <PhysicalConstants    spec="OPTIONAL NO_DATA"> <!-- FIXME: REALLY OPTIONAL??? -->
-    <gravity            spec="REQUIRED VECTOR" />
+    <gravity            spec="REQUIRED VECTOR" /> <!-- THIS IS OPTIONAL IN ICE AND MPM, DEFAULT IS 0,0,0 -->
     <reference_pressure spec="OPTIONAL DOUBLE" />
     <ideal_gas_constant spec="OPTIONAL DOUBLE" />
     <pressure           spec="OPTIONAL DOUBLE" />
@@ -357,19 +357,30 @@
   </Scheduler>
 
   <MPM                    spec="OPTIONAL NO_DATA" >
-    <time_integrator      spec="REQUIRED STRING 'explicit'" />
-    <interpolator         spec="REQUIRED STRING 'gimp'" />
+    <time_integrator      spec="REQUIRED STRING 'explicit, implicit'" />
+    <interpolator         spec="REQUIRED STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" />
     <DoExplicitHeatConduction spec="OPTIONAL BOOLEAN" />
-  </MPM>computeFromDensity
+    <DoImplicitHeatConduction spec="OPTIONAL BOOLEAN" />
+    <do_grid_reset>       spec="OPTIONAL BOOLEAN" />
+    <minimum_particle_mass>     spec="OPTIONAL DOUBLE 'positive'"/>
+    <maximum_particle_velocity> spec="OPTIONAL DOUBLE 'positive'"/>
+    <artificial_damping_coeff>  spec="OPTIONAL DOUBLE 'positive'"/>
+    <artificial_viscosity>      spec="OPTIONAL BOOLEAN" />
+    <accumulate_strain_energy>  spec="OPTIONAL BOOLEAN" />
+    <use_load_curves>           spec="OPTIONAL BOOLEAN" />
+    <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
+        <dynamic>  spec="OPTIONAL BOOLEAN" />
+        <solver>   spec="REQUIRED STRING 'petsc, simple'" />
+        <convergence_criteria_disp>    spec="OPTIONAL DOUBLE 'positive'"/>
+        <convergence_criteria_energy>  spec="OPTIONAL DOUBLE 'positive'"/>
+  </MPM>
 
   <MaterialProperties               spec="OPTIONAL NO_DATA">
     <MPM                            spec="OPTIONAL NO_DATA">
       <material                     spec="REQUIRED NO_DATA">
         <density                    spec="REQUIRED DOUBLE" />
         <heat_transfer_coefficient  spec="OPTIONAL DOUBLE" />
-        <constitutive_model         spec="REQUIRED NO_DATA"
-                                       attribute1="type    REQUIRED STRING 'comp_mooney_rivlin" >
-          <he_constant_1            spec="REQUIRED DOUBLE 'positive'" />
+        <constitutive_model         spec="REQUIRED NO_DATA"  <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
           <he_constant_2            spec="REQUIRED DOUBLE 'positive'" />
           <he_PR                    spec="REQUIRED DOUBLE 'positive'" />
         </constitutive_model>
@@ -378,8 +389,9 @@
         <geom_object                spec="MULTIPLE" />
       </material>
       <contact                      spec="REQUIRED NO_DATA" >
-        <type                       spec="REQUIRED STRING 'null, single_velocity'" />
-        <materials                  spec="REQUIRED STRING" /> <!-- THIS IS WRONG.  What is [0]? -->
+        <type                       spec="REQUIRED STRING 'null, single_velocity, rigid, specified, friction, approach'" />
+        <mu                         spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
+        <materials                  spec="OPTIONAL INTEGER" /> <!-- FIXME:  INTEGERS ACTUALLY, AS BELOW IN EXCHANGE PROPERTIES -->
       </contact>
       <thermal_contact              spec="OPTIONAL NO_DATA" />
     </MPM>
