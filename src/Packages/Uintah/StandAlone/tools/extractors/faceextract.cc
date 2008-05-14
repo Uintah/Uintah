@@ -205,8 +205,8 @@ void printData(DataArchive* archive, string& variable_name,
       // alternatively, we could just iterate through the patches)
       int p = 0;
       for (; p < patches.size(); p++) {
-        IntVector low = patches[p]->getLowIndex();
-        IntVector high = patches[p]->getHighIndex();
+        IntVector low = patches[p]->getExtraCellLowIndex__New();
+        IntVector high = patches[p]->getExtraCellHighIndex__New();
         if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
             c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
           break;
@@ -217,8 +217,8 @@ void printData(DataArchive* archive, string& variable_name,
       }
       int p_xm = 0;
       for (; p_xm < patches.size(); p_xm++) {
-        IntVector low = patches[p_xm]->getLowIndex();
-        IntVector high = patches[p_xm]->getHighIndex();
+        IntVector low = patches[p_xm]->getExtraCellLowIndex__New();
+        IntVector high = patches[p_xm]->getExtraCellHighIndex__New();
         if (c.x()-1 >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
             c.x()-1 < high.x() && c.y() < high.y() && c.z() < high.z())
           break;
@@ -229,8 +229,8 @@ void printData(DataArchive* archive, string& variable_name,
       }
       int p_ym = 0;
       for (; p_ym < patches.size(); p_ym++) {
-        IntVector low = patches[p_ym]->getLowIndex();
-        IntVector high = patches[p_ym]->getHighIndex();
+        IntVector low = patches[p_ym]->getExtraCellLowIndex__New();
+        IntVector high = patches[p_ym]->getExtraCellHighIndex__New();
         if (c.x() >= low.x() && c.y()-1 >= low.y() && c.z() >= low.z() && 
             c.x() < high.x() && c.y()-1 < high.y() && c.z() < high.z())
           break;
@@ -241,8 +241,8 @@ void printData(DataArchive* archive, string& variable_name,
       }
       int p_zm = 0;
       for (; p_zm < patches.size(); p_zm++) {
-        IntVector low = patches[p_zm]->getLowIndex();
-        IntVector high = patches[p_zm]->getHighIndex();
+        IntVector low = patches[p_zm]->getExtraCellLowIndex__New();
+        IntVector high = patches[p_zm]->getExtraCellHighIndex__New();
         if (c.x() >= low.x() && c.y() >= low.y() && c.z()-1 >= low.z() && 
             c.x() < high.x() && c.y() < high.y() && c.z()-1 < high.z())
           break;
@@ -253,8 +253,8 @@ void printData(DataArchive* archive, string& variable_name,
       }
       int p_xp = 0;
       for (; p_xp < patches.size(); p_xp++) {
-        IntVector low = patches[p_xp]->getLowIndex();
-        IntVector high = patches[p_xp]->getHighIndex();
+        IntVector low = patches[p_xp]->getExtraCellLowIndex__New();
+        IntVector high = patches[p_xp]->getExtraCellHighIndex__New();
         if (c.x()+1 >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
             c.x()+1 < high.x() && c.y() < high.y() && c.z() < high.z())
           break;
@@ -265,8 +265,8 @@ void printData(DataArchive* archive, string& variable_name,
       }
       int p_yp = 0;
       for (; p_yp < patches.size(); p_yp++) {
-        IntVector low = patches[p_yp]->getLowIndex();
-        IntVector high = patches[p_yp]->getHighIndex();
+        IntVector low = patches[p_yp]->getExtraCellLowIndex__New();
+        IntVector high = patches[p_yp]->getExtraCellHighIndex__New();
         if (c.x() >= low.x() && c.y()+1 >= low.y() && c.z() >= low.z() && 
             c.x() < high.x() && c.y()+1 < high.y() && c.z() < high.z())
           break;
@@ -277,8 +277,8 @@ void printData(DataArchive* archive, string& variable_name,
       }
       int p_zp = 0;
       for (; p_zp < patches.size(); p_zp++) {
-        IntVector low = patches[p_zp]->getLowIndex();
-        IntVector high = patches[p_zp]->getHighIndex();
+        IntVector low = patches[p_zp]->getExtraCellLowIndex__New();
+        IntVector high = patches[p_zp]->getExtraCellHighIndex__New();
         if (c.x() >= low.x() && c.y() >= low.y() && c.z()+1 >= low.z() && 
             c.x() < high.x() && c.y() < high.y() && c.z()+1 < high.z())
           break;
