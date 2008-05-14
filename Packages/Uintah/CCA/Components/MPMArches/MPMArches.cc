@@ -111,6 +111,7 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec,
      printf("ERROR: It appears that the <Multimaterial> tag is missing from the problem specification (.ups file)...\n");
      printf("\n");
    }
+   d_mpm->setWithARCHES();
 
    db->require("heatExchange", d_calcEnergyExchange);
    db->require("fluidThermalConductivity", d_tcond);

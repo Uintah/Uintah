@@ -77,6 +77,7 @@ namespace Uintah {
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
 
     bool        d_with_ice;
+    bool        d_with_arches;
 
     std::vector<std::string> d_bndy_face_txt_list; 
 
