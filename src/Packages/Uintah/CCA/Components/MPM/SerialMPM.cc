@@ -1460,11 +1460,11 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     IntVector periodic=patch->getLevel()->getPeriodicBoundaries();
     string interp_type = flags->d_interpolator_type;
     if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
-      if(!flags->d_with_ice){
+      if(!flags->d_with_ice && !flags->d_with_arches){
         ostringstream msg;
         msg << "\n ERROR: When using <interpolator>linear</interpolator> \n"
             << " you should also use <extraCells>[0,0,0]</extraCells> \n"
-            << " unless you are running an MPMICE case.\n";
+            << " unless you are running an MPMICE or MPMARCHES case.\n";
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
     }
