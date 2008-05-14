@@ -117,7 +117,7 @@ void Thomsen_Hartka_water::computePressEOS(double rhoM, double gamma,
  
  //__________________________________
  //  dp_de
- numerator   = -2 * d_L * (a_press_temp - d_To);
+ numerator   = 2 * d_L * (a_press_temp - d_To);
  
  double d1   = d_ko - 2 * a_L * (a_press_temp - d_To);
  double d2   = d_co + d_b * ( d_To - Temp) + 2 * press * d_L * d_vo * (-a_press + d_To - 2 * Temp);
