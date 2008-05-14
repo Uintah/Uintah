@@ -1527,7 +1527,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       } // End of loop over iter
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
                                            !iter.done();iter++){
         IntVector c = *iter; 
         totalmass      += (gmass[c]+Gmass[c]);
@@ -2081,7 +2081,7 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
       Gacceleration.initialize(Vector(0.,0.,0.));
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
 		        !iter.done(); iter++){
          IntVector c = *iter;
          // above crack
@@ -2141,7 +2141,7 @@ void FractureMPM::integrateAcceleration(const ProcessorGroup*,
       Gvelocity_star.initialize(Vector(0.0));
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
 		       !iter.done(); iter++){
         IntVector c = *iter;
         // above crack
@@ -2203,7 +2203,7 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
       
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getNodeIterator(interp_type); !iter.done();
+      for(NodeIterator iter = patch->getExtraNodeIterator__New(); !iter.done();
                                                                iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;

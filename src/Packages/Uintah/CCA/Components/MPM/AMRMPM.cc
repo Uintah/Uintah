@@ -1055,7 +1055,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter=patch->getNodeIterator(interp_type);!iter.done();iter++){
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();iter++){
         IntVector c = *iter; 
         gvelocity[c]    /= gmass[c];
         gvelocityInterp[c]=gvelocity[c];
@@ -1287,7 +1287,7 @@ void AMRMPM::solveEquationsMotion(const ProcessorGroup*,
       acceleration.initialize(Vector(0.,0.,0.));
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter = patch->getNodeIterator(interp_type);
+      for(NodeIterator iter = patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
         IntVector c = *iter;
         Vector acc(0.0,0.0,0.0);
@@ -1326,7 +1326,7 @@ void AMRMPM::integrateAcceleration(const ProcessorGroup*,
       velocity_star.initialize(Vector(0,0,0));
 
       string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter = patch->getNodeIterator(interp_type);
+      for(NodeIterator iter = patch->getExtraNodeIterator__New();
                         !iter.done();iter++){
         IntVector c = *iter;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
@@ -1372,7 +1372,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
-      for(NodeIterator iter = patch->getNodeIterator(interp_type); !iter.done();
+      for(NodeIterator iter = patch->getExtraNodeIterator__New(); !iter.done();
                                                                iter++){
         IntVector c = *iter;
         gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
@@ -1384,7 +1384,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
         new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
         old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
                                                                Ghost::None,0);
-        for(NodeIterator iter = patch->getNodeIterator(interp_type);
+        for(NodeIterator iter = patch->getExtraNodeIterator__New();
                          !iter.done();iter++){
            IntVector c = *iter;
            displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
@@ -1442,7 +1442,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
 
     if(!coarser && !finer){
-      for(NodeIterator iter = patch->getNodeIterator(interp_type);
+      for(NodeIterator iter = patch->getExtraNodeIterator__New();
           !iter.done();iter++){
         IntVector c = *iter;
         zoi[c].p=1.;
@@ -1471,7 +1471,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     cout << "Patch node high index = " << patch->getExtraNodeHighIndex__New() << endl;
     cout << "Patch cell high index = " << patch->getExtraCellHighIndex__New() << endl;
 
-    for(NodeIterator iter = patch->getNodeIterator(interp_type);
+    for(NodeIterator iter = patch->getExtraNodeIterator__New();
         !iter.done();iter++){
       IntVector c = *iter;
 
