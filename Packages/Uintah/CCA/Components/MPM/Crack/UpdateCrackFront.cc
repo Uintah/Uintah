@@ -65,7 +65,7 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
         cfnset[m][pid].clear();
         for(int j=0; j<(int)cfSegNodes[m].size(); j++) {
           int node=cfSegNodes[m][j];
-          if(patch->containsPoint(cx[m][node]))
+          if(patch->containsPointInExtraCells(cx[m][node]))
             cfnset[m][pid].push_back(j);
         }
         MPI_Barrier(mpi_crack_comm);
@@ -87,7 +87,7 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
           int n1=cfSegNodes[m][2*j]; 
           int n2=cfSegNodes[m][2*j+1];
           Point cent=cx[m][n1]+(cx[m][n2]-cx[m][n1])/2.;
-          if(patch->containsPoint(cent)) {
+          if(patch->containsPointInExtraCells(cent)) {
             cfsset[m][pid].push_back(j); 
           } 
         }
