@@ -201,8 +201,8 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  IntVector domLo = patch->getCellLowIndex();
-  IntVector domHi = patch->getCellHighIndex();
+  IntVector domLo = patch->getExtraCellLowIndex__New();
+  IntVector domHi = patch->getExtraCellHighIndex__New();
 
   /*
       IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
@@ -300,8 +300,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  IntVector domLo = patch->getCellLowIndex();
-  IntVector domHi = patch->getCellHighIndex();
+  IntVector domLo = patch->getExtraCellLowIndex__New();
+  IntVector domHi = patch->getExtraCellHighIndex__New();
   
   int wall = d_boundaryCondition->wallCellType();
   double areaew;
