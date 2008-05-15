@@ -620,7 +620,9 @@ ProblemSpecReader::parseValidationFile()
   doc = xmlReadFile( valFile.c_str(), 0, XML_PARSE_PEDANTIC );
   
   if (doc == 0) {
-    cout << "\nWARNING: can't find '" << valFile << "'... .ups validation will not take place.\n\n";
+    if(Parallel::getMPIRank() == 0){
+      cout << "\nWARNING: can't find '" << valFile << "'... .ups validation will not take place.\n\n";
+    }
     return;
     //throw ProblemSetupException( "Error opening " + valFile, __FILE__, __LINE__ );
   }
