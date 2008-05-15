@@ -121,8 +121,8 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
-    IntVector lowIndex = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector highIndex = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalCells=0;
@@ -234,8 +234,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
-  IntVector lowIndex = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-  IntVector highIndex = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+  IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+  IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);

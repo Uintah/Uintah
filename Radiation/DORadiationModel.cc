@@ -205,8 +205,8 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
   IntVector domHi = patch->getExtraCellHighIndex__New();
 
   /*
-      IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-      IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+      IntVector domLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+      IntVector domHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;

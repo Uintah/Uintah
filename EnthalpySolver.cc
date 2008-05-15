@@ -795,8 +795,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     if (d_radiationCalc) {
       if (d_DORadiationCalc){
-      enthalpyVars.ESRCG.allocate(patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL),
-				 patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL));
+      enthalpyVars.ESRCG.allocate(patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL),
+				 patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL));
 	
       enthalpyVars.ESRCG.initialize(0.0);
 

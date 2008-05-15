@@ -887,8 +887,8 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
     Array3<double> rhoF(idxLo, idxHi);
     Array3<double> rhoE(idxLo, idxHi);
     Array3<double> rhoRF(idxLo, idxHi);
@@ -1597,8 +1597,8 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 
     StencilMatrix<constCCVariable<double> > SIJ; //6 point tensor
     StencilMatrix<constCCVariable<double> > SHATIJ; //6 point tensor
@@ -2543,8 +2543,8 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }      
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, MLI, MLHatI);
     d_filter->applyFilter(pc, patch, MMI, MMHatI);
@@ -3056,8 +3056,8 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
     Array3<double> phiSqr(idxLo, idxHi);
     phiSqr.initialize(0.0);
 

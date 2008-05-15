@@ -137,8 +137,8 @@ OdtClosure::initializeOdtvariable( const ProcessorGroup*,
     odt_variable.initialize(data);
 //    odt_variable.x_u.initialize(0.0);
     int numGC = 1;
-    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
-    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(numGC);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(numGC);
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -396,8 +396,8 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
 
     int numGC = 1;
-    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
-    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(numGC);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(numGC);
     cout << "ATTENTION(idxLo and idxHi): " << idxLo << " " << idxHi << " " << patches->size() << " " << p <<  "\n";
     Array3<double> denUU(idxLo, idxHi);
     denUU.initialize(0.0);
@@ -1185,8 +1185,8 @@ OdtClosure::computeScalarVariance(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     int numGC = 1;
-    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
-    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(numGC);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(numGC);
     Array3<double> phiSqr(idxLo, idxHi);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {

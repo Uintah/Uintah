@@ -752,8 +752,8 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     StencilMatrix<Array3<double> > betaIJ;  //6 point tensor
     StencilMatrix<Array3<double> > betaHATIJ; //6 point tensor
 
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 
     int tensorSize = 6; //  1-> 11, 2->22, 3->33, 4 ->12, 5->13, 6->23
     for (int ii = 0; ii < tensorSize; ii++) {
@@ -2149,8 +2149,8 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 #endif
     
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
     Array3<double> phiSqr(idxLo, idxHi);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {

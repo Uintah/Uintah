@@ -821,8 +821,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
     Array3<double> rhoF(idxLo, idxHi);
     Array3<double> rhoE(idxLo, idxHi);
     Array3<double> rhoRF(idxLo, idxHi);
@@ -1446,8 +1446,8 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 
     StencilMatrix<constCCVariable<double> > SIJ; //6 point tensor
     StencilMatrix<constCCVariable<double> > SHATIJ; //6 point tensor
@@ -2728,8 +2728,8 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     
-    IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
     Array3<double> rhoPhi(idxLo, idxHi);
     Array3<double> rhoPhiSqr(idxLo, idxHi);
     rhoPhi.initialize(0.0);
