@@ -1355,23 +1355,23 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }	
 #endif
-    Array3<double> filterUU(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterUU(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterUU.initialize(0.0);
-    Array3<double> filterUV(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterUV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterUV.initialize(0.0);
-    Array3<double> filterUW(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterUW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterUW.initialize(0.0);
-    Array3<double> filterVV(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterVV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterVV.initialize(0.0);
-    Array3<double> filterVW(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterVW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterVW.initialize(0.0);
-    Array3<double> filterWW(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterWW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterWW.initialize(0.0);
-    Array3<double> filterUVel(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterUVel(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterUVel.initialize(0.0);
-    Array3<double> filterVVel(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterVVel(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterVVel.initialize(0.0);
-    Array3<double> filterWVel(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterWVel(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterWVel.initialize(0.0);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
@@ -1854,9 +1854,9 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
     // using a box filter, generalize it to use other filters such as Gaussian
-    Array3<double> MLHatI(patch->getLowIndex(), patch->getHighIndex()); // magnitude of strain rate
+    Array3<double> MLHatI(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()); // magnitude of strain rate
     MLHatI.initialize(0.0);
-    Array3<double> MMHatI(patch->getLowIndex(), patch->getHighIndex()); // magnitude of test filter strain rate
+    Array3<double> MMHatI(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()); // magnitude of test filter strain rate
     MMHatI.initialize(0.0);
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
@@ -1893,7 +1893,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }
 #endif
     CCVariable<double> tempCs;
-    tempCs.allocate(patch->getLowIndex(), patch->getHighIndex());
+    tempCs.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     tempCs.initialize(0.0);
 	  //     calculate the local Smagorinsky coefficient
 	  //     perform "clipping" in case MLij is negative...
@@ -2162,8 +2162,8 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
 
-    Array3<double> filterPhi(patch->getLowIndex(), patch->getHighIndex());
-    Array3<double> filterPhiSqr(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterPhi(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterPhiSqr(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
 

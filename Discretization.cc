@@ -207,7 +207,7 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
   IntVector indexHigh = patch->getCellFORTHighIndex();
 
   CCVariable<double> unfiltered_divergence;
-  unfiltered_divergence.allocate(patch->getLowIndex(), patch->getHighIndex());
+  unfiltered_divergence.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
   unfiltered_divergence.initialize(0.0);
 
   for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
