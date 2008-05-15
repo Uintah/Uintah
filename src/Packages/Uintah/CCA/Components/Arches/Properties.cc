@@ -2169,7 +2169,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     // compute drhodt and its filtered value
-    drhodt.allocate(patch->getLowIndex(), patch->getHighIndex());
+    drhodt.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     drhodt.initialize(0.0);
 
     if ((d_first_order_drhodt)||(current_step <= drhodt_1st_order)) {
