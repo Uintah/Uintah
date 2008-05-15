@@ -750,8 +750,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (negativeDensityGuess > 0.0) {
       if (pc->myrank() == 0)
         cout << "Applying old density fix for enthalpy" << endl;
-      IntVector idxLo = patch->getCellFORTLowIndex();
-      IntVector idxHi = patch->getCellFORTHighIndex();
+      IntVector idxLo = patch->getFortranCellLowIndex__New();
+      IntVector idxHi = patch->getFortranCellHighIndex__New();
       double areaew, areans, areatb, div;
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -834,8 +834,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	  d_DORadiation->intensitysolve(pc, patch, cellinfo,
 					&enthalpyVars, &constEnthalpyVars);
       }
-      IntVector indexLow = patch->getCellFORTLowIndex();
-      IntVector indexHigh = patch->getCellFORTHighIndex();
+      IntVector indexLow = patch->getFortranCellLowIndex__New();
+      IntVector indexHigh = patch->getFortranCellHighIndex__New();
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {

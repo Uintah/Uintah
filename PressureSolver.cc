@@ -652,8 +652,8 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
 			    d_lab->d_pressPlusHydroLabel, 
 			    matlIndex, patch);
 
-    IntVector valid_lo = patch->getCellFORTLowIndex();
-    IntVector valid_hi = patch->getCellFORTHighIndex();
+    IntVector valid_lo = patch->getFortranCellLowIndex__New();
+    IntVector valid_hi = patch->getFortranCellHighIndex__New();
 
     int mmwallid = d_boundaryCondition->getMMWallId();
 
@@ -676,8 +676,8 @@ PressureSolver::normPressure(const ProcessorGroup*,
 			     const Patch* patch,
 			     ArchesVariables* vars)
 {
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   double pressref = vars->press_ref;
   fort_normpress(idxLo, idxHi, vars->pressure, pressref);
 

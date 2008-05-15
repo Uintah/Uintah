@@ -86,19 +86,12 @@ ZeroExtraScalarSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     new_dw->getModifiable(zerosrcVar, d_lab->d_zerosrcVarLabel, 
     			  matlIndex, patch);
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
-
     //cout << "adding source for " << d_scalar_nonlin_src_label->getName() << endl;
-    for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
+	for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
 
-          scalarNonlinSrc[currCell] += 0.0;
-	  zerosrcVar[currCell] += 0.0;
-        }
-      }
-    }
+		scalarNonlinSrc[*iter] += 0.0;
+		zerosrcVar[*iter] += 0.0;
+	
+	}
   }
 }

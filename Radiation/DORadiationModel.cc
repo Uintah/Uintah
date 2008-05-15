@@ -199,8 +199,8 @@ DORadiationModel::computeRadiationProps(const ProcessorGroup*,
 
 {
 
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   IntVector domLo = patch->getExtraCellLowIndex__New();
   IntVector domHi = patch->getExtraCellHighIndex__New();
 
@@ -254,8 +254,8 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
 					ArchesVariables* vars,
 					ArchesConstVariables* constvars)
 {
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -298,8 +298,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   fort_radarray(rgamma, sd15, sd, sd7, sd3);
   }
 
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   IntVector domLo = patch->getExtraCellLowIndex__New();
   IntVector domHi = patch->getExtraCellHighIndex__New();
   

@@ -571,8 +571,8 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
   double reactscalar_clipped = 0.0;
   double epsilon = 1.0e-15;
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {

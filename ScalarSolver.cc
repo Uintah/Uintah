@@ -447,8 +447,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 			d_lab->d_scalarFluxCompLabel, ii, patch,
 			Ghost::AroundCells, Arches::ONEGHOSTCELL);
       }
-      IntVector indexLow = patch->getCellFORTLowIndex();
-      IntVector indexHigh = patch->getCellFORTHighIndex();
+      IntVector indexLow = patch->getFortranCellLowIndex__New();
+      IntVector indexHigh = patch->getFortranCellHighIndex__New();
       
       // set density for the whole domain
       
@@ -679,8 +679,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   double scalar_clipped = 0.0;
   double epsilon = 1.0e-15;
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {

@@ -138,8 +138,8 @@ Filter::matrixCreate(const PatchSet* allpatches,
 
       // #ifdef notincludeBdry
 #if 1
-      IntVector plowIndex = patch->getCellFORTLowIndex();
-      IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
+      IntVector plowIndex = patch->getFortranCellLowIndex__New();
+      IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
 #else
       IntVector plowIndex = patch->getCellLowIndex__New();
       IntVector phighIndex = patch->getCellHighIndex__New();
@@ -276,8 +276,8 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
    if (!d_matrixInitialize) {
      // #ifdef notincludeBdry
 #if 1
-     IntVector idxLo = patch->getCellFORTLowIndex();
-     IntVector idxHi = patch->getCellFORTHighIndex();
+     IntVector idxLo = patch->getFortranCellLowIndex__New();
+     IntVector idxHi = patch->getFortranCellHighIndex__New();
 #else
      IntVector idxLo = patch->getCellLowIndex__New();
      IntVector idxHi = patch->getCellHighIndex__New()-IntVector(1,1,1);
@@ -402,8 +402,8 @@ Filter::applyFilter(const ProcessorGroup* ,
 
   // #ifdef notincludeBdry
 #if 1
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 #else
   IntVector idxLo = patch->getCellLowIndex__New();
   IntVector idxHi = patch->getCellHighIndex__New()-IntVector(1,1,1);
@@ -510,8 +510,8 @@ Filter::applyFilter(const ProcessorGroup* ,
 
   // #ifdef notincludeBdry
 #if 1
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 #else
   IntVector idxLo = patch->getCellLowIndex__New();
   IntVector idxHi = patch->getCellHighIndex__New()-IntVector(1,1,1);

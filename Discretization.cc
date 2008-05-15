@@ -203,8 +203,8 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
 {
 
   // Get the patch and variable indices
-  IntVector indexLow = patch->getCellFORTLowIndex();
-  IntVector indexHigh = patch->getCellFORTHighIndex();
+  IntVector indexLow = patch->getFortranCellLowIndex__New();
+  IntVector indexHigh = patch->getFortranCellHighIndex__New();
 
   CCVariable<double> unfiltered_divergence;
   unfiltered_divergence.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
@@ -272,8 +272,8 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 				       ArchesConstVariables* constcoeff_vars)
 {
   // Get the domain size and the patch indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
 #ifdef divergenceconstraint
   fort_prescoef_var(idxLo, idxHi, constcoeff_vars->density,
@@ -315,8 +315,8 @@ Discretization::mmModifyPressureCoeffs(const ProcessorGroup*,
 {
   // Get the domain size and the patch indices
 
-  IntVector valid_lo = patch->getCellFORTLowIndex();
-  IntVector valid_hi = patch->getCellFORTHighIndex();
+  IntVector valid_lo = patch->getFortranCellLowIndex__New();
+  IntVector valid_hi = patch->getFortranCellHighIndex__New();
 
   fort_mm_modify_prescoef(coeff_vars->pressCoeff[Arches::AE],
 			  coeff_vars->pressCoeff[Arches::AW],
@@ -340,8 +340,8 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 				     int conv_scheme)
 {
   // Get the domain size and the patch indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   
   fort_scalcoef(idxLo, idxHi,
 		constcoeff_vars->density, constcoeff_vars->viscosity,
@@ -456,8 +456,8 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 {
   
   // Get the domain size and the patch indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   // Calculate the diagonal terms (AP)
   fort_apcal_all(idxLo, idxHi, coeff_vars->pressCoeff[Arches::AP],
@@ -480,8 +480,8 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 {
   
   // Get the domain size and the patch indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   fort_apcal_all(idxLo, idxHi, coeff_vars->scalarCoeff[Arches::AP],
 	     coeff_vars->scalarCoeff[Arches::AE],
@@ -522,8 +522,8 @@ Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
   Array3<double> y_flux;
   Array3<double> z_flux;
 
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   x_flux.resize(idxLo,idxHi+IntVector(2,1,1));
   y_flux.resize(idxLo,idxHi+IntVector(1,2,1));
