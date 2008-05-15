@@ -862,8 +862,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 			Ghost::AroundCells, Arches::ONEGHOSTCELL);
 	  }
 
-	IntVector indexLow = patch->getCellFORTLowIndex();
-	IntVector indexHigh = patch->getCellFORTHighIndex();
+	IntVector indexLow = patch->getFortranCellLowIndex__New();
+	IntVector indexHigh = patch->getFortranCellHighIndex__New();
 	
 	// set density for the whole domain
 
@@ -1125,8 +1125,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   if (d_pressure_correction) {
   int outlet_celltypeval = d_boundaryCondition->outletCellType();
   if (!(outlet_celltypeval==-10)) {
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -1270,8 +1270,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     factor_old = timelabels->factor_old;
     factor_new = timelabels->factor_new;
     factor_divide = timelabels->factor_divide;
-    IntVector ixLow = patch->getCellFORTLowIndex();
-    IntVector ixHigh = patch->getCellFORTHighIndex();
+    IntVector ixLow = patch->getFortranCellLowIndex__New();
+    IntVector ixHigh = patch->getFortranCellHighIndex__New();
     
     for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
       for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
@@ -1477,8 +1477,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
   if (d_boundaryCondition->anyArchesPhysicalBC()) {
   int outlet_celltypeval = d_boundaryCondition->outletCellType();
   int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;

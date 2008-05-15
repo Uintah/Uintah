@@ -301,8 +301,8 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     int startZ = indexLow.z();
     int endZ = indexHigh.z()+1;
     int startY = indexLow.y();
@@ -1373,8 +1373,8 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     filterVVel.initialize(0.0);
     Array3<double> filterWVel(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterWVel.initialize(0.0);
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     double start_turbTime = Time::currentSeconds();
 #ifdef PetscFilter
 #if 0
@@ -1858,8 +1858,8 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     MLHatI.initialize(0.0);
     Array3<double> MMHatI(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()); // magnitude of test filter strain rate
     MMHatI.initialize(0.0);
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, MLI, MLHatI);
     d_filter->applyFilter(pc, patch, MMI, MMHatI);
@@ -2167,8 +2167,8 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch,scalar, filterPhi);
     d_filter->applyFilter(pc, patch,phiSqr, filterPhiSqr);
@@ -2427,8 +2427,8 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {

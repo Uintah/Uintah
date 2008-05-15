@@ -227,8 +227,8 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   if (!(doing_EKT_now)) {
 #ifdef divergenceconstraint
   fort_pressrcpred_var(idxLo, idxHi, vars->pressNonlinearSrc,
@@ -266,8 +266,8 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   // 3-d array for volume - fortran uses it for temporary storage
   // Array3<double> volume(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
@@ -298,8 +298,8 @@ Source::calculateExtraScalarSource(const ProcessorGroup* pc,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   // 3-d array for volume - fortran uses it for temporary storage
   // Array3<double> volume(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
@@ -324,8 +324,8 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector indexLow = patch->getCellFORTLowIndex();
-  IntVector indexHigh = patch->getCellFORTHighIndex();
+  IntVector indexLow = patch->getFortranCellLowIndex__New();
+  IntVector indexHigh = patch->getFortranCellHighIndex__New();
   for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
     for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
       for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -352,8 +352,8 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   // 3-d array for volume - fortran uses it for temporary storage
   // Array3<double> volume(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
@@ -387,8 +387,8 @@ Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   double tref = 298; // warning, read it in
   fort_enthalpyradthinsrc(idxLo, idxHi, vars->scalarNonlinearSrc,
 			  vars->temperature, constvars->absorption,
@@ -490,8 +490,8 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   fort_mascalscalar(idxLo, idxHi, constvars->scalar,
 		    vars->scalarCoeff[Arches::AE],
 		    vars->scalarCoeff[Arches::AW],
@@ -519,8 +519,8 @@ Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
 {
   // Get the patch and variable indices
   // And call the fortran routine (MASCAL)
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   fort_mascalscalar(idxLo, idxHi, constvars->enthalpy,
 		    vars->scalarCoeff[Arches::AE],
 		    vars->scalarCoeff[Arches::AW],
@@ -601,8 +601,8 @@ Source::addMMEnthalpySource(const ProcessorGroup* ,
 
   // Get the low and high index for the patch
 
-  IntVector valid_lo = patch->getCellFORTLowIndex();
-  IntVector valid_hi = patch->getCellFORTHighIndex();
+  IntVector valid_lo = patch->getFortranCellLowIndex__New();
+  IntVector valid_hi = patch->getFortranCellHighIndex__New();
 
   fort_add_mm_enth_src(vars->scalarNonlinearSrc,
 		       vars->scalarLinearSrc,
@@ -716,8 +716,8 @@ Source::calculateScalarMMSSource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   double rho0=0.0;
   
  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -749,8 +749,8 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
 
   // Get the patch and variable indices
   double rho0 = 0.0;
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {

@@ -878,8 +878,8 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterdenPhiV.initialize(0.0);
     Array3<double> filterdenPhiW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     filterdenPhiW.initialize(0.0);
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 #ifdef PetscFilter
 //    d_filter->applyFilter(pc, patch,uVel, filterUVel);
 #if 0
@@ -1203,8 +1203,8 @@ OdtClosure::computeScalarVariance(const ProcessorGroup*,
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -1340,8 +1340,8 @@ OdtClosure::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {

@@ -119,8 +119,8 @@ RadHypreSolver::gridSetup(const ProcessorGroup*,
 {
   int nx, ny, nz;
   int bx, by, bz;
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   nx = idxHi.x() - idxLo.x() + 1;
   ny = idxHi.y() - idxLo.y() + 1;
@@ -280,8 +280,8 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   
   int i, s;
  
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   d_value = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   
   /* Set the coefficients for the grid */
@@ -647,8 +647,8 @@ void
 RadHypreSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 {
   // copy solution vector back into the array
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   double* xvec;
   xvec = hypre_CTAlloc(double, d_volume);
  

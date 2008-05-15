@@ -870,8 +870,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -965,8 +965,8 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     }
     
     if (d_underflow) {
-      indexLow = patch->getCellFORTLowIndex();
-      indexHigh = patch->getCellFORTHighIndex();
+      indexLow = patch->getFortranCellLowIndex__New();
+      indexHigh = patch->getFortranCellHighIndex__New();
 
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -1109,8 +1109,8 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     fd >> tmp >> tmp >> tmp;
     fd >> tmp >> tmp >> tmp;
     double uvel,vvel,wvel,pres;
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     for (int colZ = 1; colZ <= nz; colZ ++) {
       for (int colY = 1; colY <= ny; colY ++) {
 	for (int colX = 1; colX <= nx; colX ++) {
@@ -1179,8 +1179,8 @@ Arches::blobInit(const ProcessorGroup* ,
     std::cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
     std::cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
   
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
 	  
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -1259,8 +1259,8 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     double pi = acos(-1.0);
 
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -1737,8 +1737,8 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
