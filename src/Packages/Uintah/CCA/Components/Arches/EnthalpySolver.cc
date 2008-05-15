@@ -680,23 +680,23 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         }
       }
       else {
-        enthalpyVars.qfluxe.allocate(patch->getCellLowIndex(),
-				     patch->getCellHighIndex());
+        enthalpyVars.qfluxe.allocate(patch->getExtraCellLowIndex__New(),
+				     patch->getExtraCellHighIndex__New());
         enthalpyVars.qfluxe.initialize(0.0);
-        enthalpyVars.qfluxw.allocate(patch->getCellLowIndex(),
-				     patch->getCellHighIndex());
+        enthalpyVars.qfluxw.allocate(patch->getExtraCellLowIndex__New(),
+				     patch->getExtraCellHighIndex__New());
         enthalpyVars.qfluxw.initialize(0.0);
-        enthalpyVars.qfluxn.allocate(patch->getCellLowIndex(),
-				     patch->getCellHighIndex());
+        enthalpyVars.qfluxn.allocate(patch->getExtraCellLowIndex__New(),
+				     patch->getExtraCellHighIndex__New());
         enthalpyVars.qfluxn.initialize(0.0);
-        enthalpyVars.qfluxs.allocate(patch->getCellLowIndex(),
-				     patch->getCellHighIndex());
+        enthalpyVars.qfluxs.allocate(patch->getExtraCellLowIndex__New(),
+				     patch->getExtraCellHighIndex__New());
         enthalpyVars.qfluxs.initialize(0.0);
-        enthalpyVars.qfluxt.allocate(patch->getCellLowIndex(),
-				     patch->getCellHighIndex());
+        enthalpyVars.qfluxt.allocate(patch->getExtraCellLowIndex__New(),
+				     patch->getExtraCellHighIndex__New());
         enthalpyVars.qfluxt.initialize(0.0);
-        enthalpyVars.qfluxb.allocate(patch->getCellLowIndex(),
-				     patch->getCellHighIndex());
+        enthalpyVars.qfluxb.allocate(patch->getExtraCellLowIndex__New(),
+				     patch->getExtraCellHighIndex__New());
         enthalpyVars.qfluxb.initialize(0.0);
       }
     }

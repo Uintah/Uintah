@@ -295,8 +295,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     }
 
     if (d_MAlab) {
-      IntVector indexLow = patch->getCellLowIndex();
-      IntVector indexHigh = patch->getCellHighIndex();
+      IntVector indexLow = patch->getExtraCellLowIndex__New();
+      IntVector indexHigh = patch->getExtraCellHighIndex__New();
       for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
 	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {

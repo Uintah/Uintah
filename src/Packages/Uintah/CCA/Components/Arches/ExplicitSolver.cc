@@ -2603,8 +2603,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
       if ((EKTCorrection)&&(!(doing_EKT_now))) {
       new_dw->get(densityEKT, d_lab->d_densityEKTLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-        idxLo = patch->getCellLowIndex();
-        idxHi = patch->getCellHighIndex();
+        idxLo = patch->getExtraCellLowIndex__New();
+        idxHi = patch->getExtraCellHighIndex__New();
         for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
           for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
             for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
@@ -2839,8 +2839,8 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
       new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,
 		     matlIndex, patch);
 
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
+    IntVector idxLo = patch->getExtraCellLowIndex__New();
+    IntVector idxHi = patch->getExtraCellHighIndex__New();
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
@@ -3453,8 +3453,8 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     double densityLag = 0.0;
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
+    IntVector idxLo = patch->getExtraCellLowIndex__New();
+    IntVector idxHi = patch->getExtraCellHighIndex__New();
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {

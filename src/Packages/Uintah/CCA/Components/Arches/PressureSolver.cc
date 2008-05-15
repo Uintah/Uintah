@@ -688,8 +688,8 @@ PressureSolver::updatePressure(const ProcessorGroup*,
 			     const Patch* patch,
 			     ArchesVariables* vars)
 {
-  IntVector idxLo = patch->getCellLowIndex();
-  IntVector idxHi = patch->getCellHighIndex();
+  IntVector idxLo = patch->getExtraCellLowIndex__New();
+  IntVector idxHi = patch->getExtraCellHighIndex__New();
   for (int ii = idxLo.x(); ii < idxHi.x(); ii++) {
     for (int jj = idxLo.y(); jj < idxHi.y(); jj++) {
       for (int kk = idxLo.z(); kk < idxHi.z(); kk++) {
