@@ -858,8 +858,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 
-    filterRho.copy(density, patch->getCellLowIndex(),
-		      patch->getCellHighIndex());
+    filterRho.copy(density, patch->getExtraCellLowIndex__New(),
+		      patch->getExtraCellHighIndex__New());
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, density, filterRho);
     // making filterRho nonzero 
@@ -867,8 +867,8 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (mmWallID > 0) {
       new_dw->get(den_ref_var, timelabels->ref_density);
 
-      idxLo = patch->getCellLowIndex();
-      idxHi = patch->getCellHighIndex();
+      idxLo = patch->getExtraCellLowIndex__New();
+      idxHi = patch->getExtraCellHighIndex__New();
 
       for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {

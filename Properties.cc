@@ -824,8 +824,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	new_dw->getModifiable(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
     }
 
-    IntVector indexLow = patch->getCellLowIndex();
-    IntVector indexHigh = patch->getCellHighIndex();
+	IntVector indexLow = patch->getExtraCellLowIndex__New();
+	IntVector indexHigh = patch->getExtraCellHighIndex__New();
 
     TAU_PROFILE_STOP(input);
     TAU_PROFILE_START(compute);
@@ -992,7 +992,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  if (d_carbon_balance_es)
 	  	co2Rate[currCell] = outStream.getCO2RATE();
 	  if (d_sulfur_balance_es)
-		so2Rate[currCell] = outStream.getSO2RATE();	  	
+		so2Rate[currCell] = outStream.getSO2RATE();	 
+		
+	  if (co2Rate[currCell] < 0.0)
+			  cout << "RATE IS NEGaTIVE = " << co2Rate[currCell] << endl;	 	
 
 	}
       }
@@ -1594,9 +1597,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
     // no need for if (d_MAlab),  since this routine is only 
     // called if d_MAlab
-
-    IntVector indexLow = patch->getCellLowIndex();
-    IntVector indexHigh = patch->getCellHighIndex();
+	IntVector indexLow = patch->getExtraCellLowIndex__New();
+	IntVector indexHigh = patch->getExtraCellHighIndex__New();
 
     // modify density for the whole domain by multiplying with
     // void fraction
@@ -1860,8 +1862,8 @@ Properties::averageRKProps(const ProcessorGroup*,
     factor_divide = timelabels->factor_divide;
     double epsilon = 1.0e-15;
 
-    IntVector indexLow = patch->getCellLowIndex();
-    IntVector indexHigh = patch->getCellHighIndex();
+	IntVector indexLow = patch->getExtraCellLowIndex__New();
+	IntVector indexHigh = patch->getExtraCellHighIndex__New();
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
