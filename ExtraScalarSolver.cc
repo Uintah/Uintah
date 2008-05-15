@@ -114,7 +114,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
 //      else if (conv_scheme == "flux_limited") d_conv_scheme = 1;
 	else throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
 
-  if ((d_conv_scheme = 0)&&(!(d_scalar_diffusion))) {
+  if ((d_conv_scheme == 0)&&(!(d_scalar_diffusion))) {
     cout << "WARNING! In the absence of diffusion, convection scheme" << endl;
     cout << "falls back on full upwind for scalar " << d_scalar_name << endl;
   }
