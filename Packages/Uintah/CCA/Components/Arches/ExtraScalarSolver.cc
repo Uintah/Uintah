@@ -437,7 +437,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
 		         matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     else {
-      const_density.allocate(patch->getLowIndex(), patch->getHighIndex());
+      const_density.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
       const_density.initialize(1.0);
       constScalarVars.old_density = const_density;
     }
@@ -454,7 +454,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
 		  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
     else {
-      zero_viscosity.allocate(patch->getLowIndex(), patch->getHighIndex());
+      zero_viscosity.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
       zero_viscosity.initialize(0.0);
       constScalarVars.viscosity = zero_viscosity;
     }
@@ -777,7 +777,7 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     else {
-      const_density.allocate(patch->getLowIndex(), patch->getHighIndex());
+      const_density.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
       const_density.initialize(1.0);
       constScalarVars.density_guess = const_density;
     }
