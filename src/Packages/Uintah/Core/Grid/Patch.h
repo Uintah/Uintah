@@ -1822,7 +1822,7 @@ WARNING
       IntVector getGhostCellHighIndex(int numGC) const;
 
       /**
-       * Replace with getCellLowIndex__New()
+       * Replace with getExtraCellLowIndex__New()
        */
       IntVector getLowIndex() const
       { return d_lowIndex; }
