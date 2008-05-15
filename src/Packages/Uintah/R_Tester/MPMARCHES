@@ -21,7 +21,7 @@ from helpers.modUPS import modUPS
 
 
 TESTS = [
-        ("mpmpipe_test", "pipe.ups", 1.1, "Linux", ["doesTestRun"])
+        ("mpmpipe_test", "pipe.ups", 1.1, "Linux")
 ] 
                      
 exit(runSusTests(argv, TESTS, "MPMARCHES"))
