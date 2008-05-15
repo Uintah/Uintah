@@ -929,8 +929,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -1492,8 +1492,8 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
     constCCVariable<double> newCCVVel;
     constCCVariable<double> newCCWVel;
 
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
 
     new_dw->get(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -2246,8 +2246,8 @@ ExplicitSolver::updatePressure(const ProcessorGroup* ,
     new_dw->get(pressure_guess, timelabels->pressure_guess, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     for (int ColX = idxLo.x(); ColX <= idxHi.x(); ColX++) {
       for (int ColY = idxLo.y(); ColY <= idxHi.y(); ColY++) {
         for (int ColZ = idxLo.z(); ColZ <= idxHi.z(); ColZ++) {
@@ -2472,8 +2472,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
 //    if (currentTimeStep > 1) {
-      IntVector idxLo = patch->getCellFORTLowIndex();
-      IntVector idxHi = patch->getCellFORTHighIndex();
+      IntVector idxLo = patch->getFortranCellLowIndex__New();
+      IntVector idxHi = patch->getFortranCellHighIndex__New();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
         for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
           for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -3125,8 +3125,8 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
     double pi = acos(-1.0);
 
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
 
     // Cell Centered Error Calculation
     double snumeratordiff = 0.0;

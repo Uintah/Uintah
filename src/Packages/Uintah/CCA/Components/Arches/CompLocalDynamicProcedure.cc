@@ -1122,8 +1122,8 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     }
     }
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 
 #ifdef use_fortran
     fort_comp_dynamic_3loop(SIJ[0],SIJ[1],SIJ[2],SIJ[3],SIJ[4],SIJ[5],
@@ -2038,8 +2038,8 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }  
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     double start_turbTime = Time::currentSeconds();
 
 #ifdef PetscFilter
@@ -2541,8 +2541,8 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         reactScalarDenomHat.initialize(0.0);
       }
     }      
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
     IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 #ifdef PetscFilter
@@ -3075,8 +3075,8 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, scalar, filterPhi);
@@ -3272,8 +3272,8 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {

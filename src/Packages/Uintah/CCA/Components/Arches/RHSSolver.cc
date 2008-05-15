@@ -308,8 +308,8 @@ RHSSolver::scalarLisolve(const ProcessorGroup*,
 			  CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
     fort_explicit_scalar(idxLo, idxHi, vars->scalar, constvars->old_scalar,
 		  constvars->scalarCoeff[Arches::AE], 
@@ -337,8 +337,8 @@ RHSSolver::enthalpyLisolve(const ProcessorGroup*,
 			  CellInformation* cellinfo)
 {
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
 
     fort_explicit_scalar(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
 		  constvars->scalarCoeff[Arches::AE], 

@@ -1065,8 +1065,8 @@ CompDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     }
     }
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 
     for (int colZ =indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -1825,8 +1825,8 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }  
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
     double start_turbTime = Time::currentSeconds();
 
 #ifdef PetscFilter
@@ -2248,8 +2248,8 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         reactScalarDenomHat.initialize(0.0);
       }
     }      
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, MLI, MLHatI);
     d_filter->applyFilter(pc, patch, MMI, MMHatI);
@@ -2753,8 +2753,8 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     filterRhoPhi.initialize(0.0);
     filterRhoPhiSqr.initialize(0.0);
 
-    IntVector indexLow = patch->getCellFORTLowIndex();
-    IntVector indexHigh = patch->getCellFORTHighIndex();
+    IntVector indexLow = patch->getFortranCellLowIndex__New();
+    IntVector indexHigh = patch->getFortranCellHighIndex__New();
 
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, density, filterRho);
@@ -3007,8 +3007,8 @@ CompDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {

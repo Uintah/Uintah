@@ -200,8 +200,8 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     
     // Get the patch and variable details
     // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     double CF = d_CF;
 #if 0
     if (time < 2.0 ) 
@@ -414,8 +414,8 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     double CFVar = d_CFVar;
 #if 0
     if (time < 2.0 ) 
@@ -645,8 +645,8 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {

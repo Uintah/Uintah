@@ -134,8 +134,8 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
     const PatchSubset* patches = allpatches->getSubset(s);
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      IntVector plowIndex = patch->getCellFORTLowIndex();
-      IntVector phighIndex = patch->getCellFORTHighIndex()+IntVector(1,1,1);
+      IntVector plowIndex = patch->getFortranCellLowIndex__New();
+      IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
   
       long nc = (phighIndex[0]-plowIndex[0])*
 	(phighIndex[1]-plowIndex[1])*
@@ -252,8 +252,8 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
     throw PetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
 
   // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
          Compute the matrix and right-hand-side vector that define
          the linear system, Ax = b.
@@ -566,8 +566,8 @@ void
 RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 {
   // copy solution vector back into the array
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
   double* xvec;
   int ierr;
   ierr = VecGetArray(d_x, &xvec);

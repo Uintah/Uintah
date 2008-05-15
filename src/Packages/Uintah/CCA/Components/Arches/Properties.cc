@@ -2166,8 +2166,8 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
       filterdrhodt.initialize(0.0);
 
     // Get the patch and variable indices
-    IntVector idxLo = patch->getCellFORTLowIndex();
-    IntVector idxHi = patch->getCellFORTHighIndex();
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
     // compute drhodt and its filtered value
     drhodt.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
     drhodt.initialize(0.0);
