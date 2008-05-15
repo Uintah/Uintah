@@ -226,8 +226,8 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
 
     int numGC = 1;
-    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
-    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(numGC);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(numGC);
     Array3<double> denUU(idxLo, idxHi);
     denUU.initialize(0.0);
     Array3<double> denUV(idxLo, idxHi);
@@ -934,8 +934,8 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     int numGC = 1;
-    IntVector idxLo = patch->getGhostCellLowIndex(numGC);
-    IntVector idxHi = patch->getGhostCellHighIndex(numGC);
+    IntVector idxLo = patch->getExtraCellLowIndex__New(numGC);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(numGC);
     Array3<double> phiSqr(idxLo, idxHi);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
