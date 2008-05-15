@@ -26,8 +26,6 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 //#define TEST
 #undef TEST
 
-#define NEW_BCS
-
 using namespace Uintah;
 namespace Uintah {
 
@@ -92,94 +90,112 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 
         switch (face) {
         case Patch::xplus:
-#ifdef NEW_BCS
-          for (CellIterator bound(l,h); !bound.done(); bound++) {
-            IntVector c(*bound - IntVector(1,0,0));
-            A[c].p = A[c].p + one_or_zero * A[c].e;
-            A[c].e = 0.0;
+
+          if (bound_ptr->empty()) {
+            for (CellIterator bound(l,h); !bound.done(); bound++) {
+              IntVector c(*bound - IntVector(1,0,0));
+              A[c].p = A[c].p + one_or_zero * A[c].e;
+              A[c].e = 0.0;
+            }
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+              IntVector c(*iter - IntVector(1,0,0));
+              A[c].p = A[c].p + one_or_zero * A[c].e;
+              A[c].e = 0.0;
+            }
           }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter - IntVector(1,0,0));
-            A[c].p = A[c].p + one_or_zero * A[c].e;
-            A[c].e = 0.0;
-          }
-#endif
+
           break;
         case Patch::xminus:
-#ifdef NEW_BCS
-          for (CellIterator bound(l,h); !bound.done(); bound++) {
-            IntVector c(*bound + IntVector(1,0,0));
-            A[c].p = A[c].p + one_or_zero * A[c].w;
-            A[c].w = 0.0;
+
+          if (bound_ptr->empty()) {
+            for (CellIterator bound(l,h); !bound.done(); bound++) {
+              IntVector c(*bound + IntVector(1,0,0));
+              A[c].p = A[c].p + one_or_zero * A[c].w;
+              A[c].w = 0.0;
+            }
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
+              IntVector c(*iter + IntVector(1,0,0));
+              A[c].p = A[c].p + one_or_zero * A[c].w;
+              A[c].w = 0.0;
+            }
           }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
-            IntVector c(*iter + IntVector(1,0,0));
-            A[c].p = A[c].p + one_or_zero * A[c].w;
-            A[c].w = 0.0;
-          }
-#endif
+
           break;
         case Patch::yplus:
-#ifdef NEW_BCS
-          for (CellIterator bound(l,h); !bound.done(); bound++) {
-            IntVector c(*bound - IntVector(0,1,0));
-            A[c].p = A[c].p + one_or_zero * A[c].n;
-            A[c].n = 0.0;
+
+          if (bound_ptr->empty()) {
+            for (CellIterator bound(l,h); !bound.done(); bound++) {
+              IntVector c(*bound - IntVector(0,1,0));
+              A[c].p = A[c].p + one_or_zero * A[c].n;
+              A[c].n = 0.0;
+            }
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
+              IntVector c(*iter - IntVector(0,1,0));
+              A[c].p = A[c].p + one_or_zero * A[c].n;
+              A[c].n = 0.0;
+            }
           }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
-            IntVector c(*iter - IntVector(0,1,0));
-            A[c].p = A[c].p + one_or_zero * A[c].n;
-            A[c].n = 0.0;
-          }
-#endif
+
           break;
         case Patch::yminus:
-#ifdef NEW_BCS
-          for (CellIterator bound(l,h); !bound.done(); bound++) {
-            IntVector c(*bound + IntVector(0,1,0)); 
-            A[c].p = A[c].p + one_or_zero * A[c].s;
-            A[c].s = 0.0;
+
+          if (bound_ptr->empty()) {
+            for (CellIterator bound(l,h); !bound.done(); bound++) {
+              IntVector c(*bound + IntVector(0,1,0)); 
+              A[c].p = A[c].p + one_or_zero * A[c].s;
+              A[c].s = 0.0;
+            }
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+              IntVector c(*iter + IntVector(0,1,0)); 
+              A[c].p = A[c].p + one_or_zero * A[c].s;
+              A[c].s = 0.0;
+            }
           }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter + IntVector(0,1,0)); 
-            A[c].p = A[c].p + one_or_zero * A[c].s;
-            A[c].s = 0.0;
-          }
-#endif
+
           break;
         case Patch::zplus:
-#ifdef NEW_BCS
-          for (CellIterator bound(l,h); !bound.done(); bound++) {
-            IntVector c(*bound - IntVector(0,0,1));
-            A[c].p = A[c].p + one_or_zero * A[c].t;
-            A[c].t = 0.0;
+
+          if (bound_ptr->empty()) {
+            for (CellIterator bound(l,h); !bound.done(); bound++) {
+              IntVector c(*bound - IntVector(0,0,1));
+              A[c].p = A[c].p + one_or_zero * A[c].t;
+              A[c].t = 0.0;
+            }
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+              IntVector c(*iter - IntVector(0,0,1));
+              A[c].p = A[c].p + one_or_zero * A[c].t;
+              A[c].t = 0.0;
+            }
           }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter - IntVector(0,0,1));
-            A[c].p = A[c].p + one_or_zero * A[c].t;
-            A[c].t = 0.0;
-          }
-#endif
+
           break;
         case Patch::zminus:
-#ifdef NEW_BCS
-          for (CellIterator bound(l,h); !bound.done(); bound++) {
-            IntVector c(*bound + IntVector(0,0,1));
-            A[c].p = A[c].p + one_or_zero * A[c].b;
-            A[c].b = 0.0;
+
+          if (bound_ptr->empty()) {
+            for (CellIterator bound(l,h); !bound.done(); bound++) {
+              IntVector c(*bound + IntVector(0,0,1));
+              A[c].p = A[c].p + one_or_zero * A[c].b;
+              A[c].b = 0.0;
+            }
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+              IntVector c(*iter + IntVector(0,0,1));
+              A[c].p = A[c].p + one_or_zero * A[c].b;
+              A[c].b = 0.0;
+            }
           }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter + IntVector(0,0,1));
-            A[c].p = A[c].p + one_or_zero * A[c].b;
-            A[c].b = 0.0;
-          }
-#endif
+
           break;
         case Patch::numFaces:
           break;
@@ -304,21 +320,24 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //__________________________________
         //  Set the BC  
         vector<IntVector>::const_iterator iter;
-#ifdef NEW_BCS
-        IntVector l,h;
-        patch->getFaceCells(face,0,l,h);
-        for (CellIterator bound(l,h); !bound.done(); bound++) {
-          IntVector c = *bound;
-          IntVector adj = c - oneCell;
-          imp_delP[c] = one_or_zero * imp_delP[adj];
+
+        if (bound_ptr->empty()) {
+          IntVector l,h;
+          patch->getFaceCells(face,0,l,h);
+          for (CellIterator bound(l,h); !bound.done(); bound++) {
+            IntVector c = *bound;
+            IntVector adj = c - oneCell;
+            imp_delP[c] = one_or_zero * imp_delP[adj];
+          }
+        } else {
+
+          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+            IntVector c = *iter;
+            IntVector adj = c - oneCell;
+            imp_delP[c] = one_or_zero * imp_delP[adj];
+          }
         }
-#else
-        for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-          IntVector c = *iter;
-          IntVector adj = c - oneCell;
-          imp_delP[c] = one_or_zero * imp_delP[adj];
-        }
-#endif
+
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
@@ -614,27 +633,30 @@ void setBC(CCVariable<double>& press_CC,
             double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
             IntVector oneCell = patch->faceDirection(face);
             vector<IntVector>::const_iterator iter;
-#ifdef NEW_BCS
-            IntVector l,h;
-            patch->getFaceCells(face,0,l,h);
-            for (CellIterator bound(l,h); !bound.done(); bound++) {
-              IntVector L = *bound - oneCell;
-              IntVector R = *bound;
-              double rho_R = rho_micro[surroundingMatl_indx][R];
-              double rho_L = rho_micro[surroundingMatl_indx][L];
-              double rho_micro_brack = (rho_L + rho_R)/2.0;
-              press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack; 
+
+            if (bound_ptr->empty()) {
+              IntVector l,h;
+              patch->getFaceCells(face,0,l,h);
+              for (CellIterator bound(l,h); !bound.done(); bound++) {
+                IntVector L = *bound - oneCell;
+                IntVector R = *bound;
+                double rho_R = rho_micro[surroundingMatl_indx][R];
+                double rho_L = rho_micro[surroundingMatl_indx][L];
+                double rho_micro_brack = (rho_L + rho_R)/2.0;
+                press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack; 
+              }
+            } else {
+
+              for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) { 
+                IntVector L = *iter - oneCell;
+                IntVector R = *iter;
+                double rho_R = rho_micro[surroundingMatl_indx][R];
+                double rho_L = rho_micro[surroundingMatl_indx][L];
+                double rho_micro_brack = (rho_L + rho_R)/2.0;
+                press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack; 
+              }
             }
-#else
-            for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) { 
-              IntVector L = *iter - oneCell;
-              IntVector R = *iter;
-              double rho_R = rho_micro[surroundingMatl_indx][R];
-              double rho_L = rho_micro[surroundingMatl_indx][L];
-              double rho_micro_brack = (rho_L + rho_R)/2.0;
-              press_CC[R] += grav * cell_dx[p_dir] * rho_micro_brack; 
-            }
-#endif
+
             IveSetBC = true;      
           }
           //__________________________________
@@ -642,30 +664,33 @@ void setBC(CCVariable<double>& press_CC,
           if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
           
             vector<IntVector>::const_iterator iter;
-#ifdef NEW_BCS
-            IntVector l,h;
-            patch->getFaceCells(face,0,l,h);
-            for (CellIterator bound(l,h); !bound.done(); bound++) {
-              IntVector R = *bound;
-              Point here_R = level->getCellPosition(R);
-              Vector dist_R = (here_R.asVector() - press_ref_pt);
-              double rho_R = rho_micro[surroundingMatl_indx][R];
-              // Need the dot product to get the sideWall dirichlet BC's right
-              double correction_R = Dot(gravity,dist_R) * rho_R;
-              press_CC[R] += correction_R;
-            }
-#else
-            for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) {
-              IntVector R = *iter;
-              Point here_R = level->getCellPosition(R);
-              Vector dist_R = (here_R.asVector() - press_ref_pt);
-              double rho_R = rho_micro[surroundingMatl_indx][R];
-              // Need the dot product to get the sideWall dirichlet BC's right
-              double correction_R = Dot(gravity,dist_R) * rho_R;
 
-              press_CC[R] += correction_R;
+            if (bound_ptr->empty()) {
+              IntVector l,h;
+              patch->getFaceCells(face,0,l,h);
+              for (CellIterator bound(l,h); !bound.done(); bound++) {
+                IntVector R = *bound;
+                Point here_R = level->getCellPosition(R);
+                Vector dist_R = (here_R.asVector() - press_ref_pt);
+                double rho_R = rho_micro[surroundingMatl_indx][R];
+                // Need the dot product to get the sideWall dirichlet BC's right
+                double correction_R = Dot(gravity,dist_R) * rho_R;
+                press_CC[R] += correction_R;
+              }
+            } else {
+
+              for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) {
+                IntVector R = *iter;
+                Point here_R = level->getCellPosition(R);
+                Vector dist_R = (here_R.asVector() - press_ref_pt);
+                double rho_R = rho_micro[surroundingMatl_indx][R];
+                // Need the dot product to get the sideWall dirichlet BC's right
+                double correction_R = Dot(gravity,dist_R) * rho_R;
+                
+                press_CC[R] += correction_R;
+              }
             }
-#endif
+
             IveSetBC = true;    
           } //
         } // // not initialization step 
@@ -902,19 +927,22 @@ void setBC(CCVariable<Vector>& var_CC,
           IntVector sign = IntVector(1,1,1);
           sign[P_dir] = -1;
           vector<IntVector>::const_iterator iter;
-#ifdef NEW_BCS
+
+          if (bound_ptr->empty()) {
             IntVector l,h;
             patch->getFaceCells(face,0,l,h);
             for (CellIterator bound(l,h); !bound.done(); bound++) {
               IntVector adjCell = *bound - oneCell;
               var_CC[*bound] = sign.asVector() * var_CC[adjCell];
             }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector adjCell = *iter - oneCell;
-            var_CC[*iter] = sign.asVector() * var_CC[adjCell];
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+              IntVector adjCell = *iter - oneCell;
+              var_CC[*iter] = sign.asVector() * var_CC[adjCell];
+            }
           }
-#endif
+
           IveSetBC = true;
           bc_value = Vector(0,0,0); // so the debugging output is accurate
         }
@@ -984,34 +1012,40 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         if(bc_kind == "computeFromDensity"){
         
           vector<IntVector>::const_iterator iter;
-#ifdef NEW_BCS
-          IntVector l,h;
-          patch->getFaceCells(face,0,l,h);
-          for (CellIterator bound(l,h); !bound.done(); bound++) {
-            IntVector c = *bound;
-            sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
-          }
-#else
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c = *iter;
-            sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
-          }
-#endif
-          
-          if(isMassSp_vol){  // convert to mass * sp_vol
-#ifdef NEW_BCS
+
+          if (bound_ptr->empty()) {
             IntVector l,h;
             patch->getFaceCells(face,0,l,h);
             for (CellIterator bound(l,h); !bound.done(); bound++) {
               IntVector c = *bound;
-              sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
+              sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
             }
-#else
-            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
+          } else {
+
+            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
               IntVector c = *iter;
-              sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
+              sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
             }
-#endif
+          }
+
+          
+          if(isMassSp_vol){  // convert to mass * sp_vol
+
+            if (bound_ptr->empty()){
+              IntVector l,h;
+              patch->getFaceCells(face,0,l,h);
+              for (CellIterator bound(l,h); !bound.done(); bound++) {
+                IntVector c = *bound;
+                sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
+              }
+            } else {
+
+              for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
+                IntVector c = *iter;
+                sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
+              }
+            }
+
           }
           IveSetBC = true;
         }

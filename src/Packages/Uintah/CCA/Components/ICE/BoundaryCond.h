@@ -229,17 +229,17 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  }
  //__________________________________        
  if (bc_kind == "Dirichlet") {    //   D I R I C H L E T 
-#ifdef NEW_BCS
-   IntVector l,h;
-   patch->getFaceCells(face,0,l,h);
-   for (CellIterator bound(l,h); !bound.done(); bound++) {
-     var[*bound] = value;
+   if (bound_ptr->empty()) {
+     IntVector l,h;
+     patch->getFaceCells(face,0,l,h);
+     for (CellIterator bound(l,h); !bound.done(); bound++) {
+       var[*bound] = value;
+     }
+   } else {
+     for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+       var[*iter] = value;
+     }
    }
-#else
-   for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     var[*iter] = value;
-   }
-#endif
    IveSetBC = true;
  }
  //__________________________________
@@ -263,51 +263,60 @@ bool getIteratorBCValueBCKind( const Patch* patch,
 
    time_t seconds = time(NULL);
    srand(seconds);
-#ifdef NEW_BCS
-   IntVector l,h;
-   patch->getFaceCells(face,0,l,h);
-   for (CellIterator bound(l,h); !bound.done(); bound++) {
-     var[*bound] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
+
+   if (bound_ptr->empty()) {
+     IntVector l,h;
+     patch->getFaceCells(face,0,l,h);
+     for (CellIterator bound(l,h); !bound.done(); bound++) {
+       var[*bound] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
+     }
+   } else {
+
+     for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+       var[*iter] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
+     }
    }
-#else
-   for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     var[*iter] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
-   }
-#endif
+
    IveSetBC = true;
    delete bc;
  }
 
  if (bc_kind == "Neumann") {       //    N E U M A N N
-#ifdef NEW_BCS
-   IntVector l,h;
-   patch->getFaceCells(face,0,l,h);
-   for (CellIterator bound(l,h); !bound.done(); bound++) {
-     IntVector adjCell = *bound - oneCell;
-     var[*bound] = var[adjCell] - value * dx;
+
+   if (bound_ptr->empty()) {
+     IntVector l,h;
+     patch->getFaceCells(face,0,l,h);
+     for (CellIterator bound(l,h); !bound.done(); bound++) {
+       IntVector adjCell = *bound - oneCell;
+       var[*bound] = var[adjCell] - value * dx;
+     }
+   } else {
+
+     for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+       IntVector adjCell = *iter - oneCell;
+       var[*iter] = var[adjCell] - value * dx;
+     }
    }
-#else
-   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     IntVector adjCell = *iter - oneCell;
-     var[*iter] = var[adjCell] - value * dx;
-   }
-#endif
+
    IveSetBC = true;
  }
  if (bc_kind == "zeroNeumann") {   //    Z E R O  N E U M A N N
-#ifdef NEW_BCS
-   IntVector l,h;
-   patch->getFaceCells(face,0,l,h);
-   for (CellIterator bound(l,h); !bound.done(); bound++) {
-     IntVector adjCell = *bound - oneCell;
-     var[*bound] = var[adjCell];
+
+   if (bound_ptr->empty()) {
+     IntVector l,h;
+     patch->getFaceCells(face,0,l,h);
+     for (CellIterator bound(l,h); !bound.done(); bound++) {
+       IntVector adjCell = *bound - oneCell;
+       var[*bound] = var[adjCell];
+     }
+   } else {
+
+     for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+       IntVector adjCell = *iter - oneCell;
+       var[*iter] = var[adjCell];
+     }
    }
-#else
-   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     IntVector adjCell = *iter - oneCell;
-     var[*iter] = var[adjCell];
-   }
-#endif
+
    IveSetBC = true;
    value = T(0.0);   // so the debugging output is accurate
  }
@@ -352,33 +361,39 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     }
     // on (x,y,z)minus faces move in one cell
     if( onMinusFace ) {
-#ifdef NEW_BCS
-      IntVector l,h;
-      patch->getFaceCells(face,0,l,h);
-      for (CellIterator bound(l,h); !bound.done(); bound++) {
-        IntVector c = *bound - oneCell;
-        vel_FC[c] = value;
+
+      if (bound_ptr->empty()) {
+        IntVector l,h;
+        patch->getFaceCells(face,0,l,h);
+        for (CellIterator bound(l,h); !bound.done(); bound++) {
+          IntVector c = *bound - oneCell;
+          vel_FC[c] = value;
+        }
+      } else {
+
+        for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+          IntVector c = *iter - oneCell;
+          vel_FC[c] = value;
+        }
       }
-#else
-      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-        IntVector c = *iter - oneCell;
-        vel_FC[c] = value;
-      }
-#endif
+
     }else {    // (xplus, yplus, zplus) faces
-#ifdef NEW_BCS
-      IntVector l,h;
-      patch->getFaceCells(face,0,l,h);
-      for (CellIterator bound(l,h); !bound.done(); bound++) {
-        IntVector c = *bound;
-        vel_FC[c] = value;
+
+      if (bound_ptr->empty()){
+        IntVector l,h;
+        patch->getFaceCells(face,0,l,h);
+        for (CellIterator bound(l,h); !bound.done(); bound++) {
+          IntVector c = *bound;
+          vel_FC[c] = value;
+        }
+      } else {
+
+        for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
+          IntVector c = *iter;
+          vel_FC[c] = value;
+        }
       }
-#else
-      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-        IntVector c = *iter;
-        vel_FC[c] = value;
-      }
-#endif
+
     }
     IveSetBC = true;
   }
