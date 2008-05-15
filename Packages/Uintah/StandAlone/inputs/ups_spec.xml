@@ -361,18 +361,18 @@
     <interpolator         spec="REQUIRED STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" />
     <DoExplicitHeatConduction spec="OPTIONAL BOOLEAN" />
     <DoImplicitHeatConduction spec="OPTIONAL BOOLEAN" />
-    <do_grid_reset>       spec="OPTIONAL BOOLEAN" />
-    <minimum_particle_mass>     spec="OPTIONAL DOUBLE 'positive'"/>
-    <maximum_particle_velocity> spec="OPTIONAL DOUBLE 'positive'"/>
-    <artificial_damping_coeff>  spec="OPTIONAL DOUBLE 'positive'"/>
-    <artificial_viscosity>      spec="OPTIONAL BOOLEAN" />
-    <accumulate_strain_energy>  spec="OPTIONAL BOOLEAN" />
-    <use_load_curves>           spec="OPTIONAL BOOLEAN" />
+    <do_grid_reset       spec="OPTIONAL BOOLEAN" />
+    <minimum_particle_mass     spec="OPTIONAL DOUBLE 'positive'"/>
+    <maximum_particle_velocity spec="OPTIONAL DOUBLE 'positive'"/>
+    <artificial_damping_coeff  spec="OPTIONAL DOUBLE 'positive'"/>
+    <artificial_viscosity      spec="OPTIONAL BOOLEAN" />
+    <accumulate_strain_energy  spec="OPTIONAL BOOLEAN" />
+    <use_load_curves           spec="OPTIONAL BOOLEAN" />
     <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
-        <dynamic>  spec="OPTIONAL BOOLEAN" />
-        <solver>   spec="REQUIRED STRING 'petsc, simple'" />
-        <convergence_criteria_disp>    spec="OPTIONAL DOUBLE 'positive'"/>
-        <convergence_criteria_energy>  spec="OPTIONAL DOUBLE 'positive'"/>
+        <dynamic  spec="OPTIONAL BOOLEAN" />
+        <solver   spec="REQUIRED STRING 'petsc, simple'" />
+        <convergence_criteria_disp    spec="OPTIONAL DOUBLE 'positive'"/>
+        <convergence_criteria_energy  spec="OPTIONAL DOUBLE 'positive'"/>
   </MPM>
 
   <MaterialProperties               spec="OPTIONAL NO_DATA">
@@ -380,7 +380,9 @@
       <material                     spec="REQUIRED NO_DATA">
         <density                    spec="REQUIRED DOUBLE" />
         <heat_transfer_coefficient  spec="OPTIONAL DOUBLE" />
-        <constitutive_model         spec="REQUIRED NO_DATA"  <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
+        
+        <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
+        <constitutive_model         spec="REQUIRED NO_DATA">
           <he_constant_2            spec="REQUIRED DOUBLE 'positive'" />
           <he_PR                    spec="REQUIRED DOUBLE 'positive'" />
         </constitutive_model>
