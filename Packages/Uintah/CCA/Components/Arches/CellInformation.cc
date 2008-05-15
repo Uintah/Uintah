@@ -16,11 +16,11 @@ using namespace SCIRun;
 
 CellInformation::CellInformation(const Patch* patch)
 {
-  IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
-  IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
+  IntVector domLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+  IntVector domHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 
-  IntVector locationLo = patch->getGhostCellLowIndex(Arches::THREEGHOSTCELLS);
-  IntVector locationHi = patch->getGhostCellHighIndex(Arches::THREEGHOSTCELLS);
+  IntVector locationLo = patch->getExtraCellLowIndex__New(Arches::THREEGHOSTCELLS);
+  IntVector locationHi = patch->getExtraCellHighIndex__New(Arches::THREEGHOSTCELLS);
 
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
