@@ -100,6 +100,7 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   d_wallBdry = 0;
   d_pressureBC = 0;
   d_outletBC = 0;
+  d_intrusionBC = 0;
 }
 
 //****************************************************************************
@@ -107,15 +108,19 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 //****************************************************************************
 BoundaryCondition::~BoundaryCondition()
 {
-  delete d_wallBdry;
-  delete d_pressureBC;
-  delete d_outletBC;
+  if(d_wallBdry)
+    delete d_wallBdry;
+  if(d_pressureBC)
+    delete d_pressureBC;
+  if(d_outletBC)
+    delete d_outletBC;
   for (int ii = 0; ii < d_numInlets; ii++)
     delete d_flowInlets[ii];
   if (d_calcExtraScalars)
     for (int i=0; i < static_cast<int>(d_extraScalarBCs.size()); i++)
       delete d_extraScalarBCs[i];
-	  
+  if(d_intrusionBC)
+	  delete d_intrusionBC;
 }
 
 //****************************************************************************
