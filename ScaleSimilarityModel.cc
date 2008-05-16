@@ -679,33 +679,33 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }	
 
 #endif
-    Array3<double> filterdenUU(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenUU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenUU.initialize(0.0);
-    Array3<double> filterdenUV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenUV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenUV.initialize(0.0);
-    Array3<double> filterdenUW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenUW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenUW.initialize(0.0);
-    Array3<double> filterdenVV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenVV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenVV.initialize(0.0);
-    Array3<double> filterdenVW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenVW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenVW.initialize(0.0);
-    Array3<double> filterdenWW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenWW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenWW.initialize(0.0);
-    Array3<double> filterDen(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterDen(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterDen.initialize(0.0);
-    Array3<double> filterUVel(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterUVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterUVel.initialize(0.0);
-    Array3<double> filterVVel(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterVVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterVVel.initialize(0.0);
-    Array3<double> filterWVel(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterWVel(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterWVel.initialize(0.0);
-    Array3<double> filterPhi(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterPhi(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterPhi.initialize(0.0);
-    Array3<double> filterdenPhiU(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenPhiU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenPhiU.initialize(0.0);
-    Array3<double> filterdenPhiV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenPhiV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenPhiV.initialize(0.0);
-    Array3<double> filterdenPhiW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterdenPhiW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterdenPhiW.initialize(0.0);
     IntVector indexLow = patch->getFortranCellLowIndex__New();
     IntVector indexHigh = patch->getFortranCellHighIndex__New();
@@ -947,8 +947,8 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
       }
     }
 
-    Array3<double> filterPhi(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
-    Array3<double> filterPhiSqr(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterPhi(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterPhiSqr(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
 

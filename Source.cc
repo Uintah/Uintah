@@ -270,7 +270,7 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
   IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+  // Array3<double> volume(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
@@ -302,7 +302,7 @@ Source::calculateExtraScalarSource(const ProcessorGroup* pc,
   IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+  // Array3<double> volume(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,
@@ -356,7 +356,7 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
   IntVector idxHi = patch->getFortranCellHighIndex__New();
 
   // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+  // Array3<double> volume(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   fort_scalsrc(idxLo, idxHi, vars->scalarLinearSrc, vars->scalarNonlinearSrc,

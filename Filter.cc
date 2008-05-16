@@ -141,8 +141,8 @@ Filter::matrixCreate(const PatchSet* allpatches,
       IntVector plowIndex = patch->getFortranCellLowIndex__New();
       IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
 #else
-      IntVector plowIndex = patch->getCellLowIndex__New();
-      IntVector phighIndex = patch->getCellHighIndex__New();
+      IntVector plowIndex = patch->getExtraCellLowIndex__New();
+      IntVector phighIndex = patch->getExtraCellHighIndex__New();
 #endif
       if (d_3d_periodic) {
         const Level* level = patch->getLevel();
@@ -183,8 +183,8 @@ Filter::matrixCreate(const PatchSet* allpatches,
       IntVector plow = neighbor->getCellFORTLowIndex();
       IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
 #else
-      IntVector plow = neighbor->getCellLowIndex__New();
-      IntVector phigh = neighbor->getCellHighIndex__New();
+      IntVector plow = neighbor->getExtraCellLowIndex__New();
+      IntVector phigh = neighbor->getExtraCellHighIndex__New();
 #endif
       if (d_3d_periodic) {
         const Level* level = patch->getLevel();
@@ -279,8 +279,8 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      IntVector idxLo = patch->getFortranCellLowIndex__New();
      IntVector idxHi = patch->getFortranCellHighIndex__New();
 #else
-     IntVector idxLo = patch->getCellLowIndex__New();
-     IntVector idxHi = patch->getCellHighIndex__New()-IntVector(1,1,1);
+     IntVector idxLo = patch->getExtraCellLowIndex__New();
+     IntVector idxHi = patch->getExtraCellHighIndex__New()-IntVector(1,1,1);
 #endif
     /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
          Compute the matrix that defines the filter function Ax
@@ -405,8 +405,8 @@ Filter::applyFilter(const ProcessorGroup* ,
   IntVector idxLo = patch->getFortranCellLowIndex__New();
   IntVector idxHi = patch->getFortranCellHighIndex__New();
 #else
-  IntVector idxLo = patch->getCellLowIndex__New();
-  IntVector idxHi = patch->getCellHighIndex__New()-IntVector(1,1,1);
+  IntVector idxLo = patch->getExtraCellLowIndex__New();
+  IntVector idxHi = patch->getExtraCellHighIndex__New()-IntVector(1,1,1);
 #endif
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;
@@ -513,8 +513,8 @@ Filter::applyFilter(const ProcessorGroup* ,
   IntVector idxLo = patch->getFortranCellLowIndex__New();
   IntVector idxHi = patch->getFortranCellHighIndex__New();
 #else
-  IntVector idxLo = patch->getCellLowIndex__New();
-  IntVector idxHi = patch->getCellHighIndex__New()-IntVector(1,1,1);
+  IntVector idxLo = patch->getExtraCellLowIndex__New();
+  IntVector idxHi = patch->getExtraCellHighIndex__New()-IntVector(1,1,1);
 #endif
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;
