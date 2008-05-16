@@ -994,9 +994,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  if (d_sulfur_balance_es)
 		so2Rate[currCell] = outStream.getSO2RATE();	 
 		
-	  if (co2Rate[currCell] < 0.0)
-			  cout << "RATE IS NEGaTIVE = " << co2Rate[currCell] << endl;	 	
-
 	}
       }
     }
