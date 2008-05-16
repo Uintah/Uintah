@@ -82,10 +82,10 @@ avtudaReaderFileFormat::avtudaReaderFileFormat(const char *filename)
     // INITIALIZE DATA MEMBERS
 	bool fileOpened = false;
 	
-	folder.assign("/home/collab/sshankar/csafe_data/jp8_tuna_can_Dmin_Pmax_rel_Wmax.uda");
-	// folder.assign(filename);
-	// size_t found = folder.find_last_of("/");
-	// folder = folder.substr(0, found);
+	// folder.assign("/home/collab/sshankar/csafe_data/jp8_tuna_can_Dmin_Pmax_rel_Wmax.uda");
+	folder.assign(filename);
+	size_t found = folder.find_last_of("/");
+	folder = folder.substr(0, found);
 
 	cout << folder << endl;
 	
