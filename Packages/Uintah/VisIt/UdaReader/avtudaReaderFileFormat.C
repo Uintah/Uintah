@@ -82,9 +82,10 @@ avtudaReaderFileFormat::avtudaReaderFileFormat(const char *filename)
     // INITIALIZE DATA MEMBERS
 	bool fileOpened = false;
 	
-	folder.append(filename);
-	size_t found = folder.find_last_of("/");
-	folder = folder.substr(0, found);
+	folder.assign("/home/collab/sshankar/csafe_data/jp8_tuna_can_Dmin_Pmax_rel_Wmax.uda");
+	// folder.assign(filename);
+	// size_t found = folder.find_last_of("/");
+	// folder = folder.substr(0, found);
 
 	cout << folder << endl;
 	
@@ -94,10 +95,32 @@ avtudaReaderFileFormat::avtudaReaderFileFormat(const char *filename)
 		EXCEPTION1(InvalidDBTypeException, "The library libuda2nrrd could not be located!!!");
 	}
 
+	// All possile function calls - check here
+
 	*(void **)(&getTimeSteps) = dlsym(libHandle, "getTimeSteps");
 	if((error = dlerror()) != NULL) {
 		EXCEPTION1(InvalidDBTypeException, "The function getTimeSteps could be located in the library!!!");
 	}
+
+    *(void **)(&getVarList) = dlsym(libHandle, "getVarList");
+	if((error = dlerror()) != NULL) {
+		EXCEPTION1(InvalidDBTypeException, "The function getVarList could be located in the library!!!");
+	}
+
+	*(void **)(&getMaterials) = dlsym(libHandle, "getMaterials");
+	if((error = dlerror()) != NULL) {
+		EXCEPTION1(InvalidDBTypeException, "The function getMaterials could be located in the library!!!");
+	}
+
+	*(void **)(&getBBox) = dlsym(libHandle, "getBBox");
+	if((error = dlerror()) != NULL) {
+			EXCEPTION1(InvalidDBTypeException, "The function getBBox could be located in the library!!!");
+	}
+
+	*(void **)(&processData) = dlsym(libHandle, "processData");
+	if((error = dlerror()) != NULL) {
+			EXCEPTION1(InvalidDBTypeException, "The function processData could be located in the library!!!");
+	}    
 	
 	// Check to see if the file could be opened should be here
 	// fileOpened should be set if the file could be opened
@@ -181,7 +204,7 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
     int block_origin = 0;
     int spatial_dimension = 3;
     int topological_dimension;
-    double *extents = NULL;
+    // double *extents = NULL;
     //
     // Here's the call that tells the meta-data object that we have a mesh:
     //
@@ -209,15 +232,31 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
     //                    spatial_dimension, topological_dimension);
     //
 
-	*(void **)(&getVarList) = dlsym(libHandle, "getVarList");
-	if((error = dlerror()) != NULL) {
+	// *(void **)(&getVarList) = dlsym(libHandle, "getVarList");
+	/*if((error = dlerror()) != NULL) {
 		EXCEPTION1(InvalidDBTypeException, "The function getVarList could be located in the library!!!");
-	}
+	}*/
 
-	*(void **)(&getMaterials) = dlsym(libHandle, "getMaterials");
-	if((error = dlerror()) != NULL) {
+	// *(void **)(&getMaterials) = dlsym(libHandle, "getMaterials");
+	/*if((error = dlerror()) != NULL) {
 		EXCEPTION1(InvalidDBTypeException, "The function getMaterials could be located in the library!!!");
-	}
+	}*/
+
+	// *(void **)(&getBBox) = dlsym(libHandle, "getBBox");
+	/*if((error = dlerror()) != NULL) {
+			EXCEPTION1(InvalidDBTypeException, "The function getBBox could be located in the library!!!");
+	}*/
+	
+	double* minMaxArr = (*getBBox)(folder, timeState);
+
+	double extents[6];
+	
+	extents[0] = minMaxArr[0];
+	extents[1] = minMaxArr[3];
+	extents[2] = minMaxArr[1];
+	extents[3] = minMaxArr[4];
+	extents[4] = minMaxArr[2];
+	extents[5] = minMaxArr[5];
 
 	udaVars* udaVarsPtr = (*getVarList)(folder);
 	udaVars& udaVarsObj = *(udaVarsPtr);
@@ -232,22 +271,42 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
   
         varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
 	    varMatls& varMatlsObj = *(varMatlsPtr); 
+
+		if (varMatlsObj.size() == 0)
+		  cout << varname << " has no materials\n";
+		  
 	    for (int j = 0; j < varMatlsObj.size(); j++) {
 			char buffer[128];
 			string newVarname = varname;
-			sprintf(buffer, "%d", j);
+			sprintf(buffer, "%d", varMatlsObj[j]);
 			newVarname.append("/");
 			newVarname.append(buffer);
 			
 			string mesh_for_this_var;
 			
+			mt = AVT_RECTILINEAR_MESH;
+			topological_dimension = 1;
+			
 			if (vartype.find("NC") != string::npos) {
 			  cent = AVT_NODECENT;
-			  mesh_for_this_var.append("NC"); 
+			  mesh_for_this_var.assign("NC"); 
 			}  
 			else if (vartype.find("CC") != string::npos) {  
 			  cent = AVT_ZONECENT;
-			  mesh_for_this_var.append("CC"); 
+			  mesh_for_this_var.assign("CC"); 
+			}
+			else if (vartype.find("SFC") != string::npos) { // face centered variables, point mesh -> as suggested by Dav 
+			  cent = AVT_NODECENT;
+			  
+			  if (vartype.find("SFCX") != string::npos)		
+			    mesh_for_this_var.assign("SFCX");
+			  else if (vartype.find("SFCY") != string::npos)		
+			    mesh_for_this_var.assign("SFCY");
+			  else if (vartype.find("SFCZ") != string::npos)		
+			    mesh_for_this_var.assign("SFCZ");		 			  
+			  
+			  mt = AVT_POINT_MESH;
+			  topological_dimension = 0; 
 			}  
 			
 			mesh_for_this_var.append("mesh_");
@@ -255,18 +314,8 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 
 			cout << newVarname << " " << mesh_for_this_var << endl;
 			
-			mt = AVT_RECTILINEAR_MESH;
-			topological_dimension = 1;
 			AddMeshToMetaData(md, mesh_for_this_var, mt, extents, nblocks, block_origin,
 							  spatial_dimension, topological_dimension);
-			
-			
-			if (vartype.find("NC") != string::npos)
-			  cent = AVT_NODECENT;
-			else if (vartype.find("CC") != string::npos)  
-			  cent = AVT_ZONECENT;
-			  
-		    // Face centered variables not suppoted yet
 			
 			if (vartype.find("Vector") != string::npos) 
 			  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
@@ -285,14 +334,14 @@ avtudaReaderFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, int ti
 		
 		string vartype = varname.substr(found + 1);
 		varname = varname.substr(0, found);
-		
-        varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
+
+		varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
 	    varMatls& varMatlsObj = *(varMatlsPtr); 
         bool addStar = false;
 	    for (int j = 0; j < varMatlsObj.size(); j++) {
 			char buffer[128];
 			string newVarname = varname;
-			sprintf(buffer, "%d", j);
+			sprintf(buffer, "%d", varMatlsObj[j]);
 			newVarname.append("/");
 			
 			if (j == 0 && addStar == false) {
@@ -434,17 +483,17 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 		cout << varName << endl;
 		cout << matlNo << endl;
 
-		*(void **)(&getBBox) = dlsym(libHandle, "getBBox");
-		if((error = dlerror()) != NULL) {
+		// *(void **)(&getBBox) = dlsym(libHandle, "getBBox");
+		/*if((error = dlerror()) != NULL) {
 			EXCEPTION1(InvalidDBTypeException, "The function getBBox could be located in the library!!!");
-		}
+		}*/
 
 		double* minMaxArr = (*getBBox)(folder, timestate);
 
-		*(void **)(&processData) = dlsym(libHandle, "processData");
-		if((error = dlerror()) != NULL) {
+		// *(void **)(&processData) = dlsym(libHandle, "processData");
+		/*if((error = dlerror()) != NULL) {
 			EXCEPTION1(InvalidDBTypeException, "The function processData could be located in the library!!!");
-		}
+		}*/
 
 		strcpy(arr2d[0], "uda2nrrd"); // anything will do
 		strcpy(arr2d[1], "-uda");
@@ -470,57 +519,142 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 		dy = (minMaxArr[4] - minMaxArr[1]) / cellValColln.y;
 		dz = (minMaxArr[5] - minMaxArr[2]) / cellValColln.z;
 		
+		double dtdx, dtdy, dtdz;
+		dtdx = dtdy = dtdz = 0.;
+		
 		if (meshName.find("NC") != string::npos) {
 		  cout << "NC Mesh\n";
-		  dims[0] = dims[0] - 1;
-		  dims[1] = dims[1] - 1;
-		  dims[2] = dims[2] - 1;
+		  dims[0] = cellValColln.x;
+		  dims[1] = cellValColln.y;
+		  dims[2] = cellValColln.z;
 		  		
 		  dx = (minMaxArr[3] - minMaxArr[0]) / (cellValColln.x - 1);
 		  dy = (minMaxArr[4] - minMaxArr[1]) / (cellValColln.y - 1);
 		  dz = (minMaxArr[5] - minMaxArr[2]) / (cellValColln.z - 1);
 		}  
+		else if (meshName.find("SFC") != string::npos) {
+		  cout << "SFC Mesh\n";
+		  dims[0] = cellValColln.x;
+		  dims[1] = cellValColln.y;
+		  dims[2] = cellValColln.z;
+		  		
+		  dx = (minMaxArr[3] - minMaxArr[0]) / cellValColln.x;
+		  dy = (minMaxArr[4] - minMaxArr[1]) / cellValColln.y;
+		  dz = (minMaxArr[5] - minMaxArr[2]) / cellValColln.z;
+		  
+		  if (meshName.find("SFCX") != string::npos) {
+		    cout << "SFCX\n";
+		    dx = (minMaxArr[3] - minMaxArr[0]) / (cellValColln.x - 1);
+		    dtdy = dy / 2.;
+		    dtdz = dz / 2.;
+		  }
+		  else if (meshName.find("SFCY") != string::npos) {
+			cout << "SFCY\n";
+			dy = (minMaxArr[4] - minMaxArr[1]) / (cellValColln.y - 1);
+		    dtdx = dx / 2.;
+		    dtdz = dz / 2.;
+	      }
+		  else if (meshName.find("SFCZ") != string::npos) {
+		    cout << "SFCZ\n";
+			dz = (minMaxArr[5] - minMaxArr[2]) / (cellValColln.z - 1);
+		    dtdx = dx / 2.;
+		    dtdy = dy / 2.;
+	      }			
+		}
 		
 		// Read the X coordinates from the file. 
 		coords[0] = vtkFloatArray::New(); 
 		coords[0]->SetNumberOfTuples(dims[0]); 
 		float *xarray = (float *)coords[0]->GetVoidPointer(0); 
 		for (int i = 0; i < dims[0]; i++) {
-		  xarray[i] =  minMaxArr[0] + i * dx;
+		  xarray[i] =  (minMaxArr[0] + dtdx) + i * dx;
+		  // cout << xarray[i] << " ";
 		}
+		
+		// cout << "\n";
 		
 		// Read the Y coordinates from the file. 
 		coords[1] = vtkFloatArray::New(); 
 		coords[1]->SetNumberOfTuples(dims[1]); 
 		float *yarray = (float *)coords[1]->GetVoidPointer(0); 
 		for (int i = 0; i < dims[1]; i++) {
-		  yarray[i] =  minMaxArr[1] + i * dy;
+		  yarray[i] =  (minMaxArr[1] + dtdy) + i * dy;
+		  // cout << yarray[i] << " ";
 		}
+		
+		// cout << "\n";
 		
 		// Read the Z coordinates from the file. 
 		coords[2] = vtkFloatArray::New(); 
 		coords[2]->SetNumberOfTuples(dims[2]); 
 		float *zarray = (float *)coords[2]->GetVoidPointer(0); 
 		for (int i = 0; i < dims[2]; i++) {
-		  zarray[i] =  minMaxArr[2] + i * dz;
-		} 
+		  zarray[i] =  (minMaxArr[2] + dtdz) + i * dz;
+		  // cout << zarray[i] << " ";
+		}
 		
-		// 
-		// Create the vtkRectilinearGrid object and set its dimensions 
-		// and coordinates. 
-		// 
-		vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New(); 
-		rgrid->SetDimensions(dims); 
-		rgrid->SetXCoordinates(coords[0]); 
-		coords[0]->Delete(); 
-		rgrid->SetYCoordinates(coords[1]); 
-		coords[1]->Delete();
-		rgrid->SetZCoordinates(coords[2]); 
-		coords[2]->Delete(); 
+		// cout << "\n";
 
-		cout << "Out GetMesh\n";
+		if (meshName.find("SFC") != string::npos) {
+		  unsigned int nnodes = dims[0] * dims [1] * dims[2];
+		  	
+		  vtkPoints *points = vtkPoints::New(); 
+		  points->SetNumberOfPoints(nnodes); 
+		  float *pts = (float *) points->GetVoidPointer(0); 
+		  
+		  for (int p = 0; p < dims[0]; p++) {
+		    for (int q = 0; q < dims[1]; q++) {
+			  for (int r = 0; r < dims[2]; r++) {
+				// cout << xarray[p] << " " << yarray[q] << " " << zarray[r] << endl;
+			    *pts++ = xarray[p];
+				*pts++ = yarray[q];
+				*pts++ = zarray[r];
+			  }
+		    }
+		  }
 
-		return rgrid; 
+          // 
+		  // Create a vtkUnstructuredGrid to contain the point cells. 
+		  // 
+		
+		  vtkUnstructuredGrid *ugrid = vtkUnstructuredGrid::New(); 
+		  ugrid->SetPoints(points); 
+		  points->Delete(); 
+		  ugrid->Allocate(nnodes); 
+		  vtkIdType onevertex; 
+		
+		  for(int i = 0; i < nnodes; ++i) { 
+		    onevertex = i; 
+			ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
+		  }
+
+		  coords[0]->Delete();
+		  coords[1]->Delete();
+		  coords[2]->Delete();
+		  
+		  cout << "Out GetMesh\n";
+
+		  return ugrid;
+		}
+		else {
+		
+		  // 
+		  // Create the vtkRectilinearGrid object and set its dimensions 
+		  // and coordinates. 
+		  // 
+		  vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New(); 
+		  rgrid->SetDimensions(dims); 
+		  rgrid->SetXCoordinates(coords[0]); 
+		  coords[0]->Delete(); 
+		  rgrid->SetYCoordinates(coords[1]); 
+		  coords[1]->Delete();
+		  rgrid->SetZCoordinates(coords[2]); 
+		  coords[2]->Delete(); 
+
+		  cout << "Out GetMesh\n";
+
+		  return rgrid;
+	    }	   
 	}
 	else if (meshName.find("mesh_particle") != string::npos) { // particle data
 		cout << "\nIn GetMesh\n";
@@ -536,10 +670,10 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 
 		cout << matlNo << endl;
 
-		*(void **)(&processData) = dlsym(libHandle, "processData");
-		if((error = dlerror()) != NULL) {
+		// *(void **)(&processData) = dlsym(libHandle, "processData");
+		/*if((error = dlerror()) != NULL) {
 			EXCEPTION1(InvalidDBTypeException, "The function processData could be located in the library!!!");
-		}
+		}*/
 
 		strcpy(arr2d[0], "uda2nrrd"); // anything will do
 		strcpy(arr2d[1], "-uda");
@@ -587,6 +721,7 @@ avtudaReaderFileFormat::GetMesh(int timestate, const char *meshname)
 		  *xc++ = varRef.x;
 		  *yc++ = varRef.y;
 		  *zc++ = varRef.z;
+          // cout << varRef.x << " " << varRef.y << " " << varRef.z << endl;
 		}
 
 		// 
@@ -683,10 +818,10 @@ avtudaReaderFileFormat::GetVar(int timestate, const char *varname)
 	
 	string varName(varname);
 	
-	*(void **)(&processData) = dlsym(libHandle, "processData");
-	if((error = dlerror()) != NULL) {
+	// *(void **)(&processData) = dlsym(libHandle, "processData");
+	/*if((error = dlerror()) != NULL) {
 		EXCEPTION1(InvalidDBTypeException, "The function processData could be located in the library!!!");
-	}
+	}*/
 
 	vtkFloatArray *rv = vtkFloatArray::New();
 
@@ -825,10 +960,10 @@ avtudaReaderFileFormat::GetVectorVar(int timestate, const char *varname)
 	
 	string varName(varname);
 	
-	*(void **)(&processData) = dlsym(libHandle, "processData");
-	if((error = dlerror()) != NULL) {
+	// *(void **)(&processData) = dlsym(libHandle, "processData");
+	/*if((error = dlerror()) != NULL) {
 		EXCEPTION1(InvalidDBTypeException, "The function processData could be located in the library!!!");
-	}
+	}*/
 
 	vtkFloatArray *rv = vtkFloatArray::New();
 
