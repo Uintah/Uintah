@@ -1770,23 +1770,23 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
   TAU_PROFILE_STOP(compute1);
-    Array3<double> filterRhoUU(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoUU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoUU.initialize(0.0);
-    Array3<double> filterRhoUV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoUV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoUV.initialize(0.0);
-    Array3<double> filterRhoUW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoUW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoUW.initialize(0.0);
-    Array3<double> filterRhoVV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoVV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoVV.initialize(0.0);
-    Array3<double> filterRhoVW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoVW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoVW.initialize(0.0);
-    Array3<double> filterRhoWW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoWW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoWW.initialize(0.0);
-    Array3<double> filterRhoU(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoU.initialize(0.0);
-    Array3<double> filterRhoV(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoV(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoV.initialize(0.0);
-    Array3<double> filterRhoW(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRhoW(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRhoW.initialize(0.0);
 
     Array3<double> filterRhoFU;
@@ -1800,27 +1800,27 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     Array3<double> filterRhoRFW;
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        filterRhoFU.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoFU.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoFU.initialize(0.0);
-        filterRhoFV.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoFV.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoFV.initialize(0.0);
-        filterRhoFW.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoFW.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoFW.initialize(0.0);
       }
       if (d_calcEnthalpy) {
-        filterRhoEU.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoEU.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoEU.initialize(0.0);
-        filterRhoEV.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoEV.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoEV.initialize(0.0);
-        filterRhoEW.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoEW.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoEW.initialize(0.0);
       }
       if (d_calcReactingScalar) {
-        filterRhoRFU.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoRFU.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoRFU.initialize(0.0);
-        filterRhoRFV.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoRFV.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoRFV.initialize(0.0);
-        filterRhoRFW.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        filterRhoRFW.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         filterRhoRFW.initialize(0.0);
       }
     }  
@@ -2218,9 +2218,9 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
     // using a box filter, generalize it to use other filters such as Gaussian
-    Array3<double> MLHatI(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()); // magnitude of strain rate
+    Array3<double> MLHatI(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New()); // magnitude of strain rate
     MLHatI.initialize(0.0);
-    Array3<double> MMHatI(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()); // magnitude of test filter strain rate
+    Array3<double> MMHatI(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New()); // magnitude of test filter strain rate
     MLHatI.initialize(0.0);
     Array3<double> scalarNumHat;
     Array3<double> scalarDenomHat;
@@ -2230,21 +2230,21 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     Array3<double> reactScalarDenomHat;
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        scalarNumHat.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        scalarNumHat.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         scalarNumHat.initialize(0.0);
-        scalarDenomHat.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        scalarDenomHat.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         scalarDenomHat.initialize(0.0);
       }
       if (d_calcEnthalpy) {
-        enthalpyNumHat.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        enthalpyNumHat.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         enthalpyNumHat.initialize(0.0);
-        enthalpyDenomHat.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        enthalpyDenomHat.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         enthalpyDenomHat.initialize(0.0);
       }
       if (d_calcReactingScalar) {
-        reactScalarNumHat.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        reactScalarNumHat.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         reactScalarNumHat.initialize(0.0);
-        reactScalarDenomHat.resize(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        reactScalarDenomHat.resize(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         reactScalarDenomHat.initialize(0.0);
       }
     }      
@@ -2269,22 +2269,22 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }      
 #endif
     CCVariable<double> tempCs;
-    tempCs.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    tempCs.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     tempCs.initialize(0.0);
     CCVariable<double> tempShF;
     CCVariable<double> tempShE;
     CCVariable<double> tempShRF;
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tempShF.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        tempShF.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         tempShF.initialize(0.0);
       }
       if (d_calcEnthalpy) {
-        tempShE.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        tempShE.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         tempShE.initialize(0.0);
       }
       if (d_calcReactingScalar) {
-        tempShRF.allocate(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+        tempShRF.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
         tempShRF.initialize(0.0);
       }
     }      
@@ -2746,9 +2746,9 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
 
-    Array3<double> filterRho(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
-    Array3<double> filterRhoPhi(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
-    Array3<double> filterRhoPhiSqr(patch->getCellLowIndex__New(), patch->getCellHighIndex__New());
+    Array3<double> filterRho(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterRhoPhi(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    Array3<double> filterRhoPhiSqr(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterRho.initialize(0.0);
     filterRhoPhi.initialize(0.0);
     filterRhoPhiSqr.initialize(0.0);
