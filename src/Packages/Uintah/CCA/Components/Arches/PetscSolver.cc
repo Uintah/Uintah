@@ -100,6 +100,7 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
   vector<int> numCells(numProcessors, 0);
   vector<int> startIndex(numProcessors);
   int totalCells = 0;
+  //loop through patches and compute the the d_petscGlobalStart for each patch
   for(int s=0;s<allpatches->size();s++){
     startIndex[s]=totalCells;
     int mytotal = 0;
@@ -108,10 +109,10 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
       const Patch* patch = patches->get(p);
       IntVector plowIndex = patch->getFortranCellLowIndex__New();
       IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
-  
+
       long nc = (phighIndex[0]-plowIndex[0])*
-	(phighIndex[1]-plowIndex[1])*
-	(phighIndex[2]-plowIndex[2]);
+        (phighIndex[1]-plowIndex[1])*
+        (phighIndex[2]-plowIndex[2]);
       d_petscGlobalStart[patch]=totalCells;
       totalCells+=nc;
       mytotal+=nc;
@@ -119,6 +120,7 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
     numCells[s] = mytotal;
   }
 
+  //for each patch
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
     IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
@@ -128,35 +130,42 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
     long totalCells=0;
     const Level* level = patch->getLevel();
     Patch::selectType neighbors;
+    //get neighboring patches (which includes this patch)
     level->selectPatches(lowIndex, highIndex, neighbors);
+    //for each neighboring patch and myself
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
 
+      //compute the instescting range between the neighbor and this patch
       IntVector plow = neighbor->getCellFORTLowIndex();
       IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
 
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
-      
+          || ( high.z() < low.z() ) )
+        throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
+
+      //set petscglobilIndex equal to the starting global index for the neighbor patch
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dcells = phigh-plow;
       IntVector start = low-plow;
+      //offset the global index by to the intersecting range
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
-	+start.y()*dcells.x()+start.x();
+        +start.y()*dcells.x()+start.x();
+      //for each node in intersecting range
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-	int idx_slab = petscglobalIndex;
-	petscglobalIndex += dcells.x()*dcells.y();
-	
-	for (int colY = low.y(); colY < high.y(); colY ++) {
-	  int idx = idx_slab;
-	  idx_slab += dcells.x();
-	  for (int colX = low.x(); colX < high.x(); colX ++) {
-	    l2g[IntVector(colX, colY, colZ)] = idx++;
-	  }
-	}
+        int idx_slab = petscglobalIndex;
+        petscglobalIndex += dcells.x()*dcells.y();
+
+        for (int colY = low.y(); colY < high.y(); colY ++) {
+          int idx = idx_slab;
+          idx_slab += dcells.x();
+          for (int colX = low.x(); colX < high.x(); colX ++) {
+            //set the local to global mapping 
+            l2g[IntVector(colX, colY, colZ)] = idx++;
+          }
+        }
       }
       IntVector d = high-low;
       totalCells+=d.x()*d.y()*d.z();
@@ -171,14 +180,14 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
   int d_nz = 7;
   int o_nz = 6;
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+      globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
-  */
+     */
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
     throw PetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
@@ -209,10 +218,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   IntVector idxLo = patch->getFortranCellLowIndex__New();
   IntVector idxHi = patch->getFortranCellHighIndex__New();
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-         Compute the matrix and right-hand-side vector that define
-         the linear system, Ax = b.
+     Compute the matrix and right-hand-side vector that define
+     the linear system, Ax = b.
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    /* 
+  /* 
      Create parallel matrix, specifying only its global dimensions.
      When using MatCreate(), the matrix format can be specified at
      runtime. Also, the parallel partitioning of the matrix is
@@ -224,10 +233,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
      matrix creation routine MatCreate(), we recommend for practical 
      problems instead to use the creation routine for a particular matrix
      format, e.g.,
-         MatCreateMPIAIJ() - parallel AIJ (compressed sparse row)
-         MatCreateMPIBAIJ() - parallel block AIJ
+     MatCreateMPIAIJ() - parallel AIJ (compressed sparse row)
+     MatCreateMPIBAIJ() - parallel block AIJ
      See the matrix chapter of the users manual for details.
-  */
+     */
   int ierr;
   int col[7];
   double value[7];
@@ -243,54 +252,54 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 #if 0
   //if ((patchNumber != 0)&&(patchNumber != sizeof(d_petscIndex)-1)) 
 #endif
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
-	  col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	  col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	  col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	  col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	  col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	  col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
-	  value[0] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
-	  value[1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-	  value[2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-	  value[3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-	  value[4] = -constvars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-	  value[5] = -constvars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-	  value[6] = -constvars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
-	  int row = col[3];
-	  ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
-	  if(ierr)
-	    throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
-	}
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
+        col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+        col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+        col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+        col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+        col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
+        col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
+        value[0] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
+        value[1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
+        value[2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
+        value[3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
+        value[4] = -constvars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
+        value[5] = -constvars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
+        value[6] = -constvars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
+        int row = col[3];
+        ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
       }
     }
+  }
 
   // assemble right hand side and solution vector
   double vecvalueb, vecvaluex;
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  vecvalueb = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
-	  vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
-	  int row = l2g[IntVector(colX, colY, colZ)];	  
-//	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-	  ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-//	  VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	  ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	  if(ierr)
-	    throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-	}
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        vecvalueb = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
+        vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
+        int row = l2g[IntVector(colX, colY, colZ)];	  
+        //	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+        ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        //	  VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+        ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
-    int me = d_myworld->myrank();
-    if(me == 0) {
-     cerr << "Time in PETSC Assemble: " << Time::currentSeconds()-solve_start << " seconds\n";
-    }
+  }
+  int me = d_myworld->myrank();
+  if(me == 0) {
+    cerr << "Time in PETSC Assemble: " << Time::currentSeconds()-solve_start << " seconds\n";
+  }
 }
 
 
@@ -300,7 +309,7 @@ PetscSolver::pressLinearSolve()
   double solve_start = Time::currentSeconds();
   KSP solver;
   PC peqnpc; // pressure eqn pc
- 
+
   int ierr;
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
@@ -349,7 +358,7 @@ PetscSolver::pressLinearSolve()
   double norm;
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-                Create the linear solver and set various options
+     Create the linear solver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ierr = KSPCreate(PETSC_COMM_WORLD,&solver);
   if(ierr)
@@ -418,9 +427,9 @@ PetscSolver::pressLinearSolve()
   // ierr = KSPSetInitialGuessNonzero(solver);
   if(ierr)
     throw PetscError(ierr, "KSPSetInitialGuessNonzero", __FILE__, __LINE__);
-  
+
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-                      Solve the linear system
+     Solve the linear system
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   int its;
   ierr = KSPSolve(solver,d_b,d_x);
@@ -453,9 +462,9 @@ PetscSolver::pressLinearSolve()
   if(ierr)
     throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
   if(me == 0) {
-     cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << Time::currentSeconds()-solve_start << " seconds\n";
-     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
-     cerr << "Sum of RHS vector: " << sum_b << endl;
+    cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << Time::currentSeconds()-solve_start << " seconds\n";
+    cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
+    cerr << "Sum of RHS vector: " << sum_b << endl;
   }
   ierr =  KSPDestroy(solver);
   if (ierr)
@@ -468,7 +477,7 @@ PetscSolver::pressLinearSolve()
 }
 
 
-void
+  void
 PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 {
   // copy solution vector back into the array
@@ -476,16 +485,20 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   IntVector idxHi = patch->getFortranCellHighIndex__New();
   double* xvec;
   int ierr;
+  PetscInt begin, end;
+  //get the ownership range so we know where the local indicing on this processor begins
+  VecGetOwnershipRange(d_x, &begin, &end);
   ierr = VecGetArray(d_x, &xvec);
   if(ierr)
     throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   Array3<int> l2g = d_petscLocalToGlobal[patch];
-  int rowinit = l2g[IntVector(idxLo.x(), idxLo.y(), idxLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	int row = l2g[IntVector(colX, colY, colZ)]-rowinit;
-	vars->pressure[IntVector(colX, colY, colZ)] = xvec[row];
+        //subtract the begining index from the global index to get to the local array index
+        int row = l2g[IntVector(colX, colY, colZ)]-begin;
+        ASSERTRANGE(l2g[IntVector(colX, colY, colZ)] ,begin,end);
+        vars->pressure[IntVector(colX, colY, colZ)] = xvec[row];
       }
     }
   }
