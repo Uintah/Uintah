@@ -26,7 +26,7 @@ methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
 
 UNUSED_TESTS = []
 TESTS = [
-    ("methane_explicit_table", "methane_explicit_table.ups", 1.1, "Linux"),    
+    ("methane_explicit_table", "methane_explicit_table.ups", 1.1, "Linux", ["exactComparison"]),    
     ("methane_explicit_table", "methane_explicit_table.ups", 1.1, "Darwin", ["doesTestRun"]),
     ("methane8patch", methane8patch_ups, 8, "Linux"),
     ("methane8patch", methane8patch_ups, 8, "Darwin", ["doesTestRun"])
