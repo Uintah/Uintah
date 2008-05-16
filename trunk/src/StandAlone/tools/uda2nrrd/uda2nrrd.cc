@@ -134,7 +134,7 @@ getMaterials(const string& input_uda_name, const string& variable_name, int time
 
   for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		   matlIter != matls.end(); matlIter++) {
-	  varMatlList->push_back(*matlIter);
+      varMatlList->push_back(*matlIter);
   }	
   
   return varMatlList;

@@ -58,9 +58,9 @@ handleData( QueryInfo &    qinfo,
   if( !args.quiet ) cout << "Bounding box: min("<<bbox.min()<<"), max("<<bbox.max()<<")\n";
 
   // Get the nrrd data, and print it out.
-  char *err;
+  // char *err;
 
-  Nrrd * nrrd;
+  // Nrrd * nrrd;
   if( basis_order == 0 ){
     LVFieldCB* sf = scinew LVFieldCB(mesh_handle);
     typedef typename LVFieldCB::mesh_type::Cell FLOC;
@@ -74,7 +74,7 @@ handleData( QueryInfo &    qinfo,
       build_field( qinfo, low, data_T, gridVar, sf, args );
     }
     // Convert the field to a nrrd
-    nrrd = wrap_nrrd( sf, args.matrix_op, args.verbose );
+    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
     // Clean up our memory
     delete sf;
   } else {
@@ -90,8 +90,8 @@ handleData( QueryInfo &    qinfo,
       build_field( qinfo, low, data_T, gridVar, sf, args );
     }
     // Convert the field to a nrrd
-    nrrd = wrap_nrrd( sf, args.matrix_op, args.verbose );
-    // Clean up our memory
+    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
+	// Clean up our memory
     delete sf;
   }
 
@@ -108,7 +108,7 @@ handleData( QueryInfo &    qinfo,
   }
 #endif
 
-  if( nrrd ) { // Save the NRRD to a file.
+  // if( nrrd ) { // Save the NRRD to a file.
     // No more needed 
     /*string filetype = args.attached_header ? ".nrrd": ".nhdr";
 
@@ -136,7 +136,7 @@ handleData( QueryInfo &    qinfo,
     // Coying the values from the nrrd directly. This at some time should be changed
 	// to avoid the double doing and data should be copied directy from the source.
 
-	unsigned int dim = cellValColln.dim = nrrd->dim;
+	/*unsigned int dim = cellValColln.dim = nrrd->dim;
 	
 	cout << "Nrrd has " << dim << " dimensions\n";
 	
@@ -161,14 +161,14 @@ handleData( QueryInfo &    qinfo,
 	  cellValColln.x = nrrd->axis[0].size;
 	  cellValColln.y = nrrd->axis[1].size;
 	  cellValColln.z = nrrd->axis[2].size;
-	}
+	}*/
 
 	// unsigned int x = cellValColln.x = nrrd->axis[0].size;
 	// unsigned int y = cellValColln.y = nrrd->axis[1].size;
 	// unsigned int z = cellValColln.z = nrrd->axis[2].size;
 	// unsigned int w = nrrd->axis[3].size; // may be present in the case of vectors
 
-	// cout << x << "|" << y << "|" << z << "|" << w << endl;
+	// cout << cellValColln.x << "|" << cellValColln.y << "|" << cellValColln.z << "\n";
 	
 	// unsigned int numComponents;
 	
@@ -181,12 +181,18 @@ handleData( QueryInfo &    qinfo,
 	  numComponents = x * y * z * w;
 	}*/  
 	  
-	if (dataReq) {
-	  typeDouble* cellValVecPtr = new typeDouble();   
+	/*if (dataReq) {
+	  typeDouble* cellValVecPtr = new typeDouble();
+	  double* data = (double*)nrrd->data;   
+	  double* testPtr = NULL;
 	  for( unsigned int cnt = 0; cnt < numComponents; cnt++ ) {
-	    double* data = (double*)nrrd->data;
-		cellValVecPtr->push_back(data[cnt]);
-	  }
+	    if ((testPtr = (data + cnt)) == NULL ) {
+		  cout << "NULL encountered, pushed zero\n";
+		  cellValVecPtr->push_back(0);
+		}  
+		else  
+		  cellValVecPtr->push_back(data[cnt]);
+	  }*/
 	  
 	  /*for (unsigned int i = 0; i < x; ++i) {
 	    double* rowData = (double*)(nrrd->data) + i * y * z;
@@ -206,19 +212,19 @@ handleData( QueryInfo &    qinfo,
 	    }
 	  }*/
 	  
-	  cout << "Data in cellValVecPtr pushed\n";
+	  /*cout << "Data in cellValVecPtr pushed\n";
 	  cout << "Assigning cellValVecPtr ptr\n";
 	  cellValColln.cellValVec = cellValVecPtr;
 	  cout << "Assignment successful\n";		          
-	}
+	}*/
 		
     // nrrdNuke deletes the nrrd and the data inside the nrrd
-    nrrdNuke( nrrd );
-  } else {
+    // nrrdNuke( nrrd );
+  // } else {
     // There was a problem
-    err = biffGetDone(NRRD);
-    cerr << "Error wrapping nrrd: "<<err<<"\n";
-  }  
+    // err = biffGetDone(NRRD);
+    // cerr << "Error wrapping nrrd: "<<err<<"\n";
+  // }  
   return;
 } // end getData
 
