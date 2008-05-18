@@ -27,6 +27,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #undef CHKERRQ
 #define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 
@@ -208,25 +209,25 @@ Filter::matrixCreate(const PatchSet* allpatches,
       IntVector high= Min(highIndex, phigh);
 
       if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
-      
+          || ( high.z() < low.z() ) )
+        throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
+
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dcells = phigh-plow;
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
-	+start.y()*dcells.x()+start.x();
+        +start.y()*dcells.x()+start.x();
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-	int idx_slab = petscglobalIndex;
-	petscglobalIndex += dcells.x()*dcells.y();
-	
-	for (int colY = low.y(); colY < high.y(); colY ++) {
-	  int idx = idx_slab;
-	  idx_slab += dcells.x();
-	  for (int colX = low.x(); colX < high.x(); colX ++) {
-	    l2g[IntVector(colX, colY, colZ)] = idx++;
-	  }
-	}
+        int idx_slab = petscglobalIndex;
+        petscglobalIndex += dcells.x()*dcells.y();
+
+        for (int colY = low.y(); colY < high.y(); colY ++) {
+          int idx = idx_slab;
+          idx_slab += dcells.x();
+          for (int colX = low.x(); colX < high.x(); colX ++) {
+            l2g[IntVector(colX, colY, colZ)] = idx++;
+          }
+        }
       }
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
@@ -282,25 +283,25 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      IntVector idxLo = patch->getExtraCellLowIndex__New();
      IntVector idxHi = patch->getExtraCellHighIndex__New()-IntVector(1,1,1);
 #endif
-    /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-         Compute the matrix that defines the filter function Ax
-     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-    /* 
-       Create parallel matrix, specifying only its global dimensions.
-       When using MatCreate(), the matrix format can be specified at
-       runtime. Also, the parallel partitioning of the matrix is
-       determined by PETSc at runtime.
-       
-       Performance tuning note:  For problems of substantial size,
-       preallocation of matrix memory is crucial for attaining good 
-       performance.  Since preallocation is not possible via the generic
-       matrix creation routine MatCreate(), we recommend for practical 
-       problems instead to use the creation routine for a particular matrix
-       format, e.g.,
-       MatCreateMPIAIJ() - parallel AIJ (compressed sparse row)
-       MatCreateMPIBAIJ() - parallel block AIJ
-       See the matrix chapter of the users manual for details.
-    */
+     /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+        Compute the matrix that defines the filter function Ax
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+     /* 
+        Create parallel matrix, specifying only its global dimensions.
+        When using MatCreate(), the matrix format can be specified at
+        runtime. Also, the parallel partitioning of the matrix is
+        determined by PETSc at runtime.
+
+        Performance tuning note:  For problems of substantial size,
+        preallocation of matrix memory is crucial for attaining good 
+        performance.  Since preallocation is not possible via the generic
+        matrix creation routine MatCreate(), we recommend for practical 
+        problems instead to use the creation routine for a particular matrix
+        format, e.g.,
+        MatCreateMPIAIJ() - parallel AIJ (compressed sparse row)
+        MatCreateMPIBAIJ() - parallel block AIJ
+        See the matrix chapter of the users manual for details.
+        */
      int ierr;
      int col[27];
      double value[27];
@@ -309,72 +310,78 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      // petsc matrix
      IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
      IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
-     
+
      Array3<int> l2g(lowIndex, highIndex);
      l2g.copy(d_petscLocalToGlobal[patch]);
      int flowID = d_boundaryCondition->flowCellType();
      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	 for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	   IntVector currCell(colX, colY, colZ);
-	   int bndry_count=0;
-	   if  (!(cellType[IntVector(colX+1, colY, colZ)] == flowID))
-		   bndry_count++;
-	   if  (!(cellType[IntVector(colX-1, colY, colZ)] == flowID))
-		   bndry_count++;
-	   if  (!(cellType[IntVector(colX, colY+1, colZ)] == flowID))
-		   bndry_count++;
-	   if  (!(cellType[IntVector(colX, colY-1, colZ)] == flowID))
-		   bndry_count++;
-	   if  (!(cellType[IntVector(colX, colY, colZ+1)] == flowID))
-		   bndry_count++;
-	   if  (!(cellType[IntVector(colX, colY, colZ-1)] == flowID))
-		   bndry_count++;
-	   bool corner = (bndry_count==3);
-	   int count = 0;
-	   double totalVol = 0.0;
-	   for (int kk = -1; kk <= 1; kk ++) {
-	     for (int jj = -1; jj <= 1; jj ++) {
-	       for (int ii = -1; ii <= 1; ii ++) {
-		 IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-		 double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-		   cellinfo->stb[colZ+kk];
-		 if (!(corner)) vol *= (1.0-0.5*abs(ii))*
-		   (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-		 col[count] = l2g[filterCell];  //ab
+         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+           IntVector currCell(colX, colY, colZ);
+           int bndry_count=0;
+           if  (!(cellType[IntVector(colX+1, colY, colZ)] == flowID))
+             bndry_count++;
+           if  (!(cellType[IntVector(colX-1, colY, colZ)] == flowID))
+             bndry_count++;
+           if  (!(cellType[IntVector(colX, colY+1, colZ)] == flowID))
+             bndry_count++;
+           if  (!(cellType[IntVector(colX, colY-1, colZ)] == flowID))
+             bndry_count++;
+           if  (!(cellType[IntVector(colX, colY, colZ+1)] == flowID))
+             bndry_count++;
+           if  (!(cellType[IntVector(colX, colY, colZ-1)] == flowID))
+             bndry_count++;
+           bool corner = (bndry_count==3);
+           int count = 0;
+           double totalVol = 0.0;
+           for (int kk = -1; kk <= 1; kk ++) {
+             for (int jj = -1; jj <= 1; jj ++) {
+               for (int ii = -1; ii <= 1; ii ++) {
+                 IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+                 double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
+                   cellinfo->stb[colZ+kk];
+                 if (!(corner)) vol *= (1.0-0.5*abs(ii))*
+                   (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+                 col[count] = l2g[filterCell];  //ab
 #if 1
-		 // on the boundary
-		 if (cellType[currCell] != flowID)
-		   if (filterCell == currCell) {
-		     totalVol = vol;
-		     value[count] = vol;
-		   }
-		   else
-		     value[count] = 0;
-		 else if ((col[count] != -1234)&&
-		     (cellType[filterCell] == flowID)) {
-		   totalVol += vol;
-		   value[count] = vol;
-		 }
-		 else 
-		   value[count] = 0;
+                 // on the boundary
+                 if (cellType[currCell] != flowID)
+                   if (filterCell == currCell) {
+                     totalVol = vol;
+                     value[count] = vol;
+                   }
+                   else
+                     value[count] = 0;
+                 else if ((col[count] != -1234)&&
+                     (cellType[filterCell] == flowID)) {
+                   totalVol += vol;
+                   value[count] = vol;
+                 }
+                 else 
+                   value[count] = 0;
 #else
-		 if (col[count] != -1234) // not on the boundary
-		   totalVol += vol;
-		 value[count] = vol;
+                 if (col[count] != -1234) // not on the boundary
+                   totalVol += vol;
+                 value[count] = vol;
 #endif
-		 count++;
-	       }
-	     }
-	   }
-	   for (int ii = 0; ii < d_nz; ii++)
-	     value[ii] /= totalVol;
-	   int row = l2g[IntVector(colX,colY,colZ)];
-	   
-	   ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
-	   if(ierr)
-	     throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
-	 }
+                 count++;
+               }
+             }
+           }
+           for (int ii = 0; ii < d_nz; ii++)
+             value[ii] /= totalVol;
+           int row = l2g[IntVector(colX,colY,colZ)];
+
+#if SCI_ASSERTION_LEVEL > 0
+           for(int i=0;i<d_nz;i++)
+           {
+            ASSERT(!isnan(value[i]));
+           }
+#endif           
+           ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
+           if(ierr)
+             throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
+         }
        }
      }
      d_matrixInitialize = true; 
@@ -411,27 +418,28 @@ Filter::applyFilter(const ProcessorGroup* ,
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;
   if (d_3d_periodic) {
-  const Level* level = patch->getLevel();
-  IntVector domain_low, domain_high;
-  level->findCellIndexRange(domain_low, domain_high);
-  domain_high -=IntVector(1,1,1);
-  if (idxLo.x() == domain_low.x()) inputLo -= IntVector(1,0,0);
-  if (idxLo.y() == domain_low.y()) inputLo -= IntVector(0,1,0);
-  if (idxLo.z() == domain_low.z()) inputLo -= IntVector(0,0,1);
-  if (idxHi.x() == domain_high.x()) inputHi += IntVector(1,0,0);
-  if (idxHi.y() == domain_high.y()) inputHi += IntVector(0,1,0);
-  if (idxHi.z() == domain_high.z()) inputHi += IntVector(0,0,1);
+    const Level* level = patch->getLevel();
+    IntVector domain_low, domain_high;
+    level->findCellIndexRange(domain_low, domain_high);
+    domain_high -=IntVector(1,1,1);
+    if (idxLo.x() == domain_low.x()) inputLo -= IntVector(1,0,0);
+    if (idxLo.y() == domain_low.y()) inputLo -= IntVector(0,1,0);
+    if (idxLo.z() == domain_low.z()) inputLo -= IntVector(0,0,1);
+    if (idxHi.x() == domain_high.x()) inputHi += IntVector(1,0,0);
+    if (idxHi.y() == domain_high.y()) inputHi += IntVector(0,1,0);
+    if (idxHi.z() == domain_high.z()) inputHi += IntVector(0,0,1);
   }
 
   double vecvaluex;
   for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
     for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
       for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
-	vecvaluex = var[IntVector(colX, colY, colZ)];
-	int row = l2g[IntVector(colX, colY, colZ)];	  
-	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	if(ierr)
-	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        vecvaluex = var[IntVector(colX, colY, colZ)];
+        int row = l2g[IntVector(colX, colY, colZ)];	 
+        ASSERT(!isnan(vecvaluex));
+        ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
   }
@@ -470,12 +478,20 @@ Filter::applyFilter(const ProcessorGroup* ,
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
     throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
-  int rowinit = l2g[IntVector(inputLo.x(), inputLo.y(), inputLo.z())]; 
+
+  PetscInt begin, end;
+  //get the ownership range so we know where the local indicing on this processor begins
+  VecGetOwnershipRange(d_b, &begin, &end);
+
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	int row = l2g[IntVector(colX, colY, colZ)]-rowinit;
-	filterVar[IntVector(colX, colY, colZ)] = xvec[row];
+        int row = l2g[IntVector(colX, colY, colZ)]-begin;
+        
+        //verify this processor owns this node
+        ASSERTRANGE(l2g[IntVector(colX, colY, colZ)] ,begin,end);
+
+        filterVar[IntVector(colX, colY, colZ)] = xvec[row];
       }
     }
   }
@@ -519,27 +535,28 @@ Filter::applyFilter(const ProcessorGroup* ,
   IntVector inputLo = idxLo;
   IntVector inputHi = idxHi;
   if (d_3d_periodic) {
-  const Level* level = patch->getLevel();
-  IntVector domain_low, domain_high;
-  level->findCellIndexRange(domain_low, domain_high);
-  domain_high -=IntVector(1,1,1);
-  if (idxLo.x() == domain_low.x()) inputLo -= IntVector(1,0,0);
-  if (idxLo.y() == domain_low.y()) inputLo -= IntVector(0,1,0);
-  if (idxLo.z() == domain_low.z()) inputLo -= IntVector(0,0,1);
-  if (idxHi.x() == domain_high.x()) inputHi += IntVector(1,0,0);
-  if (idxHi.y() == domain_high.y()) inputHi += IntVector(0,1,0);
-  if (idxHi.z() == domain_high.z()) inputHi += IntVector(0,0,1);
+    const Level* level = patch->getLevel();
+    IntVector domain_low, domain_high;
+    level->findCellIndexRange(domain_low, domain_high);
+    domain_high -=IntVector(1,1,1);
+    if (idxLo.x() == domain_low.x()) inputLo -= IntVector(1,0,0);
+    if (idxLo.y() == domain_low.y()) inputLo -= IntVector(0,1,0);
+    if (idxLo.z() == domain_low.z()) inputLo -= IntVector(0,0,1);
+    if (idxHi.x() == domain_high.x()) inputHi += IntVector(1,0,0);
+    if (idxHi.y() == domain_high.y()) inputHi += IntVector(0,1,0);
+    if (idxHi.z() == domain_high.z()) inputHi += IntVector(0,0,1);
   }
 
   double vecvaluex;
   for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
     for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
       for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
-	vecvaluex = var[IntVector(colX, colY, colZ)];
-	int row = l2g[IntVector(colX, colY, colZ)];	  
-	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	if(ierr)
-	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        vecvaluex = var[IntVector(colX, colY, colZ)];
+        int row = l2g[IntVector(colX, colY, colZ)];	  
+        ASSERT(!isnan(vecvaluex));
+        ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
   }
@@ -580,12 +597,20 @@ Filter::applyFilter(const ProcessorGroup* ,
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
     throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
-  int rowinit = l2g[IntVector(inputLo.x(), inputLo.y(), inputLo.z())]; 
+  
+  PetscInt begin, end;
+  //get the ownership range so we know where the local indicing on this processor begins
+  VecGetOwnershipRange(d_b, &begin, &end);
+
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	int row = l2g[IntVector(colX, colY, colZ)]-rowinit;
-	filterVar[IntVector(colX, colY, colZ)] = xvec[row];
+        int row = l2g[IntVector(colX, colY, colZ)]-begin;
+        
+        //verify this processor owns this node
+        ASSERTRANGE(l2g[IntVector(colX, colY, colZ)] ,begin,end);
+
+        filterVar[IntVector(colX, colY, colZ)] = xvec[row];
       }
     }
   }
