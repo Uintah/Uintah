@@ -612,16 +612,22 @@ Models_PetscSolver::copyRadSoln(const Patch* patch, RadiationVariables* vars)
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
   double* xvec;
+  
+  PetscInt begin, end;
+  //get the ownership range so we know where the local indicing on this processor begins
+  VecGetOwnershipRange(d_x, &begin, &end);
+  
   int ierr;
   ierr = VecGetArray(d_x, &xvec);
+
   if(ierr)
     throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   Array3<int> l2g = d_petscLocalToGlobal[patch];
-  int rowinit = l2g[IntVector(idxLo.x(), idxLo.y(), idxLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        int row = l2g[IntVector(colX, colY, colZ)]-rowinit;
+        ASSERTRANGE(l2g[IntVector(colX, colY, colZ)],begin,end);
+        int row = l2g[IntVector(colX, colY, colZ)]-begin;
         vars->cenint[IntVector(colX, colY, colZ)] = xvec[row];
       }
     }
