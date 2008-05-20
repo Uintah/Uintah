@@ -118,7 +118,7 @@ namespace Uintah {
 
     vector<IntVector> d_minPatchSize;
     CostProfiler d_costProfiler;
-    enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };
+    enum { static_lb, cyclic_lb, random_lb, patch_factor_lb, zoltan_sfc_lb };
 
     DynamicLoadBalancer(const DynamicLoadBalancer&);
     DynamicLoadBalancer& operator=(const DynamicLoadBalancer&);
@@ -129,6 +129,7 @@ namespace Uintah {
     bool assignPatchesFactor(const GridP& grid, bool force);
     bool assignPatchesRandom(const GridP& grid, bool force);
     bool assignPatchesCyclic(const GridP& grid, bool force);
+    bool assignPatchesZoltanSFC(const GridP& grid, bool force);
 
     /// Helper for assignPatchesFactor.  Collects each patch's particles
     void collectParticles(const Grid* grid, vector<vector<double> >& costs);
