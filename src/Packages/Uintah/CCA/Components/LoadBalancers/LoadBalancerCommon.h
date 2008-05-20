@@ -70,8 +70,6 @@ namespace Uintah {
      // grid might have changed and need to create a new perProcessorPatchSet
      virtual bool possiblyDynamicallyReallocate(const GridP&, int state);
 
-     virtual void dynamicallyLoadBalanceAndSplit(const GridP&, SizeList, vector<vector<Region> >&, bool);
-
      //! Returns n - data gets output every n procs.
      virtual int getNthProc() { return d_outputNthProc; }
 

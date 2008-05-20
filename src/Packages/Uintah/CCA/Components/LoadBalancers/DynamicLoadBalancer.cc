@@ -427,8 +427,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   bool on_regrid = olddw != 0 && grid.get_rep() != olddw->getGrid();
   vector<vector<Region> > regions;
   if (on_regrid) {
-    // prepare the list of regions so the getCosts can operate the same when called from here 
-    // or from dynamicallyLoadBalanceAndSplit.
+    // prepare the list of regions
     for (int l = 0; l < grid->numLevels(); l++) {
       regions.push_back(vector<Region>());
       for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
