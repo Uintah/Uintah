@@ -410,6 +410,115 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   */
 }
 
+bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
+{
+  doing << d_myworld->myrank() << "   assignPatchesZoltanSFC\n";
+  double time = Time::currentSeconds();
+
+  //this will store a vector per level of costs for each patch
+  vector<vector<double> > patch_costs;
+
+  int num_procs = d_myworld->size();
+  DataWarehouse* olddw = d_scheduler->get_dw(0);
+
+  // treat as a 'regrid' setup (where we need to get particles from the old grid)
+  // IFF the old dw exists and the grids are unequal.
+  // Yes, this discounts the first initialization regrid, where there isn't an OLD DW, or particles on it yet.
+  bool on_regrid = olddw != 0 && grid.get_rep() != olddw->getGrid();
+  vector<vector<Region> > regions;
+  if (on_regrid) {
+    // prepare the list of regions
+    for (int l = 0; l < grid->numLevels(); l++) {
+      regions.push_back(vector<Region>());
+      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
+        const Patch* patch = grid->getLevel(l)->getPatch(p);
+        regions[l].push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
+      }
+    }
+    getCosts(olddw->getGrid(), regions, patch_costs, on_regrid);
+  }
+  else {
+    getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
+  }
+
+  int level_offset=0;
+  
+  int dim=d_sharedState->getNumDims();    //Number of dimensions
+  int *dimensions=d_sharedState->getActiveDims(); //dimensions will store the active dimensions up to the number of dimensions
+
+  for(int l=0;l<grid->numLevels();l++){
+
+    const LevelP& level = grid->getLevel(l);
+    int num_patches = level->numPatches();
+
+    //create the positions vector
+    vector<double> positions;
+    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
+    {
+      const Patch* patch = *iter;
+
+      //create positions vector
+      int proc = (patch->getLevelIndex()*d_myworld->size())/level->numPatches();
+      if(d_myworld->myrank()==proc)
+      {
+        Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
+        for(int d=0;d<dim;d++)
+        {
+          positions.push_back(point[dimensions[d]]);
+        }
+      }
+    }
+
+    //costs[l][p] gives you the cost of patch p on level l
+    //positions[p*3+d] gives you the location of patch p for the dimension d.
+    
+
+    //INSERT ZOLTAN SFC CODE HERE
+        //code should set d_tempAssignment[level_offset+p] to be equal to the owner of the patch p
+
+
+    if(stats.active() && d_myworld->myrank()==0)
+    {
+      //calculate lb stats:
+      double totalCost=0;
+      vector<double> procCosts(num_procs,0);
+      for(int p=0;p<num_patches;p++)
+      {
+        totalCost+=patch_costs[l][p];
+        procCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
+      }
+
+      double meanCost=totalCost/num_procs;
+      double minCost=procCosts[0];
+      double maxCost=procCosts[0];
+      if(d_myworld->myrank()==0)
+        stats << "Level:" << l << " ProcCosts:";
+
+      for(int p=0;p<num_procs;p++)
+      {
+        if(minCost>procCosts[p])
+          minCost=procCosts[p];
+        else if(maxCost<procCosts[p])
+          maxCost=procCosts[p];
+
+        if(d_myworld->myrank()==0)
+          stats << procCosts[p] << " ";
+      }
+      if(d_myworld->myrank()==0)
+        stats << endl;
+
+      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << (maxCost-meanCost)/meanCost <<  endl;
+    }  
+
+    level_offset+=num_patches;
+  }
+  bool doLoadBalancing = force || thresholdExceeded(patch_costs);
+  time = Time::currentSeconds() - time;
+  if (d_myworld->myrank() == 0)
+    dbg << " Time to LB: " << time << endl;
+  doing << d_myworld->myrank() << "   APF END\n";
+  return doLoadBalancing;
+}
 
 bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 {
@@ -1204,6 +1313,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
         case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
         case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
         case random_lb:        dynamicAllocate = assignPatchesRandom(grid, force); break;
+        case zoltan_sfc_lb:    dynamicAllocate = assignPatchesZoltanSFC(grid, force); break;
       }
     }
     else  //regridder has called dynamic load balancer so we must dynamically Allocate
@@ -1292,6 +1402,10 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     // particle3 is for backward-compatibility
     d_dynamicAlgorithm = patch_factor_lb;
     d_collectParticles = true;
+  }
+  else if (dynamicAlgo == "ZoltanSFC")
+  {
+    d_dynamicAlgorithm=zoltan_sfc_lb;
   }
   else {
     if (d_myworld->myrank() == 0)
