@@ -1,0 +1,150 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  validateUda:
+#
+#   usage:  validateUda  <udas>
+#
+#  This scripts performs the following tests on a uda:
+#    0)  does index.xml exist
+#    1)  does each timestep listed in the index.xml file exist
+#    2)  Does timestep/timestep.xml file exist
+#    3)  Does a level directory for each level exist
+#    4)  for each level directory does a pxxxx.xml file exist
+#    5)  for each level directory does a pxxxx.data file exist and is size > 0 
+#______________________________________________________________________
+
+set udas = ($argv)
+
+if ($#udas == 0) then
+  echo "Usage validateUda  <udas>"
+  exit
+endif
+
+# bulletproofing
+foreach U ($udas[*]:q)
+  if(! -d $U) then
+    echo " ERROR: The uda $U does not exist. Now exiting"
+    exit
+  endif
+end
+
+echo $udas
+
+#__________________________________
+foreach U ($udas[*]:q)
+  echo " "
+  echo "---------------------------------"
+  echo "$U"
+  cd $U
+  
+  set passed0 = true
+  if ( ! -e index.xml ) then
+    set passed0 = false
+  endif
+  echo "Test 0:  Does index.xml exist?                                        $passed0"
+  
+  if ($passed0 == "false") then
+    goto bottom
+  endif
+  
+  #__________________________________
+  # Test 1:  does each timestep directory exist 
+  set timesteps = (`grep "timestep href=" index.xml | awk -F '[=/"]' '{print $3}'`)
+ 
+  set passed1 = true
+  set missingTimesteps
+  foreach T ($timesteps[*]:q)
+    if ( ! -d $T ) then
+      set passed1 = false
+      set missingTimesteps = ($missingTimesteps $T)
+    endif
+  end
+
+  echo "Test 1:  Does each timestep in index.xml exist?                       $passed1"
+  if ( $passed1 == "false" ) then
+    foreach T ($missingTimesteps[*])
+      echo "          Missing directory:  $T"
+    end
+  endif
+  #__________________________________
+  #Test 2: 
+  set passed2 = true
+  foreach T ($timesteps[*]:q)
+    if ( -d $T ) then
+      
+      if ( ! -e $T/timestep.xml ) then
+        set passed2 = false
+        echo "           Missinng $T/timestep.xml"
+      endif
+      
+    endif
+  end
+  echo "Test 2:  Do all timesteps.xml files exist?                            $passed2"
+  
+  #__________________________________
+  #Test 3:  does a level directory exist for each level
+  set passed3 = true
+  foreach T ($timesteps[*]:q)
+    if( -d $T && -e $T/timestep.xml ) then
+      
+      set nLevels = `grep numLevels $T/timestep.xml | awk -F '[><]' '{print $3}' `
+      @ l = 0
+      while( $l< $nLevels)
+        set level = "l$l"
+        
+        if ( ! -d $T/$level ) then
+          echo "        Missing $T/$level"
+          set passed3 = false
+        endif
+        
+        @ l ++
+      end
+    endif
+  end
+  echo "Test 3:  Do all the level directories exist:                          $passed3"    
+  
+  #__________________________________
+  #Test 4:  do the pxxxx.xml files for each level
+  #Test 5:  do the pxxxxx.data files exist
+  set passed4 = true
+  set passed5 = true
+  
+  foreach T ($timesteps[*]:q)
+    if ( -e $T/timestep.xml ) then
+
+      set pxxx_xml = `grep Datafile $T/timestep.xml | awk -F '[="]' '{print $3}'`
+      
+      foreach D ($pxxx_xml[*]:q)
+        set here = "$T/$D"
+        if( ! -e $here ) then
+          echo "           Missing $here"
+          set passed4 = false
+        endif
+      end   
+      
+
+      # do all pxxxx.data files exist and have size > 0
+      set pxxx_data = `grep Datafile $T/timestep.xml | awk -F '[=."]' '{print $3".data"}'`
+      foreach D ($pxxx_data[*]:q)
+        set here = "$T/$D"
+        
+        if( ! -e $here ) then
+          echo "           Missing $here"
+        endif
+        
+        set bytes = `stat --format %s $here`
+        if ( $bytes == "0" ) then
+          echo "            $here has 0 bytes"
+          set passed5 = false
+        endif
+        
+      end
+    endif
+  end
+  echo "Test 4:  Do all of the pxxxx.xml files exist:                         $passed4"  
+  echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0:      $passed5"
+  
+bottom:  
+  cd ..
+end
+exit
