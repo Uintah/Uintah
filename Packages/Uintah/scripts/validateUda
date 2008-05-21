@@ -28,7 +28,7 @@ foreach U ($udas[*]:q)
   endif
 end
 
-echo $udas
+date
 
 #__________________________________
 foreach U ($udas[*]:q)
@@ -132,12 +132,13 @@ foreach U ($udas[*]:q)
           echo "           Missing $here"
         endif
         
-        set bytes = `stat --format %s $here`
-        if ( $bytes == "0" ) then
-          echo "            $here has 0 bytes"
-          set passed5 = false
+        if ( -e $here ) then 
+          set bytes = `stat --format %s $here`
+          if ( $bytes == "0" ) then
+            echo "            $here has 0 bytes"
+            set passed5 = false
+          endif
         endif
-        
       end
     endif
   end
