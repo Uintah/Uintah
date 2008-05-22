@@ -44,6 +44,13 @@ unsigned int get_nrrd_type() {
 ////////////////////////////////////////////////////////////////////////////////////
 // Helper functions for wrap_nrrd
 
+#if defined( __ICC )
+   // Turn off the ICC optimizer for this file as it gets rid of the
+   // function symbols that I need...  I don't believe that this will
+   // hurt performace...
+#  pragma optimize("", off)
+#endif
+
 template <class T>
 bool 
 wrap_copy( T* fdata, double*& datap, unsigned int size, Matrix_Op matrix_op ){
@@ -211,6 +218,9 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose )
   }
 
   if (verbose) for(int i = 0; i < dim; i++) cout << "size["<<i<<"] = "<<size[i]<<endl;
+
+  cout << "wrap_nrrd.cc: Should never get here... (I think.)\n";
+  return 0;
 
 } // end wrap_nrrd()
 
