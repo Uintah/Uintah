@@ -1,24 +1,30 @@
-#include <math.h>
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/GenericField.h>
 
+#include <Packages/Uintah/Core/Math/Matrix3.h> // 
+#include <Core/Basis/HexTrilinearLgn.h>        // Note, for template instantiation on some compilers
+#include <Core/Datatypes/LatVolMesh.h>         // these includes must appear in this order.
+#include <Core/Geometry/Point.h>               //
+
+#include <Core/Basis/Constant.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Containers/FData.h>
 
+#include <Core/Datatypes/GenericField.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <math.h>
+
 using namespace SCIRun;
+
 namespace Uintah {
+
 using std::string;
 
 class EigenEvaluator: public Module {
