@@ -227,16 +227,32 @@ GridP
 DataArchive::queryGrid( int index, const ProblemSpec* ups)
 {
 
+  // The following variable along with d_cell_scale is necessary to allow the 
+  // UdaScale module work.  Small domains are a problem for the SCIRun widgets
+  // so UdaScale allows the user increase the domain by setting the 
+  // d_cell_scale. The next call to this function will use the new scaling.
+  // This can be removed if SCIRun is no longer used for visualization.
+  static Vector old_cell_scale(1.0,1.0,1.0);  
+
   d_lock.lock();
 
   double start = Time::currentSeconds();
   TimeData& timedata = getTimeData(index);
 
-  if (timedata.d_grid != 0) {
+  // Check to see if the grid has already been reconstructed and that
+  // the cell scaling has not changed. Cell scale check can be removed
+  // if SCIRun is no longer used for visualization
+  if (timedata.d_grid != 0  &&  old_cell_scale == d_cell_scale) {
     d_lock.unlock();
     return timedata.d_grid;
+  } 
+
+  // update the static variable old_cell_scale if the cell scale has changed.
+  // Can be removed if SCIRun is no longer used for visualization.
+  if( old_cell_scale != d_cell_scale ){
+    old_cell_scale = d_cell_scale;
   }
- 
+
   timedata.d_patchInfo.clear();
   timedata.d_matlInfo.clear();
 
@@ -310,6 +326,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
                               __FILE__, __LINE__);
         have_stretch = true;
       }
+
       if (!have_stretch)
         dcell *= d_cell_scale;
       IntVector extraCells(0,0,0);
