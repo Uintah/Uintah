@@ -43,11 +43,11 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/AttractNormals.h>
-#include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Util/DynamicCompilation.h>
+#include <Core/Datatypes/GenericField.h>
 
 #include <iostream>
 #include <stdio.h>
