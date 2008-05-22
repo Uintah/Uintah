@@ -11163,7 +11163,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of M check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -11373,8 +11373,8 @@ eval M_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -11663,7 +11663,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir) of X c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -11718,7 +11718,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of X check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -11926,8 +11926,8 @@ eval X_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -12281,7 +12281,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of FETCHOP check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -12489,8 +12489,8 @@ eval FETCHOP_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -12744,7 +12744,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PTHREAD check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -12952,8 +12952,8 @@ eval PTHREAD_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -13424,7 +13424,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GL ch
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -13479,7 +13479,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GL check (disrega
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -13687,8 +13687,8 @@ eval GL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -13929,7 +13929,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GL ch
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -13984,7 +13984,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GL check (disrega
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -14192,8 +14192,8 @@ eval GL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -14426,7 +14426,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GL ch
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -14481,7 +14481,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GL check (disrega
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -14689,8 +14689,8 @@ eval GL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -15174,7 +15174,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disrega
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -15384,8 +15384,8 @@ eval DL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -15623,7 +15623,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($sci_thirdparty_inc
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -15678,7 +15678,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disrega
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -15888,8 +15888,8 @@ eval DL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -16143,7 +16143,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disrega
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -16353,8 +16353,8 @@ eval DL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -16615,7 +16615,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STAT64 check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -16825,8 +16825,8 @@ eval STAT64_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -17085,7 +17085,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (d
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -17293,8 +17293,8 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -17546,7 +17546,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (d
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -17754,8 +17754,8 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -18005,7 +18005,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (d
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -18213,8 +18213,8 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -18468,7 +18468,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (d
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -18676,8 +18676,8 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -18940,7 +18940,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STL_HEADERS check
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -19151,8 +19151,8 @@ eval STL_HEADERS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -19637,7 +19637,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_tcl_inc) of T
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -19692,7 +19692,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TCL check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -19900,8 +19900,8 @@ eval TCL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -20182,7 +20182,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir $_sci_t
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -20237,7 +20237,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TK check (disrega
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -20445,8 +20445,8 @@ eval TK_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -20714,7 +20714,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of ITCL 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -20769,7 +20769,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of ITCL check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -20977,8 +20977,8 @@ eval ITCL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -21265,7 +21265,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_x_inc_dir $_sci_i
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -21320,7 +21320,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of ITK check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -21528,8 +21528,8 @@ eval ITK_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -21782,7 +21782,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLT c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -21837,7 +21837,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLT check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -22045,8 +22045,8 @@ eval BLT_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -22631,7 +22631,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($includes) of XML2 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -22686,7 +22686,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of XML2 check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -22914,8 +22914,8 @@ eval XML2_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -23217,7 +23217,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SSTREAM check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -23425,8 +23425,8 @@ eval SSTREAM_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -23688,7 +23688,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of EXC c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -23743,7 +23743,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of EXC check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -23951,8 +23951,8 @@ eval EXC_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -24185,7 +24185,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of EXC c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -24240,7 +24240,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of EXC check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -24448,8 +24448,8 @@ eval EXC_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -24720,7 +24720,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of Z che
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -24775,7 +24775,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of Z check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -24983,8 +24983,8 @@ eval Z_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -25251,7 +25251,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of JPEG 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -25306,7 +25306,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of JPEG check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -25514,8 +25514,8 @@ eval JPEG_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -25765,7 +25765,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of TIFF 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -25820,7 +25820,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TIFF check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -26028,8 +26028,8 @@ eval TIFF_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -26322,7 +26322,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of PNG c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -26377,7 +26377,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PNG check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -26585,8 +26585,8 @@ eval PNG_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -26903,7 +26903,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 (/usr/sci/local/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -26958,7 +26958,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PNG check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -27166,8 +27166,8 @@ eval PNG_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -27492,7 +27492,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPEGE check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -27700,8 +27700,8 @@ eval MPEGE_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -28006,7 +28006,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of UNP c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -28061,7 +28061,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of UNP check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -28271,8 +28271,8 @@ eval UNP_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -28548,7 +28548,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -28756,8 +28756,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -29007,7 +29007,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -29215,8 +29215,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -29468,7 +29468,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -29676,8 +29676,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -29926,7 +29926,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -30134,8 +30134,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -30384,7 +30384,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -30592,8 +30592,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -30842,7 +30842,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -31050,8 +31050,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -31302,7 +31302,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -31510,8 +31510,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -31747,7 +31747,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of F che
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -31802,7 +31802,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -32010,8 +32010,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -32244,7 +32244,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of F che
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -32299,7 +32299,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -32507,8 +32507,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -32741,7 +32741,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of F che
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -32796,7 +32796,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -33004,8 +33004,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -33257,7 +33257,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -33465,8 +33465,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -33715,7 +33715,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -33923,8 +33923,8 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -34239,7 +34239,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of JAVA 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -34294,7 +34294,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of JAVA check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -34502,8 +34502,8 @@ eval JAVA_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -34777,7 +34777,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of JAVA 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -34832,7 +34832,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of JAVA check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -35040,8 +35040,8 @@ eval JAVA_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -35759,7 +35759,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of VERDI
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -35814,7 +35814,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VERDICT check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -36024,8 +36024,8 @@ eval VERDICT_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -36305,7 +36305,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of CAMAL
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -36360,7 +36360,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of CAMAL check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -36568,8 +36568,8 @@ eval CAMAL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -36805,7 +36805,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of CAMAL
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -36860,7 +36860,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of CAMAL check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -37068,8 +37068,8 @@ eval CAMAL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -37338,7 +37338,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of TETGE
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -37393,7 +37393,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TETGEN check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -37601,8 +37601,8 @@ eval TETGEN_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -37881,7 +37881,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 (-faltivec) of BLAS 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -37936,7 +37936,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -38144,8 +38144,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -38379,7 +38379,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -38434,7 +38434,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -38642,8 +38642,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -38920,7 +38920,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -39128,8 +39128,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -39378,7 +39378,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -39586,8 +39586,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -39823,7 +39823,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -39878,7 +39878,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -40086,8 +40086,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -40325,7 +40325,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -40380,7 +40380,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -40588,8 +40588,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -40825,7 +40825,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BLAS 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -40880,7 +40880,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -41088,8 +41088,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -41342,7 +41342,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -41550,8 +41550,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -41799,7 +41799,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -42007,8 +42007,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -42258,7 +42258,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -42466,8 +42466,8 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -42756,7 +42756,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -42964,8 +42964,8 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -43217,7 +43217,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -43425,8 +43425,8 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -43677,7 +43677,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -43885,8 +43885,8 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -44145,7 +44145,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -44353,8 +44353,8 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -44604,7 +44604,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACKMP check (d
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -44812,8 +44812,8 @@ eval LAPACKMP_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -45157,7 +45157,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -45212,7 +45212,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -45420,8 +45420,8 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -45668,7 +45668,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -45723,7 +45723,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -45931,8 +45931,8 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -46177,7 +46177,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -46232,7 +46232,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -46440,8 +46440,8 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -46685,7 +46685,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -46740,7 +46740,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -46948,8 +46948,8 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -47193,7 +47193,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -47248,7 +47248,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -47456,8 +47456,8 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -47692,7 +47692,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -47747,7 +47747,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -47955,8 +47955,8 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -48424,7 +48424,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MPI_U
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -48479,7 +48479,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI_UNI check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -48687,8 +48687,8 @@ eval MPI_UNI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -48922,7 +48922,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MPI_U
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -48977,7 +48977,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI_UNICH check (
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -49185,8 +49185,8 @@ eval MPI_UNICH_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -49511,7 +49511,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -49566,7 +49566,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -49774,8 +49774,8 @@ eval PETSC_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -50013,7 +50013,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -50068,7 +50068,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -50276,8 +50276,8 @@ eval PETSC_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -50539,7 +50539,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -50594,7 +50594,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -50802,8 +50802,8 @@ eval PETSC_UNI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -51040,7 +51040,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc /usr/incl
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -51095,7 +51095,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -51303,8 +51303,8 @@ eval PETSC_UNI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -52086,7 +52086,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of SIDL 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -52141,7 +52141,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SIDL check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -52349,8 +52349,8 @@ eval SIDL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -52785,7 +52785,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of NETSOLVE check (d
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -52993,8 +52993,8 @@ eval NETSOLVE_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -53445,7 +53445,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLUT 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -53500,7 +53500,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLUT check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -53708,8 +53708,8 @@ eval GLUT_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -54223,7 +54223,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLUI 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -54278,7 +54278,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLUI check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -54486,8 +54486,8 @@ eval GLUI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -54777,7 +54777,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of OOGL 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -54832,7 +54832,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of OOGL check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -55040,8 +55040,8 @@ eval OOGL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -55414,7 +55414,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLEW 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -55469,7 +55469,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLEW check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -55677,8 +55677,8 @@ eval GLEW_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -55911,7 +55911,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLEW 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -55966,7 +55966,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLEW check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -56174,8 +56174,8 @@ eval GLEW_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -56511,7 +56511,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of FREET
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -56566,7 +56566,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of FREETYPE check (d
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -56774,8 +56774,8 @@ eval FREETYPE_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -57049,7 +57049,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of FTGL 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -57104,7 +57104,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of FTGL check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -57312,8 +57312,8 @@ eval FTGL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -57585,7 +57585,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of AUDIO check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -57793,8 +57793,8 @@ eval AUDIO_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -58123,7 +58123,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of TEEM 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -58178,7 +58178,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TEEM check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -58390,8 +58390,8 @@ eval TEEM_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -58703,7 +58703,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of MDSPL
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -58758,7 +58758,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MDSPLUS check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -58966,8 +58966,8 @@ eval MDSPLUS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -59240,7 +59240,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of HDF5 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -59295,7 +59295,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of HDF5 check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -59503,8 +59503,8 @@ eval HDF5_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -59772,7 +59772,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PERFEX check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -59980,8 +59980,8 @@ eval PERFEX_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -60248,7 +60248,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of CRYPTO check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -60456,8 +60456,8 @@ eval CRYPTO_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -60735,7 +60735,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SSL check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -60943,8 +60943,8 @@ eval SSL_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -61220,7 +61220,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLOBU
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -61275,7 +61275,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLOBUS check (dis
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -61483,8 +61483,8 @@ eval GLOBUS_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -62020,7 +62020,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of NCURS
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -62075,7 +62075,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of NCURSES check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -62283,8 +62283,8 @@ eval NCURSES_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -62730,7 +62730,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_ruby_inc) of RUBY
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -62785,7 +62785,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of RUBY check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -62993,8 +62993,8 @@ eval RUBY_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -63261,7 +63261,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_tao_inc) of TAO c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -63316,7 +63316,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TAO check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -63524,8 +63524,8 @@ eval TAO_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -63796,7 +63796,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_vtk_inc) of VTK c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -63851,7 +63851,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VTK check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -64059,8 +64059,8 @@ eval VTK_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -64354,7 +64354,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_vdt_inc) of VDT c
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -64409,7 +64409,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VDT check (disreg
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -64619,8 +64619,8 @@ eval VDT_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -64903,7 +64903,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of HYPRE
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -64958,7 +64958,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of HYPRE check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -65166,8 +65166,8 @@ eval HYPRE_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -65461,7 +65461,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of BOOST
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -65516,7 +65516,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BOOST check (disr
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -65724,8 +65724,8 @@ eval BOOST_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -66000,7 +66000,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of CPPUN
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -66055,7 +66055,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of CPPUNIT check (di
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -66263,8 +66263,8 @@ eval CPPUNIT_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
@@ -66546,7 +66546,7 @@ echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of LOKI 
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -66601,7 +66601,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LOKI check (disre
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -66809,8 +66809,8 @@ eval LOKI_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
