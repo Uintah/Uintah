@@ -398,7 +398,7 @@ for inc in $4; do
      fi
   fi
 
-  the_inc=`echo $inc | grep "\-I"`
+  the_inc=`echo $inc | grep "^\-I"`
   if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
      # If the include arg does not already have -I on it.
      if test -d $inc; then
@@ -453,7 +453,7 @@ if test -n "$5"; then
          fi
       fi
 
-      the_lib=`echo $lib | grep "\-l"`
+      the_lib=`echo $lib | grep "^\-l"`
       if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          if test "$IS_VC" = "yes"; then
@@ -618,8 +618,8 @@ eval $1_LIB_DIR_FLAG="'$_final_dirs'"
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
 for _lib in "" $LIBS; do
-  bad_l_arg=`echo "$_lib" | grep "\-L"`
-  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
     final_libs="$final_libs $_lib"
   fi
