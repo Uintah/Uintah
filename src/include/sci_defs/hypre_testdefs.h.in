@@ -33,14 +33,14 @@
 @DEF_HYPRE@
 
 /* 
-   For reference, (if you have petsc, then) you are linking verses this PETSc:
+   For reference, (if hypre is enabled, then) you are linking verses this Hypre:
 
    @HYPRE_LIB_DIR_FLAG@
 
    @INC_HYPRE_H@
 
    (Note, the above info is used to tell when the user configures
-   verses a new PETSc, so please leave it here.)
+   verses a new Hypre, so please leave it here.)
 */
 
 #endif
