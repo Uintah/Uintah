@@ -33,13 +33,17 @@
 
 
 
-#include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Basis/HexTricubicHmt.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/HexVolMesh.h>
+#include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Persistent/Pstreams.h>
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+
 #include <stdlib.h>
 
 using std::cerr;
