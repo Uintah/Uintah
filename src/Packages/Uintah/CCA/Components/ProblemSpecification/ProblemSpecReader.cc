@@ -1004,7 +1004,7 @@ ProblemSpecReader::readInputFile( bool validate /* = false */ )
     if ( !getInfo( d_upsFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
       // Find the directory this file is in...
       string directory = d_upsFilename;
-      unsigned int index;
+      int    index;
       for( index = directory.length()-1; index >= 0; --index ) {
         //strip off characters after last /
         if (directory[index] == '/')
