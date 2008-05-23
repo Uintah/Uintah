@@ -414,7 +414,7 @@ void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux" || "ArchesHeatFlux" ) {
+    if (bcs_type == "HeatFlux" || bcs_type == "ArchesHeatFlux" ) {
       nofHeatFluxBCs++;
       //cout << "nofHeatFluxBCs = " << nofHeatFluxBCs << endl;
 
@@ -460,7 +460,7 @@ void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux" || "ArchesHeatFlux" ) {
+    if (bcs_type == "HeatFlux" || bcs_type == "ArchesHeatFlux" ) {
 
       // Get the material points per load curve
       sumlong_vartype numPart = 0;
@@ -3689,7 +3689,7 @@ void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
   int nofHeatFluxBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "HeatFlux" || "ArchesHeatFlux")
+    if (bcs_type == "HeatFlux" || bcs_type == "ArchesHeatFlux")
       loadCurveIndex->add(nofHeatFluxBCs++);
   }
   if (nofHeatFluxBCs > 0) {
