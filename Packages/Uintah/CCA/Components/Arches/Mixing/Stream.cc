@@ -188,15 +188,12 @@ Stream::operator==(const Stream &rhs)
     return(false);
   else if (d_lsoot != rhs.d_lsoot)
     return(false);
-  else if (rhs.d_numRxnVars > 0) {
-    if (d_rxnVarRates != rhs.d_rxnVarRates)
-      return(false);
-    else if (d_rxnVarNorm != rhs.d_rxnVarNorm)
-      return(false);
+  else if( rhs.d_numRxnVars > 0 && 
+	   ( ( d_rxnVarRates != rhs.d_rxnVarRates ) || (d_rxnVarNorm != rhs.d_rxnVarNorm) ) ) {
+    return false;
   }
-  else if (rhs.d_lsoot) {
-    if (d_sootData != rhs.d_sootData)
-      return(false);
+  else if( rhs.d_lsoot && ( d_sootData != rhs.d_sootData ) ) {
+    return false;
   }
   else if (d_CO2index != rhs.d_CO2index)
     return(false);
