@@ -30,6 +30,8 @@
 #ifndef UINTAH_DEFS_H
 #define UINTAH_DEFS_H
 
+@DEF_ZOLTAN@
+
 @DEF_ARCHES@
 @DEF_ICE@
 @DEF_MPM@
