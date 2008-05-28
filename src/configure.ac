@@ -291,6 +291,12 @@ SCI_ARG_WITH(mesquite,
   [with_mesquite="$withval"
    sci_required_mesquite=yes],
   [with_mesquite=""])
+SCI_ARG_WITH(zoltan,
+  AC_HELP_STRING(--with-zoltan=DIR,
+                 Use the Zoltan installation in DIR),
+  [with_zoltan="$withval"
+   sci_required_zoltan=yes],
+  [with_zoltan=""])
 SCI_ARG_WITH(verdict,
   AC_HELP_STRING(--with-verdict=DIR,
                  Use the Verdict installation in DIR),
@@ -1239,6 +1245,38 @@ if test "$pkg_Uintah" = "yes"; then
   if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
     sci_required_fortran=no
   fi
+
+  ##  --  search for Zoltan ------------------------
+
+  if test "$with_zoltan"; then
+    if test "$with_zoltan" = "yes"; then
+      AC_MSG_ERROR( --with-zoltan=DIR requires a DIRectory be provided. )
+    else
+      AC_MSG_CHECKING(for Zoltan files (For now we are just verifying the existence of lib and .h files)) 
+      if test ! -d $with_zoltan; then
+        AC_MSG_ERROR( '$with_zoltan' directory does not exist. )
+      fi
+      if test ! -f $with_zoltan/lib/libzoltan.a; then
+        AC_MSG_ERROR( '$with_zoltan/lib/libzoltan.a' does not exist. )
+      fi
+      if test ! -f $with_zoltan/include/zoltan_cpp.h; then
+        AC_MSG_ERROR( '$with_zoltan/include/zoltan_cpp.h' does not exist. )
+      fi
+    fi
+    AC_MSG_RESULT(yes)
+    DEF_ZOLTAN="#define HAVE_ZOLTAN 1"
+    INC_ZOLTAN_H="-I$with_zoltan/include"
+    ZOLTAN_LIB_DIR_FLAG="-L$with_zoltan/lib"
+    ZOLTAN_LIB_FLAG="-lzoltan"
+
+  fi
+  AC_SUBST(DEF_ZOLTAN)
+  AC_SUBST(INC_ZOLTAN_H)
+  AC_SUBST(ZOLTAN_LIB_FLAG)
+  AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
+
+  ## -----------------------------------------------
+
   sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
 fi
 

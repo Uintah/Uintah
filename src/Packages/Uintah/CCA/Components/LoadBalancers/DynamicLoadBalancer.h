@@ -2,11 +2,18 @@
 #define UINTAH_HOMEBREW_DynamicLoadBalancer_H
 
 #include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+
 #include <Packages/Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+
+#include <sci_defs/uintah_defs.h>
+#if defined( HAVE_ZOLTAN )
+#  include <zoltan_cpp.h>
+#endif
+
 #include <set>
 #include <string>
 
@@ -63,6 +70,22 @@ namespace Uintah {
     }
   };
 
+#if defined( HAVE_ZOLTAN )
+  class ZoltanFuncs {
+  public:
+    //Zoltan input functions
+    static void zoltan_get_object_list( void *data, int sizeGID, int sizeLID,
+                                        ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
+                                        int wgt_dim, float *obj_wgts, int *ierr );
+    static int zoltan_get_number_of_objects( void *data, int *ierr );
+    static int zoltan_get_number_of_geometry( void *data, int *ierr );
+    static void zoltan_get_geometry_list( void *data, int sizeGID, int sizeLID,
+                                          int num_obj,
+                                          ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
+                                          int num_dim, double *geom_vec, int *ierr );
+  };
+#endif
+
   class DynamicLoadBalancer : public LoadBalancerCommon {
   public:
     DynamicLoadBalancer(const ProcessorGroup* myworld);
@@ -108,13 +131,13 @@ namespace Uintah {
 
   private:
 
-  struct double_int
-  {
-     double val;
-     int loc;
-     double_int(double val, int loc): val(val), loc(loc) {}
-     double_int(): val(0), loc(-1) {}
-  };
+    struct double_int
+    {
+      double val;
+      int loc;
+      double_int(double val, int loc): val(val), loc(loc) {}
+      double_int(): val(0), loc(-1) {}
+    };
 
     vector<IntVector> d_minPatchSize;
     CostProfiler d_costProfiler;
@@ -178,6 +201,15 @@ namespace Uintah {
     bool d_profile;
 
     SFC <double> sfc;
+
+#if defined( HAVE_ZOLTAN )    
+    // Zoltan global vars
+    Zoltan * zz;
+    int      zoltan_num_gids;
+    int      zoltan_dim;
+    float  * zoltan_obj_wgts;
+    float  * zoltan_obj_pos;
+#endif
   };
 } // End namespace Uintah
 
