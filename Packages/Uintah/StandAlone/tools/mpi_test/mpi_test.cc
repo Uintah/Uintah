@@ -91,9 +91,9 @@ usage( const string & prog, const string & badArg )
   if( rank == 0 ) {
     cout << "\n";
     if( badArg != "" ) {
-      cout << "Bad command line argument: '" << badArg << "'\n\n";
+      cout << prog << ": Bad command line argument: '" << badArg << "'\n\n";
     }
-    cout << "Usage: mpirun -np # mpi_test [options]\n";
+    cout << "Usage: mpirun -np <number> mpi_test [options]\n";
     cout << "\n";
     cout << "       mpi_test runs a number of MPI calls attempting to verify\n";
     cout << "       that all nodes are up and running.  These tests include\n";
