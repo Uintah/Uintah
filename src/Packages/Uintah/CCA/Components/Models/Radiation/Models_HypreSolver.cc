@@ -27,10 +27,10 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "utilities.h"
+#include "_hypre_utilities.h"
 #include "HYPRE_struct_ls.h"
 #include "krylov.h"
-#include "struct_mv.h"
+#include "_hypre_struct_mv.h"
 
 #undef CHKERRQ
 #define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);

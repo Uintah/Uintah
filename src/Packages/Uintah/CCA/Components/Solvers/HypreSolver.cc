@@ -26,7 +26,7 @@
 
 // hypre includes
 //#define HYPRE_TIMING
-#include <utilities.h>
+#include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
 #include <krylov.h>
 #ifndef HYPRE_TIMING
