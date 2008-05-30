@@ -13,7 +13,7 @@
 
 #include <Core/Containers/Array1.h>
 
-#include <utilities.h>
+#include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
 #include <krylov.h>
 
