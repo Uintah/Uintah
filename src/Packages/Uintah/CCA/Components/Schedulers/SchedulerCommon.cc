@@ -339,7 +339,9 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
     }
     else { // Tracking not specified
       // This 'else' won't be necessary once the .ups files are validated... but for now.
-      cout << "<VarTracker> not specified in .ups file... no variable tracking will take place.\n";
+      if( d_myworld->myrank() == 0 ) {
+        cout << "<VarTracker> not specified in .ups file... no variable tracking will take place.\n";
+      }
     }
   }
   noScrubVars_.insert("refineFlag");
