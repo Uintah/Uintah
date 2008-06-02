@@ -205,10 +205,6 @@ namespace Uintah {
 #if defined( HAVE_ZOLTAN )    
     // Zoltan global vars
     Zoltan * zz;
-    int      zoltan_num_gids;
-    int      zoltan_dim;
-    float  * zoltan_obj_wgts;
-    float  * zoltan_obj_pos;
 #endif
   };
 } // End namespace Uintah
