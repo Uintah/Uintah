@@ -1741,13 +1741,13 @@ WARNING
       const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
       const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-                                            const string& type,
-                                            vector<IntVector>*& b_ptr,
-                                            vector<IntVector>*& nb_ptr,
-                                            int child) const ;
+          const string& type,
+          vector<IntVector>*& b_ptr,
+          vector<IntVector>*& nb_ptr,
+          int child) const ;
 
       bool haveBC(FaceType face,int mat_id,const string& bc_type,
-                  const string& bc_variable) const;
+          const string& bc_variable) const;
 
       void initializeBoundaryConditions();
 
