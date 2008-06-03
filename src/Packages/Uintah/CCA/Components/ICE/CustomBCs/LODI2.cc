@@ -106,6 +106,23 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
       }
     }
   }
+  //__________________________________
+  //  Save Li Terms?
+  vb->saveLiTerms = false;
+  ProblemSpecP DA_ps = prob_spec->findBlock("DataArchiver");
+  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
+                    child = child->findNextBlock("save")) {
+    map<string,string> var_attr;
+    child->getAttributes(var_attr);
+    if (var_attr["label"] == "Li1" ||
+        var_attr["label"] == "Li2" ||
+        var_attr["label"] == "Li3" ||
+        var_attr["label"] == "Li4" ||
+        var_attr["label"] == "Li5" &&
+        usingLODI ){
+      vb->saveLiTerms = true;
+    }
+  }
   
   if (usingLODI) {
     cout << "\n WARNING:  LODI boundary conditions are "
@@ -189,6 +206,14 @@ void addRequires_Lodi(Task* t,
          f !=var_basket->LodiFaces.end(); ++f) {
       VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
       t->requires(whichDW,V_Label, ice_matls);
+    }
+    
+    if(var_basket->saveLiTerms){
+      t->computes(lb->LODI_BC_Li1Label);
+      t->computes(lb->LODI_BC_Li2Label);
+      t->computes(lb->LODI_BC_Li3Label);
+      t->computes(lb->LODI_BC_Li4Label);
+      t->computes(lb->LODI_BC_Li5Label); 
     }
   }  
 }
@@ -286,6 +311,23 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
 
     computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
               patch, new_dw, sharedState, var_basket, false);
+              
+    if(var_basket->saveLiTerms){
+      CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
+      new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, 0,patch);
+      new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, 0,patch);
+      new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, 0,patch);
+      new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, 0,patch);
+      new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, 0,patch);
+      for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
+        IntVector c = *iter;
+        Li1[c]=lv->Li[1][c];
+        Li2[c]=lv->Li[2][c];
+        Li3[c]=lv->Li[3][c];
+        Li4[c]=lv->Li[4][c];
+        Li5[c]=lv->Li[5][c];
+      }
+    }
   }
 }
 

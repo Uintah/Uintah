@@ -28,6 +28,7 @@ namespace Uintah {
     double sigma;
     int iceMatl_indx;
     vector<Patch::FaceType> LodiFaces;
+    bool saveLiTerms;
   };    
   //____________________________________________________________
   // This struct contains the additional variables required to 
