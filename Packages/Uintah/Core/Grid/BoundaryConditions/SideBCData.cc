@@ -11,8 +11,6 @@ using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
-#define NEW_BCS 1
-
 SideBCData::SideBCData() 
 {
   
@@ -75,7 +73,7 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
   patch->getFaceCells(face,0,l,h);
   vector<IntVector> b,nb;
 
-#ifndef NEW_BCS
+
   for (CellIterator bound(l,h); !bound.done(); bound++) 
     b.push_back(*bound);
   
@@ -84,7 +82,7 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
   for (NodeIterator bound(ln,hn);!bound.done();bound++) {
     nb.push_back(*bound);
   }
-#endif
+
 
 #if 1
   setBoundaryIterator(b);
@@ -94,9 +92,22 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
   setNBoundaryIterator(nb.begin(),nb.end());
 
 
+#if 0
+  determineSFLimits(face,patch);
+#endif
 
 #endif  
 
   
 }
 
+#if 0
+void SideBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
+{
+#if 0
+  cout << "SideBC determineSFLimits()" << endl;
+  BCGeomBase::determineSFLimits(face,patch);
+#endif
+  return;
+}
+#endif
