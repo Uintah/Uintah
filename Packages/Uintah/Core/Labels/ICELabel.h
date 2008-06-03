@@ -116,7 +116,14 @@ namespace Uintah {
     const VarLabel* scratch_FCXLabel;
     const VarLabel* scratch_FCYLabel;
     const VarLabel* scratch_FCZLabel;
-
+    
+    // LODI boundary condition labels
+    const VarLabel* LODI_BC_Li1Label;
+    const VarLabel* LODI_BC_Li2Label;
+    const VarLabel* LODI_BC_Li3Label;
+    const VarLabel* LODI_BC_Li4Label;
+    const VarLabel* LODI_BC_Li5Label;
+    
     // Reduction Variables
     const VarLabel*  TotalMassLabel;
     const VarLabel*  CenterOfMassVelocityLabel;

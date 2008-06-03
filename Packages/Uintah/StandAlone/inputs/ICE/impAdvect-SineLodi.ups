@@ -58,7 +58,7 @@
         </BCType>
       </Face>
 
-<!--
+
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "LODI">
                               <value> 0. </value>                
@@ -76,8 +76,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
--->
-
+<!--
       <Face side = "x+">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
@@ -95,7 +94,7 @@
                               <value> 0.0 </value>
         </BCType>
       </Face>
-                   
+-->                   
       <Face side = "y-">
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0.0 </value>
@@ -153,7 +152,7 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>Neumann_Sine.uda</filebase>
+      <filebase>Sine_Lodi.uda</filebase>
       <outputInterval>0.0002 </outputInterval>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
@@ -162,6 +161,11 @@
       <save label="sp_vol_CC"/>
       <save label="delP_Dilatate"/>
       <save label="TotalMass"/>
+      <save label="Li1"/>
+      <save label="Li2"/>
+      <save label="Li3"/>
+      <save label="Li4"/>
+      <save label="Li5"/>
       <checkpoint interval="0.005" cycle="2"/>     
    </DataArchiver>
 

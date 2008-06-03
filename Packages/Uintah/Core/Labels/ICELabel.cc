@@ -133,6 +133,15 @@ ICELabel::ICELabel()
   scratch_FCZLabel    = VarLabel::create("scratch_FCZ",SFCZ_double);
   IveBeenHereLabel     =
     VarLabel::create("IveBeenHere",CCVariable<int>::getTypeDescription());
+    
+  
+  //__________________________________
+  // LODI Boundary Conditions
+  LODI_BC_Li1Label    = VarLabel::create("Li1",   CC_Vector);
+  LODI_BC_Li2Label    = VarLabel::create("Li2",   CC_Vector);
+  LODI_BC_Li3Label    = VarLabel::create("Li3",   CC_Vector);
+  LODI_BC_Li4Label    = VarLabel::create("Li4",   CC_Vector);
+  LODI_BC_Li5Label    = VarLabel::create("Li5",   CC_Vector);    
      
  //__________________________________
  //Reduction labels (The names must be identical to those in MPMLabel.cc)
@@ -316,7 +325,14 @@ ICELabel::~ICELabel()
     VarLabel::destroy(scratch_FCXLabel);
     VarLabel::destroy(scratch_FCYLabel);
     VarLabel::destroy(scratch_FCZLabel);
-
+    
+    // LODI Boundary condition variables
+    VarLabel::destroy(LODI_BC_Li1Label);
+    VarLabel::destroy(LODI_BC_Li2Label);
+    VarLabel::destroy(LODI_BC_Li3Label);
+    VarLabel::destroy(LODI_BC_Li4Label);
+    VarLabel::destroy(LODI_BC_Li5Label);    
+    
     // Reduction Variables
     VarLabel::destroy(TotalMassLabel);
     VarLabel::destroy(KineticEnergyLabel);
