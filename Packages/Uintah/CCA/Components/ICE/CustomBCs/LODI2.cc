@@ -208,7 +208,7 @@ void addRequires_Lodi(Task* t,
       t->requires(whichDW,V_Label, ice_matls);
     }
     
-    if(var_basket->saveLiTerms){
+    if(var_basket->saveLiTerms && where == "Advection"){
       t->computes(lb->LODI_BC_Li1Label);
       t->computes(lb->LODI_BC_Li2Label);
       t->computes(lb->LODI_BC_Li3Label);
@@ -312,7 +312,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     computeLi(lv->Li, lv->rho_CC,  lv->press_CC, lv->vel_CC, lv->speedSound, 
               patch, new_dw, sharedState, var_basket, false);
               
-    if(var_basket->saveLiTerms){
+    if(var_basket->saveLiTerms  && where == "Advection"){
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
       new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, 0,patch);
       new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, 0,patch);
