@@ -544,14 +544,6 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     //set assignment result array 
     int nMyGids = ZoltanFuncs::zoltan_get_number_of_objects(&(my_costs), &rc);
     int nGids   = 0;
-    
-    MPI_Allreduce(&nMyGids, &nGids, 1, MPI_INT, MPI_SUM, d_myworld->getComm());
-    if (nGids != num_patches) {
-      std::cout << "rank " << d_myworld->myrank() << ": nMyGids=" << nMyGids << ", num_pathes=" << num_patches << "\n";
-      throw InternalError("Zoltan partition checksum error!", __FILE__, __LINE__);
-      return false;
-    }
-    
     int *gid_list = new int[nMyGids];
     int *lid_list = new int[nMyGids];
     
@@ -571,14 +563,6 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
        gid_flags[exportGlobalIds[i]] = 0;  // my exports
     }
     
-    /*
-    int nextIdx = 0;
-    for (int i=0; i<nGids; i++){
-      if (gid_flags[i]){
-        gid_flags[nextIdx] = i+1; // my new GID list
-        nextIdx++;
-      }
-    }*/
 
     MPI_Allreduce(gid_flags, gid_results, nGids, MPI_INT, MPI_SUM, d_myworld->getComm());
 
@@ -593,8 +577,6 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     delete [] gid_list;
     delete [] lid_list;
   
-	
-    
     //mpi_communicator is d_myworld->getComm()
     //mpi_rank is d_myworld->myrank()
     //mpi_size is d_myworld->size()
