@@ -513,7 +513,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     /* Set Zoltan Functions */
     zz->Set_Num_Obj_Fn(ZoltanFuncs::zoltan_get_number_of_objects, & (my_costs) );
     zz->Set_Obj_List_Fn(ZoltanFuncs::zoltan_get_object_list, obj_data);
-    zz->Set_Num_Geom_Fn(ZoltanFuncs::zoltan_get_number_of_geometry, (void *) dim);
+    zz->Set_Num_Geom_Fn(ZoltanFuncs::zoltan_get_number_of_geometry, &dim);
     zz->Set_Geom_Multi_Fn(ZoltanFuncs::zoltan_get_geometry_list, &(positions));
 
 
@@ -1599,7 +1599,7 @@ int
 ZoltanFuncs::zoltan_get_number_of_geometry( void *data, int *ierr )
 {
     *ierr = ZOLTAN_OK;
-    return (int)data;
+    return *static_cast<int*>(data);
 }
 
 void
