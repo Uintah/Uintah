@@ -194,7 +194,6 @@ namespace Uintah {
     double d_patchCost;     //cost weight per patch
     
     int d_dynamicAlgorithm;
-
     bool d_doSpaceCurve;
     bool d_collectParticles;
     bool d_checkAfterRestart;
@@ -205,6 +204,7 @@ namespace Uintah {
 #if defined( HAVE_ZOLTAN )    
     // Zoltan global vars
     Zoltan * zz;
+    string d_zoltanAlgorithm;  //This will be the algorithm that zoltan will use (HSFC, RCB, etc)
 #endif
   };
 } // End namespace Uintah
