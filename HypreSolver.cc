@@ -76,20 +76,20 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
       d_kspType = "1";
     else
       if (d_kspType == "cg")
-	{
-	  db->getWithDefault("pctype", d_pcType, "pfmg");
-	  if (d_pcType == "smg")
-	    d_kspType = "10";
-	  else
-	    if (d_pcType == "pfmg")
-	      d_kspType = "11";
-	    else
-	      if (d_pcType == "jacobi")
-		d_kspType = "17";
-	      else
-		if (d_pcType == "none")
-		  d_kspType = "19";
-	}
+        {
+          db->getWithDefault("pctype", d_pcType, "pfmg");
+          if (d_pcType == "smg")
+            d_kspType = "10";
+          else
+            if (d_pcType == "pfmg")
+              d_kspType = "11";
+            else
+              if (d_pcType == "jacobi")
+                d_kspType = "17";
+              else
+                if (d_pcType == "none")
+                  d_kspType = "19";
+        }
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("res_tol", d_stored_residual, 1.0e-8);
 }
@@ -100,7 +100,7 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
 // ***************************************************************************
 void
 HypreSolver::gridSetup(const ProcessorGroup*,
-		       const Patch* patch)
+                       const Patch* patch)
 
 {
   int nx, ny, nz;
@@ -164,13 +164,13 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
-	  d_ilower[ib][0] = idxLo.x();
-	  d_iupper[ib][0] = idxHi.x();
-	  d_ilower[ib][1] = idxLo.y();
-	  d_iupper[ib][1] = idxHi.y();
-	  d_ilower[ib][2] = idxLo.z();
-	  d_iupper[ib][2] = idxHi.z();
-	  ib++;
+          d_ilower[ib][0] = idxLo.x();
+          d_iupper[ib][0] = idxHi.x();
+          d_ilower[ib][1] = idxLo.y();
+          d_iupper[ib][1] = idxHi.y();
+          d_ilower[ib][2] = idxLo.z();
+          d_iupper[ib][2] = idxHi.z();
+          ib++;
       }
     }
   }
@@ -179,9 +179,9 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   for (int iz = 0; iz < bz; iz++) {
     for (int iy = 0; iy < by; iy++) {
       for (int ix = 0; ix < bx; ix++) {
-	printf("  d_ilower[%d](i,j,k)= (%d, %d, %d)\n",ib, d_ilower[ib][0], d_ilower[ib][1],   d_ilower[ib][2]);
-	printf("  d_iupper[%d](i,j,k)= (%d, %d, %d)\n",ib, d_iupper[ib][0], d_iupper[ib][1],   d_iupper[ib][2]);
-	ib++;
+        printf("  d_ilower[%d](i,j,k)= (%d, %d, %d)\n",ib, d_ilower[ib][0], d_ilower[ib][1],   d_ilower[ib][2]);
+        printf("  d_iupper[%d](i,j,k)= (%d, %d, %d)\n",ib, d_iupper[ib][0], d_iupper[ib][1],   d_iupper[ib][2]);
+        ib++;
       }
     }
   }
@@ -223,10 +223,10 @@ HypreSolver::gridSetup(const ProcessorGroup*,
 // ****************************************************************************
 void 
 HypreSolver::setPressMatrix(const ProcessorGroup* pc,
-			    const Patch* patch,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const ArchesLabel*)
+                            const Patch* patch,
+                            ArchesVariables* vars,
+                            ArchesConstVariables* constvars,
+                            const ArchesLabel*)
 { 
   double start_time = Time::currentSeconds();
   gridSetup(pc, patch);
@@ -262,19 +262,19 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)]; //[0,0,-1]
-	d_value[i+1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)]; //[0,-1,0]
-	d_value[i+2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)]; //[-1,0,0]
-	d_value[i+3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)]; //[0,0,0]
+        d_value[i] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)]; //[0,0,-1]
+        d_value[i+1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)]; //[0,-1,0]
+        d_value[i+2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)]; //[-1,0,0]
+        d_value[i+3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)]; //[0,0,0]
 
 #if 0
-	cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
-	cerr << "value[AB]=" << d_value[i] << endl;
-	cerr << "value[AS]=" << d_value[i+1] << endl;
-	cerr << "value[AW]=" << d_value[i+2] << endl;
-	cerr << "value[AP]=" << d_value[i+3] << endl;
+        cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
+        cerr << "value[AB]=" << d_value[i] << endl;
+        cerr << "value[AS]=" << d_value[i+1] << endl;
+        cerr << "value[AW]=" << d_value[i+2] << endl;
+        cerr << "value[AP]=" << d_value[i+3] << endl;
 #endif
-	    i = i + d_stencilSize;
+            i = i + d_stencilSize;
       }
     }
   }
@@ -282,7 +282,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int ib = 0; ib < d_nblocks; ib++)
     {
       HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
-				     d_stencilIndices, d_value);
+                                     d_stencilIndices, d_value);
     }
 
 
@@ -302,9 +302,9 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
-	//cerr << "b[" << i << "] =" << d_value[i] << endl;
-	i++;
+        d_value[i] = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
+        //cerr << "b[" << i << "] =" << d_value[i] << endl;
+        i++;
       }
     }
   }
@@ -319,9 +319,9 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	d_value[i] = vars->pressure[IntVector(colX, colY, colZ)];
-	//cerr << "x0[" << i << "] =" << d_value[i] << endl;
-	i++;;
+        d_value[i] = vars->pressure[IntVector(colX, colY, colZ)];
+        //cerr << "x0[" << i << "] =" << d_value[i] << endl;
+        i++;;
       }
     }
   }
@@ -457,9 +457,9 @@ HypreSolver::pressLinearSolve()
       HYPRE_StructSMGSetNumPostRelax(precond, n_post);
       HYPRE_StructSMGSetLogging(precond, 0);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
   
@@ -477,9 +477,9 @@ HypreSolver::pressLinearSolve()
       /*HYPRE_StructPFMGSetDxyz(precond, dxyz);*/
       HYPRE_StructPFMGSetLogging(precond, 0);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     else if (d_kspType == "17") {
@@ -489,9 +489,9 @@ HypreSolver::pressLinearSolve()
       HYPRE_StructJacobiSetTol(precond, zero_residual);
       HYPRE_StructJacobiSetZeroGuess(precond);
       HYPRE_PCGSetPrecond( (HYPRE_Solver) solver,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
-			   (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
-			   (HYPRE_Solver) precond);
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
+                           (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
+                           (HYPRE_Solver) precond);
       //      cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     
@@ -520,7 +520,7 @@ HypreSolver::pressLinearSolve()
     }
   }
   if(me == 0) {
-    final_res_norm *= sum_b;	  
+    final_res_norm *= sum_b;          
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
@@ -555,9 +555,9 @@ HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-  	vars->pressure[IntVector(colX, colY, colZ)] = xvec[i];
-	//cerr << "xvec[" << i << "] = " << xvec[i] << endl;
-	i++;
+        vars->pressure[IntVector(colX, colY, colZ)] = xvec[i];
+        //cerr << "xvec[" << i << "] = " << xvec[i] << endl;
+        i++;
       }
     }
   }

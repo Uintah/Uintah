@@ -47,13 +47,13 @@ using namespace Uintah;
 //****************************************************************************
 Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                        PhysicalConstants* phys_const, bool calcReactingScalar,
-		       		   bool calcEnthalpy, bool calcVariance, const ProcessorGroup* myworld):
+                       bool calcEnthalpy, bool calcVariance, const ProcessorGroup* myworld):
                        d_lab(label), d_MAlab(MAlb), 
                        d_physicalConsts(phys_const), 
                        d_calcReactingScalar(calcReactingScalar),
                        d_calcEnthalpy(calcEnthalpy),
                        d_calcVariance(calcVariance),
-					   d_myworld(myworld)
+                                           d_myworld(myworld)
 {
   d_DORadiationCalc = false;
   d_radiationCalc = false;
@@ -98,7 +98,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     d_mixingModel = scinew NewStaticMixingTable(d_calcReactingScalar,
                                                 d_calcEnthalpy,
                                                 d_calcVariance,
-												d_myworld);
+                                                                                                d_myworld);
     d_mixingModel->setCalcExtraScalars(d_calcExtraScalars);
     d_mixingModel->setExtraScalars(d_extraScalars);
   }
@@ -108,15 +108,15 @@ Properties::problemSetup(const ProblemSpecP& params)
                                          d_calcVariance);
   else if (mixModel == "MOMcoldFlowMixingModel"){
      d_mixingModel = scinew MOMColdflowMixingModel(d_calcReactingScalar,
-						  d_calcEnthalpy,
-						  d_calcVariance);
+                                                  d_calcEnthalpy,
+                                                  d_calcVariance);
      d_reactingFlow = false;
   }
 
 
   else if (mixModel == "pdfMixingModel" || mixModel == "SteadyFlameletsTable"
-	|| mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
-	|| mixModel == "meanMixingModel" )
+        || mixModel == "flameletModel"  || mixModel == "StaticMixingTable"
+        || mixModel == "meanMixingModel" )
     throw InvalidValue("DEPRECATED: Mixing Model no longer supported: " + mixModel, __FILE__, __LINE__);
   else
     throw InvalidValue("Mixing Model not supported" + mixModel, __FILE__, __LINE__);
@@ -181,7 +181,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 
 void
 Properties::computeInletProperties(const InletStream& inStream, 
-				   Stream& outStream)
+                                   Stream& outStream)
 {
   if (dynamic_cast<const ColdflowMixingModel*>(d_mixingModel))
     d_mixingModel->computeProps(inStream, outStream);
@@ -205,20 +205,20 @@ Properties::computeInletProperties(const InletStream& inStream,
 //****************************************************************************
 void 
 Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
-				 const MaterialSet* matls,
-				 const TimeIntegratorLabel* timelabels,
-			         bool modify_ref_density, bool initialize,
+                                 const MaterialSet* matls,
+                                 const TimeIntegratorLabel* timelabels,
+                                 bool modify_ref_density, bool initialize,
                                  bool d_EKTCorrection,
                                  bool doing_EKT_now)
 {
   string md = "";
   if (!(modify_ref_density)) md += "RKSSP";
   string taskname =  "Properties::ReComputeProps" +
-		     timelabels->integrator_step_name + md;
+                     timelabels->integrator_step_name + md;
   if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
-			  &Properties::reComputeProps,
-			  timelabels, modify_ref_density, initialize,
+                          &Properties::reComputeProps,
+                          timelabels, modify_ref_density, initialize,
                           d_EKTCorrection, doing_EKT_now);
 
   if (doing_EKT_now)
@@ -229,15 +229,15 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 
   if (d_calcVariance)
     tsk->requires(Task::NewDW, d_lab->d_normalizedScalarVarLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_calcReactingScalar)
     if (doing_EKT_now)
       tsk->requires(Task::NewDW, d_lab->d_reactscalarEKTLabel,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
+                    Ghost::None, Arches::ZEROGHOSTCELLS);
     else
       tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
+                    Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_calcEnthalpy)
     if (doing_EKT_now)
@@ -248,24 +248,24 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
     tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
+                  Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
-    		  Arches::ZEROGHOSTCELLS);
+                  Arches::ZEROGHOSTCELLS);
 #else
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
+                  Arches::ZEROGHOSTCELLS);
 #endif
   }
   else
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
+                  Arches::ZEROGHOSTCELLS);
 
   if (d_MAlab && !initialize) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
-    		  Arches::ZEROGHOSTCELLS);
+                  Arches::ZEROGHOSTCELLS);
   if (d_DORadiationCalc && d_bc->getIfCalcEnergyExchange())
     tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, Ghost::None,
-		  Arches::ZEROGHOSTCELLS);
+                  Arches::ZEROGHOSTCELLS);
   }
 
   if (doing_EKT_now)
@@ -334,10 +334,10 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_sootFVINLabel);
     }
 
-    if (d_carbon_balance_es)	
-    	tsk->modifies(d_lab->d_co2RateLabel);
-	if (d_sulfur_balance_es)
-		tsk->modifies(d_lab->d_so2RateLabel);		
+    if (d_carbon_balance_es)        
+      tsk->modifies(d_lab->d_co2RateLabel);
+      if (d_sulfur_balance_es)
+        tsk->modifies(d_lab->d_so2RateLabel);                
 
   }
   else {
@@ -392,10 +392,10 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_sootFVINLabel);
     }
 
-    if (d_carbon_balance_es)	
-    	tsk->modifies(d_lab->d_co2RateLabel);
-	if (d_sulfur_balance_es)
-		tsk->modifies(d_lab->d_so2RateLabel);		
+    if (d_carbon_balance_es)        
+      tsk->modifies(d_lab->d_co2RateLabel);
+      if (d_sulfur_balance_es)
+        tsk->modifies(d_lab->d_so2RateLabel);                
   
     //tsk->modifies(d_lab->d_tabReactionRateLabel);
   }
@@ -411,7 +411,7 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
   if (d_calcExtraScalars)
     for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
       tsk->requires(Task::NewDW, d_extraScalars->at(i)->getScalarLabel(), 
-      		    Ghost::None, Arches::ZEROGHOSTCELLS);
+                    Ghost::None, Arches::ZEROGHOSTCELLS);
     } 
 
   sched->addTask(tsk, patches, matls);
@@ -423,13 +423,13 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
 //****************************************************************************
 void 
 Properties::reComputeProps(const ProcessorGroup* pc,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse* ,
-			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels,
-			   bool modify_ref_density,
-			   bool initialize,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* ,
+                           DataWarehouse* new_dw,
+                           const TimeIntegratorLabel* timelabels,
+                           bool modify_ref_density,
+                           bool initialize,
                            bool d_EKTCorrection,
                            bool doing_EKT_now)
 {
@@ -449,7 +449,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->
-		     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<int> cellType;
     CCVariable<double> scalar;
@@ -523,88 +523,87 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
       new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
-    		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 #else
       new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 #endif
     }
     else
       new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     //WARNING!
     //THIS is messy for extra scalars and will need to be fixed for EKT!!!!
     if (doing_EKT_now) {
       new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, 
-			    matlIndex, patch);
+                            matlIndex, patch);
       std::cout << "DANGER!  Extra scalars not supported for EKT yet" << endl;
     }
     //ExtraScalar for Density
     else if (d_calcExtraScalars){     
       for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-	usemeforden = d_extraScalars->at(i)->useforDen();
-	if (usemeforden) {
-		indexforden = i;
-	        foundExtrascalar = true;
-	}
+        usemeforden = d_extraScalars->at(i)->useforDen();
+        if (usemeforden) {
+                indexforden = i;
+                foundExtrascalar = true;
+        }
       } 
       
 
       if (foundExtrascalar){
-	//found an extra scalar for density
-	const VarLabel* extrascalarlabel;
-	extrascalarlabel = d_extraScalars->at(indexforden)->getScalarLabel();
-	new_dw->getModifiable(extrascalar, extrascalarlabel,
-	  	    matlIndex, patch);
+        //found an extra scalar for density
+        const VarLabel* extrascalarlabel;
+        extrascalarlabel = d_extraScalars->at(indexforden)->getScalarLabel();
+        new_dw->getModifiable(extrascalar, extrascalarlabel,matlIndex, patch);
       }
       else { //Standard scalar
-	//Default to the standard scalar if no extrascalar 
-	// is found that is labeled to be used for density
-	new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
-			      matlIndex, patch);
+        //Default to the standard scalar if no extrascalar 
+        // is found that is labeled to be used for density
+        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
+                              matlIndex, patch);
       }
     }
     else {
-	new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
-			      matlIndex, patch);
+        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
+                              matlIndex, patch);
     }
 
 
     if (d_calcVariance) {
       new_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
     
     if (d_calcReactingScalar) {
       if (doing_EKT_now)
-	new_dw->get(reactScalar, d_lab->d_reactscalarEKTLabel, 
-		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        new_dw->get(reactScalar, d_lab->d_reactscalarEKTLabel, 
+                      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       else
-	new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, 
-		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, 
+                      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     if (d_calcEnthalpy)
       if (doing_EKT_now)
         new_dw->getModifiable(enthalpy, d_lab->d_enthalpyEKTLabel, 
-		              matlIndex, patch);
+                              matlIndex, patch);
       else
         new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, 
-		              matlIndex, patch);
+                              matlIndex, patch);
 
     if (doing_EKT_now)
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         new_dw->allocateAndPut(new_density, d_lab->d_densityEKTLabel,
-			      matlIndex, patch);
+                              matlIndex, patch);
       else
         new_dw->getModifiable(new_density, d_lab->d_densityEKTLabel,
-			      matlIndex, patch);
+                              matlIndex, patch);
     else
       new_dw->getModifiable(new_density, d_lab->d_densityCPLabel,
-			    matlIndex, patch);
+                            matlIndex, patch);
     new_density.initialize(0.0);
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -613,30 +612,30 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
       if (d_reactingFlow) {
         new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel, 
-			       matlIndex, patch);
+                               matlIndex, patch);
         new_dw->allocateAndPut(cp, d_lab->d_cpINLabel, matlIndex, patch);
         new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
         new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
         new_dw->allocateAndPut(heatLoss, d_lab->d_heatLossLabel, matlIndex, patch);
         new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
-			       matlIndex, patch);
+                               matlIndex, patch);
         if (d_calcReactingScalar)
-	  new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-			         matlIndex, patch);
+          new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+                                 matlIndex, patch);
       }
 
       if (d_co_output)
-	new_dw->allocateAndPut(co, d_lab->d_coINLabel,
-			       matlIndex, patch);
+        new_dw->allocateAndPut(co, d_lab->d_coINLabel,
+                               matlIndex, patch);
       if (d_sulfur_chem) {
-	new_dw->allocateAndPut(h2s, d_lab->d_h2sINLabel,
-			       matlIndex, patch);
-	new_dw->allocateAndPut(so2, d_lab->d_so2INLabel,
-			       matlIndex, patch);
-	new_dw->allocateAndPut(so3, d_lab->d_so3INLabel,
-			       matlIndex, patch);
-	new_dw->allocateAndPut(sulfur, d_lab->d_sulfurINLabel,
-			       matlIndex, patch);
+        new_dw->allocateAndPut(h2s, d_lab->d_h2sINLabel,
+                               matlIndex, patch);
+        new_dw->allocateAndPut(so2, d_lab->d_so2INLabel,
+                               matlIndex, patch);
+        new_dw->allocateAndPut(so3, d_lab->d_so3INLabel,
+                               matlIndex, patch);
+        new_dw->allocateAndPut(sulfur, d_lab->d_sulfurINLabel,
+                               matlIndex, patch);
 
         new_dw->allocateAndPut(s2, d_lab->d_s2INLabel, matlIndex, patch);
         new_dw->allocateAndPut(sh, d_lab->d_shINLabel, matlIndex, patch);
@@ -668,45 +667,44 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       if (d_radiationCalc) {
         if (!d_DORadiationCalc)
           new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
-			         matlIndex, patch);
+                                 matlIndex, patch);
         new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
 
-      if (d_carbon_balance_es)	
-      	new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
-	  if (d_sulfur_balance_es)
-		new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
-			  	
+      if (d_carbon_balance_es)        
+        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+        if (d_sulfur_balance_es)
+          new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
     }
     else {
       new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
 
       if (d_reactingFlow) {
         new_dw->getModifiable(temperature, d_lab->d_tempINLabel, 
-			       matlIndex, patch);
+                               matlIndex, patch);
         new_dw->getModifiable(cp, d_lab->d_cpINLabel, matlIndex, patch);
         new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
         new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
         new_dw->getModifiable(heatLoss, d_lab->d_heatLossLabel, matlIndex, patch);
         new_dw->getModifiable(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
-			       matlIndex, patch);
+                               matlIndex, patch);
         if (d_calcReactingScalar)
-	  new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-			         matlIndex, patch);
+          new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
+                                 matlIndex, patch);
       }
 
       if (d_co_output)
-	new_dw->getModifiable(co, d_lab->d_coINLabel,
-			      matlIndex, patch);
+        new_dw->getModifiable(co, d_lab->d_coINLabel,
+                              matlIndex, patch);
       if (d_sulfur_chem) {
-	new_dw->getModifiable(h2s, d_lab->d_h2sINLabel,
-			      matlIndex, patch);
-	new_dw->getModifiable(so2, d_lab->d_so2INLabel,
-			      matlIndex, patch);
-	new_dw->getModifiable(so3, d_lab->d_so3INLabel,
-			      matlIndex, patch);
-	new_dw->getModifiable(sulfur, d_lab->d_sulfurINLabel,
-			      matlIndex, patch);
+        new_dw->getModifiable(h2s, d_lab->d_h2sINLabel,
+                              matlIndex, patch);
+        new_dw->getModifiable(so2, d_lab->d_so2INLabel,
+                              matlIndex, patch);
+        new_dw->getModifiable(so3, d_lab->d_so3INLabel,
+                              matlIndex, patch);
+        new_dw->getModifiable(sulfur, d_lab->d_sulfurINLabel,
+                              matlIndex, patch);
 
         new_dw->getModifiable(s2, d_lab->d_s2INLabel, matlIndex, patch);
         new_dw->getModifiable(sh, d_lab->d_shINLabel, matlIndex, patch);
@@ -739,14 +737,14 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       if (d_radiationCalc) {
         if (!d_DORadiationCalc)
           new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
-			        matlIndex, patch);
+                                matlIndex, patch);
         new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
 
       if (d_carbon_balance_es)
-      	new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
-	  if (d_sulfur_balance_es)
-		new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);	  	
+        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+        if (d_sulfur_balance_es)
+          new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);                  
 
     }
     drhodf.initialize(0.0);
@@ -758,7 +756,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       heatLoss.initialize(0.0);
       enthalpyRXN.initialize(0.0);
       if (d_calcReactingScalar)
-	  reactscalarSRC.initialize(0.0);
+          reactscalarSRC.initialize(0.0);
     }    
 
     if (d_co_output)
@@ -803,104 +801,104 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)){
     
     if (d_carbon_balance_es)
-    	co2Rate.initialize(0.0);
-	if (d_sulfur_balance_es)
-		so2Rate.initialize(0.0);		
+      co2Rate.initialize(0.0);
+      if (d_sulfur_balance_es)
+        so2Rate.initialize(0.0);                
     }
 
     if (d_MAlab && !initialize) {
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       if (d_DORadiationCalc && d_bc->getIfCalcEnergyExchange())
-	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
+                    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     if (d_MAlab) {
       if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
-	new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+        new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
       else
-	new_dw->getModifiable(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+        new_dw->getModifiable(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
     }
 
-	IntVector indexLow = patch->getExtraCellLowIndex__New();
-	IntVector indexHigh = patch->getExtraCellHighIndex__New();
+        IntVector indexLow = patch->getExtraCellLowIndex__New();
+        IntVector indexHigh = patch->getExtraCellHighIndex__New();
 
     TAU_PROFILE_STOP(input);
     TAU_PROFILE_START(compute);
     int variance_count = d_calcVariance;
     int reacting_scalar_count = d_calcReactingScalar;
     InletStream inStream(1,
-		         variance_count,
-		         reacting_scalar_count);
+                         variance_count,
+                         reacting_scalar_count);
     Stream outStream;
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
+        for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
 
-	  // construct an InletStream for input to the computeProps
-	  // of mixingModel
-	  bool local_enthalpy_init;
-	  if (d_calcEnthalpy && (scalar[currCell] == -1.0)) {
-	    scalar[currCell] = 0.0;
-	    local_enthalpy_init = true;
+          // construct an InletStream for input to the computeProps
+          // of mixingModel
+          bool local_enthalpy_init;
+          if (d_calcEnthalpy && (scalar[currCell] == -1.0)) {
+            scalar[currCell] = 0.0;
+            local_enthalpy_init = true;
           }
-	  else
-	    local_enthalpy_init = false;
-	  
-	  inStream.d_currentCell = currCell;
-	  
-	  //This is a bit messy, but we can make this more efficient later
-	  if (d_calcExtraScalars && foundExtrascalar){
-	    inStream.d_mixVars[0] = extrascalar[currCell];
-	  }
-	  else{
-	    //Mixture fraction 
-	    inStream.d_mixVars[0] = scalar[currCell];
-	  }
-	  
-	  if (d_calcVariance) {
-	    // Variance passed in has already been normalized !!!
-	    inStream.d_mixVarVariance[0] = normalizedScalarVar[currCell];
-	  }
+          else
+            local_enthalpy_init = false;
+          
+          inStream.d_currentCell = currCell;
+          
+          //This is a bit messy, but we can make this more efficient later
+          if (d_calcExtraScalars && foundExtrascalar){
+            inStream.d_mixVars[0] = extrascalar[currCell];
+          }
+          else{
+            //Mixture fraction 
+            inStream.d_mixVars[0] = scalar[currCell];
+          }
+          
+          if (d_calcVariance) {
+            // Variance passed in has already been normalized !!!
+            inStream.d_mixVarVariance[0] = normalizedScalarVar[currCell];
+          }
 
-	  // currently not using any reaction progress variables
-	  if (d_calcReactingScalar) {
-	      inStream.d_rxnVars[0] = reactScalar[currCell];
-	  }
+          // currently not using any reaction progress variables
+          if (d_calcReactingScalar) {
+              inStream.d_rxnVars[0] = reactScalar[currCell];
+          }
 
 
           if (d_calcEnthalpy)
-	      //	      &&(cellType[currCell] != d_bc->getIntrusionID()))
+              //              &&(cellType[currCell] != d_bc->getIntrusionID()))
             if (initialize || local_enthalpy_init)
-	      inStream.d_enthalpy = 0.0;
-	    else
-	      inStream.d_enthalpy = enthalpy[currCell];
-	  else
-	    inStream.d_enthalpy = 0.0;
+              inStream.d_enthalpy = 0.0;
+            else
+              inStream.d_enthalpy = enthalpy[currCell];
+          else
+            inStream.d_enthalpy = 0.0;
            // This flag ensures properties for heatloss=0.0
-	   // during the initialization
+           // during the initialization
            inStream.d_initEnthalpy = (initialize || local_enthalpy_init);
 
-	   inStream.cellvolume =  cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+           inStream.cellvolume =  cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
   TAU_PROFILE_START(mixing);
            d_mixingModel->computeProps(inStream, outStream);
   TAU_PROFILE_STOP(mixing);
 
-	  double local_den = outStream.getDensity();
-	  drhodf[currCell] = outStream.getdrhodf();
+          double local_den = outStream.getDensity();
+          drhodf[currCell] = outStream.getdrhodf();
 
-	  if (d_co_output) {
-	    co[currCell] = outStream.getCO();
-	  }
-	  if (d_sulfur_chem) {
-	    h2s[currCell] = outStream.getH2S();
-	    so2[currCell] = outStream.getSO2();
-	    so3[currCell] = outStream.getSO3();
-	    sulfur[currCell] = outStream.getSULFUR();
+          if (d_co_output) {
+            co[currCell] = outStream.getCO();
+          }
+          if (d_sulfur_chem) {
+            h2s[currCell] = outStream.getH2S();
+            so2[currCell] = outStream.getSO2();
+            so3[currCell] = outStream.getSO3();
+            sulfur[currCell] = outStream.getSULFUR();
 
             s2[currCell]        = outStream.getS2();
             sh[currCell]        = outStream.getSH();
@@ -921,80 +919,80 @@ Properties::reComputeProps(const ProcessorGroup* pc,
             hosho[currCell]     = outStream.getHOSHO();
             hs2[currCell]       = outStream.getHS2();
             h2s2[currCell]      = outStream.getH2S2();
-	  }
+          }
           if (d_soot_precursors) {
             c2h2[currCell] = outStream.getC2H2();
             ch4[currCell] = outStream.getCH4();
           }
 
-	  if (d_calcEnthalpy && (initialize || local_enthalpy_init))
-	    enthalpy[currCell] = outStream.getEnthalpy();
-	  if (d_reactingFlow) {
-	    temperature[currCell] = outStream.getTemperature();
-	    cp[currCell] = outStream.getCP();
-	    co2[currCell] = outStream.getCO2();
-	    h2o[currCell] = outStream.getH2O();
-	    heatLoss[currCell] = outStream.getheatLoss();
-	    enthalpyRXN[currCell] = outStream.getEnthalpy();
+          if (d_calcEnthalpy && (initialize || local_enthalpy_init))
+            enthalpy[currCell] = outStream.getEnthalpy();
+          if (d_reactingFlow) {
+            temperature[currCell] = outStream.getTemperature();
+            cp[currCell] = outStream.getCP();
+            co2[currCell] = outStream.getCO2();
+            h2o[currCell] = outStream.getH2O();
+            heatLoss[currCell] = outStream.getheatLoss();
+            enthalpyRXN[currCell] = outStream.getEnthalpy();
 // Uncomment the next line to check enthalpy transport in adiabatic case
-	    if (d_calcEnthalpy)
-	      enthalpyRXN[currCell] -= enthalpy[currCell];
-	    if (d_calcReactingScalar) {
-	      reactscalarSRC[currCell] = outStream.getRxnSource();
-	      enthalpyRXN[currCell] = scalar[currCell] - reactScalar[currCell];
+            if (d_calcEnthalpy)
+              enthalpyRXN[currCell] -= enthalpy[currCell];
+            if (d_calcReactingScalar) {
+              reactscalarSRC[currCell] = outStream.getRxnSource();
+              enthalpyRXN[currCell] = scalar[currCell] - reactScalar[currCell];
             }
-	  }
-	  
+          }
+          
 
-	  if (d_radiationCalc) {
-	    if ((d_calcReactingScalar)||(d_tabulated_soot)) 
-	      sootFV[currCell] = outStream.getSootFV();
-	    else {
-	      if (d_empirical_soot) {
-	        if (temperature[currCell] > 1000.0) {
+          if (d_radiationCalc) {
+            if ((d_calcReactingScalar)||(d_tabulated_soot)) 
+              sootFV[currCell] = outStream.getSootFV();
+            else {
+              if (d_empirical_soot) {
+                if (temperature[currCell] > 1000.0) {
                   double carbon_content = 
                            getCarbonContent(inStream.d_mixVars[0]);
-		  double bc = carbon_content * local_den;
-		  double c3 = 0.1;
-		  double rhosoot = 1950.0;
-		  double cmw = 12.0;
+                  double bc = carbon_content * local_den;
+                  double c3 = 0.1;
+                  double rhosoot = 1950.0;
+                  double cmw = 12.0;
 
-		  if (inStream.d_mixVars[0] > d_f_stoich)
-		    sootFV[currCell] = c3*bc*cmw/rhosoot;
-		  else
-		    sootFV[currCell] = 0.0;
-	        }
-	        else 
-		  sootFV[currCell] = 0.0;
-	      }
-	      else sootFV[currCell] = 0.0;
-	    }  
+                  if (inStream.d_mixVars[0] > d_f_stoich)
+                    sootFV[currCell] = c3*bc*cmw/rhosoot;
+                  else
+                    sootFV[currCell] = 0.0;
+                }
+                else 
+                  sootFV[currCell] = 0.0;
+              }
+              else sootFV[currCell] = 0.0;
+            }  
             if (!d_DORadiationCalc)
-	      absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
-				     sootFV[currCell]*temperature[currCell]*d_opl));
-	  }
+              absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
+                                     sootFV[currCell]*temperature[currCell]*d_opl));
+          }
 
-	  if (d_MAlab) {
-	    denMicro[currCell] = local_den;
-	    if (initialize) {
+          if (d_MAlab) {
+            denMicro[currCell] = local_den;
+            if (initialize) {
 #ifdef ExactMPMArchesInitialize
-	      local_den *= voidFraction[currCell];
+              local_den *= voidFraction[currCell];
 #endif
-	    }
-	    else
-	      local_den *= voidFraction[currCell];
-	  }
-	  // density underrelaxation is bogus here and has been removed
-	  new_density[currCell] = local_den;
+            }
+            else
+              local_den *= voidFraction[currCell];
+          }
+          // density underrelaxation is bogus here and has been removed
+          new_density[currCell] = local_den;
 
-	  //write the rates:
+          //write the rates:
 
-	  if (d_carbon_balance_es)
-	  	co2Rate[currCell] = outStream.getCO2RATE();
-	  if (d_sulfur_balance_es)
-		so2Rate[currCell] = outStream.getSO2RATE();	 
-		
-	}
+          if (d_carbon_balance_es)
+            co2Rate[currCell] = outStream.getCO2RATE();
+          if (d_sulfur_balance_es)
+            so2Rate[currCell] = outStream.getSO2RATE();         
+                
+        }
       }
     }
     // Write the computed density to the new data warehouse
@@ -1013,12 +1011,12 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     if (d_MAlab && d_DORadiationCalc && !initialize) {
       bool d_energyEx = d_bc->getIfCalcEnergyExchange();
       d_bc->mmWallTemperatureBC(pc, patch, cellType, solidTemp, temperature,
-				d_energyEx);
+                                d_energyEx);
     }
 
     if (pc->myrank() == 0)
       cerr << "Time in the Mixing Model: " << 
-	   Time::currentSeconds()-start_mixTime << " seconds\n";
+           Time::currentSeconds()-start_mixTime << " seconds\n";
 
   TAU_PROFILE_STOP(compute);
   }
@@ -1029,68 +1027,68 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 //****************************************************************************
 void 
 Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patches,
-				       const MaterialSet* matls)
+                                       const MaterialSet* matls)
 {
   Task* tsk = scinew Task("Properties::mmComputePropsFirst",
-			  this,
-			  &Properties::computePropsFirst_mm);
+                          this,
+                          &Properties::computePropsFirst_mm);
 
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_densityMicroINLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   
   if (d_bc->getIfCalcEnergyExchange()) 
     if (d_DORadiationCalc)
       tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);    
+                    Ghost::None, Arches::ZEROGHOSTCELLS);    
 
   if (d_reactingFlow) {
     tsk->requires(Task::OldDW, d_lab->d_tempINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_cpINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_co2INLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_heatLossLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     /*
     tsk->requires(Task::OldDW, d_lab->d_enthalpyRXNLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     */
     if (d_calcReactingScalar)
       tsk->requires(Task::OldDW, d_lab->d_reactscalarSRCINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   }
 
   if (d_radiationCalc) {
     if (!d_DORadiationCalc)
       tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
+                    Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_DORadiationCalc) {
     tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
   }
 
@@ -1127,19 +1125,19 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 
   if (d_co_output) {
     tsk->requires(Task::OldDW, d_lab->d_coINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->computes(d_lab->d_coINLabel);
   }
 
   if (d_sulfur_chem) {
     tsk->requires(Task::OldDW, d_lab->d_h2sINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_so2INLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_so3INLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_sulfurINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     tsk->requires(Task::OldDW, d_lab->d_s2INLabel,      Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_shINLabel,      Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1192,9 +1190,9 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 
   if (d_soot_precursors) {
     tsk->requires(Task::OldDW, d_lab->d_c2h2INLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_ch4INLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     tsk->computes(d_lab->d_c2h2INLabel);
     tsk->computes(d_lab->d_ch4INLabel);
@@ -1212,10 +1210,10 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 //****************************************************************************
 void 
 Properties::computePropsFirst_mm(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset*,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
 {
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
@@ -1229,22 +1227,22 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
     constCCVariable<double> denMicro;
     new_dw->get(denMicro, d_lab->d_densityMicroINLabel, matlIndex, patch,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> voidFraction;
     new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     CCVariable<double> density;
     new_dw->getModifiable(density, d_lab->d_densityCPLabel, 
-			   matlIndex, patch);
+                           matlIndex, patch);
 
     CCVariable<double> denMicro_new;
     new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroLabel, 
-			   matlIndex, patch);
+                           matlIndex, patch);
     denMicro_new.copyData(denMicro);
 
     constCCVariable<double> tempIN;
@@ -1327,50 +1325,50 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
     if (d_bc->getIfCalcEnergyExchange())
       if (d_DORadiationCalc)
-	new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
+        new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, matlIndex, patch,
+                    Ghost::None, Arches::ZEROGHOSTCELLS);
 
     if (d_reactingFlow) {
       old_dw->get(tempIN, d_lab->d_tempINLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(cpIN, d_lab->d_cpINLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(co2IN, d_lab->d_co2INLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(heatLoss, d_lab->d_heatLossLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       /*
       old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       */
       if (d_calcReactingScalar) {
-	old_dw->get(reactScalarSrc, d_lab->d_reactscalarSRCINLabel,
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        old_dw->get(reactScalarSrc, d_lab->d_reactscalarSRCINLabel,
+                    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       }
 
       new_dw->allocateAndPut(tempIN_new, d_lab->d_tempINLabel, 
-			     matlIndex, patch);
+                             matlIndex, patch);
       tempIN_new.copyData(tempIN);
 
       new_dw->allocateAndPut(cpIN_new, d_lab->d_cpINLabel, 
-			     matlIndex, patch);
+                             matlIndex, patch);
       cpIN_new.copyData(cpIN);
 
       new_dw->allocateAndPut(co2IN_new, d_lab->d_co2INLabel, 
-			     matlIndex, patch);
+                             matlIndex, patch);
       co2IN_new.copyData(co2IN);
       new_dw->allocateAndPut(heatLoss_new, d_lab->d_heatLossLabel, 
-			     matlIndex, patch);
+                             matlIndex, patch);
       heatLoss_new.copyData(heatLoss);
 
       new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, 
-			     matlIndex, patch);
+                             matlIndex, patch);
       enthalpyRXN_new.initialize(0.0);
 
       if (d_calcReactingScalar) {
-	new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,
-			       matlIndex, patch);
-	reactScalarSrc_new.copyData(reactScalarSrc);
+        new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,
+                               matlIndex, patch);
+        reactScalarSrc_new.copyData(reactScalarSrc);
       }
     }
 
@@ -1402,107 +1400,107 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
       if (!d_DORadiationCalc) {
         old_dw->get(absorpIN, d_lab->d_absorpINLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
+                    Ghost::None, Arches::ZEROGHOSTCELLS);
         new_dw->allocateAndPut(absorpIN_new, d_lab->d_absorpINLabel, 
-		       matlIndex, patch);
+                       matlIndex, patch);
         absorpIN_new.copyData(absorpIN);
       }
 
 
       old_dw->get(sootFVIN, d_lab->d_sootFVINLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
       //      new_dw->allocateAndPut(abskgIN_new, d_lab->d_abskgINLabel, 
-      //		       matlIndex, patch);
+      //                       matlIndex, patch);
       //      abskgIN_new.copyData(abskgIN);
 
       new_dw->allocateAndPut(sootFVIN_new, d_lab->d_sootFVINLabel,
-		       matlIndex, patch);
+                       matlIndex, patch);
       sootFVIN_new.copyData(sootFVIN);
 
       if (d_DORadiationCalc) {
       old_dw->get(h2oIN, d_lab->d_h2oINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(radiationSRCIN, d_lab->d_radiationSRCINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(radiationFluxEIN, d_lab->d_radiationFluxEINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(radiationFluxWIN, d_lab->d_radiationFluxWINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(radiationFluxNIN, d_lab->d_radiationFluxNINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(radiationFluxSIN, d_lab->d_radiationFluxSINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(radiationFluxTIN, d_lab->d_radiationFluxTINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(radiationFluxBIN, d_lab->d_radiationFluxBINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(abskg, d_lab->d_abskgINLabel,
-		  matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch,
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(h2oIN_new, d_lab->d_h2oINLabel, 
-		       matlIndex, patch);
+                       matlIndex, patch);
       h2oIN_new.copyData(h2oIN);
       new_dw->allocateAndPut(radiationSRCIN_new, d_lab->d_radiationSRCINLabel, 
-		       matlIndex, patch);
+                       matlIndex, patch);
       radiationSRCIN_new.copyData(radiationSRCIN);
       new_dw->allocateAndPut(radiationFluxEIN_new,
-			     d_lab->d_radiationFluxEINLabel, matlIndex, patch);
+                             d_lab->d_radiationFluxEINLabel, matlIndex, patch);
       radiationFluxEIN_new.copyData(radiationFluxEIN);
       new_dw->allocateAndPut(radiationFluxWIN_new,
-			     d_lab->d_radiationFluxWINLabel, matlIndex, patch);
+                             d_lab->d_radiationFluxWINLabel, matlIndex, patch);
       radiationFluxWIN_new.copyData(radiationFluxWIN);
       new_dw->allocateAndPut(radiationFluxNIN_new,
-			     d_lab->d_radiationFluxNINLabel, matlIndex, patch);
+                             d_lab->d_radiationFluxNINLabel, matlIndex, patch);
       radiationFluxNIN_new.copyData(radiationFluxNIN);
       new_dw->allocateAndPut(radiationFluxSIN_new,
-			     d_lab->d_radiationFluxSINLabel, matlIndex, patch);
+                             d_lab->d_radiationFluxSINLabel, matlIndex, patch);
       radiationFluxSIN_new.copyData(radiationFluxSIN);
       new_dw->allocateAndPut(radiationFluxTIN_new,
-			     d_lab->d_radiationFluxTINLabel, matlIndex, patch);
+                             d_lab->d_radiationFluxTINLabel, matlIndex, patch);
       radiationFluxTIN_new.copyData(radiationFluxTIN);
       new_dw->allocateAndPut(radiationFluxBIN_new,
-			     d_lab->d_radiationFluxBINLabel, matlIndex, patch);
+                             d_lab->d_radiationFluxBINLabel, matlIndex, patch);
       radiationFluxBIN_new.copyData(radiationFluxBIN);
       new_dw->allocateAndPut(abskg_new,
-			     d_lab->d_abskgINLabel, matlIndex, patch);
+                             d_lab->d_abskgINLabel, matlIndex, patch);
       abskg_new.copyData(abskg);
       }
     }
 
     if (d_co_output) {
       old_dw->get(coIN, d_lab->d_coINLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(coIN_new, d_lab->d_coINLabel,
-			     matlIndex, patch);
+                             matlIndex, patch);
       coIN_new.copyData(coIN);
     }
     
     if (d_sulfur_chem) {
       old_dw->get(h2sIN, d_lab->d_h2sINLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(h2sIN_new, d_lab->d_h2sINLabel,
-			     matlIndex, patch);
+                             matlIndex, patch);
       h2sIN_new.copyData(h2sIN);      
 
       old_dw->get(so2IN, d_lab->d_so2INLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(so2IN_new, d_lab->d_so2INLabel,
-			     matlIndex, patch);
+                             matlIndex, patch);
       so2IN_new.copyData(so2IN);
 
       old_dw->get(so3IN, d_lab->d_so3INLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(so3IN_new, d_lab->d_so3INLabel,
-			     matlIndex, patch);
+                             matlIndex, patch);
       so3IN_new.copyData(so3IN);
       
       old_dw->get(sulfurIN, d_lab->d_sulfurINLabel, matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -1580,49 +1578,49 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     
     if (d_soot_precursors) {
       old_dw->get(c2h2IN, d_lab->d_c2h2INLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(c2h2IN_new, d_lab->d_c2h2INLabel,
-			     matlIndex, patch);
+                             matlIndex, patch);
       c2h2IN_new.copyData(c2h2IN);      
 
       old_dw->get(ch4IN, d_lab->d_ch4INLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(ch4IN_new, d_lab->d_ch4INLabel,
-			     matlIndex, patch);
+                             matlIndex, patch);
       ch4IN_new.copyData(ch4IN);
     }
 
     // no need for if (d_MAlab),  since this routine is only 
     // called if d_MAlab
-	IntVector indexLow = patch->getExtraCellLowIndex__New();
-	IntVector indexHigh = patch->getExtraCellHighIndex__New();
+        IntVector indexLow = patch->getExtraCellLowIndex__New();
+        IntVector indexHigh = patch->getExtraCellHighIndex__New();
 
     // modify density for the whole domain by multiplying with
     // void fraction
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+        for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
 
-	  IntVector currCell(colX, colY, colZ);
-	  bool fixTemp = d_bc->getIfFixTemp();
+          IntVector currCell(colX, colY, colZ);
+          bool fixTemp = d_bc->getIfFixTemp();
 
-	  double local_den = denMicro[currCell]*voidFraction[currCell];
+          double local_den = denMicro[currCell]*voidFraction[currCell];
 
-	  if (cellType[currCell] != d_bc->getMMWallId()) {
-	    density[currCell] = local_den;
-	  }
-	  else{
-	    density[currCell] = 0.0;
-	    if (d_bc->getIfCalcEnergyExchange())
-	      if (d_DORadiationCalc)
+          if (cellType[currCell] != d_bc->getMMWallId()) {
+            density[currCell] = local_den;
+          }
+          else{
+            density[currCell] = 0.0;
+            if (d_bc->getIfCalcEnergyExchange())
+              if (d_DORadiationCalc)
 
-		if (fixTemp) 
-		  tempIN_new[currCell] = 298.0;
-		else
-		  tempIN_new[currCell] = solidTemp[currCell];
-	  }
-	}
+                if (fixTemp) 
+                  tempIN_new[currCell] = 298.0;
+                else
+                  tempIN_new[currCell] = solidTemp[currCell];
+          }
+        }
       }
     }
 
@@ -1642,26 +1640,26 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 //****************************************************************************
 void 
 Properties::sched_computeDenRefArray(SchedulerP& sched,
-				     const PatchSet* patches,
-				     const MaterialSet* matls,
-			             const TimeIntegratorLabel* timelabels)
+                                     const PatchSet* patches,
+                                     const MaterialSet* matls,
+                                     const TimeIntegratorLabel* timelabels)
 
 {
 
   // primitive variable initialization
 
   string taskname =  "Properties::computeDenRefArray" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname,
-			  this, &Properties::computeDenRefArray,
-			  timelabels);
+                          this, &Properties::computeDenRefArray,
+                          timelabels);
 
 
   tsk->requires(Task::NewDW, timelabels->ref_density);
 
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -1678,11 +1676,11 @@ Properties::sched_computeDenRefArray(SchedulerP& sched,
 
 void 
 Properties::computeDenRefArray(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset*,
-			       DataWarehouse*,
-			       DataWarehouse* new_dw,
-			       const TimeIntegratorLabel* timelabels)
+                               const PatchSubset* patches,
+                               const MaterialSubset*,
+                               DataWarehouse*,
+                               DataWarehouse* new_dw,
+                               const TimeIntegratorLabel* timelabels)
 
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -1704,25 +1702,25 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     if (d_MAlab) {
 
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     }
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayLabel, 
-		             matlIndex, patch);
+                             matlIndex, patch);
     else
       new_dw->getModifiable(denRefArray, d_lab->d_denRefArrayLabel, 
-		            matlIndex, patch);
-		
+                            matlIndex, patch);
+                
     denRefArray.initialize(den_Ref);
 
     if (d_MAlab) {
 
       for (CellIterator iter = patch->getCellIterator();
-	   !iter.done();iter++){
+           !iter.done();iter++){
 
-	denRefArray[*iter]  *= voidFraction[*iter];
+        denRefArray[*iter]  *= voidFraction[*iter];
 
       }
     }
@@ -1734,39 +1732,39 @@ Properties::computeDenRefArray(const ProcessorGroup*,
 //****************************************************************************
 void 
 Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
-				 const MaterialSet* matls,
-				 const TimeIntegratorLabel* timelabels)
+                                 const MaterialSet* matls,
+                                 const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "Properties::averageRKProps" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &Properties::averageRKProps,
-			  timelabels);
+                          &Properties::averageRKProps,
+                          timelabels);
 
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_calcReactingScalar)
     tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_calcEnthalpy)
     tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_scalarFELabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_calcReactingScalar)
     tsk->requires(Task::NewDW, d_lab->d_reactscalarFELabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
   if (d_calcEnthalpy)
     tsk->requires(Task::NewDW, d_lab->d_enthalpyFELabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->modifies(d_lab->d_scalarSPLabel);
   if (d_calcReactingScalar)
@@ -1778,7 +1776,7 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
   if (d_calcExtraScalars)
     for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
       tsk->requires(Task::OldDW, d_extraScalars->at(i)->getScalarLabel(), 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
+                    Ghost::None, Arches::ZEROGHOSTCELLS);
       tsk->modifies(d_extraScalars->at(i)->getScalarLabel());
     }
 
@@ -1789,18 +1787,18 @@ Properties::sched_averageRKProps(SchedulerP& sched, const PatchSet* patches,
 //****************************************************************************
 void 
 Properties::averageRKProps(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* timelabels)
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->
-		     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> old_density;
     constCCVariable<double> rho1_density;
@@ -1817,41 +1815,39 @@ Properties::averageRKProps(const ProcessorGroup*,
     CCVariable<double> density_guess;
 
     old_dw->get(old_density, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     old_dw->get(old_scalar, d_lab->d_scalarSPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_calcReactingScalar) {
       old_dw->get(old_reactScalar, d_lab->d_reactscalarSPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
     if (d_calcEnthalpy)
       old_dw->get(old_enthalpy, d_lab->d_enthalpySPLabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(rho1_density, d_lab->d_densityTempLabel,
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(new_density, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    new_dw->getModifiable(new_scalar, d_lab->d_scalarSPLabel, 
-		            matlIndex, patch);
+    new_dw->getModifiable(new_scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
     new_dw->get(fe_scalar, d_lab->d_scalarFELabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_calcReactingScalar)
-      new_dw->getModifiable(new_reactScalar, d_lab->d_reactscalarSPLabel,
-		    	    matlIndex, patch);
+      new_dw->getModifiable(new_reactScalar, d_lab->d_reactscalarSPLabel,matlIndex, patch);
     if (d_calcReactingScalar)
       new_dw->get(fe_reactScalar, d_lab->d_reactscalarFELabel,
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_calcEnthalpy) {
       new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, 
-			    matlIndex, patch);
+                            matlIndex, patch);
       new_dw->get(fe_enthalpy, d_lab->d_enthalpyFELabel, 
-		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     }
 
     new_dw->getModifiable(density_guess, d_lab->d_densityGuessLabel, 
-			  matlIndex, patch);
+                          matlIndex, patch);
 
     double factor_old, factor_new, factor_divide;
     factor_old = timelabels->factor_old;
@@ -1859,36 +1855,36 @@ Properties::averageRKProps(const ProcessorGroup*,
     factor_divide = timelabels->factor_divide;
     double epsilon = 1.0e-15;
 
-	IntVector indexLow = patch->getExtraCellLowIndex__New();
-	IntVector indexHigh = patch->getExtraCellHighIndex__New();
+        IntVector indexLow = patch->getExtraCellLowIndex__New();
+        IntVector indexHigh = patch->getExtraCellHighIndex__New();
 
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
+        for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
           
 //The following if statement is to eliminate Kumar's zero block density problem
-	  if (new_density[currCell] > 0.0) {
+          if (new_density[currCell] > 0.0) {
           double predicted_density;
-	  if (old_density[currCell] > 0.0)
+          if (old_density[currCell] > 0.0)
 //            predicted_density = rho1_density[currCell];
-	    if (d_inverse_density_average)
+            if (d_inverse_density_average)
               predicted_density = 1.0/((factor_old/old_density[currCell] +
-			         factor_new/new_density[currCell])/factor_divide);
-	    else
+                                 factor_new/new_density[currCell])/factor_divide);
+            else
               predicted_density = (factor_old*old_density[currCell] +
-			         factor_new*new_density[currCell])/factor_divide;
-	  else
-	    predicted_density = new_density[currCell];
+                                 factor_new*new_density[currCell])/factor_divide;
+          else
+            predicted_density = new_density[currCell];
 
-	  bool average_failed = false;
-	    if (d_inverse_density_average)
-	      new_scalar[currCell] = (factor_old*old_scalar[currCell] +
-		  factor_new*new_scalar[currCell])/factor_divide;
-	    else
-	      new_scalar[currCell] = (factor_old*old_density[currCell]*
-		  old_scalar[currCell] + factor_new*new_density[currCell]*
-		  new_scalar[currCell])/(factor_divide*predicted_density);
+          bool average_failed = false;
+            if (d_inverse_density_average)
+              new_scalar[currCell] = (factor_old*old_scalar[currCell] +
+                  factor_new*new_scalar[currCell])/factor_divide;
+            else
+              new_scalar[currCell] = (factor_old*old_density[currCell]*
+                  old_scalar[currCell] + factor_new*new_density[currCell]*
+                  new_scalar[currCell])/(factor_divide*predicted_density);
 // Following lines to fix density delay problem for helium.
 // One would also need to edit fortran/explicit.F to use it.
 //            (new_scalar)[currCell] = (new_scalar)[currCell]*predicted_density;
@@ -1896,50 +1892,50 @@ Properties::averageRKProps(const ProcessorGroup*,
 //              0.133*1.184344+(new_scalar)[currCell]*(0.133-1.184344));
             if (new_scalar[currCell] > 1.0) {
               if (new_scalar[currCell] < 1.0 + epsilon)
-		new_scalar[currCell] = 1.0;
+                new_scalar[currCell] = 1.0;
               else {
-	        cout << "average failed with scalar > 1 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
-	        new_scalar[currCell] = fe_scalar[currCell];
-	        average_failed = true;
+                cout << "average failed with scalar > 1 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+                new_scalar[currCell] = fe_scalar[currCell];
+                average_failed = true;
               }
-	    }
+            }
             else if (new_scalar[currCell] < 0.0) {
               if (new_scalar[currCell] > - epsilon)
-            	new_scalar[currCell] = 0.0;
+                new_scalar[currCell] = 0.0;
               else {
-	        cout << "average failed with scalar < 0 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
-	        new_scalar[currCell] = fe_scalar[currCell];
-	        average_failed = true;
+                cout << "average failed with scalar < 0 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+                new_scalar[currCell] = fe_scalar[currCell];
+                average_failed = true;
               }
             }
 
-	  if (d_calcReactingScalar) {
-	      if (!average_failed) {
-	      new_reactScalar[currCell] = (factor_old *
-		old_density[currCell]*old_reactScalar[currCell] +
-		factor_new*new_density[currCell]*
-		new_reactScalar[currCell])/
-		(factor_divide*predicted_density);
+          if (d_calcReactingScalar) {
+              if (!average_failed) {
+              new_reactScalar[currCell] = (factor_old *
+                old_density[currCell]*old_reactScalar[currCell] +
+                factor_new*new_density[currCell]*
+                new_reactScalar[currCell])/
+                (factor_divide*predicted_density);
             if (new_reactScalar[currCell] > 1.0)
-		new_reactScalar[currCell] = 1.0;
+                new_reactScalar[currCell] = 1.0;
             else if (new_reactScalar[currCell] < 0.0)
-            	new_reactScalar[currCell] = 0.0;
-	      }
-	      else
-            	new_reactScalar[currCell] = fe_reactScalar[currCell];
-	  }
+                    new_reactScalar[currCell] = 0.0;
+              }
+              else
+                    new_reactScalar[currCell] = fe_reactScalar[currCell];
+          }
 
           if (d_calcEnthalpy)
-	    if (!average_failed)
-	    new_enthalpy[currCell] = (factor_old*old_density[currCell]*
-		old_enthalpy[currCell] + factor_new*new_density[currCell]*
-		new_enthalpy[currCell])/(factor_divide*predicted_density);
-	    else
-	    new_enthalpy[currCell] = fe_enthalpy[currCell];
+            if (!average_failed)
+            new_enthalpy[currCell] = (factor_old*old_density[currCell]*
+                old_enthalpy[currCell] + factor_new*new_density[currCell]*
+                new_enthalpy[currCell])/(factor_divide*predicted_density);
+            else
+            new_enthalpy[currCell] = fe_enthalpy[currCell];
 
-	  density_guess[currCell] = predicted_density;
+          density_guess[currCell] = predicted_density;
 
-	  }
+          }
         }
       }
     }
@@ -1949,31 +1945,29 @@ Properties::averageRKProps(const ProcessorGroup*,
         constCCVariable<double> old_extra_scalar;
         CCVariable<double> new_extra_scalar;
         old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
         new_dw->getModifiable(new_extra_scalar,
                               d_extraScalars->at(i)->getScalarLabel(), 
-		              matlIndex, patch);
+                              matlIndex, patch);
         bool scalar_density_weighted =
                 d_extraScalars->at(i)->isDensityWeighted();
+                
         for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
           for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	    	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	      		IntVector currCell(colX, colY, colZ);
-          
-	      		if (new_density[currCell] > 0.0) {
-                	if (scalar_density_weighted)
-	          			new_extra_scalar[currCell] = 
-                    		(factor_old*old_density[currCell]*
-		    				 old_extra_scalar[currCell] + 
-                    		 factor_new*new_density[currCell]*
-		    				 new_extra_scalar[currCell])/
-                    		 (factor_divide* density_guess[currCell]);
+            for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+              IntVector currCell(colX, colY, colZ);
+              if (new_density[currCell] > 0.0) {
+                if (scalar_density_weighted)
+                  new_extra_scalar[currCell] = 
+                      (factor_old*old_density[currCell]* old_extra_scalar[currCell] + 
+                       factor_new*new_density[currCell]* new_extra_scalar[currCell])/
+                       (factor_divide* density_guess[currCell]);
                 else
-	          		new_extra_scalar[currCell] = (factor_old*
-		    				old_extra_scalar[currCell] + factor_new*
-		    				new_extra_scalar[currCell])/(factor_divide);
+                  new_extra_scalar[currCell] = 
+                      (factor_old*old_extra_scalar[currCell] + factor_new* new_extra_scalar[currCell])/
+                      (factor_divide);
               }
-	    	}
+            }
           }
         }
       }
@@ -1984,18 +1978,19 @@ Properties::averageRKProps(const ProcessorGroup*,
 // Schedule saving of temp density
 //****************************************************************************
 void 
-Properties::sched_saveTempDensity(SchedulerP& sched, const PatchSet* patches,
-				  const MaterialSet* matls,
-			   	  const TimeIntegratorLabel* timelabels)
+Properties::sched_saveTempDensity(SchedulerP& sched, 
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls,
+                                  const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "Properties::saveTempDensity" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &Properties::saveTempDensity,
-			  timelabels);
+                          &Properties::saveTempDensity,
+                          timelabels);
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+                Arches::ZEROGHOSTCELLS);
  
   tsk->modifies(d_lab->d_densityTempLabel);
 
@@ -2006,25 +2001,25 @@ Properties::sched_saveTempDensity(SchedulerP& sched, const PatchSet* patches,
 //****************************************************************************
 void 
 Properties::saveTempDensity(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse*,
-			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel* )
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw,
+                            const TimeIntegratorLabel* )
 {
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->
-		     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> temp_density;
 
     new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,
-			  matlIndex, patch);
+                          matlIndex, patch);
      new_dw->copyOut(temp_density, d_lab->d_densityCPLabel,
-		     matlIndex, patch);
+                     matlIndex, patch);
 
   }
 }
@@ -2033,17 +2028,17 @@ Properties::saveTempDensity(const ProcessorGroup*,
 //****************************************************************************
 void 
 Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
-				const MaterialSet* matls, 
-			        const TimeIntegratorLabel* timelabels,
+                                const MaterialSet* matls, 
+                                const TimeIntegratorLabel* timelabels,
                                 bool d_EKTCorrection,
                                 bool doing_EKT_now)
 {
   string taskname =  "Properties::computeDrhodt" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
-			  &Properties::computeDrhodt,
-			  timelabels, d_EKTCorrection, doing_EKT_now);
+                          &Properties::computeDrhodt,
+                          timelabels, d_EKTCorrection, doing_EKT_now);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
@@ -2053,19 +2048,19 @@ Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
   tsk->requires(parent_old_dw, d_lab->d_oldDeltaTLabel);
 
   tsk->requires(parent_old_dw, d_lab->d_densityOldOldLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+                Arches::ZEROGHOSTCELLS);
 
   if (doing_EKT_now) {
     tsk->requires(Task::NewDW, d_lab->d_densityEKTLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+                Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+                Arches::ZEROGHOSTCELLS);
   }
   else {
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+                Arches::ZEROGHOSTCELLS);
     tsk->requires(parent_old_dw, d_lab->d_densityCPLabel, Ghost::None,
-		Arches::ZEROGHOSTCELLS);
+                Arches::ZEROGHOSTCELLS);
   }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -2084,11 +2079,11 @@ Properties::sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
 //****************************************************************************
 void 
 Properties::computeDrhodt(const ProcessorGroup* pc,
-			  const PatchSubset* patches,
-			  const MaterialSubset*,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels,
+                          const PatchSubset* patches,
+                          const MaterialSubset*,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const TimeIntegratorLabel* timelabels,
                           bool d_EKTCorrection,
                           bool doing_EKT_now)
 {
@@ -2116,7 +2111,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->
-		     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> new_density;
     constCCVariable<double> old_density;
@@ -2127,12 +2122,12 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 
     if (doing_EKT_now)
       new_dw->get(old_density, d_lab->d_densityGuessLabel, matlIndex, patch,
-	        Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     else
       parent_old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch,
-	        Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, matlIndex, patch,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
@@ -2148,18 +2143,18 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 
     if (doing_EKT_now)
       new_dw->get(new_density, d_lab->d_densityEKTLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
     else
       new_dw->get(new_density, d_lab->d_densityCPLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) 
       new_dw->allocateAndPut(filterdrhodt, d_lab->d_filterdrhodtLabel,
-		             matlIndex, patch);
+                             matlIndex, patch);
     else
       new_dw->getModifiable(filterdrhodt, d_lab->d_filterdrhodtLabel,
-		            matlIndex, patch);
+                            matlIndex, patch);
       filterdrhodt.initialize(0.0);
 
     // Get the patch and variable indices
@@ -2174,11 +2169,11 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
           for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	    IntVector currcell(ii,jj,kk);
+            IntVector currcell(ii,jj,kk);
 
-	    double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-	    drhodt[currcell] = (new_density[currcell] -
-				old_density[currcell])*vol/delta_t;
+            double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+            drhodt[currcell] = (new_density[currcell] -
+                                old_density[currcell])*vol/delta_t;
           }
         }
       }
@@ -2191,13 +2186,13 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
           for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-	    IntVector currcell(ii,jj,kk);
+            IntVector currcell(ii,jj,kk);
 
-	    double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-	    drhodt[currcell] = (new_factor*new_density[currcell] -
-				old_factor*old_density[currcell] +
-				old_old_density[currcell])*vol /
-			       (old_delta_t*factor);
+            double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+            drhodt[currcell] = (new_factor*new_density[currcell] -
+                                old_factor*old_density[currcell] +
+                                old_old_density[currcell])*vol /
+                               (old_delta_t*factor);
           }
         }
       }
@@ -2212,21 +2207,21 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     // filtering without petsc is not implemented
     // if it needs to be then drhodt will have to be computed with ghostcells
     filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
-		      drhodt.getHighIndex());
+                      drhodt.getHighIndex());
 #endif
     }
     else
     filterdrhodt.copy(drhodt, drhodt.getLowIndex(),
-		      drhodt.getHighIndex());
+                      drhodt.getHighIndex());
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
         for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
           IntVector currcell(ii,jj,kk);
 
-	  double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-	  if (Abs(filterdrhodt[currcell]/vol) < 1.0e-9)
-	      filterdrhodt[currcell] = 0.0;
+          double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
+          if (Abs(filterdrhodt[currcell]/vol) < 1.0e-9)
+              filterdrhodt[currcell] = 0.0;
         }
       }
     }
