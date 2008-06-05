@@ -456,8 +456,7 @@ void oneSidedDifference_offsets(const Patch::FaceType face,
  Note:     Ignore all body force sources except those normal
            to the boundary face.
 ____________________________________________________________________*/
-inline void characteristic_source_terms(const IntVector dir,
-                                        const int P_dir,
+inline void characteristic_source_terms(const int P_dir,
                                         const Vector grav,
                                         const double rho_CC,
                                         const double speedSound,
@@ -466,16 +465,14 @@ inline void characteristic_source_terms(const IntVector dir,
   Vector s_mom = Vector(0,0,0);
   s_mom[P_dir] = grav[P_dir];
   double s_press = 0.0;
+  
   //__________________________________
   //  compute sources, Appendix:Table 4
-  // x_dir:  dir = (0,1,2) 
-  // y_dir:  dir = (1,0,2)  
-  // z_dir:  dir = (2,0,1)
-  s[1] = 0.5 * (s_press - rho_CC * speedSound * s_mom[dir[0]] );
+  s[1] = 0.5 * (s_press - rho_CC * speedSound * s_mom[P_dir] );
   s[2] = -s_press/(speedSound * speedSound);
-  s[3] = s_mom[dir[1]];
-  s[4] = s_mom[dir[2]];
-  s[5] = 0.5 * (s_press + rho_CC * speedSound * s_mom[dir[0]] );
+  s[3] = s_mom[P_dir];
+  s[4] = s_mom[P_dir];
+  s[5] = 0.5 * (s_press + rho_CC * speedSound * s_mom[P_dir] );
 }
 
 
@@ -523,11 +520,11 @@ void debugging_Li(const IntVector c,
   string s_L4 = " normalVel * dVel_dx[dir[2]];  ";
   string s_L5 = " 0.5 * (normalVel + speedSound) * (dp_dx + A); \n";
   
-  cout << "s[1] = "<< s[1] << "  0.5 * (s_press - rho_CC * speedSound * s_mom[dir[0]] ) "<< endl;
+  cout << "s[1] = "<< s[1] << "  0.5 * (s_press - rho_CC * speedSound * s_mom[P_dir] ) "<< endl;
   cout << "s[2] = "<< s[2] << "  -s_press/(speedSound * speedSound);                     " << endl;
-  cout << "s[3] = "<< s[3] << "  s_mom[dir[1]];                                          " << endl;
-  cout << "s[4] = "<< s[4] << "  s_mom[dir[2]];                                          " << endl;
-  cout << "s[5] = "<< s[5] << "  0.5 * (s_press + rho_CC * speedSound * s_mom[dir[0]] )  " << endl;
+  cout << "s[3] = "<< s[3] << "  s_mom[P_dir];                                          " << endl;
+  cout << "s[4] = "<< s[4] << "  s_mom[P_dir];                                          " << endl;
+  cout << "s[5] = "<< s[5] << "  0.5 * (s_press + rho_CC * speedSound * s_mom[P_dir] )  " << endl;
   cout << "\n"<< endl;
   //__________________________________
   //Subsonic non-reflective inflow
@@ -796,7 +793,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
         Vector dVel_dx = (vel[r]   - vel[l])/delta;        
 
         vector<double> s(6);
-        characteristic_source_terms(dir, P_dir, grav, rho[c], speedSound[c], s);
+        characteristic_source_terms(P_dir, grav, rho[c], speedSound[c], s);
 
         Li(L, dir, c, face, domainLength, user_inputs, maxMach, s, press[c],
            speedSound[c], rho[c], vel[c], drho_dx, dp_dx, dVel_dx); 
