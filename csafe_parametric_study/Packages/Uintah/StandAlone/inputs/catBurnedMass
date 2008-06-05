@@ -19,7 +19,7 @@ if( -e $uda/totalMassBurned.dat ) then
 
   cat $uda/totalMassBurned.dat >> TMB.dat 
 
-  sort TMB.dat | uniq > totalMassBurned.dat
+  sort TMB.dat | uniq -u > totalMassBurned.dat
 endif
 
 /bin/rm TMB.dat
