@@ -542,8 +542,8 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     }
 
     //set assignment result array 
-    int nMyGids = ZoltanFuncs::zoltan_get_number_of_objects(&(my_costs), &rc);
-    int nGids   = 0;
+    int nMyGids = my_costs.size();
+    int nGids   = num_patches;
     int *gid_list = new int[nMyGids];
     int *lid_list = new int[nMyGids];
     
