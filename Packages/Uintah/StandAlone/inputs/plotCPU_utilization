@@ -6,9 +6,9 @@ if ( $#argv == 1 ) then
 endif
 
 #__________________________________
-set f = `find HT* -name "out.*" -maxdepth 2 |sort`
+set f = `find HT*  -maxdepth 2 -name "out.*"  |sort`
 echo "examining each of these output files"
-find HT* -name "out.*" -maxdepth 2|sort
+find HT* -maxdepth 2 -name "out.*" |sort
 #__________________________________
 /bin/rm -f .procs .date .elapsedTime .data
 touch .procs .date .elapsedTime
@@ -26,8 +26,8 @@ end
 # use the date command to reformat it
 awk -F, '{printf("\"%s\" \n",$1)}' <.date >&.date2
 awk -F, '{time=system("date +%D_%H:%M -d"$1)}'<.date2 >& .date
-
-paste -d "," .date .procs .elapsedTime |sort >& .data
+# sort by date
+paste -d "," .date .procs .elapsedTime |sort -t/ -n -k1.8  >& .data
 
 #__________________________________
 # compute number of cpu hours
