@@ -89,7 +89,7 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
 
 void 
 PetscSolver::matrixCreate(const PatchSet* allpatches,
-			  const PatchSubset* mypatches)
+                          const PatchSubset* mypatches)
 {
   // for global index get a petsc index that
   // make it a data memeber
@@ -207,10 +207,10 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
 // ****************************************************************************
 void 
 PetscSolver::setPressMatrix(const ProcessorGroup* ,
-			    const Patch* patch,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars,
-			    const ArchesLabel*)
+                            const Patch* patch,
+                            ArchesVariables* vars,
+                            ArchesConstVariables* constvars,
+                            const ArchesLabel*)
 {
   double solve_start = Time::currentSeconds();
 
@@ -284,12 +284,12 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         vecvalueb = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
         vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
-        int row = l2g[IntVector(colX, colY, colZ)];	  
-        //	  VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+        int row = l2g[IntVector(colX, colY, colZ)];   
+        //          VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
         ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
         if(ierr)
           throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-        //	  VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+        //          VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
           throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
