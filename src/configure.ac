@@ -4762,7 +4762,7 @@ if test "$with_opengl"; then
   _sci_lib="$_sci_lib $with_opengl/lib"
   _sci_inc="$_sci_inc $with_opengl/include"
 else
-  _sci_lib_t="usr/X11R6"
+  _sci_lib_t="/usr/X11R6"
   BASE_LIB_PATH(_sci_lib_t,$_sci_lib_t)
   _sci_lib="$_sci_lib $_sci_lib_t"
   _sci_inc="$_sci_inc /usr/X11R6/include"

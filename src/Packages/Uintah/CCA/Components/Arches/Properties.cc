@@ -119,7 +119,7 @@ Properties::problemSetup(const ProblemSpecP& params)
         || mixModel == "meanMixingModel" )
     throw InvalidValue("DEPRECATED: Mixing Model no longer supported: " + mixModel, __FILE__, __LINE__);
   else
-    throw InvalidValue("Mixing Model not supported" + mixModel, __FILE__, __LINE__);
+    throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   d_mixingModel->problemSetup(db);
 
   if (d_calcEnthalpy)
