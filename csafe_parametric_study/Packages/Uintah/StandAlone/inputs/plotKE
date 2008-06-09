@@ -27,29 +27,43 @@ echo "" > gp
 # if hardcopy
 if ($hardcopy == "y" || $hardcopy == "Y") then
 echo "Generating the postscript file plotKE.ps"
-/bin/rm gp
+/bin/rm gp plotKE.ps
 cat > gp << fin
 set terminal postscript color solid "Times-Roman" 12
 set output "plotKE.ps"
 fin
 endif
+  
 
 #__________________________________
 # plot script
 # Note:  if susKE doesn't exist then it will be ignored
 awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $pudaKE >> gp
 cat >> gp << fin
-set timestamp "%m/%d/%y %H:%M" offset 80,-2 
+set timestamp "%m/%d/%y %H:%M" 
 set key left top Left 
 set grid
 set title 'Kinetic Energy of the Steel Container vs Time'
 set xlabel 'Time (s)'
 set ylabel 'Kinetic Energy (J)'
+
+fin
+
+if (-e $susKE) then
+cat >> gp << fin
 plot '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linespoints,\
      '$pudaKE' using (\$1-t0):(0.5*\$3*\$2*\$2)     t 'center of mass KE (puda)' w linespoints,\
      '$pudaKE' using (\$1-t0):(\$4-0.5*\$3*\$2*\$2) t 'relative to center of mass KE (puda)' w linespoints,\
      '$susKE'  using (\$1-t0):(\$2)                 t 'total KE (sus)' w lines
 fin
+else
+cat >>gp << fin
+plot '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linespoints,\
+     '$pudaKE' using (\$1-t0):(0.5*\$3*\$2*\$2)     t 'center of mass KE (puda)' w linespoints,\
+     '$pudaKE' using (\$1-t0):(\$4-0.5*\$3*\$2*\$2) t 'relative to center of mass KE (puda)' w linespoints
+fin
+
+
 if ($hardcopy == "n") then
   echo "pause -1 'Hit return to exit'" >> gp
 endif
