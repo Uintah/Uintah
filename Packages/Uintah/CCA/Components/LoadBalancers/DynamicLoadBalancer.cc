@@ -494,9 +494,9 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
 
 #if defined( HAVE_ZOLTAN )
 
-    void * obj_data[2];
-    obj_data[0]= &(my_costs);
-    obj_data[1]= &(my_gids);
+    int obj_data[2];
+    obj_data[0]= (int) &(my_costs);
+    obj_data[1]= (int) &(my_gids);
     
     /* General Zoltan parameters */
     zz->Set_Param("DEBUG_LEVEL", "0");     // amount of debug messages desired
@@ -512,7 +512,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
 
     /* Set Zoltan Functions */
     zz->Set_Num_Obj_Fn(ZoltanFuncs::zoltan_get_number_of_objects, & (my_costs) );
-    zz->Set_Obj_List_Fn(ZoltanFuncs::zoltan_get_object_list, obj_data);
+    zz->Set_Obj_List_Fn(ZoltanFuncs::zoltan_get_object_list, (void *)obj_data);
     zz->Set_Num_Geom_Fn(ZoltanFuncs::zoltan_get_number_of_geometry, &dim);
     zz->Set_Geom_Multi_Fn(ZoltanFuncs::zoltan_get_geometry_list, &(positions));
 
@@ -542,7 +542,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     }
 
     //set assignment result array 
-    int nMyGids = my_costs.size();
+    int nMyGids = my_gids.size();
     int nGids   = num_patches;
     int *gid_list = new int[nMyGids];
     int *lid_list = new int[nMyGids];
