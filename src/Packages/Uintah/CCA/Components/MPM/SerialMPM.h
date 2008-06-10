@@ -66,36 +66,32 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
-	 
+ 
   //////////
   // Insert Documentation Here:
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, GridP&,
-			    SimulationStateP&);
+                            SimulationStateP&);
 
   virtual void outputProblemSpec(ProblemSpecP& ps);
-	 
+
   virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&);
+                                  SchedulerP&);
 
   virtual void addMaterial(const ProblemSpecP& params,
                            GridP& grid,
                            SimulationStateP&);
 
-  virtual void scheduleInitializeAddedMaterial(const LevelP& level,
-                                               SchedulerP&);
+  virtual void scheduleInitializeAddedMaterial(const LevelP& level, SchedulerP&);
 
-  void schedulePrintParticleCount(const LevelP& level, 
-                                  SchedulerP& sched);
+  void schedulePrintParticleCount(const LevelP& level, SchedulerP& sched);
   //////////
   // Insert Documentation Here:
-  virtual void scheduleComputeStableTimestep(const LevelP& level,
-					     SchedulerP&);
-	 
+  virtual void scheduleComputeStableTimestep(const LevelP& level, SchedulerP&);
+
   //////////
   // Insert Documentation Here:
-  virtual void scheduleTimeAdvance(const LevelP& level, 
-				   SchedulerP&);
+  virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
 
   virtual void scheduleRefine(const PatchSet* patches, SchedulerP& scheduler);
 
@@ -117,17 +113,17 @@ public:
   void setMPMLabel(MPMLabel* Mlb)
   {
         delete lb;
-	lb = Mlb;
+        lb = Mlb;
   };
 
   void setWithICE()
   {
-	flags->d_with_ice = true;
+        flags->d_with_ice = true;
   };
 
   void setWithARCHES()
   {
-	flags->d_with_arches = true;
+        flags->d_with_arches = true;
   };
 
   enum bctype { NONE=0,
@@ -146,12 +142,12 @@ protected:
   // Insert Documentation Here:
   friend class MPMICE;
   friend class MPMArches;
-	 
+ 
   virtual void actuallyInitialize(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw);
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
 
   virtual void actuallyInitializeAddedMaterial(const ProcessorGroup*,
                                                const PatchSubset* patches,
@@ -174,64 +170,63 @@ protected:
                           DataWarehouse* new_dw,
                           double val);
   void setParticleDefault(ParticleVariable<Vector>& pvar,
-			  const VarLabel* label, 
-			  ParticleSubset* pset,
-			  DataWarehouse* new_dw,
-			  const Vector& val);
+                          const VarLabel* label, 
+                          ParticleSubset* pset,
+                          DataWarehouse* new_dw,
+                          const Vector& val);
   void setParticleDefault(ParticleVariable<Matrix3>& pvar,
-			  const VarLabel* label, 
-			  ParticleSubset* pset,
-			  DataWarehouse* new_dw,
-			  const Matrix3& val);
+                          const VarLabel* label, 
+                          ParticleSubset* pset,
+                          DataWarehouse* new_dw,
+                          const Matrix3& val);
 
   void printParticleLabels(vector<const VarLabel*> label,DataWarehouse* dw,
-			   int dwi, const Patch* patch);
+                          int dwi, const Patch* patch);
 
-  void scheduleInitializePressureBCs(const LevelP& level,
-				     SchedulerP&);
-	 
+  void scheduleInitializePressureBCs(const LevelP& level, SchedulerP&);
+
   void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   void initializePressureBC(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   virtual void interpolateParticlesToGrid(const ProcessorGroup*,
-					  const PatchSubset* patches,
-					  const MaterialSubset* matls,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw);
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   virtual void setBCsInterpolated(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset* matls,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw);
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here:
   virtual void computeStressTensor(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse* old_dw,
-				   DataWarehouse* new_dw);
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
 
   /*! Update the erosion parameter is mass is to be removed */
   void updateErosionParameter(const ProcessorGroup*,
@@ -243,10 +238,10 @@ protected:
   //////////
   // Compute Accumulated Strain Energy
   void computeAccStrainEnergy(const ProcessorGroup*,
-			      const PatchSubset*,
-			      const MaterialSubset*,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw);
+                              const PatchSubset*,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -257,10 +252,10 @@ protected:
                                   DataWarehouse* new_dw);
   
   virtual void computeInternalForce(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -274,26 +269,26 @@ protected:
   //////////
   // Insert Documentation Here:
   virtual void solveEquationsMotion(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw);
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* matls,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   virtual void integrateAcceleration(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:                            
   void setGridBoundaryConditions(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* ,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw);
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* ,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
   //////////
   // This task is to be used for setting particle external force
   // and external heat rate.  I'm creating a separate task so that
@@ -308,33 +303,33 @@ protected:
   //////////
   // Calculate the rate of evolution of the damping coefficient
   void calculateDampingRate(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
   void addNewParticles(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw,
-		       DataWarehouse* new_dw);
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
 
 
   /*!  Convert the localized particles into particles of a new material
        with a different velocity field */
   void convertLocalizedParticles(const ProcessorGroup*,
-		                 const PatchSubset* patches,
-		                 const MaterialSubset* matls,
-		                 DataWarehouse* old_dw,
-		                 DataWarehouse* new_dw);
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   virtual void interpolateToParticlesAndUpdate(const ProcessorGroup*,
-				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw);
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
 
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
@@ -358,102 +353,102 @@ protected:
                                                   const MaterialSet*);
 
   virtual void scheduleSetBCsInterpolated(SchedulerP&, const PatchSet*,
-                                                       const MaterialSet*);
+                                          const MaterialSet*);
 
   virtual void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
-					   const MaterialSet*);
+                                           const MaterialSet*);
 
   virtual void scheduleExMomInterpolated(SchedulerP&, const PatchSet*,
-					 const MaterialSet*);
+                                         const MaterialSet*);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
-					   const MaterialSet*);
+                                           const MaterialSet*);
   
   void scheduleUpdateErosionParameter(SchedulerP& sched,
-				      const PatchSet* patches,
-				      const MaterialSet* matls);
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls);
+
   void scheduleComputeAccStrainEnergy(SchedulerP&, const PatchSet*,
-				      const MaterialSet*);
+                                      const MaterialSet*);
 
   virtual void scheduleComputeContactArea(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
   
   virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
-					    const MaterialSet*);
+                                            const MaterialSet*);
 
   void scheduleComputeArtificialViscosity(SchedulerP&, const PatchSet*,
-					  const MaterialSet*);
+                                          const MaterialSet*);
 
   virtual void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
-					       const MaterialSet*);
+                                               const MaterialSet*);
                                           
   virtual void scheduleComputeNodalHeatFlux(SchedulerP&, const PatchSet*,
-					       const MaterialSet*);
+                                            const MaterialSet*);
 
   virtual void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
-					    const MaterialSet*);
+                                            const MaterialSet*);
 
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
-					  const MaterialSet*);
+                                          const MaterialSet*);
 
   virtual void scheduleIntegrateAcceleration(SchedulerP&, const PatchSet*,
-					     const MaterialSet*);
+                                             const MaterialSet*);
 
   virtual void scheduleIntegrateTemperatureRate(SchedulerP&, const PatchSet*,
-                                                  const MaterialSet*);
+                                                const MaterialSet*);
 
   virtual void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
-				       const MaterialSet*);
+                                       const MaterialSet*);
 
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
-					 const MaterialSet* matls);
+                                         const MaterialSet* matls);
                                                  
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
-				  const MaterialSet*);
+                                  const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
-						       const PatchSet*,
-						       const MaterialSet*);
+                                                       const PatchSet*,
+                                                       const MaterialSet*);
 
-  void scheduleAddNewParticles(SchedulerP&, const PatchSet*,
-			       const MaterialSet*);
+  void scheduleAddNewParticles(SchedulerP&, const PatchSet*, const MaterialSet*);
 
   void scheduleConvertLocalizedParticles(SchedulerP&, const PatchSet*,
-					 const MaterialSet*);
+                                         const MaterialSet*);
 
   void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+                                    const MaterialSet*);
 
 
   virtual void scheduleParticleVelocityField(SchedulerP&, const PatchSet*,
-					     const MaterialSet*) {};
+                                             const MaterialSet*) {};
 
   virtual void scheduleAdjustCrackContactInterpolated(SchedulerP&, 
-						      const PatchSet*,
-						      const MaterialSet*){};
+                                                      const PatchSet*,
+                                                      const MaterialSet*){};
 
   virtual void scheduleAdjustCrackContactIntegrated(SchedulerP&, 
-						    const PatchSet*,
-						    const MaterialSet*){};
+                                                    const PatchSet*,
+                                                    const MaterialSet*){};
 
   virtual void scheduleCalculateFractureParameters(SchedulerP&,const PatchSet*,
-						   const MaterialSet*){};
+                                                   const MaterialSet*){};
 
   virtual void scheduleDoCrackPropagation(SchedulerP& sched, 
-					  const PatchSet* patches,
-					  const MaterialSet* matls){};
+                                          const PatchSet* patches,
+                                          const MaterialSet* matls){};
 
   virtual void scheduleMoveCracks(SchedulerP& sched,const PatchSet* patches,
-				  const MaterialSet* matls){};
+                                  const MaterialSet* matls){};
 
   virtual void scheduleUpdateCrackFront(SchedulerP& sched,
-					const PatchSet* patches,
-					const MaterialSet* matls){};
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls){};
 
 
   void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
-					const PatchSet* patches,
-                                        const MaterialSet*);
+                                       const PatchSet* patches,
+                                       const MaterialSet*);
                                                                              
   //////////
   // Insert Documentation Here:
@@ -464,18 +459,18 @@ protected:
                                        DataWarehouse* new_dw);
 
   void scheduleSetNeedAddMaterialFlag(SchedulerP&,
-                                              const LevelP& level,
-                                              const MaterialSet*);
+                                      const LevelP& level,
+                                      const MaterialSet*);
   
   
   void setNeedAddMaterialFlag(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset* matls,
-                                      DataWarehouse*,
-                                      DataWarehouse*);
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse*);
   
   bool needRecompile(double time, double dt,
-                             const GridP& grid);
+                     const GridP& grid);
   
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
@@ -509,7 +504,6 @@ private:
 
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);
-  	 
 };
       
 } // end namespace Uintah
