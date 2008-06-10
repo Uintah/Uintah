@@ -209,11 +209,11 @@ void addRequires_Lodi(Task* t,
     }
     
     if(var_basket->saveLiTerms && where == "Advection"){
-      t->computes(lb->LODI_BC_Li1Label);
-      t->computes(lb->LODI_BC_Li2Label);
-      t->computes(lb->LODI_BC_Li3Label);
-      t->computes(lb->LODI_BC_Li4Label);
-      t->computes(lb->LODI_BC_Li5Label); 
+      t->computes(lb->LODI_BC_Li1Label, ice_matls);
+      t->computes(lb->LODI_BC_Li2Label, ice_matls);
+      t->computes(lb->LODI_BC_Li3Label, ice_matls);
+      t->computes(lb->LODI_BC_Li4Label, ice_matls);
+      t->computes(lb->LODI_BC_Li5Label, ice_matls); 
     }
   }  
 }
@@ -314,11 +314,11 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
               
     if(var_basket->saveLiTerms  && where == "Advection"){
       CCVariable<Vector> Li1, Li2, Li3, Li4, Li5;
-      new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, 0,patch);
-      new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, 0,patch);
-      new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, 0,patch);
-      new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, 0,patch);
-      new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, 0,patch);
+      new_dw->allocateAndPut(Li1, lb->LODI_BC_Li1Label, indx,patch);
+      new_dw->allocateAndPut(Li2, lb->LODI_BC_Li2Label, indx,patch);
+      new_dw->allocateAndPut(Li3, lb->LODI_BC_Li3Label, indx,patch);
+      new_dw->allocateAndPut(Li4, lb->LODI_BC_Li4Label, indx,patch);
+      new_dw->allocateAndPut(Li5, lb->LODI_BC_Li5Label, indx,patch);
       for (CellIterator iter = patch->getExtraCellIterator__New();!iter.done();iter++){
         IntVector c = *iter;
         Li1[c]=lv->Li[1][c];
