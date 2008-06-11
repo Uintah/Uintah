@@ -494,9 +494,9 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
 
 #if defined( HAVE_ZOLTAN )
 
-    int obj_data[2];
-    obj_data[0]= (int) &(my_costs);
-    obj_data[1]= (int) &(my_gids);
+    vector<void *> obj_data;
+    obj_data.push_back((void *) &(my_costs));
+    obj_data.push_back((void *) &(my_gids));
     
     /* General Zoltan parameters */
     zz->Set_Param("DEBUG_LEVEL", "0");     // amount of debug messages desired
@@ -512,7 +512,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
 
     /* Set Zoltan Functions */
     zz->Set_Num_Obj_Fn(ZoltanFuncs::zoltan_get_number_of_objects, & (my_costs) );
-    zz->Set_Obj_List_Fn(ZoltanFuncs::zoltan_get_object_list, (void *)obj_data);
+    zz->Set_Obj_List_Fn(ZoltanFuncs::zoltan_get_object_list, &(obj_data));
     zz->Set_Num_Geom_Fn(ZoltanFuncs::zoltan_get_number_of_geometry, &dim);
     zz->Set_Geom_Multi_Fn(ZoltanFuncs::zoltan_get_geometry_list, &(positions));
 
@@ -547,7 +547,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     int *gid_list = new int[nMyGids];
     int *lid_list = new int[nMyGids];
     
-    ZoltanFuncs::zoltan_get_object_list(obj_data, nMyGids, nMyGids,
+    ZoltanFuncs::zoltan_get_object_list(&obj_data, nMyGids, nMyGids,
       (ZOLTAN_ID_PTR)gid_list, (ZOLTAN_ID_PTR)lid_list, 0, NULL, &rc);
     
     int *gid_flags = new int[nGids];
@@ -1559,8 +1559,9 @@ ZoltanFuncs::zoltan_get_object_list( void *data, int sizeGID, int sizeLID,
                                      ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
                                      int wgt_dim, float *obj_wgts, int *ierr )
 {
-  vector<double> * obj_costs =  (vector<double> *)(((int *)data)[0]);
-  vector<int> * obj_gids =  (vector<int> *)(((int *)data)[1]);
+  vector<void *> * obj_data = (vector<void *> *) data;
+  vector<double> * obj_costs =  (vector<double> *) ((*obj_data)[0]);
+  vector<int> * obj_gids =  (vector<int> *)((*obj_data)[1]);
   for (unsigned int i=0; i < obj_costs->size(); i++) {
     globalID[i] = (*obj_gids)[i];
     localID[i] = i;
