@@ -23,10 +23,10 @@
   <!--__________________________________-->
   <DataArchiver>
   <filebase>poisson.uda</filebase>
-      <outputInterval>1</outputInterval>
+      <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "phi"/>
       <save label = "residual"/>
-      <checkpoint cycle = "2" interval = "1"/>
+      <checkpoint cycle = "2" timestepInterval = "1"/>
   </DataArchiver>
   
   
