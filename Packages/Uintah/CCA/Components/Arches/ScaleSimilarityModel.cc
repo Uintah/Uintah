@@ -36,12 +36,12 @@ using namespace SCIRun;
 // Default constructor for SmagorinskyModel
 //****************************************************************************
 ScaleSimilarityModel::ScaleSimilarityModel(const ArchesLabel* label, 
-				   const MPMArchesLabel* MAlb,
-				   PhysicalConstants* phyConsts,
-				   BoundaryCondition* bndry_cond):
-                                    TurbulenceModel(label, MAlb),
-				    d_physicalConsts(phyConsts),
-				    d_boundaryCondition(bndry_cond)
+                                           const MPMArchesLabel* MAlb,
+                                           PhysicalConstants* phyConsts,
+                                           BoundaryCondition* bndry_cond):
+                                           TurbulenceModel(label, MAlb),
+                                           d_physicalConsts(phyConsts),
+                                           d_boundaryCondition(bndry_cond)
 {
 }
 
@@ -77,59 +77,59 @@ ScaleSimilarityModel::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void 
 ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
-					      const PatchSet* patches,
-					      const MaterialSet* matls,
-				        const TimeIntegratorLabel* timelabels)
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls,
+                                                  const TimeIntegratorLabel* timelabels)
 {
 //  SmagorinskyModel::sched_reComputeTurbSubmodel(sched, patches, matls,
-//						timelabels);
+//                                                timelabels);
 
   string taskname =  "ScaleSimilarityModel::ReTurbSubmodel" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
     Task* tsk = scinew Task(taskname, this,
-			    &ScaleSimilarityModel::reComputeTurbSubmodel,
-			    timelabels);
+                            &ScaleSimilarityModel::reComputeTurbSubmodel,
+                            timelabels);
 
   // Requires
   // Assuming one layer of ghost cells
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,
-		Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::AroundCells,
-		Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // for multimaterial
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
 
       // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
-		  Task::OutOfDomain);
+                  Task::OutOfDomain);
 
     tsk->computes(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
-		  Task::OutOfDomain);
+                  Task::OutOfDomain);
   }
   else {
     tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
-		  Task::OutOfDomain);
+                  Task::OutOfDomain);
 
     tsk->modifies(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
-		  Task::OutOfDomain);
+                  Task::OutOfDomain);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -140,11 +140,11 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 //****************************************************************************
 void 
 ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
-					const PatchSubset* patches,
-					const MaterialSubset*,
-					DataWarehouse*,
-					DataWarehouse* new_dw,
-				        const TimeIntegratorLabel* timelabels)
+                                            const PatchSubset* patches,
+                                            const MaterialSubset*,
+                                            DataWarehouse*,
+                                            DataWarehouse* new_dw,
+                                            const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -161,22 +161,23 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     // Get the velocity, density and viscosity from the old data warehouse
 
     new_dw->get(uVel,d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(vVel,d_lab->d_newCCVVelocityLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(wVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
-    if (d_MAlab)
+    if (d_MAlab){
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    }
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 #ifndef PetscFilter
     // Get the PerPatch CellInformation data
@@ -197,10 +198,10 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         new_dw->allocateAndPut(stressTensorCoeff[ii], 
-			       d_lab->d_stressTensorCompLabel, ii, patch);
+                               d_lab->d_stressTensorCompLabel, ii, patch);
       else
         new_dw->getModifiable(stressTensorCoeff[ii], 
-			      d_lab->d_stressTensorCompLabel, ii, patch);
+                              d_lab->d_stressTensorCompLabel, ii, patch);
       stressTensorCoeff[ii].initialize(0.0);
     }
 
@@ -218,10 +219,10 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         new_dw->allocateAndPut(scalarFluxCoeff[ii], 
-			       d_lab->d_scalarFluxCompLabel, ii, patch);
+                               d_lab->d_scalarFluxCompLabel, ii, patch);
       else
         new_dw->getModifiable(scalarFluxCoeff[ii], 
-			       d_lab->d_scalarFluxCompLabel, ii, patch);
+                               d_lab->d_scalarFluxCompLabel, ii, patch);
       scalarFluxCoeff[ii].initialize(0.0);
     }
 
@@ -247,11 +248,12 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     Array3<double> denPhiW(idxLo, idxHi);
     denPhiW.initialize(0.0);
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
+    
     int startZ = idxLo.z();
     if (zminus) startZ++;
     int endZ = idxHi.z();
@@ -264,419 +266,419 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (xminus) startX++;
     int endX = idxHi.x();
     if (xplus) endX--;
+    
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
-	for (int colX = startX; colX < endX; colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  denUU[currCell] = uVel[currCell]*uVel[currCell];
-	  denUV[currCell] = uVel[currCell]*vVel[currCell];
-	  denUW[currCell] = uVel[currCell]*wVel[currCell];
-	  denVV[currCell] = vVel[currCell]*vVel[currCell];
-	  denVW[currCell] = vVel[currCell]*wVel[currCell];
-	  denWW[currCell] = wVel[currCell]*wVel[currCell];
-	  denPhiU[currCell] = scalar[currCell]*uVel[currCell];
-	  denPhiV[currCell] = scalar[currCell]*vVel[currCell];
-	  denPhiW[currCell] = scalar[currCell]*wVel[currCell];
-	}
+        for (int colX = startX; colX < endX; colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          denUU[currCell] = uVel[currCell]*uVel[currCell];
+          denUV[currCell] = uVel[currCell]*vVel[currCell];
+          denUW[currCell] = uVel[currCell]*wVel[currCell];
+          denVV[currCell] = vVel[currCell]*vVel[currCell];
+          denVW[currCell] = vVel[currCell]*wVel[currCell];
+          denWW[currCell] = wVel[currCell]*wVel[currCell];
+          denPhiU[currCell] = scalar[currCell]*uVel[currCell];
+          denPhiV[currCell] = scalar[currCell]*vVel[currCell];
+          denPhiW[currCell] = scalar[currCell]*wVel[currCell];
+        }
       }
     }
     //#ifndef PetscFilter
 #if 1
     if (xminus) { 
       for (int colZ = startZ; colZ < endZ; colZ ++) {
-	for (int colY = startY; colY < endY; colY ++) {
-	  IntVector currCell(startX-1, colY, colZ);
-	  IntVector prevCell(startX, colY, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colY = startY; colY < endY; colY ++) {
+          IntVector currCell(startX-1, colY, colZ);
+          IntVector prevCell(startX, colY, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
     }
     if (xplus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
-	for (int colY = startY; colY < endY; colY ++) {
-	  IntVector currCell(endX, colY, colZ);
-	  IntVector prevCell(endX-1, colY, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colY = startY; colY < endY; colY ++) {
+          IntVector currCell(endX, colY, colZ);
+          IntVector prevCell(endX-1, colY, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
     }
     if (yminus) { 
       for (int colZ = startZ; colZ < endZ; colZ ++) {
-	for (int colX = startX; colX < endX; colX ++) {
-	  IntVector currCell(colX, startY-1, colZ);
-	  IntVector prevCell(colX, startY, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colX = startX; colX < endX; colX ++) {
+          IntVector currCell(colX, startY-1, colZ);
+          IntVector prevCell(colX, startY, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
     }
     if (yplus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
-	for (int colX = startX; colX < endX; colX ++) {
-	  IntVector currCell(colX, endY, colZ);
-	  IntVector prevCell(colX, endY-1, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colX = startX; colX < endX; colX ++) {
+          IntVector currCell(colX, endY, colZ);
+          IntVector prevCell(colX, endY-1, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
     }
     if (zminus) { 
       for (int colY = startY; colY < endY; colY ++) {
-	for (int colX = startX; colX < endX; colX ++) {
-	  IntVector currCell(colX, colY, startZ-1);
-	  IntVector prevCell(colX, colY, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colX = startX; colX < endX; colX ++) {
+          IntVector currCell(colX, colY, startZ-1);
+          IntVector prevCell(colX, colY, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
     }
     if (zplus) {
       for (int colY = startY; colY < endY; colY ++) {
-	for (int colX = startX; colX < endX; colX ++) {
-	  IntVector currCell(colX, colY, endZ);
-	  IntVector prevCell(colX, colY, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colX = startX; colX < endX; colX ++) {
+          IntVector currCell(colX, colY, endZ);
+          IntVector prevCell(colX, colY, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
     }
 
     // fill the corner cells
     if (xminus) {
       if (yminus) {
-	for (int colZ = startZ; colZ < endZ; colZ ++) {
-	  IntVector currCell(startX-1, startY-1, colZ);
-	  IntVector prevCell(startX, startY, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colZ = startZ; colZ < endZ; colZ ++) {
+          IntVector currCell(startX-1, startY-1, colZ);
+          IntVector prevCell(startX, startY, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (yplus) {
-	for (int colZ = startZ; colZ < endZ; colZ ++) {
-	  IntVector currCell(startX-1, endY, colZ);
-	  IntVector prevCell(startX, endY-1, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colZ = startZ; colZ < endZ; colZ ++) {
+          IntVector currCell(startX-1, endY, colZ);
+          IntVector prevCell(startX, endY-1, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (zminus) {
-	for (int colY = startY; colY < endY; colY ++) {
-	  IntVector currCell(startX-1, colY, startZ-1);
-	  IntVector prevCell(startX, colY, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colY = startY; colY < endY; colY ++) {
+          IntVector currCell(startX-1, colY, startZ-1);
+          IntVector prevCell(startX, colY, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (zplus) {
-	for (int colY = startY; colY < endY; colY ++) {
-	  IntVector currCell(startX-1, colY, endZ);
-	  IntVector prevCell(startX, colY, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colY = startY; colY < endY; colY ++) {
+          IntVector currCell(startX-1, colY, endZ);
+          IntVector prevCell(startX, colY, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (yminus&&zminus) {
-	IntVector currCell(startX-1, startY-1, startZ-1);
-	IntVector prevCell(startX, startY, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(startX-1, startY-1, startZ-1);
+        IntVector prevCell(startX, startY, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
       if (yminus&&zplus) {
-	IntVector currCell(startX-1, startY-1, endZ);
-	IntVector prevCell(startX, startY, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(startX-1, startY-1, endZ);
+        IntVector prevCell(startX, startY, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
       if (yplus&&zminus) {
-	IntVector currCell(startX-1, endY, startZ-1);
-	IntVector prevCell(startX, endY-1, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(startX-1, endY, startZ-1);
+        IntVector prevCell(startX, endY-1, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
       if (yplus&&zplus) {
-	IntVector currCell(startX-1, endY, endZ);
-	IntVector prevCell(startX, endY-1, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(startX-1, endY, endZ);
+        IntVector prevCell(startX, endY-1, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
-	
     }
     if (xplus) {
       if (yminus) {
-	for (int colZ = startZ; colZ < endZ; colZ ++) {
-	  IntVector currCell(endX, startY-1, colZ);
-	  IntVector prevCell(endX-1, startY, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colZ = startZ; colZ < endZ; colZ ++) {
+          IntVector currCell(endX, startY-1, colZ);
+          IntVector prevCell(endX-1, startY, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (yplus) {
-	for (int colZ = startZ; colZ < endZ; colZ ++) {
-	  IntVector currCell(endX, endY, colZ);
-	  IntVector prevCell(endX-1, endY-1, colZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colZ = startZ; colZ < endZ; colZ ++) {
+          IntVector currCell(endX, endY, colZ);
+          IntVector prevCell(endX-1, endY-1, colZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (zminus) {
-	for (int colY = startY; colY < endY; colY ++) {
-	  IntVector currCell(endX, colY, startZ-1);
-	  IntVector prevCell(endX-1, colY, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colY = startY; colY < endY; colY ++) {
+          IntVector currCell(endX, colY, startZ-1);
+          IntVector prevCell(endX-1, colY, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (zplus) {
-	for (int colY = startY; colY < endY; colY ++) {
-	  IntVector currCell(endX, colY, endZ);
-	  IntVector prevCell(endX-1, colY, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
-	}
+        for (int colY = startY; colY < endY; colY ++) {
+          IntVector currCell(endX, colY, endZ);
+          IntVector prevCell(endX-1, colY, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
+        }
       }
       if (yminus&&zminus) {
-	IntVector currCell(endX, startY-1, startZ-1);
-	IntVector prevCell(endX-1, startY, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(endX, startY-1, startZ-1);
+        IntVector prevCell(endX-1, startY, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
       if (yminus&&zplus) {
-	IntVector currCell(endX, startY-1, endZ);
-	IntVector prevCell(endX-1, startY, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(endX, startY-1, endZ);
+        IntVector prevCell(endX-1, startY, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
       if (yplus&&zminus) {
-	IntVector currCell(endX, endY, startZ-1);
-	IntVector prevCell(endX-1, endY-1, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(endX, endY, startZ-1);
+        IntVector prevCell(endX-1, endY-1, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
       if (yplus&&zplus) {
-	IntVector currCell(endX, endY, endZ);
-	IntVector prevCell(endX-1, endY-1, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(endX, endY, endZ);
+        IntVector prevCell(endX-1, endY-1, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
-	
+        
     }
     // for yminus&&zminus fill the corner cells for all internal x
     if (yminus&&zminus) {
       for (int colX = startX; colX < endX; colX++) {
-	IntVector currCell(colX, startY-1, startZ-1);
-	IntVector prevCell(colX, startY, startZ);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(colX, startY-1, startZ-1);
+        IntVector prevCell(colX, startY, startZ);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
     }
     if (yminus&&zplus) {
       for (int colX = startX; colX < endX; colX++) {
-	IntVector currCell(colX, startY-1, endZ);
-	IntVector prevCell(colX, startY, endZ-1);
-	  denUU[currCell] = denUU[prevCell];
-	  denUV[currCell] = denUV[prevCell];
-	  denUW[currCell] = denUW[prevCell];
-	  denVV[currCell] = denVV[prevCell];
-	  denVW[currCell] = denVW[prevCell];
-	  denWW[currCell] = denWW[prevCell];
-	  denPhiU[currCell] = denPhiU[prevCell];
-	  denPhiV[currCell] = denPhiV[prevCell];
-	  denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(colX, startY-1, endZ);
+        IntVector prevCell(colX, startY, endZ-1);
+          denUU[currCell] = denUU[prevCell];
+          denUV[currCell] = denUV[prevCell];
+          denUW[currCell] = denUW[prevCell];
+          denVV[currCell] = denVV[prevCell];
+          denVW[currCell] = denVW[prevCell];
+          denWW[currCell] = denWW[prevCell];
+          denPhiU[currCell] = denPhiU[prevCell];
+          denPhiV[currCell] = denPhiV[prevCell];
+          denPhiW[currCell] = denPhiW[prevCell];
       }
     }
     if (yplus&&zminus) {
       for (int colX = startX; colX < endX; colX++) {
-	IntVector currCell(colX, endY, startZ-1);
-	IntVector prevCell(colX, endY-1, startZ);
-	denUU[currCell] = denUU[prevCell];
-	denUV[currCell] = denUV[prevCell];
-	denUW[currCell] = denUW[prevCell];
-	denVV[currCell] = denVV[prevCell];
-	denVW[currCell] = denVW[prevCell];
-	denWW[currCell] = denWW[prevCell];
-	denPhiU[currCell] = denPhiU[prevCell];
-	denPhiV[currCell] = denPhiV[prevCell];
-	denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(colX, endY, startZ-1);
+        IntVector prevCell(colX, endY-1, startZ);
+        denUU[currCell] = denUU[prevCell];
+        denUV[currCell] = denUV[prevCell];
+        denUW[currCell] = denUW[prevCell];
+        denVV[currCell] = denVV[prevCell];
+        denVW[currCell] = denVW[prevCell];
+        denWW[currCell] = denWW[prevCell];
+        denPhiU[currCell] = denPhiU[prevCell];
+        denPhiV[currCell] = denPhiV[prevCell];
+        denPhiW[currCell] = denPhiW[prevCell];
       }
     }
     if (yplus&&zplus) {
       for (int colX = startX; colX < endX; colX++) {
-	IntVector currCell(colX, endY, endZ);
-	IntVector prevCell(colX, endY-1, endZ-1);
-	denUU[currCell] = denUU[prevCell];
-	denUV[currCell] = denUV[prevCell];
-	denUW[currCell] = denUW[prevCell];
-	denVV[currCell] = denVV[prevCell];
-	denVW[currCell] = denVW[prevCell];
-	denWW[currCell] = denWW[prevCell];
-	denPhiU[currCell] = denPhiU[prevCell];
-	denPhiV[currCell] = denPhiV[prevCell];
-	denPhiW[currCell] = denPhiW[prevCell];
+        IntVector currCell(colX, endY, endZ);
+        IntVector prevCell(colX, endY-1, endZ-1);
+        denUU[currCell] = denUU[prevCell];
+        denUV[currCell] = denUV[prevCell];
+        denUW[currCell] = denUW[prevCell];
+        denVV[currCell] = denVV[prevCell];
+        denVW[currCell] = denVW[prevCell];
+        denWW[currCell] = denWW[prevCell];
+        denPhiU[currCell] = denPhiU[prevCell];
+        denPhiV[currCell] = denPhiV[prevCell];
+        denPhiW[currCell] = denPhiW[prevCell];
       }
-    }	
+    }        
 
 #endif
     Array3<double> filterdenUU(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
@@ -736,125 +738,125 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 #else
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  //double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          //double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
           //                       (2.0*cellinfo->stb[colZ]);
-	  //double invDelta = 1.0/cube_delta;
-	  filterDen[currCell] = 0.0;
-	  filterUVel[currCell] = 0.0;
-	  filterVVel[currCell] = 0.0;
-	  filterWVel[currCell] = 0.0;
-	  filterdenUU[currCell] = 0.0;
-	  filterdenUV[currCell] = 0.0;
-	  filterdenUW[currCell] = 0.0;
-	  filterdenVV[currCell] = 0.0;
-	  filterdenVW[currCell] = 0.0;
-	  filterdenWW[currCell] = 0.0;
-	  filterPhi[currCell] = 0.0;
-	  filterdenPhiU[currCell] = 0.0;
-	  filterdenPhiV[currCell] = 0.0;
-	  filterdenPhiW[currCell] = 0.0;
-	  double totalVol = 0;
-	  for (int kk = -1; kk <= 1; kk ++) {
-	    for (int jj = -1; jj <= 1; jj ++) {
-	      for (int ii = -1; ii <= 1; ii ++) {
-		IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-		double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-		             cellinfo->stb[colZ+kk]*
-		             (1.0-0.5*abs(ii))*
-		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-		totalVol += vol;
-		//		filterDen[currCell] += den[filterCell]*vol; 
-		filterDen[currCell] += den[currCell]*vol; 
-		filterUVel[currCell] += uVel[filterCell]*vol; 
-		filterVVel[currCell] += vVel[filterCell]*vol; 
-		filterWVel[currCell] += wVel[filterCell]*vol;
-		filterdenUU[currCell] += denUU[filterCell]*vol;  
-		filterdenUV[currCell] += denUV[filterCell]*vol;  
-		filterdenUW[currCell] += denUW[filterCell]*vol;  
-		filterdenVV[currCell] += denVV[filterCell]*vol;  
-		filterdenVW[currCell] += denVW[filterCell]*vol;  
-		filterdenWW[currCell] += denWW[filterCell]*vol;  
-		filterPhi[currCell] += scalar[filterCell]*vol; 
-		filterdenPhiU[currCell] += denPhiU[filterCell]*vol;  
-		filterdenPhiV[currCell] += denPhiV[filterCell]*vol;  
-		filterdenPhiW[currCell] += denPhiW[filterCell]*vol;  
-	      }
-	    }
-	  }
-	  
-	  filterDen[currCell] /= totalVol;
-	  filterUVel[currCell] /= totalVol;
-	  filterVVel[currCell] /= totalVol;
-	  filterWVel[currCell] /= totalVol;
-	  filterdenUU[currCell] /= totalVol;
-	  filterdenUV[currCell] /= totalVol;
-	  filterdenUW[currCell] /= totalVol;
-	  filterdenVV[currCell] /= totalVol;
-	  filterdenVW[currCell] /= totalVol;
-	  filterdenWW[currCell] /= totalVol;
-	  filterPhi[currCell] /= totalVol;
-	  filterdenPhiU[currCell] /= totalVol;
-	  filterdenPhiV[currCell] /= totalVol;
-	  filterdenPhiW[currCell] /= totalVol;
-	}
+          //double invDelta = 1.0/cube_delta;
+          filterDen[currCell] = 0.0;
+          filterUVel[currCell] = 0.0;
+          filterVVel[currCell] = 0.0;
+          filterWVel[currCell] = 0.0;
+          filterdenUU[currCell] = 0.0;
+          filterdenUV[currCell] = 0.0;
+          filterdenUW[currCell] = 0.0;
+          filterdenVV[currCell] = 0.0;
+          filterdenVW[currCell] = 0.0;
+          filterdenWW[currCell] = 0.0;
+          filterPhi[currCell] = 0.0;
+          filterdenPhiU[currCell] = 0.0;
+          filterdenPhiV[currCell] = 0.0;
+          filterdenPhiW[currCell] = 0.0;
+          double totalVol = 0;
+          for (int kk = -1; kk <= 1; kk ++) {
+            for (int jj = -1; jj <= 1; jj ++) {
+              for (int ii = -1; ii <= 1; ii ++) {
+                IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+                double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
+                             cellinfo->stb[colZ+kk]*
+                             (1.0-0.5*abs(ii))*
+                             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
+                totalVol += vol;
+                //                filterDen[currCell] += den[filterCell]*vol; 
+                filterDen[currCell] += den[currCell]*vol; 
+                filterUVel[currCell] += uVel[filterCell]*vol; 
+                filterVVel[currCell] += vVel[filterCell]*vol; 
+                filterWVel[currCell] += wVel[filterCell]*vol;
+                filterdenUU[currCell] += denUU[filterCell]*vol;  
+                filterdenUV[currCell] += denUV[filterCell]*vol;  
+                filterdenUW[currCell] += denUW[filterCell]*vol;  
+                filterdenVV[currCell] += denVV[filterCell]*vol;  
+                filterdenVW[currCell] += denVW[filterCell]*vol;  
+                filterdenWW[currCell] += denWW[filterCell]*vol;  
+                filterPhi[currCell] += scalar[filterCell]*vol; 
+                filterdenPhiU[currCell] += denPhiU[filterCell]*vol;  
+                filterdenPhiV[currCell] += denPhiV[filterCell]*vol;  
+                filterdenPhiW[currCell] += denPhiW[filterCell]*vol;  
+              }
+            }
+          }
+          
+          filterDen[currCell] /= totalVol;
+          filterUVel[currCell] /= totalVol;
+          filterVVel[currCell] /= totalVol;
+          filterWVel[currCell] /= totalVol;
+          filterdenUU[currCell] /= totalVol;
+          filterdenUV[currCell] /= totalVol;
+          filterdenUW[currCell] /= totalVol;
+          filterdenVV[currCell] /= totalVol;
+          filterdenVW[currCell] /= totalVol;
+          filterdenWW[currCell] /= totalVol;
+          filterPhi[currCell] /= totalVol;
+          filterdenPhiU[currCell] /= totalVol;
+          filterdenPhiV[currCell] /= totalVol;
+          filterdenPhiW[currCell] /= totalVol;
+        }
       }
     }
 #endif
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  // compute stress tensor
-	  // index 0: T11, 1:T12, 2:T13, 3:T21, 4:T22, 5:T23, 6:T31, 7:T32, 8:T33
-	  (stressTensorCoeff[0])[currCell] = CF*den[currCell]*(filterdenUU[currCell] -
-						 filterUVel[currCell]*
-						 filterUVel[currCell]);
-	  (stressTensorCoeff[1])[currCell] = CF*den[currCell]*(filterdenUV[currCell] -
-						 filterUVel[currCell]*
-						 filterVVel[currCell]);
-	  (stressTensorCoeff[2])[currCell] = CF*den[currCell]*(filterdenUW[currCell] -
-						 filterUVel[currCell]*
-						 filterWVel[currCell]);
-	  (stressTensorCoeff[3])[currCell] = (stressTensorCoeff[1])[currCell];
-	  (stressTensorCoeff[4])[currCell] = CF*den[currCell]*(filterdenVV[currCell] -
-						 filterVVel[currCell]*
-						 filterVVel[currCell]);
-	  (stressTensorCoeff[5])[currCell] = CF*den[currCell]*(filterdenVW[currCell] -
-						 filterVVel[currCell]*
-						 filterWVel[currCell]);
-	  (stressTensorCoeff[6])[currCell] = (stressTensorCoeff[2])[currCell];
-	  (stressTensorCoeff[7])[currCell] = (stressTensorCoeff[5])[currCell];
-	  (stressTensorCoeff[8])[currCell] = CF*den[currCell]*(filterdenWW[currCell] -
-						 filterWVel[currCell]*
-						 filterWVel[currCell]);
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          // compute stress tensor
+          // index 0: T11, 1:T12, 2:T13, 3:T21, 4:T22, 5:T23, 6:T31, 7:T32, 8:T33
+          (stressTensorCoeff[0])[currCell] = CF*den[currCell]*(filterdenUU[currCell] -
+                                                 filterUVel[currCell]*
+                                                 filterUVel[currCell]);
+          (stressTensorCoeff[1])[currCell] = CF*den[currCell]*(filterdenUV[currCell] -
+                                                 filterUVel[currCell]*
+                                                 filterVVel[currCell]);
+          (stressTensorCoeff[2])[currCell] = CF*den[currCell]*(filterdenUW[currCell] -
+                                                 filterUVel[currCell]*
+                                                 filterWVel[currCell]);
+          (stressTensorCoeff[3])[currCell] = (stressTensorCoeff[1])[currCell];
+          (stressTensorCoeff[4])[currCell] = CF*den[currCell]*(filterdenVV[currCell] -
+                                                 filterVVel[currCell]*
+                                                 filterVVel[currCell]);
+          (stressTensorCoeff[5])[currCell] = CF*den[currCell]*(filterdenVW[currCell] -
+                                                 filterVVel[currCell]*
+                                                 filterWVel[currCell]);
+          (stressTensorCoeff[6])[currCell] = (stressTensorCoeff[2])[currCell];
+          (stressTensorCoeff[7])[currCell] = (stressTensorCoeff[5])[currCell];
+          (stressTensorCoeff[8])[currCell] = CF*den[currCell]*(filterdenWW[currCell] -
+                                                 filterWVel[currCell]*
+                                                 filterWVel[currCell]);
 
-	  // scalar fluxes uf, vf, wf
-	  (scalarFluxCoeff[0])[currCell] = CF*den[currCell]*(filterdenPhiU[currCell] -
-						 filterPhi[currCell]*
-						 filterUVel[currCell]);
-	  (scalarFluxCoeff[1])[currCell] = CF*den[currCell]*
+          // scalar fluxes uf, vf, wf
+          (scalarFluxCoeff[0])[currCell] = CF*den[currCell]*(filterdenPhiU[currCell] -
+                                                 filterPhi[currCell]*
+                                                 filterUVel[currCell]);
+          (scalarFluxCoeff[1])[currCell] = CF*den[currCell]*
                                                 (filterdenPhiV[currCell] -
-						 filterPhi[currCell]*
-						 filterVVel[currCell]);
-	  (scalarFluxCoeff[2])[currCell] = CF*den[currCell]*
-	                                       (filterdenPhiW[currCell] -
-						 filterPhi[currCell]*
-						 filterWVel[currCell]);
+                                                 filterPhi[currCell]*
+                                                 filterVVel[currCell]);
+          (scalarFluxCoeff[2])[currCell] = CF*den[currCell]*
+                                               (filterdenPhiW[currCell] -
+                                                 filterPhi[currCell]*
+                                                 filterWVel[currCell]);
 
-	}
+        }
       }
     }
 #if 0
     // compute stress tensor
     for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) 
       new_dw->put(stressTensorCoeff[ii], 
-		  d_lab->d_stressTensorCompLabel, ii, patch);
+                  d_lab->d_stressTensorCompLabel, ii, patch);
 
     for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) 
       new_dw->put(scalarFluxCoeff[ii], 
-		  d_lab->d_scalarFluxCompLabel, ii, patch);
+                  d_lab->d_scalarFluxCompLabel, ii, patch);
 #endif
 
   }
@@ -862,26 +864,26 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
 void 
 ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched, 
-					      const PatchSet* patches,
-					      const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels,
-                                              bool d_EKTCorrection,
-                                              bool doing_EKT_now)
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls,
+                                                  const TimeIntegratorLabel* timelabels,
+                                                  bool d_EKTCorrection,
+                                                  bool doing_EKT_now)
 {
   string taskname =  "ScaleSimilarityModel::computeScalarVaraince" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &ScaleSimilarityModel::computeScalarVariance,
-			  timelabels, d_EKTCorrection, doing_EKT_now);
+                          &ScaleSimilarityModel::computeScalarVariance,
+                          timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -895,12 +897,12 @@ ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched,
 
 void 
 ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset*,
-					DataWarehouse*,
-					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels,
-                                        bool, bool)
+                                            const PatchSubset* patches,
+                                            const MaterialSubset*,
+                                            DataWarehouse*,
+                                            DataWarehouse* new_dw,
+                                            const TimeIntegratorLabel* timelabels,
+                                            bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -911,19 +913,18 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-    	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
-			       patch);
-    else
-    	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
-			       patch);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+      new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    }else{
+      new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    }
     scalarVar.initialize(0.0);
     
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -931,6 +932,7 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+      
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     int numGC = 1;
@@ -940,10 +942,10 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  phiSqr[currCell] = scalar[currCell]*scalar[currCell];
-	}
+        for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          phiSqr[currCell] = scalar[currCell]*scalar[currCell];
+        }
       }
     }
 
@@ -956,33 +958,37 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     IntVector indexHigh = patch->getFortranCellHighIndex__New();
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double cube_delta = (2.0*cellinfo->sew[colX])*(2.0*cellinfo->sns[colY])*
-                 	    (2.0*cellinfo->stb[colZ]);
-	  double invDelta = 1.0/cube_delta;
-	  for (int kk = -1; kk <= 1; kk ++) {
-	    for (int jj = -1; jj <= 1; jj ++) {
-	      for (int ii = -1; ii <= 1; ii ++) {
-		IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
-		double vol = cellinfo->sew[colX+ii]*cellinfo->sns[colY+jj]*
-		             cellinfo->stb[colZ+kk]*
-		             (1.0-0.5*abs(ii))*
-		             (1.0-0.5*abs(jj))*(1.0-0.5*abs(kk));
-		filterPhi[currCell] += scalar[filterCell]*vol; 
-		filterPhiSqr[currCell] += phiSqr[filterCell]*vol; 
-	      }
-	    }
-	  }
-	  
-	  filterPhi[currCell] *= invDelta;
-	  filterPhiSqr[currCell] *= invDelta;
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          double cube_delta = (2.0*cellinfo->sew[colX])*
+                              (2.0*cellinfo->sns[colY])*
+                              (2.0*cellinfo->stb[colZ]);
+          double invDelta = 1.0/cube_delta;
+          
+          for (int kk = -1; kk <= 1; kk ++) {
+            for (int jj = -1; jj <= 1; jj ++) {
+              for (int ii = -1; ii <= 1; ii ++) {
+                IntVector filterCell = IntVector(colX+ii,colY+jj,colZ+kk);
+                double vol = cellinfo->sew[colX+ii]*
+                             cellinfo->sns[colY+jj]*
+                             cellinfo->stb[colZ+kk]*
+                             (1.0-0.5*abs(ii))*
+                             (1.0-0.5*abs(jj))*
+                             (1.0-0.5*abs(kk));
+                filterPhi[currCell] += scalar[filterCell]*vol; 
+                filterPhiSqr[currCell] += phiSqr[filterCell]*vol; 
+              }
+            }
+          }
+          
+          filterPhi[currCell] *= invDelta;
+          filterPhiSqr[currCell] *= invDelta;
 
 
-	  // compute scalar variance
-	  scalarVar[currCell] = d_CF*(filterPhiSqr[currCell]-
-				      (filterPhi[currCell]*filterPhi[currCell]));
-	}
+          // compute scalar variance
+          scalarVar[currCell] = d_CF*(filterPhiSqr[currCell]-
+                                      (filterPhi[currCell]*filterPhi[currCell]));
+        }
       }
     }
     // Put the calculated viscosityvalue into the new data warehouse
@@ -991,126 +997,149 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
 #endif
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
+    
     int outlet_celltypeval = d_boundaryCondition->outletCellType();
     int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+    
     if (xminus) {
       int colX = indexLow.x();
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          IntVector currCell(colX-1, colY, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (xplus) {
       int colX = indexHigh.x();
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+          IntVector currCell(colX+1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (yminus) {
       int colY = indexLow.y();
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY-1, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (yplus) {
       int colY = indexHigh.y();
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY+1, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (zminus) {
       int colZ = indexLow.z();
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ-1);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (zplus) {
       int colZ = indexHigh.z();
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ+1);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
   }
 }
 
-
+//______________________________________________________________________
+//
 void 
 ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched, 
-						 const PatchSet* patches,
-						 const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls,
+                                                 const TimeIntegratorLabel* timelabels,
                                                  bool d_EKTCorrection,
                                                  bool doing_EKT_now)
 {
   string taskname =  "ScaleSimilarityModel::computeScalarDissipation" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &ScaleSimilarityModel::computeScalarDissipation,
-			  timelabels, d_EKTCorrection, doing_EKT_now);
+                          &ScaleSimilarityModel::computeScalarDissipation,
+                          timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
      tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-		   d_lab->d_vectorMatl,
-		   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                   d_lab->d_vectorMatl,
+                   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   // Computes
      tsk->computes(d_lab->d_scalarDissSPLabel);
   }
   else {
      tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
-		   d_lab->d_vectorMatl,
-		   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                   d_lab->d_vectorMatl,
+                   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   // Computes
      tsk->modifies(d_lab->d_scalarDissSPLabel);
   }
@@ -1120,15 +1149,16 @@ ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched,
 
 
 
-
+//______________________________________________________________________
+//
 void 
 ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset*,
-					DataWarehouse* old_dw,
-					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels,
-                                        bool, bool)
+                                               const PatchSubset* patches,
+                                               const MaterialSubset*,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw,
+                                               const TimeIntegratorLabel* timelabels,
+                                               bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1141,33 +1171,33 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     StencilMatrix<constCCVariable<double> > scalarFlux; //3 point stencil
 
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
         old_dw->get(scalarFlux[ii], 
-		    d_lab->d_scalarFluxCompLabel, ii, patch,
-		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                    d_lab->d_scalarFluxCompLabel, ii, patch,
+                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
       }
       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
-			     matlIndex, patch);
+                             matlIndex, patch);
     }
     else {
       for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
         new_dw->get(scalarFlux[ii], 
-		    d_lab->d_scalarFluxCompLabel, ii, patch,
-		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                    d_lab->d_scalarFluxCompLabel, ii, patch,
+                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
       }
       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
-			    matlIndex, patch);
+                            matlIndex, patch);
     }
     scalarDiss.initialize(0.0);
     
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
@@ -1181,117 +1211,134 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     IntVector indexHigh = patch->getFortranCellHighIndex__New();
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double scale = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX+1,colY,colZ)]);
-	  double scalw = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX-1,colY,colZ)]);
-	  double scaln = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY+1,colZ)]);
-	  double scals = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY-1,colZ)]);
-	  double scalt = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY,colZ+1)]);
-	  double scalb = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY,colZ-1)]);
-	  double dfdx = (scale-scalw)/cellinfo->sew[colX];
-	  double dfdy = (scaln-scals)/cellinfo->sns[colY];
-	  double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
-	  // molecular diffusivity
-	  scalarDiss[currCell] = viscosity[currCell]/d_turbPrNo*
-	                        (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
-	  double turbProduction = -2.0*((scalarFlux[0])[currCell]*dfdx+
-				       (scalarFlux[1])[currCell]*dfdy+
-				       (scalarFlux[2])[currCell]*dfdz);
-	  if (turbProduction > 0)
-	    scalarDiss[currCell] += turbProduction;
-	  if (scalarDiss[currCell] < 0.0)
-	    scalarDiss[currCell] = 0.0;
-	}
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          double scale = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX+1,colY,colZ)]);
+          double scalw = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX-1,colY,colZ)]);
+          double scaln = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY+1,colZ)]);
+          double scals = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY-1,colZ)]);
+          double scalt = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY,colZ+1)]);
+          double scalb = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY,colZ-1)]);
+          double dfdx = (scale-scalw)/cellinfo->sew[colX];
+          double dfdy = (scaln-scals)/cellinfo->sns[colY];
+          double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
+          // molecular diffusivity
+          scalarDiss[currCell] = viscosity[currCell]/d_turbPrNo*
+                                (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
+          double turbProduction = -2.0*((scalarFlux[0])[currCell]*dfdx+
+                                        (scalarFlux[1])[currCell]*dfdy+
+                                        (scalarFlux[2])[currCell]*dfdz);
+          if (turbProduction > 0){
+            scalarDiss[currCell] += turbProduction;
+          }
+          if (scalarDiss[currCell] < 0.0){
+            scalarDiss[currCell] = 0.0;
+          }
+        }
       }
     }
     // boundary conditions
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
     int outlet_celltypeval = d_boundaryCondition->outletCellType();
     int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+    
     if (xminus) {
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX-1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (xplus) {
       int colX = idxHi.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX+1, colY, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (yminus) {
       int colY = idxLo.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY-1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (yplus) {
       int colY = idxHi.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY+1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (zminus) {
       int colZ = idxLo.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ-1);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (zplus) {
       int colZ = idxHi.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ+1);
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
   }

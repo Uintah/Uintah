@@ -38,12 +38,12 @@ using namespace SCIRun;
 // Default constructor for SmagorinkyModel
 //****************************************************************************
 SmagorinskyModel::SmagorinskyModel(const ArchesLabel* label, 
-				   const MPMArchesLabel* MAlb,
-				   PhysicalConstants* phyConsts,
-				   BoundaryCondition* bndry_cond):
-                                    TurbulenceModel(label, MAlb),
-				    d_physicalConsts(phyConsts),
-				    d_boundaryCondition(bndry_cond)
+                                   const MPMArchesLabel* MAlb,
+                                   PhysicalConstants* phyConsts,
+                                   BoundaryCondition* bndry_cond):
+                                   TurbulenceModel(label, MAlb),
+                                   d_physicalConsts(phyConsts),
+                                   d_boundaryCondition(bndry_cond)
 {
 }
 
@@ -82,9 +82,9 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 
   // actually, Shmidt number, not Prandtl number
   d_turbPrNo = 0.0;
-  if (db->findBlock("turbulentPrandtlNumber"))
+  if (db->findBlock("turbulentPrandtlNumber")){
     db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
-
+  }
 }
 
 //****************************************************************************
@@ -92,40 +92,40 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void 
 SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched, 
-					      const PatchSet* patches,
-					      const MaterialSet* matls,
-				          const TimeIntegratorLabel* timelabels)
+                                              const PatchSet* patches,
+                                              const MaterialSet* matls,
+                                              const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "SmagorinskyModel::ReTurbSubmodel" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-			  &SmagorinskyModel::reComputeTurbSubmodel,
-			  timelabels);
+                          &SmagorinskyModel::reComputeTurbSubmodel,
+                          timelabels);
 
   // Requires
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
   // for multimaterial
-  if (d_MAlab)
+  if (d_MAlab){
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
+  }
 
-      // Computes
   tsk->modifies(d_lab->d_viscosityCTSLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -137,61 +137,66 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 //****************************************************************************
 void 
 SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset*,
-					DataWarehouse*,
-					DataWarehouse* new_dw,
-				        const TimeIntegratorLabel* timelabels)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse*,
+                                        DataWarehouse* new_dw,
+                                        const TimeIntegratorLabel* timelabels)
 {
 //  double time = d_lab->d_sharedState->getElapsedTime();
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    // Variables
+
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
+    
     constCCVariable<double> uVelocityCC;
     constCCVariable<double> vVelocityCC;
     constCCVariable<double> wVelocityCC;
     constCCVariable<double> density;
+    
     CCVariable<double> viscosity;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,
-			   matlIndex, patch);
+                           matlIndex, patch);
     
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
+    
     new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     if (d_MAlab)
       new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // get physical constants
@@ -208,89 +213,103 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       CF *= (time+ 0.0001)*0.5;
 #endif      
     fort_smagmodel(uVelocity, vVelocity, wVelocity,
-		   uVelocityCC, vVelocityCC, wVelocityCC,
-		   density, viscosity, idxLo, idxHi,
-		   cellinfo->sew, cellinfo->sns, cellinfo->stb,
-		   mol_viscos, CF, d_factorMesh, d_filterl);
+                   uVelocityCC, vVelocityCC, wVelocityCC,
+                   density, viscosity, idxLo, idxHi,
+                   cellinfo->sew, cellinfo->sns, cellinfo->stb,
+                   mol_viscos, CF, d_factorMesh, d_filterl);
 
+    //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
+    
     int wall_celltypeval = d_boundaryCondition->wallCellType();
-    if (xminus) {
+    if (xminus) {         // xminus
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
-	}
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX-1, colY, colZ);
+          
+          if (cellType[currCell] != wall_celltypeval){
+            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//                    *density[currCell]/density[IntVector(colX,colY,colZ)];
+          }
+        }
       }
     }
-    if (xplus) {
+    if (xplus) {          // xplus
       int colX = idxHi.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
-	}
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX+1, colY, colZ);
+          
+          if (cellType[currCell] != wall_celltypeval){
+            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//                    *density[currCell]/density[IntVector(colX,colY,colZ)];
+          }
+        }
       }
     }
-    if (yminus) {
+    if (yminus) {         // yminus
       int colY = idxLo.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY-1, colZ);
+          
+          if (cellType[currCell] != wall_celltypeval){
+            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//                    *density[currCell]/density[IntVector(colX,colY,colZ)];
+          }
+        }
       }
     }
-    if (yplus) {
+    if (yplus) {          // yplus
       int colY = idxHi.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        
+          IntVector currCell(colX, colY+1, colZ);
+          if (cellType[currCell] != wall_celltypeval){
+            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//                    *density[currCell]/density[IntVector(colX,colY,colZ)];
+          }
+        }
       }
     }
-    if (zminus) {
+    if (zminus) {         // zminus
       int colZ = idxLo.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ-1);
+          
+          if (cellType[currCell] != wall_celltypeval){
+            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//                    *density[currCell]/density[IntVector(colX,colY,colZ)];
+          }
+        }
       }
     }
-    if (zplus) {
+    if (zplus) {          // zplus
       int colZ = idxHi.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
-	  if (cellType[currCell] != wall_celltypeval)
-	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
-//	    viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
-//		    *density[currCell]/density[IntVector(colX,colY,colZ)];
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ+1);
+          
+          if (cellType[currCell] != wall_celltypeval){
+            viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)];
+//          viscosity[currCell] = viscosity[IntVector(colX,colY,colZ)]
+//                    *density[currCell]/density[IntVector(colX,colY,colZ)];
+          }
+        }
       }
     }
 
@@ -298,16 +317,15 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
       IntVector indexLow = patch->getExtraCellLowIndex__New();
       IntVector indexHigh = patch->getExtraCellHighIndex__New();
       for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
-	for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-	  for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-	    // Store current cell
-	    IntVector currCell(colX, colY, colZ);
-	    viscosity[currCell] *=  voidFraction[currCell];
-	  }
-	}
+        for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+          for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+            // Store current cell
+            IntVector currCell(colX, colY, colZ);
+            viscosity[currCell] *=  voidFraction[currCell];
+          }
+        }
       }
     }
-
   }
 }
 
@@ -317,54 +335,56 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
 //****************************************************************************
 void 
 SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, 
-					      const PatchSet* patches,
-					      const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels,
+                                              const PatchSet* patches,
+                                              const MaterialSet* matls,
+                                             const TimeIntegratorLabel* timelabels,
                                               bool d_EKTCorrection,
                                               bool doing_EKT_now)
 {
   string taskname =  "SmagorinskyModel::computeScalarVaraince" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
-			  &SmagorinskyModel::computeScalarVariance,
-			  timelabels, d_EKTCorrection, doing_EKT_now);
+                          &SmagorinskyModel::computeScalarVariance,
+                          timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  if (doing_EKT_now)
+  if (doing_EKT_now){
     tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  }else{
     tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  }
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-     tsk->computes(d_lab->d_scalarVarSPLabel);
-     tsk->computes(d_lab->d_normalizedScalarVarLabel);
+    tsk->computes(d_lab->d_scalarVarSPLabel);
+    tsk->computes(d_lab->d_normalizedScalarVarLabel);
   }
   else {
-     tsk->modifies(d_lab->d_scalarVarSPLabel);
-     tsk->modifies(d_lab->d_normalizedScalarVarLabel);
+    tsk->modifies(d_lab->d_scalarVarSPLabel);
+    tsk->modifies(d_lab->d_normalizedScalarVarLabel);
   }
 
   sched->addTask(tsk, patches, matls);
 }
 
-
+//______________________________________________________________________
+//
 void 
 SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset*,
-					DataWarehouse*,
-					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse*,
+                                        DataWarehouse* new_dw,
+                                        const TimeIntegratorLabel* timelabels,
                                         bool d_EKTCorrection,
                                         bool doing_EKT_now)
 {
@@ -377,33 +397,30 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     CCVariable<double> normalizedScalarVar;
+    
     // Get the velocity, density and viscosity from the old data warehouse
     if (doing_EKT_now)
       new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     else
       new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-    	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
-			       patch);
-    	new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
-			       patch);
+      new_dw->allocateAndPut(scalarVar,           d_lab->d_scalarVarSPLabel,         matlIndex,patch);
+      new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,patch);
     }
     else {
-    	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
-			       patch);
-    	new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
-			       patch);
+      new_dw->getModifiable(scalarVar,           d_lab->d_scalarVarSPLabel,         matlIndex,patch);
+      new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,patch);
     }
     scalarVar.initialize(0.0);
     normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -422,131 +439,146 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
       CFVar *= (time+ 0.0001)*0.5;
 #endif
     fort_scalarvarmodel(scalar, idxLo, idxHi, scalarVar, cellinfo->dxpw,
-			cellinfo->dyps, cellinfo->dzpb, cellinfo->sew,
-			cellinfo->sns, cellinfo->stb, CFVar, d_factorMesh,
-			d_filterl);
+                        cellinfo->dyps, cellinfo->dzpb, cellinfo->sew,
+                        cellinfo->sns, cellinfo->stb, CFVar, d_factorMesh,
+                        d_filterl);
 
     double small = 1.0e-10;
     double var_limit = 0.0;
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
 
-	  // check variance bounds and normalize
-	  var_limit = scalar[currCell] * (1.0 - scalar[currCell]);
+          // check variance bounds and normalize
+          var_limit = scalar[currCell] * (1.0 - scalar[currCell]);
 
-          if(scalarVar[currCell] < small)
+          if(scalarVar[currCell] < small){
             scalarVar[currCell] = 0.0;
-          if(scalarVar[currCell] > var_limit)
+          }
+          if(scalarVar[currCell] > var_limit){
             scalarVar[currCell] = var_limit;
-
+          }
           normalizedScalarVar[currCell] = scalarVar[currCell]/(var_limit+small);
-	}
+        }
       }
     }
 
     
+    //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
     int outlet_celltypeval = d_boundaryCondition->outletCellType();
     int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-    if (xminus) {
+    
+    if (xminus) {       // xminus
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX-1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	      normalizedScalarVar[currCell] = 
-		          normalizedScalarVar[IntVector(colX,colY,colZ)];
-	    }
-	}
-      }
-    }
-    if (xplus) {
-      int colX = idxHi.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	      normalizedScalarVar[currCell] = 
-		          normalizedScalarVar[IntVector(colX,colY,colZ)];
-	    }
-	}
-      }
-    }
-    if (yminus) {
-      int colY = idxLo.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	      normalizedScalarVar[currCell] = 
-		          normalizedScalarVar[IntVector(colX,colY,colZ)];
-	    }
-	}
-      }
-    }
-    if (yplus) {
-      int colY = idxHi.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	      normalizedScalarVar[currCell] = 
-		          normalizedScalarVar[IntVector(colX,colY,colZ)];
-	    }
-	}
-      }
-    }
-    if (zminus) {
-      int colZ = idxLo.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	      normalizedScalarVar[currCell] = 
-		          normalizedScalarVar[IntVector(colX,colY,colZ)];
-	    }
-	}
-      }
-    }
-    if (zplus) {
-      int colZ = idxHi.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
-          if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
-	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
-	      normalizedScalarVar[currCell] = 
-		          normalizedScalarVar[IntVector(colX,colY,colZ)];
-	    }
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+              normalizedScalarVar[currCell] = 
+                          normalizedScalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     
+    if (xplus) {      // xplus
+      int colX = idxHi.x();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX+1, colY, colZ);
+          
+          if ((cellType[currCell] == outlet_celltypeval)||
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+              normalizedScalarVar[currCell] = 
+                          normalizedScalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
+      }
+    }
+    if (yminus) {   // yminus
+      int colY = idxLo.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY-1, colZ);
+          
+          if ((cellType[currCell] == outlet_celltypeval)||
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+              normalizedScalarVar[currCell] = 
+                          normalizedScalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
+      }
+    }
+    if (yplus) {    // yplus
+      int colY = idxHi.y();
+      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY+1, colZ);
+          
+          if ((cellType[currCell] == outlet_celltypeval)||
+              (cellType[currCell] == pressure_celltypeval)){
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+              normalizedScalarVar[currCell] = 
+                          normalizedScalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
+      }
+    }
+    if (zminus) {   // zminus
+      int colZ = idxLo.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ-1);
+          if ((cellType[currCell] == outlet_celltypeval)||
+            (cellType[currCell] == pressure_celltypeval))
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+              normalizedScalarVar[currCell] = 
+                          normalizedScalarVar[IntVector(colX,colY,colZ)];
+            }
+        }
+      }
+    }
+    if (zplus) {  // zplus
+      int colZ = idxHi.z();
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ+1);
+          
+          if ((cellType[currCell] == outlet_celltypeval)||
+              (cellType[currCell] == pressure_celltypeval)){
+            
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
+              scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+              normalizedScalarVar[currCell] = 
+                          normalizedScalarVar[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
+      }
+    }
   }
 }
 
@@ -555,18 +587,18 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 //****************************************************************************
 void 
 SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched, 
-						 const PatchSet* patches,
-						 const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls,
+                                             const TimeIntegratorLabel* timelabels,
                                                  bool d_EKTCorrection,
                                                  bool doing_EKT_now)
 {
   string taskname =  "SmagorinskyModel::computeScalarDissipation" +
-		     timelabels->integrator_step_name;
+                     timelabels->integrator_step_name;
   if (doing_EKT_now) taskname += "EKTnow";
   Task* tsk = scinew Task(taskname, this,
-			  &SmagorinskyModel::computeScalarDissipation,
-			  timelabels, d_EKTCorrection, doing_EKT_now);
+                          &SmagorinskyModel::computeScalarDissipation,
+                          timelabels, d_EKTCorrection, doing_EKT_now);
 
   
   // Requires, only the scalar corresponding to matlindex = 0 is
@@ -574,15 +606,15 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
   if (doing_EKT_now)
     tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   else
     tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
@@ -594,14 +626,15 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
   sched->addTask(tsk, patches, matls);
 }
 
-
+//______________________________________________________________________
+//
 void 
 SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
-					const PatchSubset* patches,
-					const MaterialSubset*,
-					DataWarehouse*,
-					DataWarehouse* new_dw,
-			    		const TimeIntegratorLabel* timelabels,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset*,
+                                        DataWarehouse*,
+                                        DataWarehouse* new_dw,
+                                            const TimeIntegratorLabel* timelabels,
                                         bool d_EKTCorrection,
                                         bool doing_EKT_now)
 {
@@ -616,25 +649,28 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
 
     if (doing_EKT_now)
       new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     else
       new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  
+                  
     new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
        new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
-			      matlIndex, patch);
-    else
+                              matlIndex, patch);
+    }else{
        new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
-			      matlIndex, patch);
+                              matlIndex, patch);
+    }
     scalarDiss.initialize(0.0);
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -647,113 +683,138 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     // compatible with fortran index
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
+    
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double scale = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX+1,colY,colZ)]);
-	  double scalw = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX-1,colY,colZ)]);
-	  double scaln = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY+1,colZ)]);
-	  double scals = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY-1,colZ)]);
-	  double scalt = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY,colZ+1)]);
-	  double scalb = 0.5*(scalar[currCell]+
-			      scalar[IntVector(colX,colY,colZ-1)]);
-	  double dfdx = (scale-scalw)/cellinfo->sew[colX];
-	  double dfdy = (scaln-scals)/cellinfo->sns[colY];
-	  double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
-	  scalarDiss[currCell] = viscosity[currCell]/d_turbPrNo*
-	                        (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          double scale = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX+1,colY,colZ)]);
+          double scalw = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX-1,colY,colZ)]);
+          double scaln = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY+1,colZ)]);
+          double scals = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY-1,colZ)]);
+          double scalt = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY,colZ+1)]);
+          double scalb = 0.5*(scalar[currCell]+
+                              scalar[IntVector(colX,colY,colZ-1)]);
+          double dfdx = (scale-scalw)/cellinfo->sew[colX];
+          double dfdy = (scaln-scals)/cellinfo->sns[colY];
+          double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
+          scalarDiss[currCell] = viscosity[currCell]/d_turbPrNo*
+                                (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
+        }
       }
     }
 
     
+    //__________________________________
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus)  != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus)  != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
     int outlet_celltypeval = d_boundaryCondition->outletCellType();
     int pressure_celltypeval = d_boundaryCondition->pressureCellType();
     if (xminus) {
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX-1, colY, colZ);
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX-1, colY, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+            
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (xplus) {
       int colX = idxHi.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  IntVector currCell(colX+1, colY, colZ);
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          IntVector currCell(colX+1, colY, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+          
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (yminus) {
       int colY = idxLo.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY-1, colZ);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY-1, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (yplus) {
       int colY = idxHi.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY+1, colZ);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY+1, colZ);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (zminus) {
       int colZ = idxLo.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ-1);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ-1);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
     if (zplus) {
       int colZ = idxHi.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ+1);
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ+1);
+          
           if ((cellType[currCell] == outlet_celltypeval)||
-            (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
-	      scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
-	}
+              (cellType[currCell] == pressure_celltypeval)){
+              
+            if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]){
+              scalarDiss[currCell] = scalarDiss[IntVector(colX,colY,colZ)];
+            }
+          }
+        }
       }
     }
-    
   }
 }
