@@ -79,27 +79,27 @@ public:
       ///////////////////////////////////////////////////////////////////////
       //
       virtual void computeRadiationProps(const ProcessorGroup*,
-					 const Patch* patch,
-					 CellInformation* cellinfo,
-					ArchesVariables* vars,
-					ArchesConstVariables* constvars) = 0;
+                                         const Patch* patch,
+                                         CellInformation* cellinfo,
+                                         ArchesVariables* vars,
+                                         ArchesConstVariables* constvars) = 0;
 
 
       /////////////////////////////////////////////////////////////////////////
       //
       virtual void boundarycondition(const ProcessorGroup*,
-					 const Patch* patch,
-					 CellInformation* cellinfo,
-					ArchesVariables* vars,
-					ArchesConstVariables* constvars)  = 0;
+                                     const Patch* patch,
+                                     CellInformation* cellinfo,
+                                     ArchesVariables* vars,
+                                     ArchesConstVariables* constvars)  = 0;
 
       /////////////////////////////////////////////////////////////////////////
       //
       virtual void intensitysolve(const ProcessorGroup*,
-					 const Patch* patch,
-					 CellInformation* cellinfo,
-					ArchesVariables* vars,
-					ArchesConstVariables* constvars)  = 0;
+                                  const Patch* patch,
+                                  CellInformation* cellinfo,
+                                  ArchesVariables* vars,
+                                  ArchesConstVariables* constvars)  = 0;
   RadiationSolver* d_linearSolver;
  protected:
       void computeOpticalLength();

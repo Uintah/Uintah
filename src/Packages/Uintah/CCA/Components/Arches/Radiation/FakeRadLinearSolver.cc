@@ -38,7 +38,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& )
 
 void 
 RadLinearSolver::matrixCreate(const PatchSet* ,
-			  const PatchSubset* )
+                          const PatchSubset* )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
@@ -48,17 +48,17 @@ RadLinearSolver::matrixCreate(const PatchSet* ,
 // ****************************************************************************
 void 
 RadLinearSolver::setMatrix(const ProcessorGroup* ,
-			   const Patch* ,
-			   ArchesVariables* ,
-			   bool , bool , bool ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& ,
-			   CCVariable<double>& )
+                           const Patch* ,
+                           ArchesVariables* ,
+                           bool , bool , bool ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& ,
+                           CCVariable<double>& )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
 }
