@@ -2664,7 +2664,7 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
 		d_sourceBoundaryInfo[bp]->totalVelocity = d_sourceBoundaryInfo[bp]->totalMassFlux/(d_sourceBoundaryInfo[bp]->calcStream.d_density*d_sourceBoundaryInfo[bp]->summed_area);
 
 
-		for (int gp = 0; gp < nofBoundaryPieces; gp++){
+		for (int gp = 0; gp < nofGeomPieces; gp++){
 
 			GeometryPieceP piece = d_sourceBoundaryInfo[bp]->d_geomPiece[gp];
 			Box geomBox = piece->getBoundingBox();
@@ -5152,7 +5152,7 @@ BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
 
 	// Count balance variable comming through the air inlet
 	double scalarValue = fi->streamMixturefraction.d_mixVars[0];
-	if (scalarValue == 0.0)
+	//if (scalarValue == 0.0)
 	  *varIN += varIN_inlet;
       } 
 
