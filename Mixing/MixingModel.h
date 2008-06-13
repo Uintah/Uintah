@@ -76,7 +76,7 @@ public:
       // Carry out actual computation of properties
       //
       virtual void computeProps(const InletStream& inStream,
-				Stream& outStream) = 0;
+                                Stream& outStream) = 0;
 
 
       // GROUP: Get Methods :
