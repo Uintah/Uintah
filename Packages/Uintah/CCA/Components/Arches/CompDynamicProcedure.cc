@@ -102,8 +102,8 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
    d_turbPrNo = 1.0; 
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 #ifndef PetscFilter
-  cout << "Filtering without Petsc is not supported in variable" << endl;
-  cout << "density dynamic Smagorinsky model" << endl;
+  cout << "ERROR: Filtering without Petsc is not supported in variable\n";
+  cout << "density dynamic Smagorinsky model\n";
   exit(1);
 #endif
 
