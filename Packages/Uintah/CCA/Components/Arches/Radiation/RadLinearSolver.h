@@ -78,22 +78,27 @@ public:
       void finalizeSolver();
 
       void matrixCreate(const PatchSet* allpatches,
-				const PatchSubset* mypatches);
-      void setMatrix(const ProcessorGroup* pc, const Patch* patch,
-		     ArchesVariables* vars,
-		     bool xplus, bool yplus, bool zplus,
-		     CCVariable<double>& SU,
-		     CCVariable<double>& AB,
-		     CCVariable<double>& AS,
-		     CCVariable<double>& AW,
-		     CCVariable<double>& AP,
-		     CCVariable<double>& AE,
-		     CCVariable<double>& AN,
-		     CCVariable<double>& AT);
+                        const PatchSubset* mypatches);
+                        
+      void setMatrix(const ProcessorGroup* pc, 
+                     const Patch* patch,
+                     ArchesVariables* vars,
+                     bool xplus, 
+                     bool yplus, 
+                     bool zplus,
+                     CCVariable<double>& SU,
+                     CCVariable<double>& AB,
+                     CCVariable<double>& AS,
+                     CCVariable<double>& AW,
+                     CCVariable<double>& AP,
+                     CCVariable<double>& AE,
+                     CCVariable<double>& AN,
+                     CCVariable<double>& AT);
 
       bool radLinearSolve();
 
-      virtual void copyRadSoln(const Patch* patch, ArchesVariables* vars);
+      virtual void copyRadSoln(const Patch* patch, 
+                               ArchesVariables* vars);
       virtual void destroyMatrix();
 protected:
 

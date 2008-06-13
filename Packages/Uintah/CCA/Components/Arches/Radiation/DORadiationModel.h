@@ -70,30 +70,30 @@ public:
       ///////////////////////////////////////////////////////////////////////
       /*
       virtual void computeRadiationProps(const ProcessorGroup* pc,
-      				 const Patch* patch,
-      				 CellInformation* cellinfo,
-      				 ArchesVariables* vars);
+                                       const Patch* patch,
+                                       CellInformation* cellinfo,
+                                       ArchesVariables* vars);
       */
       virtual void computeRadiationProps(const ProcessorGroup* pc,
-					 const Patch* patch,
-					 CellInformation* cellinfo,
-					 ArchesVariables* vars,
-					 ArchesConstVariables* constvars);
+                                         const Patch* patch,
+                                         CellInformation* cellinfo,
+                                         ArchesVariables* vars,
+                                         ArchesConstVariables* constvars);
       //
       /////////////////////////////////////////////////////////////////////////
       
       virtual void boundarycondition(const ProcessorGroup* pc,
-                                      const Patch* patch,
-      				      CellInformation* cellinfo, 
-      				      ArchesVariables* vars,
-      				      ArchesConstVariables* constvars);
+                                     const Patch* patch,
+                                     CellInformation* cellinfo, 
+                                     ArchesVariables* vars,
+                                     ArchesConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
 
       virtual void intensitysolve(const ProcessorGroup* pc,
-                                      const Patch* patch,
-      				      CellInformation* cellinfo, 
-      				      ArchesVariables* vars,
-      				      ArchesConstVariables* constvars);
+                                  const Patch* patch,
+                                  CellInformation* cellinfo, 
+                                  ArchesVariables* vars,
+                                  ArchesConstVariables* constvars);
       ////////////////////////////////////////////////////////////////////////
 
 protected: 

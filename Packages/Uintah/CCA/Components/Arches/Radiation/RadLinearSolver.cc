@@ -64,30 +64,30 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
     if (db) {
       /*
       if (db->findBlock("shsolver"))
-	db->require("shsolver", d_shsolver);
+        db->require("shsolver", d_shsolver);
       else
-	d_shsolver = false;
+        d_shsolver = false;
       */
       if (db->findBlock("max_iter"))
-	db->require("max_iter", d_maxSweeps);
+        db->require("max_iter", d_maxSweeps);
       else
-	d_maxSweeps = 75;
+        d_maxSweeps = 75;
       if (db->findBlock("ksptype"))
-	db->require("ksptype",d_kspType);
+        db->require("ksptype",d_kspType);
       else
-	d_kspType = "gmres";
+        d_kspType = "gmres";
       if (db->findBlock("res_tol"))
-	db->require("res_tol",d_tolerance);
+        db->require("res_tol",d_tolerance);
       else
-	d_tolerance = 1.e-08;
+        d_tolerance = 1.e-08;
       if (db->findBlock("pctype"))
-	db->require("pctype", d_pcType);
+        db->require("pctype", d_pcType);
       else
-	d_pcType = "blockjacobi";
+        d_pcType = "blockjacobi";
       if (d_pcType == "asm")
-	db->require("overlap",d_overlap);
+        db->require("overlap",d_overlap);
       if (d_pcType == "ilu")
-	db->require("fill",d_fill);
+        db->require("fill",d_fill);
     }
     else {
       d_maxSweeps = 75;
@@ -117,7 +117,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
 
 void 
 RadLinearSolver::matrixCreate(const PatchSet* allpatches,
-			  const PatchSubset* mypatches)
+                              const PatchSubset* mypatches)
 {
   // for global index get a petsc index that
   // make it a data memeber
@@ -132,14 +132,16 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
     startIndex[s]=totalCells;
     int mytotal = 0;
     const PatchSubset* patches = allpatches->getSubset(s);
+    
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
       IntVector plowIndex = patch->getFortranCellLowIndex__New();
       IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
   
       long nc = (phighIndex[0]-plowIndex[0])*
-	(phighIndex[1]-plowIndex[1])*
-	(phighIndex[2]-plowIndex[2]);
+                (phighIndex[1]-plowIndex[1])*
+                (phighIndex[2]-plowIndex[2]);
+                
       d_petscGlobalStart[patch]=totalCells;
       totalCells+=nc;
       mytotal+=nc;
@@ -149,14 +151,16 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
 
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
-    IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+    IntVector lowIndex  = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
     IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+    
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
     long totalCells=0;
     const Level* level = patch->getLevel();
     Patch::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
+    
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
 
@@ -165,26 +169,27 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
 
-      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	  || ( high.z() < low.z() ) )
-	throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
+      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) || ( high.z() < low.z() ) ){
+        throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
+      }
       
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dcells = phigh-plow;
       IntVector start = low-plow;
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
-	+start.y()*dcells.x()+start.x();
+                         +start.y()*dcells.x()+start.x();
+                         
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
-	int idx_slab = petscglobalIndex;
-	petscglobalIndex += dcells.x()*dcells.y();
-	
-	for (int colY = low.y(); colY < high.y(); colY ++) {
-	  int idx = idx_slab;
-	  idx_slab += dcells.x();
-	  for (int colX = low.x(); colX < high.x(); colX ++) {
-	    l2g[IntVector(colX, colY, colZ)] = idx++;
-	  }
-	}
+        int idx_slab = petscglobalIndex;
+        petscglobalIndex += dcells.x()*dcells.y();
+        
+        for (int colY = low.y(); colY < high.y(); colY ++) {
+          int idx = idx_slab;
+          idx_slab += dcells.x();
+          for (int colX = low.x(); colX < high.x(); colX ++) {
+            l2g[IntVector(colX, colY, colZ)] = idx++;
+          }
+        }
       }
       IntVector d = high-low;
       totalCells+=d.x()*d.y()*d.z();
@@ -215,22 +220,22 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
 // ****************************************************************************
 void 
 RadLinearSolver::setMatrix(const ProcessorGroup* ,
-			   const Patch* patch,
-			   ArchesVariables* vars,
-			   bool plusX, bool plusY, bool plusZ,
-			   CCVariable<double>& SU,
-			   CCVariable<double>& AB,
-			   CCVariable<double>& AS,
-			   CCVariable<double>& AW,
-			   CCVariable<double>& AP,
-			   CCVariable<double>& AE,
-			   CCVariable<double>& AN,
-			   CCVariable<double>& AT)
+                           const Patch* patch,
+                           ArchesVariables* vars,
+                           bool plusX, bool plusY, bool plusZ,
+                           CCVariable<double>& SU,
+                           CCVariable<double>& AB,
+                           CCVariable<double>& AS,
+                           CCVariable<double>& AW,
+                           CCVariable<double>& AP,
+                           CCVariable<double>& AE,
+                           CCVariable<double>& AN,
+                           CCVariable<double>& AT)
 
 {
   int ierr;
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
@@ -286,13 +291,14 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
   // fill matrix for internal patches
   // make sure that sizeof(d_petscIndex) is the last patch, i.e., appears last in the
   // petsc matrix
-  IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
+  IntVector lowIndex  = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
   IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
   MatZeroEntries(A);
   double vecvalueb, vecvaluex;
+  
   int facX = 1;
   if (plusX)
     facX = -1;
@@ -302,76 +308,78 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
   int facZ = 1;
   if (plusZ)
     facZ = -1;
+    
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	int ii = colX+facX;
-	int jj = colY+facY;
-	int kk = colZ+facZ;
-	/*
-	if(d_shsolver){
-	col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
-	col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
-	col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
-	col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
-	col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
-	col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
-	}
-	else {
-	*/
-	col[0] = l2g[IntVector(colX,colY,kk)];  //ab
-	col[1] = l2g[IntVector(colX, jj, colZ)]; // as
-	col[2] = l2g[IntVector(ii, colY, colZ)]; // aw
-	col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
-	//	}
+        int ii = colX+facX;
+        int jj = colY+facY;
+        int kk = colZ+facZ;
+        /*
+        if(d_shsolver){
+        col[0] = l2g[IntVector(colX,colY,colZ-1)];  //ab
+        col[1] = l2g[IntVector(colX, colY-1, colZ)]; // as
+        col[2] = l2g[IntVector(colX-1, colY, colZ)]; // aw
+        col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+        col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
+        col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
+        col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
+        }
+        else {
+        */
+        col[0] = l2g[IntVector(colX,colY,kk)];  //ab
+        col[1] = l2g[IntVector(colX, jj, colZ)]; // as
+        col[2] = l2g[IntVector(ii, colY, colZ)]; // aw
+        col[3] = l2g[IntVector(colX, colY, colZ)]; //ap
+        //        }
 
-	//#ifdef ARCHES_PETSC_DEBUG
-	/*
-	if(d_shsolver){
-	value[0] = -AB[IntVector(colX,colY,colZ)];
-	value[1] = -AS[IntVector(colX,colY,colZ)];
-	value[2] = -AW[IntVector(colX,colY,colZ)];
-	value[3] = AP[IntVector(colX,colY,colZ)];
-	value[4] = -AE[IntVector(colX,colY,colZ)];
-	value[5] = -AN[IntVector(colX,colY,colZ)];
-	value[6] = -AT[IntVector(colX,colY,colZ)];
-	}
-	else{
-	*/
-	value[0] = -AB[IntVector(colX,colY,colZ)];
-	value[1] = -AS[IntVector(colX,colY,colZ)];
-	value[2] = -AW[IntVector(colX,colY,colZ)];
-	value[3] = AP[IntVector(colX,colY,colZ)];
-	//	}
+        //#ifdef ARCHES_PETSC_DEBUG
+        /*
+        if(d_shsolver){
+        value[0] = -AB[IntVector(colX,colY,colZ)];
+        value[1] = -AS[IntVector(colX,colY,colZ)];
+        value[2] = -AW[IntVector(colX,colY,colZ)];
+        value[3] = AP[IntVector(colX,colY,colZ)];
+        value[4] = -AE[IntVector(colX,colY,colZ)];
+        value[5] = -AN[IntVector(colX,colY,colZ)];
+        value[6] = -AT[IntVector(colX,colY,colZ)];
+        }
+        else{
+        */
+        value[0] = -AB[IntVector(colX,colY,colZ)];
+        value[1] = -AS[IntVector(colX,colY,colZ)];
+        value[2] = -AW[IntVector(colX,colY,colZ)];
+        value[3] =  AP[IntVector(colX,colY,colZ)];
+        //        }
 
-	int row = col[3];
-	/*
-	if(d_shsolver){
-	ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
-	}
-	else{
-	*/
-	ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
-	//	}
+        int row = col[3];
+        /*
+        if(d_shsolver){
+        ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
+        }
+        else{
+        */
+        ierr = MatSetValues(A,1,&row,4,col,value,INSERT_VALUES);
+        //        }
 
-	if(ierr)
-	  throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
-	vecvalueb = SU[IntVector(colX,colY,colZ)];
-	vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
-	ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
-	if(ierr)
-	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
-	if(ierr)
-	  throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        if(ierr)
+          throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
+        vecvalueb = SU[IntVector(colX,colY,colZ)];
+        vecvaluex = vars->cenint[IntVector(colX, colY, colZ)];
+        ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+        ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+        if(ierr)
+          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
 
       }
     }
   }
 }
 
-
+//______________________________________________________________________
+//
 bool
 RadLinearSolver::radLinearSolve()
 {
@@ -561,7 +569,8 @@ RadLinearSolver::radLinearSolve()
     return false;
 }
 
-
+//______________________________________________________________________
+//
 void
 RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 {
@@ -596,7 +605,8 @@ RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
   if(ierr)
     throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 }
-  
+//______________________________________________________________________
+//  
 void
 RadLinearSolver::destroyMatrix() 
 {
