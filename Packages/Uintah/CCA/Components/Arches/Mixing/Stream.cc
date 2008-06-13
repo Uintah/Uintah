@@ -60,7 +60,7 @@ Stream::Stream(int numSpecies,  int numElements)
 
 
 Stream::Stream(int numSpecies, int numElements, int numMixVars, 
-	       int numRxnVars, bool lsoot): 
+               int numRxnVars, bool lsoot): 
   d_numMixVars(numMixVars), d_numRxnVars(numRxnVars), d_lsoot(lsoot)
 {
   d_speciesConcn = vector<double>(numSpecies, 0.0); // initialize with 0
@@ -131,7 +131,7 @@ Stream::operator=(const Stream &rhs)
 {
   // Guard against self-assignment
   if (this != &rhs)
-    {	
+    {        
       d_speciesConcn = rhs.d_speciesConcn;
       d_pressure = rhs.d_pressure;
       d_density = rhs.d_density;
@@ -149,11 +149,11 @@ Stream::operator=(const Stream &rhs)
       d_lsoot = rhs.d_lsoot;
       //d_atomNumbers = rhs.d_atomNumbers;
       if (rhs.d_numRxnVars > 0) {
-	d_rxnVarRates = rhs.d_rxnVarRates;
-	d_rxnVarNorm = rhs.d_rxnVarNorm;
+        d_rxnVarRates = rhs.d_rxnVarRates;
+        d_rxnVarNorm = rhs.d_rxnVarNorm;
       }
       if (rhs.d_lsoot)
-	d_sootData = rhs.d_sootData;
+        d_sootData = rhs.d_sootData;
       d_CO2index = rhs.d_CO2index;
       d_H2Oindex = rhs.d_H2Oindex;
     }
@@ -189,7 +189,7 @@ Stream::operator==(const Stream &rhs)
   else if (d_lsoot != rhs.d_lsoot)
     return(false);
   else if( rhs.d_numRxnVars > 0 && 
-	   ( ( d_rxnVarRates != rhs.d_rxnVarRates ) || (d_rxnVarNorm != rhs.d_rxnVarNorm) ) ) {
+         ( ( d_rxnVarRates != rhs.d_rxnVarRates ) || (d_rxnVarNorm != rhs.d_rxnVarNorm) ) ) {
     return false;
   }
   else if( rhs.d_lsoot && ( d_sootData != rhs.d_sootData ) ) {
@@ -215,47 +215,45 @@ Stream::getValue(int count)
   if ((d_numRxnVars > 0)&&(count >= sumVars))
     {
       if (count < (sumVars + d_numRxnVars))
-	return d_rxnVarRates[count-NUM_DEP_VARS-d_speciesConcn.size()];
+        return d_rxnVarRates[count-NUM_DEP_VARS-d_speciesConcn.size()];
       else if (count < (sumVars + 3*d_numRxnVars))
-	return d_rxnVarNorm[count-NUM_DEP_VARS-d_speciesConcn.size()-
-			   d_numRxnVars];
+        return d_rxnVarNorm[count-NUM_DEP_VARS-d_speciesConcn.size()- d_numRxnVars];
       else if ((count < d_depStateSpaceVars)&&d_lsoot)
-	return d_sootData[count-NUM_DEP_VARS-d_speciesConcn.size()-
-			 3*d_numRxnVars];
+        return d_sootData[count-NUM_DEP_VARS-d_speciesConcn.size()- 3*d_numRxnVars];
       else {
-	cerr << "Invalid count value" << '\n';
-	return 0;
+        cerr << "Invalid count value" << '\n';
+        return 0;
       }
-    }	
+    }        
   if ((count >= NUM_DEP_VARS)&&(count < sumVars))
     return d_speciesConcn[count-NUM_DEP_VARS];
   else
     {
       switch (count) {
       case 0:
-	//return d_density;
-	return 1.0/d_density;
+        //return d_density;
+        return 1.0/d_density;
       case 1:
-	return d_pressure;
+        return d_pressure;
       case 2:
-	//return d_temperature;
-	return d_temperature/d_density; //To satisfy argument that T measurements in 
-	// flames are Reynolds-averaged while other measurements are favre-averaged
+        //return d_temperature;
+        return d_temperature/d_density; //To satisfy argument that T measurements in 
+        // flames are Reynolds-averaged while other measurements are favre-averaged
       case 3:
-	return d_enthalpy;
+        return d_enthalpy;
       case 4:
-	return d_sensibleEnthalpy;
+        return d_sensibleEnthalpy;
       case 5:
-	return d_moleWeight;
+        return d_moleWeight;
       case 6:
-	return d_cp;
+        return d_cp;
       case 7:
-	return d_drhodf;
+        return d_drhodf;
       case 8:
-	return d_drhodh;
+        return d_drhodh;
       default:
-	cerr << "Invalid count value" << '\n';
-	return 0;
+        cerr << "Invalid count value" << '\n';
+        return 0;
       }
     }
 }
@@ -270,7 +268,7 @@ Stream::normalizeStream() {
        iter != d_speciesConcn.end(); ++iter) 
     *iter /= sum;
 }  
-	
+        
 void
 Stream::convertVecToStream(const vector<double>& vec_stateSpace,
                            int numMixVars, int numRxnVars, bool lsoot) {
@@ -292,16 +290,16 @@ Stream::convertVecToStream(const vector<double>& vec_stateSpace,
   if (lsoot)
     incSoot = 2;
   d_speciesConcn = vector<double> (vec_stateSpace.begin()+NUM_DEP_VARS,
-				   vec_stateSpace.end()-3*d_numRxnVars-incSoot);
+                                   vec_stateSpace.end()-3*d_numRxnVars-incSoot);
   if (d_numRxnVars > 0) {
     d_rxnVarRates = vector<double> (vec_stateSpace.end()-3*d_numRxnVars-incSoot, 
-				    vec_stateSpace.end()-2*d_numRxnVars-incSoot);
+                                    vec_stateSpace.end()-2*d_numRxnVars-incSoot);
     d_rxnVarNorm = vector<double> (vec_stateSpace.end()-2*d_numRxnVars-incSoot, 
-				   vec_stateSpace.end()-incSoot);
+                                   vec_stateSpace.end()-incSoot);
   } 
   if (lsoot) {
     d_sootData = vector<double> (vec_stateSpace.end()-2, 
-				 vec_stateSpace.end());
+                                 vec_stateSpace.end());
   }
 #if 0
   cout << "Density: "<< d_density << endl;
@@ -344,10 +342,10 @@ Stream::convertStreamToVec()
   }
   if (d_numRxnVars > 0) {
     for (vector<double>::iterator iter = d_rxnVarRates.begin(); 
-	 iter != d_rxnVarRates.end(); ++iter)
+         iter != d_rxnVarRates.end(); ++iter)
       vec_stateSpace.push_back(*iter);
     for (vector<double>::iterator iter = d_rxnVarNorm.begin(); 
-	 iter != d_rxnVarNorm.end(); ++iter)
+         iter != d_rxnVarNorm.end(); ++iter)
       vec_stateSpace.push_back(*iter);
   }
   if (d_lsoot) {
@@ -360,7 +358,7 @@ Stream::convertStreamToVec()
 
 
 Stream& Stream::linInterpolate(double upfactor, double lowfactor,
-			       Stream& rightvalue) {
+                               Stream& rightvalue) {
   d_pressure = upfactor*d_pressure+lowfactor*rightvalue.d_pressure;
   d_density = upfactor*d_density+lowfactor*rightvalue.d_density;
   d_temperature = upfactor*d_temperature+lowfactor*rightvalue.d_temperature;
@@ -371,21 +369,22 @@ Stream& Stream::linInterpolate(double upfactor, double lowfactor,
   d_cp = upfactor*d_cp+lowfactor*rightvalue.d_cp;
   d_drhodf = upfactor*d_drhodf+lowfactor*rightvalue.d_drhodf;
   d_drhodh = upfactor*d_drhodh+lowfactor*rightvalue.d_drhodh;
+
   for (int i = 0; i < (int)d_speciesConcn.size(); i++)
     d_speciesConcn[i] = upfactor*d_speciesConcn[i] +
                    lowfactor*rightvalue.d_speciesConcn[i];
   if (d_numRxnVars > 0) {
     for (int i = 0; i < (int)d_rxnVarRates.size(); i++)
       d_rxnVarRates[i] = upfactor*d_rxnVarRates[i] +
-	lowfactor*rightvalue.d_rxnVarRates[i];
+        lowfactor*rightvalue.d_rxnVarRates[i];
     for (int i = 0; i < (int)d_rxnVarNorm.size(); i++)
       d_rxnVarNorm[i] = upfactor*d_rxnVarNorm[i] +
-	lowfactor*rightvalue.d_rxnVarNorm[i];
+        lowfactor*rightvalue.d_rxnVarNorm[i];
   }
   if (d_lsoot) {
     for (int i = 0; i < (int)d_sootData.size(); i++)
       d_sootData[i] = upfactor*d_sootData[i] +
-	lowfactor*rightvalue.d_sootData[i];
+        lowfactor*rightvalue.d_sootData[i];
   }
 
   return *this;
