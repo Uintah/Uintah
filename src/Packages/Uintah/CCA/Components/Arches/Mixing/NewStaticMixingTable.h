@@ -59,7 +59,7 @@ public:
   NewStaticMixingTable( bool calcReactingScalar,
                         bool calcEnthalpy,
                         bool calcVariance,
-						const ProcessorGroup* myworld );
+                        const ProcessorGroup* myworld );
   
   // GROUP: Destructors :
   ///////////////////////////////////////////////////////////////////////

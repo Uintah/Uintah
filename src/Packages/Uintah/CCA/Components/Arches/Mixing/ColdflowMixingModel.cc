@@ -59,7 +59,7 @@ ColdflowMixingModel::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void 
 ColdflowMixingModel::computeProps(const InletStream& inStream,
-				  Stream& outStream)
+                                  Stream& outStream)
 {
   double local_den = 0.0;
   double mixFracSum = 0.0;

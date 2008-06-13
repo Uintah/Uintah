@@ -13,8 +13,8 @@ using namespace SCIRun;
 // Default constructor for MOMColdflowMixingModel
 //****************************************************************************
 MOMColdflowMixingModel::MOMColdflowMixingModel(bool calcReactingScalar,
-					       bool calcEnthalpy,
-					       bool calcVariance)
+                                               bool calcEnthalpy,
+                                               bool calcVariance)
   :MixingModel(),
   d_calcReactingScalar(calcReactingScalar),
   d_calcEnthalpy(calcEnthalpy),
@@ -60,7 +60,7 @@ MOMColdflowMixingModel::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void 
 MOMColdflowMixingModel::computeProps(const InletStream& inStream,
-				     Stream& outStream)
+                                     Stream& outStream)
 {
   double local_den = 0.0;
   double mixFracSum = 0.0;

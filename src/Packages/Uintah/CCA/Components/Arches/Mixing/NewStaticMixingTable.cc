@@ -37,7 +37,7 @@ using namespace SCIRun;
 NewStaticMixingTable::NewStaticMixingTable( bool calcReactingScalar,
                                             bool calcEnthalpy,
                                             bool calcVariance, 
-											const ProcessorGroup* myworld) :
+                                                                                        const ProcessorGroup* myworld) :
   MixingModel(),
   d_calcReactingScalar(calcReactingScalar),
   d_calcEnthalpy(calcEnthalpy),
@@ -200,7 +200,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_co2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, co2rate_index);
   }
   if (so2rate_index != -1){
-	outStream.d_so2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so2rate_index);
+     outStream.d_so2rate=tableLookUp(mixFrac, mixFracVars, current_heat_loss, so2rate_index);
   }
 }
 
@@ -504,8 +504,8 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
             //there has to be a better way to do this!
             if ( myname == "rate_CO2" )
               co2rate_index = ii;
-			if ( myname == "rate_SO2" )
-			  so2rate_index = ii;		  
+            if ( myname == "rate_SO2" )
+              so2rate_index = ii;                  
           }
         }
       }
@@ -626,7 +626,7 @@ NewStaticMixingTable::readMixingTable( const string & inputfile )
     cout << "sootFV index is "  << soot_index  << endl;
 
     if (co2rate_index != -1) {
-  	cout << "CO2 rxn rate index is " << co2rate_index << endl;
+          cout << "CO2 rxn rate index is " << co2rate_index << endl;
     }
     if (so2rate_index != -1) {
       cout << "SO2 rxn rate index is " << so2rate_index << endl;
