@@ -54,8 +54,8 @@ using namespace std;
 const int HOST_NAME_SIZE = 100;
 char      hostname[ HOST_NAME_SIZE ];
 vector< string > hostnames;  // Only valid on rank 0
-int       rank;
-int       procs;
+int       rank = -1;
+int       procs = -1;
 
 stringstream error_stream;
 
@@ -93,6 +93,7 @@ usage( const string & prog, const string & badArg )
     if( badArg != "" ) {
       cout << prog << ": Bad command line argument: '" << badArg << "'\n\n";
     }
+
     cout << "Usage: mpirun -np <number> mpi_test [options]\n";
     cout << "\n";
     cout << "       mpi_test runs a number of MPI calls attempting to verify\n";
@@ -119,6 +120,7 @@ usage( const string & prog, const string & badArg )
     cout << "         -vv   - Be very verbose... see -v warning...\n";
     cout << "\n";
   }
+  MPI_Finalize();
   exit(1);
 }
 
@@ -152,14 +154,14 @@ main( int argc, char* argv[] )
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
   MPI_Comm_size( MPI_COMM_WORLD, &procs );
 
+  parseArgs( argc, argv ); // Should occur after variables 'rank' and 'procs' set...
+
 #if DO_DEBUG
   // Many times if there is a problem with a node, the MPI_Init() call above will just hang.
   // If debugging, sometimes it is useful to print something out at this point to track
   // how many nodes have initialized... and to get an idea of how long it took.
   printf( "Finished MPI_Init() on rank %d.\n", rank );
 #endif
-
-  parseArgs( argc, argv );
 
   if( rank == 0 ) {
     cout << "Testing mpi communication on " << procs << " processors.\n";
