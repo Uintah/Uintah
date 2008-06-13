@@ -22,7 +22,7 @@ using namespace Uintah;
 // Interface constructor for CO2RateSrc
 //****************************************************************************
 CO2RateSrc::CO2RateSrc(const ArchesLabel* label, 
-		       		   const MPMArchesLabel* MAlb,
+                                          const MPMArchesLabel* MAlb,
                        const VarLabel* d_src_label):
                        ExtraScalarSrc(label, MAlb, d_src_label)
 {
@@ -41,21 +41,19 @@ CO2RateSrc::~CO2RateSrc()
 void 
 CO2RateSrc::problemSetup(const ProblemSpecP& params)
 {
+   ProblemSpecP db = params;
+   //Get the name of what to look for in the table
+   // we "require" this because this source is specifically 
+   // designed for a table-read source term.
+   db->require("tableName", d_tableName);
+   db->getWithDefault("scaleFactor", d_scaleFactor, 1.0);
 
-	ProblemSpecP db = params;
-	//Get the name of what to look for in the table
-	// we "require" this because this source is specifically 
-	// designed for a table-read source term.
-	db->require("tableName", d_tableName);
-	db->getWithDefault("scaleFactor", d_scaleFactor, 1.0);
+   //Initialize
+    setTableIndex(-1);
 
-	//Initialize
- 	setTableIndex(-1);
-
-	//warning
-	cout << "** WARNING! **\n";
-	cout << "   The CO2Rate Source term requires that carbon_balance_es be set to true! \n";
-
+   //warning
+   cout << "** WARNING! **\n";
+   cout << "   The CO2Rate Source term requires that carbon_balance_es be set to true! \n";
 }
 //****************************************************************************
 // Schedule source computation
@@ -63,22 +61,20 @@ CO2RateSrc::problemSetup(const ProblemSpecP& params)
 void
 CO2RateSrc::sched_addExtraScalarSrc(SchedulerP& sched, 
                                     const PatchSet* patches,
-				   				    const MaterialSet* matls,
-				   				    const TimeIntegratorLabel* timelabels)
+                                    const MaterialSet* matls,
+                                    const TimeIntegratorLabel* timelabels)
 {
-  
   string taskname =  "CO2RateSrc::addExtraScalarSrc" +
-      	              timelabels->integrator_step_name+
+                      timelabels->integrator_step_name+
                       d_scalar_nonlin_src_label->getName();
   
   Task* tsk = scinew Task(taskname, this,
-      		    &CO2RateSrc::addExtraScalarSrc,
-      		    timelabels);
+                          &CO2RateSrc::addExtraScalarSrc,
+                          timelabels);
 
   //variables needed:
   tsk->modifies(d_scalar_nonlin_src_label);
-  tsk->requires(Task::NewDW, d_lab->d_co2RateLabel, 
-  		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_co2RateLabel, Ghost::None, Arches::ZEROGHOSTCELLS);
 
   //add the task:
   sched->addTask(tsk, patches, matls);
@@ -89,11 +85,11 @@ CO2RateSrc::sched_addExtraScalarSrc(SchedulerP& sched,
 //****************************************************************************
 void 
 CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
-				      const PatchSubset* patches,
-					  const MaterialSubset*,
-				      DataWarehouse*,
-				      DataWarehouse* new_dw,
-				      const TimeIntegratorLabel* timelabels)
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw,
+                              const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -101,22 +97,19 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> scalarNonlinSrc;
-    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label,
-                          matlIndex, patch);
+    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label, matlIndex, patch);
 
-	//going to estimate volume for all cells.
-	//this will need to be fixed when going to stretched meshes
-	Vector dx = patch->dCell();
-	double vol = dx.x()*dx.y()*dx.z();
+    //going to estimate volume for all cells.
+    //this will need to be fixed when going to stretched meshes
+    Vector dx = patch->dCell();
+    double vol = dx.x()*dx.y()*dx.z();
 
     constCCVariable<double> CO2rate;
     new_dw->get(CO2rate, d_lab->d_co2RateLabel, 
-	matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-	for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-
-		scalarNonlinSrc[*iter] += d_scaleFactor*CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
-	
-	}
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      scalarNonlinSrc[*iter] += d_scaleFactor*CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
+    }
   }
 }
