@@ -18,9 +18,9 @@ using namespace Uintah;
 // Interface constructor for ZeroExtraScalarSrc
 //****************************************************************************
 ZeroExtraScalarSrc::ZeroExtraScalarSrc(const ArchesLabel* label, 
-			       const MPMArchesLabel* MAlb,
-                               const VarLabel* d_src_label):
-                               ExtraScalarSrc(label, MAlb, d_src_label)
+                                       const MPMArchesLabel* MAlb,
+                                       const VarLabel* d_src_label):
+                                       ExtraScalarSrc(label, MAlb, d_src_label)
 {
 }
 
@@ -43,18 +43,18 @@ ZeroExtraScalarSrc::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 void
 ZeroExtraScalarSrc::sched_addExtraScalarSrc(SchedulerP& sched, 
-                                   const PatchSet* patches,
-				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels)
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls,
+                                            const TimeIntegratorLabel* timelabels)
 {
   
   string taskname =  "ZeroExtraScalarSrc::addExtraScalarSrc" +
-      	              timelabels->integrator_step_name+
+                            timelabels->integrator_step_name+
                       d_scalar_nonlin_src_label->getName();
   //cout << taskname << endl;
   Task* tsk = scinew Task(taskname, this,
-      		    &ZeroExtraScalarSrc::addExtraScalarSrc,
-      		    timelabels);
+                          &ZeroExtraScalarSrc::addExtraScalarSrc,
+                          timelabels);
 
   tsk->modifies(d_scalar_nonlin_src_label);
   tsk->modifies(d_lab->d_zerosrcVarLabel);
@@ -67,11 +67,11 @@ ZeroExtraScalarSrc::sched_addExtraScalarSrc(SchedulerP& sched,
 //****************************************************************************
 void 
 ZeroExtraScalarSrc::addExtraScalarSrc(const ProcessorGroup* pc,
-				      const PatchSubset* patches,
-				      const MaterialSubset*,
-				      DataWarehouse*,
-				      DataWarehouse* new_dw,
-				      const TimeIntegratorLabel* timelabels)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset*,
+                                      DataWarehouse*,
+                                      DataWarehouse* new_dw,
+                                      const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -79,19 +79,15 @@ ZeroExtraScalarSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> scalarNonlinSrc;
-    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label,
-                          matlIndex, patch);
-
     CCVariable<double> zerosrcVar;
-    new_dw->getModifiable(zerosrcVar, d_lab->d_zerosrcVarLabel, 
-    			  matlIndex, patch);
+    
+    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label,matlIndex, patch);
+    new_dw->getModifiable(zerosrcVar,     d_lab->d_zerosrcVarLabel,  matlIndex, patch);
 
     //cout << "adding source for " << d_scalar_nonlin_src_label->getName() << endl;
-	for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-
-		scalarNonlinSrc[*iter] += 0.0;
-		zerosrcVar[*iter] += 0.0;
-	
-	}
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      scalarNonlinSrc[*iter] += 0.0;
+      zerosrcVar[*iter] += 0.0;
+    }
   }
 }
