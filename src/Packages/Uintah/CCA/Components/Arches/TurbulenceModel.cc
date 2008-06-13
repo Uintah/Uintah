@@ -21,7 +21,7 @@
 using namespace Uintah;
 
 TurbulenceModel::TurbulenceModel(const ArchesLabel* label, 
-				 const MPMArchesLabel* MAlb):
+                                 const MPMArchesLabel* MAlb):
                                  d_lab(label), d_MAlab(MAlb)
 {
 #ifdef PetscFilter
@@ -37,29 +37,30 @@ TurbulenceModel::~TurbulenceModel()
 #endif
 }
 #ifdef PetscFilter
+//______________________________________________________________________
+//
 void 
 TurbulenceModel::sched_initFilterMatrix(const LevelP& level,
-					SchedulerP& sched, 
-					const PatchSet* patches,
-					const MaterialSet* matls)
+                                        SchedulerP& sched, 
+                                        const PatchSet* patches,
+                                        const MaterialSet* matls)
 {
   d_filter->sched_buildFilterMatrix(level, sched);
-  Task* tsk = scinew Task("TurbulenceModel::initFilterMatrix",
-			  this,
-			  &TurbulenceModel::initFilterMatrix);
+  Task* tsk = scinew Task("TurbulenceModel::initFilterMatrix",this,
+                          &TurbulenceModel::initFilterMatrix);
+                          
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
   sched->addTask(tsk, patches, matls);
-
-
 }
-
+//______________________________________________________________________
+//
 void
 TurbulenceModel::initFilterMatrix(const ProcessorGroup* pg,
-				  const PatchSubset* patches,
-				  const MaterialSubset*,
-				  DataWarehouse*,
-				  DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*,
+                                  DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -67,7 +68,7 @@ TurbulenceModel::initFilterMatrix(const ProcessorGroup* pg,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel,
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
