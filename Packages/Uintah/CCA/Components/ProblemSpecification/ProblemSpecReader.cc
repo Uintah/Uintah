@@ -102,7 +102,9 @@ operator<<( ostream & out, const need_e & need )
   else if( need == OPTIONAL )     { out << "OPTIONAL"; }
   else if( need == MULTIPLE )     { out << "MULTIPLE"; }
   else if( need == INVALID_NEED ) { out << "INVALID_NEED"; }
-  else {                        out << "Error: need (" << (int)need << ") did not parse correctly... \n"; }
+  else {
+    out << "Error in need_e '<<' operator: value of 'need': " << (int)need << ", is invalid... \n";
+  }
   return out;
 }
 
@@ -115,7 +117,7 @@ operator<<( ostream & out, const type_e & type )
   else if( type == VECTOR )  { out << "VECTOR"; }
   else if( type == BOOLEAN ) { out << "BOOLEAN"; }
   else if( type == NO_DATA ) { out << "NO_DATA"; }
-  else {                       out << "Error: type (" << (int)type << ") did not parse correctly... \n"; }
+  else {                       out << "Error: type_e '<<' operator.  Value of " << (int)type << " is invalid... \n"; }
   return out;
 }
 
@@ -132,7 +134,7 @@ getNeed( const string & needStr )
     return MULTIPLE;
   }
   else {
-    cout << "Error: need (" << needStr << ") did not parse correctly... "
+    cout << "Error: ProblemSpecReader.cc: need_e (" << needStr << ") did not parse correctly... "
          << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
     return INVALID_NEED;
   }
@@ -160,7 +162,7 @@ getType( const string & typeStr )
     return NO_DATA;
   }
   else {
-    cout << "Error: type (" << typeStr << ") did not parse correctly... "
+    cout << "Error: ProblemSpecReader.cc: type (" << typeStr << ") did not parse correctly... "
          << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
     return INVALID_TYPE;
   }
@@ -549,6 +551,9 @@ ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
   if( hasSpecString ) {
     string specStr = to_char_ptr( xmlTag->properties->children->content );
     common = !getNeedAndTypeAndValidValues( specStr, need, type, validValues );
+    if( need == INVALID_NEED ) {
+      cout << "The value of 'need' was invalid for: " << name << ".\n";
+    }
   }
   else {
     common = true;
@@ -585,6 +590,10 @@ ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
         if( attrName.find( "attribute") == 0 ) { // attribute string begins with "attribute"
           string specStr = to_char_ptr( child->children->content );
           getLabelAndNeedAndTypeAndValidValues( specStr, label, need, type, validValues );
+
+          if( need == INVALID_NEED ) {
+            cout << "The value of 'need' was invalid for: " << name << ".\n";
+          }
 
           newTag->attributes_.push_back( new Attribute( label, need, type, validValues, newTag ) );
         }
