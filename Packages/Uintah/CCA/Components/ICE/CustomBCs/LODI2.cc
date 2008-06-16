@@ -411,26 +411,6 @@ bool is_LODI_face(const Patch* patch,
   return is_lodi_face;
 }
 
-
-/*__________________________________________________________________
- Function~ Sutherland_Vector_Components-
- Purpose:  Returns an IntVector filled with the vector components 
-           from Sutherland and Kennedy's table 4 and 5
-____________________________________________________________________*/
-inline IntVector Sutherland_Vector_Components(const Patch::FaceType face) 
-{
-  IntVector dir(0,0,0);
-  if (face == Patch::xminus || face == Patch::xplus ) {
-    dir = IntVector(0,1,2);
-  }
-  if (face == Patch::yminus || face == Patch::yplus ) {
-    dir = IntVector(1,0,2);
-  }
-  if (face == Patch::zminus || face == Patch::zplus ) {
-    dir = IntVector(2,0,1);
-  }
-  return dir;
-}
 /*__________________________________________________________________
  Function~ oneSidedDifference_offsets-
  Purpose: utility function that computes offsets for 
@@ -456,12 +436,18 @@ void oneSidedDifference_offsets(const Patch::FaceType face,
  Note:     Ignore all body force sources except those normal
            to the boundary face.
 ____________________________________________________________________*/
-inline void characteristic_source_terms(const int P_dir,
+inline void characteristic_source_terms(const IntVector dir,
                                         const Vector grav,
                                         const double rho_CC,
                                         const double speedSound,
                                         vector<double>& s)
 {
+  //__________________________________
+  // x_dir:  dir = (0,1,2) 
+  // y_dir:  dir = (1,2,0)  right hand rule  
+  // z_dir:  dir = (2,0,1)
+  
+  int P_dir = dir[0];
   Vector s_mom = Vector(0,0,0);
   s_mom[P_dir] = grav[P_dir];
   double s_press = 0.0;
@@ -470,8 +456,8 @@ inline void characteristic_source_terms(const int P_dir,
   //  compute sources, Appendix:Table 4
   s[1] = 0.5 * (s_press - rho_CC * speedSound * s_mom[P_dir] );
   s[2] = -s_press/(speedSound * speedSound);
-  s[3] = s_mom[P_dir];
-  s[4] = s_mom[P_dir];
+  s[3] = s_mom[dir[1]];
+  s[4] = s_mom[dir[2]];
   s[5] = 0.5 * (s_press + rho_CC * speedSound * s_mom[P_dir] );
 }
 
@@ -592,7 +578,7 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   // compute Li terms
   //  see table 5 of Sutherland and Kennedy 
   // x_dir:  dir = (0,1,2) 
-  // y_dir:  dir = (1,0,2)  
+  // y_dir:  dir = (1,2,0)  right hand rule  
   // z_dir:  dir = (2,0,1)
   
   int n_dir = dir[0];
@@ -748,8 +734,8 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
                << " patch " << patch->getID()<<endl;
       //_____________________________________
       // S I D E S
-      IntVector axes = patch->faceAxes(face);
-      int P_dir = axes[0]; // find the principal dir
+      IntVector dir = patch->faceAxes(face);
+      int P_dir = dir[0]; // find the principal dir
       double delta = dx[P_dir];
 
       IntVector R_offset(0,0,0);
@@ -761,8 +747,6 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
       if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus){
         L_offset[P_dir] -= 1;
       }
-
-      IntVector dir = Sutherland_Vector_Components(face);
       
       // get the maxMach for that face
       DataWarehouse* pNewDW;
@@ -790,10 +774,10 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
 
         double drho_dx = (rho[r]   - rho[l])/delta; 
         double dp_dx   = (press[r] - press[l])/delta;
-        Vector dVel_dx = (vel[r]   - vel[l])/delta;        
-
+        Vector dVel_dx = (vel[r]   - vel[l])/delta;
+                
         vector<double> s(6);
-        characteristic_source_terms(P_dir, grav, rho[c], speedSound[c], s);
+        characteristic_source_terms(dir, grav, rho[c], speedSound[c], s);
 
         Li(L, dir, c, face, domainLength, user_inputs, maxMach, s, press[c],
            speedSound[c], rho[c], vel[c], drho_dx, dp_dx, dVel_dx); 
@@ -961,7 +945,7 @@ void FaceVel_LODI(const Patch* patch,
   constCCVariable<double>& rho_CC     = lv->rho_CC;
   constCCVariable<double>& speedSound = lv->speedSound;
 
-  IntVector dir= Sutherland_Vector_Components(face);                 
+  IntVector dir= patch->faceAxes(face);                 
   int P_dir = dir[0];  // principal direction
   int dir1  = dir[1];  // transverse
   int dir2  = dir[2];  // transvers
