@@ -346,19 +346,19 @@
 
   <AMR                                  spec="OPTIONAL NO_DATA" >
     <ICE                                spec="OPTIONAL NO_DATA" >
-      <orderOfInterpolation             spec="REQUIRED INTEGER 'positive' />
-      <useLockStep                      spec="REQUIRED BOOLEAN />
-      <do_Refluxing                     spec="REQUIRED BOOLEAN />
-      <Refinement_Criteria_Thresholds   spec="OPTIONAL NO_DATA /> 
+      <orderOfInterpolation             spec="REQUIRED INTEGER 'positive'" />
+      <useLockStep                      spec="REQUIRED BOOLEAN" />
+      <do_Refluxing                     spec="REQUIRED BOOLEAN" />
+      <Refinement_Criteria_Thresholds   spec="OPTIONAL NO_DATA" /> 
     </ICE>
-    <Regridder                          spec="OPTIONAL NO_DATA >
-      <max_levels                       spec="INTEGER 'POSITIVE' />
+    <Regridder                          spec="OPTIONAL NO_DATA" >
+      <max_levels                       spec="REQUIRED INTEGER 'POSITIVE'" />
       <cell_refinement_ratio            spec="REQUIRED STRING" />
-      <lattice_refinement_ratio>        spec="REQUIRED STRING" />
+      <lattice_refinement_ratio         spec="REQUIRED STRING" />
       <cell_stability_dilation          spec="REQUIRED VECTOR" />
       <cell_deletion_dilation           spec="REQUIRED VECTOR" />
       <min_boundary_cells               spec="REQUIRED VECTOR" />
-    </Regridder>   
+    </Regridder>
   </AMR>
 
   <Scheduler              spec="OPTIONAL NO_DATA">
