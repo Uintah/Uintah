@@ -6,9 +6,9 @@ if ( $#argv == 1 ) then
 endif
 
 #__________________________________
-set f = `find HT*  -maxdepth 2 -name "out.*"  |sort`
+set f = `find HTContainer_arches_mpmice.uda.[0-9]*  -maxdepth 2 -name "out.*"  |sort`
 echo "examining each of these output files"
-find HT* -maxdepth 2 -name "out.*" |sort
+find HTContainer_arches_mpmice.uda.[0-9]* -maxdepth 2 -name "out.*" |sort
 #__________________________________
 /bin/rm -f .procs .date .elapsedTime .data
 touch .procs .date .elapsedTime
