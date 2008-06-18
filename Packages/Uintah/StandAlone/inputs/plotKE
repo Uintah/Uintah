@@ -62,7 +62,7 @@ plot '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linesp
      '$pudaKE' using (\$1-t0):(0.5*\$3*\$2*\$2)     t 'center of mass KE (puda)' w linespoints,\
      '$pudaKE' using (\$1-t0):(\$4-0.5*\$3*\$2*\$2) t 'relative to center of mass KE (puda)' w linespoints
 fin
-
+endif
 
 if ($hardcopy == "n") then
   echo "pause -1 'Hit return to exit'" >> gp
