@@ -141,8 +141,8 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
 #ifdef HAVE_HYPRE
   }else if (linear_sol == "hypre"){ 
     d_linearSolver = scinew RadHypreSolver(d_myworld);
-  }
 #endif
+  }
   
 
 //  d_linearSolver = scinew RadLinearSolver(d_myworld);
