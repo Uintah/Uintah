@@ -508,7 +508,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     zz->Set_Param("RETURN_LISTS", "ALL");  // return all lists in LB_Partition
     
     /* Balance Method parameters */
-    zz->Set_Param("KEEP_CUTS", "1");
+    zz->Set_Param("KEEP_CUTS", "0");
 
     /* Set Zoltan Functions */
     zz->Set_Num_Obj_Fn(ZoltanFuncs::zoltan_get_number_of_objects, & (my_costs) );
