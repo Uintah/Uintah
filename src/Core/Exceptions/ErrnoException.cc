@@ -43,6 +43,7 @@
 #include <Core/Exceptions/ErrnoException.h>
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
+#include <string.h>
 #include <sgi_stl_warnings_on.h>
 #include <iostream>
 

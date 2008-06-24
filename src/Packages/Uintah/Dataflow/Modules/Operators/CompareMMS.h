@@ -47,6 +47,7 @@
 #include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
+#include   <stdlib.h>
 
 #include <sgi_stl_warnings_on.h>
 

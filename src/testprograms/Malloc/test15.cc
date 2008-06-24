@@ -208,7 +208,7 @@ public:
 };
 
 int
-main(char **, int )
+main(int,char **)
 {
     fprintf(stderr, "This should hang - race condition on Allocator::lock within forked thread.\n\n\n");
 

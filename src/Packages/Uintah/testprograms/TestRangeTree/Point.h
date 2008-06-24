@@ -1,5 +1,6 @@
 #include <sgi_stl_warnings_off.h>
 #include <string>
+#include <stdlib.h>
 #include <sgi_stl_warnings_on.h>
 using namespace std;
 

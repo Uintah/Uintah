@@ -84,6 +84,7 @@
 #include <string>
 #include <sstream>
 #include <stdio.h>
+#include <string.h>
 
 using std::cerr;
 using std::ostringstream;

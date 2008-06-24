@@ -28,6 +28,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <string.h>
 #include <sgi_stl_warnings_on.h>
 #include <sys/stat.h>
 

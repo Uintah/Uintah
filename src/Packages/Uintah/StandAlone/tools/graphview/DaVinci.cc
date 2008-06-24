@@ -5,9 +5,11 @@
 #include <sstream>
 #include <string>
 #include <list>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdio.h>
+#include <string.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>

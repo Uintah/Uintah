@@ -32,7 +32,7 @@
 
 
 int
-main(char **, int )
+main(int,char** )
 {
     free(malloc(20));
     return 0;

@@ -260,7 +260,7 @@ SCIRUN_SERV_TMP_DIR = /tmp
 #   Turns off use of glDrawArrays.  This should be set to true if you wish
 #   to avoid drawing artifacts on _ATI_ Radeon cards under Linux or to fix
 #   cross-platform remote display problems.
-# SCIRUN_DRAWARRAYS_DISABLE = false
+SCIRUN_DRAWARRAYS_DISABLE = true
 
 
 ### SCIRUN_DISABLE_PBUFFERS = [boolean]
@@ -270,7 +270,7 @@ SCIRUN_SERV_TMP_DIR = /tmp
 #   Linux with ATI they seem to have OpenGL state issues in that
 #   transparency is disabled and volume rendering can lock up the
 #   screen.
-# SCIRUN_DISABLE_PBUFFERS = false
+SCIRUN_DISABLE_PBUFFERS = true
 
 
 ### SCIRUN_LOAD_MODULES_ON_STARTUP = [boolean]

@@ -33,7 +33,7 @@
 
 
 int
-main(char **, int )
+main(int,char **)
 {
     fprintf(stderr, "This should fail - wrote before object\n\n\n");
     void* p=malloc(20);

@@ -5,7 +5,10 @@
 #include <queue>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <math.h>
+#include <limits.h>
+#include <string.h>
 using namespace std;
 
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>

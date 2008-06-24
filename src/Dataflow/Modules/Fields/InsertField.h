@@ -41,6 +41,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <set>
+#include <algorithm>
 
 namespace SCIRun {
 

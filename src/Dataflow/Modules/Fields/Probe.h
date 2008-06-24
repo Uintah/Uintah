@@ -46,6 +46,7 @@
 #include <Core/Datatypes/ImageMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <sstream>
+#include <stdlib.h>
 
 namespace SCIRun {
 

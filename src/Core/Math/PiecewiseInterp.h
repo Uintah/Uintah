@@ -80,18 +80,21 @@ template <class T> inline int PiecewiseInterp<T>::get_interval(double w){
 	  
        if (w>=points[lbnd] && w<=points[rbnd]) {
 	 
-	 if (curr_intrv >=0)
-	   if (w<min_bnd) {			// the series of optimizations that will take advantage
-						     // on monotonic parameter changing (camera path interp.)		
-	   if (w>=points[curr_intrv-1])
-	     lbnd=curr_intrv-1;			
-	   rbnd=curr_intrv;
-	   
+	 if (curr_intrv >=0) {
+	   if (w<min_bnd) {    
+             // the series of optimizations that will take advantage
+             // on monotonic parameter changing (camera path interp.)		
+             if (w>=points[curr_intrv-1])
+               lbnd=curr_intrv-1;			
+             
+             rbnd=curr_intrv;
+             
 	   } else {
 	     if (w<=points[curr_intrv+1])
 	       rbnd=curr_intrv+1;
 	     lbnd=curr_intrv;
 	   }
+         }
 	 
 	 while ((delta=rbnd-lbnd)!=1){
 	   if (w<points[lbnd+delta/2])

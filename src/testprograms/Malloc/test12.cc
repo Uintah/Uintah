@@ -43,7 +43,7 @@
 #endif
 
 int
-main(char **, int )
+main(int,char **)
 {
     for(int i=0;i<50;i++){
 	int n=rand()%1000+1;

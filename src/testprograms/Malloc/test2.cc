@@ -33,7 +33,7 @@
 
 
 int
-main(char **, int )
+main(int,char **)
 {
     fprintf(stderr, "This should fail - freeing a pointer twice...\n\n\n");
     void* p=malloc(20);

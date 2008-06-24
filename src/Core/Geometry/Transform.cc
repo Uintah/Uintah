@@ -47,6 +47,7 @@
 #include <Core/Math/Trig.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <string.h>
 #include <sgi_stl_warnings_on.h>
 #include <stdio.h>
 

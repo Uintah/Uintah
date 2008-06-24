@@ -87,6 +87,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
 #include <unistd.h>
 #include <fstream>
 #include <string>

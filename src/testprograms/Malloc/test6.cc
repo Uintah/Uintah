@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 int
-main(char **, int )
+main(int,char **)
 {
     fprintf(stderr, "This should fail - wrote to object after free\n\n\n");
     void* p=malloc(8);

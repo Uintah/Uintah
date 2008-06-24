@@ -563,8 +563,8 @@ FieldArbitrarySlicer::execute()
       algoCBF->u0 = algoCBF->u1 = algoCBF->u2 = algoCBF->u3 =
 	algoCBF->u4 = algoCBF->u5 = 0;
 
-      if (!(field_sliced_handle->basis_order() == 0 && gMode == 0 ||
-	    field_sliced_handle->basis_order() == 1 && gMode != 0) &&
+      if (!((field_sliced_handle->basis_order() == 0 && gMode == 0) ||
+             (field_sliced_handle->basis_order() == 1 && gMode != 0)) &&
 	  field_sliced_handle->mesh()->dimensionality() > 0)
 	{
 	  warning("Basis doesn't match clip location, value will always be zero.");

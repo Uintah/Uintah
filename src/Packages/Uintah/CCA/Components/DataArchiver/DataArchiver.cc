@@ -41,6 +41,7 @@
 #include   <sys/stat.h>
 #include   <fcntl.h>
 #include   <math.h>
+#include   <string.h>
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32

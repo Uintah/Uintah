@@ -7,6 +7,7 @@
 #include <fstream>  
 #include <vector>                   
 #include <math.h>
+#include <stdlib.h>
 #define d_SMALL_NUM 1e-100;
 using namespace std;
 
