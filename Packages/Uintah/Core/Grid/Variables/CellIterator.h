@@ -7,6 +7,7 @@
 #include <iterator>
 
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
 
 namespace Uintah {
 
@@ -42,115 +43,115 @@ WARNING
 ****************************************/
 
  class UINTAHSHARE CellIterator : 
- public std::iterator<std::forward_iterator_tag, IntVector>  {
-public:
-  inline ~CellIterator() {}
-    
-  //////////
-  // Insert Documentation Here:
-  inline void operator++(int) {
-    // This does not return the old iterator due to performance problems
-    // on some compilers...
-    if(++d_cur.modifiable_x() >= d_e.x()){
-      d_cur.modifiable_x() = d_s.x();
-      if(++d_cur.modifiable_y() >= d_e.y()){
-        d_cur.modifiable_y() = d_s.y();
-        ++d_cur.modifiable_z();
-        if(d_cur.modifiable_z() >= d_e.z())
-          d_done=true;
-      }
-    }
-  }
+ public BaseIterator {
+   public:
+     inline ~CellIterator() {}
 
-  inline CellIterator& operator++() {
-    if(++d_cur.modifiable_x() >= d_e.x()){
-      d_cur.modifiable_x() = d_s.x();
-      if(++d_cur.modifiable_y() >= d_e.y()){
-        d_cur.modifiable_y() = d_s.y();
-        ++d_cur.modifiable_z();
-        if(d_cur.modifiable_z() >= d_e.z())
-          d_done=true;
-      }
-    }
-    return *this;
-  }
-    
-  //////////
-  // Insert Documentation Here:
-  inline CellIterator operator+=(int step) {
-    CellIterator old(*this);
-      
-    for (int i = 0; i < step; i++) {
-      if(++d_cur.modifiable_x() >= d_e.x()){
-        d_cur.modifiable_x() = d_s.x();
-        if(++d_cur.modifiable_y() >= d_e.y()){
-          d_cur.modifiable_y() = d_s.y();
-          ++d_cur.modifiable_z();
-          if(d_cur.modifiable_z() >= d_e.z())
-            d_done=true;
-        }
-      }
-      if (done())
-        break;
-    }
-    return old;
-  }
-    
-  //////////
-  // Insert Documentation Here:
-  inline bool done() const {
-    return d_done;
-  }
-     
-  const IntVector& operator*() const {
-    ASSERT(!d_done);
-    return d_cur;
-  }
-  inline CellIterator(const IntVector& s, const IntVector& e)
-    : d_s(s), d_e(e), d_cur(s){
-    if(d_s.x() >= d_e.x() || d_s.y() >= d_e.y() || d_s.z() >= d_e.z())
-      d_done = true;
-    else
-      d_done = false;
-  }
-  inline IntVector begin() const {
-    return d_s;
-  }
-  inline IntVector end() const {
-    return d_e;
-  }
-  inline CellIterator(const CellIterator& copy)
-    : d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done) {
-  }
-    
-  inline CellIterator& operator=( const CellIterator& copy ) {
-    d_s    = copy.d_s;
-    d_e    = copy.d_e;
-    d_cur  = copy.d_cur;
-    d_done = copy.d_done;
-    return *this;
-  }
-  bool operator==(const CellIterator& o) const
-  {
-    return begin()==o.begin() && end()==o.end() && d_cur==o.d_cur;
-  }
-  
-  bool operator!=(const CellIterator& o) const
-  {
-    return begin()!=o.begin() || end()!=o.end() || d_cur!=o.d_cur;
-  }
-  friend std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
+     //////////
+     // Insert Documentation Here:
+     inline void operator++(int) {
+       this->operator++();
+     }
 
-  friend class GridIterator;
+     inline CellIterator& operator++() {
+       if(++d_cur.modifiable_x() >= d_e.x()){
+         d_cur.modifiable_x() = d_s.x();
+         if(++d_cur.modifiable_y() >= d_e.y()){
+           d_cur.modifiable_y() = d_s.y();
+           ++d_cur.modifiable_z();
+           if(d_cur.modifiable_z() >= d_e.z())
+             d_done=true;
+         }
+       }
+       return *this;
+     }
 
-private:
-  CellIterator();
-    
-  //////////
-  // Insert Documentation Here:
-  IntVector d_s,d_e;
-  IntVector d_cur;
-  bool d_done;
+     //////////
+     // Insert Documentation Here:
+     inline CellIterator operator+=(int step) {
+       CellIterator old(*this);
+
+       for (int i = 0; i < step; i++) {
+         if(++d_cur.modifiable_x() >= d_e.x()){
+           d_cur.modifiable_x() = d_s.x();
+           if(++d_cur.modifiable_y() >= d_e.y()){
+             d_cur.modifiable_y() = d_s.y();
+             ++d_cur.modifiable_z();
+             if(d_cur.modifiable_z() >= d_e.z())
+               d_done=true;
+           }
+         }
+         if (done())
+           break;
+       }
+       return old;
+     }
+
+     //////////
+     // Insert Documentation Here:
+     inline bool done() const {
+       return d_done;
+     }
+
+     IntVector operator*() const {
+       ASSERT(!d_done);
+       return d_cur;
+     }
+     inline CellIterator(const IntVector& s, const IntVector& e)
+       : d_s(s), d_e(e), d_cur(s){
+         if(d_s.x() >= d_e.x() || d_s.y() >= d_e.y() || d_s.z() >= d_e.z())
+           d_done = true;
+         else
+           d_done = false;
+       }
+     inline IntVector begin() const {
+       return d_s;
+     }
+     inline IntVector end() const {
+       return d_e;
+     }
+     inline CellIterator(const CellIterator& copy)
+       : d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done) {
+       }
+
+     inline CellIterator& operator=( const CellIterator& copy ) {
+       d_s    = copy.d_s;
+       d_e    = copy.d_e;
+       d_cur  = copy.d_cur;
+       d_done = copy.d_done;
+       return *this;
+     }
+     bool operator==(const CellIterator& o) const
+     {
+       return begin()==o.begin() && end()==o.end() && d_cur==o.d_cur;
+     }
+
+     bool operator!=(const CellIterator& o) const
+     {
+       return begin()!=o.begin() || end()!=o.end() || d_cur!=o.d_cur;
+     }
+     friend std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
+
+     friend class GridIterator;
+
+   private:
+     CellIterator();
+
+     CellIterator* clone() const
+     {
+       return new CellIterator(*this);
+     }
+
+     ostream& put(ostream& out) const
+     {
+       out << *this;
+       return out;
+     }
+     //////////
+     // Insert Documentation Here:
+     IntVector d_s,d_e;
+     IntVector d_cur;
+     bool d_done;
 
 }; // end class CellIterator
 
