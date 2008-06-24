@@ -73,11 +73,15 @@ namespace Uintah {
      */
     IntVector operator*() const { ASSERT(index_<listOfCells_.size()); return listOfCells_[index_]; }
 
-    ostream& put(std::ostream& out) const
-    {
-      out << *this;
-      return out;
-    }
+    /**
+     * Return the first element of the iterator
+     */
+    inline IntVector begin() const { return listOfCells.front(); }
+
+    /**
+     * Return the last element of the iterator
+     */
+    inline IntVector end() const { return listOfCells.back(); }
 
     /**
      * adds a cell to the list of cells
@@ -94,6 +98,13 @@ namespace Uintah {
       return new ListOfCellsIterator(*this);
 
     };
+    
+    ostream& put(std::ostream& out) const
+    {
+      out << *this;
+      return out;
+    }
+
 
 
     //vector to store cells

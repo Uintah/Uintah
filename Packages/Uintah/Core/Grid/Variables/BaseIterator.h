@@ -69,6 +69,16 @@ namespace Uintah {
        */
       virtual IntVector operator*() const=0;
 
+      /**
+       * Return the first element of the iterator
+       */
+      virtual IntVector begin() const=0;
+
+      /**
+       * Return the last element of the iterator
+       */
+      virtual IntVector end() const=0;
+
       protected:
       /**
        * Prevent this class from being instantiated, use an inherited class instead
