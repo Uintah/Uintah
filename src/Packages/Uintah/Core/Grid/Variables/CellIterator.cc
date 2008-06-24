@@ -7,10 +7,12 @@
 using namespace Uintah;
 using namespace std;
 
-ostream& operator<<(ostream& out, const CellIterator& c)
+namespace Uintah
 {
-   out << "[CellIterator at " << *c << " of " << c.end() << ']';
-   return out;
+  ostream& operator<<(ostream& out, const CellIterator& c)
+  {
+    out << "[CellIterator at " << *c << " of " << c.end() << ']';
+    return out;
+  }
 }
-
 
