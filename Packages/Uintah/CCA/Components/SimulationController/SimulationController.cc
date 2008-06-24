@@ -29,6 +29,7 @@
 #include <iomanip>
 #include <fstream>
 #include <vector>
+#include <string.h>
 
 #define SECONDS_PER_MINUTE 60.0
 #define SECONDS_PER_HOUR   3600.0

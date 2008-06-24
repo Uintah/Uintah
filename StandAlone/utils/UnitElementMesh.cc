@@ -50,6 +50,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 using std::cerr;
 using std::ifstream;

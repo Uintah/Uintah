@@ -1834,13 +1834,14 @@ get_neighbors_stencil(vector<pair<bool,typename Cell::index_type> > &nbrs,
   for (int k = idx.k_ - 1; k <= int(idx.k_ + 1); k++)
     for (int j = idx.j_ - 1; j <= int(idx.j_ + 1); j++)
       for (int i = idx.i_ - 1; i <= int(idx.i_ + 1); i++)
-        if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
+        if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_)) {
           if (i >= int(this->min_i_) && j >= int(this->min_j_) && k >= int(this->min_k_) &&
               i <= int(this->min_i_+this->ni_)-1 && j <= int(this->min_j_+this->nj_)-1 &&
-              i <= int(this->min_k_+this->nk_)-1 && check_valid(i,j,k))
+              i <= int(this->min_k_+this->nk_)-1 && check_valid(i,j,k)) {
             nbrs.push_back(make_pair(true,typename Cell::index_type(this,i,j,k)));
-          else
+          } else
             nbrs.push_back(make_pair(false,typename Cell::index_type(0,0,0,0)));
+        }
 }
 
 

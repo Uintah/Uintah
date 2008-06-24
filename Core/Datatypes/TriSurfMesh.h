@@ -63,6 +63,7 @@
 #include <vector>
 #include <list>
 #include <set>
+#include <algorithm>
 #include <sgi_stl_warnings_on.h>
 #include <float.h> // for DBL_MAX
 
@@ -569,7 +570,7 @@ private:
   {
     bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
     {
-      return a.first < b.first || a.first == b.first && a.second < b.second;
+      return (a.first < b.first) || (a.first == b.first && a.second < b.second);
     }
   };
 
@@ -1168,16 +1169,16 @@ bool
 TriSurfMesh<Basis>::synchronize(unsigned int tosync)
 {
   synchronize_lock_.lock();
-  if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
-      tosync & LOCATE_E && !(synchronized_ & EDGES_E))
+  if (((tosync & EDGES_E) && !(synchronized_ & EDGES_E)) ||
+      ((tosync & LOCATE_E) && !(synchronized_ & EDGES_E)))
     compute_edges();
-  if (tosync & NORMALS_E && !(synchronized_ & NORMALS_E))
+  if ((tosync & NORMALS_E) && !(synchronized_ & NORMALS_E))
     compute_normals();
-  if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
+  if ((tosync & NODE_NEIGHBORS_E) && !(synchronized_ & NODE_NEIGHBORS_E))
     compute_node_neighbors();
-  if (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
+  if ((tosync & EDGE_NEIGHBORS_E) && !(synchronized_ & EDGE_NEIGHBORS_E))
     compute_edge_neighbors();
-  if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E))
+  if ((tosync & LOCATE_E) && !(synchronized_ & LOCATE_E))
     compute_grid();
   synchronize_lock_.unlock();
   return true;

@@ -61,7 +61,7 @@ void* operator new[](size_t, SCIRun::Allocator*, const char*);
 #endif
 
 int
-main(char **, int )
+main(int,char **)
 {
   printf( "Warning... test14 has been disabled.\n" );
 

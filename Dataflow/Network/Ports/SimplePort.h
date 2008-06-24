@@ -294,9 +294,9 @@ SimpleOPort<T>::do_send(const T& data, SendType type, DerefType deref)
     // Add the new message.
     Connection* conn = connections[i];
     SimplePortComm<T>* msg = scinew SimplePortComm<T>(data);
-    if (i == nconnections()-1 &&
+    if ((i == nconnections()-1) &&
         (deref == DEREF_ALWAYS ||
-         deref == DEREF_NOCACHE && !handle_.get_rep()))
+         (deref == DEREF_NOCACHE && !handle_.get_rep())))
     {
       ((T &)data) = 0;
     }
@@ -304,7 +304,7 @@ SimpleOPort<T>::do_send(const T& data, SendType type, DerefType deref)
   }
   if (nconnections() == 0 &&
       (deref == DEREF_ALWAYS ||
-       deref == DEREF_NOCACHE && !handle_.get_rep()))
+       (deref == DEREF_NOCACHE && !handle_.get_rep())))
   {
     ((T &)data) = 0;
   }

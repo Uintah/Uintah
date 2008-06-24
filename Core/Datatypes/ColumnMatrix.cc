@@ -49,6 +49,7 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/LinAlg.h>
 #include <iostream>
+#include <string.h>
 using std::endl;
 using std::cerr;
 

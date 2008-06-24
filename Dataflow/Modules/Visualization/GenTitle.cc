@@ -40,6 +40,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>

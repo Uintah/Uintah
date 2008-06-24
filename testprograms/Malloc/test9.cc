@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 int
-main(char **, int )
+main(int,char **)
 {
     unsigned long int tot=0;
     unsigned long int bytes=0;

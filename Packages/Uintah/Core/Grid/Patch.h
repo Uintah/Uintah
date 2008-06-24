@@ -1746,6 +1746,16 @@ WARNING
           vector<IntVector>*& nb_ptr,
           int child) const ;
 
+#if 0
+      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
+                                            const string& type,
+                                            BCIterator* b_ptr,
+                                            BCIterator* e_ptr,
+                                            NBCIterator* nb_ptr,
+                                            NBCIterator* ne_ptr,
+                                            int child) const ;
+#endif
+
       bool haveBC(FaceType face,int mat_id,const string& bc_type,
           const string& bc_variable) const;
 

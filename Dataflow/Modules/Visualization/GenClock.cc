@@ -54,6 +54,7 @@
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSticky.h>
+#include <string.h>
 
 namespace SCIRun {
 

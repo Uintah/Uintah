@@ -6,6 +6,8 @@
 #include <sci_gl.h>
 #include <math.h>
 #include <float.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <iostream>
 
 namespace Uintah {

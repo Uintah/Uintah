@@ -32,7 +32,7 @@
 #include <stdio.h>
 
 int
-main(char **, int )
+main(int,char **)
 {
     fprintf(stderr, "This should fail - wrote after object\n\n\n");
     void* p=malloc(8);

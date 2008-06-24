@@ -38,6 +38,8 @@
 #include <Core/Util/Environment.h> // includes <string>
 #include <iostream>
 #include <map>
+#include <string.h>
+#include <stdlib.h>
 #include <sgi_stl_warnings_on.h>
 
 #define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H

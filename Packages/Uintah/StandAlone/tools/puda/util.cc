@@ -1,6 +1,6 @@
 
 #include <Packages/Uintah/StandAlone/tools/puda/util.h>
-
+#include <stdlib.h>
 #include <iostream>
 
 using namespace std;

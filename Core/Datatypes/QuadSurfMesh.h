@@ -1292,7 +1292,7 @@ struct edgecompare
 {
   bool operator()(const pair<int, int> &a, const pair<int, int> &b) const
   {
-    return a.first < b.first || a.first == b.first && a.second < b.second;
+    return a.first < b.first || (a.first == b.first && a.second < b.second);
   }
 };
 

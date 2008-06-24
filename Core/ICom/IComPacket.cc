@@ -41,6 +41,7 @@
 #endif
 
 #include <Core/ICom/IComPacket.h>
+#include <string.h>
  
 namespace SCIRun {
 

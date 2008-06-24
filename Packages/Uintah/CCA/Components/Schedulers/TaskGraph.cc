@@ -24,6 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <string.h>
 #include <sstream>
 
 #ifndef _WIN32

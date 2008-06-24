@@ -1154,11 +1154,11 @@ TetVolMesh<Basis>::synchronize(unsigned int tosync)
   synchronize_lock_.lock();
   if (tosync & NODE_NEIGHBORS_E && !(synchronized_ & NODE_NEIGHBORS_E))
     compute_node_neighbors();
-  if (tosync & EDGES_E && !(synchronized_ & EDGES_E) ||
-      tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E))
+  if ((tosync & EDGES_E && !(synchronized_ & EDGES_E)) ||
+      (tosync & EDGE_NEIGHBORS_E && !(synchronized_ & EDGE_NEIGHBORS_E)))
     compute_edges();
-  if (tosync & FACES_E && !(synchronized_ & FACES_E) ||
-      tosync & FACE_NEIGHBORS_E && !(synchronized_ & FACE_NEIGHBORS_E))
+  if ((tosync & FACES_E && !(synchronized_ & FACES_E)) ||
+      (tosync & FACE_NEIGHBORS_E && !(synchronized_ & FACE_NEIGHBORS_E)))
     compute_faces();
   if (tosync & LOCATE_E && !(synchronized_ & LOCATE_E))
     compute_grid();

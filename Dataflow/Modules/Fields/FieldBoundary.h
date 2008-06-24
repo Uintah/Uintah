@@ -63,23 +63,23 @@ class SCISHARE FieldBoundaryAlgoAux : public DynamicAlgoBase
 public:
   typedef TriSurfMesh<TriLinearLgn<Point> >                    TSMesh;
   typedef ConstantBasis<double>                                ConBasis;
-  typedef NoDataBasis<double>                                  NoDataBasis;
+  typedef NoDataBasis<double>                                  NDataBasis;
   typedef TriLinearLgn<double>                                 TLBasis;
   typedef GenericField<TSMesh, TLBasis, vector<double> >       TSField;  
   typedef GenericField<TSMesh, ConBasis, vector<double> >      TSFieldC; 
-  typedef GenericField<TSMesh, NoDataBasis, vector<double> >   TSFieldND;
+  typedef GenericField<TSMesh, NDataBasis, vector<double> >   TSFieldND;
 
   typedef QuadSurfMesh<QuadBilinearLgn<Point> >                QSMesh;
   typedef QuadBilinearLgn<double>                              QBasis;
   typedef GenericField<QSMesh, QBasis, vector<double> >        QSField; 
   typedef GenericField<QSMesh, ConBasis, vector<double> >      QSFieldC; 
-  typedef GenericField<QSMesh, NoDataBasis, vector<double> >   QSFieldND; 
+  typedef GenericField<QSMesh, NDataBasis, vector<double> >   QSFieldND; 
 
   typedef CurveMesh<CrvLinearLgn<Point> >                      CMesh;
   typedef CrvLinearLgn<double>                                 CrvBasis;
   typedef GenericField<CMesh, CrvBasis, vector<double> >       CField; 
   typedef GenericField<CMesh, ConBasis, vector<double> >       CFieldC; 
-  typedef GenericField<CMesh, NoDataBasis, vector<double> >    CFieldND; 
+  typedef GenericField<CMesh, NDataBasis, vector<double> >    CFieldND; 
 
   virtual void execute(ProgressReporter *reporter,
                        const MeshHandle mesh,

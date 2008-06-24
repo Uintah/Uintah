@@ -55,6 +55,7 @@
 #include <Core/Exceptions/FileNotFound.h>
 #include <iostream>
 #include <vector>
+#include <string.h>
 
 #if defined(HAVE_LAPACK)
 #include <Core/Math/sci_lapack.h>

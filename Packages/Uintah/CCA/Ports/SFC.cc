@@ -1,6 +1,6 @@
 
 #include <Packages/Uintah/CCA/Ports/SFC.h>
-
+#include <limits.h>
 
 namespace Uintah
 {

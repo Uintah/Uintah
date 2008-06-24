@@ -26,6 +26,7 @@
 #include   <sstream>
 #include   <iomanip>
 #include   <map>
+#include   <string.h>
 #include <sgi_stl_warnings_on.h>
 
 #ifdef USE_PERFEX_COUNTERS

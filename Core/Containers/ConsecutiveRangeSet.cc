@@ -30,6 +30,7 @@
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <sstream>
+#include <limits.h>
 #include <errno.h>
 
 namespace SCIRun {

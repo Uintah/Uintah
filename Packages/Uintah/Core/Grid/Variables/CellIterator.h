@@ -4,6 +4,7 @@
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
+#include <iterator>
 
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
 
@@ -40,7 +41,8 @@ WARNING
   
 ****************************************/
 
-class UINTAHSHARE CellIterator {
+ class UINTAHSHARE CellIterator : 
+ public std::iterator<std::forward_iterator_tag, IntVector>  {
 public:
   inline ~CellIterator() {}
     

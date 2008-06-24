@@ -32,6 +32,7 @@
 
 #include <Core/Util/Socket.h>
 #include <string>
+#include <string.h>
 #include <errno.h>
 
 #ifdef _WIN32

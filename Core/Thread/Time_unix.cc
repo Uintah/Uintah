@@ -46,6 +46,7 @@
 #include <Core/Thread/ThreadError.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <string.h>
 #include <errno.h>
 #ifdef __linux
 #include <time.h>

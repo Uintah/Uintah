@@ -58,6 +58,8 @@
 #include <tk.h>
 #include <iostream>
 #include <string>
+#include <string.h>
+#include <stdlib.h>
 
 // find a more 'consolidated' place to put this...
 #if (TCL_MINOR_VERSION >= 4)

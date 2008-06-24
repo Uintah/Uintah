@@ -20,6 +20,7 @@
 #include <zlib.h>
 #include <math.h>
 #include <errno.h>
+#include <string.h>
 
 using namespace std;
 using namespace Uintah;

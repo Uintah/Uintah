@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Math/Rand48.h>
 #include <Core/Math/MiscMath.h>
 #include <math.h>
+#include <stdlib.h>
 #include <iostream>
 using namespace std;
 using namespace SCIRun;
