@@ -1,7 +1,5 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/NoneBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/NeighBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/PressureBoundCond.h>
@@ -44,21 +42,14 @@ void BoundCondFactory::create(ProblemSpecP& child,
   if (bc_attr.find("id") == bc_attr.end()) 
     SCI_THROW(ProblemSetupException("id is not specified in the BCType tag", __FILE__, __LINE__));
   
-  if (bc_attr["id"] != "all")
+  if (bc_attr["id"] != "all"){
     mat_id = atoi(bc_attr["id"].c_str());
-  else
-    mat_id = -1;  // Old setting was 0.
-
-  if (bc_attr["var"] == "None") {
-    bc = scinew NoneBoundCond(child);
+  }else{
+    mat_id = -1;  
   }
   
-  else if (bc_attr["label"] == "Symmetric") {
+  if (bc_attr["label"] == "Symmetric") {
     bc = scinew SymmetryBoundCond(child);
-  }
-  
-  else if (bc_attr["var"] ==  "Neighbor") {
-    bc = scinew NeighBoundCond(child);
   }
   
   else if (bc_attr["label"] == "Velocity" && 
