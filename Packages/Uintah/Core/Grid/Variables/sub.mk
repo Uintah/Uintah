@@ -4,6 +4,9 @@ SRCDIR   := Packages/Uintah/Core/Grid/Variables
 
 SRCS     += \
 	$(SRCDIR)/CellIterator.cc               \
+	$(SRCDIR)/NodeIterator.cc               \
+	$(SRCDIR)/Iterator.cc               		\
+	$(SRCDIR)/ListOfCellsIterator.cc     		\
 	$(SRCDIR)/ComputeSet.cc                 \
 	$(SRCDIR)/ComputeSet_special.cc         \
 	$(SRCDIR)/GridIterator.cc               \
