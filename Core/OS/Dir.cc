@@ -34,7 +34,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/syscall.h>
+//#include <sys/syscall.h>
 
 #include <errno.h>
 #include <string.h>
