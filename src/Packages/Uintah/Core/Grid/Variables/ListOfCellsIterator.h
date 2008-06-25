@@ -76,12 +76,12 @@ namespace Uintah {
     /**
      * Return the first element of the iterator
      */
-    inline IntVector begin() const { return listOfCells.front(); }
+    inline IntVector begin() const { return listOfCells_.front(); }
 
     /**
      * Return the last element of the iterator
      */
-    inline IntVector end() const { return listOfCells.back(); }
+    inline IntVector end() const { return listOfCells_.back(); }
 
     /**
      * adds a cell to the list of cells
