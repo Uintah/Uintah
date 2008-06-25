@@ -44,45 +44,78 @@ namespace Uintah {
     public:
       Iterator() : iter_(NULL) {}
 
+      Iterator(Iterator& copy)
+      {
+        //clone the new iterator (deep copy)
+        iter_=copy.iter_->clone();
+      }
+
       /**
        * prefix operator to move the iterator forward
        * no reference is returned for performance reasons
        */
-      inline void operator++() { ASSERT(iter_!=NULL); iter_->operator++(); }
+      inline void operator++() 
+      { 
+        ASSERT(iter_!=NULL); 
+        iter_->operator++(); 
+      }
 
       /**
        * postfix operator to move the iterator forward
        */
-      inline Iterator& operator++(int) { ASSERT(iter_!=NULL); (*iter_)++; }
+      inline Iterator& operator++(int) 
+      { 
+        ASSERT(iter_!=NULL); 
+        (*iter_)++; 
+      }
 
       /**
        * returns true if the iterator is done
        */    
-      inline bool done() const { ASSERT(iter_!=NULL); return iter_->done(); }
+      inline bool done() const 
+      { 
+        ASSERT(iter_!=NULL); 
+        return iter_->done(); 
+      }
 
       /**
        * returns the IntVector that the current iterator is pointing at
        */
-      inline IntVector operator*() const {ASSERT(iter_!=NULL);  return **iter_; }
+      inline IntVector operator*() const 
+      {
+        ASSERT(iter_!=NULL);  
+        return **iter_; 
+      }
 
       /**
        * Return the first element of the iterator
        */
-      inline IntVector begin() const { ASSERT(iter_!=NULL);  return iter_->begin(); }
+      inline IntVector begin() const 
+      { 
+        ASSERT(iter_!=NULL);  
+        return iter_->begin(); 
+      }
 
       /**
        * Return the last element of the iterator
        */
-      inline IntVector end() const { ASSERT(iter_!=NULL);  return iter_->end(); }
+      inline IntVector end() const 
+      { 
+        ASSERT(iter_!=NULL);  
+        return iter_->end(); 
+      }
 
       /**
        * Assignment operator - this is expensive as we have to allocate new memory
        */
       inline Iterator& operator=( const Iterator& copy ) 
-      { 
+      {
         //delete old iterator
         if(iter_!=NULL)
+        {
           delete iter_;
+
+        }
 
         //clone the new iterator (deep copy)
         iter_=copy.iter_->clone();
