@@ -115,8 +115,15 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
       return(scinew HypoElastic(child,flags));
-    else if (flags->d_integrator_type == "implicit")
+    else if (flags->d_integrator_type == "implicit"){
+      if(!flags->d_doGridReset){
+         ostringstream msg;
+         msg << "\n ERROR: One may not use HypoElastic along with \n"
+             << " <do_grid_reset>false</do_grid_reset> \n";
+         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+      }
       return(scinew HypoElasticImplicit(child,flags));
+    }
   }
 
   else if (mat_type ==  "mw_visco_elastic")

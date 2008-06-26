@@ -163,7 +163,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     Matrix3 Shear,deformationGradientInc,dispGrad,fbar;
     double onethird = (1.0/3.0);
-    
+
     Matrix3 Identity;
     
     Identity.Identity();
@@ -226,11 +226,10 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
         dispGrad.set(0.0);
         // Get the node indices that surround the cell
-                                                                                
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
         for(int k = 0; k < 8; k++) {
           const Vector& disp = dispNew[ni[k]];
-                                                                                
           for (int j = 0; j<3; j++){
             for (int i = 0; i<3; i++) {
               dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
@@ -289,22 +288,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         D[4][4] = C44;
         D[4][5] = 0.;
         D[5][5] = C44;
-      
-        D[1][0]=D[0][1];
-        D[2][0]=D[0][2];
-        D[2][1]=D[1][2];
-        D[3][0]=D[0][3];
-        D[3][1]=D[1][3];
-        D[3][2]=D[2][3];
-        D[4][0]=D[0][4];
-        D[4][1]=D[1][4];
-        D[4][2]=D[2][4];
-        D[4][3]=D[3][4];
-        D[5][0]=D[0][5];
-        D[5][1]=D[1][5];
-        D[5][2]=D[2][5];
-        D[5][3]=D[3][5];
-        D[5][4]=D[4][5];
       
         // kmat = B.transpose()*D*B*volold
         double kmat[24][24];
