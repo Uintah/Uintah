@@ -58,198 +58,210 @@ class PhysicalConstants;
 class Properties {
 
 public:
+  
+  // GROUP: Constructors:
+  ///////////////////////////////////////////////////////////////////////
+  // Constructor taking
+  //   [in] 
 
-      // GROUP: Constructors:
-      ///////////////////////////////////////////////////////////////////////
-      // Constructor taking
-      //   [in] 
+  Properties(const ArchesLabel* label, \
+             const MPMArchesLabel* MAlb,
+             PhysicalConstants* phys_const, 
+             bool calcReactingScalar,
+             bool calcEnthalpy, 
+             bool calcVariance, 
+             const ProcessorGroup* myworld);
 
-      Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-                 PhysicalConstants* phys_const, bool calcReactingScalar,
-		 bool calcEnthalpy, bool calcVariance, const ProcessorGroup* myworld);
+  // GROUP: Destructors :
+  ///////////////////////////////////////////////////////////////////////
+  // Destructor
 
-      // GROUP: Destructors :
-      ///////////////////////////////////////////////////////////////////////
-      // Destructor
+  ~Properties();
 
-      ~Properties();
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Set up the problem specification database
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Set up the problem specification database
+  void problemSetup(const ProblemSpecP& params);
 
-      void problemSetup(const ProblemSpecP& params);
+  // GROUP: Compute properties 
+  ///////////////////////////////////////////////////////////////////////
+  // Compute properties for inlet/outlet streams
 
-      // GROUP: Compute properties 
-      ///////////////////////////////////////////////////////////////////////
-      // Compute properties for inlet/outlet streams
+  void computeInletProperties(const InletStream& inStream,
+                              Stream& outStream);
 
-      void computeInletProperties(const InletStream& inStream,
-				  Stream& outStream);
+  // GROUP: Schedule Action :
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule the recomputation of proprties
 
-      // GROUP: Schedule Action :
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the recomputation of proprties
-
-      void sched_reComputeProps(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls,
-				const TimeIntegratorLabel* timelabels,
-			        bool modify_density, bool initialize,
-                                bool d_EKTCorrection,
-                                bool doing_EKT_now);
-
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of proprties for the first actual time 
-      // step in an MPMArches run
-
-      void sched_computePropsFirst_mm(SchedulerP&, const PatchSet* patches,
-				      const MaterialSet* matls);
-
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of density reference array here
-
-      void sched_computeDenRefArray(SchedulerP&, const PatchSet* patches,
-				    const MaterialSet* matls,
-			            const TimeIntegratorLabel* timelabels);
-
-      void sched_averageRKProps(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
-
-      void sched_saveTempDensity(SchedulerP&, const PatchSet* patches,
-				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels);
-
-      void sched_computeDrhodt(SchedulerP& sched, const PatchSet* patches,
-				const MaterialSet* matls,
-			        const TimeIntegratorLabel* timelabels,
-                                bool d_EKTCorrection,
-                                bool doing_EKT_now);
+  void sched_reComputeProps(SchedulerP&, 
+                            const PatchSet* patches,
+                            const MaterialSet* matls,
+                            const TimeIntegratorLabel* timelabels,
+                            bool modify_density, 
+                            bool initialize,
+                            bool d_EKTCorrection,
+                            bool doing_EKT_now);
 
 
-      // GROUP: Get Methods :
-      ///////////////////////////////////////////////////////////////////////
-      // Get the number of mixing variables
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule the computation of proprties for the first actual time 
+  // step in an MPMArches run
 
-      inline int getNumMixVars() const{ 
-	return d_numMixingVars; 
-      }
+  void sched_computePropsFirst_mm(SchedulerP&, 
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
 
-      // GROUP: Set Methods :
-      ///////////////////////////////////////////////////////////////////////
-      // Set the boundary consition pointer
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule the computation of density reference array here
 
-      inline void setBC(BoundaryCondition* bc) {
-	d_bc = bc;
-      }
+  void sched_computeDenRefArray(SchedulerP&, 
+                                const PatchSet* patches,
+                                const MaterialSet* matls,
+                                const TimeIntegratorLabel* timelabels);
+
+  void sched_averageRKProps(SchedulerP&, 
+                            const PatchSet* patches,
+                            const MaterialSet* matls,
+                            const TimeIntegratorLabel* timelabels);
+
+  void sched_saveTempDensity(SchedulerP&, 
+                            const PatchSet* patches,
+                            const MaterialSet* matls,
+                            const TimeIntegratorLabel* timelabels);
+
+  void sched_computeDrhodt(SchedulerP& sched, 
+                            const PatchSet* patches,
+                            const MaterialSet* matls,
+                            const TimeIntegratorLabel* timelabels,
+                            bool d_EKTCorrection,
+                            bool doing_EKT_now);
+
+
+  // GROUP: Get Methods :
+  ///////////////////////////////////////////////////////////////////////
+  // Get the number of mixing variables
+
+  inline int getNumMixVars() const{ 
+    return d_numMixingVars; 
+  }
+
+  // GROUP: Set Methods :
+  ///////////////////////////////////////////////////////////////////////
+  // Set the boundary consition pointer
+
+  inline void setBC(BoundaryCondition* bc) {
+    d_bc = bc;
+  }
 
 #ifdef PetscFilter
-      inline void setFilter(Filter* filter) {
-	d_filter = filter;
-      }
+  inline void setFilter(Filter* filter) {
+    d_filter = filter;
+  }
 #endif
-      inline void set3dPeriodic(bool periodic) {
-	d_3d_periodic = periodic;
-      }
+  inline void set3dPeriodic(bool periodic) {
+    d_3d_periodic = periodic;
+  }
 
-      inline double getAdiabaticAirEnthalpy() const{
-	return d_H_air;
-      }
+  inline double getAdiabaticAirEnthalpy() const{
+    return d_H_air;
+  }
 
-      inline double getCarbonContent(double f) const{
-	return d_carbon_fuel*f+d_carbon_air*(1.0-f);
-      }
-      inline void setCalcExtraScalars(bool calcExtraScalars) {
-        d_calcExtraScalars=calcExtraScalars;
-      }
-      inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
-        d_extraScalars = extraScalars;
-      }
-	  inline void setCarbonBalanceES(bool carbon_balance_es){
-		d_carbon_balance_es = carbon_balance_es;
-	  }
-	  inline void setSulfurBalanceES(bool sulfur_balance_es){
-		d_sulfur_balance_es = sulfur_balance_es;
-	  }
+  inline double getCarbonContent(double f) const{
+    return d_carbon_fuel*f+d_carbon_air*(1.0-f);
+  }
+  inline void setCalcExtraScalars(bool calcExtraScalars) {
+    d_calcExtraScalars=calcExtraScalars;
+  }
+  inline void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) {
+    d_extraScalars = extraScalars;
+  }
+  inline void setCarbonBalanceES(bool carbon_balance_es){
+        d_carbon_balance_es = carbon_balance_es;
+  }
+  inline void setSulfurBalanceES(bool sulfur_balance_es){
+        d_sulfur_balance_es = sulfur_balance_es;
+  }
 
 
 protected :
 
 private:
+  
+  // GROUP: Actual Action Methods :
+  ///////////////////////////////////////////////////////////////////////
+  // Carry out actual recomputation of properties
 
-      // GROUP: Actual Action Methods :
-      ///////////////////////////////////////////////////////////////////////
-      // Carry out actual recomputation of properties
+  void reComputeProps(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels,
+                      bool modify_density,
+                      bool initialize,
+                      bool d_EKTCorrection,
+                      bool doing_EKT_now);
 
-      void reComputeProps(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels,
-			  bool modify_density, bool initialize,
-                          bool d_EKTCorrection,
-                          bool doing_EKT_now);
+  ///////////////////////////////////////////////////////////////////////
+  // Carry out actual computation of properties for the first actual
+  // time step in an MPMArches run
 
-      ///////////////////////////////////////////////////////////////////////
-      // Carry out actual computation of properties for the first actual
-      // time step in an MPMArches run
+  void computePropsFirst_mm(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
-      void computePropsFirst_mm(const ProcessorGroup*,
-				const PatchSubset* patches,
-				const MaterialSubset* matls,
-				DataWarehouse* old_dw,
-				DataWarehouse* new_dw);
+  ///////////////////////////////////////////////////////////////////////
+  // Carry out actual computation of density reference array
 
-      ///////////////////////////////////////////////////////////////////////
-      // Carry out actual computation of density reference array
+  void computeDenRefArray(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const TimeIntegratorLabel* timelabels);
 
-      void computeDenRefArray(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw,
-			      const TimeIntegratorLabel* timelabels);
+  void averageRKProps(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
 
-      void averageRKProps(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
+  void saveTempDensity(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels);
 
-      void saveTempDensity(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels);
+  void computeDrhodt(const ProcessorGroup*,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw,
+                      const TimeIntegratorLabel* timelabels,
+                      bool d_EKTCorrection,
+                      bool doing_EKT_now);
 
-      void computeDrhodt(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* old_dw,
-			  DataWarehouse* new_dw,
-			  const TimeIntegratorLabel* timelabels,
-                          bool d_EKTCorrection,
-                          bool doing_EKT_now);
+  // GROUP: Constructors Not Instantiated:
+  ///////////////////////////////////////////////////////////////////////
+  // Copy Constructor (never instantiated)
+  //   [in] 
+  //        const Properties&   
 
-      // GROUP: Constructors Not Instantiated:
-      ///////////////////////////////////////////////////////////////////////
-      // Copy Constructor (never instantiated)
-      //   [in] 
-      //        const Properties&   
+  Properties(const Properties&);
 
-      Properties(const Properties&);
+  // GROUP: Operators Not Instantiated:
+  ///////////////////////////////////////////////////////////////////////
+  // Assignment Operator (never instantiated)
+  //   [in] 
+  //        const Properties&   
 
-      // GROUP: Operators Not Instantiated:
-      ///////////////////////////////////////////////////////////////////////
-      // Assignment Operator (never instantiated)
-      //   [in] 
-      //        const Properties&   
-
-      Properties& operator=(const Properties&);
+  Properties& operator=(const Properties&);
 
 private:
 
@@ -287,10 +299,10 @@ private:
 #endif
       bool d_calcExtraScalars;
       vector<ExtraScalarSolver*>* d_extraScalars;
-      bool d_carbon_balance_es;	
-	  bool d_sulfur_balance_es;
+      bool d_carbon_balance_es;        
+      bool d_sulfur_balance_es;
 
-   	  const ProcessorGroup* d_myworld;
+      const ProcessorGroup* d_myworld;
 }; // end class Properties
 } // End namespace Uintah
 

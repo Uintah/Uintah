@@ -88,168 +88,165 @@ class Arches : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
-      // GROUP: Static Variables:
-      ////////////////////////////////////////////////////////////////////////
-      // Number of dimensions in the problem
-      static const int NDIM;
-      // GROUP: Constants:
-      ////////////////////////////////////////////////////////////////////////
-      enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
-      enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
-      enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
-      enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
-			    THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
-int nofTimeSteps;
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Arches constructor
-      Arches(const ProcessorGroup* myworld);
+  // GROUP: Static Variables:
+  ////////////////////////////////////////////////////////////////////////
+  // Number of dimensions in the problem
+  static const int NDIM;
+  // GROUP: Constants:
+  ////////////////////////////////////////////////////////////////////////
+  enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
+  enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
+  enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
+  enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
+                        THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
+  int nofTimeSteps;
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Arches constructor
+  Arches(const ProcessorGroup* myworld);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor 
-      virtual ~Arches();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual destructor 
+  virtual ~Arches();
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Set up the problem specification database
-      virtual void problemSetup(const ProblemSpecP& params, 
-                                const ProblemSpecP& materials_ps, 
-				GridP& grid, SimulationStateP&);
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Set up the problem specification database
+  virtual void problemSetup(const ProblemSpecP& params, 
+                            const ProblemSpecP& materials_ps, 
+                            GridP& grid, SimulationStateP&);
 
-      // GROUP: Schedule Action :
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule initialization
-      virtual void scheduleInitialize(const LevelP& level,
-				      SchedulerP&);
-	 
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule parameter initialization
-      virtual void sched_paramInit(const LevelP& level,
-				   SchedulerP&);
-      
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule Compute if Stable time step
-      virtual void scheduleComputeStableTimestep(const LevelP& level,
-						 SchedulerP&);
+  // GROUP: Schedule Action :
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule initialization
+  virtual void scheduleInitialize(const LevelP& level,
+                                  SchedulerP&);
+     
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule parameter initialization
+  virtual void sched_paramInit(const LevelP& level,
+                               SchedulerP&);
 
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule time advance
-      virtual void scheduleTimeAdvance( const LevelP& level, 
-					SchedulerP&);
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule Compute if Stable time step
+  virtual void scheduleComputeStableTimestep(const LevelP& level,
+                                             SchedulerP&);
 
-      ///////////////////////////////////////////////////////////////////////
-       // Function to return boolean for recompiling taskgraph
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule time advance
+  virtual void scheduleTimeAdvance( const LevelP& level, 
+                                    SchedulerP&);
 
-	virtual bool needRecompile(double time, double dt,
-			    const GridP& grid);
+  ///////////////////////////////////////////////////////////////////////
+   // Function to return boolean for recompiling taskgraph
 
-      virtual void sched_readCCInitialCondition(const LevelP& level,
-				   		SchedulerP&);
-      virtual void sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
-				   		SchedulerP&);
-      virtual void sched_getCCVelocities(const LevelP& level,
-			   		 SchedulerP&);
-      virtual void sched_mmsInitialCondition(const LevelP& level,
-				   		SchedulerP&);
-      virtual void sched_blobInit(const LevelP& level,
-				   		SchedulerP&);
-      // GROUP: Access Functions :
-      ///////////////////////////////////////////////////////////////////////
-	// Boolean to see whether or not Enthalpy is solved for
-      inline bool checkSolveEnthalpy() const{
-	return d_calcEnthalpy;
-      }
+    virtual bool needRecompile(double time, double dt,
+                        const GridP& grid);
 
-      // for multimaterial
-      void setMPMArchesLabel(const MPMArchesLabel* MAlb)
-	{
-	  d_MAlab = MAlb;
-	}
+  virtual void sched_readCCInitialCondition(const LevelP& level,
+                                            SchedulerP&);
+  virtual void sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
+                                                           SchedulerP&);
+  virtual void sched_getCCVelocities(const LevelP& level,
+                                     SchedulerP&);
+  virtual void sched_mmsInitialCondition(const LevelP& level,
+                                         SchedulerP&);
+  virtual void sched_blobInit(const LevelP& level,
+                              SchedulerP&);
+  // GROUP: Access Functions :
+  ///////////////////////////////////////////////////////////////////////
+    // Boolean to see whether or not Enthalpy is solved for
+  inline bool checkSolveEnthalpy() const{
+    return d_calcEnthalpy;
+  }
 
-      const ArchesLabel* getArchesLabel()
-	{
-	  return d_lab;
-	}
-      NonlinearSolver* getNonlinearSolver()
-	{
-	  return d_nlSolver;
-	}
+  // for multimaterial
+  void setMPMArchesLabel(const MPMArchesLabel* MAlb){
+    d_MAlab = MAlb;
+  }
 
-      BoundaryCondition* getBoundaryCondition()
-	{
-	  return d_boundaryCondition;
-	}
+  const ArchesLabel* getArchesLabel(){
+    return d_lab;
+  }
+  NonlinearSolver* getNonlinearSolver(){
+    return d_nlSolver;
+  }
 
-      TurbulenceModel* getTurbulenceModel()
-	{
-	  return d_turbModel;
-	}
-      virtual double recomputeTimestep(double current_dt);
-      
-      virtual bool restartableTimesteps();
+  BoundaryCondition* getBoundaryCondition(){
+    return d_boundaryCondition;
+  }
+
+  TurbulenceModel* getTurbulenceModel(){
+    return d_turbModel;
+  }
+  virtual double recomputeTimestep(double current_dt);
+
+  virtual bool restartableTimesteps();
 
 
 protected:
 
 private:
 
-      // GROUP: Constructors (Private):
-      ////////////////////////////////////////////////////////////////////////
-      // Default Arches constructor
-      Arches();
+  // GROUP: Constructors (Private):
+  ////////////////////////////////////////////////////////////////////////
+  // Default Arches constructor
+  Arches();
 
-      ////////////////////////////////////////////////////////////////////////
-      // Arches copy constructor
-      Arches(const Arches&);
+  ////////////////////////////////////////////////////////////////////////
+  // Arches copy constructor
+  Arches(const Arches&);
 
-      // GROUP: Overloaded Operators (Private):
-      ////////////////////////////////////////////////////////////////////////
-      // Arches assignment constructor
-      Arches& operator=(const Arches&);
+  // GROUP: Overloaded Operators (Private):
+  ////////////////////////////////////////////////////////////////////////
+  // Arches assignment constructor
+  Arches& operator=(const Arches&);
 
-      // GROUP: Action Methods (Private):
-      ////////////////////////////////////////////////////////////////////////
-      // Arches assignment constructor
-      void paramInit(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset*,
-		     DataWarehouse* ,
-		     DataWarehouse* new_dw );
+  // GROUP: Action Methods (Private):
+  ////////////////////////////////////////////////////////////////////////
+  // Arches assignment constructor
+  void paramInit(const ProcessorGroup*,
+                 const PatchSubset* patches,
+                 const MaterialSubset*,
+                 DataWarehouse* ,
+                 DataWarehouse* new_dw );
 
-      void computeStableTimeStep(const ProcessorGroup* ,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* ,
-				 DataWarehouse* new_dw);
+  void computeStableTimeStep(const ProcessorGroup* ,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* ,
+                             DataWarehouse* new_dw);
 
-      void readCCInitialCondition(const ProcessorGroup*,
-		     		  const PatchSubset* patches,
-		     		  const MaterialSubset*,
-		    		  DataWarehouse* ,
-		     		  DataWarehouse* new_dw);
+  void readCCInitialCondition(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* ,
+                              DataWarehouse* new_dw);
 
-      void interpInitialConditionToStaggeredGrid(const ProcessorGroup*,
-		     				 const PatchSubset* patches,
-		    				 const MaterialSubset*,
-		   				 DataWarehouse* ,
-		     				 DataWarehouse* new_dw);
+  void interpInitialConditionToStaggeredGrid(const ProcessorGroup*,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset*,
+                                             DataWarehouse* ,
+                                             DataWarehouse* new_dw);
 
-      void getCCVelocities(const ProcessorGroup*,
-		     	   const PatchSubset* patches,
-		     	   const MaterialSubset*,
-		    	   DataWarehouse* ,
-		     	   DataWarehouse* new_dw);
-      void mmsInitialCondition(const ProcessorGroup*,
-		     		  const PatchSubset* patches,
-		     		  const MaterialSubset*,
-		    		  DataWarehouse* ,
-		     		  DataWarehouse* new_dw);
-      void blobInit(const ProcessorGroup*,
-		     		  const PatchSubset* patches,
-		     		  const MaterialSubset*,
-		    		  DataWarehouse* ,
-		     		  DataWarehouse* new_dw);
+  void getCCVelocities(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset*,
+                       DataWarehouse* ,
+                       DataWarehouse* new_dw);
+                       
+  void mmsInitialCondition(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse* ,
+                           DataWarehouse* new_dw);
+                           
+  void blobInit(const ProcessorGroup*,
+                const PatchSubset* patches,
+                const MaterialSubset*,
+                DataWarehouse* ,
+                DataWarehouse* new_dw);
 
 private:
 
@@ -309,8 +306,8 @@ private:
     ExtraScalarSolver* d_extraScalarSolver;
     vector<ExtraScalarSolver*> d_extraScalars;
 
-    bool d_carbon_balance_es;	
-    bool d_sulfur_balance_es;	
+    bool d_carbon_balance_es;        
+    bool d_sulfur_balance_es;        
     
 
 }; // end class Arches

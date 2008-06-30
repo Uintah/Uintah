@@ -41,33 +41,33 @@ class StencilMatrix {
 
 public:
 
-      // GROUP: Constants:
-      ////////////////////////////////////////////////////////////////////////
-      // Enumerate the names of the variables
-      //enum stencilName {AP, AE, AW, AN, AS, AT, AB};
+  // GROUP: Constants:
+  ////////////////////////////////////////////////////////////////////////
+  // Enumerate the names of the variables
+  //enum stencilName {AP, AE, AW, AN, AS, AT, AB};
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a StencilMatrix.
-      StencilMatrix();
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Construct an instance of a StencilMatrix.
+  StencilMatrix();
 
-      ////////////////////////////////////////////////////////////////////////
-      // Construct a copy of a StencilMatrix.
-      StencilMatrix(const StencilMatrix<T>&);
+  ////////////////////////////////////////////////////////////////////////
+  // Construct a copy of a StencilMatrix.
+  StencilMatrix(const StencilMatrix<T>&);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Destructor
-      virtual ~StencilMatrix();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Destructor
+  virtual ~StencilMatrix();
 
-      // GROUP:  Operator Overloads
-      ////////////////////////////////////////////////////////////////////////
-      // Get a reference to the variable at the input index 
-      T& operator[](int index); 
+  // GROUP:  Operator Overloads
+  ////////////////////////////////////////////////////////////////////////
+  // Get a reference to the variable at the input index 
+  T& operator[](int index); 
 
 private:
 
-      T d_data[9];
+  T d_data[9];
 
 }; // end Class Source
 

@@ -50,66 +50,67 @@ using namespace SCIRun;
 class RHSSolver{
 
 public:
+  
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Construct an instance of a RHSSolver.
+  RHSSolver();
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a RHSSolver.
-      RHSSolver();
-
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual Destructor
-      virtual ~RHSSolver();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual Destructor
+  virtual ~RHSSolver();
 
 
-      ////////////////////////////////////////////////////////////////////////
-      // Velocity Solve
-      void calculateHatVelocity(const ProcessorGroup* ,
-			      const Patch* patch,
-			      int index, double delta_t,
-			      CellInformation* cellinfo,
-			      ArchesVariables* vars,
-			      ArchesConstVariables* constvars);
+  ////////////////////////////////////////////////////////////////////////
+  // Velocity Solve
+  void calculateHatVelocity(const ProcessorGroup* ,
+                            const Patch* patch,
+                            int index, 
+                            double delta_t,
+                            CellInformation* cellinfo,
+                            ArchesVariables* vars,
+                            ArchesConstVariables* constvars);
 
-      void calculateVelocity(const ProcessorGroup* ,
-				 const Patch* patch,
-				 double delta_t,
-				 int index,
-				 CellInformation* cellinfo,
-				 ArchesVariables* vars,
-				 ArchesConstVariables* constvars);
+  void calculateVelocity(const ProcessorGroup* ,
+                         const Patch* patch,
+                         double delta_t,
+                         int index,
+                         CellInformation* cellinfo,
+                         ArchesVariables* vars,
+                         ArchesConstVariables* constvars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Solve
-      void scalarLisolve(const ProcessorGroup* pc,
-			 const Patch* patch,
-			 double delta_t,
-			 ArchesVariables* vars,
-			 ArchesConstVariables* constvars,
-			 CellInformation* cellinfo);
+  ////////////////////////////////////////////////////////////////////////
+  // Scalar Solve
+  void scalarLisolve(const ProcessorGroup* pc,
+                     const Patch* patch,
+                     double delta_t,
+                     ArchesVariables* vars,
+                     ArchesConstVariables* constvars,
+                     CellInformation* cellinfo);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Scalar Solve
-      void enthalpyLisolve(const ProcessorGroup* pc,
-			 const Patch* patch,
-			 double delta_t,
-			 ArchesVariables* vars,
-			 ArchesConstVariables* constvars,
-			 CellInformation* cellinfo);
+  ////////////////////////////////////////////////////////////////////////
+  // Scalar Solve
+  void enthalpyLisolve(const ProcessorGroup* pc,
+                       const Patch* patch,
+                       double delta_t,
+                       ArchesVariables* vars,
+                       ArchesConstVariables* constvars,
+                       CellInformation* cellinfo);
 
-      inline void setMMS(bool doMMS) {
-        d_doMMS=doMMS;
-      }
-      inline bool getMMS() const {
-        return d_doMMS;
-      }
+  inline void setMMS(bool doMMS) {
+    d_doMMS=doMMS;
+  }
+  inline bool getMMS() const {
+    return d_doMMS;
+  }
 
 protected:
 
 private:
 
-      //mms variables
-      bool d_doMMS;
+  //mms variables
+  bool d_doMMS;
 
 
 }; // End class RHSSolver.h

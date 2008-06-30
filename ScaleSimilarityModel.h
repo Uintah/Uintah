@@ -43,83 +43,83 @@ class BoundaryCondition;
 class ScaleSimilarityModel: public TurbulenceModel {
 
 public:
+  
+   // GROUP: Constructors:
+   ////////////////////////////////////////////////////////////////////////
+   // Blank constructor for ScaleSimilarityModel.
+   ScaleSimilarityModel(const ArchesLabel* label, 
+                        const MPMArchesLabel* MAlb,
+                        PhysicalConstants* phyConsts,
+                        BoundaryCondition* bndryCondition);
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for ScaleSimilarityModel.
-      ScaleSimilarityModel(const ArchesLabel* label, 
-		       const MPMArchesLabel* MAlb,
-		       PhysicalConstants* phyConsts,
-		       BoundaryCondition* bndryCondition);
+   // GROUP: Destructors:
+   ////////////////////////////////////////////////////////////////////////
+   // Virtual destructor for ScaleSimilarityModel.
+   virtual ~ScaleSimilarityModel();
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for ScaleSimilarityModel.
-      virtual ~ScaleSimilarityModel();
+   // GROUP: Problem Setup :
+   ///////////////////////////////////////////////////////////////////////
+   // Set up the problem specification database
+   virtual void problemSetup(const ProblemSpecP& db);
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Set up the problem specification database
-      virtual void problemSetup(const ProblemSpecP& db);
+   // GROUP: Schedule Action :
+   ///////////////////////////////////////////////////////////////////////
+   // Schedule the recomputation of Turbulence Model data
+   //    [in] 
+   //        data User data needed for solve 
+   virtual void sched_reComputeTurbSubmodel(SchedulerP&,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls,
+                                            const TimeIntegratorLabel* timelabels);
 
-      // GROUP: Schedule Action :
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the recomputation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(SchedulerP&,
-				 const PatchSet* patches,
-				 const MaterialSet* matls,
-			         const TimeIntegratorLabel* timelabels);
+   // GROUP: Schedule Action :
+   ///////////////////////////////////////////////////////////////////////
+   // Schedule the computation of Turbulence Model data
+   //    [in] 
+   //        data User data needed for solve 
+   virtual void sched_computeScalarVariance(SchedulerP&,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls,
+                                            const TimeIntegratorLabel* timelabels,
+                                            bool d_EKTCorrection,
+                                            bool doing_EKT_now);
 
-      // GROUP: Schedule Action :
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the computation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-      virtual void sched_computeScalarVariance(SchedulerP&,
-					       const PatchSet* patches,
-					       const MaterialSet* matls,
-			                 const TimeIntegratorLabel* timelabels,
+   virtual void sched_computeScalarDissipation(SchedulerP&,
+                                               const PatchSet* patches,
+                                               const MaterialSet* matls,
+                                               const TimeIntegratorLabel* timelabels,
                                                bool d_EKTCorrection,
                                                bool doing_EKT_now);
+   ///////////////////////////////////////////////////////////////////////
+   // Get the molecular viscosity
+   double getMolecularViscosity() const; 
 
-      virtual void sched_computeScalarDissipation(SchedulerP&,
-						  const PatchSet* patches,
-						  const MaterialSet* matls,
-			                 const TimeIntegratorLabel* timelabels,
-                                                  bool d_EKTCorrection,
-                                                  bool doing_EKT_now);
-      ///////////////////////////////////////////////////////////////////////
-      // Get the molecular viscosity
-      double getMolecularViscosity() const; 
+   ///////////////////////////////////////////////////////////////////////
+   // Schedule the initialization of the Smagorinsky Coefficient
+   //    [in] 
+   //        data User data needed for solve 
+   
+   // GROUP: Access Methods :
+   ///////////////////////////////////////////////////////////////////////
+   // Get the molecular viscosity
+   // double getMolecularViscosity() const; 
 
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the initialization of the Smagorinsky Coefficient
-      //    [in] 
-      //        data User data needed for solve 
-      
-      // GROUP: Access Methods :
-      ///////////////////////////////////////////////////////////////////////
-      // Get the molecular viscosity
-//      double getMolecularViscosity() const; 
-
-      ////////////////////////////////////////////////////////////////////////
-      // Get the Smagorinsky model constant
-      double getSmagorinskyConst() const {
-	return d_CF;
-      }
-      inline void set3dPeriodic(bool periodic) {}
-      inline double getTurbulentPrandtlNumber() const {
-	return d_turbPrNo;
-      }
-      inline void setTurbulentPrandtlNumber(double turbPrNo) {
-	d_turbPrNo = turbPrNo;
-      }
-      inline bool getDynScalarModel() const {
-	return false;
-      }
-      ///////////////////////////////////////////////////////////////////////
+   ////////////////////////////////////////////////////////////////////////
+   // Get the Smagorinsky model constant
+   double getSmagorinskyConst() const {
+     return d_CF;
+   }
+   inline void set3dPeriodic(bool periodic) {}
+   inline double getTurbulentPrandtlNumber() const {
+     return d_turbPrNo;
+   }
+   inline void setTurbulentPrandtlNumber(double turbPrNo) {
+     d_turbPrNo = turbPrNo;
+   }
+   inline bool getDynScalarModel() const {
+     return false;
+   }
+   ///////////////////////////////////////////////////////////////////////
 
 protected:
       PhysicalConstants* d_physicalConsts;
@@ -131,45 +131,45 @@ protected:
       double d_CL;
       double d_CB;
 private:
+  
+   // GROUP: Constructors (not instantiated):
+   ////////////////////////////////////////////////////////////////////////
+   // Blank constructor for ScaleSimilarityModel.
+   ScaleSimilarityModel();
 
-      // GROUP: Constructors (not instantiated):
-      ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for ScaleSimilarityModel.
-      ScaleSimilarityModel();
+   // GROUP: Action Methods (private)  :
+   ///////////////////////////////////////////////////////////////////////
+   // Actually reCalculate the Turbulence sub model
+   //    [in] 
+   //        documentation here
+   void reComputeTurbSubmodel(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              const TimeIntegratorLabel* timelabels);
 
-      // GROUP: Action Methods (private)  :
-      ///////////////////////////////////////////////////////////////////////
-      // Actually reCalculate the Turbulence sub model
-      //    [in] 
-      //        documentation here
-      void reComputeTurbSubmodel(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw,
-			         const TimeIntegratorLabel* timelabels);
- 
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Calculate the subgrid scale variance
-      //    [in] 
-      //        documentation here
-      void computeScalarVariance(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw,
-			         const TimeIntegratorLabel* timelabels,
+   ///////////////////////////////////////////////////////////////////////
+   // Actually Calculate the subgrid scale variance
+   //    [in] 
+   //        documentation here
+   void computeScalarVariance(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              const TimeIntegratorLabel* timelabels,
+                              bool d_EKTCorrection,
+                              bool doing_EKT_now);
+
+   void computeScalarDissipation(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 const TimeIntegratorLabel* timelabels,
                                  bool d_EKTCorrection,
                                  bool doing_EKT_now);
-
-      void computeScalarDissipation(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw,
-			            const TimeIntegratorLabel* timelabels,
-                                    bool d_EKTCorrection,
-                                    bool doing_EKT_now);
 
 private:
       double d_CF; //model constant

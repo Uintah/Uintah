@@ -63,46 +63,52 @@ class PetscSolver: public LinearSolver {
 
 public:
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a PetscSolver.
-      PetscSolver(const ProcessorGroup* myworld);
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Construct an instance of a PetscSolver.
+  PetscSolver(const ProcessorGroup* myworld);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual Destructor
-      virtual ~PetscSolver();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual Destructor
+  virtual ~PetscSolver();
 
-      // GROUP: Problem Setup:
-      ////////////////////////////////////////////////////////////////////////
-      // Problem setup
-      void problemSetup(const ProblemSpecP& params);
+  // GROUP: Problem Setup:
+  ////////////////////////////////////////////////////////////////////////
+  // Problem setup
+  void problemSetup(const ProblemSpecP& params);
 
-       // to close petsc 
-      void finalizeSolver();
+   // to close petsc 
+  void finalizeSolver();
 
-   virtual void matrixCreate(const PatchSet* allpatches,
-			     const PatchSubset* mypatches);
-   virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
-			       ArchesVariables* vars,
-			       ArchesConstVariables* constvars,
-			       const ArchesLabel* lab);
-   
+  virtual void matrixCreate(const PatchSet* allpatches,
+                            const PatchSubset* mypatches);
+                            
+  virtual void setPressMatrix(const ProcessorGroup* pc, 
+                              const Patch* patch,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars,
+                              const ArchesLabel* lab);
+
 
    virtual bool pressLinearSolve();
+   
    virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
+   
    virtual void destroyMatrix();
 protected:
 
 private:
-      string d_pcType;
-      string d_kspType;
-      int d_overlap;
-      int d_fill;
-      int d_maxSweeps;
-      double d_convgTol; // convergence tolerence
-      double d_residual;
-   const ProcessorGroup* d_myworld;
+  string d_pcType;
+  string d_kspType;
+  int d_overlap;
+  int d_fill;
+  int d_maxSweeps;
+  double d_convgTol; // convergence tolerence
+  double d_residual;
+  const ProcessorGroup* d_myworld;
+  
+  
 #ifdef HAVE_PETSC
    map<const Patch*, int> d_petscGlobalStart;
    map<const Patch*, Array3<int> > d_petscLocalToGlobal;

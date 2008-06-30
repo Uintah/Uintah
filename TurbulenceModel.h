@@ -51,7 +51,7 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Blank constructor for TurbulenceModel.
       TurbulenceModel(const ArchesLabel* label, 
-		      const MPMArchesLabel* MAlb);
+                      const MPMArchesLabel* MAlb);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ public:
       virtual ~TurbulenceModel();
 #ifdef PetscFilter
       inline void setFilter(Filter* filter) {
-	d_filter = filter;
+        d_filter = filter;
       }
 #endif
       // GROUP: Access Methods :
@@ -80,12 +80,13 @@ public:
       // access function
 #ifdef PetscFilter
       Filter* getFilter() const{
-	return d_filter;
+        return d_filter;
       }
 
       void sched_initFilterMatrix(const LevelP&, 
-			      SchedulerP&, const PatchSet* patches,
-			      const MaterialSet* matls);
+                                  SchedulerP&, 
+                                  const PatchSet* patches,
+                                  const MaterialSet* matls);
 
 #endif
       virtual void set3dPeriodic(bool periodic) = 0;
@@ -94,20 +95,20 @@ public:
       virtual bool getDynScalarModel() const = 0;
 
       inline void setCombustionSpecifics(bool calcScalar,
-		                         bool calcEnthalpy,
-					 bool calcReactingScalar) {
-	d_calcScalar = calcScalar;
-	d_calcEnthalpy = calcEnthalpy;
-	d_calcReactingScalar = calcReactingScalar;
+                                         bool calcEnthalpy,
+                                         bool calcReactingScalar) {
+        d_calcScalar = calcScalar;
+        d_calcEnthalpy = calcEnthalpy;
+        d_calcReactingScalar = calcReactingScalar;
       }
       inline void modelVariance(bool calcVariance) {
-	d_calcVariance = calcVariance;
+        d_calcVariance = calcVariance;
       }
       inline void setMixedModel(bool mixedModel) {
-	d_mixedModel = mixedModel;
+        d_mixedModel = mixedModel;
       }
       inline bool getMixedModel() const {
-	return d_mixedModel;
+        return d_mixedModel;
       }
 
       // GROUP: Schedule Action :
@@ -116,21 +117,21 @@ public:
       //    [in] 
       //        data User data needed for solve 
       virtual void sched_reComputeTurbSubmodel(SchedulerP&,
-				 const PatchSet* patches,
-				 const MaterialSet* matls,
-			    	 const TimeIntegratorLabel* timelabels) = 0;
+                                               const PatchSet* patches,
+                                               const MaterialSet* matls,
+                                               const TimeIntegratorLabel* timelabels) = 0;
 
 
       virtual void sched_computeScalarVariance(SchedulerP&,
-					       const PatchSet* patches,
-					       const MaterialSet* matls,
-			    	     const TimeIntegratorLabel* timelabels,
+                                               const PatchSet* patches,
+                                               const MaterialSet* matls,
+                                               const TimeIntegratorLabel* timelabels,
                                                bool d_EKTCorrection,
                                                bool doing_EKT_now) = 0;
       virtual void sched_computeScalarDissipation(SchedulerP&,
-						  const PatchSet* patches,
-						  const MaterialSet* matls,
-			    	     const TimeIntegratorLabel* timelabels,
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls,
+                                                  const TimeIntegratorLabel* timelabels,
                                                   bool d_EKTCorrection,
                                                   bool doing_EKT_now) = 0;
  protected:
@@ -147,10 +148,10 @@ private:
 bool d_mixedModel;
 #ifdef PetscFilter
       void initFilterMatrix(const ProcessorGroup* pg,
-			    const PatchSubset* patches,
-			    const MaterialSubset*,
-			    DataWarehouse*,
-			    DataWarehouse* new_dw);
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse*,
+                            DataWarehouse* new_dw);
 #endif
 
 

@@ -56,19 +56,24 @@ namespace Uintah {
       constCCVariable<double> drhodf;
       StencilMatrix<constCCVariable<double> > scalarDiffusionCoeff; //7 pt stl
       constCCVariable<double> scalarDiffNonlinearSrc;
+      
       constSFCXVariable<double> uVelocity;
       constSFCYVariable<double> vVelocity;
       constSFCZVariable<double> wVelocity;
+      
       constSFCXVariable<double> old_uVelocity;
       constSFCYVariable<double> old_vVelocity;
       constSFCZVariable<double> old_wVelocity;
+      
       constCCVariable<double> old_density;
       constCCVariable<double> old_old_density;
       constCCVariable<int> cellType;
       constCCVariable<double> filterdrhodt; //add to the RHS of the pres eqn
+      
       constSFCXVariable<double> uVelRhoHat;
       constSFCYVariable<double> vVelRhoHat;
       constSFCZVariable<double> wVelRhoHat;
+      
       constCCVariable<double> divergence;
       constCCVariable<double> old_scalar;
       constCCVariable<double> enthalpy;
@@ -87,8 +92,10 @@ namespace Uintah {
       StencilMatrix<constCCVariable<double> > pressCoeff; //7 point stencil
       constCCVariable<double> pressNonlinearSrc;
       constCCVariable<double> voidFraction;
+      
       constCCVariable<double> mmEnthSu;
       constCCVariable<double> mmEnthSp;
+      
       constSFCXVariable<double> mmuVelSu;
       constSFCXVariable<double> mmuVelSp;
       constSFCYVariable<double> mmvVelSu;
@@ -100,11 +107,11 @@ namespace Uintah {
       constSFCXVariable<double> vFmms;
       constSFCXVariable<double> wFmms;
 
-	  constCCVariable<double> scalarBoundarySrc; 
-	  constCCVariable<double> enthalpyBoundarySrc;
-	  constSFCXVariable<double> umomBoundarySrc;
-	  constSFCYVariable<double> vmomBoundarySrc;
-	  constSFCZVariable<double> wmomBoundarySrc;
+      constCCVariable<double> scalarBoundarySrc; 
+      constCCVariable<double> enthalpyBoundarySrc;
+      constSFCXVariable<double> umomBoundarySrc;
+      constSFCYVariable<double> vmomBoundarySrc;
+      constSFCZVariable<double> wmomBoundarySrc;
 
     }; // End class ArchesConstVariables
 } // End namespace Uintah
