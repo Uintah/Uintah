@@ -37,52 +37,52 @@ class ZeroExtraScalarSrc: public ExtraScalarSrc{
 
 public:
 
-      ////////////////////////////////////////////////////////////////////////
-      // Constructor for ZeroExtraScalarSrc.
-      ZeroExtraScalarSrc(const ArchesLabel* label, 
-		     const MPMArchesLabel* MAlb,
+  ////////////////////////////////////////////////////////////////////////
+  // Constructor for ZeroExtraScalarSrc.
+  ZeroExtraScalarSrc(const ArchesLabel* label, 
+                     const MPMArchesLabel* MAlb,
                      const VarLabel* d_src_label);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for ZeroExtraScalarSrc.
-      ~ZeroExtraScalarSrc();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual destructor for ZeroExtraScalarSrc.
+  ~ZeroExtraScalarSrc();
 
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for Set up of the problem specification database
-      void problemSetup(const ProblemSpecP& db);
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Interface for Set up of the problem specification database
+  void problemSetup(const ProblemSpecP& db);
 
 
-      void sched_addExtraScalarSrc(SchedulerP& sched, 
-                                   const PatchSet* patches,
-				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels);
-      
-      inline const string getTableName(){
-	      return d_tableName;
-      }
+  void sched_addExtraScalarSrc(SchedulerP& sched, 
+                               const PatchSet* patches,
+                               const MaterialSet* matls,
+                               const TimeIntegratorLabel* timelabels);
 
-      inline void setTableIndex(int tableIndex){
-	      d_tableIndex = tableIndex;
-      }
+  inline const string getTableName(){
+    return d_tableName;
+  }
+
+  inline void setTableIndex(int tableIndex){
+    d_tableIndex = tableIndex;
+  }
 
 protected:
 
 private:
-      ZeroExtraScalarSrc();
+  ZeroExtraScalarSrc();
 
 
-      void addExtraScalarSrc(const ProcessorGroup*,
-			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const TimeIntegratorLabel* timelabels);
+  void addExtraScalarSrc(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const TimeIntegratorLabel* timelabels);
 
-      string d_tableName;
-      int d_tableIndex; 
+  string d_tableName;
+  int d_tableIndex; 
 
 }; // End class ZeroExtraScalarSrc
 } // End namespace Uintah

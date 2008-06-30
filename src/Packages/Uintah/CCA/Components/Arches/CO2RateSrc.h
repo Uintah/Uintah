@@ -38,58 +38,58 @@ class CO2RateSrc: public ExtraScalarSrc{
 
 public:
 
-      ////////////////////////////////////////////////////////////////////////
-      // Constructor for CO2RateSrc.
-      CO2RateSrc(const ArchesLabel* label, 
-		     const MPMArchesLabel* MAlb,
-                     const VarLabel* d_src_label);
+  ////////////////////////////////////////////////////////////////////////
+  // Constructor for CO2RateSrc.
+  CO2RateSrc(const ArchesLabel* label, 
+             const MPMArchesLabel* MAlb,
+             const VarLabel* d_src_label);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for CO2RateSrc.
-      ~CO2RateSrc();
-
-
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for Set up of the problem specification database
-      void problemSetup(const ProblemSpecP& db);
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual destructor for CO2RateSrc.
+  ~CO2RateSrc();
 
 
-      void sched_addExtraScalarSrc(SchedulerP& sched, 
-                                   const PatchSet* patches,
-				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels);
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Interface for Set up of the problem specification database
+  void problemSetup(const ProblemSpecP& db);
 
-      inline const string getTableName(){
-	      return d_tableName;
-      }
+
+  void sched_addExtraScalarSrc(SchedulerP& sched, 
+                               const PatchSet* patches,
+                               const MaterialSet* matls,
+                               const TimeIntegratorLabel* timelabels);
+
+  inline const string getTableName(){
+    return d_tableName;
+  }
 /*
-      inline const int getTableIndex(){
-	      return d_tableIndex;
-      }
+  inline const int getTableIndex(){
+          return d_tableIndex;
+  }
 */
-      inline void setTableIndex(int tableIndex){
-	      d_tableIndex = tableIndex;
-      }
+  inline void setTableIndex(int tableIndex){
+    d_tableIndex = tableIndex;
+  }
 
 
 protected:
 
 private:
-      CO2RateSrc();
+  CO2RateSrc();
 
 
-      void addExtraScalarSrc(const ProcessorGroup*,
-			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const TimeIntegratorLabel* timelabels);
+  void addExtraScalarSrc(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const TimeIntegratorLabel* timelabels);
 
-	string	d_tableName;
-	int d_tableIndex;
-	double d_scaleFactor; 
+  string d_tableName;
+  int d_tableIndex;
+  double d_scaleFactor; 
 
 }; // End class CO2RateSrc
 } // End namespace Uintah

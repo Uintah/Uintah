@@ -51,138 +51,141 @@ class IncDynamicProcedure: public TurbulenceModel {
 
 public:
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for IncDynamicProcedure.
-      IncDynamicProcedure(const ArchesLabel* label, 
-		       const MPMArchesLabel* MAlb,
-		       PhysicalConstants* phyConsts,
-		       BoundaryCondition* bndryCondition);
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Blank constructor for IncDynamicProcedure.
+  IncDynamicProcedure(const ArchesLabel* label, 
+                      const MPMArchesLabel* MAlb,
+                      PhysicalConstants* phyConsts,
+                      BoundaryCondition* bndryCondition);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for IncDynamicProcedure.
-      virtual ~IncDynamicProcedure();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual destructor for IncDynamicProcedure.
+  virtual ~IncDynamicProcedure();
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Set up the problem specification database
-      virtual void problemSetup(const ProblemSpecP& db);
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Set up the problem specification database
+  virtual void problemSetup(const ProblemSpecP& db);
 
-      // GROUP: Schedule Action :
-      ///////////////////////////////////////////////////////////////////////
-      // Schedule the recomputation of Turbulence Model data
-      //    [in] 
-      //        data User data needed for solve 
-      virtual void sched_reComputeTurbSubmodel(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls,
-			                 const TimeIntegratorLabel* timelabels);
+  // GROUP: Schedule Action :
+  ///////////////////////////////////////////////////////////////////////
+  // Schedule the recomputation of Turbulence Model data
+  //    [in] 
+  //        data User data needed for solve 
+  virtual void sched_reComputeTurbSubmodel(SchedulerP&, 
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls,
+                                           const TimeIntegratorLabel* timelabels);
 
-      virtual void sched_computeScalarVariance(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls,
-			    		const TimeIntegratorLabel* timelabels,
-                                               bool d_EKTCorrection,
-                                               bool doing_EKT_now);
+  virtual void sched_computeScalarVariance(SchedulerP&, 
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls,
+                                           const TimeIntegratorLabel* timelabels,
+                                           bool d_EKTCorrection,
+                                           bool doing_EKT_now);
 
-      virtual void sched_computeScalarDissipation(SchedulerP&,
-						  const PatchSet* patches,
-					          const MaterialSet* matls,
-			    		 const TimeIntegratorLabel* timelabels,
-                                                  bool d_EKTCorrection,
-                                                  bool doing_EKT_now);
+  virtual void sched_computeScalarDissipation(SchedulerP&,
+                                              const PatchSet* patches,
+                                              const MaterialSet* matls,
+                                              const TimeIntegratorLabel* timelabels,
+                                              bool d_EKTCorrection,
+                                              bool doing_EKT_now);
 
-      // GROUP: Access Methods :
-      ///////////////////////////////////////////////////////////////////////
-      // Get the molecular viscosity
-      double getMolecularViscosity() const; 
+  // GROUP: Access Methods :
+  ///////////////////////////////////////////////////////////////////////
+  // Get the molecular viscosity
+  double getMolecularViscosity() const; 
 
-      ////////////////////////////////////////////////////////////////////////
-      // Get the Smagorinsky model constant
-      double getSmagorinskyConst() const {
-	cerr << "There is no Smagorinsky constant in IncDynamic Procedure" << endl;
-	exit(0);
-	return 0;
-      }
-      inline void set3dPeriodic(bool periodic) {
-	d_3d_periodic = periodic;
-      }
-      inline double getTurbulentPrandtlNumber() const {
-	return d_turbPrNo;
-      }
-      inline void setTurbulentPrandtlNumber(double turbPrNo) {
-	d_turbPrNo = turbPrNo;
-      }
-      inline bool getDynScalarModel() const {
-	return false;
-      }
+  ////////////////////////////////////////////////////////////////////////
+  // Get the Smagorinsky model constant
+  double getSmagorinskyConst() const {
+    cerr << "There is no Smagorinsky constant in IncDynamic Procedure" << endl;
+    exit(0);
+    return 0;
+  }
+  inline void set3dPeriodic(bool periodic) {
+    d_3d_periodic = periodic;
+  }
+  inline double getTurbulentPrandtlNumber() const {
+    return d_turbPrNo;
+  }
+  inline void setTurbulentPrandtlNumber(double turbPrNo) {
+    d_turbPrNo = turbPrNo;
+  }
+  inline bool getDynScalarModel() const {
+    return false;
+  }
 
 protected:
       PhysicalConstants* d_physicalConsts;
       BoundaryCondition* d_boundaryCondition;
 
 private:
+  
+  // GROUP: Constructors (not instantiated):
+  ////////////////////////////////////////////////////////////////////////
+  // Blank constructor for IncDynamicProcedure.
+  IncDynamicProcedure();
 
-      // GROUP: Constructors (not instantiated):
-      ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for IncDynamicProcedure.
-      IncDynamicProcedure();
-
-      // GROUP: Action Methods (private)  :
-
-
-      ///////////////////////////////////////////////////////////////////////
-      // Actually reCalculate the Turbulence sub model
-      //    [in] 
-      //        documentation here
-      void reComputeTurbSubmodel(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw,
-			         const TimeIntegratorLabel* timelabels);
- 
-      void reComputeFilterValues(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw,
-			         const TimeIntegratorLabel* timelabels);
- 
-      void reComputeSmagCoeff(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* matls,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw,
-			      const TimeIntegratorLabel* timelabels);
+  // GROUP: Action Methods (private)  :
 
 
-      ///////////////////////////////////////////////////////////////////////
-      // Actually Calculate the subgrid scale variance
-      //    [in] 
-      //        documentation here
-      void computeScalarVariance(const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw,
-				 DataWarehouse* new_dw,
-			         const TimeIntegratorLabel* timelabels,
-                                 bool d_EKTCorrection,
-                                 bool doing_EKT_now);
-      void computeScalarDissipation(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw,
-			            const TimeIntegratorLabel* timelabels,
-                                    bool d_EKTCorrection,
-                                    bool doing_EKT_now);
+  ///////////////////////////////////////////////////////////////////////
+  // Actually reCalculate the Turbulence sub model
+  //    [in] 
+  //        documentation here
+  void reComputeTurbSubmodel(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw,
+                             const TimeIntegratorLabel* timelabels);
+
+  void reComputeFilterValues(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw,
+                             const TimeIntegratorLabel* timelabels);
+
+  void reComputeSmagCoeff(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const TimeIntegratorLabel* timelabels);
+
+
+  ///////////////////////////////////////////////////////////////////////
+  // Actually Calculate the subgrid scale variance
+  //    [in] 
+  //        documentation here
+  void computeScalarVariance(const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw,
+                             const TimeIntegratorLabel* timelabels,
+                             bool d_EKTCorrection,
+                             bool doing_EKT_now);
+                             
+  void computeScalarDissipation(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                const TimeIntegratorLabel* timelabels,
+                                bool d_EKTCorrection,
+                                bool doing_EKT_now);
 
  protected:
-      double d_CFVar; // model constant for mixture fraction variance
-      double d_turbPrNo; // turbulent prandtl number
-      bool d_filter_cs_squared; //option for filtering Cs^2 in IncDynamic Procedure
-      bool d_3d_periodic;
-      bool d_filter_var_limit_scalar;
+  double d_CFVar; // model constant for mixture fraction variance
+  double d_turbPrNo; // turbulent prandtl number
+  bool d_filter_cs_squared; //option for filtering Cs^2 in IncDynamic Procedure
+  bool d_3d_periodic;
+  bool d_filter_var_limit_scalar;
 
 
  private:

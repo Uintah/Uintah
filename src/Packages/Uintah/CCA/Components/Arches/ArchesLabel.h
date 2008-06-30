@@ -54,17 +54,16 @@ namespace Uintah {
 
       // Cell Information
       // for old_dw, perpatch var
-
       const VarLabel* d_cellInfoLabel;
 
       // Cell type
-
       const VarLabel* d_cellTypeLabel;//computed for old_dw in cellTypeInit
      
       // Labels for inlet and flow rate
       const VarLabel* d_totalflowINLabel;
       const VarLabel* d_totalflowOUTLabel;
       const VarLabel* d_netflowOUTBCLabel;
+      
       // net outlet area, mass balance, and overall outlet velocity
       const VarLabel* d_totalAreaOUTLabel;
       const VarLabel* d_denAccumLabel;
@@ -126,32 +125,24 @@ namespace Uintah {
       // Scalar variance labels
 
       // computed for new_dw in Smagorinsky Model
-
       const VarLabel* d_scalarVarSPLabel;
 
       // computed for new_dw in Smagorinsky Model for flamelet
-
       const VarLabel* d_scalarDissSPLabel;
 
       // Scalar Coef
-
       const VarLabel* d_scalCoefSBLMLabel;
 
       // scalar diffusion coeffs, required for divergence constraint
       const VarLabel* d_scalDiffCoefLabel;
-
       const VarLabel* d_scalDiffCoefSrcLabel;
-
       const VarLabel* d_enthDiffCoefLabel;
 
       // Scalar NonLinear Src
-
       const VarLabel* d_scalNonLinSrcSBLMLabel;
 
 
       // reactive scalars
-
-
       const VarLabel* d_reactscalarSPLabel;
       const VarLabel* d_reactscalarEKTLabel;
       const VarLabel* d_reactscalarTempLabel;
@@ -159,19 +150,15 @@ namespace Uintah {
 
       // Reactscalar variance labels
       // computed for new_dw in Smagorinsky Model
-
       const VarLabel* d_reactscalarVarSPLabel;
 
       // Reactscalar Coef
-
       const VarLabel* d_reactscalCoefSBLMLabel;
 
       // Reactscalar Diffusion Coef
-
       const VarLabel* d_reactscalDiffCoefLabel;
       
       // Reactscalar NonLinear Src
-
       const VarLabel* d_reactscalNonLinSrcSBLMLabel;
 
       // labels for scalesimilaritymodels
@@ -199,21 +186,18 @@ namespace Uintah {
       const VarLabel* d_alphaalphaLabel;
       const VarLabel* d_CsLabel;
       const VarLabel* d_deltaCsLabel;
-      //label for odt model
+      
+      //odt model
       const VarLabel* d_odtDataLabel;
 
-      // label for ref_density and pressure
-
+      // ref_density and pressure
       const VarLabel* d_refDensity_label;
       const VarLabel* d_refDensityPred_label;
       const VarLabel* d_refPressure_label;
 
       // labels for nonlinear residuals
 
-
-
       // For storing the interpolated CC Velocity Variables
-
       const VarLabel* d_oldCCVelocityLabel;
       const VarLabel* d_newCCVelocityLabel;
       const VarLabel* d_newCCVelMagLabel;
@@ -222,7 +206,6 @@ namespace Uintah {
       const VarLabel* d_newCCWVelocityLabel;
 
       // for multimaterial
-
       const VarLabel* d_mmcellTypeLabel;
       const VarLabel* d_mmgasVolFracLabel;
 
@@ -273,7 +256,6 @@ namespace Uintah {
       // pred-corr labels
 
       // labels for pressure solver
-
       const VarLabel* d_uVelRhoHatLabel;
       const VarLabel* d_vVelRhoHatLabel;
       const VarLabel* d_wVelRhoHatLabel;
@@ -292,18 +274,16 @@ namespace Uintah {
       const VarLabel* d_enthalpyEKTLabel;
       const VarLabel* d_enthalpyTempLabel;
       const VarLabel* d_enthalpyFELabel;
+      
       // for validation
       const VarLabel* d_enthalpyRXNLabel;
 
 
       // Enthalpy Coef
-
       const VarLabel* d_enthCoefSBLMLabel;
 
       // Enthalpy NonLinear Src
-
       const VarLabel* d_enthNonLinSrcSBLMLabel;
-
 
       // for radiation
       const VarLabel* d_fvtfiveINLabel;
@@ -322,9 +302,9 @@ namespace Uintah {
       const VarLabel* d_radiationFluxSINLabel;
       const VarLabel* d_radiationFluxTINLabel;
       const VarLabel* d_radiationFluxBINLabel;
+      
       // reactive scalar source term from properties
       const VarLabel* d_reactscalarSRCINLabel;
-      
       
 
       // runge-kutta 3d order properties labels
@@ -359,12 +339,14 @@ namespace Uintah {
       const VarLabel* d_densityLagInterm_label;
       const VarLabel* d_densityLagAfterAverage_label;
       const VarLabel* d_densityLagAfterIntermAverage_label;
-// kinetic energy
+      
+      // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyPredLabel;
       const VarLabel* d_totalKineticEnergyIntermLabel;
-// scalar mms Ln error
+      
+      // scalar mms Ln error
       const VarLabel* d_smmsLnErrorLabel;
       const VarLabel* d_totalsmmsLnErrorLabel;
       const VarLabel* d_totalsmmsLnErrorPredLabel;
@@ -372,7 +354,8 @@ namespace Uintah {
       const VarLabel* d_totalsmmsExactSolLabel;
       const VarLabel* d_totalsmmsExactSolPredLabel;
       const VarLabel* d_totalsmmsExactSolIntermLabel;
-// grad P mms Ln error
+      
+      // grad P mms Ln error
       const VarLabel* d_gradpmmsLnErrorLabel;
       const VarLabel* d_totalgradpmmsLnErrorLabel;
       const VarLabel* d_totalgradpmmsLnErrorPredLabel;
@@ -380,7 +363,8 @@ namespace Uintah {
       const VarLabel* d_totalgradpmmsExactSolLabel;
       const VarLabel* d_totalgradpmmsExactSolPredLabel;
       const VarLabel* d_totalgradpmmsExactSolIntermLabel;
-// u mms Ln error
+      
+      // u mms Ln error
       const VarLabel* d_ummsLnErrorLabel;
       const VarLabel* d_totalummsLnErrorLabel;
       const VarLabel* d_totalummsLnErrorPredLabel;
@@ -388,7 +372,8 @@ namespace Uintah {
       const VarLabel* d_totalummsExactSolLabel;
       const VarLabel* d_totalummsExactSolPredLabel;
       const VarLabel* d_totalummsExactSolIntermLabel;
-// v mms Ln error
+      
+      // v mms Ln error
       const VarLabel* d_vmmsLnErrorLabel;
       const VarLabel* d_totalvmmsLnErrorLabel;
       const VarLabel* d_totalvmmsLnErrorPredLabel;
@@ -397,7 +382,7 @@ namespace Uintah {
       const VarLabel* d_totalvmmsExactSolPredLabel;
       const VarLabel* d_totalvmmsExactSolIntermLabel;
 
-// w mms Ln error
+      // w mms Ln error
       const VarLabel* d_wmmsLnErrorLabel;
       const VarLabel* d_totalwmmsLnErrorLabel;
       const VarLabel* d_totalwmmsLnErrorPredLabel;
@@ -406,7 +391,7 @@ namespace Uintah {
       const VarLabel* d_totalwmmsExactSolPredLabel;
       const VarLabel* d_totalwmmsExactSolIntermLabel;
 
-// mass balance labels for RK
+      // mass balance labels for RK
       const VarLabel* d_totalflowINPredLabel;
       const VarLabel* d_totalflowOUTPredLabel;
       const VarLabel* d_denAccumPredLabel;
@@ -419,7 +404,8 @@ namespace Uintah {
       const VarLabel* d_totalAreaOUTIntermLabel;
  
       const VarLabel* d_oldDeltaTLabel;
-// test filtered terms for variable density dynamic Smagorinsky model
+       
+       // test filtered terms for variable density dynamic Smagorinsky model
       const VarLabel* d_filterRhoULabel;
       const VarLabel* d_filterRhoVLabel;
       const VarLabel* d_filterRhoWLabel;
@@ -458,12 +444,11 @@ namespace Uintah {
       const VarLabel* d_normTotalRadSrcLabel;
       const VarLabel* d_carbonEfficiencyESLabel;
 
- 
-
       //mms force term labels
       const VarLabel* d_uFmmsLabel;
       const VarLabel* d_vFmmsLabel;
       const VarLabel* d_wFmmsLabel;
+      
       //Helper variable
       const VarLabel* d_zerosrcVarLabel;
 

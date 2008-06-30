@@ -69,32 +69,34 @@ namespace Uintah {
       StencilMatrix<SFCXVariable<double> > uVelocityConvectCoeff;
       StencilMatrix<SFCYVariable<double> > vVelocityConvectCoeff;
       StencilMatrix<SFCZVariable<double> > wVelocityConvectCoeff;
-      SFCXVariable<double> uVelLinearSrc; //SP term in Arches 
-      SFCXVariable<double> uVelNonlinearSrc; // SU in Arches 
-      SFCYVariable<double> vVelLinearSrc; //SP term in Arches 
-      SFCYVariable<double> vVelNonlinearSrc; // SU in Arches 
-      SFCZVariable<double> wVelLinearSrc; //SP term in Arches 
-      SFCZVariable<double> wVelNonlinearSrc; // SU in Arches 
+      SFCXVariable<double> uVelLinearSrc;       //SP term in Arches 
+      SFCXVariable<double> uVelNonlinearSrc;    // SU in Arches 
+      SFCYVariable<double> vVelLinearSrc;       //SP term in Arches 
+      SFCYVariable<double> vVelNonlinearSrc;    // SU in Arches 
+      SFCZVariable<double> wVelLinearSrc;       //SP term in Arches 
+      SFCZVariable<double> wVelNonlinearSrc;    // SU in Arches 
       StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
       CCVariable<double> pressLinearSrc;
       CCVariable<double> pressNonlinearSrc;
-      CCVariable<double> drhodt; //add to the RHS of the pressure eqn
-      CCVariable<double> filterdrhodt; //add to the RHS of the pressure eqn
-      StencilMatrix<CCVariable<double> > scalarCoeff; //7 point stencil
+      CCVariable<double> drhodt;        //add to the RHS of the pressure eqn
+      CCVariable<double> filterdrhodt;  //add to the RHS of the pressure eqn
+      StencilMatrix<CCVariable<double> > scalarCoeff;          //7 point stencil
       StencilMatrix<CCVariable<double> > scalarDiffusionCoeff; //7 point stencil
-      StencilMatrix<CCVariable<double> > scalarConvectCoeff; //7 point stencil
+      StencilMatrix<CCVariable<double> > scalarConvectCoeff;   //7 point stencil
       CCVariable<double> scalarLinearSrc;
       CCVariable<double> scalarDiffNonlinearSrc;
       CCVariable<double> scalarNonlinearSrc;
-      StencilMatrix<CCVariable<double> > reactscalarCoeff; //7 point stencil
+      StencilMatrix<CCVariable<double> > reactscalarCoeff;        //7 point stencil
       StencilMatrix<CCVariable<double> > reactscalarConvectCoeff; //7 point stencil
       CCVariable<double> reactscalarLinearSrc;
       CCVariable<double> reactscalarNonlinearSrc;
       // reaction source term
       CCVariable<double> reactscalarSRC;
+      
       // for refdensity and refpressure
       double den_Ref;
       double press_ref;
+      
       // added velocity hat vars
       SFCXVariable<double> uVelRhoHat;
       SFCYVariable<double> vVelRhoHat;
@@ -102,6 +104,7 @@ namespace Uintah {
       CCVariable<double> divergence;
       CCVariable<double> drhodf;
       CCVariable<double> densityPred;
+      
       // for radiation calculations
       CCVariable<double> qfluxe;
       CCVariable<double> qfluxw;
@@ -133,21 +136,21 @@ namespace Uintah {
       CCVariable<double> mmEnthSp;
       CCVariable<double> denRefArray;
 
-    //MMS variables
-    SFCXVariable<double> uFmms;
-    SFCYVariable<double> vFmms;
-    SFCZVariable<double> wFmms;
+      //MMS variables
+      SFCXVariable<double> uFmms;
+      SFCYVariable<double> vFmms;
+      SFCZVariable<double> wFmms;
 
-    //rate Variables for species transport
-    CCVariable<double> co2Rate;
-    CCVariable<double> so2Rate;
+      //rate Variables for species transport
+      CCVariable<double> co2Rate;
+      CCVariable<double> so2Rate;
 
-	//intrusion boundary source terms
-	CCVariable<double> scalarBoundarySrc;
-	CCVariable<double> enthalpyBoundarySrc;
-	SFCXVariable<double> umomBoundarySrc;
-	SFCYVariable<double> vmomBoundarySrc;
-	SFCZVariable<double> wmomBoundarySrc;
+      //intrusion boundary source terms
+      CCVariable<double> scalarBoundarySrc;
+      CCVariable<double> enthalpyBoundarySrc;
+      SFCXVariable<double> umomBoundarySrc;
+      SFCYVariable<double> vmomBoundarySrc;
+      SFCZVariable<double> wmomBoundarySrc;
 
     }; // End class ArchesVariables
    

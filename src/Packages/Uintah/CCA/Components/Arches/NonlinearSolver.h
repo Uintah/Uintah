@@ -41,81 +41,82 @@ WARNING
 ****************************************/
 
 namespace Uintah {
-  class EnthalpySolver;
+class EnthalpySolver;
 class TimeIntegratorLabel;
 class ExtraScalarSolver;
 class NonlinearSolver {
 
 public:
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for NonlinearSolver.
-      NonlinearSolver(const ProcessorGroup* myworld);
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Blank constructor for NonlinearSolver.
+  NonlinearSolver(const ProcessorGroup* myworld);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for NonlinearSolver.
-      virtual ~NonlinearSolver();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual destructor for NonlinearSolver.
+  virtual ~NonlinearSolver();
 
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for Set up of the problem specification database
-      virtual void problemSetup(const ProblemSpecP& db) = 0;
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Interface for Set up of the problem specification database
+  virtual void problemSetup(const ProblemSpecP& db) = 0;
 
-      // GROUP: Access Functions:
+  // GROUP: Access Functions:
 
-      // GROUP: Access Functions
-      ///////////////////////////////////////////////////////////////////////
-	
-	EnthalpySolver* getEnthalpySolver() const
-	  {
-	    return d_enthalpySolver;
-	  }
+  // GROUP: Access Functions
+  ///////////////////////////////////////////////////////////////////////
+    
+  EnthalpySolver* getEnthalpySolver() const
+  {
+    return d_enthalpySolver;
+  }
 
-      virtual void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
-					       const MaterialSet* matls,
-				 const TimeIntegratorLabel* timelabels) = 0;
-      // GROUP: Schedule Action Computations :
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for Solve the nonlinear system, return some error code.
-      //    [in] 
-      //        documentation here
-      //    [out] 
-      //        documentation here
-      virtual int nonlinearSolve( const LevelP& level,
-				  SchedulerP& sched) = 0;
-  
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for dummy Solve of the nonlinear System
-      virtual int noSolve(const LevelP& level,
-			  SchedulerP& sched) = 0;
+  virtual void sched_interpolateFromFCToCC(SchedulerP&, 
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls,
+                                           const TimeIntegratorLabel* timelabels) = 0;
+  // GROUP: Schedule Action Computations :
+  ///////////////////////////////////////////////////////////////////////
+  // Interface for Solve the nonlinear system, return some error code.
+  //    [in] 
+  //        documentation here
+  //    [out] 
+  //        documentation here
+  virtual int nonlinearSolve( const LevelP& level,
+                              SchedulerP& sched) = 0;
 
-      const string& getTimeIntegratorType() const
-	{
-	  return d_timeIntegratorType;
-	}
-      virtual double recomputeTimestep(double current_dt) = 0;
-      
-      virtual double getAdiabaticAirEnthalpy() const = 0;
+  ///////////////////////////////////////////////////////////////////////
+  // Interface for dummy Solve of the nonlinear System
+  virtual int noSolve(const LevelP& level,
+                      SchedulerP& sched) = 0;
 
-      virtual bool restartableTimesteps() = 0;
+  const string& getTimeIntegratorType() const
+  {
+    return d_timeIntegratorType;
+  }
+  virtual double recomputeTimestep(double current_dt) = 0;
 
-      virtual void setMMS(bool doMMS) = 0;
+  virtual double getAdiabaticAirEnthalpy() const = 0;
 
-      virtual bool getMMS() const = 0;
+  virtual bool restartableTimesteps() = 0;
 
-      virtual void setExtraProjection(bool extraProjection) = 0;
+  virtual void setMMS(bool doMMS) = 0;
 
-      virtual void setEKTCorrection(bool EKTCorrection) = 0;
+  virtual bool getMMS() const = 0;
 
-      virtual void setCalcExtraScalars(bool calcExtraScalars) = 0;
+  virtual void setExtraProjection(bool extraProjection) = 0;
 
-      virtual void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) = 0;
+  virtual void setEKTCorrection(bool EKTCorrection) = 0;
 
-	  virtual void setCarbonBalanceES(bool carbon_balance_es) = 0;
-	  virtual void setSulfurBalanceES(bool sulfur_balance_es) = 0;
+  virtual void setCalcExtraScalars(bool calcExtraScalars) = 0;
+
+  virtual void setExtraScalars(vector<ExtraScalarSolver*>* extraScalars) = 0;
+
+  virtual void setCarbonBalanceES(bool carbon_balance_es) = 0;
+  virtual void setSulfurBalanceES(bool sulfur_balance_es) = 0;
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;
