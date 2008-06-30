@@ -756,7 +756,7 @@ private:
   public:
     FlowInlet();
     FlowInlet(const FlowInlet& copy);
-    FlowInlet(int cellID, sbool calcVariance, bool reactingScalarSolve);
+    FlowInlet(int cellID, bool calcVariance, bool reactingScalarSolve);
     ~FlowInlet();
     FlowInlet& operator=(const FlowInlet& copy);
     int d_cellTypeID;          // define enum for cell type
