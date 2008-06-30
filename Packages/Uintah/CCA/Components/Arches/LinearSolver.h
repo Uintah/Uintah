@@ -61,39 +61,41 @@ class LinearSolver {
 
 public:
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a LinearSolver.
-      // PRECONDITIONS
-      // POSTCONDITIONS
-      LinearSolver();
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Construct an instance of a LinearSolver.
+  // PRECONDITIONS
+  // POSTCONDITIONS
+  LinearSolver();
 
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual Destructor
-      virtual ~LinearSolver();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual Destructor
+  virtual ~LinearSolver();
 
 
-      // GROUP: Problem Setup:
-      ////////////////////////////////////////////////////////////////////////
-      // Setup the problem (etc.)
-      virtual void problemSetup(const ProblemSpecP& params) = 0;
+  // GROUP: Problem Setup:
+  ////////////////////////////////////////////////////////////////////////
+  // Setup the problem (etc.)
+  virtual void problemSetup(const ProblemSpecP& params) = 0;
 
-      inline double getInitNorm() { return init_norm; }
+  inline double getInitNorm() { return init_norm; }
 
-   virtual void matrixCreate(const PatchSet* allpatches,
-			     const PatchSubset* mypatches) = 0;
-   virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
-			       ArchesVariables* vars,
-			       ArchesConstVariables* constvars,
-			       const ArchesLabel* lab) = 0;
-   
+  virtual void matrixCreate(const PatchSet* allpatches,
+                            const PatchSubset* mypatches) = 0;
+                            
+  virtual void setPressMatrix(const ProcessorGroup* pc, 
+                              const Patch* patch,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars,
+                              const ArchesLabel* lab) = 0;
 
-   virtual bool pressLinearSolve() = 0;
-   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars) = 0;
-   virtual void destroyMatrix() = 0;
-   double init_norm;
+
+  virtual bool pressLinearSolve() = 0;
+  virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars) = 0;
+  virtual void destroyMatrix() = 0;
+  double init_norm;
 
 protected:
 

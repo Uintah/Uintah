@@ -13,17 +13,16 @@ namespace Uintah {
 
   class ExtraScalarSrcFactory {
   public:
-    ExtraScalarSrcFactory();
-    ~ExtraScalarSrcFactory();
+  ExtraScalarSrcFactory();
+  ~ExtraScalarSrcFactory();
     
     
-    static ExtraScalarSrc* create(const ArchesLabel* label, 
-			          const MPMArchesLabel* MAlb,
-                                  const VarLabel* d_src_label,
-                                  const std::string d_src_name);
-                              
+  static ExtraScalarSrc* create(const ArchesLabel* label, 
+                                const MPMArchesLabel* MAlb,
+                                const VarLabel* d_src_label,
+                                const std::string d_src_name);
+                            
   };
-
 } // End namespace Uintah
 
 #endif 

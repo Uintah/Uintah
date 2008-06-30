@@ -40,7 +40,7 @@ none
 
 namespace Uintah {
     class Stencil {
-	Stencil(const DataWarehouseP&, const std::string&, const Patch*);
+        Stencil(const DataWarehouseP&, const std::string&, const Patch*);
     };
 } // End namespace Uintah
 

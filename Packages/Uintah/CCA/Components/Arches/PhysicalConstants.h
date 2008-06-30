@@ -46,66 +46,71 @@ class PhysicalConstants {
 
 public:
 
-      // GROUP: Constructors:
-      ///////////////////////////////////////////////////////////////////////
-      // Constructor taking
-      //   [in] 
-      PhysicalConstants();
+  // GROUP: Constructors:
+  ///////////////////////////////////////////////////////////////////////
+  // Constructor taking
+  //   [in] 
+  PhysicalConstants();
 
-      // GROUP: Destructors :
-      ///////////////////////////////////////////////////////////////////////
-      // Destructor
-      ~PhysicalConstants();
+  // GROUP: Destructors :
+  ///////////////////////////////////////////////////////////////////////
+  // Destructor
+  ~PhysicalConstants();
 
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Set up the problem specification database
-      void problemSetup(const ProblemSpecP& params);
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Set up the problem specification database
+  void problemSetup(const ProblemSpecP& params);
 
-      // GROUP: Get Methods :
-      ///////////////////////////////////////////////////////////////////////
-      // Get Gravity Vector
-      const Vector& getGravity(){ return d_gravity; }
+  // GROUP: Get Methods :
+  ///////////////////////////////////////////////////////////////////////
+  // Get Gravity Vector
+  const Vector& getGravity(){ return d_gravity; }
 
-      ///////////////////////////////////////////////////////////////////////
-      // Get RefPoint Location
-      const IntVector& getRefPoint(){ return d_ref_point; }
+  ///////////////////////////////////////////////////////////////////////
+  // Get RefPoint Location
+  const IntVector& getRefPoint(){ return d_ref_point; }
 
-      ///////////////////////////////////////////////////////////////////////
-      // Get one component of Gravity Vector
-      double getGravity(int index){
-	if (index == 1) return d_gravity.x();
-	else if (index == 2) return d_gravity.y();
-	else return d_gravity.z();
-      }
+  ///////////////////////////////////////////////////////////////////////
+  // Get one component of Gravity Vector
+  double getGravity(int index){
+    if (index == 1){
+      return d_gravity.x();
+    }else if (index == 2){
+      return d_gravity.y();
+    }
+    else{
+      return d_gravity.z();
+    }
+  }
 
-      ///////////////////////////////////////////////////////////////////////
-      // Get molecular viscosity (of air)
-      double getMolecularViscosity() { return d_viscosity; }
+  ///////////////////////////////////////////////////////////////////////
+  // Get molecular viscosity (of air)
+  double getMolecularViscosity() { return d_viscosity; }
 
 protected :
 
 private:
 
-      // GROUP: Constructors:
-      ///////////////////////////////////////////////////////////////////////
-      // Copy Constructor (never instantiated)
-      //   [in] 
-      //        const PhysicalConstants&   
-      PhysicalConstants(const PhysicalConstants&);
+  // GROUP: Constructors:
+  ///////////////////////////////////////////////////////////////////////
+  // Copy Constructor (never instantiated)
+  //   [in] 
+  //        const PhysicalConstants&   
+  PhysicalConstants(const PhysicalConstants&);
 
-      // GROUP: Operators:
-      ///////////////////////////////////////////////////////////////////////
-      // Assignment Operator (never instantiated)
-      //   [in] 
-      //        const PhysicalConstants&   
-      PhysicalConstants& operator=(const PhysicalConstants&);
+  // GROUP: Operators:
+  ///////////////////////////////////////////////////////////////////////
+  // Assignment Operator (never instantiated)
+  //   [in] 
+  //        const PhysicalConstants&   
+  PhysicalConstants& operator=(const PhysicalConstants&);
 
 private:
 
-    Vector d_gravity;
-    IntVector d_ref_point;
-    double d_viscosity;
+  Vector d_gravity;
+  IntVector d_ref_point;
+  double d_viscosity;
     
 }; // end class PhysicalConstants
 } // End namespace Uintah

@@ -64,119 +64,121 @@ class Discretization {
 
 public:
 
-      // GROUP: Constructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Construct an instance of a Discretization.
-      // PRECONDITIONS
-      // POSTCONDITIONS
-      // Default constructor.
-      Discretization();
+  // GROUP: Constructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Construct an instance of a Discretization.
+  // PRECONDITIONS
+  // POSTCONDITIONS
+  // Default constructor.
+  Discretization();
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual Destructor
-      virtual ~Discretization();
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual Destructor
+  virtual ~Discretization();
 
-      // GROUP:  Action Methods
-      ////////////////////////////////////////////////////////////////////////
-      // Set stencil weights. (Velocity)
-      // It uses second order hybrid differencing for computing
-      // coefficients
-      void calculateVelocityCoeff(const ProcessorGroup*,
-				  const Patch* patch,
-				  double delta_t,
-				  int index, bool lcentral,
-				  CellInformation* cellinfo,
-				  ArchesVariables* vars,
-				  ArchesConstVariables* constvars);
+  // GROUP:  Action Methods
+  ////////////////////////////////////////////////////////////////////////
+  // Set stencil weights. (Velocity)
+  // It uses second order hybrid differencing for computing
+  // coefficients
+  void calculateVelocityCoeff(const ProcessorGroup*,
+                              const Patch* patch,
+                              double delta_t,
+                              int index, 
+                              bool lcentral,
+                              CellInformation* cellinfo,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Set stencil weights. (Pressure)
-      // It uses second order hybrid differencing for computing
-      // coefficients
-      void calculatePressureCoeff(const ProcessorGroup*,
-				  const Patch* patch,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw,
-				  double delta_t, 
-				  CellInformation* cellinfo,
-				  ArchesVariables* vars,
-				  ArchesConstVariables* constvars); 
+  ////////////////////////////////////////////////////////////////////////
+  // Set stencil weights. (Pressure)
+  // It uses second order hybrid differencing for computing
+  // coefficients
+  void calculatePressureCoeff(const ProcessorGroup*,
+                              const Patch* patch,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              double delta_t, 
+                              CellInformation* cellinfo,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars); 
 
-      ////////////////////////////////////////////////////////////////////////
-      // Modify stencil weights (Pressure) to account for voidage due
-      // to multiple materials
-      void mmModifyPressureCoeffs(const ProcessorGroup*,
-				      const Patch* patch,
-				      ArchesVariables* vars,
-				      ArchesConstVariables* constvars);
+  ////////////////////////////////////////////////////////////////////////
+  // Modify stencil weights (Pressure) to account for voidage due
+  // to multiple materials
+  void mmModifyPressureCoeffs(const ProcessorGroup*,
+                                  const Patch* patch,
+                                  ArchesVariables* vars,
+                                  ArchesConstVariables* constvars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Set stencil weights. (Scalars)
-      // It uses second order hybrid differencing for computing
-      // coefficients
-      void calculateScalarCoeff(const ProcessorGroup*,
-				const Patch* patch,
-				double delta_t,
-				CellInformation* cellinfo,
-				ArchesVariables* vars,
-				ArchesConstVariables* constvars,
-				int conv_scheme);
+  ////////////////////////////////////////////////////////////////////////
+  // Set stencil weights. (Scalars)
+  // It uses second order hybrid differencing for computing
+  // coefficients
+  void calculateScalarCoeff(const ProcessorGroup*,
+                            const Patch* patch,
+                            double delta_t,
+                            CellInformation* cellinfo,
+                            ArchesVariables* vars,
+                            ArchesConstVariables* constvars,
+                            int conv_scheme);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Documentation here
-      void calculateVelDiagonal(const ProcessorGroup*,
-				const Patch* patch,
-				int index,
-				ArchesVariables* vars);
+  ////////////////////////////////////////////////////////////////////////
+  // Documentation here
+  void calculateVelDiagonal(const ProcessorGroup*,
+                            const Patch* patch,
+                            int index,
+                            ArchesVariables* vars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Documentation here
-      void calculatePressDiagonal(const ProcessorGroup*,
-				  const Patch* patch,
-				  DataWarehouse* old_dw,
-				  DataWarehouse* new_dw, ArchesVariables* vars);
+  ////////////////////////////////////////////////////////////////////////
+  // Documentation here
+  void calculatePressDiagonal(const ProcessorGroup*,
+                              const Patch* patch,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw, 
+                              ArchesVariables* vars);
 
-      ////////////////////////////////////////////////////////////////////////
-      // Documentation here
-      void calculateScalarDiagonal(const ProcessorGroup*,
-				   const Patch* patch,
-				   ArchesVariables* vars);
-      ////////////////////////////////////////////////////////////////////////
-      // Documentation here
-      void calculateScalarFluxLimitedConvection(const ProcessorGroup*,
-				   const Patch* patch,
-				   CellInformation* cellinfo,
-				   ArchesVariables* vars,
-				   ArchesConstVariables* constvars,
-				   const int wall_celltypeval,
-				   int limiter_type,
-				   int boundary_limiter_type,
-				   bool central_limiter);
+  ////////////////////////////////////////////////////////////////////////
+  // Documentation here
+  void calculateScalarDiagonal(const ProcessorGroup*,
+                               const Patch* patch,
+                               ArchesVariables* vars);
+  ////////////////////////////////////////////////////////////////////////
+  // Documentation here
+  void calculateScalarFluxLimitedConvection(const ProcessorGroup*,
+                                            const Patch* patch,
+                                            CellInformation* cellinfo,
+                                            ArchesVariables* vars,
+                                            ArchesConstVariables* constvars,
+                                            const int wall_celltypeval,
+                                            int limiter_type,
+                                            int boundary_limiter_type,
+                                            bool central_limiter);
 
 
-      void computeDivergence(const ProcessorGroup*,
-			     const Patch* patch,
-			     ArchesVariables* vars,
-			     ArchesConstVariables* constvars,
-			     const bool filter_divergence,
-			     const bool periodic);
+  void computeDivergence(const ProcessorGroup*,
+                         const Patch* patch,
+                         ArchesVariables* vars,
+                         ArchesConstVariables* constvars,
+                         const bool filter_divergence,
+                         const bool periodic);
 
 #ifdef PetscFilter
-      inline void setFilter(Filter* filter) {
-	d_filter = filter;
-      }
+  inline void setFilter(Filter* filter) {
+    d_filter = filter;
+  }
 #endif
-      inline void setTurbulentPrandtlNumber(double turbPrNo) {
-	d_turbPrNo = turbPrNo;
-      }
+  inline void setTurbulentPrandtlNumber(double turbPrNo) {
+    d_turbPrNo = turbPrNo;
+  }
 
-      inline void setMMS(bool doMMS) {
-        d_doMMS=doMMS;
-      }
-      inline bool getMMS() const {
-        return d_doMMS;
-      }
+  inline void setMMS(bool doMMS) {
+    d_doMMS=doMMS;
+  }
+  inline bool getMMS() const {
+    return d_doMMS;
+  }
 protected:
 
 private:

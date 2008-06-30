@@ -39,36 +39,36 @@ class ExtraScalarSrc {
 
 public:
 
-      ////////////////////////////////////////////////////////////////////////
-      // Blank constructor for ExtraScalarSrc.
-      ExtraScalarSrc(const ArchesLabel* label, 
-		     const MPMArchesLabel* MAlb,
-                     const VarLabel* d_src_label);
+  ////////////////////////////////////////////////////////////////////////
+  // Blank constructor for ExtraScalarSrc.
+  ExtraScalarSrc(const ArchesLabel* label, 
+                 const MPMArchesLabel* MAlb,
+                 const VarLabel* d_src_label);
 
-      // GROUP: Destructors:
-      ////////////////////////////////////////////////////////////////////////
-      // Virtual destructor for ExtraScalarSrc.
-      virtual ~ExtraScalarSrc();
-
-
-      // GROUP: Problem Setup :
-      ///////////////////////////////////////////////////////////////////////
-      // Interface for Set up of the problem specification database
-      virtual void problemSetup(const ProblemSpecP& db) = 0;
+  // GROUP: Destructors:
+  ////////////////////////////////////////////////////////////////////////
+  // Virtual destructor for ExtraScalarSrc.
+  virtual ~ExtraScalarSrc();
 
 
-      virtual void sched_addExtraScalarSrc(SchedulerP& sched, 
-                                           const PatchSet* patches,
-					   const MaterialSet* matls,
-				     const TimeIntegratorLabel* timelabels) = 0;
+  // GROUP: Problem Setup :
+  ///////////////////////////////////////////////////////////////////////
+  // Interface for Set up of the problem specification database
+  virtual void problemSetup(const ProblemSpecP& db) = 0;
 
-      virtual const string getTableName() = 0;
-      virtual void setTableIndex(int tableIndex) = 0;  
-					     
+
+  virtual void sched_addExtraScalarSrc(SchedulerP& sched, 
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls,
+                                       const TimeIntegratorLabel* timelabels) = 0;
+
+  virtual const string getTableName() = 0;
+  virtual void setTableIndex(int tableIndex) = 0;  
+                                         
 protected:
-      const ArchesLabel* d_lab;
-      const MPMArchesLabel* d_MAlab;
-      const VarLabel* d_scalar_nonlin_src_label;
+  const ArchesLabel* d_lab;
+  const MPMArchesLabel* d_MAlab;
+  const VarLabel* d_scalar_nonlin_src_label;
 
 private:
 
