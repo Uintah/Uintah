@@ -103,12 +103,12 @@ usage () {
     echo
     echo "  -main          run the mpm,ice,mpmice,arches and mpmarches tests"
     echo "  -all           run all tests (overrides other tests flags)"
-    echo "  -ar            run the arches tests"
+    echo "  -arches        run the arches tests"
     echo "  -ice_amr       run the tests ice amr tests"
     echo "  -e             run the example tests"
     echo "  -m             run the mpm tests"
     echo "  -models        run the Models tests"
-    echo "  -ma            run the mpmarches tests"
+    echo "  -mpmarches     run the mpmarches tests"
     echo "  -sm            run the smpm tests"
     echo "  -i             run the ice tests"
     echo "  -mi            run the mpmice tests"
@@ -142,7 +142,7 @@ for arg in $*; do
             do_arches=1
             do_mpmarches=1
             do_examples=1;;
-        -ar)
+        -arches)
             echo "Scheduling the arches tests . . ."
             do_arches=1;;
         -ice_amr)
@@ -164,7 +164,7 @@ for arg in $*; do
         -models)
             echo "Scheduling the models tests . . ."
             do_models=1;;
-        -ma)
+        -mpmarches)
             echo "Scheduling the mpmarches tests . . ."
             do_mpmarches=1;;
         -sm)
@@ -384,7 +384,7 @@ mpmf_test () {
         run_restart
         MPI=""
     done
-}
+}ar
 
 mpmice_test () {
     echo; echo "Testing $mpmice_test_cases"
