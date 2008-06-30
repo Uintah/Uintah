@@ -384,7 +384,7 @@ mpmf_test () {
         run_restart
         MPI=""
     done
-}ar
+}
 
 mpmice_test () {
     echo; echo "Testing $mpmice_test_cases"
