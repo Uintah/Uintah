@@ -9,7 +9,7 @@ using namespace Uintah;
 // Interface constructor for ExtraScalarSrc
 //****************************************************************************
 ExtraScalarSrc::ExtraScalarSrc(const ArchesLabel* label, 
-			       const MPMArchesLabel* MAlb,
+                               const MPMArchesLabel* MAlb,
                                const VarLabel* d_src_label):
                                d_lab(label), d_MAlab(MAlb),
                                d_scalar_nonlin_src_label(d_src_label)

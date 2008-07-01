@@ -123,7 +123,7 @@ Arches::~Arches()
 void 
 Arches::problemSetup(const ProblemSpecP& params, 
                      const ProblemSpecP& materials_ps, 
-		     GridP& grid, SimulationStateP& sharedState)
+                     GridP& grid, SimulationStateP& sharedState)
 {
 
   d_sharedState= sharedState;
@@ -146,43 +146,43 @@ Arches::problemSetup(const ProblemSpecP& params,
     db->require("model_mixture_fraction_variance", d_calcVariance);
     db->getWithDefault("transport_extra_scalars", d_calcExtraScalars, false);
   }
-  db->getWithDefault("turnonMixedModel",d_mixedModel,false);
-  db->getWithDefault("recompileTaskgraph",d_recompile,false);
+  db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
+  db->getWithDefault("recompileTaskgraph",  d_recompile,false);
   db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
-  db->getWithDefault("extraProjection",d_extraProjection,false);  
-  db->getWithDefault("EKTCorrection",d_EKTCorrection,false);  
+  db->getWithDefault("extraProjection",     d_extraProjection,false);  
+  db->getWithDefault("EKTCorrection",       d_EKTCorrection,false);  
 
   db->getWithDefault("doMMS", d_doMMS, false);
   if(d_doMMS) {
-	  ProblemSpecP db_mms = db->findBlock("MMS");
-	  db_mms->getWithDefault("whichMMS", d_mms, "constantMMS");
-	  if (d_mms == "constantMMS") {
-	    ProblemSpecP db_mms0 = db_mms->findBlock("constantMMS");
-	    db_mms0->getWithDefault("cu",cu,0.0);
-	    db_mms0->getWithDefault("cv",cv,0.0);
-	    db_mms0->getWithDefault("cw",cw,0.0);
-	    db_mms0->getWithDefault("cp",cp,0.0);
-	    db_mms0->getWithDefault("phi0",phi0,0.0);
-	  }
-	  else if (d_mms == "gao1MMS") {
-	    ProblemSpecP db_mms1 = db_mms->findBlock("gao1MMS");
-	    db_mms1->getWithDefault("cu",cu,1.0);
-	    db_mms1->getWithDefault("cv",cv,1.0);
-	    db_mms1->getWithDefault("cw",cw,1.0);
-	    db_mms1->getWithDefault("cp",cp,1.0);
-	    db_mms1->getWithDefault("phi0",phi0,0.5);
-	  }
-	  else if (d_mms == "thornock1MMS") {
-		  ProblemSpecP db_mms2 = db_mms->findBlock("thornock1MMS");
-		  db_mms2->require("cu",cu);
-	  }
-	  else if (d_mms == "almgrenMMS") {
-		  ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
-		  db_mms3->require("amplitude",amp);
-	  }
-	  else
-		  throw InvalidValue("current MMS "
-		       "not supported: " + d_mms, __FILE__, __LINE__);
+    ProblemSpecP db_mms = db->findBlock("MMS");
+    db_mms->getWithDefault("whichMMS", d_mms, "constantMMS");
+    if (d_mms == "constantMMS") {
+      ProblemSpecP db_mms0 = db_mms->findBlock("constantMMS");
+      db_mms0->getWithDefault("cu",cu,0.0);
+      db_mms0->getWithDefault("cv",cv,0.0);
+      db_mms0->getWithDefault("cw",cw,0.0);
+      db_mms0->getWithDefault("cp",cp,0.0);
+      db_mms0->getWithDefault("phi0",phi0,0.0);
+    }
+    else if (d_mms == "gao1MMS") {
+      ProblemSpecP db_mms1 = db_mms->findBlock("gao1MMS");
+      db_mms1->getWithDefault("cu",cu,1.0);
+      db_mms1->getWithDefault("cv",cv,1.0);
+      db_mms1->getWithDefault("cw",cw,1.0);
+      db_mms1->getWithDefault("cp",cp,1.0);
+      db_mms1->getWithDefault("phi0",phi0,0.5);
+    }
+    else if (d_mms == "thornock1MMS") {
+      ProblemSpecP db_mms2 = db_mms->findBlock("thornock1MMS");
+      db_mms2->require("cu",cu);
+    }
+    else if (d_mms == "almgrenMMS") {
+      ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
+      db_mms3->require("amplitude",amp);
+    }
+    else
+      throw InvalidValue("current MMS "
+           "not supported: " + d_mms, __FILE__, __LINE__);
   }
 
   // physical constant
@@ -201,7 +201,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     for (ProblemSpecP scalar_db = extra_sc_db->findBlock("scalar");
          scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")) {
       d_extraScalarSolver = scinew ExtraScalarSolver(d_lab, d_MAlab,
-					             d_physicalConsts);
+                                                     d_physicalConsts);
       d_extraScalarSolver->problemSetup(scalar_db);
       d_extraScalars.push_back(d_extraScalarSolver);
     }
@@ -222,8 +222,8 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // read boundary
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
-						 d_props, d_calcReactingScalar,
-						 d_calcEnthalpy, d_calcVariance);
+                                                 d_props, d_calcReactingScalar,
+                                                 d_calcEnthalpy, d_calcVariance);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->setCalcExtraScalars(d_calcExtraScalars);
@@ -232,19 +232,19 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
   d_sulfur_balance_es = d_boundaryCondition->getSulfurBalanceES();
-  d_props->setCarbonBalanceES(d_carbon_balance_es);	
+  d_props->setCarbonBalanceES(d_carbon_balance_es);        
   d_props->setSulfurBalanceES(d_sulfur_balance_es);
 
   db->require("turbulence_model", turbModel);
   if (turbModel == "smagorinsky") 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
-					  d_boundaryCondition);
+                                          d_boundaryCondition);
   else  if (turbModel == "dynamicprocedure") 
     d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
-					  d_boundaryCondition);
+                                          d_boundaryCondition);
   else if (turbModel == "compdynamicprocedure")
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
-					  d_boundaryCondition);
+                                          d_boundaryCondition);
   else if (turbModel == "complocaldynamicprocedure") {
     d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition); 
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
@@ -257,7 +257,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   if (d_dynScalarModel)
     d_turbModel->setCombustionSpecifics(d_calcScalar, d_calcEnthalpy,
-		                        d_calcReactingScalar);
+                                        d_calcReactingScalar);
 
 #ifdef PetscFilter
     d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);
@@ -268,7 +268,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
     d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
-                                                       d_boundaryCondition);	
+                                                       d_boundaryCondition);        
     d_scaleSimilarityModel->problemSetup(db);
 
     d_scaleSimilarityModel->setMixedModel(d_mixedModel);
@@ -279,41 +279,42 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_props->setBC(d_boundaryCondition);
 
-  if (d_calcExtraScalars)
+  if (d_calcExtraScalars){
     for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
       d_extraScalars[i]->setTurbulenceModel(d_turbModel);
       d_extraScalars[i]->setBoundaryCondition(d_boundaryCondition);
     }
-
+  }
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard") {
     d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_MAlab, d_props, 
-					      d_boundaryCondition,
-					      d_turbModel, d_physicalConsts,
+                                              d_boundaryCondition,
+                                              d_turbModel, d_physicalConsts,
                                               d_calcScalar,
-					      d_calcReactingScalar,
-					      d_calcEnthalpy,
+                                              d_calcReactingScalar,
+                                              d_calcEnthalpy,
                                               d_calcVariance,
-					      d_myworld);
-    if (d_calcExtraScalars)
+                                              d_myworld);
+    if (d_calcExtraScalars){
       throw InvalidValue("Transport of extra scalars by picard solver is not implemented", __FILE__, __LINE__);
+    }
   }
   else if (nlSolver == "explicit") {
         d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
-					   d_boundaryCondition,
-					   d_turbModel, d_scaleSimilarityModel, 
-					   d_physicalConsts,
-					   d_calcScalar,
-					   d_calcReactingScalar,
-					   d_calcEnthalpy,
+                                           d_boundaryCondition,
+                                           d_turbModel, d_scaleSimilarityModel, 
+                                           d_physicalConsts,
+                                           d_calcScalar,
+                                           d_calcReactingScalar,
+                                           d_calcEnthalpy,
                        d_calcVariance,
-					   d_myworld);
+                                           d_myworld);
 
   }
-  else
+  else{
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
-
+  }
   d_nlSolver->setExtraProjection(d_extraProjection);
   d_nlSolver->setEKTCorrection(d_EKTCorrection);
   d_nlSolver->setMMS(d_doMMS);
@@ -351,7 +352,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 // ****************************************************************************
 void 
 Arches::scheduleInitialize(const LevelP& level,
-			   SchedulerP& sched)
+                           SchedulerP& sched)
 {
   const PatchSet* patches= level->eachPatch();
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
@@ -368,15 +369,13 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //mms initial condition
   if (d_doMMS) {
-	  sched_mmsInitialCondition(level, sched);
+          sched_mmsInitialCondition(level, sched);
   }
 
   //========= MOM debugging ===========
   bool debug_mom = false;
   if (debug_mom){
-    
     sched_blobInit(level, sched);
-    
   }
   //===================================
 
@@ -386,9 +385,9 @@ Arches::scheduleInitialize(const LevelP& level,
   d_boundaryCondition->sched_cellTypeInit(sched, patches, matls);
 
   // computing flow inlet areas
-  if (d_boundaryCondition->getInletBC())
+  if (d_boundaryCondition->getInletBC()){
     d_boundaryCondition->sched_calculateArea(sched, patches, matls);
-
+  }
   // Set the profile (output Varlabel have SP appended to them)
   // require : densityIN,[u,v,w]VelocityIN
   // compute : densitySP, [u,v,w]VelocitySP, scalarSP
@@ -414,11 +413,11 @@ Arches::scheduleInitialize(const LevelP& level,
   // require scalarSP
   // compute : densityCP
   init_timelabel = scinew TimeIntegratorLabel(d_lab,
-		  			      TimeIntegratorStepType::FE);
+                                                TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
   d_props->sched_reComputeProps(sched, patches, matls,
-				init_timelabel, true, true, false,false);
+                                init_timelabel, true, true, false,false);
 
   d_boundaryCondition->sched_initInletBC(sched, patches, matls);
 
@@ -434,7 +433,7 @@ Arches::scheduleInitialize(const LevelP& level,
     if (d_turbModel->getFilter()) {
       // if the matrix is not initialized
       if (!d_turbModel->getFilter()->isInitialized()) 
-	d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+        d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
     }
 #endif
 
@@ -461,11 +460,11 @@ Arches::scheduleInitialize(const LevelP& level,
 // ****************************************************************************
 void 
 Arches::sched_paramInit(const LevelP& level,
-			SchedulerP& sched)
+                        SchedulerP& sched)
 {
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::paramInit",
-			    this, &Arches::paramInit);
+                       this, &Arches::paramInit);
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
@@ -476,22 +475,30 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
-    if ((d_extraProjection)||(d_EKTCorrection))
+    if ((d_extraProjection)||(d_EKTCorrection)){
       tsk->computes(d_lab->d_pressureExtraProjectionLabel);
-    if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE")))
+    }
+    if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
       tsk->computes(d_lab->d_pressurePredLabel);
-    if (d_timeIntegratorType == "RK3SSP")
+    }
+    if (d_timeIntegratorType == "RK3SSP"){
       tsk->computes(d_lab->d_pressureIntermLabel);
-
-    if (d_calcScalar) 
+    }
+    
+    if (d_calcScalar){
       tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
+    }
+    
     if (d_calcVariance) {
       tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarVar
       tsk->computes(d_lab->d_normalizedScalarVarLabel); // only work for 1 scalarVar
       tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarVar
     }
-    if (d_calcReactingScalar)
+    
+    if (d_calcReactingScalar){
       tsk->computes(d_lab->d_reactscalarSPLabel);
+    }
+    
     if (d_calcEnthalpy) {
       tsk->computes(d_lab->d_enthalpySPLabel); 
       tsk->computes(d_lab->d_radiationSRCINLabel);
@@ -507,12 +514,15 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_densityCPLabel);
     tsk->computes(d_lab->d_viscosityCTSLabel);
     if (d_dynScalarModel) {
-      if (d_calcScalar)
+      if (d_calcScalar){
         tsk->computes(d_lab->d_scalarDiffusivityLabel);
-      if (d_calcEnthalpy)
+      }
+      if (d_calcEnthalpy){
         tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
-      if (d_calcReactingScalar)
+      }
+      if (d_calcReactingScalar){
         tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
+      }
     }
     tsk->computes(d_lab->d_oldDeltaTLabel);
     // for reacting flows save temperature and co2 
@@ -522,29 +532,29 @@ Arches::sched_paramInit(const LevelP& level,
     }
 
     if (d_doMMS) {
-
       tsk->computes(d_lab->d_uFmmsLabel);
       tsk->computes(d_lab->d_vFmmsLabel);
       tsk->computes(d_lab->d_wFmmsLabel);
-
     }
-    if (d_calcExtraScalars)
+    
+    if (d_calcExtraScalars){
       for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
-              tsk->computes(d_extraScalars[i]->getScalarLabel());
+        tsk->computes(d_extraScalars[i]->getScalarLabel());
       }
-    if (d_carbon_balance_es)
-    	tsk->computes(d_lab->d_co2RateLabel);	
-	if (d_sulfur_balance_es)
-		tsk->computes(d_lab->d_so2RateLabel);		
-
-	tsk->computes(d_lab->d_scalarBoundarySrcLabel);
-	tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
-	tsk->computes(d_lab->d_umomBoundarySrcLabel);
-	tsk->computes(d_lab->d_vmomBoundarySrcLabel);
-	tsk->computes(d_lab->d_wmomBoundarySrcLabel);
+    }
+    if (d_carbon_balance_es){
+      tsk->computes(d_lab->d_co2RateLabel);
+    }
+    if (d_sulfur_balance_es){
+      tsk->computes(d_lab->d_so2RateLabel);                
+    }
+    tsk->computes(d_lab->d_scalarBoundarySrcLabel);
+    tsk->computes(d_lab->d_enthalpyBoundarySrcLabel);
+    tsk->computes(d_lab->d_umomBoundarySrcLabel);
+    tsk->computes(d_lab->d_vmomBoundarySrcLabel);
+    tsk->computes(d_lab->d_wmomBoundarySrcLabel);
 
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
 }
 
 // ****************************************************************************
@@ -552,10 +562,10 @@ Arches::sched_paramInit(const LevelP& level,
 // ****************************************************************************
 void
 Arches::paramInit(const ProcessorGroup* pg,
-		  const PatchSubset* patches,
-		  const MaterialSubset* matls,
-		  DataWarehouse* old_dw,
-		  DataWarehouse* new_dw)
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw)
 {
     double old_delta_t = 0.0;
     new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
@@ -602,40 +612,39 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> mmgasVolFrac;
    
     if (d_calcExtraScalars){
-	if (d_carbon_balance_es){ 
-    		CCVariable<double> co2Rate;
-    		new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
-    		co2Rate.initialize(0.0);
-	}
-	if (d_sulfur_balance_es){ 
-    		CCVariable<double> so2Rate;
-    		new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
-    		so2Rate.initialize(0.0);
-	}
-    }	
+      if (d_carbon_balance_es){ 
+        CCVariable<double> co2Rate;
+        new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+        co2Rate.initialize(0.0);
+      }
+      if (d_sulfur_balance_es){ 
+        CCVariable<double> so2Rate;
+        new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+        so2Rate.initialize(0.0);
+      }
+    }        
 
-	CCVariable<double> scalarBoundarySrc;
-	CCVariable<double> enthalpyBoundarySrc;
-	SFCXVariable<double> umomBoundarySrc;
-	SFCYVariable<double> vmomBoundarySrc;
-	SFCZVariable<double> wmomBoundarySrc;
+    CCVariable<double> scalarBoundarySrc;
+    CCVariable<double> enthalpyBoundarySrc;
+    SFCXVariable<double> umomBoundarySrc;
+    SFCYVariable<double> vmomBoundarySrc;
+    SFCZVariable<double> wmomBoundarySrc;
 
-	new_dw->allocateAndPut(scalarBoundarySrc, d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
-	new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
-	new_dw->allocateAndPut(umomBoundarySrc, d_lab->d_umomBoundarySrcLabel, matlIndex, patch);
-	new_dw->allocateAndPut(vmomBoundarySrc, d_lab->d_vmomBoundarySrcLabel, matlIndex, patch);
-	new_dw->allocateAndPut(wmomBoundarySrc, d_lab->d_wmomBoundarySrcLabel, matlIndex, patch);
+    new_dw->allocateAndPut(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,   matlIndex, patch);
+    new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
+    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,     matlIndex, patch);
+    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,     matlIndex, patch);
+    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,     matlIndex, patch);
 
-	scalarBoundarySrc.initialize(0.0);
-	enthalpyBoundarySrc.initialize(0.0);
-	umomBoundarySrc.initialize(0.0);
-	vmomBoundarySrc.initialize(0.0);
-	wmomBoundarySrc.initialize(0.0);
+    scalarBoundarySrc.initialize(0.0);
+    enthalpyBoundarySrc.initialize(0.0);
+    umomBoundarySrc.initialize(0.0);
+    vmomBoundarySrc.initialize(0.0);
+    wmomBoundarySrc.initialize(0.0);
 
 
     // Variables for mms analysis
     if (d_doMMS){
-
       //Force terms of convection + diffusion
       // These will be used in the MMS scirun module
       //  to get error convergence
@@ -668,19 +677,18 @@ Arches::paramInit(const ProcessorGroup* pg,
     uVelRhoHat.initialize(0.0);
     vVelRhoHat.initialize(0.0);
     wVelRhoHat.initialize(0.0);
+    
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
     if ((d_extraProjection)||(d_EKTCorrection)) {
       new_dw->allocateAndPut(pressureExtraProjection, d_lab->d_pressureExtraProjectionLabel, matlIndex, patch);
       pressureExtraProjection.initialize(0.0);
     }
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
-      new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
-			     matlIndex, patch);
+      new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,matlIndex, patch);
       pressurePred.initialize(0.0);
     }
     if (d_timeIntegratorType == "RK3SSP") {
-      new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,
-			     matlIndex, patch);
+      new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,matlIndex, patch);
       pressureInterm.initialize(0.0);
     }
 
@@ -692,6 +700,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     }
     
     new_dw->allocateAndPut(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    
     if (d_calcVariance) {
       new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, matlIndex, patch);
       scalarVar_new.initialize(0.0);
@@ -700,10 +709,10 @@ Arches::paramInit(const ProcessorGroup* pg,
       new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, matlIndex, patch);
       scalarDiss_new.initialize(0.0);  
     }
+    
     CCVariable<double> reactscalar;
     if (d_calcReactingScalar) {
-      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel,
-		       matlIndex, patch);
+      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel,matlIndex, patch);
       reactscalar.initialize(0.0);
     }
 
@@ -720,42 +729,43 @@ Arches::paramInit(const ProcessorGroup* pg,
       CCVariable<double> abskg;
       CCVariable<double> radEnthalpySrc;;
 
-      new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,
-			     matlIndex, patch);
+      new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,matlIndex, patch);
       radEnthalpySrc.initialize(0.0);
 
-      new_dw->allocateAndPut(qfluxe, d_lab->d_radiationFluxEINLabel,
-			     matlIndex, patch);
+      new_dw->allocateAndPut(qfluxe, d_lab->d_radiationFluxEINLabel,matlIndex, patch);
       qfluxe.initialize(0.0);
-      new_dw->allocateAndPut(qfluxw, d_lab->d_radiationFluxWINLabel,
-			     matlIndex, patch);
+      
+      new_dw->allocateAndPut(qfluxw, d_lab->d_radiationFluxWINLabel,matlIndex, patch);
       qfluxw.initialize(0.0);
-      new_dw->allocateAndPut(qfluxn, d_lab->d_radiationFluxNINLabel,
-			     matlIndex, patch);
+      
+      new_dw->allocateAndPut(qfluxn, d_lab->d_radiationFluxNINLabel,matlIndex, patch);
       qfluxn.initialize(0.0);
-      new_dw->allocateAndPut(qfluxs, d_lab->d_radiationFluxSINLabel,
-			     matlIndex, patch);
+      
+      new_dw->allocateAndPut(qfluxs, d_lab->d_radiationFluxSINLabel,matlIndex, patch);
       qfluxs.initialize(0.0);
-      new_dw->allocateAndPut(qfluxt, d_lab->d_radiationFluxTINLabel,
-			     matlIndex, patch);
+      
+      new_dw->allocateAndPut(qfluxt, d_lab->d_radiationFluxTINLabel,matlIndex, patch);
       qfluxt.initialize(0.0);
-      new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,
-			     matlIndex, patch);
+      
+      new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,matlIndex, patch);
       qfluxb.initialize(0.0);
-      new_dw->allocateAndPut(abskg, d_lab->d_abskgINLabel,
-			     matlIndex, patch);
+      
+      new_dw->allocateAndPut(abskg,   d_lab->d_abskgINLabel,        matlIndex, patch);
       abskg.initialize(0.0);
 
     }
-    new_dw->allocateAndPut(density, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    matlIndex, patch);
     new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
     if (d_dynScalarModel) {
-      if (d_calcScalar)
-        new_dw->allocateAndPut(scalarDiffusivity, d_lab->d_scalarDiffusivityLabel, matlIndex, patch);
-      if (d_calcEnthalpy)
-        new_dw->allocateAndPut(enthalpyDiffusivity, d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch);
-      if (d_calcReactingScalar)
-        new_dw->allocateAndPut(reactScalarDiffusivity, d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch);
+      if (d_calcScalar){
+        new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     matlIndex, patch);
+      }
+      if (d_calcEnthalpy){
+        new_dw->allocateAndPut(enthalpyDiffusivity,   d_lab->d_enthalpyDiffusivityLabel,   matlIndex, patch);
+      }
+      if (d_calcReactingScalar){
+        new_dw->allocateAndPut(reactScalarDiffusivity,d_lab->d_reactScalarDiffusivityLabel,matlIndex, patch);
+      }
     }  
 
     uVelocity.initialize(0.0);
@@ -767,31 +777,29 @@ Arches::paramInit(const ProcessorGroup* pg,
     viscosity.initialize(visVal);
 
     if (d_dynScalarModel) {
-      if (d_calcScalar)
+      if (d_calcScalar){
         scalarDiffusivity.initialize(visVal/0.4);
-      if (d_calcEnthalpy)
+      }
+      if (d_calcEnthalpy){
         enthalpyDiffusivity.initialize(visVal/0.4);
-      if (d_calcReactingScalar)
+      }
+      if (d_calcReactingScalar){
         reactScalarDiffusivity.initialize(visVal/0.4);
+      }
     }
     scalar.initialize(0.0);
 
     if (d_calcExtraScalars) {
 
       for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-	CCVariable<double> extra_scalar;
+        CCVariable<double> extra_scalar;
         new_dw->allocateAndPut(extra_scalar,
                                d_extraScalars[i]->getScalarLabel(),
                                matlIndex, patch);
         extra_scalar.initialize(d_extraScalars[i]->getScalarInitValue());
-	
       }
-      
-      
-      
-    }
-    
-  }
+    }  
+  } // patches
 }
 
 // ****************************************************************************
@@ -799,32 +807,30 @@ Arches::paramInit(const ProcessorGroup* pg,
 // ****************************************************************************
 void 
 Arches::scheduleComputeStableTimestep(const LevelP& level,
-				      SchedulerP& sched)
+                                      SchedulerP& sched)
 {
   // primitive variable initialization
   Task* tsk = scinew Task( "Arches::computeStableTimeStep",
-			   this, &Arches::computeStableTimeStep);
+                           this, &Arches::computeStableTimeStep);
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
+                Ghost::None, Arches::ZEROGHOSTCELLS);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
-
 }
 
 // ****************************************************************************
@@ -832,10 +838,10 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
 // ****************************************************************************
 void 
 Arches::computeStableTimeStep(const ProcessorGroup* ,
-			      const PatchSubset* patches,
-			      const MaterialSubset*,
-			      DataWarehouse* old_dw,
-			      DataWarehouse* new_dw)
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -857,17 +863,17 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(den, d_lab->d_densityCPLabel, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
     IntVector indexLow = patch->getFortranCellLowIndex__New();
@@ -878,23 +884,33 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    
     int press_celltypeval = d_boundaryCondition->pressureCellType();
     int out_celltypeval = d_boundaryCondition->outletCellType();
     if ((xminus)&&((cellType[indexLow - IntVector(1,0,0)]==press_celltypeval)
-		 ||(cellType[indexLow - IntVector(1,0,0)]==out_celltypeval)))
-     indexLow = indexLow - IntVector(1,0,0);
+                 ||(cellType[indexLow - IntVector(1,0,0)]==out_celltypeval))){
+      indexLow = indexLow - IntVector(1,0,0);
+    }
+     
     if ((yminus)&&((cellType[indexLow - IntVector(0,1,0)]==press_celltypeval)
-		 ||(cellType[indexLow - IntVector(0,1,0)]==out_celltypeval)))
-     indexLow = indexLow - IntVector(0,1,0);
+                 ||(cellType[indexLow - IntVector(0,1,0)]==out_celltypeval))){
+      indexLow = indexLow - IntVector(0,1,0);
+    }
+    
     if ((zminus)&&((cellType[indexLow - IntVector(0,0,1)]==press_celltypeval)
-		 ||(cellType[indexLow - IntVector(0,0,1)]==out_celltypeval)))
-     indexLow = indexLow - IntVector(0,0,1);
-    if (xplus)
-     indexHigh = indexHigh + IntVector(1,0,0);
-    if (yplus)
-     indexHigh = indexHigh + IntVector(0,1,0);
-    if (zplus)
-     indexHigh = indexHigh + IntVector(0,0,1);
+                 ||(cellType[indexLow - IntVector(0,0,1)]==out_celltypeval))){
+      indexLow = indexLow - IntVector(0,0,1);
+    }
+    
+    if (xplus){
+      indexHigh = indexHigh + IntVector(1,0,0);
+    }
+    if (yplus){
+      indexHigh = indexHigh + IntVector(0,1,0);
+    }
+    if (zplus){
+      indexHigh = indexHigh + IntVector(0,0,1);
+    }
 
     double delta_t = d_deltaT; // max value allowed
     double small_num = 1e-30;
@@ -902,65 +918,66 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  double tmp_time;
+        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          double tmp_time;
 
-	  if (d_MAlab) {
-	    int flag = 1;
-	    int colXm = colX - 1;
-	    int colXp = colX + 1;
-	    int colYm = colY - 1;
-	    int colYp = colY + 1;
-	    int colZm = colZ - 1;
-	    int colZp = colZ + 1;
-	    if (colXm < indexLow.x()) colXm = indexLow.x();
-	    if (colXp > indexHigh.x())colXp = indexHigh.x();
-	    if (colYm < indexLow.y()) colYm = indexLow.y();
-	    if (colYp > indexHigh.y())colYp = indexHigh.y();
-	    if (colZm < indexLow.z()) colZm = indexLow.z();
-	    if (colZp > indexHigh.z())colZp = indexHigh.z();
-	    IntVector xMinusCell(colXm,colY,colZ);
-	    IntVector xPlusCell(colXp,colY,colZ);
-	    IntVector yMinusCell(colX,colYm,colZ);
-	    IntVector yPlusCell(colX,colYp,colZ);
-	    IntVector zMinusCell(colX,colY,colZm);
-	    IntVector zPlusCell(colX,colY,colZp);
-	    double uvel = uVelocity[currCell];
-	    double vvel = vVelocity[currCell];
-	    double wvel = wVelocity[currCell];
+          if (d_MAlab) {
+            int flag = 1;
+            int colXm = colX - 1;
+            int colXp = colX + 1;
+            int colYm = colY - 1;
+            int colYp = colY + 1;
+            int colZm = colZ - 1;
+            int colZp = colZ + 1;
+            if (colXm < indexLow.x()) colXm = indexLow.x();
+            if (colXp > indexHigh.x())colXp = indexHigh.x();
+            if (colYm < indexLow.y()) colYm = indexLow.y();
+            if (colYp > indexHigh.y())colYp = indexHigh.y();
+            if (colZm < indexLow.z()) colZm = indexLow.z();
+            if (colZp > indexHigh.z())colZp = indexHigh.z();
+            IntVector xMinusCell(colXm,colY,colZ);
+            IntVector xPlusCell(colXp,colY,colZ);
+            IntVector yMinusCell(colX,colYm,colZ);
+            IntVector yPlusCell(colX,colYp,colZ);
+            IntVector zMinusCell(colX,colY,colZm);
+            IntVector zPlusCell(colX,colY,colZp);
+            double uvel = uVelocity[currCell];
+            double vvel = vVelocity[currCell];
+            double wvel = wVelocity[currCell];
 
-	    if (den[xMinusCell] < 1.0e-12) uvel=uVelocity[xPlusCell];
-	    if (den[yMinusCell] < 1.0e-12) vvel=vVelocity[yPlusCell];
-	    if (den[zMinusCell] < 1.0e-12) wvel=wVelocity[zPlusCell];
-	    if (den[currCell] < 1.0e-12) flag = 0;
-	    if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = 0;
-	    if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = 0;
-	    if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = 0;
+            if (den[xMinusCell] < 1.0e-12) uvel=uVelocity[xPlusCell];
+            if (den[yMinusCell] < 1.0e-12) vvel=vVelocity[yPlusCell];
+            if (den[zMinusCell] < 1.0e-12) wvel=wVelocity[zPlusCell];
+            if (den[currCell] < 1.0e-12) flag = 0;
+            if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = 0;
+            if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = 0;
+            if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = 0;
 
-	    tmp_time=1.0;
-	    if (flag != 0)
-	      tmp_time=Abs(uvel)/(cellinfo->sew[colX])+
-		Abs(vvel)/(cellinfo->sns[colY])+
-		Abs(wvel)/(cellinfo->stb[colZ])+
-		(visc[currCell]/den[currCell])* 
-		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
-		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
-		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-		small_num;
-	  }
-	  else
-	    tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
-	      Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
-	      Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
-	      (visc[currCell]/den[currCell])* 
-	      (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
-	       1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
-	       1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-	      small_num;
+            tmp_time=1.0;
+            if (flag != 0){
+              tmp_time=Abs(uvel)/(cellinfo->sew[colX])+
+                Abs(vvel)/(cellinfo->sns[colY])+
+                Abs(wvel)/(cellinfo->stb[colZ])+
+                (visc[currCell]/den[currCell])* 
+                (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+                 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+                 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+                small_num;
+            }
+          }
+          else
+            tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
+              Abs(vVelocity[currCell])/(cellinfo->sns[colY])+
+              Abs(wVelocity[currCell])/(cellinfo->stb[colZ])+
+              (visc[currCell]/den[currCell])* 
+              (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
+               1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
+               1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
+              small_num;
 
-	  delta_t2=Min(1.0/tmp_time, delta_t2);
-	}
+          delta_t2=Min(1.0/tmp_time, delta_t2);
+        }
       }
     }
     
@@ -970,17 +987,17 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-	    IntVector currCell(colX, colY, colZ);
-	    IntVector xplusCell(colX+1, colY, colZ);
-	    IntVector yplusCell(colX, colY+1, colZ);
-	    IntVector zplusCell(colX, colY, colZ+1);
-	    IntVector xminusCell(colX-1, colY, colZ);
-	    IntVector yminusCell(colX, colY-1, colZ);
-	    IntVector zminusCell(colX, colY, colZ-1);
-	    double tmp_time;
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector xplusCell(colX+1, colY, colZ);
+            IntVector yplusCell(colX, colY+1, colZ);
+            IntVector zplusCell(colX, colY, colZ+1);
+            IntVector xminusCell(colX-1, colY, colZ);
+            IntVector yminusCell(colX, colY-1, colZ);
+            IntVector zminusCell(colX, colY, colZ-1);
+            double tmp_time;
 
-	    tmp_time = 0.5* (
+            tmp_time = 0.5* (
             ((den[currCell]+den[xplusCell])*Max(uVelocity[xplusCell],0.0) -
              (den[currCell]+den[xminusCell])*Min(uVelocity[currCell],0.0)) /
             cellinfo->sew[colX] +
@@ -991,9 +1008,10 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
              (den[currCell]+den[zminusCell])*Min(wVelocity[currCell],0.0)) /
             cellinfo->stb[colZ])+small_num;
 
-	    if (den[currCell] > 0.0)
-	      delta_t2=Min(den[currCell]/tmp_time, delta_t2);
-	  }
+            if (den[currCell] > 0.0){
+              delta_t2=Min(den[currCell]/tmp_time, delta_t2);
+            }
+          }
         }
       }
     }
@@ -1016,7 +1034,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 // ****************************************************************************
 void 
 Arches::scheduleTimeAdvance( const LevelP& level, 
-			     SchedulerP& sched)
+                             SchedulerP& sched)
 {
   double time = d_lab->d_sharedState->getElapsedTime();
   nofTimeSteps++ ;
@@ -1046,7 +1064,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 // Function to return boolean for recompiling taskgraph
 // ****************************************************************************
 bool Arches::needRecompile(double time, double dt, 
-			    const GridP& grid) {
+                            const GridP& grid) {
  return d_recompile;
 }
 // ****************************************************************************
@@ -1054,11 +1072,11 @@ bool Arches::needRecompile(double time, double dt,
 // ****************************************************************************
 void 
 Arches::sched_readCCInitialCondition(const LevelP& level,
-				     SchedulerP& sched)
+                                     SchedulerP& sched)
 {
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::readCCInitialCondition",
-			    this, &Arches::readCCInitialCondition);
+                            this, &Arches::readCCInitialCondition);
     tsk->modifies(d_lab->d_newCCUVelocityLabel);
     tsk->modifies(d_lab->d_newCCVVelocityLabel);
     tsk->modifies(d_lab->d_newCCWVelocityLabel);
@@ -1072,10 +1090,10 @@ Arches::sched_readCCInitialCondition(const LevelP& level,
 // ****************************************************************************
 void
 Arches::readCCInitialCondition(const ProcessorGroup* ,
-		  	       const PatchSubset* patches,
-			       const MaterialSubset*,
-	 		       DataWarehouse* ,
-			       DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                               const MaterialSubset*,
+                                DataWarehouse* ,
+                               DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1088,7 +1106,7 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     new_dw->getModifiable(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
     new_dw->getModifiable(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
     new_dw->getModifiable(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
-    new_dw->getModifiable(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
+    new_dw->getModifiable(pressure,    d_lab->d_pressurePSLabel,     matlIndex, patch);
 
     ifstream fd(d_init_inputfile.c_str());
     if(fd.fail()) {
@@ -1113,18 +1131,18 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     IntVector idxHi = patch->getFortranCellHighIndex__New();
     for (int colZ = 1; colZ <= nz; colZ ++) {
       for (int colY = 1; colY <= ny; colY ++) {
-	for (int colX = 1; colX <= nx; colX ++) {
-	  IntVector currCell(colX-1, colY-1, colZ-1);
+        for (int colX = 1; colX <= nx; colX ++) {
+          IntVector currCell(colX-1, colY-1, colZ-1);
 
-	  fd >> uvel >> vvel >> wvel >> pres >> tmp;
-	  if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
+          fd >> uvel >> vvel >> wvel >> pres >> tmp;
+          if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
               (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
-	    uVelocityCC[currCell] = 0.01*uvel;
-	    vVelocityCC[currCell] = 0.01*vvel;
-	    wVelocityCC[currCell] = 0.01*wvel;
-	    pressure[currCell] = 0.1*pres;
+            uVelocityCC[currCell] = 0.01*uvel;
+            vVelocityCC[currCell] = 0.01*vvel;
+            wVelocityCC[currCell] = 0.01*wvel;
+            pressure[currCell] = 0.1*pres;
           }
-	}
+        }
       }
     }
     fd.close();  
@@ -1133,29 +1151,28 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
 
 
 
-
+//______________________________________________________________________
+//
 void 
 Arches::sched_blobInit(const LevelP& level,
-				     SchedulerP& sched)
+                       SchedulerP& sched)
 {
-    // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::blobInit",
-			    this, &Arches::blobInit);
+  // primitive variable initialization
+  Task* tsk = scinew Task( "Arches::blobInit",
+                     this, &Arches::blobInit);
 
-    tsk->modifies(d_extraScalars[0]->getScalarLabel());
-
-    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
+  tsk->modifies(d_extraScalars[0]->getScalarLabel());
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
-
+//______________________________________________________________________
+//
 void
 Arches::blobInit(const ProcessorGroup* ,
-		 const PatchSubset* patches,
-		 const MaterialSubset*,
-		 DataWarehouse* ,
-		 DataWarehouse* new_dw)
+                 const PatchSubset* patches,
+                 const MaterialSubset*,
+                 DataWarehouse* ,
+                 DataWarehouse* new_dw)
 {
-
   //WARNING: Hardcoded to 1 patch!
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
@@ -1165,41 +1182,42 @@ Arches::blobInit(const ProcessorGroup* ,
     CCVariable<double> extrascalar;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
 
     extrascalarlabel = d_extraScalars[0]->getScalarLabel();
     new_dw->getModifiable(extrascalar, extrascalarlabel,
-    			  matlIndex, patch);
+                              matlIndex, patch);
   
     std::cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
     std::cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
   
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
-	  
+          
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  
-	  IntVector currCell(colX,colY,colZ);
-		
-	  if (cellinfo->xx[colX] >= .4 && cellinfo->xx[colX] <= .6){
-	    if (cellinfo->yy[colY] >= .4 && cellinfo->yy[colY] <= .6){
-	      if (cellinfo->zz[colZ] >= .4 && cellinfo->zz[colZ] <= .6){
-		      
-		//for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
-		extrascalar[currCell] = .0004513;
-		//}
-		
-	      }
-	    }
-	  } //end if	  
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          
+          IntVector currCell(colX,colY,colZ);
+                
+          if (cellinfo->xx[colX] >= .4 && cellinfo->xx[colX] <= .6){
+            if (cellinfo->yy[colY] >= .4 && cellinfo->yy[colY] <= .6){
+              if (cellinfo->zz[colZ] >= .4 && cellinfo->zz[colZ] <= .6){
+                      
+                //for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
+                extrascalar[currCell] = .0004513;
+                //}
+                
+              }
+            }
+          } //end if          
+        }
       }
     } //end for
   }  //end patch loop
@@ -1211,19 +1229,18 @@ Arches::blobInit(const ProcessorGroup* ,
 // ****************************************************************************
 void 
 Arches::sched_mmsInitialCondition(const LevelP& level,
-				     SchedulerP& sched)
+                                  SchedulerP& sched)
 {
-    // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::mmsInitialCondition",
-			    this, &Arches::mmsInitialCondition);
-    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_pressurePSLabel);
-    tsk->modifies(d_lab->d_scalarSPLabel);
+  // primitive variable initialization
+  Task* tsk = scinew Task( "Arches::mmsInitialCondition",
+                          this, &Arches::mmsInitialCondition);
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_pressurePSLabel);
+  tsk->modifies(d_lab->d_scalarSPLabel);
 
-    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
 // ****************************************************************************
@@ -1231,10 +1248,10 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
 // ****************************************************************************
 void
 Arches::mmsInitialCondition(const ProcessorGroup* ,
-		  	       const PatchSubset* patches,
-			       const MaterialSubset*,
-	 		       DataWarehouse* ,
-			       DataWarehouse* new_dw)
+                            const PatchSubset* patches,
+                            const MaterialSubset*,
+                            DataWarehouse* ,
+                            DataWarehouse* new_dw)
 {
 
   for (int p = 0; p < patches->size(); p++) {
@@ -1246,17 +1263,19 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     SFCZVariable<double> wVelocity;
     CCVariable<double> pressure;
     CCVariable<double> scalar;
+    
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->getModifiable(pressure,  d_lab->d_pressurePSLabel,    matlIndex, patch);
+    new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      matlIndex, patch);
     
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     IntVector idxLo = patch->getFortranCellLowIndex__New();
@@ -1265,26 +1284,26 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
 
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 
-	  IntVector currCell(colX, colY, colZ);
-	  if (d_mms == "constantMMS") {
-	    pressure[currCell] = cp;
-	    scalar[currCell]   = phi0;
-	  }
-	  else if (d_mms == "gao1MMS") {
-	    pressure[currCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
-	    scalar[currCell] = phi0;
-	  }
-	  else if (d_mms == "thornock1MMS") {
-	  }
-	  else if (d_mms == "almgrenMMS") {
-	    // for mms in x-y plane
-	    pressure[currCell]  = -amp*amp/4 * (cos(4.0*pi*cellinfo->xx[colX])
-	    	     +  cos(4.0*pi*cellinfo->yy[colY]));
-	    scalar[currCell]    = 0.0;
-	  }
-	}
+          IntVector currCell(colX, colY, colZ);
+          if (d_mms == "constantMMS") {
+            pressure[currCell] = cp;
+            scalar[currCell]   = phi0;
+          }
+          else if (d_mms == "gao1MMS") {
+            pressure[currCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
+            scalar[currCell] = phi0;
+          }
+          else if (d_mms == "thornock1MMS") {
+          }
+          else if (d_mms == "almgrenMMS") {
+            // for mms in x-y plane
+            pressure[currCell]  = -amp*amp/4 * (cos(4.0*pi*cellinfo->xx[colX])
+                         +  cos(4.0*pi*cellinfo->yy[colY]));
+            scalar[currCell]    = 0.0;
+          }
+        }
       }
     }
 
@@ -1294,25 +1313,21 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-
-
-	  IntVector currCell(colX, colY, colZ);
-	  if (d_mms == "constantMMS") {
-	    uVelocity[currCell] = cu;
-	  }
-	  else if (d_mms == "gao1MMS") {
-	    uVelocity[currCell] = cu*cellinfo->xu[colX];
-	  }
-	  else if (d_mms == "thornock1MMS") {
-	  }
-	  else if (d_mms == "almgrenMMS") {
-	    // for mms in x-y plane
-
-	    uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-	      * sin(2.0*pi*cellinfo->yy[colY]);
-
-	  }
-	}
+          IntVector currCell(colX, colY, colZ);
+          if (d_mms == "constantMMS") {
+            uVelocity[currCell] = cu;
+          }
+          else if (d_mms == "gao1MMS") {
+            uVelocity[currCell] = cu*cellinfo->xu[colX];
+          }
+          else if (d_mms == "thornock1MMS") {
+          }
+          else if (d_mms == "almgrenMMS") {
+            // for mms in x-y plane
+            uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+              * sin(2.0*pi*cellinfo->yy[colY]);
+          }
+        }
       }
     }
 
@@ -1323,24 +1338,24 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 
-	  IntVector currCell(colX, colY, colZ);
+          IntVector currCell(colX, colY, colZ);
 
-	  if (d_mms == "constantMMS") {
-	    vVelocity[currCell] = cv;
-	  }
-	  else if (d_mms == "gao1MMS") {
-	    vVelocity[currCell] = cv*cellinfo->yv[colY];
-	  }
-	  else if (d_mms == "thornock1MMS") {
-	  }
-	  else if (d_mms == "almgrenMMS") {
-	    // for mms in x-y plane
+          if (d_mms == "constantMMS") {
+            vVelocity[currCell] = cv;
+          }
+          else if (d_mms == "gao1MMS") {
+            vVelocity[currCell] = cv*cellinfo->yv[colY];
+          }
+          else if (d_mms == "thornock1MMS") {
+          }
+          else if (d_mms == "almgrenMMS") {
+            // for mms in x-y plane
 
-	    vVelocity[currCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-	      * cos(2.0*pi*cellinfo->yv[colY]);
+            vVelocity[currCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+              * cos(2.0*pi*cellinfo->yv[colY]);
 
-	  }
-	}
+          }
+        }
       }
     }
     //Z-FACE centered variables 
@@ -1350,23 +1365,23 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 
-	  IntVector currCell(colX, colY, colZ);
+          IntVector currCell(colX, colY, colZ);
 
-	  if (d_mms == "constantMMS") {
-	    wVelocity[currCell] = cw;
-	  }
-	  else if (d_mms == "gao1MMS") {
-	    wVelocity[currCell] = cw*cellinfo->zw[colZ];
-	  }
-	  else if (d_mms == "thornock1MMS") {
-	  }
-	  else if (d_mms == "almgrenMMS") {
-	    // for mms in x-y plane
-	    //double pi = acos(-1.0);
+          if (d_mms == "constantMMS") {
+            wVelocity[currCell] = cw;
+          }
+          else if (d_mms == "gao1MMS") {
+            wVelocity[currCell] = cw*cellinfo->zw[colZ];
+          }
+          else if (d_mms == "thornock1MMS") {
+          }
+          else if (d_mms == "almgrenMMS") {
+            // for mms in x-y plane
+            //double pi = acos(-1.0);
 
-	    wVelocity[currCell] = 0.0;
-	  }
-	}
+            wVelocity[currCell] = 0.0;
+          }
+        }
       }
     }
 
@@ -1395,190 +1410,190 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
 
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector xminusCell(colX-1, colY, colZ);
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        
+          IntVector currCell(colX, colY, colZ);
+          IntVector xminusCell(colX-1, colY, colZ);
 
-	  //if (cellType[xminusCell] == wall_celltypeval){
+          //if (cellType[xminusCell] == wall_celltypeval){
 
-	  if (d_mms == "gao1MMS"){
-	   
-	    scalar[xminusCell]    = phi0;
-	    uVelocity[currCell]   = cu*cellinfo->xu[colX];
-	    uVelocity[xminusCell] = cu*cellinfo->xu[colX-1];
-	    vVelocity[xminusCell] = cv*cellinfo->yv[colY];
-	    wVelocity[xminusCell] = cw*cellinfo->zw[colZ];
-	    pressure[xminusCell]  = cp*(cellinfo->xx[colX-1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
-	    
-	  }
-	  else if (d_mms == "thornock1MMS"){
-	  }
-	  else if (d_mms == "almgrenMMS"){
-	    double pi = acos(-1.0);
-	    uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-	                                  * sin(2.0*pi*cellinfo->yy[colY]);
-	    uVelocity[xminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX-1])
-	                                    * sin(2.0*pi*cellinfo->yy[colY]);
-	    vVelocity[xminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX-1])
-	                                    * cos(2.0*pi*cellinfo->yv[colY]);
-	    wVelocity[xminusCell] = 0.0;
-	  }
-	}
+          if (d_mms == "gao1MMS"){
+           
+            scalar[xminusCell]    = phi0;
+            uVelocity[currCell]   = cu*cellinfo->xu[colX];
+            uVelocity[xminusCell] = cu*cellinfo->xu[colX-1];
+            vVelocity[xminusCell] = cv*cellinfo->yv[colY];
+            wVelocity[xminusCell] = cw*cellinfo->zw[colZ];
+            pressure[xminusCell]  = cp*(cellinfo->xx[colX-1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
+            
+          }
+          else if (d_mms == "thornock1MMS"){
+          }
+          else if (d_mms == "almgrenMMS"){
+            double pi = acos(-1.0);
+            uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+                                          * sin(2.0*pi*cellinfo->yy[colY]);
+            uVelocity[xminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX-1])
+                                            * sin(2.0*pi*cellinfo->yy[colY]);
+            vVelocity[xminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX-1])
+                                            * cos(2.0*pi*cellinfo->yv[colY]);
+            wVelocity[xminusCell] = 0.0;
+          }
+        }
       }
     }   
 
     if (xplus) {
       int colX = idxHi.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	  
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector xplusCell(colX+1, colY, colZ);
-	  
-	  if (d_mms == "gao1MMS"){
-	    scalar[xplusCell]    = phi0;
-	    uVelocity[xplusCell] = cu*cellinfo->xu[colX+1];
-	    vVelocity[xplusCell] = cv*cellinfo->yv[colY];
-	    wVelocity[xplusCell] = cw*cellinfo->zw[colZ];
-	    pressure[xplusCell]  = cp*(cellinfo->xx[colX+1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
-	  }
-	  else if (d_mms == "thornock1MMS"){
-	  }
-	  else if (d_mms == "almgrenMMS"){
-	    double pi = acos(-1.0);
-	    uVelocity[xplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX+1])
-	                                   * sin(2.0*pi*cellinfo->yy[colY]);
-	    vVelocity[xplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX+1])
-	                                   * cos(2.0*pi*cellinfo->yv[colY]);
-	    wVelocity[xplusCell] = 0.0;
-	  }
-	}
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          
+          IntVector currCell(colX, colY, colZ);
+          IntVector xplusCell(colX+1, colY, colZ);
+          
+          if (d_mms == "gao1MMS"){
+            scalar[xplusCell]    = phi0;
+            uVelocity[xplusCell] = cu*cellinfo->xu[colX+1];
+            vVelocity[xplusCell] = cv*cellinfo->yv[colY];
+            wVelocity[xplusCell] = cw*cellinfo->zw[colZ];
+            pressure[xplusCell]  = cp*(cellinfo->xx[colX+1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
+          }
+          else if (d_mms == "thornock1MMS"){
+          }
+          else if (d_mms == "almgrenMMS"){
+            double pi = acos(-1.0);
+            uVelocity[xplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX+1])
+                                           * sin(2.0*pi*cellinfo->yy[colY]);
+            vVelocity[xplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX+1])
+                                           * cos(2.0*pi*cellinfo->yv[colY]);
+            wVelocity[xplusCell] = 0.0;
+          }
+        }
       }
     }    
 
     if (yminus) {
       int colY = idxLo.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector yminusCell(colX, colY-1, colZ);
-	  
-	  if (d_mms == "gao1MMS"){
-	    scalar[yminusCell]    = phi0;
-	    uVelocity[yminusCell] = cu*cellinfo->xu[colX];
-	    vVelocity[currCell]   = cv*cellinfo->yv[colY];
-	    vVelocity[yminusCell] = cv*cellinfo->yv[colY-1];
-	    wVelocity[yminusCell] = cw*cellinfo->zw[colZ];
-	    pressure[yminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY-1]+cellinfo->zz[colZ]);
-	  }
-	  else if (d_mms == "thornock1MMS"){
-	  }
-	  else if (d_mms == "almgrenMMS"){
-	    double pi = acos(-1.0);
-	    uVelocity[yminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-	                                    * sin(2.0*pi*cellinfo->yy[colY-1]);
-	    vVelocity[yminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-	                                    * cos(2.0*pi*cellinfo->yv[colY-1]);
-	    vVelocity[currCell]   = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-	                                    * cos(2.0*pi*cellinfo->yv[colY]);
-	    wVelocity[yminusCell] = 0.0;
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          
+          IntVector currCell(colX, colY, colZ);
+          IntVector yminusCell(colX, colY-1, colZ);
+          
+          if (d_mms == "gao1MMS"){
+            scalar[yminusCell]    = phi0;
+            uVelocity[yminusCell] = cu*cellinfo->xu[colX];
+            vVelocity[currCell]   = cv*cellinfo->yv[colY];
+            vVelocity[yminusCell] = cv*cellinfo->yv[colY-1];
+            wVelocity[yminusCell] = cw*cellinfo->zw[colZ];
+            pressure[yminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY-1]+cellinfo->zz[colZ]);
+          }
+          else if (d_mms == "thornock1MMS"){
+          }
+          else if (d_mms == "almgrenMMS"){
+            double pi = acos(-1.0);
+            uVelocity[yminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+                                            * sin(2.0*pi*cellinfo->yy[colY-1]);
+            vVelocity[yminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+                                            * cos(2.0*pi*cellinfo->yv[colY-1]);
+            vVelocity[currCell]   = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+                                            * cos(2.0*pi*cellinfo->yv[colY]);
+            wVelocity[yminusCell] = 0.0;
 
-	  }
-	  
-	}
+          }
+          
+        }
       }
     }    
 
     if (yplus) {
       int colY = idxHi.y();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector yplusCell(colX, colY+1, colZ);
-	  
-	  //if (cellType[yplusCell] == wall_celltypeval){
-	  
-	  if (d_mms == "gao1MMS"){
-	    scalar[yplusCell]    = phi0;
-	    uVelocity[yplusCell] = cu*cellinfo->xu[colX];
-	    vVelocity[yplusCell] = cv*cellinfo->yv[colY+1];
-	    wVelocity[yplusCell] = cw*cellinfo->zw[colZ];
-	    pressure[yplusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY+1]+cellinfo->zz[colZ]);
-	  }
-	  else if (d_mms == "thornock1MMS"){
-	  }
-	  else if (d_mms == "almgrenMMS"){
-	    double pi = acos(-1.0);
-	    uVelocity[yplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-	                                   * sin(2.0*pi*cellinfo->yy[colY+1]);
-	    vVelocity[yplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-	                                   * cos(2.0*pi*cellinfo->yv[colY+1]);
-	    wVelocity[yplusCell] = 0.0;
-	  }
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          
+          IntVector currCell(colX, colY, colZ);
+          IntVector yplusCell(colX, colY+1, colZ);
+          
+          //if (cellType[yplusCell] == wall_celltypeval){
+          
+          if (d_mms == "gao1MMS"){
+            scalar[yplusCell]    = phi0;
+            uVelocity[yplusCell] = cu*cellinfo->xu[colX];
+            vVelocity[yplusCell] = cv*cellinfo->yv[colY+1];
+            wVelocity[yplusCell] = cw*cellinfo->zw[colZ];
+            pressure[yplusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY+1]+cellinfo->zz[colZ]);
+          }
+          else if (d_mms == "thornock1MMS"){
+          }
+          else if (d_mms == "almgrenMMS"){
+            double pi = acos(-1.0);
+            uVelocity[yplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+                                           * sin(2.0*pi*cellinfo->yy[colY+1]);
+            vVelocity[yplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+                                           * cos(2.0*pi*cellinfo->yv[colY+1]);
+            wVelocity[yplusCell] = 0.0;
+          }
+        }
       }
     }    
 
     if (zminus) {
       int colZ = idxLo.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector zminusCell(colX, colY, colZ-1);
-	  
-	  if (d_mms == "gao1MMS"){
-	    scalar[zminusCell]    = phi0;
-	    uVelocity[zminusCell] = cu*cellinfo->xu[colX];
-	    vVelocity[zminusCell] = cv*cellinfo->yv[colY];
-	    wVelocity[currCell]   = cw*cellinfo->zw[colZ];
-	    wVelocity[zminusCell] = cw*cellinfo->zw[colZ-1];
-	    pressure[zminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ-1]);
-	  }
-	  else if (d_mms == "thornock1MMS"){
-	  }
-	  else if (d_mms == "almgrenMMS"){
-	    double pi = acos(-1.0);
-	    uVelocity[zminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-	                                    * sin(2.0*pi*cellinfo->yy[colY]);
-	    vVelocity[zminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-	                                    * cos(2.0*pi*cellinfo->yv[colY]);
-	    wVelocity[currCell] = 0.0;
-	    wVelocity[zminusCell] = 0.0;
-	  }	    
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          
+          IntVector currCell(colX, colY, colZ);
+          IntVector zminusCell(colX, colY, colZ-1);
+          
+          if (d_mms == "gao1MMS"){
+            scalar[zminusCell]    = phi0;
+            uVelocity[zminusCell] = cu*cellinfo->xu[colX];
+            vVelocity[zminusCell] = cv*cellinfo->yv[colY];
+            wVelocity[currCell]   = cw*cellinfo->zw[colZ];
+            wVelocity[zminusCell] = cw*cellinfo->zw[colZ-1];
+            pressure[zminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ-1]);
+          }
+          else if (d_mms == "thornock1MMS"){
+          }
+          else if (d_mms == "almgrenMMS"){
+            double pi = acos(-1.0);
+            uVelocity[zminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+                                            * sin(2.0*pi*cellinfo->yy[colY]);
+            vVelocity[zminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+                                            * cos(2.0*pi*cellinfo->yv[colY]);
+            wVelocity[currCell] = 0.0;
+            wVelocity[zminusCell] = 0.0;
+          }            
+        }
       }
     }    
 
     if (zplus) {
       int colZ = idxHi.z();
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector zplusCell(colX, colY, colZ+1);
-	  
-	  if (d_mms == "gao1MMS"){
-	    scalar[zplusCell] = phi0;
-	    uVelocity[zplusCell] = cu*cellinfo->xu[colX];
-	    vVelocity[zplusCell] = cv*cellinfo->yv[colY];
-	    wVelocity[zplusCell] = cw*cellinfo->zw[colZ+1];
-	    pressure[zplusCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ+1]);
-	  }
-	  else if (d_mms == "thornock1MMS"){
-	    }
-	  else if (d_mms == "almgrenMMS"){
-	    double pi = acos(-1.0);
-	    uVelocity[zplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-	                                   * sin(2.0*pi*cellinfo->yy[colY]);
-	    vVelocity[zplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-	                                   * cos(2.0*pi*cellinfo->yv[colY]);
-	    wVelocity[zplusCell] = 0.0;
-	  }	    
-	}
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          
+          IntVector currCell(colX, colY, colZ);
+          IntVector zplusCell(colX, colY, colZ+1);
+          
+          if (d_mms == "gao1MMS"){
+            scalar[zplusCell] = phi0;
+            uVelocity[zplusCell] = cu*cellinfo->xu[colX];
+            vVelocity[zplusCell] = cv*cellinfo->yv[colY];
+            wVelocity[zplusCell] = cw*cellinfo->zw[colZ+1];
+            pressure[zplusCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ+1]);
+          }
+          else if (d_mms == "thornock1MMS"){
+            }
+          else if (d_mms == "almgrenMMS"){
+            double pi = acos(-1.0);
+            uVelocity[zplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
+                                           * sin(2.0*pi*cellinfo->yy[colY]);
+            vVelocity[zplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
+                                           * cos(2.0*pi*cellinfo->yv[colY]);
+            wVelocity[zplusCell] = 0.0;
+          }            
+        }
       }
     }
     }
@@ -1591,17 +1606,17 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
 // ****************************************************************************
 void 
 Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
-						    SchedulerP& sched)
+                                                    SchedulerP& sched)
 {
     // primitive variable initialization
     Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
-			    this, &Arches::interpInitialConditionToStaggeredGrid);
+                            this, &Arches::interpInitialConditionToStaggeredGrid);
     tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
+                  Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
+                  Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, Ghost::AroundCells,
-		  Arches::ONEGHOSTCELL);
+                  Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_uVelocitySPBCLabel);
     tsk->modifies(d_lab->d_vVelocitySPBCLabel);
     tsk->modifies(d_lab->d_wVelocitySPBCLabel);
@@ -1614,10 +1629,10 @@ Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
 // ****************************************************************************
 void
 Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
-		  			      const PatchSubset* patches,
-		  			      const MaterialSubset*,
-		  			      DataWarehouse* ,
-		 			      DataWarehouse* new_dw)
+                                              const PatchSubset* patches,
+                                              const MaterialSubset*,
+                                              DataWarehouse* ,
+                                              DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1630,11 +1645,11 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
     new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
@@ -1646,13 +1661,13 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector xminusCell(colX-1, colY, colZ);
+          IntVector currCell(colX, colY, colZ);
+          IntVector xminusCell(colX-1, colY, colZ);
 
-	  uVelocity[currCell] = 0.5*(uVelocityCC[currCell] +
-			             uVelocityCC[xminusCell]);
+          uVelocity[currCell] = 0.5*(uVelocityCC[currCell] +
+                                     uVelocityCC[xminusCell]);
 
-	}
+        }
       }
     }
     idxLo = patch->getSFCYFORTLowIndex();
@@ -1660,13 +1675,13 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector yminusCell(colX, colY-1, colZ);
+          IntVector currCell(colX, colY, colZ);
+          IntVector yminusCell(colX, colY-1, colZ);
 
-	  vVelocity[currCell] = 0.5*(vVelocityCC[currCell] +
-			             vVelocityCC[yminusCell]);
+          vVelocity[currCell] = 0.5*(vVelocityCC[currCell] +
+                                     vVelocityCC[yminusCell]);
 
-	}
+        }
       }
     }
     idxLo = patch->getSFCZFORTLowIndex();
@@ -1674,13 +1689,13 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-	  IntVector currCell(colX, colY, colZ);
-	  IntVector zminusCell(colX, colY, colZ-1);
+          IntVector currCell(colX, colY, colZ);
+          IntVector zminusCell(colX, colY, colZ-1);
 
-	  wVelocity[currCell] = 0.5*(wVelocityCC[currCell] +
-			             wVelocityCC[zminusCell]);
+          wVelocity[currCell] = 0.5*(wVelocityCC[currCell] +
+                                     wVelocityCC[zminusCell]);
 
-	}
+        }
       }
     }
   }
@@ -1697,7 +1712,7 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
                 Ghost::AroundFaces, Arches::ONEGHOSTCELL);
 
@@ -1712,10 +1727,10 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 // ****************************************************************************
 void 
 Arches::getCCVelocities(const ProcessorGroup* ,
-		        const PatchSubset* patches,
-		        const MaterialSubset*,
-		        DataWarehouse* ,
-		        DataWarehouse* new_dw)
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse* ,
+                        DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1749,18 +1764,18 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     
     new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,
-			   matlIndex, patch);
+                           matlIndex, patch);
     new_dw->getModifiable(newCCVVel, d_lab->d_newCCVVelocityLabel,
-			   matlIndex, patch);
+                           matlIndex, patch);
     new_dw->getModifiable(newCCWVel, d_lab->d_newCCWVelocityLabel,
-			   matlIndex, patch);
+                           matlIndex, patch);
     newCCUVel.initialize(0.0);
     newCCVVel.initialize(0.0);
     newCCWVel.initialize(0.0);
@@ -1768,151 +1783,151 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
-	  
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-			 cellinfo->efac[ii] * newUVel[idxU];
-	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-			 cellinfo->nfac[jj] * newVVel[idxV];
-	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-			 cellinfo->tfac[kk] * newWVel[idxW];
-	  
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	}
+        for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
+          
+          IntVector idx(ii,jj,kk);
+          IntVector idxU(ii+1,jj,kk);
+          IntVector idxV(ii,jj+1,kk);
+          IntVector idxW(ii,jj,kk+1);
+          
+          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+                         cellinfo->efac[ii] * newUVel[idxU];
+          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+                         cellinfo->nfac[jj] * newVVel[idxV];
+          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+                         cellinfo->tfac[kk] * newWVel[idxW];
+          
+          newCCUVel[idx] = new_u;
+          newCCVVel[idx] = new_v;
+          newCCWVel[idx] = new_w;
+        }
       }
     }
     // boundary conditions not to compute erroneous values in the case of ramping
     if (xminus) {
       int ii = idxLo.x()-1;
       for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  double new_u = newUVel[idxU];
-	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-			 cellinfo->nfac[jj] * newVVel[idxV];
-	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-			 cellinfo->tfac[kk] * newWVel[idxW];
-	  
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	}
+        for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+          IntVector idx(ii,jj,kk);
+          IntVector idxU(ii+1,jj,kk);
+          IntVector idxV(ii,jj+1,kk);
+          IntVector idxW(ii,jj,kk+1);
+          
+          double new_u = newUVel[idxU];
+          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+                         cellinfo->nfac[jj] * newVVel[idxV];
+          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+                         cellinfo->tfac[kk] * newWVel[idxW];
+          
+          newCCUVel[idx] = new_u;
+          newCCVVel[idx] = new_v;
+          newCCWVel[idx] = new_w;
+        }
       }
     }
     if (xplus) {
       int ii =  idxHi.x()+1;
       for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  double new_u = newUVel[idx];
-	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-			 cellinfo->nfac[jj] * newVVel[idxV];
-	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-			 cellinfo->tfac[kk] * newWVel[idxW];
-	  
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	}
+        for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+          IntVector idx(ii,jj,kk);
+          IntVector idxU(ii+1,jj,kk);
+          IntVector idxV(ii,jj+1,kk);
+          IntVector idxW(ii,jj,kk+1);
+          
+          double new_u = newUVel[idx];
+          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+                         cellinfo->nfac[jj] * newVVel[idxV];
+          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+                         cellinfo->tfac[kk] * newWVel[idxW];
+          
+          newCCUVel[idx] = new_u;
+          newCCVVel[idx] = new_v;
+          newCCWVel[idx] = new_w;
+        }
       }
     }
     if (yminus) {
       int jj = idxLo.y()-1;
       for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-			 cellinfo->efac[ii] * newUVel[idxU];
-	  double new_v = newVVel[idxV];
-	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-			 cellinfo->tfac[kk] * newWVel[idxW];
-	  
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	}
+        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+          IntVector idx(ii,jj,kk);
+          IntVector idxU(ii+1,jj,kk);
+          IntVector idxV(ii,jj+1,kk);
+          IntVector idxW(ii,jj,kk+1);
+          
+          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+                         cellinfo->efac[ii] * newUVel[idxU];
+          double new_v = newVVel[idxV];
+          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+                         cellinfo->tfac[kk] * newWVel[idxW];
+          
+          newCCUVel[idx] = new_u;
+          newCCVVel[idx] = new_v;
+          newCCWVel[idx] = new_w;
+        }
       }
     }
     if (yplus) {
       int jj =  idxHi.y()+1;
       for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-			 cellinfo->efac[ii] * newUVel[idxU];
-	  double new_v = newVVel[idx];
-	  double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-			 cellinfo->tfac[kk] * newWVel[idxW];
-	  
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	}
+        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+          IntVector idx(ii,jj,kk);
+          IntVector idxU(ii+1,jj,kk);
+          IntVector idxV(ii,jj+1,kk);
+          IntVector idxW(ii,jj,kk+1);
+          
+          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+                         cellinfo->efac[ii] * newUVel[idxU];
+          double new_v = newVVel[idx];
+          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
+                         cellinfo->tfac[kk] * newWVel[idxW];
+          
+          newCCUVel[idx] = new_u;
+          newCCVVel[idx] = new_v;
+          newCCWVel[idx] = new_w;
+        }
       }
     }
     if (zminus) {
       int kk = idxLo.z()-1;
       for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-			 cellinfo->efac[ii] * newUVel[idxU];
-	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-			 cellinfo->nfac[jj] * newVVel[idxV];
-	  double new_w = newWVel[idxW];
-	  
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	}
+        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+          IntVector idx(ii,jj,kk);
+          IntVector idxU(ii+1,jj,kk);
+          IntVector idxV(ii,jj+1,kk);
+          IntVector idxW(ii,jj,kk+1);
+          
+          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+                         cellinfo->efac[ii] * newUVel[idxU];
+          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+                         cellinfo->nfac[jj] * newVVel[idxV];
+          double new_w = newWVel[idxW];
+          
+          newCCUVel[idx] = new_u;
+          newCCVVel[idx] = new_v;
+          newCCWVel[idx] = new_w;
+        }
       }
     }
     if (zplus) {
       int kk =  idxHi.z()+1;
       for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-	  IntVector idx(ii,jj,kk);
-	  IntVector idxU(ii+1,jj,kk);
-	  IntVector idxV(ii,jj+1,kk);
-	  IntVector idxW(ii,jj,kk+1);
-	  
-	  double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-			 cellinfo->efac[ii] * newUVel[idxU];
-	  double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-			 cellinfo->nfac[jj] * newVVel[idxV];
-	  double new_w = newWVel[idx];
-	  
-	  newCCUVel[idx] = new_u;
-	  newCCVVel[idx] = new_v;
-	  newCCWVel[idx] = new_w;
-	}
+        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+          IntVector idx(ii,jj,kk);
+          IntVector idxU(ii+1,jj,kk);
+          IntVector idxV(ii,jj+1,kk);
+          IntVector idxW(ii,jj,kk+1);
+          
+          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
+                         cellinfo->efac[ii] * newUVel[idxU];
+          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
+                         cellinfo->nfac[jj] * newVVel[idxV];
+          double new_w = newWVel[idx];
+          
+          newCCUVel[idx] = new_u;
+          newCCVVel[idx] = new_v;
+          newCCWVel[idx] = new_w;
+        }
       }
     }
   }
