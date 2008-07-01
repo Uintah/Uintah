@@ -11,7 +11,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -39,8 +38,8 @@ using namespace SCIRun;
 // Default constructor for Filter
 // ****************************************************************************
 Filter::Filter(const ArchesLabel* label,
-	       BoundaryCondition* bndryCondition,
-	       const ProcessorGroup* myworld) :
+               BoundaryCondition* bndryCondition,
+               const ProcessorGroup* myworld) :
   d_myworld(myworld), d_lab(label), d_boundaryCondition(bndryCondition)
 {
   d_perproc_patches= 0;
@@ -53,10 +52,12 @@ Filter::Filter(const ArchesLabel* label,
 // ****************************************************************************
 Filter::~Filter()
 {
-  if (d_perproc_patches && d_perproc_patches->removeReference())
+  if (d_perproc_patches && d_perproc_patches->removeReference()){
     delete d_perproc_patches;
-  if (d_matrix_vectors_created)
+  }
+  if (d_matrix_vectors_created){
     destroyMatrix();
+  }
 }
 
 // ****************************************************************************
@@ -78,10 +79,11 @@ Filter::problemSetup(const ProblemSpecP& params)
     throw PetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
   delete argv;
 }
-
+//______________________________________________________________________
+//
 void
 Filter::sched_buildFilterMatrix(const LevelP& level,
-				SchedulerP& sched)
+                                SchedulerP& sched)
 {
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
@@ -95,31 +97,33 @@ Filter::sched_buildFilterMatrix(const LevelP& level,
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
 
   Task* tsk = scinew Task("Filter::BuildFilterMatrix",
-			  this,
-			  &Filter::buildFilterMatrix);
+                          this,
+                          &Filter::buildFilterMatrix);
   // Requires
   // coefficient for the variable for which solve is invoked
 
   sched->addTask(tsk, d_perproc_patches, matls);
 }
 
-
+//______________________________________________________________________
+//
 void 
 Filter::buildFilterMatrix (const ProcessorGroup* ,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse*,
-			   DataWarehouse* )
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse*,
+                           DataWarehouse* )
 {
   // initializeMatrix...
   if (!d_matrixInitialize)
     matrixCreate(d_perproc_patches, patches);
 }
 
-
+//______________________________________________________________________
+//
 void 
 Filter::matrixCreate(const PatchSet* allpatches,
-		     const PatchSubset* mypatches)
+                     const PatchSubset* mypatches)
 {
   // for global index get a petsc index that
   // make it a data memeber
@@ -158,8 +162,8 @@ Filter::matrixCreate(const PatchSet* allpatches,
       }
 
       long nc = (phighIndex[0]-plowIndex[0])*
-	        (phighIndex[1]-plowIndex[1])*
-	        (phighIndex[2]-plowIndex[2]);
+                (phighIndex[1]-plowIndex[1])*
+                (phighIndex[2]-plowIndex[2]);
       d_petscGlobalStart[patch]=totalCells;
       totalCells+=nc;
       mytotal+=nc;
@@ -242,7 +246,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
   o_nz = 26;
   cout << "Creating the patch matrix... \n Note: if sus crashes here, try reducing your resolution.\n";
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
     throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
@@ -269,9 +273,9 @@ Filter::matrixCreate(const PatchSet* allpatches,
 // ****************************************************************************
 void 
 Filter::setFilterMatrix(const ProcessorGroup* ,
-			const Patch* patch,
-			CellInformation* cellinfo,
-			constCCVariable<int>& cellType )
+                        const Patch* patch,
+                        CellInformation* cellinfo,
+                        constCCVariable<int>& cellType )
 {
   // Get the patch bounds and the variable bounds
    if (!d_matrixInitialize) {
@@ -388,12 +392,13 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
    }
 }
 
-
+//______________________________________________________________________
+//
 bool
 Filter::applyFilter(const ProcessorGroup* ,
-		    const Patch* patch,
-		    Array3<double>& var,
-		    Array3<double>& filterVar)
+                    const Patch* patch,
+                    Array3<double>& var,
+                    Array3<double>& filterVar)
 {
   TAU_PROFILE("applyFilter", "[Filter::applyFilter]" , TAU_USER);
   // assemble x vector
@@ -435,7 +440,7 @@ Filter::applyFilter(const ProcessorGroup* ,
     for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
       for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
         vecvaluex = var[IntVector(colX, colY, colZ)];
-        int row = l2g[IntVector(colX, colY, colZ)];	 
+        int row = l2g[IntVector(colX, colY, colZ)];         
         ASSERT(!isnan(vecvaluex));
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
@@ -506,12 +511,13 @@ Filter::applyFilter(const ProcessorGroup* ,
 
   return true;
 }
-
+//______________________________________________________________________
+//
 bool
 Filter::applyFilter(const ProcessorGroup* ,
-		    const Patch* patch,
-		    constCCVariable<double>& var,
-		    Array3<double>& filterVar)
+                    const Patch* patch,
+                    constCCVariable<double>& var,
+                    Array3<double>& filterVar)
 {
   // assemble x vector
   int ierr;
@@ -551,8 +557,9 @@ Filter::applyFilter(const ProcessorGroup* ,
   for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
     for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
       for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
+      
         vecvaluex = var[IntVector(colX, colY, colZ)];
-        int row = l2g[IntVector(colX, colY, colZ)];	  
+        int row = l2g[IntVector(colX, colY, colZ)];          
         ASSERT(!isnan(vecvaluex));
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
@@ -626,7 +633,8 @@ Filter::applyFilter(const ProcessorGroup* ,
   return true;
 }
 
-
+//______________________________________________________________________
+//
 void
 Filter::destroyMatrix() 
 {
