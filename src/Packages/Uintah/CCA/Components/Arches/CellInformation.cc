@@ -38,12 +38,15 @@ CellInformation::CellInformation(const Patch* patch)
   zz.resize(locationLo.z(), locationHi.z());
 
   const Level* level = patch->getLevel();
-  for (int ii = locationLo.x(); ii < locationHi.x(); ii++)
+  for (int ii = locationLo.x(); ii < locationHi.x(); ii++){
     xx[ii] = level->getCellPosition(IntVector(ii, locationLo.y(), locationLo.z())).x();
-  for (int ii = locationLo.y(); ii < locationHi.y(); ii++)
+  }
+  for (int ii = locationLo.y(); ii < locationHi.y(); ii++){
     yy[ii] = level->getCellPosition(IntVector(locationLo.x(), ii, locationLo.z())).y();
-  for (int ii = locationLo.z(); ii < locationHi.z(); ii++)
+  }
+  for (int ii = locationLo.z(); ii < locationHi.z(); ii++){
     zz[ii] = level->getCellPosition(IntVector(locationLo.x(), locationLo.y(), ii)).z();
+  }
 
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -232,15 +235,15 @@ CellInformation::CellInformation(const Patch* patch)
 
   // for computing geometry parameters
   fort_cellg(domLo, domHi, idxLoU, idxHiU, idxLoV, idxHiV,
-	     idxLoW, idxHiW, idxLo, idxHi,
-	     sew, sns, stb, sewu, snsv, stbw, dxep, dynp, dztp,
-	     dxepu, dynpv, dztpw, dxpw, dyps, dzpb, dxpwu, dypsv, dzpbw,
-	     cee, cwe, cww, ceeu, cweu, cwwu, cnn, csn, css,
-	     cnnv, csnv, cssv, ctt, cbt, cbb, cttw, cbtw, cbbw,
-	     xx, xu, yy, yv, zz, zw, efac, wfac, nfac, sfac, tfac, bfac,
-	     fac1u, fac2u, fac3u, fac4u, fac1v, fac2v, fac3v, fac4v,
-	     fac1w, fac2w, fac3w, fac4w, iesdu, iwsdu, jnsdv, jssdv, 
-	     ktsdw, kbsdw, fac1ew, fac2ew, fac3ew, fac4ew,
+             idxLoW, idxHiW, idxLo, idxHi,
+             sew, sns, stb, sewu, snsv, stbw, dxep, dynp, dztp,
+             dxepu, dynpv, dztpw, dxpw, dyps, dzpb, dxpwu, dypsv, dzpbw,
+             cee, cwe, cww, ceeu, cweu, cwwu, cnn, csn, css,
+             cnnv, csnv, cssv, ctt, cbt, cbb, cttw, cbtw, cbbw,
+             xx, xu, yy, yv, zz, zw, efac, wfac, nfac, sfac, tfac, bfac,
+             fac1u, fac2u, fac3u, fac4u, fac1v, fac2v, fac3v, fac4v,
+             fac1w, fac2w, fac3w, fac4w, iesdu, iwsdu, jnsdv, jssdv, 
+             ktsdw, kbsdw, fac1ew, fac2ew, fac3ew, fac4ew,
              fac1ns, fac2ns, fac3ns, fac4ns, fac1tb, fac2tb, fac3tb, fac4tb,
              e_shift, w_shift, n_shift, s_shift, t_shift, b_shift,
              xminus,xplus,yminus,yplus,zminus,zplus);

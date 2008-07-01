@@ -21,8 +21,8 @@
     static Uintah::TypeDescription* td = 0;
     if(!td){
       td = scinew Uintah::TypeDescription(Uintah::TypeDescription::Other,
-					  "odtData", true, 
-					  &makeMPI_odtData);
+                                          "odtData", true, 
+                                          &makeMPI_odtData);
     }
     return td;
   }
