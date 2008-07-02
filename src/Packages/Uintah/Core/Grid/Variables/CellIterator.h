@@ -134,6 +134,11 @@ WARNING
 
      friend class GridIterator;
 
+     inline void reset()
+     {
+       d_cur=d_s;
+       d_done=false;
+     }
    private:
      CellIterator();
 

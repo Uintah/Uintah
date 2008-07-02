@@ -3,13 +3,15 @@
 SRCDIR   := Packages/Uintah/Core/Grid/Variables
 
 SRCS     += \
+	$(SRCDIR)/Iterator.cc               		\
 	$(SRCDIR)/CellIterator.cc               \
 	$(SRCDIR)/NodeIterator.cc               \
-	$(SRCDIR)/Iterator.cc               		\
+	$(SRCDIR)/GridIterator.cc               \
 	$(SRCDIR)/ListOfCellsIterator.cc     		\
+	$(SRCDIR)/DifferenceIterator.cc     		\
+	$(SRCDIR)/UnionIterator.cc  			   		\
 	$(SRCDIR)/ComputeSet.cc                 \
 	$(SRCDIR)/ComputeSet_special.cc         \
-	$(SRCDIR)/GridIterator.cc               \
 	$(SRCDIR)/GridVariableBase.cc           \
 	$(SRCDIR)/LocallyComputedPatchVarMap.cc \
 	$(SRCDIR)/ParticleSubset.cc             \

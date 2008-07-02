@@ -97,6 +97,10 @@ namespace Uintah {
        */
       virtual ostream& put(ostream&) const = 0;
 
+      /**
+       * resets the iterator to the begining
+       */
+      virtual void reset() = 0;
     }; // end class BaseIterator
 
 } // End namespace Uintah

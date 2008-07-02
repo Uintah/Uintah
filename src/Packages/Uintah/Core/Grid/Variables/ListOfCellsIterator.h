@@ -88,7 +88,15 @@ namespace Uintah {
      */
     inline void add(const IntVector& c) { listOfCells_.push_back(c); }
 
-    private:
+    /**
+     * resets the iterator
+     */
+    inline void reset()
+    {
+      index_=0;
+    }
+
+    protected:
     /**
      * Returns a pointer to a deep copy of the virtual class
      * this should be used only by the Iterator class
@@ -99,7 +107,7 @@ namespace Uintah {
 
     };
     
-    ostream& put(std::ostream& out) const
+    virtual ostream& put(std::ostream& out) const
     {
       out << *this;
       return out;
