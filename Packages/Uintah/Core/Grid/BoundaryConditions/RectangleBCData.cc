@@ -45,6 +45,18 @@ RectangleBCData::~RectangleBCData()
 {
 }
 
+
+bool RectangleBCData::operator==(const BCGeomBase& rhs) const
+{
+  const RectangleBCData* p_rhs =
+    dynamic_cast<const RectangleBCData*>(&rhs);
+
+  if (p_rhs == NULL)
+    return false;
+  else
+    return (this->d_min == p_rhs->d_min) && (this->d_max == p_rhs->d_max);
+}
+
 RectangleBCData* RectangleBCData::clone()
 {
   return scinew RectangleBCData(*this);

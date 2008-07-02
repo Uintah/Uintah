@@ -44,6 +44,8 @@ namespace Uintah {
      /// Destructor
      virtual ~UnionBCData();
 
+     virtual bool operator==(const BCGeomBase&) const;
+
      /// Clone the boundary condition -- allocates memory
      UnionBCData* clone();
 

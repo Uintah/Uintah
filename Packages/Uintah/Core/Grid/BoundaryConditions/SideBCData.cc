@@ -26,6 +26,17 @@ SideBCData::~SideBCData()
 {
 }
 
+bool SideBCData::operator==(const BCGeomBase& rhs) const
+{
+  const SideBCData* p_rhs = 
+    dynamic_cast<const SideBCData*>(&rhs);
+
+  if (p_rhs == NULL)
+    return false;
+  else
+    return true;
+}
+
 SideBCData* SideBCData::clone()
 {
   return scinew SideBCData(*this);
@@ -54,7 +65,7 @@ bool SideBCData::inside(const Point &p) const
 
 void SideBCData::print()
 {
-  cout << "Geometry type = " << typeid(this).name() << endl;
+  //cout << "Geometry type = " << typeid(this).name() << endl;
   d_bc.print();
 }
 

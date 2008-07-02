@@ -12,6 +12,7 @@
 #include <iterator>
 #include <sgi_stl_warnings_on.h>
 
+
 namespace Uintah {
 
   /*!
@@ -40,6 +41,8 @@ namespace Uintah {
 
     /// Destructor
     virtual ~BCGeomBase();    
+
+    virtual bool operator==(const BCGeomBase&) const = 0;
 
     /// Make a clone
     virtual BCGeomBase* clone() = 0;
@@ -124,8 +127,15 @@ namespace Uintah {
 
   template<class T> class cmp_type {
     public:
-    bool operator()(BCGeomBase* p) {
+    bool operator()(const BCGeomBase* p) {
       return (typeid(T) == typeid(*p));
+    }
+  };
+
+  template<class T> class not_type {
+    public:
+    bool operator()(const BCGeomBase* p) {
+      return (typeid(T) != typeid(*p));
     }
   };
 

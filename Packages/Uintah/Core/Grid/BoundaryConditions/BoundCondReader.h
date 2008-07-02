@@ -107,6 +107,8 @@ namespace Uintah {
     /// if there are more than one bc specified for a given face.  
     void combineBCS();
 
+    void combineBCS_NEW();
+
     ///
     bool compareBCData(BCGeomBase* b1, BCGeomBase* b2);
 

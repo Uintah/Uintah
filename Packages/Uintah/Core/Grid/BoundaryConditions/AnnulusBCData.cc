@@ -28,6 +28,21 @@ AnnulusBCData::~AnnulusBCData()
 {
 }
 
+
+bool AnnulusBCData::operator==(const BCGeomBase& rhs) const
+{
+  const AnnulusBCData* p_rhs = 
+    dynamic_cast<const AnnulusBCData*>(&rhs);
+  
+  if (p_rhs == NULL)
+    return false;
+  else 
+    return (this->d_innerRadius == p_rhs->d_innerRadius) && 
+      (this->d_outerRadius == p_rhs->d_outerRadius) && 
+      (this->d_origin == p_rhs->d_origin) ;
+  
+}
+
 AnnulusBCData* AnnulusBCData::clone()
 {
   return scinew AnnulusBCData(*this);
