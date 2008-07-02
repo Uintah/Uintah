@@ -37,8 +37,7 @@
 #include <mpi.h>
 
 #include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <vector>
 #include <iostream>
