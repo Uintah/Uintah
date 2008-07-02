@@ -54,6 +54,7 @@
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
 #include <Core/Geom/GeomViewerItem.h>
+#include <string.h>
 
 #if defined(HAVE_PNG) && HAVE_PNG
 #  include <png.h>
