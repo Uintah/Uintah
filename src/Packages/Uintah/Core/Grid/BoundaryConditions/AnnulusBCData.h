@@ -41,6 +41,8 @@ namespace Uintah {
     /// Destructor
     virtual ~AnnulusBCData();
 
+    virtual bool operator==(const BCGeomBase&) const;
+
     /// Clone the boundary condition geometry -- allocates memory.
     AnnulusBCData* clone();
 

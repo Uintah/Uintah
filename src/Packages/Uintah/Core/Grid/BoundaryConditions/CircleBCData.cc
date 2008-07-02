@@ -28,6 +28,20 @@ CircleBCData::~CircleBCData()
 {
 }
 
+bool CircleBCData::operator==(const BCGeomBase& rhs) const
+{
+
+  const CircleBCData* p_rhs =
+    dynamic_cast<const CircleBCData*>(&rhs);
+
+  if (p_rhs == NULL)
+    return false;
+  else
+    return (this->d_radius == p_rhs->d_radius) && 
+      (this->d_origin == p_rhs->d_origin);
+
+}
+
 CircleBCData* CircleBCData::clone()
 {
   return scinew CircleBCData(*this);
@@ -60,7 +74,7 @@ bool CircleBCData::inside(const Point &p) const
 
 void CircleBCData::print()
 {
-  cout << "Geometry type = " << typeid(this).name() << endl;
+  //  cout << "Geometry type = " << typeid(this).name() << endl;
   d_bc.print();
 }
 

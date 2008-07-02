@@ -38,6 +38,8 @@ namespace Uintah {
     /// Constructor used with a point defining the origin and the radius.
     CircleBCData(Point& p, double radius);
 
+    virtual bool operator==(const BCGeomBase&) const;
+
     /// Destructor
     virtual ~CircleBCData();
 

@@ -16,7 +16,7 @@ using std::cerr;
 using std::endl;
 
 // export SCI_DEBUG="BCDA_DBG:+"
-static DebugStream BCData_dbg("BCData_DBG",false);
+static DebugStream BCData_dbg("BCDATA_DBG",false);
 
 #define PRINT
 #undef PRINT
@@ -155,6 +155,7 @@ void BCData::combine(BCData& from)
 void BCData::print() const
 {
   bcDataType::const_iterator itr;
+  BCData_dbg << "size of d_BCData = " << d_BCData.size() << endl;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
     BCData_dbg << "BC = " << itr->first << " actual name = " 
 	       << itr->second->getType() << " bctype = " 

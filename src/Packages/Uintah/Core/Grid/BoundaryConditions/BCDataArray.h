@@ -66,6 +66,7 @@ namespace Uintah {
 
      /// Combine the duplicate BCGeometryTypes into a single BCGeometryType
      void combineBCGeometryTypes(int mat_id);
+     void combineBCGeometryTypes_NEW(int mat_id);
 
      /// Set the cell centered boundary iterators. 
      void setBoundaryIterator(int mat_id,vector<IntVector>& b, int i);

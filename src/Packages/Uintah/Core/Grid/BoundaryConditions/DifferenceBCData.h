@@ -43,6 +43,8 @@ namespace Uintah {
      /// Destructor
      virtual ~DifferenceBCData();
 
+     virtual bool operator==(const BCGeomBase&) const;
+
      /// Clone the boundary condition geometry -- allocates memory.
      DifferenceBCData* clone();
 

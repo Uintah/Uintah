@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+#include <algorithm>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -71,6 +72,22 @@ UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
 #endif
 
   return *this;
+}
+
+bool UnionBCData::operator==(const BCGeomBase& rhs) const
+{
+  const UnionBCData* p_rhs = 
+    dynamic_cast<const UnionBCData*>(&rhs);
+
+  if (p_rhs == NULL)
+    return false;
+  else {
+    if (this->child.size() != p_rhs->child.size())
+      return false;
+
+    return equal(this->child.begin(),this->child.end(),p_rhs->child.begin());
+  }
+
 }
 
 UnionBCData* UnionBCData::clone()

@@ -61,6 +61,18 @@ DifferenceBCData::~DifferenceBCData()
   delete right;
 }
 
+bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
+{
+  const DifferenceBCData* p_rhs = 
+    dynamic_cast<const DifferenceBCData*>(&rhs);
+
+  if (p_rhs == NULL)
+    return false;
+  else
+    return (this->left == p_rhs->left) && (this->right == p_rhs->right);
+
+}
+
 DifferenceBCData* DifferenceBCData::clone()
 {
   return scinew DifferenceBCData(*this);
@@ -89,8 +101,14 @@ bool DifferenceBCData::inside(const Point &p) const
 
 void DifferenceBCData::print()
 {
-  cout << "Geometry type = " << typeid(this).name() << endl;
+#if 0
+  cout << "Difference Geometry type = " << typeid(this).name() << endl;
+  cout << "Left" << endl;
+#endif
   left->print();
+#if 0
+  cout << "Right" << endl;
+#endif
   right->print();
 }
 
