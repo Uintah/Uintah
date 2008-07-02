@@ -43,7 +43,14 @@ namespace Uintah {
   class UINTAHSHARE Iterator {
     public:
       Iterator() : iter_(NULL) {}
-
+      ~Iterator()
+      {
+        if(iter_!=NULL)
+        {
+          delete iter_;
+          iter_=NULL;
+        }
+      }
       Iterator(Iterator& copy)
       {
         //clone the new iterator (deep copy)
@@ -67,6 +74,7 @@ namespace Uintah {
       { 
         ASSERT(iter_!=NULL); 
         (*iter_)++; 
+        return *this;
       }
 
       /**
@@ -123,6 +131,10 @@ namespace Uintah {
         return *this;
       }
 
+      inline void reset()
+      {
+        iter_->reset();
+      }
 
     private:
       friend std::ostream& operator<<(std::ostream& out, const Uintah::Iterator& b);

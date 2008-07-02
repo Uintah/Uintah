@@ -127,7 +127,12 @@ namespace Uintah {
           return begin()!=o.begin() || end()!=o.end() || index()!=o.index();
         }
 
-
+        inline void reset()
+        {
+          d_ix=d_s.x();
+          d_iy=d_s.y();
+          d_iz=d_s.z();
+        }
       private:
         NodeIterator();
         NodeIterator& operator=(const NodeIterator& copy);
