@@ -810,24 +810,19 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
   // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::computeStableTimeStep",
-                           this, &Arches::computeStableTimeStep);
+  Task* tsk = scinew Task( "Arches::computeStableTimeStep",this, 
+                           &Arches::computeStableTimeStep);
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Ghost::GhostType  gn = Ghost::None;
 
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gn,  0);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 1);
 
   tsk->computes(d_sharedState->get_delt_label());
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
@@ -855,26 +850,25 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     constCCVariable<double> visc;
     constCCVariable<int> cellType;
 
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    Ghost::GhostType  gn = Ghost::None;
+  
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(den, d_lab->d_densityCPLabel,           matlIndex, patch, gac, 1);
+    new_dw->get(visc, d_lab->d_viscosityCTSLabel,       matlIndex, patch, gn,  0);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,       matlIndex, patch, gac, 1);
+  
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(den, d_lab->d_densityCPLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(visc, d_lab->d_viscosityCTSLabel, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
 
     IntVector indexLow = patch->getFortranCellLowIndex__New();
     IntVector indexHigh = patch->getFortranCellHighIndex__New();
@@ -1608,19 +1602,18 @@ void
 Arches::sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
                                                     SchedulerP& sched)
 {
-    // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
-                            this, &Arches::interpInitialConditionToStaggeredGrid);
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, Ghost::AroundCells,
-                  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, Ghost::AroundCells,
-                  Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, Ghost::AroundCells,
-                  Arches::ONEGHOSTCELL);
-    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-    sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+  // primitive variable initialization
+  Task* tsk = scinew Task( "Arches::interpInitialConditionToStaggeredGrid",
+                     this, &Arches::interpInitialConditionToStaggeredGrid);
+  Ghost::GhostType  gac = Ghost::AroundCells;   
+                      
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
 
@@ -1644,17 +1637,19 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
-    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
     
     IntVector idxLo, idxHi;
+
+
 
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
@@ -1706,15 +1701,13 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
 void 
 Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 {
-  string taskname =  "Arches::getCCVelocities";
-  Task* tsk = scinew Task(taskname, this, &Arches::getCCVelocities);
-
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  Task* tsk = scinew Task("Arches::getCCVelocities", this, 
+                          &Arches::getCCVelocities);
+                          
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
   tsk->modifies(d_lab->d_newCCUVelocityLabel);
   tsk->modifies(d_lab->d_newCCVVelocityLabel);
@@ -1722,6 +1715,7 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
       
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
+
 // ****************************************************************************
 // Actual interpolation from FC to CC Variable
 // ****************************************************************************
@@ -1763,12 +1757,10 @@ Arches::getCCVelocities(const ProcessorGroup* ,
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
     
     new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,
                            matlIndex, patch);
@@ -1781,6 +1773,19 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     newCCWVel.initialize(0.0);
 
 
+    cout << " getSFCXFORTLowIndex() Old:" << patch->getSFCXFORTLowIndex() << " New: " <<  patch->getFortranSFCXLowIndex__New()
+         << " getSFCXFORTHighIndex() Old:" << patch->getSFCXFORTHighIndex() << " New: " <<  patch->getFortranSFCXHighIndex__New() << endl;
+
+    cout << " getSFCYFORTLowIndex() Old:" << patch->getSFCYFORTLowIndex() << " New: " <<  patch->getFortranSFCYLowIndex__New()
+         << " getSFCYFORTHighIndex() Old:" << patch->getSFCYFORTHighIndex() << " New: " <<  patch->getFortranSFCYHighIndex__New() << endl;
+         
+    cout << " getSFCZFORTLowIndex() Old:" << patch->getSFCZFORTLowIndex() << " New: " <<  patch->getFortranSFCZLowIndex__New()
+         << " getSFCZFORTHighIndex() Old:" << patch->getSFCZFORTHighIndex() << " New: " <<  patch->getFortranSFCZHighIndex__New() << endl;
+         
+         
+    cout << "  getFortranCellLowIndex__New()  " << patch->getFortranCellLowIndex__New() <<  " cellLow:  " << patch->getCellLowIndex__New() << endl;
+    cout << "  getFortranCellHighIndex__New() " << patch->getFortranCellHighIndex__New() << " cellHigh: " << patch->getCellHighIndex__New() << endl;
+         
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
         for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
