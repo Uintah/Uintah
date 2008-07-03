@@ -162,46 +162,43 @@ CompLocalDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched,
 //****************************************************************************
 void 
 CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls,
-                                         const TimeIntegratorLabel* timelabels)
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls,
+                                                       const TimeIntegratorLabel* timelabels)
 {
+  Ghost::GhostType  gn = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeTurbSubmodel" +
                        timelabels->integrator_step_name;
     Task* tsk = scinew Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeTurbSubmodel,
                             timelabels);
-
-
     // Requires
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 2);
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,      gac, 2);
 
     if (d_dynScalarModel) {
-      if (d_calcScalar)
-        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      if (d_calcEnthalpy)
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      if (d_calcReactingScalar)
-        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      if (d_calcScalar){
+        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,     gac, 1);
+      }
+      if (d_calcEnthalpy){
+        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,   gac, 1);
+      }
+      if (d_calcReactingScalar){
+        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
+      }
     }
 
     int mmWallID = d_boundaryCondition->getMMWallId();
-    if (mmWallID > 0)
+    if (mmWallID > 0){
       tsk->requires(Task::NewDW, timelabels->ref_density);
-
+    }
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_filterRhoULabel);
@@ -234,7 +231,8 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
     sched->addTask(tsk, patches, matls);
   }
-
+  //______________________________________________________________________
+  //
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeStrainRateTensors" +
                        timelabels->integrator_step_name;
@@ -246,97 +244,86 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoULabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoVLabel, 
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoWLabel, 
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_filterRhoULabel,    gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_filterRhoVLabel,    gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_filterRhoWLabel,    gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,     gac, 1);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,   gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
       }
       if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel, gac, 1);
       }
       if (d_calcReactingScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoRFLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_filterRhoRFLabel,   gac, 1);
       }
     }
         
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_strainTensorCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain);
+                  d_lab->d_symTensorMatl, oams);
     tsk->computes(d_lab->d_filterStrainTensorCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain);
+                  d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         tsk->computes(d_lab->d_scalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
         tsk->computes(d_lab->d_filterScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
       }
       if (d_calcEnthalpy) {
         tsk->computes(d_lab->d_enthalpyGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
         tsk->computes(d_lab->d_filterEnthalpyGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
       }
       if (d_calcReactingScalar) {
         tsk->computes(d_lab->d_reactScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
         tsk->computes(d_lab->d_filterReactScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
       }
     }  
   }
   else {
     tsk->modifies(d_lab->d_strainTensorCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain);
+                  d_lab->d_symTensorMatl, oams);
     tsk->modifies(d_lab->d_filterStrainTensorCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain);
+                  d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         tsk->modifies(d_lab->d_scalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
         tsk->modifies(d_lab->d_filterScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
       }
       if (d_calcEnthalpy) {
         tsk->modifies(d_lab->d_enthalpyGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
         tsk->modifies(d_lab->d_filterEnthalpyGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
       }
       if (d_calcReactingScalar) {
         tsk->modifies(d_lab->d_reactScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
         tsk->modifies(d_lab->d_filterReactScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain);
+                      d_lab->d_vectorMatl, oams);
       }
     }  
   }  
 
     sched->addTask(tsk, patches, matls);
   }
+  //______________________________________________________________________
+  //
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeFilterValues" +
                        timelabels->integrator_step_name;
@@ -350,62 +337,42 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
     
-    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::OldDW, d_lab->d_CsLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
+    tsk->requires(Task::OldDW, d_lab->d_CsLabel,             gac, 1);
     
     tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  d_lab->d_symTensorMatl, oams, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  d_lab->d_symTensorMatl, oams, gac, 1);
 
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,   gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_filterRhoFLabel, gac, 1);
         tsk->requires(Task::NewDW, d_lab->d_scalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                      d_lab->d_vectorMatl, oams, gac, 1);
         tsk->requires(Task::NewDW, d_lab->d_filterScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                      d_lab->d_vectorMatl, oams, gac, 1);
       }
       if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_filterRhoELabel, gac, 1);
         tsk->requires(Task::NewDW, d_lab->d_enthalpyGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                      d_lab->d_vectorMatl, oams, gac, 1);
         tsk->requires(Task::NewDW, d_lab->d_filterEnthalpyGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                      d_lab->d_vectorMatl, oams, gac, 1);
       }
       if (d_calcReactingScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_filterRhoRFLabel, 
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_filterRhoRFLabel,   gac, 1);
         tsk->requires(Task::NewDW, d_lab->d_reactScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                      d_lab->d_vectorMatl, oams, gac, 1);
         tsk->requires(Task::NewDW, d_lab->d_filterReactScalarGradientCompLabel,
-                      d_lab->d_vectorMatl, Task::OutOfDomain,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                      d_lab->d_vectorMatl, oams, gac, 1);
       }
     }  
     
@@ -418,7 +385,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->computes(d_lab->d_alphaalphaLabel);
     tsk->computes(d_lab->d_cbetaHATalphaLabel);
     tsk->computes(d_lab->d_LIJCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain);
+                  d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         tsk->computes(d_lab->d_scalarNumeratorLabel);
@@ -442,7 +409,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->modifies(d_lab->d_alphaalphaLabel);
     tsk->modifies(d_lab->d_cbetaHATalphaLabel);
     tsk->modifies(d_lab->d_LIJCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain);
+                  d_lab->d_symTensorMatl, oams);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         tsk->modifies(d_lab->d_scalarNumeratorLabel);
@@ -461,6 +428,8 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     
     sched->addTask(tsk, patches, matls);
   }
+  //______________________________________________________________________
+  //
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeSmagCoeff" +
                        timelabels->integrator_step_name;
@@ -473,56 +442,40 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as an array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel, gac, 1);
 
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_LalphaLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_alphaalphaLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_cbetaHATalphaLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,  gn,  0);
+    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel,gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel,gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_LalphaLabel,           gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_alphaalphaLabel,       gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_cbetaHATalphaLabel,    gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  d_lab->d_symTensorMatl, oams, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_LIJCompLabel,
-                  d_lab->d_symTensorMatl, Task::OutOfDomain,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  d_lab->d_symTensorMatl, oams, gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
+    
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_scalarNumeratorLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_scalarDenominatorLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_scalarNumeratorLabel,  gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_scalarDenominatorLabel,gac, 1);
       }
       if (d_calcEnthalpy) {
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyNumeratorLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_enthalpyDenominatorLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_enthalpyNumeratorLabel,  gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_enthalpyDenominatorLabel,gac, 1);
       }
       if (d_calcReactingScalar) {
-        tsk->requires(Task::NewDW, d_lab->d_reactScalarNumeratorLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_reactScalarDenominatorLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_reactScalarNumeratorLabel,  gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_reactScalarDenominatorLabel,gac, 1);
       }
     }      
 
     // for multimaterial
-    if (d_MAlab)
-      tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_MAlab){
+      tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+    }
     
     // Computes
     tsk->modifies(d_lab->d_viscosityCTSLabel);
@@ -577,11 +530,11 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 //****************************************************************************
 void 
 CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse* new_dw,
-                                        const TimeIntegratorLabel* timelabels)
+                                                 const PatchSubset* patches,
+                                                 const MaterialSubset*,
+                                                 DataWarehouse*,
+                                                 DataWarehouse* new_dw,
+                                                 const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -607,28 +560,25 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     
 
     // Get the velocity
-    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(density, d_lab->d_densityCPLabel,  matlIndex, patch, gac, 2);
     if (d_dynScalarModel) {
-      if (d_calcScalar)
-        new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      if (d_calcEnthalpy)
-        new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      if (d_calcReactingScalar)
-        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      if (d_calcScalar){
+        new_dw->get(scalar,     d_lab->d_scalarSPLabel,     matlIndex, patch, gac, 1);
+      }
+      if (d_calcEnthalpy){
+        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel,     matlIndex, patch, gac, 1);
+      }
+      if (d_calcReactingScalar){
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, gac, 1);
+      }
     }
 
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 2);
 
     
     SFCXVariable<double> filterRhoU;
@@ -639,58 +589,51 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     CCVariable<double> filterRhoE;
     CCVariable<double> filterRhoRF;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(filterRhoU, 
-                             d_lab->d_filterRhoULabel, matlIndex, patch);
-      new_dw->allocateAndPut(filterRhoV, 
-                             d_lab->d_filterRhoVLabel, matlIndex, patch);
-      new_dw->allocateAndPut(filterRhoW, 
-                             d_lab->d_filterRhoWLabel, matlIndex, patch);
-      new_dw->allocateAndPut(filterRho, 
-                             d_lab->d_filterRhoLabel, matlIndex, patch);
+      new_dw->allocateAndPut(filterRhoU,  d_lab->d_filterRhoULabel, matlIndex, patch);
+      new_dw->allocateAndPut(filterRhoV,  d_lab->d_filterRhoVLabel, matlIndex, patch);
+      new_dw->allocateAndPut(filterRhoW,  d_lab->d_filterRhoWLabel, matlIndex, patch);
+      new_dw->allocateAndPut(filterRho,   d_lab->d_filterRhoLabel,  matlIndex, patch);
       if (d_dynScalarModel) {
-        if (d_calcScalar)
-          new_dw->allocateAndPut(filterRhoF, 
-                                 d_lab->d_filterRhoFLabel, matlIndex, patch);
-        if (d_calcEnthalpy)
-          new_dw->allocateAndPut(filterRhoE, 
-                                 d_lab->d_filterRhoELabel, matlIndex, patch);
-        if (d_calcReactingScalar)
-          new_dw->allocateAndPut(filterRhoRF, 
-                                 d_lab->d_filterRhoRFLabel, matlIndex, patch);
+        if (d_calcScalar){
+          new_dw->allocateAndPut(filterRhoF,  d_lab->d_filterRhoFLabel, matlIndex, patch);
+        }
+        if (d_calcEnthalpy){
+          new_dw->allocateAndPut(filterRhoE,  d_lab->d_filterRhoELabel, matlIndex, patch);
+        }
+        if (d_calcReactingScalar){
+          new_dw->allocateAndPut(filterRhoRF, d_lab->d_filterRhoRFLabel, matlIndex, patch);
+        }
       }
     }
     else {
-      new_dw->getModifiable(filterRhoU, 
-                            d_lab->d_filterRhoULabel, matlIndex, patch);
-      new_dw->getModifiable(filterRhoV, 
-                            d_lab->d_filterRhoVLabel, matlIndex, patch);
-      new_dw->getModifiable(filterRhoW, 
-                            d_lab->d_filterRhoWLabel, matlIndex, patch);
-      new_dw->getModifiable(filterRho, 
-                            d_lab->d_filterRhoLabel, matlIndex, patch);
+      new_dw->getModifiable(filterRhoU, d_lab->d_filterRhoULabel, matlIndex, patch);
+      new_dw->getModifiable(filterRhoV, d_lab->d_filterRhoVLabel, matlIndex, patch);
+      new_dw->getModifiable(filterRhoW, d_lab->d_filterRhoWLabel, matlIndex, patch);
+      new_dw->getModifiable(filterRho,  d_lab->d_filterRhoLabel,  matlIndex, patch);
       if (d_dynScalarModel) {
         if (d_calcScalar)
-          new_dw->getModifiable(filterRhoF, 
-                                d_lab->d_filterRhoFLabel, matlIndex, patch);
+          new_dw->getModifiable(filterRhoF,  d_lab->d_filterRhoFLabel, matlIndex, patch);
         if (d_calcEnthalpy)
-          new_dw->getModifiable(filterRhoE, 
-                                d_lab->d_filterRhoELabel, matlIndex, patch);
+          new_dw->getModifiable(filterRhoE,  d_lab->d_filterRhoELabel, matlIndex, patch);
         if (d_calcReactingScalar)
-          new_dw->getModifiable(filterRhoRF, 
-                                d_lab->d_filterRhoRFLabel, matlIndex, patch);
+          new_dw->getModifiable(filterRhoRF, d_lab->d_filterRhoRFLabel, matlIndex, patch);
       }
     }
     filterRhoU.initialize(0.0);
     filterRhoV.initialize(0.0);
     filterRhoW.initialize(0.0);
     filterRho.initialize(0.0);
+    
     if (d_dynScalarModel) {
-      if (d_calcScalar)
+      if (d_calcScalar){
         filterRhoF.initialize(0.0);
-      if (d_calcEnthalpy)
+      }
+      if (d_calcEnthalpy){
         filterRhoE.initialize(0.0);
-      if (d_calcReactingScalar)
+      }
+      if (d_calcReactingScalar){
         filterRhoRF.initialize(0.0);
+      }
     }
 
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -990,39 +933,30 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     constCCVariable<double> filterRhoE;
     constCCVariable<double> filterRhoRF;
 
-    // Get the velocity
-    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(filterRhoU, d_lab->d_filterRhoULabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel, matlIndex, patch,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(filterRhoW, d_lab->d_filterRhoWLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(filterRho, d_lab->d_filterRhoLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    // Get the velocity  
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    
+    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel,    matlIndex, patch, gaf, 1);
+    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel,    matlIndex, patch, gaf, 1);
+    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel,    matlIndex, patch, gaf, 1);
+    new_dw->get(filterRhoU, d_lab->d_filterRhoULabel, matlIndex, patch, gaf, 1);
+    new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(filterRhoW, d_lab->d_filterRhoWLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(filterRho, d_lab->d_filterRhoLabel,   matlIndex, patch, gac, 1);
+    
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(scalar,     d_lab->d_scalarSPLabel,   matlIndex, patch, gac, 1);
+        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, matlIndex, patch, gac, 1);
       }
       if (d_calcEnthalpy) {
-        new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, matlIndex, patch, gac, 1);
+        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, matlIndex, patch, gac, 1);
       }
       if (d_calcReactingScalar) {
-        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, gac, 1);
+        new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel,   matlIndex, patch, gac, 1);
       }
     }
 
@@ -1040,18 +974,13 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     StencilMatrix<CCVariable<double> > SIJ;    //6 point tensor
     StencilMatrix<CCVariable<double> > filterSIJ;    //6 point tensor
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(SIJ[ii], 
-                             d_lab->d_strainTensorCompLabel, ii, patch);
-      new_dw->allocateAndPut(filterSIJ[ii], 
-                             d_lab->d_filterStrainTensorCompLabel, ii, patch);
-    }
-    else {
-      new_dw->getModifiable(SIJ[ii], 
-                             d_lab->d_strainTensorCompLabel, ii, patch);
-      new_dw->getModifiable(filterSIJ[ii], 
-                             d_lab->d_filterStrainTensorCompLabel, ii, patch);
-    }
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+        new_dw->allocateAndPut(SIJ[ii],       d_lab->d_strainTensorCompLabel,       ii, patch);
+        new_dw->allocateAndPut(filterSIJ[ii], d_lab->d_filterStrainTensorCompLabel, ii, patch);
+      }else {
+        new_dw->getModifiable(SIJ[ii],        d_lab->d_strainTensorCompLabel,       ii, patch);
+        new_dw->getModifiable(filterSIJ[ii],  d_lab->d_filterStrainTensorCompLabel, ii, patch);
+      }
       SIJ[ii].initialize(0.0);
       filterSIJ[ii].initialize(0.0);
     }
@@ -1063,49 +992,39 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     StencilMatrix<CCVariable<double> > filterReactScalarGrad;    //vector
     for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->allocateAndPut(scalarGrad[ii], 
-                               d_lab->d_scalarGradientCompLabel, ii, patch);
-        new_dw->allocateAndPut(filterScalarGrad[ii], 
-                             d_lab->d_filterScalarGradientCompLabel, ii, patch);
+      if (d_dynScalarModel) {
+        if (d_calcScalar) {
+          new_dw->allocateAndPut(scalarGrad[ii],       d_lab->d_scalarGradientCompLabel,       ii, patch);
+          new_dw->allocateAndPut(filterScalarGrad[ii], d_lab->d_filterScalarGradientCompLabel, ii, patch);
+        }
+        if (d_calcEnthalpy) {
+          new_dw->allocateAndPut(enthalpyGrad[ii],       d_lab->d_enthalpyGradientCompLabel,       ii, patch);
+          new_dw->allocateAndPut(filterEnthalpyGrad[ii], d_lab->d_filterEnthalpyGradientCompLabel, ii, patch);
+        }
+        if (d_calcReactingScalar) {
+          new_dw->allocateAndPut(reactScalarGrad[ii],      d_lab->d_reactScalarGradientCompLabel, ii, patch);
+          new_dw->allocateAndPut(filterReactScalarGrad[ii], d_lab->d_filterReactScalarGradientCompLabel, ii, patch);
+        }
       }
-      if (d_calcEnthalpy) {
-        new_dw->allocateAndPut(enthalpyGrad[ii], 
-                               d_lab->d_enthalpyGradientCompLabel, ii, patch);
-        new_dw->allocateAndPut(filterEnthalpyGrad[ii], 
-                           d_lab->d_filterEnthalpyGradientCompLabel, ii, patch);
-      }
-      if (d_calcReactingScalar) {
-        new_dw->allocateAndPut(reactScalarGrad[ii], 
-                              d_lab->d_reactScalarGradientCompLabel, ii, patch);
-        new_dw->allocateAndPut(filterReactScalarGrad[ii], 
-                        d_lab->d_filterReactScalarGradientCompLabel, ii, patch);
-      }
-    }
     }
     else {
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->getModifiable(scalarGrad[ii], 
-                               d_lab->d_scalarGradientCompLabel, ii, patch);
-        new_dw->getModifiable(filterScalarGrad[ii], 
-                             d_lab->d_filterScalarGradientCompLabel, ii, patch);
-      }
-      if (d_calcEnthalpy) {
-        new_dw->getModifiable(enthalpyGrad[ii], 
-                               d_lab->d_enthalpyGradientCompLabel, ii, patch);
-        new_dw->getModifiable(filterEnthalpyGrad[ii], 
-                           d_lab->d_filterEnthalpyGradientCompLabel, ii, patch);
-      }
-      if (d_calcReactingScalar) {
-        new_dw->getModifiable(reactScalarGrad[ii], 
-                              d_lab->d_reactScalarGradientCompLabel, ii, patch);
-        new_dw->getModifiable(filterReactScalarGrad[ii], 
-                        d_lab->d_filterReactScalarGradientCompLabel, ii, patch);
+      if (d_dynScalarModel) {
+        if (d_calcScalar) {
+          new_dw->getModifiable(scalarGrad[ii],       d_lab->d_scalarGradientCompLabel,       ii, patch);
+          new_dw->getModifiable(filterScalarGrad[ii], d_lab->d_filterScalarGradientCompLabel, ii, patch);
+        }
+        if (d_calcEnthalpy) {
+          new_dw->getModifiable(enthalpyGrad[ii],      d_lab->d_enthalpyGradientCompLabel,       ii, patch);
+          new_dw->getModifiable(filterEnthalpyGrad[ii],d_lab->d_filterEnthalpyGradientCompLabel, ii, patch);
+        }
+        if (d_calcReactingScalar) {
+          new_dw->getModifiable(reactScalarGrad[ii],      d_lab->d_reactScalarGradientCompLabel, ii, patch);
+          new_dw->getModifiable(filterReactScalarGrad[ii],d_lab->d_filterReactScalarGradientCompLabel, ii, patch);
+        }
       }
     }
-    }
+    
+    //__________________________________
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         scalarGrad[ii].initialize(0.0);
@@ -1555,45 +1474,35 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     constCCVariable<double> CsOld;
 
     // Get the velocity and density
-    new_dw->get(ccUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(filterRho, d_lab->d_filterRhoLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    old_dw->get(CsOld, d_lab->d_CsLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(ccUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(ccVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(ccWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(den,       d_lab->d_densityCPLabel,   matlIndex, patch, gac, 1);
+    new_dw->get(filterRho, d_lab->d_filterRhoLabel,   matlIndex, patch, gac, 1);
+    old_dw->get(CsOld,     d_lab->d_CsLabel,          matlIndex, patch, gac, 1);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-      new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, matlIndex, patch, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(scalar,     d_lab->d_scalarSPLabel,   matlIndex, patch, gac, 1);
+        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, matlIndex, patch, gac, 1);
       }
       if (d_calcEnthalpy) {
-      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, matlIndex, patch, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, matlIndex, patch, gac, 1);
+        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, matlIndex, patch, gac, 1);
       }
       if (d_calcReactingScalar) {
-      new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel, matlIndex, patch, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, gac, 1);
+        new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel,   matlIndex, patch, gac, 1);
       }
     }  
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     
@@ -1603,10 +1512,8 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     StencilMatrix<constCCVariable<double> > SIJ; //6 point tensor
     StencilMatrix<constCCVariable<double> > SHATIJ; //6 point tensor
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-      new_dw->get(SIJ[ii], d_lab->d_strainTensorCompLabel, ii, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      new_dw->get(SHATIJ[ii], d_lab->d_filterStrainTensorCompLabel,
-                  ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(SIJ[ii],    d_lab->d_strainTensorCompLabel,      ii, patch,gac, 1);
+      new_dw->get(SHATIJ[ii], d_lab->d_filterStrainTensorCompLabel,ii, patch, gac, 1);
     }
 
     StencilMatrix<constCCVariable<double> > scalarGrad; //vector
@@ -1616,29 +1523,20 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     StencilMatrix<constCCVariable<double> > reactScalarGrad; //vector
     StencilMatrix<constCCVariable<double> > filterReactScalarGrad; //vector
     for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->get(scalarGrad[ii], d_lab->d_scalarGradientCompLabel,
-                    ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(filterScalarGrad[ii],
-                    d_lab->d_filterScalarGradientCompLabel,
-                    ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      if (d_dynScalarModel) {
+        if (d_calcScalar) {
+          new_dw->get(scalarGrad[ii],      d_lab->d_scalarGradientCompLabel,      ii, patch, gac, 1);
+          new_dw->get(filterScalarGrad[ii],d_lab->d_filterScalarGradientCompLabel,ii, patch, gac, 1);
+        }
+        if (d_calcEnthalpy) {
+          new_dw->get(enthalpyGrad[ii],      d_lab->d_enthalpyGradientCompLabel,      ii, patch, gac, 1);
+          new_dw->get(filterEnthalpyGrad[ii],d_lab->d_filterEnthalpyGradientCompLabel,ii, patch, gac, 1);
+        }
+        if (d_calcReactingScalar) {
+          new_dw->get(reactScalarGrad[ii],    d_lab->d_reactScalarGradientCompLabel,        ii, patch, gac, 1);
+          new_dw->get(filterReactScalarGrad[ii],d_lab->d_filterReactScalarGradientCompLabel,ii, patch, gac, 1);
+        }
       }
-      if (d_calcEnthalpy) {
-        new_dw->get(enthalpyGrad[ii], d_lab->d_enthalpyGradientCompLabel,
-                    ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(filterEnthalpyGrad[ii],
-                    d_lab->d_filterEnthalpyGradientCompLabel,
-                    ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      }
-      if (d_calcReactingScalar) {
-        new_dw->get(reactScalarGrad[ii], d_lab->d_reactScalarGradientCompLabel,
-                    ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(filterReactScalarGrad[ii],
-                    d_lab->d_filterReactScalarGradientCompLabel,
-                    ii, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      }
-    }  
     }
 
     StencilMatrix<Array3<double> > betaIJ, cbetaIJ;  //6 point tensor
@@ -1696,84 +1594,58 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     CCVariable<double> reactScalarNum;
     CCVariable<double> reactScalarDenom;
     StencilMatrix<CCVariable<double> > lij;    //6 point tensor
+    
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(lij[ii], 
-                             d_lab->d_LIJCompLabel, ii, patch);
-    }
-    else {
-      new_dw->getModifiable(lij[ii], 
-                             d_lab->d_LIJCompLabel, ii, patch);
-    }
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
+        new_dw->allocateAndPut(lij[ii], d_lab->d_LIJCompLabel, ii, patch);
+      }else {
+        new_dw->getModifiable(lij[ii],  d_lab->d_LIJCompLabel, ii, patch);
+      }
       lij[ii].initialize(0.0);
     }
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    new_dw->allocateAndPut(IsImag, 
-                           d_lab->d_strainMagnitudeLabel, matlIndex, patch);
-    new_dw->allocateAndPut(MLI, 
-                           d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
-    new_dw->allocateAndPut(MMI, 
-                           d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
-    new_dw->allocateAndPut(alphaalpha, 
-                           d_lab->d_alphaalphaLabel, matlIndex, patch);
-    new_dw->allocateAndPut(Lalpha, 
-                           d_lab->d_LalphaLabel, matlIndex, patch);
-    new_dw->allocateAndPut(cbetaHATalpha, 
-                           d_lab->d_cbetaHATalphaLabel, matlIndex, patch);
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->allocateAndPut(scalarNum, 
-                          d_lab->d_scalarNumeratorLabel, matlIndex, patch);
-        new_dw->allocateAndPut(scalarDenom, 
-                          d_lab->d_scalarDenominatorLabel, matlIndex, patch);
+      new_dw->allocateAndPut(IsImag, d_lab->d_strainMagnitudeLabel,   matlIndex, patch);
+      new_dw->allocateAndPut(MLI,    d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
+      new_dw->allocateAndPut(MMI,    d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
+      new_dw->allocateAndPut(alphaalpha,   d_lab->d_alphaalphaLabel,    matlIndex, patch);
+      new_dw->allocateAndPut(Lalpha,       d_lab->d_LalphaLabel,        matlIndex, patch);
+      new_dw->allocateAndPut(cbetaHATalpha,d_lab->d_cbetaHATalphaLabel, matlIndex, patch);
+      if (d_dynScalarModel) {
+        if (d_calcScalar) {
+          new_dw->allocateAndPut(scalarNum,  d_lab->d_scalarNumeratorLabel,   matlIndex, patch);
+          new_dw->allocateAndPut(scalarDenom,d_lab->d_scalarDenominatorLabel, matlIndex, patch);
+        }
+        if (d_calcEnthalpy) {
+          new_dw->allocateAndPut(enthalpyNum,  d_lab->d_enthalpyNumeratorLabel,   matlIndex, patch);
+          new_dw->allocateAndPut(enthalpyDenom,d_lab->d_enthalpyDenominatorLabel, matlIndex, patch);
+        }
+        if (d_calcReactingScalar) {
+          new_dw->allocateAndPut(reactScalarNum, d_lab->d_reactScalarNumeratorLabel,    matlIndex, patch);
+          new_dw->allocateAndPut(reactScalarDenom,d_lab->d_reactScalarDenominatorLabel, matlIndex, patch);
+        }
       }
-      if (d_calcEnthalpy) {
-        new_dw->allocateAndPut(enthalpyNum, 
-                          d_lab->d_enthalpyNumeratorLabel, matlIndex, patch);
-        new_dw->allocateAndPut(enthalpyDenom, 
-                          d_lab->d_enthalpyDenominatorLabel, matlIndex, patch);
-      }
-      if (d_calcReactingScalar) {
-        new_dw->allocateAndPut(reactScalarNum, 
-                        d_lab->d_reactScalarNumeratorLabel, matlIndex, patch);
-        new_dw->allocateAndPut(reactScalarDenom, 
-                        d_lab->d_reactScalarDenominatorLabel, matlIndex, patch);
-      }
-    }  
     }
     else {
-    new_dw->getModifiable(IsImag, 
-                           d_lab->d_strainMagnitudeLabel, matlIndex, patch);
-    new_dw->getModifiable(MLI, 
-                           d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
-    new_dw->getModifiable(MMI, 
-                           d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
-    new_dw->getModifiable(alphaalpha, 
-                           d_lab->d_alphaalphaLabel, matlIndex, patch);
-    new_dw->getModifiable(Lalpha, 
-                           d_lab->d_LalphaLabel, matlIndex, patch);
-    new_dw->getModifiable(cbetaHATalpha, 
-                           d_lab->d_cbetaHATalphaLabel, matlIndex, patch);
-    if (d_dynScalarModel) {
-      if (d_calcScalar) {
-        new_dw->getModifiable(scalarNum, 
-                          d_lab->d_scalarNumeratorLabel, matlIndex, patch);
-        new_dw->getModifiable(scalarDenom, 
-                          d_lab->d_scalarDenominatorLabel, matlIndex, patch);
+      new_dw->getModifiable(IsImag,       d_lab->d_strainMagnitudeLabel,   matlIndex, patch);
+      new_dw->getModifiable(MLI,          d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
+      new_dw->getModifiable(MMI,          d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
+      new_dw->getModifiable(alphaalpha,   d_lab->d_alphaalphaLabel,        matlIndex, patch);
+      new_dw->getModifiable(Lalpha,       d_lab->d_LalphaLabel,            matlIndex, patch);
+      new_dw->getModifiable(cbetaHATalpha,d_lab->d_cbetaHATalphaLabel,     matlIndex, patch);
+      if (d_dynScalarModel) {
+        if (d_calcScalar) {
+          new_dw->getModifiable(scalarNum,  d_lab->d_scalarNumeratorLabel,   matlIndex, patch);
+          new_dw->getModifiable(scalarDenom,d_lab->d_scalarDenominatorLabel, matlIndex, patch);
+        }
+        if (d_calcEnthalpy) {
+          new_dw->getModifiable(enthalpyNum,  d_lab->d_enthalpyNumeratorLabel,   matlIndex, patch);
+          new_dw->getModifiable(enthalpyDenom,d_lab->d_enthalpyDenominatorLabel, matlIndex, patch);
+        }
+        if (d_calcReactingScalar) {
+          new_dw->getModifiable(reactScalarNum,  d_lab->d_reactScalarNumeratorLabel, matlIndex, patch);
+          new_dw->getModifiable(reactScalarDenom,d_lab->d_reactScalarDenominatorLabel,matlIndex, patch);
+        }
       }
-      if (d_calcEnthalpy) {
-        new_dw->getModifiable(enthalpyNum, 
-                          d_lab->d_enthalpyNumeratorLabel, matlIndex, patch);
-        new_dw->getModifiable(enthalpyDenom, 
-                          d_lab->d_enthalpyDenominatorLabel, matlIndex, patch);
-      }
-      if (d_calcReactingScalar) {
-        new_dw->getModifiable(reactScalarNum, 
-                        d_lab->d_reactScalarNumeratorLabel, matlIndex, patch);
-        new_dw->getModifiable(reactScalarDenom, 
-                        d_lab->d_reactScalarDenominatorLabel, matlIndex, patch);
-      }
-    }  
     }
     IsImag.initialize(0.0);
     MLI.initialize(0.0);
@@ -2345,14 +2217,15 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
 
 
-
+//______________________________________________________________________
+//
 void 
 CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw,
-                                     const TimeIntegratorLabel* timelabels)
+                                              const PatchSubset* patches,
+                                              const MaterialSubset*,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw,
+                                              const TimeIntegratorLabel* timelabels)
 {
   int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   int initialTimeStep=2;
@@ -2383,6 +2256,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     CCVariable<double> scalardiff;
     CCVariable<double> enthalpydiff;
     CCVariable<double> reactScalardiff;
+    
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
        new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);
        if (d_dynScalarModel) {
@@ -2442,64 +2316,46 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }      
 
-    new_dw->get(IsI,d_lab->d_strainMagnitudeLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;
+    new_dw->get(IsI,            d_lab->d_strainMagnitudeLabel,  matlIndex, patch, gn, 0);
     // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
-    new_dw->get(MLI,d_lab->d_strainMagnitudeMLLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      new_dw->get(alphaalpha, d_lab->d_alphaalphaLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      new_dw->get(Lalpha, d_lab->d_LalphaLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-      new_dw->get(cbetaHATalpha, d_lab->d_cbetaHATalphaLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(MLI,            d_lab->d_strainMagnitudeMLLabel,matlIndex, patch, gac, 1);
+    new_dw->get(MMI,            d_lab->d_strainMagnitudeMMLabel,matlIndex, patch, gac, 1);
+    new_dw->get(alphaalpha,     d_lab->d_alphaalphaLabel,       matlIndex, patch, gac, 1);
+    new_dw->get(Lalpha,         d_lab->d_LalphaLabel,           matlIndex, patch, gac, 1);
+    new_dw->get(cbetaHATalpha,  d_lab->d_cbetaHATalphaLabel,    matlIndex, patch, gac, 1);
+    
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        new_dw->get(scalarNum,d_lab->d_scalarNumeratorLabel,
-                    matlIndex, patch,
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(scalarDenom, d_lab->d_scalarDenominatorLabel,
-                    matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(scalarNum,   d_lab->d_scalarNumeratorLabel,  matlIndex, patch, gac, 1);
+        new_dw->get(scalarDenom, d_lab->d_scalarDenominatorLabel,matlIndex, patch, gac, 1);
       }
       if (d_calcEnthalpy) {
-        new_dw->get(enthalpyNum,d_lab->d_enthalpyNumeratorLabel,
-                    matlIndex, patch,
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(enthalpyDenom, d_lab->d_enthalpyDenominatorLabel,
-                    matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(enthalpyNum,   d_lab->d_enthalpyNumeratorLabel,  matlIndex, patch,gac, 1);
+        new_dw->get(enthalpyDenom, d_lab->d_enthalpyDenominatorLabel,matlIndex, patch,gac, 1);
       }
       if (d_calcReactingScalar) {
-        new_dw->get(reactScalarNum,d_lab->d_reactScalarNumeratorLabel,
-                    matlIndex, patch,
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(reactScalarDenom, d_lab->d_reactScalarDenominatorLabel,
-                    matlIndex, patch, 
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(reactScalarNum,   d_lab->d_reactScalarNumeratorLabel,matlIndex,   patch,gac, 1);
+        new_dw->get(reactScalarDenom, d_lab->d_reactScalarDenominatorLabel,matlIndex, patch, gac, 1);
       }
     }      
 
-    new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(filterRho, d_lab->d_filterRhoLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(den,       d_lab->d_densityCPLabel, matlIndex, patch, gac, 1);
+    new_dw->get(filterRho, d_lab->d_filterRhoLabel, matlIndex, patch, gac, 1);
+    new_dw->get(cellType,  d_lab->d_cellTypeLabel,  matlIndex, patch, gac, 1);
 
-    if (d_MAlab)
-        new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    if (d_MAlab){
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, gn, 0);
+    }
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // get physical constants
@@ -2671,7 +2527,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                             tempShRF.getHighIndex());
       }
     }
-//-----------------------------------------------------------------------------------    
+    //__________________________________    
     if (nofTimeSteps>initialTimeStep) {
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -2681,6 +2537,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           }
         }
       }
+      
       if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
         // filtering for periodic case is not implemented 
         // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
@@ -2989,14 +2846,14 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
   }
 }
 
-
+//______________________________________________________________________
 void 
 CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels,
-                                              bool d_EKTCorrection,
-                                              bool doing_EKT_now)
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls,
+                                                       const TimeIntegratorLabel* timelabels,
+                                                       bool d_EKTCorrection,
+                                                       bool doing_EKT_now)
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
@@ -3004,33 +2861,28 @@ CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
                           &CompLocalDynamicProcedure::computeScalarVariance,
                           timelabels, d_EKTCorrection, doing_EKT_now);
 
-  
-  // Requires, only the scalar corresponding to matlindex = 0 is
-  //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
 
   // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
      tsk->computes(d_lab->d_scalarVarSPLabel);
-  else
+  }else{
      tsk->modifies(d_lab->d_scalarVarSPLabel);
-
+  }
   sched->addTask(tsk, patches, matls);
 }
 
-
+//______________________________________________________________________
 void 
 CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse* new_dw,
-                                            const TimeIntegratorLabel* timelabels,
-                                        bool, bool)
+                                                 const PatchSubset* patches,
+                                                 const MaterialSubset*,
+                                                 DataWarehouse*,
+                                                 DataWarehouse* new_dw,
+                                                 const TimeIntegratorLabel* timelabels,
+                                                 bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -3039,22 +2891,18 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
-    // Get the velocity, density and viscosity from the old data warehouse
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-            new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
-                               patch);
-    else
-            new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
-                               patch);
-    scalarVar.initialize(0.0);
-
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(scalar,   d_lab->d_scalarSPLabel, matlIndex, patch,gac, 1);    
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+      new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    }else{
+      new_dw->getModifiable(scalarVar,  d_lab->d_scalarVarSPLabel, matlIndex,patch);
+    }
+    scalarVar.initialize(0.0);
     
     IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
     IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
@@ -3186,11 +3034,11 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 //****************************************************************************
 void 
 CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
-                                                 const PatchSet* patches,
-                                                 const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels,
-                                                 bool d_EKTCorrection,
-                                                 bool doing_EKT_now)
+                                                          const PatchSet* patches,
+                                                          const MaterialSet* matls,
+                                                          const TimeIntegratorLabel* timelabels,
+                                                          bool d_EKTCorrection,
+                                                          bool doing_EKT_now)
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarDissipation" +
                      timelabels->integrator_step_name;
@@ -3201,18 +3049,16 @@ CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  // assuming scalar dissipation is computed before turbulent viscosity calculation
+  Ghost::GhostType  gac = Ghost::AroundCells;
+   
+  tsk->requires(Task::NewDW,   d_lab->d_scalarSPLabel,        gac, 1);
   if (d_dynScalarModel)
-    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 1);
   else
-    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,     gac, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW,  d_lab->d_cellTypeLabel,          gac, 1);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -3223,15 +3069,15 @@ CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
   sched->addTask(tsk, patches, matls);
 }
 
-
+//______________________________________________________________________
 void 
 CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse* new_dw,
-                                            const TimeIntegratorLabel* timelabels,
-                                        bool, bool)
+                                                    const PatchSubset* patches,
+                                                    const MaterialSubset*,
+                                                    DataWarehouse*,
+                                                    DataWarehouse* new_dw,
+                                                    const TimeIntegratorLabel* timelabels,
+                                                    bool, bool)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -3240,28 +3086,26 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     // Variables
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
+    constCCVariable<int> cellType;
     CCVariable<double> scalarDiss;  // dissipation..chi
+    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, gac, 1);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,gac, 1);
+    
+    if (d_dynScalarModel){
+      new_dw->get(viscosity, d_lab->d_scalarDiffusivityLabel, matlIndex, patch, gac, 1);
+    }else{
+      new_dw->get(viscosity, d_lab->d_viscosityCTSLabel,      matlIndex, patch, gac, 1);
+    }
 
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    if (d_dynScalarModel)
-      new_dw->get(viscosity, d_lab->d_scalarDiffusivityLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else
-      new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
-                              matlIndex, patch);
-    else
-       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
-                              matlIndex, patch);
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+    }else{
+       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,  matlIndex, patch);
+    }
     scalarDiss.initialize(0.0);
 
-    constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
