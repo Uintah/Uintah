@@ -22,7 +22,7 @@ using namespace Uintah;
 // Interface constructor for CO2RateSrc
 //****************************************************************************
 CO2RateSrc::CO2RateSrc(const ArchesLabel* label, 
-                                          const MPMArchesLabel* MAlb,
+                       const MPMArchesLabel* MAlb,
                        const VarLabel* d_src_label):
                        ExtraScalarSrc(label, MAlb, d_src_label)
 {
@@ -74,7 +74,7 @@ CO2RateSrc::sched_addExtraScalarSrc(SchedulerP& sched,
 
   //variables needed:
   tsk->modifies(d_scalar_nonlin_src_label);
-  tsk->requires(Task::NewDW, d_lab->d_co2RateLabel, Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_co2RateLabel, Ghost::None, 0);
 
   //add the task:
   sched->addTask(tsk, patches, matls);
@@ -105,8 +105,7 @@ CO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     double vol = dx.x()*dx.y()*dx.z();
 
     constCCVariable<double> CO2rate;
-    new_dw->get(CO2rate, d_lab->d_co2RateLabel, 
-    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(CO2rate, d_lab->d_co2RateLabel, matlIndex, patch, Ghost::None, 0);
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       scalarNonlinSrc[*iter] += d_scaleFactor*CO2rate[*iter]*vol*44000; //44000 = conversion from mol/cm^3/s to kg/m^3/s
