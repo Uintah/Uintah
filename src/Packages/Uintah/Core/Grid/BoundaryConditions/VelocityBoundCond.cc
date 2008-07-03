@@ -1,7 +1,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <Core/Malloc/Allocator.h>
 using namespace Uintah;
 

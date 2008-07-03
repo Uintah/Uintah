@@ -30,6 +30,7 @@ BCDataArray::BCDataArray()
 
 BCDataArray::~BCDataArray()
 {
+ // cout << "Calling BCDataArray destructor" << endl;
   bcDataArrayType::const_iterator mat_id_itr;
   for (mat_id_itr=d_BCDataArray.begin(); mat_id_itr != d_BCDataArray.end();
        ++mat_id_itr) {
@@ -214,7 +215,6 @@ void BCDataArray::combineBCGeometryTypes(int mat_id)
 
 void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 {
-
   if (d_BCDataArray[mat_id].size() <= 1) {
     BCDA_dbg<< "One or fewer elements in BCDataArray" << endl << endl;
     return;
@@ -302,69 +302,7 @@ void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 #if 1
   d_BCDataArray_vec = new_bcdata_array;
 #endif
-  
-#if 0
-  for (nv_itr = new_bcdata_array.begin(); nv_itr != new_bcdata_array.end();
-       ++nv_itr) {
-    
-    for (v_itr = d_BCDataArray_vec.begin(); v_itr != d_BCDataArray_vec.end();
-         ++v_itr) {
-      
-      if (*(*nv_itr) == *(*v_itr)) {
-        BCDA_dbg<< "They are the same" << endl;
-        BCData bcd,n_bcd;
-        (*v_itr)->getBCData(bcd);
-        (*nv_itr)->getBCData(n_bcd);
-        n_bcd.combine(bcd);
-        (*nv_itr)->addBCData(n_bcd);
-        d_BCDataArray_vec.erase(v_itr);
-      } else {
-        BCDA_dbg<< "They are different" << endl;        
-        new_bcdata_array.push_back((*v_itr)->clone());
-        d_BCDataArray_vec.erase(v_itr);
-      }
-     
-      BCDA_dbg<< "size of new_bcdata_array = " << new_bcdata_array.size() << endl;
-      BCDA_dbg<< "size of d_BCDataArray_vec = " << d_BCDataArray_vec.size() << endl;
-      
-    }
-  }
-  
-  if (count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-               cmp_type<SideBCData>()) > 1) {
-    
-    SideBCData* side_bc = scinew SideBCData();
-    for (vector<BCGeomBase*>::const_iterator itr = d_BCDataArray_vec.begin();
-         itr != d_BCDataArray_vec.end(); ++ itr) {
-      if (typeid(*(*itr)) == typeid(SideBCData)) {
-        BCDA_dbg<< "Found SideBCData" << endl;
-        BCData bcd,s_bcd;
-        (*itr)->getBCData(bcd);
-        side_bc->getBCData(s_bcd);
-        s_bcd.combine(bcd);
-        side_bc->addBCData(s_bcd);
-        side_bc->print();
-      } else {
-        new_bcdata_array.push_back((*itr)->clone());
-      }
-      
-    }
-    side_bc->print();
-    new_bcdata_array.push_back(side_bc->clone());
-    delete side_bc;
-    new_bcdata_array.back()->print();
 
-    BCDA_dbg<< "Have duplicates After . . ." << endl;
-    for (vector<BCGeomBase*>::const_iterator v_itr = new_bcdata_array.begin();
-         v_itr != new_bcdata_array.end(); ++v_itr) {
-      (*v_itr)->print();
-    }
-    for_each(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
-             delete_object<BCGeomBase>());
-    d_BCDataArray_vec.clear();
-    d_BCDataArray_vec = new_bcdata_array;
-  }
-#endif  
 }
 
 const BoundCondBase* 

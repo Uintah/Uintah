@@ -39,6 +39,7 @@ BoundCondReader::BoundCondReader()
 
 BoundCondReader::~BoundCondReader()
 {
+  //cout << "Calling BoundCondReader destructor" << endl;
 }
 
 void BoundCondReader::whichPatchFace(const std::string fc,
@@ -345,14 +346,18 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     BCR_dbg << "Printing out bcDataArray . . " << endl;
     d_BCReaderData[face_side].print();
 
-
     delete bcGeom;
 
     // Delete stuff in bctype_data
     multimap<int, BoundCondBase*>::const_iterator m_itr;
     for (m_itr = bctype_data.begin(); m_itr != bctype_data.end(); ++m_itr) 
       delete m_itr->second;
+
+    bctype_data.clear();
+    bcgeom_data.clear();
   }
+
+ 
 
 #if 1
   // Find the mat_id = "all" (-1) information and store it in each 
@@ -596,7 +601,7 @@ void BoundCondReader::combineBCS_NEW()
     original.print();
     BCR_dbg << endl;
 
-    BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
+    BCDataArray::bcDataArrayType::iterator mat_id_itr;
     for (mat_id_itr = original.d_BCDataArray.begin(); 
 	 mat_id_itr != original.d_BCDataArray.end(); 
 	 ++mat_id_itr) {
@@ -609,7 +614,7 @@ void BoundCondReader::combineBCS_NEW()
       vector<BCGeomBase*>::const_iterator vec_itr, side_index,other_index;
 
       typedef vector<BCGeomBase*> BCGeomBaseVec;
-      const BCGeomBaseVec& bcgeom_vec = mat_id_itr->second;
+      BCGeomBaseVec& bcgeom_vec = mat_id_itr->second;
 
       // Don't do anything if the only BCGeomBase element is a SideBC
       if ( (bcgeom_vec.size() == 1) && 
@@ -645,6 +650,8 @@ void BoundCondReader::combineBCS_NEW()
           rearranged.addBCData(mat_id,diff_bc->clone());
           rearranged.addBCData(mat_id,other_bc->clone());
           delete diff_bc;
+          delete side_bc;
+          delete other_bc;
 
         } else {
 
@@ -658,6 +665,8 @@ void BoundCondReader::combineBCS_NEW()
           side_bc = dynamic_cast<SideBCData*>((*side_index)->clone());
           diff_bc = scinew DifferenceBCData(side_bc,union_bc->clone());
           rearranged.addBCData(mat_id,diff_bc->clone());
+          delete side_bc;
+          delete diff_bc;
           for (vec_itr=union_bc->child.begin();vec_itr!=union_bc->child.end();
                ++vec_itr){
             rearranged.addBCData(mat_id,(*vec_itr)->clone());
@@ -668,9 +677,12 @@ void BoundCondReader::combineBCS_NEW()
         }
 
       }
+      for_each(bcgeom_vec.begin(),bcgeom_vec.end(),delete_object<BCGeomBase>());
+      bcgeom_vec.clear();
     }
     BCR_dbg << endl << "Printing out rearranged list" << endl;
     rearranged.print();
+
 
     d_BCReaderData[face] = rearranged;
 
@@ -687,7 +699,6 @@ void BoundCondReader::combineBCS_NEW()
     BCR_dbg << "After Face . . .  " << face << endl;
     d_BCReaderData[face].print();
   } 
-
 
 }
 
