@@ -1772,20 +1772,6 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     newCCVVel.initialize(0.0);
     newCCWVel.initialize(0.0);
 
-
-    cout << " getSFCXFORTLowIndex() Old:" << patch->getSFCXFORTLowIndex() << " New: " <<  patch->getFortranSFCXLowIndex__New()
-         << " getSFCXFORTHighIndex() Old:" << patch->getSFCXFORTHighIndex() << " New: " <<  patch->getFortranSFCXHighIndex__New() << endl;
-
-    cout << " getSFCYFORTLowIndex() Old:" << patch->getSFCYFORTLowIndex() << " New: " <<  patch->getFortranSFCYLowIndex__New()
-         << " getSFCYFORTHighIndex() Old:" << patch->getSFCYFORTHighIndex() << " New: " <<  patch->getFortranSFCYHighIndex__New() << endl;
-         
-    cout << " getSFCZFORTLowIndex() Old:" << patch->getSFCZFORTLowIndex() << " New: " <<  patch->getFortranSFCZLowIndex__New()
-         << " getSFCZFORTHighIndex() Old:" << patch->getSFCZFORTHighIndex() << " New: " <<  patch->getFortranSFCZHighIndex__New() << endl;
-         
-         
-    cout << "  getFortranCellLowIndex__New()  " << patch->getFortranCellLowIndex__New() <<  " cellLow:  " << patch->getCellLowIndex__New() << endl;
-    cout << "  getFortranCellHighIndex__New() " << patch->getFortranCellHighIndex__New() << " cellHigh: " << patch->getCellHighIndex__New() << endl;
-         
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
         for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
