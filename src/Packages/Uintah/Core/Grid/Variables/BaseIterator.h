@@ -35,7 +35,12 @@ namespace Uintah {
     BaseIterator
 
     DESCRIPTION
-    Base class for all iterators.
+    Base class for all iterators.  In Uintah an iterator is both a container
+    and an iterator.  In order to be considered valid the iterator must visit
+    the container in a sorted order from low to high.  In addition, each cell 
+    can only be in the iterator once.  These conditions are not strictly 
+    enforced and thus it is up to the creater of the iterator to enforce 
+    these conditions.
 
     WARNING
 
