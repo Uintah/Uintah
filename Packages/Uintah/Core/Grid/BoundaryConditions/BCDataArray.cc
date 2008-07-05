@@ -277,7 +277,7 @@ void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
       (*nv_itr)->getBCData(n_bcd);
       n_bcd.combine(bcd);
       (*nv_itr)->addBCData(n_bcd);
-      
+      delete element;
     } else {
       new_bcdata_array.push_back(element->clone());
       d_BCDataArray_vec.pop_back();
