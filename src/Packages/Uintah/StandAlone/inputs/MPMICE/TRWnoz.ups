@@ -19,7 +19,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
-       <max_Timesteps>     500         </max_Timesteps>
+       <max_Timesteps>      500         </max_Timesteps>
        <timestep_multiplier>0.8         </timestep_multiplier>
    </Time>
 
@@ -31,6 +31,15 @@
       <Face circle = "x-" origin = "0.0 0.0 0.0" radius = ".03683">
         <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
                             <value> 4000000.0   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity" var = "Dirichlet">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature" var = "Dirichlet">
+                              <value> 300.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density" var = "Neumann">
+                              <value> 0.0  </value>
         </BCType>
         <BCType id = "1" label = "Velocity"     var = "Dirichlet">
                             <value> [209.,0.,0.] </value>
