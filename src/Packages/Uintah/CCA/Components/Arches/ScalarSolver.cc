@@ -329,10 +329,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    // from old_dw get PCELL, DENO, FO
-    new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values){
@@ -346,6 +343,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
 
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    new_dw->get(constScalarVars.cellType,           d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    
     old_values_dw->get(constScalarVars.old_scalar,  d_lab->d_scalarSPLabel,  matlIndex, patch, gn, 0);
     old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, matlIndex, patch, gn, 0);
   
@@ -573,6 +573,8 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,     gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, gn,  0);
