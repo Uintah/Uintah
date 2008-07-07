@@ -212,21 +212,25 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 
 
   Task::WhichDW parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
-  else parent_old_dw = Task::OldDW;
-
+  if (timelabels->recursion){
+    parent_old_dw = Task::ParentOldDW;
+  }else{
+    parent_old_dw = Task::OldDW;
+  }
+  
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   
   // This task requires scalar and density from old time step for transient
   // calculation
-  //DataWarehouseP old_dw = new_dw->getTop();  
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-                Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-                Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  //DataWarehouseP old_dw = new_dw->getTop();
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Ghost::GhostType  gn = Ghost::None;  
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 2);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gac, 2);
 
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
@@ -234,68 +238,53 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   }else{ 
     old_values_dw = Task::NewDW;
   }
-  tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(old_values_dw, d_lab->d_scalarSPLabel,  gn, 0);
+  tsk->requires(old_values_dw, d_lab->d_densityCPLabel, gn, 0);
 
   if (d_dynScalarModel){
-    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 2);
   }else{
-    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,     gac, 2);
   }
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-                  d_lab->d_vectorMatl, Task::OutOfDomain,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else
+                  d_lab->d_vectorMatl, oams, gac, 1);
+  }else{
     tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
-                  d_lab->d_vectorMatl, Task::OutOfDomain,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+                  d_lab->d_vectorMatl, oams,gac, 1);
+  }
 
       // added one more argument of index to specify scalar component
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-    tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
-    tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
+    tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
     tsk->computes(d_lab->d_scalNonLinSrcSBLMLabel);
 //#ifdef divergenceconstraint
     tsk->computes(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
-        tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
-  }
-  else {
-    tsk->modifies(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
-    tsk->modifies(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
+    tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
+  }else {
+    tsk->modifies(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->modifies(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
     tsk->modifies(d_lab->d_scalNonLinSrcSBLMLabel);
 //#ifdef divergenceconstraint
     tsk->modifies(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
-        tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
+    tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
   }
-  if (doing_EKT_now)
+  if (doing_EKT_now){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       tsk->computes(d_lab->d_scalarEKTLabel);
-    else
+    else{
       tsk->modifies(d_lab->d_scalarEKTLabel);
-
-          
-
+    }
+  }       
   sched->addTask(tsk, patches, matls);
 }
 
@@ -314,9 +303,12 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 {
 
   DataWarehouse* parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-  else parent_old_dw = old_dw;
-
+  if (timelabels->recursion){
+    parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  }else{
+    parent_old_dw = old_dw;
+  }
+  
   delt_vartype delT;
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
@@ -340,8 +332,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO
-    new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values){
@@ -349,39 +340,39 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }else{ 
       old_values_dw = new_dw;
     }
-    old_values_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel, 
-                       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
-                       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    
+    //__________________________________
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    Ghost::GhostType  gn = Ghost::None;
+
+    old_values_dw->get(constScalarVars.old_scalar,  d_lab->d_scalarSPLabel,  matlIndex, patch, gn, 0);
+    old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, matlIndex, patch, gn, 0);
   
     // from new_dw get DEN, VIS, F, U, V, W
-    new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel,            matlIndex, patch, gac, 2);
 
     if (d_dynScalarModel){
-      new_dw->get(constScalarVars.viscosity, d_lab->d_scalarDiffusivityLabel, 
-                  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+      new_dw->get(constScalarVars.viscosity, d_lab->d_scalarDiffusivityLabel,matlIndex, patch, gac, 2);
     }else{
-      new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
-                  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+      new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel,     matlIndex, patch, gac, 2);
     }
-    new_dw->get(constScalarVars.scalar, d_lab->d_scalarSPLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    new_dw->get(constScalarVars.scalar,    d_lab->d_scalarSPLabel,      matlIndex, patch, gac, 2);
     // for explicit get old values
-    new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constScalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(constScalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
 
-  // allocate matrix coeffs
+   //__________________________________
+   // allocate matrix coeffs
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+      
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateAndPut(scalarVars.scalarCoeff[ii],
                              d_lab->d_scalCoefSBLMLabel, ii, patch);
       scalarVars.scalarCoeff[ii].initialize(0.0);
+      
       new_dw->allocateAndPut(scalarVars.scalarDiffusionCoeff[ii],
                              d_lab->d_scalDiffCoefLabel, ii, patch);
       scalarVars.scalarDiffusionCoeff[ii].initialize(0.0);
@@ -396,12 +387,12 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 //#endif
         new_dw->getModifiable(scalarVars.scalarBoundarySrc,
                                 d_lab->d_scalarBoundarySrcLabel, matlIndex, patch);
-  }
-  else {
+  }else {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->getModifiable(scalarVars.scalarCoeff[ii],
                             d_lab->d_scalCoefSBLMLabel, ii, patch);
       scalarVars.scalarCoeff[ii].initialize(0.0);
+      
       new_dw->getModifiable(scalarVars.scalarDiffusionCoeff[ii],
                             d_lab->d_scalDiffCoefLabel, ii, patch);
       scalarVars.scalarDiffusionCoeff[ii].initialize(0.0);
@@ -420,7 +411,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
     new_dw->allocateTemporary(scalarVars.scalarConvectCoeff[ii],  patch);
-  scalarVars.scalarConvectCoeff[ii].initialize(0.0);
+    scalarVars.scalarConvectCoeff[ii].initialize(0.0);
   }
   new_dw->allocateTemporary(scalarVars.scalarLinearSrc,  patch);
   scalarVars.scalarLinearSrc.initialize(0.0);
@@ -460,15 +451,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          old_dw->get(scalarFlux[ii],
-                          d_lab->d_scalarFluxCompLabel, ii, patch,
-                          Ghost::AroundCells, Arches::ONEGHOSTCELL);
+          old_dw->get(scalarFlux[ii], d_lab->d_scalarFluxCompLabel, ii, patch,gac, 1);
         }
       }else{
         for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-          new_dw->get(scalarFlux[ii],
-                          d_lab->d_scalarFluxCompLabel, ii, patch,
-                          Ghost::AroundCells, Arches::ONEGHOSTCELL);
+          new_dw->get(scalarFlux[ii], d_lab->d_scalarFluxCompLabel, ii, patch, gac, 1);
         }
       }
       IntVector indexLow = patch->getFortranCellLowIndex__New();
@@ -578,43 +565,40 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
                           timelabels, d_EKTCorrection, doing_EKT_now);
   
   Task::WhichDW parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
-  else parent_old_dw = Task::OldDW;
-
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (timelabels->recursion){
+    parent_old_dw = Task::ParentOldDW;
+  }else{ 
+    parent_old_dw = Task::OldDW;
+  }
   
-  if (timelabels->multiple_steps)
-    tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else
-    tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_scalCoefSBLMLabel, 
-                d_lab->d_stencilMatl, Task::OutOfDomain,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn  = Ghost::None;
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,     gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, gn,  0);
+  
+  if (timelabels->multiple_steps){
+    tsk->requires(Task::NewDW, d_lab->d_scalarTempLabel, gac, 1);
+  }else{
+    tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,   gac, 1);
+  }
+  tsk->requires(Task::NewDW, d_lab->d_scalCoefSBLMLabel,  
+                             d_lab->d_stencilMatl, oams, gn, 0);
+                             
+  tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, gn, 0);
 
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }    
 
-  if (doing_EKT_now)
+  if (doing_EKT_now){
     tsk->modifies(d_lab->d_scalarEKTLabel);
-  else 
+  }else{ 
     tsk->modifies(d_lab->d_scalarSPLabel);
-  if (timelabels->recursion)
+  }
+  if (timelabels->recursion){
     tsk->computes(d_lab->d_ScalarClippedLabel);
-  
+  }
   
   sched->addTask(tsk, patches, matls);
 }
@@ -632,9 +616,12 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
                                 bool doing_EKT_now)
 {
   DataWarehouse* parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-  else parent_old_dw = old_dw;
-
+  if (timelabels->recursion){ 
+    parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  }else{ 
+    parent_old_dw = old_dw;
+  }
+  
   delt_vartype delT;
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
@@ -651,43 +638,42 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
+    
+    //__________________________________
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, matlIndex, patch, gn, 0);
 
-    if (timelabels->multiple_steps)
-      new_dw->get(constScalarVars.old_scalar, d_lab->d_scalarTempLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else
-      old_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+    if (timelabels->multiple_steps){
+      new_dw->get(constScalarVars.old_scalar, d_lab->d_scalarTempLabel, matlIndex, patch, gac, 1);
+    }else{
+      old_dw->get(constScalarVars.old_scalar, d_lab->d_scalarSPLabel,   matlIndex, patch, gac, 1);
+    }
+    
     // for explicit calculation
-    if (doing_EKT_now)
-      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
-                  matlIndex, patch);
-    else
-      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel, 
-                  matlIndex, patch);
-
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
-      new_dw->get(constScalarVars.scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, 
-                  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (doing_EKT_now){
+      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, matlIndex, patch);
+    }else{
+      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarSPLabel,  matlIndex, patch);
+    }
+    
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++){
+      new_dw->get(constScalarVars.scalarCoeff[ii], 
+                                                 d_lab->d_scalCoefSBLMLabel, ii, patch, gn, 0);
+    }
     new_dw->get(constScalarVars.scalarNonlinearSrc,
-                d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+                                                d_lab->d_scalNonLinSrcSBLMLabel, matlIndex, patch, gn, 0);
 
-    new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel,
-                    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(constScalarVars.cellType,       d_lab->d_cellTypeLabel,     matlIndex, patch, gac, 1);
     if (d_MAlab) {
-      new_dw->get(constScalarVars.voidFraction, d_lab->d_mmgasVolFracLabel,
-                      matlIndex, patch, 
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(constScalarVars.voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, gn, 0);
     }
 
     // make it a separate task later
@@ -698,54 +684,57 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
                                             cellinfo);
     }else{
       d_rhsSolver->scalarLisolve(pc, patch, delta_t, 
-                                    &scalarVars, &constScalarVars,
-                                    cellinfo);
+                                 &scalarVars, &constScalarVars,
+                                 cellinfo);
     }
-  double scalar_clipped = 0.0;
-  double epsilon = 1.0e-15;
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-        IntVector currCell(ii,jj,kk);
+    
+    
+    double scalar_clipped = 0.0;
+    double epsilon = 1.0e-15;
+    // Get the patch bounds and the variable bounds
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+        for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+          IntVector currCell(ii,jj,kk);
 
-        if (scalarVars.scalar[currCell] > 1.0) {
-          if (scalarVars.scalar[currCell] > 1.0 + epsilon) {
-            scalar_clipped = 1.0;
-            cout << "scalar got clipped to 1 at " << currCell
-            << " , scalar value was " << scalarVars.scalar[currCell] 
-            << " , density guess was " 
-            << constScalarVars.density_guess[currCell] << endl;
+          if (scalarVars.scalar[currCell] > 1.0) {
+            if (scalarVars.scalar[currCell] > 1.0 + epsilon) {
+              scalar_clipped = 1.0;
+              cout << "scalar got clipped to 1 at " << currCell
+              << " , scalar value was " << scalarVars.scalar[currCell] 
+              << " , density guess was " 
+              << constScalarVars.density_guess[currCell] << endl;
+            }
+            scalarVars.scalar[currCell] = 1.0;
+          }  
+          else if (scalarVars.scalar[currCell] < 0.0) {
+            if (scalarVars.scalar[currCell] < - epsilon) {
+              scalar_clipped = 1.0;
+              cout << "scalar got clipped to 0 at " << currCell
+              << " , scalar value was " << scalarVars.scalar[currCell]
+              << " , density guess was " 
+              << constScalarVars.density_guess[currCell] << endl;
+              cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
+              << "in the <ARCHES> section of the input file, "
+              <<"but it would only help for first time substep if RKSSP is used" << endl;
+            }
+            scalarVars.scalar[currCell] = 0.0;
           }
-          scalarVars.scalar[currCell] = 1.0;
-        }  
-        else if (scalarVars.scalar[currCell] < 0.0) {
-          if (scalarVars.scalar[currCell] < - epsilon) {
-            scalar_clipped = 1.0;
-            cout << "scalar got clipped to 0 at " << currCell
-            << " , scalar value was " << scalarVars.scalar[currCell]
-            << " , density guess was " 
-            << constScalarVars.density_guess[currCell] << endl;
-            cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
-            << "in the <ARCHES> section of the input file, "
-            <<"but it would only help for first time substep if RKSSP is used" << endl;
-          }
-          scalarVars.scalar[currCell] = 0.0;
         }
       }
     }
-  }
-  if (timelabels->recursion){
-    new_dw->put(max_vartype(scalar_clipped), d_lab->d_ScalarClippedLabel);
-  }
-// Outlet bc is done here not to change old scalar
+    
+    if (timelabels->recursion){
+      new_dw->put(max_vartype(scalar_clipped), d_lab->d_ScalarClippedLabel);
+    }
+    
+    // Outlet bc is done here not to change old scalar
     if ((d_boundaryCondition->getOutletBC())||
-        (d_boundaryCondition->getPressureBC()))
-    d_boundaryCondition->scalarOutletPressureBC(pc, patch,
-                                        &scalarVars, &constScalarVars);
-
-  }
+        (d_boundaryCondition->getPressureBC())){
+      d_boundaryCondition->scalarOutletPressureBC(pc, patch, &scalarVars, &constScalarVars);
+    }
+  }  // patches
 }
 
