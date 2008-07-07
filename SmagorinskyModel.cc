@@ -103,27 +103,21 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
                           timelabels);
 
   // Requires
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Ghost::GhostType  gn = Ghost::None; 
+   
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
   // for multimaterial
   if (d_MAlab){
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
 
   tsk->modifies(d_lab->d_viscosityCTSLabel);
@@ -162,33 +156,26 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
-
-    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,
-                           matlIndex, patch);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    Ghost::GhostType  gn = Ghost::None; 
+     
     
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,matlIndex, patch);
+                           
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
                 
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(density,     d_lab->d_densityCPLabel,      matlIndex, patch, gn,  0);
+    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
     
-    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    
-    if (d_MAlab)
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    if (d_MAlab){
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,gn, 0);
+    }
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -337,7 +324,7 @@ void
 SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched, 
                                               const PatchSet* patches,
                                               const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels,
+                                              const TimeIntegratorLabel* timelabels,
                                               bool d_EKTCorrection,
                                               bool doing_EKT_now)
 {
@@ -351,16 +338,14 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
+  Ghost::GhostType  gac = Ghost::AroundCells;
   if (doing_EKT_now){
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
   }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
   }
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
 
   // Computes
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
@@ -399,13 +384,13 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     CCVariable<double> normalizedScalarVar;
     
     // Get the velocity, density and viscosity from the old data warehouse
-    if (doing_EKT_now)
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else
-      new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    if (doing_EKT_now){
+      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,gac, 1);
+    }else{
+      new_dw->get(scalar, d_lab->d_scalarSPLabel,  matlIndex, patch,gac, 1);
+    }
+    
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
       new_dw->allocateAndPut(scalarVar,           d_lab->d_scalarVarSPLabel,         matlIndex,patch);
@@ -419,15 +404,15 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
@@ -589,7 +574,7 @@ void
 SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched, 
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls,
-                                             const TimeIntegratorLabel* timelabels,
+                                                 const TimeIntegratorLabel* timelabels,
                                                  bool d_EKTCorrection,
                                                  bool doing_EKT_now)
 {
@@ -604,25 +589,22 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  if (doing_EKT_now)
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  if (doing_EKT_now){
+    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel,gac, 1);
+  }else{
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gac, 1);
+  }
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
 
   // Computes
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
-      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
+      &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
      tsk->computes(d_lab->d_scalarDissSPLabel);
-  else
+  }else{
      tsk->modifies(d_lab->d_scalarDissSPLabel);
-
+  }
   sched->addTask(tsk, patches, matls);
 }
 
@@ -630,13 +612,13 @@ SmagorinskyModel::sched_computeScalarDissipation(SchedulerP& sched,
 //
 void 
 SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset*,
-                                        DataWarehouse*,
-                                        DataWarehouse* new_dw,
-                                            const TimeIntegratorLabel* timelabels,
-                                        bool d_EKTCorrection,
-                                        bool doing_EKT_now)
+                                           const PatchSubset* patches,
+                                           const MaterialSubset*,
+                                           DataWarehouse*,
+                                           DataWarehouse* new_dw,
+                                           const TimeIntegratorLabel* timelabels,
+                                           bool d_EKTCorrection,
+                                           bool doing_EKT_now)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -646,38 +628,35 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
     CCVariable<double> scalarDiss;  // dissipation..chi
-
-    if (doing_EKT_now)
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    else
-      new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
+    if (doing_EKT_now){
+      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch, gac, 1);
+    }else{
+      new_dw->get(scalar, d_lab->d_scalarSPLabel,  matlIndex, patch, gac, 1);
+    }              
                   
-                  
-    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,gac, 1);
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
        new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
                               matlIndex, patch);
     }else{
-       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
-                              matlIndex, patch);
+       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
     }
     scalarDiss.initialize(0.0);
 
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
