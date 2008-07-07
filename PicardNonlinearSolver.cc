@@ -147,12 +147,13 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   }
   d_radiationCalc = false;
   d_DORadiationCalc = false;
+  
   if (d_enthalpySolve) {
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
                                              d_turbModel, d_boundaryCondition,
                                              d_physicalConsts, d_myworld);
     d_enthalpySolver->problemSetup(db);
-    d_radiationCalc = d_enthalpySolver->checkRadiation();
+    d_radiationCalc   = d_enthalpySolver->checkRadiation();
     d_DORadiationCalc = d_enthalpySolver->checkDORadiation();
   }
   db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"BE");
@@ -203,101 +204,84 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
                            level, sched.get_rep());
   tsk->hasSubScheduler();
   
+  
+  Ghost::GhostType  gn = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-                  d_lab->d_vectorMatl, Task::OutOfDomain,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+                  d_lab->d_vectorMatl, oams, gn,  0);
+                  
     tsk->requires(Task::OldDW, d_lab->d_stressTensorCompLabel,
-                  d_lab->d_tensorMatl,Task::OutOfDomain,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  d_lab->d_tensorMatl, oams, gac, 1);
   }
+  
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,   gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,     gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,    gac, 1);
+  tsk->requires(Task::OldDW, d_lab->d_densityOldOldLabel,gn,  0);
+  tsk->requires(Task::OldDW, d_lab->d_oldDeltaTLabel);
+  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel, gn,  0);
+  
+  //__________________________________
   if (d_MAlab){ 
-    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel,  gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel,gn, 0);
   }else{
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,    gn, 0);
   }
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (d_MAlab){
-    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
-
-  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
+  
+  //__________________________________
   if (d_reactingScalarSolve) {
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSRCINLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel,    gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_reactscalarSRCINLabel, gn, 0);
   }
 
+  //__________________________________
   if (d_enthalpySolve) {
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::OldDW, d_lab->d_tempINLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::OldDW, d_lab->d_cpINLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, gn,  0);
+    tsk->requires(Task::OldDW, d_lab->d_tempINLabel,     gac, 1);
+    tsk->requires(Task::OldDW, d_lab->d_cpINLabel,       gac, 1);
+    
     if (d_radiationCalc) {
-      tsk->requires(Task::OldDW, d_lab->d_absorpINLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      tsk->requires(Task::OldDW, d_lab->d_absorpINLabel,gn, 0);
       if (d_DORadiationCalc) {
-        tsk->requires(Task::OldDW, d_lab->d_co2INLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
+        tsk->requires(Task::OldDW, d_lab->d_co2INLabel,           gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,           gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,        gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,  gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,         gn, 0);
       }
     } 
   }
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::OldDW, d_lab->d_densityOldOldLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_oldDeltaTLabel);
-  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  
+  //__________________________________
   if (d_dynScalarModel) {
-    if (d_calScalar)
-      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
-    if (d_enthalpySolve)
-      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
-    if (d_reactingScalarSolve)
-      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_calScalar){
+      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,     gn, 0);
+    }
+    if (d_enthalpySolve){
+      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
+    }
+    if (d_reactingScalarSolve){
+      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,gn, 0);
+    }
   }
+  
+  //__________________________________
+  //
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_pressurePSLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -312,8 +296,16 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->computes(d_lab->d_velDivResidualLabel);
   tsk->computes(d_lab->d_continuityResidualLabel);
   tsk->computes(d_lab->d_divConstraintLabel);
-
+  tsk->computes(d_lab->d_densityCPLabel);
+  tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_scalarSPLabel);
+  tsk->computes(d_lab->d_totalKineticEnergyLabel);
+  tsk->computes(d_lab->d_newCCVelocityLabel);
+  tsk->computes(d_lab->d_newCCUVelocityLabel);
+  tsk->computes(d_lab->d_newCCVVelocityLabel);
+  tsk->computes(d_lab->d_newCCWVelocityLabel);
+  tsk->computes(d_lab->d_oldDeltaTLabel);
+  tsk->computes(d_lab->d_densityOldOldLabel);
   
   // warning **only works for one scalarVar
   if (d_calcVariance) {
@@ -323,32 +315,35 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     tsk->computes(d_lab->d_reactscalarSPLabel);
     tsk->computes(d_lab->d_reactscalarSRCINLabel);
   }
+  
+  //__________________________________
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
     tsk->computes(d_lab->d_totalRadSrcLabel);
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_cpINLabel);
+    
     if (d_radiationCalc) {
-    tsk->computes(d_lab->d_absorpINLabel);
-    if (d_DORadiationCalc) {
-    tsk->computes(d_lab->d_co2INLabel);
-    tsk->computes(d_lab->d_h2oINLabel);
-    tsk->computes(d_lab->d_sootFVINLabel);
-    tsk->computes(d_lab->d_abskgINLabel);
-    tsk->computes(d_lab->d_radiationSRCINLabel);
-    tsk->computes(d_lab->d_radiationFluxEINLabel);
-    tsk->computes(d_lab->d_radiationFluxWINLabel);
-    tsk->computes(d_lab->d_radiationFluxNINLabel);
-    tsk->computes(d_lab->d_radiationFluxSINLabel);
-    tsk->computes(d_lab->d_radiationFluxTINLabel);
-    tsk->computes(d_lab->d_radiationFluxBINLabel);
-  }
-  }
+      tsk->computes(d_lab->d_absorpINLabel);
+      
+      if (d_DORadiationCalc) {
+        tsk->computes(d_lab->d_co2INLabel);
+        tsk->computes(d_lab->d_h2oINLabel);
+        tsk->computes(d_lab->d_sootFVINLabel);
+        tsk->computes(d_lab->d_abskgINLabel);
+        tsk->computes(d_lab->d_radiationSRCINLabel);
+        tsk->computes(d_lab->d_radiationFluxEINLabel);
+        tsk->computes(d_lab->d_radiationFluxWINLabel);
+        tsk->computes(d_lab->d_radiationFluxNINLabel);
+        tsk->computes(d_lab->d_radiationFluxSINLabel);
+        tsk->computes(d_lab->d_radiationFluxTINLabel);
+        tsk->computes(d_lab->d_radiationFluxBINLabel);
+      }
+    }
   }
 
-  tsk->computes(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_viscosityCTSLabel);
 //  tsk->computes(d_lab->d_CsLabel);
+  //__________________________________
   if (d_dynScalarModel) {
     if (d_calScalar) {
       tsk->computes(d_lab->d_scalarDiffusivityLabel);
@@ -363,10 +358,12 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       tsk->computes(d_lab->d_ShRFLabel);
     }
   }
-  if (d_MAlab)
+  //__________________________________
+  if (d_MAlab){
     tsk->computes(d_lab->d_densityMicroLabel);
+  }
 
-
+  //__________________________________
   if (d_boundaryCondition->anyArchesPhysicalBC()) {
     tsk->computes(d_lab->d_uvwoutLabel);
     tsk->computes(d_lab->d_totalflowINLabel);
@@ -374,6 +371,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     tsk->computes(d_lab->d_denAccumLabel);
     tsk->computes(d_lab->d_netflowOUTBCLabel);
     tsk->computes(d_lab->d_scalarFlowRateLabel);
+    
     if (d_boundaryCondition->getCarbonBalance()) {
       tsk->computes(d_lab->d_CO2FlowRateLabel);
     }
@@ -381,18 +379,11 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       tsk->computes(d_lab->d_enthalpyFlowRateLabel);
     }
   }
-  tsk->computes(d_lab->d_totalKineticEnergyLabel);
-  tsk->computes(d_lab->d_newCCVelocityLabel);
-  tsk->computes(d_lab->d_newCCUVelocityLabel);
-  tsk->computes(d_lab->d_newCCVVelocityLabel);
-  tsk->computes(d_lab->d_newCCWVelocityLabel);
-  tsk->computes(d_lab->d_oldDeltaTLabel);
-  tsk->computes(d_lab->d_densityOldOldLabel);
+
+  
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
-    tsk->computes(d_lab->d_scalarFluxCompLabel,
-                  d_lab->d_vectorMatl, Task::OutOfDomain);
-    tsk->computes(d_lab->d_stressTensorCompLabel,
-                  d_lab->d_tensorMatl, Task::OutOfDomain);
+    tsk->computes(d_lab->d_scalarFluxCompLabel,  d_lab->d_vectorMatl, oams);
+    tsk->computes(d_lab->d_stressTensorCompLabel,d_lab->d_tensorMatl, oams);
   }
 
   sched->addTask(tsk, d_perproc_patches, d_lab->d_sharedState->allArchesMaterials());
@@ -402,9 +393,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   if (d_boundaryCondition->anyArchesPhysicalBC()) {
     d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
   }
-
   return(0);
-
 }
 
 //______________________________________________________________________
@@ -415,12 +404,14 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       LevelP level, Scheduler* sched)
+                                       LevelP level, 
+                                       Scheduler* sched)
 {
   DataWarehouse::ScrubMode ParentOldDW_scrubmode =
                            old_dw->setScrubbing(DataWarehouse::ScrubNone);
   DataWarehouse::ScrubMode ParentNewDW_scrubmode =
                            new_dw->setScrubbing(DataWarehouse::ScrubNone);
+                           
   SchedulerP subsched = sched->createSubScheduler();
   subsched->initialize(3, 1);
   subsched->setParentDWs(old_dw, new_dw);
@@ -433,171 +424,203 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   GridP grid = level->getGrid();
   subsched->advanceDataWarehouse(grid);
 
-  const PatchSet* local_patches = level->eachPatch();
+  const PatchSet* local_patches  = level->eachPatch();
   const MaterialSet* local_matls = d_lab->d_sharedState->allArchesMaterials();
+  
   IntVector periodic_vector = level->getPeriodicBoundaries();
   d_3d_periodic = (periodic_vector == IntVector(1,1,1));
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
 
-  sched_setInitialGuess(subsched, local_patches,
-                        local_matls);
+
+  //__________________________________
+  sched_setInitialGuess(                      subsched, local_patches, local_matls);
 
   // Start the iterations
 
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
     // if the matrix is not initialized
-    if (!d_turbModel->getFilter()->isInitialized()) 
-      d_turbModel->sched_initFilterMatrix(level, subsched, local_patches, local_matls);
+    if (!d_turbModel->getFilter()->isInitialized()){ 
+      d_turbModel->sched_initFilterMatrix(level, 
+                                             subsched, local_patches, local_matls);
+    }
   }
 #endif
 
   int curr_level = 0;
 
-  sched_getDensityGuess(subsched, local_patches, local_matls,
-                                         d_timeIntegratorLabels[curr_level]);
-  sched_checkDensityGuess(subsched, local_patches, local_matls,
-                                         d_timeIntegratorLabels[curr_level]);
+  sched_getDensityGuess(                     subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
+                                         
+  sched_checkDensityGuess(                   subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
 
   
-  d_scalarSolver->solve(subsched, local_patches, local_matls, 
-                        d_timeIntegratorLabels[curr_level],
-                        false, false);
+  d_scalarSolver->solve(                     subsched, local_patches, local_matls, 
+                                             d_timeIntegratorLabels[curr_level],
+                                                                    false, false);
 
-    if (d_reactingScalarSolve) {
-      d_reactingScalarSolver->solve(subsched, local_patches, local_matls,
-                                    d_timeIntegratorLabels[curr_level],
-                                    false, false);
-    }
+  if (d_reactingScalarSolve) {
+    d_reactingScalarSolver->solve(           subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level],
+                                                                   false, false);
+  }
 
-    if (d_enthalpySolve)
-      d_enthalpySolver->solve(level, subsched, local_patches, local_matls,
-                              d_timeIntegratorLabels[curr_level],
-                              false, false);
+  if (d_enthalpySolve){
+    d_enthalpySolver->solve(          level, subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level],
+                                                                    false, false);
+  }
 
-    if (d_calcVariance) {
-      d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
-                                                 d_timeIntegratorLabels[curr_level], false, false);
-      d_turbModel->sched_computeScalarDissipation(subsched, local_patches, local_matls,
-                                                d_timeIntegratorLabels[curr_level], false, false);
-    }
+  if (d_calcVariance) {
+    d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level], 
+                                                                    false, false);
+                                                                    
+    d_turbModel->sched_computeScalarDissipation(
+                                              subsched, local_patches, local_matls,
+                                              d_timeIntegratorLabels[curr_level], 
+                                                                    false, false);
+  }
 
-    d_props->sched_reComputeProps(subsched, local_patches, local_matls,
-                                  d_timeIntegratorLabels[curr_level],
-                                  true, false, false, false);
-    d_props->sched_computeDenRefArray(subsched, local_patches, local_matls,
-                                      d_timeIntegratorLabels[curr_level]);
+  d_props->sched_reComputeProps(             subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level],
+                                                       true, false, false, false);
+ 
+  d_props->sched_computeDenRefArray(         subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
+                                            
     //sched_syncRhoF(subsched, local_patches, local_matls,
 //                   d_timeIntegratorLabels[curr_level]);
 
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-    d_momSolver->solveVelHat(level, subsched,
-                             d_timeIntegratorLabels[curr_level], false);
-    // using RKSSP averaging to perform underrelaxation
-    if (d_timeIntegratorLabels[curr_level]->factor_new < 1.0) {
-       sched_saveFECopies(subsched, local_patches, local_matls,
-                                         d_timeIntegratorLabels[curr_level]);
-      d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
-      d_props->sched_averageRKProps(subsched, local_patches, local_matls,
-                                       d_timeIntegratorLabels[curr_level]);
-      d_props->sched_saveTempDensity(subsched, local_patches, local_matls,
-                                        d_timeIntegratorLabels[curr_level]);
-      if (d_calcVariance) {
-        d_turbModel->sched_computeScalarVariance(subsched, local_patches, local_matls,
-                                            d_timeIntegratorLabels[curr_level],
-                                            false, false);
-        d_turbModel->sched_computeScalarDissipation(subsched, local_patches, local_matls,
-                                            d_timeIntegratorLabels[curr_level],
-                                            false, false);
-      }
-      d_props->sched_reComputeProps(subsched, local_patches, local_matls,
-                                    d_timeIntegratorLabels[curr_level],
-                                    false, false, false, false);
+  d_momSolver->solveVelHat(         level, subsched,
+                                           d_timeIntegratorLabels[curr_level],
+                                                                        false);
+                             
+  // using RKSSP averaging to perform underrelaxation
+  if (d_timeIntegratorLabels[curr_level]->factor_new < 1.0) {
+     sched_saveFECopies(                     subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
+                                             
+    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::Second;
+    
+    d_props->sched_averageRKProps(           subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
+                                             
+    d_props->sched_saveTempDensity(          subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
+    if (d_calcVariance) {
+      d_turbModel->sched_computeScalarVariance(
+                                             subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level],
+                                                                    false, false);
+                                                                    
+      d_turbModel->sched_computeScalarDissipation(
+                                             subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level],
+                                                                    false, false);
+    }
+    d_props->sched_reComputeProps(           subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level],
+                                                      false, false, false, false);
 
-      d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
-                                            d_timeIntegratorLabels[curr_level],
-                                            false);
-      d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
-    } 
+    d_momSolver->sched_averageRKHatVelocities(subsched, local_patches, local_matls,
+                                              d_timeIntegratorLabels[curr_level],
+                                                                            false);
+                                                                            
+    d_timeIntegratorLabels[curr_level]->integrator_step_number = TimeIntegratorStepNumber::First;
+  }
 
-    d_props->sched_computeDrhodt(subsched, local_patches, local_matls,
-                                 d_timeIntegratorLabels[curr_level],
-                                 false, false);
+  d_props->sched_computeDrhodt(              subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level],
+                                                                    false, false);
 
-    d_pressSolver->solve(level, subsched, d_timeIntegratorLabels[curr_level],
-                         false, false, false);
+  d_pressSolver->solve(               level, subsched, 
+                                             d_timeIntegratorLabels[curr_level],
+                                                             false, false, false);
   
-    // project velocities using the projection step
-    for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solve(subsched, local_patches, local_matls,
-                         d_timeIntegratorLabels[curr_level], index,
-                         false, false);
-    }
-    if (d_pressure_correction)
-    sched_updatePressure(subsched, local_patches, local_matls,
-                                 d_timeIntegratorLabels[curr_level]);
+  // project velocities using the projection step
+  for (int index = 1; index <= Arches::NDIM; ++index) {
+    d_momSolver->solve(                      subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level], index,
+                                                                    false, false);
+  }
+  if (d_pressure_correction){
+    sched_updatePressure(                    subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
+  }
 
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      d_boundaryCondition->sched_getFlowINOUT(subsched, local_patches, local_matls,
-                                            d_timeIntegratorLabels[curr_level]);
-      d_boundaryCondition->sched_correctVelocityOutletBC(subsched, local_patches, local_matls,
-                                            d_timeIntegratorLabels[curr_level]);
-    }
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      d_boundaryCondition->sched_getScalarFlowRate(subsched, local_patches, local_matls);
-    }
+  if (d_boundaryCondition->anyArchesPhysicalBC()) {
+    d_boundaryCondition->sched_getFlowINOUT( subsched, local_patches, local_matls,
+                                             d_timeIntegratorLabels[curr_level]);
+                                          
+    d_boundaryCondition->sched_correctVelocityOutletBC(
+                                              subsched, local_patches, local_matls,
+                                              d_timeIntegratorLabels[curr_level]);
+  }
+  if (d_boundaryCondition->anyArchesPhysicalBC()) {
+    d_boundaryCondition->sched_getScalarFlowRate(
+                                              subsched, local_patches, local_matls);
+  }
+ 
+  sched_interpolateFromFCToCC(                subsched, local_patches, local_matls,
+                                              d_timeIntegratorLabels[curr_level]);
+                                              
+  d_turbModel->sched_reComputeTurbSubmodel(   subsched, local_patches, local_matls,
+                                              d_timeIntegratorLabels[curr_level]);
+                                            
+//sched_updateDensityGuess(                   subsched, local_patches, local_matls,
+//                                            d_timeIntegratorLabels[curr_level]);
+//d_timeIntegratorLabels[curr_level]->integrator_step_number= TimeIntegratorStepNumber::Second;
+//d_scalarSolver->solve(                      subsched, local_patches, local_matls, 
+//                                            d_timeIntegratorLabels[curr_level], index);
+//d_timeIntegratorLabels[curr_level]->integrator_step_number= TimeIntegratorStepNumber::First;
+
+  sched_printTotalKE(                         subsched, local_patches, local_matls,
+                                              d_timeIntegratorLabels[curr_level]);
+  //______________________________________________________________________
+  // print information at probes provided in input file
+  // WARNING: have no clue how to print probe data only for last iteration
+  if (d_probe_data){
+    sched_probeData(subsched, local_patches, local_matls);
+  }
+  subsched->compile();
+  int nlIterations = 0;
+  double scalar_clipped = 0.0;
+  double reactscalar_clipped = 0.0;
+  double norm;
+  double init_norm;
+  int num_procs = d_myworld->size();
   
-    sched_interpolateFromFCToCC(subsched, local_patches, local_matls,
-                                d_timeIntegratorLabels[curr_level]);
-    d_turbModel->sched_reComputeTurbSubmodel(subsched, local_patches, local_matls,
-                                            d_timeIntegratorLabels[curr_level]);
-//  sched_updateDensityGuess(subsched, local_patches, local_matls,
-//                                         d_timeIntegratorLabels[curr_level]);
-//  d_timeIntegratorLabels[curr_level]->integrator_step_number= TimeIntegratorStepNumber::Second;
-//    d_scalarSolver->solve(subsched, local_patches, local_matls, 
-//                          d_timeIntegratorLabels[curr_level], index);
-//  d_timeIntegratorLabels[curr_level]->integrator_step_number= TimeIntegratorStepNumber::First;
-
-    sched_printTotalKE(subsched, local_patches, local_matls,
-                       d_timeIntegratorLabels[curr_level]);
-
-    // print information at probes provided in input file
-    // WARNING: have no clue how to print probe data only for last iteration
-    if (d_probe_data){
-      sched_probeData(subsched, local_patches, local_matls);
-    }
-    subsched->compile();
-    int nlIterations = 0;
-    double scalar_clipped = 0.0;
-    double reactscalar_clipped = 0.0;
-    double norm;
-    double init_norm;
-    int num_procs = d_myworld->size();
-    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_stressTensorCompLabel, patches, matls); 
-    }
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_cellTypeLabel,      patches, matls); 
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_pressurePSLabel,    patches, matls); 
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_uVelocitySPBCLabel, patches, matls); 
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_vVelocitySPBCLabel, patches, matls); 
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_wVelocitySPBCLabel, patches, matls); 
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_divConstraintLabel, patches, matls); 
-
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarSPLabel, patches, matls); 
-    if (d_reactingScalarSolve) {
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactscalarSPLabel,    patches, matls); 
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactscalarSRCINLabel, patches, matls); 
-    }
-    if (d_enthalpySolve) {
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_enthalpySPLabel, patches, matls); 
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_tempINLabel,     patches, matls); 
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_cpINLabel,       patches, matls); 
+  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_stressTensorCompLabel, patches, matls); 
+  }
+  
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_cellTypeLabel,      patches, matls); 
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_pressurePSLabel,    patches, matls); 
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_uVelocitySPBCLabel, patches, matls); 
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_vVelocitySPBCLabel, patches, matls); 
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_wVelocitySPBCLabel, patches, matls); 
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_divConstraintLabel, patches, matls); 
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarSPLabel,      patches, matls);
+  
+  if (d_reactingScalarSolve) {
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactscalarSPLabel,    patches, matls); 
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactscalarSRCINLabel, patches, matls); 
+  }
+  
+  if (d_enthalpySolve) {
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_enthalpySPLabel, patches, matls); 
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_tempINLabel,     patches, matls); 
+    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_cpINLabel,       patches, matls); 
+    
     if (d_radiationCalc) {
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_absorpINLabel, patches, matls); 
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_absorpINLabel, patches, matls);
       if (d_DORadiationCalc) {
         subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_co2INLabel,            patches, matls);
         subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_h2oINLabel,            patches, matls);
@@ -611,197 +634,230 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
         subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_radiationFluxBINLabel, patches, matls);
         subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_abskgINLabel,          patches, matls);
       }
-    }            
     }
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_densityCPLabel,    patches, matls); 
-    subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_viscosityCTSLabel, patches, matls); 
-    if (d_dynScalarModel) {
+  }
+  
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_densityCPLabel,    patches, matls); 
+  subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_viscosityCTSLabel, patches, matls); 
+  
+  if (d_dynScalarModel) {
     if (d_calScalar)
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarDiffusivityLabel,      patches, matls); 
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarDiffusivityLabel,      patches, matls);
     if (d_enthalpySolve)
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_enthalpyDiffusivityLabel,    patches, matls); 
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_enthalpyDiffusivityLabel,    patches, matls);
     if (d_reactingScalarSolve)
-      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactScalarDiffusivityLabel, patches, matls); 
+      subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_reactScalarDiffusivityLabel, patches, matls);
+  }
+  do{
+    subsched->advanceDataWarehouse(grid);
+    subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
+    subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
+    if (d_enthalpySolve) {
+      d_enthalpySolver->set_iteration_number(nlIterations);
     }
-    do{
-      subsched->advanceDataWarehouse(grid);
-      subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
-      subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-      if (d_enthalpySolve) {
-        d_enthalpySolver->set_iteration_number(nlIterations);
-      }
-      subsched->execute();    
-      
-      delt_vartype delT;
-      old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
-      double delta_t = delT;
-      delta_t *= d_timeIntegratorLabels[curr_level]->time_multiplier;
-      max_vartype nm;
-      subsched->get_dw(3)->get(nm, d_lab->d_InitNormLabel);
-      double current_norm = nm;
-      norm = delta_t*current_norm+d_rho_norm+d_u_norm+d_v_norm+d_w_norm;
-      if (nlIterations == 0) init_norm = norm;
-      if(pg->myrank() == 0)
-       cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
-      
+    subsched->execute();    
+    
+    delt_vartype delT;
+    old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+    
+    double delta_t = delT;
+    delta_t *= d_timeIntegratorLabels[curr_level]->time_multiplier;
+    max_vartype nm;
+    subsched->get_dw(3)->get(nm, d_lab->d_InitNormLabel);
+    double current_norm = nm;
+    norm = delta_t*current_norm+d_rho_norm+d_u_norm+d_v_norm+d_w_norm;
+    
+    if (nlIterations == 0){
+      init_norm = norm;
+    }
+    
+    if(pg->myrank() == 0){
+     cout << "PicardSolver init norm: " << init_norm << " current norm: " << norm << endl;
+    }
     max_vartype sc;
     max_vartype rsc;
     subsched->get_dw(3)->get(sc, d_lab->d_ScalarClippedLabel);
     scalar_clipped = sc;
+    
     if (d_reactingScalarSolve) {
       subsched->get_dw(3)->get(rsc, d_lab->d_ReactScalarClippedLabel);
       reactscalar_clipped = rsc;
     }
 
-      ++nlIterations;
-    
-    }while ((nlIterations < d_nonlinear_its)&&
-            (norm > d_resTol)&&
-            (scalar_clipped == 0.0)&&
-            (reactscalar_clipped == 0.0));
+    ++nlIterations;
+  
+  }while ((nlIterations < d_nonlinear_its)&&
+          (norm > d_resTol)&&
+          (scalar_clipped == 0.0)&&
+          (reactscalar_clipped == 0.0));
 
-    if ((nlIterations == d_nonlinear_its)&&(norm > d_resTol))
+  if ((nlIterations == d_nonlinear_its)&&(norm > d_resTol)){
     if(pg->myrank() == 0)
-       cout << "Maximum allowed number of iterations reached" << endl;
-    if (norm/(init_norm+1.0e-10) > 1) {
-    if(pg->myrank() == 0)
+      cout << "Maximum allowed number of iterations reached" << endl;
+  }    
+     
+  if (norm/(init_norm+1.0e-10) > 1) {
+    if(pg->myrank() == 0){
        cout << "WARNING! Iterations diverge! Restarting timestep." << endl;
       new_dw->abortTimestep();
       new_dw->restartTimestep();
     }
-    if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
-    if(pg->myrank() == 0)
+  }
+  
+  if ((scalar_clipped > 0.0)||(reactscalar_clipped > 0.0)) {
+    if(pg->myrank() == 0){
        cout << "WARNING! Scalars got clipped! Restarting timestep." << endl;
       new_dw->abortTimestep();
       new_dw->restartTimestep();
     }
+  }
 
 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cellTypeLabel,       patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_pressurePSLabel,     patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_uVelocitySPBCLabel,  patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_vVelocitySPBCLabel,  patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_wVelocitySPBCLabel,  patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_uVelRhoHatLabel,     patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_vVelRhoHatLabel,     patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_wVelRhoHatLabel,     patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_filterdrhodtLabel,   patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_drhodfCPLabel,       patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_velocityDivergenceLabel, patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_velDivResidualLabel,     patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_continuityResidualLabel, patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_divConstraintLabel,      patches, matls); 
-
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarSPLabel, patches, matls); 
-    if (d_calcVariance)
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarVarSPLabel,      patches, matls); 
-    if (d_reactingScalarSolve) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactscalarSPLabel,    patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactscalarSRCINLabel, patches, matls); 
-    }
-    if (d_enthalpySolve) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpySPLabel, patches, matls); 
-      sum_vartype totalradsrc;
-      subsched->get_dw(3)->get(totalradsrc, d_lab->d_totalRadSrcLabel);
-      double trs = totalradsrc;
-      trs /= num_procs;
-      new_dw->put(sum_vartype(trs), d_lab->d_totalRadSrcLabel);
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_tempINLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cpINLabel, patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cellTypeLabel,           patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_pressurePSLabel,         patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_uVelocitySPBCLabel,      patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_vVelocitySPBCLabel,      patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_wVelocitySPBCLabel,      patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_uVelRhoHatLabel,         patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_vVelRhoHatLabel,         patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_wVelRhoHatLabel,         patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_filterdrhodtLabel,       patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_drhodfCPLabel,           patches, matls);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_velocityDivergenceLabel, patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_velDivResidualLabel,     patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_continuityResidualLabel, patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_divConstraintLabel,      patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarSPLabel,           patches, matls); 
+  
+  if (d_calcVariance){
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarVarSPLabel,      patches, matls); 
+  }
+  
+  if (d_reactingScalarSolve) {
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactscalarSPLabel,    patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactscalarSRCINLabel, patches, matls); 
+  }
+  
+  //__________________________________
+  if (d_enthalpySolve) {
+     
+    sum_vartype totalradsrc;
+    subsched->get_dw(3)->get(totalradsrc, d_lab->d_totalRadSrcLabel);
+    double trs = totalradsrc;
+    trs /= num_procs;
+    new_dw->put(sum_vartype(trs), d_lab->d_totalRadSrcLabel);
+    
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_tempINLabel, patches, matls); 
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cpINLabel,   patches, matls);
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpySPLabel, patches, matls); 
+    
     if (d_radiationCalc) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_absorpINLabel, patches, matls); 
-    if (d_DORadiationCalc) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_co2INLabel,      patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_h2oINLabel,      patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_sootFVINLabel,   patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_abskgINLabel,    patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationSRCINLabel,   patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxEINLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxWINLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxNINLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxSINLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxTINLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxBINLabel, patches, matls); 
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_absorpINLabel, patches, matls);
+      if (d_DORadiationCalc) {
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_co2INLabel,            patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_h2oINLabel,            patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_sootFVINLabel,         patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_abskgINLabel,          patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationSRCINLabel,   patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxEINLabel, patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxWINLabel, patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxNINLabel, patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxSINLabel, patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxTINLabel, patches, matls);
+        new_dw->transferFrom(subsched->get_dw(3), d_lab->d_radiationFluxBINLabel, patches, matls);
+      }
     }
-    }
-    }
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_densityCPLabel, patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_viscosityCTSLabel, patches, matls); 
-//    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_CsLabel, patches, matls); 
-    if (d_dynScalarModel) {
+  }
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_densityCPLabel,    patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_viscosityCTSLabel, patches, matls); 
+//new_dw->transferFrom(subsched->get_dw(3), d_lab->d_CsLabel,           patches, matls); 
+  
+  //__________________________________
+  if (d_dynScalarModel) {
     if (d_calScalar) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarDiffusivityLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShFLabel,               patches, matls); 
-    }  
-    if (d_enthalpySolve) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpyDiffusivityLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShELabel,                 patches, matls); 
-    }  
-    if (d_reactingScalarSolve) {
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactScalarDiffusivityLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShRFLabel,                   patches, matls); 
-    }  
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarDiffusivityLabel,      patches, matls);
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShFLabel,                    patches, matls);
     }
-    delt_vartype uvwout;
-    sum_vartype flowin;
-    sum_vartype flowout;
-    sum_vartype denaccum;
-    sum_vartype netflowoutbc;
-    sum_vartype scalarfr;
-    double fin, fout, da, nbc, sfr;
-    if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      subsched->get_dw(3)->get(uvwout,       d_lab->d_uvwoutLabel);
-      subsched->get_dw(3)->get(flowin,       d_lab->d_totalflowINLabel);
-      subsched->get_dw(3)->get(flowout,      d_lab->d_totalflowOUTLabel);
-      subsched->get_dw(3)->get(denaccum,     d_lab->d_denAccumLabel);
-      subsched->get_dw(3)->get(netflowoutbc, d_lab->d_netflowOUTBCLabel);
-      subsched->get_dw(3)->get(scalarfr,     d_lab->d_scalarFlowRateLabel);
-      fin = flowin;
-      fout = flowout;
-      da = denaccum;
-      nbc = netflowoutbc;
-      sfr = scalarfr;
-      fin /= num_procs;
-      fout /= num_procs;
-      da /= num_procs;
-      nbc /= num_procs;
-      sfr /= num_procs;
-      new_dw->put(uvwout, d_lab->d_uvwoutLabel);
-      new_dw->put(sum_vartype(fin),   d_lab->d_totalflowINLabel);
-      new_dw->put(sum_vartype(fout),  d_lab->d_totalflowOUTLabel);
-      new_dw->put(sum_vartype(da),    d_lab->d_denAccumLabel);
-      new_dw->put(sum_vartype(nbc),   d_lab->d_netflowOUTBCLabel);
-      new_dw->put(sum_vartype(sfr),   d_lab->d_scalarFlowRateLabel);
-      if (d_boundaryCondition->getCarbonBalance()) {
+    if (d_enthalpySolve) {
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpyDiffusivityLabel,    patches, matls);
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShELabel,                    patches, matls);
+    }
+    if (d_reactingScalarSolve) {
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_reactScalarDiffusivityLabel, patches, matls);
+      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_ShRFLabel,                   patches, matls);
+    }
+  }
+  
+  delt_vartype uvwout;
+  sum_vartype flowin;
+  sum_vartype flowout;
+  sum_vartype denaccum;
+  sum_vartype netflowoutbc;
+  sum_vartype scalarfr;
+  double fin, fout, da, nbc, sfr;
+  
+  //__________________________________
+  if (d_boundaryCondition->anyArchesPhysicalBC()) {
+    subsched->get_dw(3)->get(uvwout,       d_lab->d_uvwoutLabel);
+    subsched->get_dw(3)->get(flowin,       d_lab->d_totalflowINLabel);
+    subsched->get_dw(3)->get(flowout,      d_lab->d_totalflowOUTLabel);
+    subsched->get_dw(3)->get(denaccum,     d_lab->d_denAccumLabel);
+    subsched->get_dw(3)->get(netflowoutbc, d_lab->d_netflowOUTBCLabel);
+    subsched->get_dw(3)->get(scalarfr,     d_lab->d_scalarFlowRateLabel);
+    
+    fin   = flowin;
+    fout  = flowout;
+    da    = denaccum;
+    nbc   = netflowoutbc;
+    sfr   = scalarfr;
+    fin   /= num_procs;
+    fout  /= num_procs;
+    da    /= num_procs;
+    nbc   /= num_procs;
+    sfr   /= num_procs;
+    
+    new_dw->put(uvwout,             d_lab->d_uvwoutLabel);
+    new_dw->put(sum_vartype(fin),   d_lab->d_totalflowINLabel);
+    new_dw->put(sum_vartype(fout),  d_lab->d_totalflowOUTLabel);
+    new_dw->put(sum_vartype(da),    d_lab->d_denAccumLabel);
+    new_dw->put(sum_vartype(nbc),   d_lab->d_netflowOUTBCLabel);
+    new_dw->put(sum_vartype(sfr),   d_lab->d_scalarFlowRateLabel);
+    
+    if (d_boundaryCondition->getCarbonBalance()) {
       subsched->get_dw(3)->get(scalarfr, d_lab->d_CO2FlowRateLabel);
-      sfr = scalarfr;
+      sfr  = scalarfr;
       sfr /= num_procs;
       new_dw->put(sum_vartype(sfr), d_lab->d_CO2FlowRateLabel);
-      }
-      if (d_enthalpySolve) {
+    }
+    
+    if (d_enthalpySolve) {
       subsched->get_dw(3)->get(scalarfr, d_lab->d_enthalpyFlowRateLabel);
-      sfr = scalarfr;
+      sfr  = scalarfr;
       sfr /= num_procs;
       new_dw->put(sum_vartype(sfr), d_lab->d_enthalpyFlowRateLabel);
-      }
     }
-    sum_vartype totalkineticenergy;
-    subsched->get_dw(3)->get(totalkineticenergy, d_lab->d_totalKineticEnergyLabel);
-    double tke = totalkineticenergy;
-    tke /= num_procs;
-    new_dw->put(sum_vartype(tke), d_lab->d_totalKineticEnergyLabel);
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCVelocityLabel,  patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCUVelocityLabel, patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCVVelocityLabel, patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCWVelocityLabel, patches, matls); 
-    delt_vartype old_delta_t;
-    subsched->get_dw(3)->get(old_delta_t, d_lab->d_oldDeltaTLabel);
-    new_dw->put(old_delta_t, d_lab->d_oldDeltaTLabel);
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_densityOldOldLabel, patches, matls); 
-    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel))  {
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarFluxCompLabel,   patches, matls); 
-    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_stressTensorCompLabel, patches, matls); 
-    }
+  }
+  
+  sum_vartype totalkineticenergy;
+  subsched->get_dw(3)->get(totalkineticenergy, d_lab->d_totalKineticEnergyLabel);
+  double tke = totalkineticenergy;
+  tke /= num_procs;
+  new_dw->put(sum_vartype(tke), d_lab->d_totalKineticEnergyLabel);
+  
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCVelocityLabel,  patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCUVelocityLabel, patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCVVelocityLabel, patches, matls); 
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_newCCWVelocityLabel, patches, matls); 
+  
+  delt_vartype old_delta_t;
+  subsched->get_dw(3)->get(old_delta_t, d_lab->d_oldDeltaTLabel);
+  new_dw->put(old_delta_t, d_lab->d_oldDeltaTLabel);
+  new_dw->transferFrom(subsched->get_dw(3), d_lab->d_densityOldOldLabel, patches, matls); 
+  
+  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel))  {
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarFluxCompLabel,   patches, matls);
+    new_dw->transferFrom(subsched->get_dw(3), d_lab->d_stressTensorCompLabel, patches, matls);
+  }
 
   old_dw->setScrubbing(ParentOldDW_scrubmode);
   new_dw->setScrubbing(ParentNewDW_scrubmode);
@@ -836,43 +892,46 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
   if (d_turbModel->getFilter()) {
     // if the matrix is not initialized
     if (!d_turbModel->getFilter()->isInitialized()) 
-      d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
+      d_turbModel->sched_initFilterMatrix(   level, sched, patches, matls);
   }
 #endif
 
   if (d_calcVariance) {
-    d_turbModel->sched_computeScalarVariance(sched, patches, matls,
-                                            nosolve_timelabels, false, false);
-    d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
-                                            nosolve_timelabels, false, false);
+    d_turbModel->sched_computeScalarVariance(       sched, patches, matls,
+                                                    nosolve_timelabels, 
+                                                    false, false);
+                                              
+    d_turbModel->sched_computeScalarDissipation(    sched, patches, matls,
+                                                    nosolve_timelabels, 
+                                                    false, false);
   }
 
-  d_props->sched_computePropsFirst_mm(sched, patches, matls);
+  d_props->sched_computePropsFirst_mm(              sched, patches, matls);
 
-  d_props->sched_computeDrhodt(sched, patches, matls,
-                                 nosolve_timelabels,
-                                 false, false);
+  d_props->sched_computeDrhodt(                     sched, patches, matls,
+                                                    nosolve_timelabels,
+                                                    false, false);
 
-  d_boundaryCondition->sched_setInletFlowRates(sched, patches, matls);
+  d_boundaryCondition->sched_setInletFlowRates(     sched, patches, matls);
 
-  sched_dummySolve(sched, patches, matls);
+  sched_dummySolve(                                 sched, patches, matls);
+
 
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
-
-  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
+  sched_interpolateFromFCToCC(                      sched, patches, matls, 
+                                                    nosolve_timelabels);
   
-  d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
-                                           nosolve_timelabels);
+  d_turbModel->sched_reComputeTurbSubmodel(         sched, patches, matls,
+                                                    nosolve_timelabels);
   
   d_pressSolver->sched_addHydrostaticTermtoPressure(sched, patches, matls,
                                                     nosolve_timelabels);
  
   // print information at probes provided in input file
-
-  if (d_probe_data)
+  if (d_probe_data){
     sched_probeData(sched, patches, matls);
-
+  }
   return(0);
 }
 
@@ -888,49 +947,42 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
   //solver to compute new values
   Task* tsk = scinew Task( "PicardNonlinearSolver::setInitialGuess",
                           this, &PicardNonlinearSolver::setInitialGuess);
-  if (d_MAlab) 
-    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-  else
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (d_MAlab)
-    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+                          
+  Ghost::GhostType  gn = Ghost::None;
+  if (d_MAlab){
+    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel,   gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, gn, 0);
+  }else{
+    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,      gn, 0);
+  }
+  tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,   gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,   gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,   gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel,        gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,       gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,    gn, 0);
 
   if (d_reactingScalarSolve) {
-    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, gn, 0);
   }
 
-  if (d_enthalpySolve)
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (d_dynScalarModel) {
-    if (d_calScalar)
-      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
-    if (d_enthalpySolve)
-      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
-    if (d_reactingScalarSolve)
-      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (d_enthalpySolve){
+    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
+  
+  if (d_dynScalarModel) {
+    if (d_calScalar){
+      tsk->requires(Task::OldDW, d_lab->d_scalarDiffusivityLabel,     gn, 0);
+    }
+    if (d_enthalpySolve){
+      tsk->requires(Task::OldDW, d_lab->d_enthalpyDiffusivityLabel,   gn, 0);
+    }
+    if (d_reactingScalarSolve){
+      tsk->requires(Task::OldDW, d_lab->d_reactScalarDiffusivityLabel,gn, 0);
+    }
+  }
+  
+  //__________________________________
   tsk->computes(d_lab->d_cellTypeLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
@@ -938,36 +990,50 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_uVelRhoHatLabel);
   tsk->computes(d_lab->d_vVelRhoHatLabel);
   tsk->computes(d_lab->d_wVelRhoHatLabel);
-
+  tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_scalarSPLabel);
+  tsk->computes(d_lab->d_viscosityCTSLabel);
+    
   if (d_timeIntegratorLabels[0]->multiple_steps)
     tsk->computes(d_lab->d_scalarTempLabel);
 
   if (d_reactingScalarSolve) {
     tsk->computes(d_lab->d_reactscalarSPLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps)
+    if (d_timeIntegratorLabels[0]->multiple_steps){
       tsk->computes(d_lab->d_reactscalarTempLabel);
+    }
   }
+  
   if (d_enthalpySolve) {
     tsk->computes(d_lab->d_enthalpySPLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps)
-    tsk->computes(d_lab->d_enthalpyTempLabel);
+    if (d_timeIntegratorLabels[0]->multiple_steps){
+      tsk->computes(d_lab->d_enthalpyTempLabel);
+    }
   }
-  tsk->computes(d_lab->d_densityCPLabel);
+  
+  
+  //__________________________________
   if ((d_timeIntegratorLabels[0]->multiple_steps)||
       (d_timeIntegratorLabels[0]->factor_new < 1.0))
     tsk->computes(d_lab->d_densityTempLabel);
-  tsk->computes(d_lab->d_viscosityCTSLabel);
+
+  
+  //__________________________________
   if (d_dynScalarModel) {
-    if (d_calScalar)
+    if (d_calScalar){
       tsk->computes(d_lab->d_scalarDiffusivityLabel);
-    if (d_enthalpySolve)
+    }
+    if (d_enthalpySolve){
       tsk->computes(d_lab->d_enthalpyDiffusivityLabel);
-    if (d_reactingScalarSolve)
+    }
+    
+    if (d_reactingScalarSolve){
       tsk->computes(d_lab->d_reactScalarDiffusivityLabel);
+    }
   }  
-  if (d_MAlab)
+  if (d_MAlab){
     tsk->computes(d_lab->d_densityMicroINLabel);
+  }
   sched->addTask(tsk, patches, matls);
 }
 
@@ -982,14 +1048,11 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
   Task* tsk = scinew Task( "PicardNonlinearSolver::dataCopy",
                            this, &PicardNonlinearSolver::dummySolve);
 
-  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, Ghost::None, 0);
 
   if (d_calcVariance) {
-    tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, Ghost::None, 0);
   }
-
 
   tsk->computes(d_lab->d_pressurePSLabel);
   tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
@@ -1026,23 +1089,20 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   Task* tsk = scinew Task(taskname, this, 
                          &PicardNonlinearSolver::interpolateFromFCToCC, timelabels);
 
+  Ghost::GhostType  gn = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_uVelocitySPBCLabel,gaf, 1);
+    tsk->requires(Task::OldDW, d_lab->d_vVelocitySPBCLabel,gaf, 1);
+    tsk->requires(Task::OldDW, d_lab->d_wVelocitySPBCLabel,gaf, 1);
+    tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,    gn, 0);
 // hat velocities are only interpolated for first substep, since they are
 // not really needed anyway
-    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,   gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,   gaf, 1);
+    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,   gaf, 1);
 
     tsk->computes(d_lab->d_oldCCVelocityLabel);
     tsk->computes(d_lab->d_uVelRhoHat_CCLabel);
@@ -1051,18 +1111,12 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   }
 
 
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_divConstraintLabel, gn,  0);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_newCCVelocityLabel);
@@ -1158,30 +1212,24 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
+
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      old_dw->get(oldUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      old_dw->get(oldVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      old_dw->get(oldWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel, matlIndex, patch,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel, matlIndex, patch,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel, matlIndex, patch,
-                  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-      old_dw->get(old_density, d_lab->d_densityCPLabel, matlIndex, patch,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(oldUVel,     d_lab->d_uVelocitySPBCLabel, matlIndex, patch,gaf, 1);
+      old_dw->get(oldVVel,     d_lab->d_vVelocitySPBCLabel, matlIndex, patch,gaf, 1);
+      old_dw->get(oldWVel,     d_lab->d_wVelocitySPBCLabel, matlIndex, patch,gaf, 1);
+      new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel,    matlIndex, patch,gaf, 1);
+      new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel,    matlIndex, patch,gaf, 1);
+      new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel,    matlIndex, patch,gaf, 1);
+      old_dw->get(old_density, d_lab->d_densityCPLabel,     matlIndex, patch,gn,  0);
                   
-      new_dw->allocateAndPut(oldCCVel, d_lab->d_oldCCVelocityLabel,
-                             matlIndex, patch);
-      new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel,
-                             matlIndex, patch);
-      new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel,
-                             matlIndex, patch);
-      new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel,
-                             matlIndex, patch);
+      new_dw->allocateAndPut(oldCCVel, d_lab->d_oldCCVelocityLabel,   matlIndex, patch);
+      new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel, matlIndex, patch);
                              
       oldCCVel.initialize(Vector(0.0,0.0,0.0));
       uHatVel_CC.initialize(0.0);
@@ -1198,16 +1246,18 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
  
             double old_u = cellinfo->wfac[ii] * oldUVel[idx] +
                            cellinfo->efac[ii] * oldUVel[idxU];
-            double uhat = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
-                          cellinfo->efac[ii] * uHatVel_FCX[idxU];
+            double uhat  = cellinfo->wfac[ii] * uHatVel_FCX[idx] +
+                           cellinfo->efac[ii] * uHatVel_FCX[idxU];
+                          
             double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
                            cellinfo->nfac[jj] * oldVVel[idxV];
-            double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
-                          cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+            double vhat  = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
+                           cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+                          
             double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
                            cellinfo->tfac[kk] * oldWVel[idxW];
-            double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
-                          cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
+            double what  = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
+                           cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
  
             oldCCVel[idx] = Vector(old_u,old_v,old_w);
             uHatVel_CC[idx] = uhat;
@@ -1227,15 +1277,15 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
             IntVector idxW(ii,jj,kk+1);
  
             double old_u = oldUVel[idxU];
-            double uhat = uHatVel_FCX[idxU];
+            double uhat  = uHatVel_FCX[idxU];
             double old_v = cellinfo->sfac[jj] * oldVVel[idx] +
                            cellinfo->nfac[jj] * oldVVel[idxV];
-            double vhat = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
-                          cellinfo->nfac[jj] * vHatVel_FCY[idxV];
+            double vhat  = cellinfo->sfac[jj] * vHatVel_FCY[idx] +
+                           cellinfo->nfac[jj] * vHatVel_FCY[idxV];
             double old_w = cellinfo->bfac[kk] * oldWVel[idx] +
                            cellinfo->tfac[kk] * oldWVel[idxW];
-            double what = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
-                          cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
+            double what  = cellinfo->bfac[kk] * wHatVel_FCZ[idx] +
+                           cellinfo->tfac[kk] * wHatVel_FCZ[idxW];
  
             oldCCVel[idx] = Vector(old_u,old_v,old_w);
             uHatVel_CC[idx] = uhat;
@@ -1381,18 +1431,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       }
     } 
 
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(drhodt, d_lab->d_filterdrhodtLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(div_constraint, d_lab->d_divConstraintLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newUVel,        d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(newVVel,        d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(newWVel,        d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(drhodt,         d_lab->d_filterdrhodtLabel,  matlIndex, patch, gn,  0);
+    new_dw->get(density,        d_lab->d_densityCPLabel,     matlIndex, patch, gac, 1);
+    new_dw->get(div_constraint, d_lab->d_divConstraintLabel, matlIndex, patch, gn, 0);
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(newCCVel,      d_lab->d_newCCVelocityLabel,     matlIndex, patch);
@@ -1689,9 +1733,9 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     }
     new_dw->put(sum_vartype(total_kin_energy), timelabels->tke_out); 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->put(sum_vartype(u_norm), d_lab->d_uVelNormLabel); 
-      new_dw->put(sum_vartype(v_norm), d_lab->d_vVelNormLabel); 
-      new_dw->put(sum_vartype(w_norm), d_lab->d_wVelNormLabel); 
+      new_dw->put(sum_vartype(u_norm),  d_lab->d_uVelNormLabel); 
+      new_dw->put(sum_vartype(v_norm),  d_lab->d_vVelNormLabel); 
+      new_dw->put(sum_vartype(w_norm),  d_lab->d_wVelNormLabel); 
       new_dw->put(sum_vartype(rho_norm), d_lab->d_rhoNormLabel); 
     }
   }
@@ -1707,62 +1751,41 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched,
 {
   Task* tsk = scinew Task( "PicardNonlinearSolver::probeData",
                      this, &PicardNonlinearSolver::probeData);
-  
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_kineticEnergyLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+                     
+  Ghost::GhostType  gn = Ghost::None;
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel,    gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,      gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel,gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel,gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_kineticEnergyLabel, gn, 0);
 
   if (d_calcVariance) {
-    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, 
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, gn, 0);
   }
 
-  if (d_enthalpySolve)
-    tsk->requires(Task::NewDW, d_lab->d_tempINLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
+  if (d_enthalpySolve){
+    tsk->requires(Task::NewDW, d_lab->d_tempINLabel,      gn, 0);
+  }
+  
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,gn, 0);
     
-    tsk->requires(Task::NewDW, d_MAlab->totHT_CCLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_CCLabel,    gn, 0);
 
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCXLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCYLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->totHT_FCZLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_FCXLabel,   gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_FCYLabel,   gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->totHT_FCZLabel,   gn, 0);
 
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxXLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxYLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    tsk->requires(Task::NewDW, d_MAlab->totHtFluxZLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
+    tsk->requires(Task::NewDW, d_MAlab->totHtFluxXLabel,  gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->totHtFluxYLabel,  gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->totHtFluxZLabel,  gn, 0);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -1771,7 +1794,6 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched,
 // ****************************************************************************
 // Actual probe data
 // ****************************************************************************
-
 void 
 PicardNonlinearSolver::probeData(const ProcessorGroup* ,
                                  const PatchSubset* patches,
@@ -1786,45 +1808,37 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     double time = d_lab->d_sharedState->getElapsedTime();
 
-  // Get the new velocity
     constSFCXVariable<double> newUVel;
     constSFCYVariable<double> newVVel;
     constSFCZVariable<double> newWVel;
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+    
+    Ghost::GhostType  gn = Ghost::None;
+    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    
     constCCVariable<double> newintUVel;
     constCCVariable<double> newintVVel;
     constCCVariable<double> newintWVel;
-    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gn, 0);
+    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gn, 0);
+    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gn, 0);
+    
     constCCVariable<double> density;
     constCCVariable<double> viscosity;
     constCCVariable<double> pressure;
     constCCVariable<double> mixtureFraction;
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> kineticEnergy;
-    new_dw->get(kineticEnergy, d_lab->d_kineticEnergyLabel, matlIndex, patch,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+    
+    new_dw->get(density,          d_lab->d_densityCPLabel,    matlIndex, patch, gn, 0);
+    new_dw->get(viscosity,        d_lab->d_viscosityCTSLabel, matlIndex, patch, gn, 0);
+    new_dw->get(pressure,         d_lab->d_pressurePSLabel,   matlIndex, patch, gn, 0);
+    new_dw->get(mixtureFraction,  d_lab->d_scalarSPLabel,     matlIndex, patch, gn, 0);
+    new_dw->get(kineticEnergy,    d_lab->d_kineticEnergyLabel,matlIndex, patch, gn, 0);
     
     constCCVariable<double> mixFracVariance;
     if (d_calcVariance) {
-      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, matlIndex, patch, gn, 0);
     }
     
     constCCVariable<double> gasfraction;
@@ -1837,35 +1851,23 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
     constSFCYVariable<double> totHtFluxY;
     constSFCZVariable<double> totHtFluxZ;
     if (d_MAlab) {
-      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(tempSolid, d_MAlab->integTemp_CCLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, gn, 0);
+      new_dw->get(tempSolid,   d_MAlab->integTemp_CCLabel, matlIndex, patch, gn, 0);
 
-      new_dw->get(totalHT, d_MAlab->totHT_CCLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(totalHT,     d_MAlab->totHT_CCLabel,     matlIndex, patch, gn, 0);
+      new_dw->get(totalHT_FCX, d_MAlab->totHT_FCXLabel,    matlIndex, patch, gn, 0);
+      new_dw->get(totalHT_FCY, d_MAlab->totHT_FCYLabel,    matlIndex, patch, gn, 0);
+      new_dw->get(totalHT_FCZ, d_MAlab->totHT_FCZLabel,    matlIndex, patch, gn, 0);
 
-      new_dw->get(totalHT_FCX, d_MAlab->totHT_FCXLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(totalHT_FCY, d_MAlab->totHT_FCYLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(totalHT_FCZ, d_MAlab->totHT_FCZLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-      new_dw->get(totHtFluxX, d_MAlab->totHtFluxXLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(totHtFluxY, d_MAlab->totHtFluxYLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-      new_dw->get(totHtFluxZ, d_MAlab->totHtFluxZLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
+      new_dw->get(totHtFluxX, d_MAlab->totHtFluxXLabel,    matlIndex, patch, gn, 0);
+      new_dw->get(totHtFluxY, d_MAlab->totHtFluxYLabel,    matlIndex, patch, gn, 0);
+      new_dw->get(totHtFluxZ, d_MAlab->totHtFluxZLabel,    matlIndex, patch, gn, 0);
     }
 
     constCCVariable<double> temperature;
-    if (d_enthalpySolve) 
-      new_dw->get(temperature, d_lab->d_tempINLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
+    if (d_enthalpySolve){
+      new_dw->get(temperature, d_lab->d_tempINLabel, matlIndex, patch, gn, 0);
+    }
     for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
          iter != d_probePoints.end(); iter++) {
 
@@ -1885,9 +1887,11 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
         cerr << "CCVVelocity: " << newintVVel[*iter] << endl;
         cerr << "CCWVelocity: " << newintWVel[*iter] << endl;
         cerr << "KineticEnergy: " << kineticEnergy[*iter] << endl;
+        
         if (d_calcVariance) {
           cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
         }
+        
         if (d_MAlab) {
           cerr.precision(16);
           cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
@@ -1922,64 +1926,60 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    
     constCCVariable<double> denMicro;
     CCVariable<double> denMicro_new;
+    
+    Ghost::GhostType  gn = Ghost::None;
     if (d_MAlab) {
-      old_dw->get(denMicro, d_lab->d_densityMicroLabel, 
-                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch, gn, 0);
       new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroINLabel, 
                        matlIndex, patch);
       denMicro_new.copyData(denMicro);
     }
+    
     constCCVariable<int> cellType;
     if (d_MAlab){
-      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,gn, 0);
     }else{
-      old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(cellType, d_lab->d_cellTypeLabel,   matlIndex, patch,gn, 0);
     }
     constSFCXVariable<double> uVelocity;
-    old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
     constSFCYVariable<double> vVelocity;
-    old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
     constSFCZVariable<double> wVelocity;
-    old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
     constCCVariable<double> scalar;
-    old_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
     constCCVariable<double> enthalpy;
-    if (d_enthalpySolve){
-      old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-    constCCVariable<double> density;
-    old_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    constCCVariable<double> viscosity;
-    old_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
     constCCVariable<double> scalardiff;
     constCCVariable<double> enthalpydiff;
     constCCVariable<double> reactscalardiff;
+    constCCVariable<double> density;
+    constCCVariable<double> viscosity;
+    
+    old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    
+    old_dw->get(scalar,    d_lab->d_scalarSPLabel,      matlIndex, patch, gn, 0);
+    old_dw->get(density,   d_lab->d_densityCPLabel,     matlIndex, patch, gn, 0);
+    old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  matlIndex, patch, gn, 0);
+    
+    if (d_enthalpySolve){
+      old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0);
+    }
+    
+    //__________________________________
     if (d_dynScalarModel) {
       if (d_calScalar){
        old_dw->get(scalardiff, d_lab->d_scalarDiffusivityLabel,
-                   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                                                      matlIndex, patch, gn, 0);
       }
       if (d_enthalpySolve){
        old_dw->get(enthalpydiff, d_lab->d_enthalpyDiffusivityLabel,
-                   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                                                      matlIndex, patch, gn, 0);
       }
       if (d_reactingScalarSolve){
        old_dw->get(reactscalardiff, d_lab->d_reactScalarDiffusivityLabel,
-                   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                                                      matlIndex, patch, gn, 0);
       }
     }
 
@@ -1992,13 +1992,15 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     // Get the PerPatch CellInformation data from oldDW, initialize it if it is
     // not there
     if (!(d_MAlab)) {
-    PerPatch<CellInformationP> cellInfoP;
-      if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      PerPatch<CellInformationP> cellInfoP;
+      if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
         throw InvalidValue("cellInformation should not be initialized yet",
                            __FILE__, __LINE__);
-      if (old_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      }
+      
+      if (old_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
         old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-      else {
+      }else {
         cellInfoP.setData(scinew CellInformation(patch));
       }
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -2006,29 +2008,36 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 
     SFCXVariable<double> uVelocity_new;
     new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    uVelocity_new.copyData(uVelocity); // copy old into new
+    uVelocity_new.copyData(uVelocity); 
+    
     SFCYVariable<double> vVelocity_new;
     new_dw->allocateAndPut(vVelocity_new, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    vVelocity_new.copyData(vVelocity); // copy old into new
+    vVelocity_new.copyData(vVelocity); 
+    
     SFCZVariable<double> wVelocity_new;
     new_dw->allocateAndPut(wVelocity_new, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    wVelocity_new.copyData(wVelocity); // copy old into new
+    wVelocity_new.copyData(wVelocity); 
+    
     SFCXVariable<double> uVelRhoHat_new;
-    new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
-    uVelRhoHat_new.initialize(0.0); // copy old into new
+    new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel,   matlIndex, patch);
+    uVelRhoHat_new.initialize(0.0); 
+    
     SFCYVariable<double> vVelRhoHat_new;
-    new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
-    vVelRhoHat_new.initialize(0.0); // copy old into new
+    new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel,   matlIndex, patch);
+    vVelRhoHat_new.initialize(0.0); 
+    
     SFCZVariable<double> wVelRhoHat_new;
-    new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
-    wVelRhoHat_new.initialize(0.0); // copy old into new
+    new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel,   matlIndex, patch);
+    wVelRhoHat_new.initialize(0.0); 
 
     CCVariable<double> scalar_new;
     CCVariable<double> scalar_temp;
-    new_dw->allocateAndPut(scalar_new, d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(scalar_new,     d_lab->d_scalarSPLabel,      matlIndex, patch);
     scalar_new.copyData(scalar); // copy old into new
+    
+    
     if (d_timeIntegratorLabels[0]->multiple_steps) {
-      new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel,     matlIndex, patch);
       scalar_temp.copyData(scalar); // copy old into new
     }
 
@@ -2036,10 +2045,10 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> new_reactscalar;
     CCVariable<double> temp_reactscalar;
     if (d_reactingScalarSolve) {
-      old_dw->get(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, gn, 0);
       new_dw->allocateAndPut(new_reactscalar,   d_lab->d_reactscalarSPLabel,  matlIndex,patch);
       new_reactscalar.copyData(reactscalar);
+      
       if (d_timeIntegratorLabels[0]->multiple_steps) {
       new_dw->allocateAndPut(temp_reactscalar,  d_lab->d_reactscalarTempLabel, matlIndex,patch);
       temp_reactscalar.copyData(reactscalar);
@@ -2060,6 +2069,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> density_new;
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, matlIndex, patch);
     density_new.copyData(density); // copy old into new
+    
     if ((d_timeIntegratorLabels[0]->multiple_steps)||
         (d_timeIntegratorLabels[0]->factor_new < 1.0)) {
       CCVariable<double> density_temp;
@@ -2105,50 +2115,38 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    // gets for old dw variables
-
     constCCVariable<double> scalarVar;
-    if (d_calcVariance) {
-      old_dw->get(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch, 
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-
-    constCCVariable<double> pressure;
-    old_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
-                    Ghost::None, Arches::ZEROGHOSTCELLS);
-
-
-    // allocates and puts for new dw variables
-
-    CCVariable<double> pressure_new;
-    new_dw->allocateAndPut(pressure_new, d_lab->d_pressurePSLabel, 
-                           matlIndex, patch);
-    pressure_new.copyData(pressure); // copy old into new
-
-    CCVariable<double> pressureNLSource;
-    new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, 
-                           matlIndex, patch);
-    pressureNLSource.initialize(0.0);
-
     CCVariable<double> scalarVar_new;
+    constCCVariable<double> pressure;
+    CCVariable<double> pressure_new;
+    CCVariable<double> pressureNLSource;
+    
+    Ghost::GhostType  gn = Ghost::None;
+    old_dw->get(pressure,                d_lab->d_pressurePSLabel, matlIndex, patch, gn, 0);
+    new_dw->allocateAndPut(pressure_new, d_lab->d_pressurePSLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+    
+    pressureNLSource.initialize(0.0);
+    pressure_new.copyData(pressure);     // copy old into new
+
+    
     if (d_calcVariance) {
-        new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, matlIndex, patch);
-        scalarVar_new.copyData(scalarVar); // copy old into new
+      old_dw->get(scalarVar,                d_lab->d_scalarVarSPLabel, matlIndex, patch, gn, 0);
+      new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      scalarVar_new.copyData(scalarVar); // copy old into new
     }
 
     cout << "DOING DUMMY SOLVE " << endl;
-
-    double uvwout = 0.0;
-    double flowIN = 0.0;
-    double flowOUT = 0.0;
+    double uvwout       = 0.0;
+    double flowIN       = 0.0;
+    double flowOUT      = 0.0;
     double flowOUToutbc = 0.0;
-    double denAccum = 0.0;
+    double denAccum     = 0.0;
     double carbon_efficiency = 0.0;
     double scalar_efficiency = 0.0;
 
@@ -2167,9 +2165,10 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
 //______________________________________________________________________
 //
 void 
-PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched, const PatchSet* patches,
-                                   const MaterialSet* matls,
-                                   const TimeIntegratorLabel* timelabels)
+PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched, 
+                                          const PatchSet* patches,
+                                          const MaterialSet* matls,
+                                          const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "PicardNonlinearSolver::printTotalKE" +
                      timelabels->integrator_step_name;
@@ -2186,22 +2185,21 @@ PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched, const PatchSet* pat
   }
 
   sched->addTask(tsk, patches, matls);
-  
 }
 //______________________________________________________________________
 //
 void 
 PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
-                             const PatchSubset* ,
-                             const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels)
+                                    const PatchSubset* ,
+                                    const MaterialSubset*,
+                                    DataWarehouse*,
+                                    DataWarehouse* new_dw,
+                                    const TimeIntegratorLabel* timelabels)
 {
-
   sum_vartype tke;
   new_dw->get(tke, timelabels->tke_out);
   sum_vartype un,vn,wn,rhon;
+  
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     new_dw->get(un,   d_lab->d_uVelNormLabel);
     new_dw->get(vn,   d_lab->d_vVelNormLabel);
@@ -2210,8 +2208,10 @@ PicardNonlinearSolver::printTotalKE(const ProcessorGroup* ,
   }
   double total_kin_energy = tke;
   int me = d_myworld->myrank();
-  if (me == 0)
+  if (me == 0){
      cerr << "Total kinetic energy " <<  total_kin_energy << endl;
+  }
+  
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     d_u_norm=sqrt(un);
     d_v_norm=sqrt(vn);
@@ -2239,8 +2239,7 @@ PicardNonlinearSolver::sched_updatePressure(SchedulerP& sched,
                           this, &PicardNonlinearSolver::updatePressure,
                           timelabels);
   
-  tsk->requires(Task::OldDW, timelabels->pressure_guess, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::OldDW, timelabels->pressure_guess, Ghost::None, 0);
 
   tsk->modifies(timelabels->pressure_out);
 
@@ -2251,24 +2250,23 @@ PicardNonlinearSolver::sched_updatePressure(SchedulerP& sched,
 //
 void 
 PicardNonlinearSolver::updatePressure(const ProcessorGroup* ,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels)
+                                      const PatchSubset* patches,
+                                      const MaterialSubset*,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch *patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-  
+    
     constCCVariable<double> pressure_guess;
     CCVariable<double> pressure;
-    new_dw->getModifiable(pressure, timelabels->pressure_out,
-                          matlIndex, patch);
-    old_dw->get(pressure_guess, timelabels->pressure_guess, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    
+    Ghost::GhostType  gn = Ghost::None;
+    new_dw->getModifiable(pressure, timelabels->pressure_out,   matlIndex, patch);
+    old_dw->get(pressure_guess,     timelabels->pressure_guess, matlIndex, patch, gn, 0);
     
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
@@ -2286,34 +2284,38 @@ PicardNonlinearSolver::updatePressure(const ProcessorGroup* ,
 // Schedule saving of temp copies of variables
 //****************************************************************************
 void 
-PicardNonlinearSolver::sched_saveTempCopies(SchedulerP& sched, const PatchSet* patches,
-                                  const MaterialSet* matls,
-                                     const TimeIntegratorLabel* timelabels)
+PicardNonlinearSolver::sched_saveTempCopies(SchedulerP& sched, 
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls,
+                                            const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "PicardNonlinearSolver::saveTempCopies" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
                           &PicardNonlinearSolver::saveTempCopies,
                           timelabels);
-
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
-  if (d_reactingScalarSolve)
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-  if (d_enthalpySolve)
-    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
- 
+                          
+  Ghost::GhostType  gn = Ghost::None;
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gn, 0);
+  
+  if (d_reactingScalarSolve){
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gn, 0);
+  }
+  if (d_enthalpySolve){
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
+  }
+  
   tsk->modifies(d_lab->d_densityTempLabel);
   tsk->modifies(d_lab->d_scalarTempLabel);
-  if (d_reactingScalarSolve)
+  
+  if (d_reactingScalarSolve){
     tsk->modifies(d_lab->d_reactscalarTempLabel);
-  if (d_enthalpySolve)
+  }
+  if (d_enthalpySolve){
     tsk->modifies(d_lab->d_enthalpyTempLabel);
-
+  }
+  
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
@@ -2343,6 +2345,7 @@ PicardNonlinearSolver::saveTempCopies(const ProcessorGroup*,
     new_dw->getModifiable(temp_scalar,  d_lab->d_scalarTempLabel,   matlIndex, patch);
     new_dw->copyOut(temp_density,       d_lab->d_densityCPLabel,    matlIndex, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,     matlIndex, patch);
+    
     if (d_reactingScalarSolve) {
       new_dw->getModifiable(temp_reactscalar, d_lab->d_reactscalarTempLabel,matlIndex, patch);
       new_dw->copyOut(temp_reactscalar,       d_lab->d_reactscalarSPLabel,  matlIndex, patch);
@@ -2374,7 +2377,7 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
   }else{
     parent_old_dw = Task::OldDW;
   }
-  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  
 
   Task::WhichDW old_values_dw;
   if (timelabels->use_old_values){
@@ -2382,19 +2385,18 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
   }else{ 
     old_values_dw = Task::NewDW;
   }
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+  
+  Ghost::GhostType  gn = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+    
+  tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,     gn, 0);
+  tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,     gac, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,      gn, 0);
 
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -2444,39 +2446,41 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
     constSFCYVariable<double> vVelocity;
     constSFCZVariable<double> wVelocity;
     constCCVariable<int> cellType;
-
+    
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    new_dw->get(density,   d_lab->d_densityCPLabel,     matlIndex,patch, gac, 1);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,patch, gaf, 1);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,patch, gaf, 1);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,patch, gaf, 1);
+    new_dw->get(cellType,  d_lab->d_cellTypeLabel,      matlIndex,patch, gn, 0);
+    
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     DataWarehouse* old_values_dw;
-    if (timelabels->use_old_values)
+    if (timelabels->use_old_values){
       old_values_dw = parent_old_dw;
-    else
+    }else{
       old_values_dw = new_dw;
-
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    }
+    
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       new_dw->allocateAndPut(densityGuess, d_lab->d_densityGuessLabel,
                      matlIndex, patch);
-    else
+    }else{
       new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,
                      matlIndex, patch);
+    }
     old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
                      matlIndex, patch);
 
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,
-                patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,
-                patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,
-                patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(cellType, d_lab->d_cellTypeLabel,
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
@@ -2512,6 +2516,8 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
           }
         }
       } 
+      
+      //__________________________________
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
         bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
         bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -2638,8 +2644,7 @@ PicardNonlinearSolver::sched_checkDensityGuess(SchedulerP& sched,
   }else{ 
     old_values_dw = Task::NewDW;
   }
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,Ghost::None, 0);
   tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
 
 
@@ -2710,9 +2715,7 @@ PicardNonlinearSolver::sched_updateDensityGuess(SchedulerP& sched,
                           &PicardNonlinearSolver::updateDensityGuess,
                           timelabels);
 
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,
-                Arches::ONEGHOSTCELL);
-
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,1);
   tsk->modifies(d_lab->d_densityGuessLabel);
 
   sched->addTask(tsk, patches, matls);
@@ -2754,15 +2757,13 @@ PicardNonlinearSolver::sched_syncRhoF(SchedulerP& sched,
   string taskname =  "PicardNonlinearSolver::syncRhoF" +
                      timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
-                          &PicardNonlinearSolver::syncRhoF,
-                          timelabels);
-
-  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
-
+                          &PicardNonlinearSolver::syncRhoF, timelabels);
+                          
+  Ghost::GhostType  gn = Ghost::None;
+  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel,gn,0);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,   gn,0);
   tsk->modifies(d_lab->d_scalarSPLabel);
+  
   if (d_reactingScalarSolve){
     tsk->modifies(d_lab->d_reactscalarSPLabel);
   }
@@ -2794,13 +2795,12 @@ PicardNonlinearSolver::syncRhoF(const ProcessorGroup*,
     CCVariable<double> scalar;
     CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
-
-    new_dw->get(densityGuess, d_lab->d_densityGuessLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel,
-                     matlIndex, patch);
+    
+    Ghost::GhostType  gn = Ghost::None;
+    new_dw->get(densityGuess,     d_lab->d_densityGuessLabel, matlIndex, patch, gn, 0);
+    new_dw->get(density,          d_lab->d_densityCPLabel,    matlIndex, patch, gn, 0);
+    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel,     matlIndex, patch);
+    
     if (d_reactingScalarSolve){
       new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel,
                      matlIndex, patch);
@@ -2862,15 +2862,13 @@ PicardNonlinearSolver::sched_saveFECopies(SchedulerP& sched,
                           &PicardNonlinearSolver::saveFECopies,
                           timelabels);
 
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, Ghost::None,
-                Arches::ZEROGHOSTCELLS);
+  Ghost::GhostType  gn = Ghost::None;
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, gn, 0);
   if (d_reactingScalarSolve){
-    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel, gn, 0);
   }
   if (d_enthalpySolve){
-    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,    gn, 0);
   }
  
   tsk->computes(d_lab->d_scalarFELabel);
@@ -2907,6 +2905,7 @@ PicardNonlinearSolver::saveFECopies(const ProcessorGroup*,
 
     new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel,matlIndex, patch);
     new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,matlIndex, patch);
+    
     if (d_reactingScalarSolve) {
       new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarFELabel, matlIndex, patch);
       new_dw->copyOut(temp_reactscalar,        d_lab->d_reactscalarSPLabel, matlIndex, patch);

@@ -95,41 +95,30 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  
+  Ghost::GhostType  gn = Ghost::None;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,       gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
 
   // for multimaterial
-  if (d_MAlab)
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-
-      // Computes
+  if (d_MAlab){
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
+  }
+  
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
-                  Task::OutOfDomain);
-
-    tsk->computes(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
-                  Task::OutOfDomain);
+    tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
+    tsk->computes(d_lab->d_scalarFluxCompLabel,   d_lab->d_vectorMatl, oams);
   }
   else {
-    tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
-                  Task::OutOfDomain);
-
-    tsk->modifies(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
-                  Task::OutOfDomain);
+    tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl, oams);
+    tsk->modifies(d_lab->d_scalarFluxCompLabel,   d_lab->d_vectorMatl, oams);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -158,34 +147,28 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     constCCVariable<double> scalar;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
-    // Get the velocity, density and viscosity from the old data warehouse
-
-    new_dw->get(uVel,d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel,d_lab->d_newCCVVelocityLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(uVel,   d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(vVel,   d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(wVel,   d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(den,    d_lab->d_densityCPLabel,      matlIndex, patch, gac, 1);
+    new_dw->get(scalar, d_lab->d_scalarSPLabel,       matlIndex, patch, gac, 1);
     
     if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,gn, 0);
     }
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,gac, 1);
 
 #ifndef PetscFilter
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) {
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 #endif
     
@@ -196,12 +179,11 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
   // allocate stress tensor coeffs
     for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        new_dw->allocateAndPut(stressTensorCoeff[ii], 
-                               d_lab->d_stressTensorCompLabel, ii, patch);
-      else
-        new_dw->getModifiable(stressTensorCoeff[ii], 
-                              d_lab->d_stressTensorCompLabel, ii, patch);
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+        new_dw->allocateAndPut(stressTensorCoeff[ii],  d_lab->d_stressTensorCompLabel, ii, patch);
+      }else{
+        new_dw->getModifiable(stressTensorCoeff[ii],   d_lab->d_stressTensorCompLabel, ii, patch);
+      }
       stressTensorCoeff[ii].initialize(0.0);
     }
 
@@ -217,12 +199,11 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     // allocate stress tensor coeffs
     for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        new_dw->allocateAndPut(scalarFluxCoeff[ii], 
-                               d_lab->d_scalarFluxCompLabel, ii, patch);
-      else
-        new_dw->getModifiable(scalarFluxCoeff[ii], 
-                               d_lab->d_scalarFluxCompLabel, ii, patch);
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+        new_dw->allocateAndPut(scalarFluxCoeff[ii],  d_lab->d_scalarFluxCompLabel, ii, patch);
+      }else{
+        new_dw->getModifiable(scalarFluxCoeff[ii],   d_lab->d_scalarFluxCompLabel, ii, patch);
+      }
       scalarFluxCoeff[ii].initialize(0.0);
     }
 
@@ -850,18 +831,21 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
 #if 0
     // compute stress tensor
-    for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) 
+    for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++){
       new_dw->put(stressTensorCoeff[ii], 
                   d_lab->d_stressTensorCompLabel, ii, patch);
+    }
 
-    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) 
+    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++){
       new_dw->put(scalarFluxCoeff[ii], 
                   d_lab->d_scalarFluxCompLabel, ii, patch);
+    }
 #endif
 
   }
 }
-
+//______________________________________________________________________
+//
 void 
 ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched, 
                                                   const PatchSet* patches,
@@ -872,6 +856,7 @@ ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched,
 {
   string taskname =  "ScaleSimilarityModel::computeScalarVaraince" +
                      timelabels->integrator_step_name;
+                     
   Task* tsk = scinew Task(taskname, this,
                           &ScaleSimilarityModel::computeScalarVariance,
                           timelabels, d_EKTCorrection, doing_EKT_now);
@@ -879,22 +864,21 @@ ScaleSimilarityModel::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,  gac, 1);
 
   // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-     tsk->computes(d_lab->d_scalarVarSPLabel);
-  else
-     tsk->modifies(d_lab->d_scalarVarSPLabel);
-
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+    tsk->computes(d_lab->d_scalarVarSPLabel);
+  }else{
+    tsk->modifies(d_lab->d_scalarVarSPLabel);
+  }
   sched->addTask(tsk, patches, matls);
 }
 
-
+//______________________________________________________________________
+//
 void 
 ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
                                             const PatchSubset* patches,
@@ -908,12 +892,14 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    // Variables
+
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
-    // Get the velocity, density and viscosity from the old data warehouse
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    constCCVariable<int> cellType;
+    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    new_dw->get(scalar,   d_lab->d_scalarSPLabel, matlIndex, patch, gac, 1);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
@@ -922,17 +908,14 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
     }
     scalarVar.initialize(0.0);
     
-    constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
-      
+    }
+    
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     int numGC = 1;
@@ -949,7 +932,8 @@ ScaleSimilarityModel::computeScalarVariance(const ProcessorGroup*,
       }
     }
 
-    Array3<double> filterPhi(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+    //__________________________________
+    Array3<double> filterPhi(  patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     Array3<double> filterPhiSqr(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
     filterPhi.initialize(0.0);
     filterPhiSqr.initialize(0.0);
@@ -1121,27 +1105,23 @@ ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched,
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  
+  tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,     gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,     gac, 1);
+  
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-                   d_lab->d_vectorMatl,
-                   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  // Computes
-     tsk->computes(d_lab->d_scalarDissSPLabel);
+    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+                  d_lab->d_vectorMatl,oams, gac, 1);
+    tsk->computes(d_lab->d_scalarDissSPLabel);
   }
   else {
-     tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
-                   d_lab->d_vectorMatl,
-                   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  // Computes
-     tsk->modifies(d_lab->d_scalarDissSPLabel);
+    tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+                  d_lab->d_vectorMatl,oams, gac, 1);
+    tsk->modifies(d_lab->d_scalarDissSPLabel);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -1170,40 +1150,33 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
     CCVariable<double> scalarDiss;  // dissipation..chi
     StencilMatrix<constCCVariable<double> > scalarFlux; //3 point stencil
 
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(scalar,    d_lab->d_scalarSPLabel,     matlIndex, patch,gac, 1);
+    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,gac, 1);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-        old_dw->get(scalarFlux[ii], 
-                    d_lab->d_scalarFluxCompLabel, ii, patch,
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        old_dw->get(scalarFlux[ii], d_lab->d_scalarFluxCompLabel, ii, patch, gac, 1);
       }
-      new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
-                             matlIndex, patch);
+      new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,matlIndex, patch);
     }
     else {
       for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
-        new_dw->get(scalarFlux[ii], 
-                    d_lab->d_scalarFluxCompLabel, ii, patch,
-                    Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        new_dw->get(scalarFlux[ii],    d_lab->d_scalarFluxCompLabel, ii, patch,gac, 1);
       }
-      new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,
-                            matlIndex, patch);
+      new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,matlIndex, patch);
     }
     scalarDiss.initialize(0.0);
     
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    // Get the PerPatch CellInformation data
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
+        new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
