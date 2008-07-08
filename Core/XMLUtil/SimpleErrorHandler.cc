@@ -33,7 +33,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #ifndef __sgi
-#include <stdio.h>
+#include <cstdio>
 #endif
 using namespace std;
 

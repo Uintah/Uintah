@@ -44,7 +44,7 @@
 #include <iomanip>
 #include <fstream>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 using std::cerr;
 using std::ifstream;

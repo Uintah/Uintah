@@ -45,7 +45,7 @@
 #include <Core/Util/Assert.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Persistent/Persistent.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace SCIRun;
 using namespace std;

@@ -6,7 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
-#include <math.h>
+#include <cmath>
 
 #include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {

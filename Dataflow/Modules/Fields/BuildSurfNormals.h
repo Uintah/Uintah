@@ -39,7 +39,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 #include <Dataflow/Modules/Fields/share.h>
 

@@ -34,8 +34,8 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 

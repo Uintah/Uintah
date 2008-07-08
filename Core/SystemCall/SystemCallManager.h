@@ -74,7 +74,7 @@ typedef int pid_t;
 #include <sgi_stl_warnings_on.h>
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Runnable.h>

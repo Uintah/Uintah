@@ -52,8 +52,8 @@
 #include <Core/CCA/PIDL/PIDL.h>
 
 extern "C" {
-#  include <string.h>
-#  include <stdlib.h>
+#  include <cstring>
+#  include <cstdlib>
 }
 
 #include <iostream>

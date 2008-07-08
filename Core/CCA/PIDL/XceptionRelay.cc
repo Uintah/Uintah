@@ -29,9 +29,9 @@
 
 #include <Core/CCA/PIDL/XceptionRelay.h>
 #include <iostream>
-#include <string.h> 
+#include <cstring> 
 #include <unistd.h>
-#include <assert.h>
+#include <cassert>
 
 using namespace SCIRun;
 

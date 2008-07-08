@@ -46,7 +46,7 @@
 #include <sgi_stl_warnings_on.h>
 
 
-#include <errno.h>
+#include <cerrno>
 #ifndef _WIN32
 #include <unistd.h>
 #endif

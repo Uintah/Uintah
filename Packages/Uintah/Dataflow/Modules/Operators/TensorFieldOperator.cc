@@ -5,7 +5,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <math.h>
+#include <cmath>
 #include <iostream>
 using std::cerr;
 using std::endl;

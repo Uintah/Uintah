@@ -22,10 +22,10 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <fcntl.h>
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>

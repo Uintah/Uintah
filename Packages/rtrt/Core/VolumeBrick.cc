@@ -11,7 +11,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

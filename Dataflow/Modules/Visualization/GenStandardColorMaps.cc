@@ -63,7 +63,7 @@ DESCRIPTION
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <sstream>
 

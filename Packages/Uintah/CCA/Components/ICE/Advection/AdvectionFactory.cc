@@ -6,7 +6,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <map>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 
 
 using namespace std;

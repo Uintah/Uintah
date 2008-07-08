@@ -52,8 +52,8 @@
 #define SCI_FLOAT_EPSILON 0.000001
 
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 
 using namespace std;
 using namespace SCIRun;

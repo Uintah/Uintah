@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
+#include <cstdio>
 
 #define XK_LATIN1
 #include <X11/keysymdef.h>

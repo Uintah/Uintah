@@ -6,8 +6,8 @@
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Plane.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 extern void run_gl_test();

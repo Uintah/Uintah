@@ -41,8 +41,8 @@
 #ifndef Viewer_ViewWinodw_h
 #define Viewer_ViewWinodw_h
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 

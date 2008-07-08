@@ -10,7 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <vector>
 #include <string>
-#include <math.h>
+#include <cmath>
 
 namespace Uintah {
 

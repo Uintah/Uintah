@@ -26,7 +26,7 @@ extern "C" {
 #include <GL/glu.h>
 #include <X11/Xlib.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace rtrt;
 using namespace SCIRun;

@@ -28,9 +28,9 @@
 #include <string>
 #include <vector>
 
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
+#include <cstdio>
+#include <cmath>
+#include <ctime>
 
 using namespace SCIRun;
 using namespace std;

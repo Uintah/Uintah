@@ -44,7 +44,7 @@
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/CCA/PIDL/PIDL.h>
 
-#include <assert.h>
+#include <cassert>
 
 using namespace SCIRun;
 

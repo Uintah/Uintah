@@ -1,7 +1,7 @@
 
 #include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 
-#include <math.h>
+#include <cmath>
 
 // Depending on speed issues and how large these functions become, it
 // is possible that they should be moved to the .h files.

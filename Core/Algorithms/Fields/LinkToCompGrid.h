@@ -30,7 +30,7 @@
 #define CORE_ALGORITHMS_FIELDS_LINKTOCOMPGRID_H 1
 
 #include <Core/Algorithms/Util/DynamicAlgo.h>
-#include <float.h>
+#include <cfloat>
 
 namespace SCIRunAlgo {
 

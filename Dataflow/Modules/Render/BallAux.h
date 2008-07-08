@@ -31,7 +31,7 @@
 #ifndef _H_BallAux
 #define _H_BallAux
 
-#include <math.h>
+#include <cmath>
 
 enum QuatPart {X, Y, Z, W, QuatLen};
 typedef double HMatrix[QuatLen][QuatLen];

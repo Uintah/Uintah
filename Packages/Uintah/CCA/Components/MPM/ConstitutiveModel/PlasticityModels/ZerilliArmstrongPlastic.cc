@@ -1,5 +1,5 @@
 #include "ZerilliArmstrongPlastic.h"
-#include <math.h>
+#include <cmath>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 

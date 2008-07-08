@@ -1,8 +1,8 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Parallelogram.h>

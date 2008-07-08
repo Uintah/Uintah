@@ -1,7 +1,7 @@
 #ifndef MATH_UTILS_H
 #define MATH_UTILS_H
 
-#include <math.h>
+#include <cmath>
 /* needed for sqrt() below */
 
 

@@ -23,7 +23,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
+#include <cmath>
 
 namespace rtrt {
 template<class T> class BrickArray2;

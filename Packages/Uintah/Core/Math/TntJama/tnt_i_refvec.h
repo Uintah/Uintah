@@ -27,7 +27,7 @@
 #include <iostream>
 
 #ifdef TNT_BOUNDS_CHECK
-#include <assert.h>
+#include <cassert>
 #endif
 #include <sgi_stl_warnings_on.h>
 

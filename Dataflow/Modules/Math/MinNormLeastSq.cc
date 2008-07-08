@@ -56,7 +56,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
-#include <math.h>
+#include <cmath>
 
 namespace SCIRun {
 

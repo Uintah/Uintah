@@ -16,7 +16,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace rtrt;
 using namespace std;

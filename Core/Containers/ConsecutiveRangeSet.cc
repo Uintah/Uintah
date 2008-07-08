@@ -30,8 +30,8 @@
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <sstream>
-#include <limits.h>
-#include <errno.h>
+#include <climits>
+#include <cerrno>
 
 namespace SCIRun {
 using namespace std;

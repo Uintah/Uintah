@@ -31,17 +31,17 @@
 
 #include <sgi_stl_warnings_off.h>
 #include   <iomanip>
-#include   <errno.h>
+#include   <cerrno>
 #include   <fstream>
 #include   <iostream>
-#include   <stdio.h>
+#include   <cstdio>
 #include   <sstream>
 #include   <vector>
 #include   <sys/types.h>
 #include   <sys/stat.h>
 #include   <fcntl.h>
-#include   <math.h>
-#include   <string.h>
+#include   <cmath>
+#include   <cstring>
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32

@@ -8,8 +8,8 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 
 using namespace rtrt;
 using namespace SCIRun;

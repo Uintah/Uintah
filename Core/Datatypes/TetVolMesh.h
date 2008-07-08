@@ -62,8 +62,8 @@
 #include   <set>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
-#include <float.h> // for DBL_MAX
+#include <cmath>
+#include <cfloat> // for DBL_MAX
 
 namespace SCIRun {
 

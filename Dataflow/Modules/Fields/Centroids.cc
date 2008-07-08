@@ -41,7 +41,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/Util/DynamicCompilation.h>
-#include <math.h>
+#include <cmath>
 
 #include <vector>
 #include <iostream>

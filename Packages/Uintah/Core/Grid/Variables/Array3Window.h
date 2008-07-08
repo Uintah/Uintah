@@ -3,7 +3,7 @@
 
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3Data.h>
-#include <limits.h>
+#include <climits>
 #include <Core/Geometry/IntVector.h>
 
 #if SCI_ASSERTION_LEVEL >= 3

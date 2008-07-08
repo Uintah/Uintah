@@ -7,7 +7,7 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Core/Geometry/Transform.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
   class Cylinder;

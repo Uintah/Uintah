@@ -39,7 +39,7 @@
 #ifndef _WIN32
 #include <strings.h>
 #endif
-#include <stdio.h>
+#include <cstdio>
 using namespace std;
 
 namespace SCIRun {

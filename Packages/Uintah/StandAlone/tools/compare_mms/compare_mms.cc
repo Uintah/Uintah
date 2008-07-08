@@ -40,7 +40,7 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <math.h>
+#include <cmath>
 
 using namespace SCIRun;
 using namespace std;

@@ -32,7 +32,7 @@
 #include <Framework/CCA/CCAComponentModel.h>
 #include <Framework/Babel/BabelComponentModel.h>
 
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>

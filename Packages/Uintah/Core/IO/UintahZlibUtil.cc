@@ -1,6 +1,6 @@
 #include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace Uintah {
 

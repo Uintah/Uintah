@@ -36,9 +36,9 @@
 #include <sys/stat.h>
 //#include <sys/syscall.h>
 
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstring>
+#include <cstdlib>
 #include <iostream>
 
 #ifndef _WIN32

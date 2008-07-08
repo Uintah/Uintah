@@ -21,7 +21,7 @@
 #include <iostream>
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
-#include <stdio.h>
+#include <cstdio>
 
 #ifdef _WIN32
 #include <process.h>

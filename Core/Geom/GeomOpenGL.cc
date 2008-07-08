@@ -127,7 +127,7 @@ using std::endl;
 #include <windows.h>
 #endif
 
-#include <stdio.h>
+#include <cstdio>
 
 
 namespace SCIRun {

@@ -28,8 +28,8 @@
 
 
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 

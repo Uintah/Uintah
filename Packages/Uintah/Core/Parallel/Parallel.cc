@@ -6,7 +6,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>

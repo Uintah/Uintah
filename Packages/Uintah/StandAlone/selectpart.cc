@@ -26,8 +26,8 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 #include <algorithm>
 
 using namespace SCIRun;

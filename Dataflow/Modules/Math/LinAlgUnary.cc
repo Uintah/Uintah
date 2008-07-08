@@ -47,7 +47,7 @@
 #include <Core/Containers/HashTable.h>
 #include <iostream>
 #include <sstream>
-#include <math.h>
+#include <cmath>
 
 namespace SCIRun {
 

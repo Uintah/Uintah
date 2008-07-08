@@ -41,7 +41,7 @@
  */
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>

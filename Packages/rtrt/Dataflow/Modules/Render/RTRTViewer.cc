@@ -40,9 +40,9 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <dlfcn.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/param.h>
 
 namespace rtrt {

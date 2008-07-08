@@ -44,7 +44,7 @@
 #include <sstream>
 #include <vector>
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <libxml/tree.h>
 #include <libxml/parser.h>

@@ -46,7 +46,7 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/DT/DataTransmitter.h>
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 using namespace SCIRun;
 

@@ -29,7 +29,7 @@
 
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <Core/CCA/tools/sidl/Spec.h>
 #include <Core/CCA/tools/sidl/SymbolTable.h>
 #include <fstream>

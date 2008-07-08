@@ -9,7 +9,7 @@
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace rtrt;
 using namespace SCIRun;

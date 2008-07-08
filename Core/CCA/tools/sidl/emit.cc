@@ -38,7 +38,7 @@
 #include <sstream>
 
 #include <ctype.h>
-#include <stdio.h>
+#include <cstdio>
 
 extern bool doing_cia;
 

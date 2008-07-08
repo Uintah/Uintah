@@ -51,7 +51,7 @@
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Dataflow/Widgets/RingWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
-#include <math.h>
+#include <cmath>
 #include <set>
 
 #include <iostream>

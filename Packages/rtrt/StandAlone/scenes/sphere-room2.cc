@@ -29,7 +29,7 @@
 #include <Packages/rtrt/Core/BV1.h>
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 using namespace rtrt;
 using namespace std;

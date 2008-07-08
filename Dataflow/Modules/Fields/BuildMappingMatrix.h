@@ -41,7 +41,7 @@
 #include <Core/Geometry/BBox.h>
 #include <sci_hash_map.h>
 #include <sci_algorithm.h>
-#include <float.h> // for DBL_MAX
+#include <cfloat> // for DBL_MAX
 
 namespace SCIRun {
 

@@ -47,8 +47,8 @@
 #include <sgi_stl_warnings_off.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <errno.h>
-#include <stdio.h>
+#include <cerrno>
+#include <cstdio>
 
 using namespace std;
 

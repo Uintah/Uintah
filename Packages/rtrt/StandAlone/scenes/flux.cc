@@ -28,9 +28,9 @@
 #include <Packages/rtrt/Core/TimeObj.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstring>
+#include <cstdlib>
 
 using namespace rtrt;
 using namespace SCIRun;

@@ -50,7 +50,7 @@
 #include <iostream>
 
 extern "C" {
-#  include <string.h>
+#  include <cstring>
 }
 
 #ifndef DEBUG

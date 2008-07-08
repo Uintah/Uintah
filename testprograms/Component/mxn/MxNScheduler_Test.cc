@@ -32,7 +32,7 @@
 */
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 #include <Core/CCA/PIDL/MxNScheduler.h>
 #include <Core/CCA/SSIDL/array.h>
 using namespace SCIRun;

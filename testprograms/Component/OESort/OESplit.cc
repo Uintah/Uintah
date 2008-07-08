@@ -41,7 +41,7 @@
  */
 #include <sci_defs/mpi_defs.h>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
 #include <sci_mpi.h>
 #include <Core/CCA/PIDL/PIDL.h>

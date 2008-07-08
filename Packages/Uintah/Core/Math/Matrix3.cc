@@ -16,7 +16,7 @@
 #include "./TntJama/tnt.h"
 #include "./TntJama/jama_eig.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

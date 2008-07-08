@@ -50,7 +50,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

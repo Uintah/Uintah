@@ -42,8 +42,8 @@
 #include <CCA/Components/Viewer/ViewerDialog.h>
 #include <Core/CCA/datawrapper/vector2d.h>
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 

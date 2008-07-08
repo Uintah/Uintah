@@ -46,7 +46,7 @@
 
 #include <tcl.h>
 #include <tk.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <Core/Exceptions/GuiException.h>
 #include <Core/Containers/Array3.h>

@@ -45,7 +45,7 @@
 #include <map>
 #include <sstream>
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/stat.h>
 
 using std::cerr;

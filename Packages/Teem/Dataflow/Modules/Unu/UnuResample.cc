@@ -47,7 +47,7 @@
 #include <Core/Containers/StringUtil.h>
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 using std::endl;
 

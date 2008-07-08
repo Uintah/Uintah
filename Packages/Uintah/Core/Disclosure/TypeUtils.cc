@@ -7,8 +7,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <float.h>
-#include <limits.h>
+#include <cfloat>
+#include <climits>
 
 using namespace SCIRun;
 

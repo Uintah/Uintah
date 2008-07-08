@@ -9,7 +9,7 @@
 #include "PlasticityModels/PlasticityModel.h"
 #include "PlasticityModels/DamageModel.h"
 #include "PlasticityModels/MPMEquationOfState.h"
-#include <math.h>
+#include <cmath>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>

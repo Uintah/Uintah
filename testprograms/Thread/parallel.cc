@@ -6,9 +6,9 @@
 //#include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #ifndef _WIN32
 #include <unistd.h>

@@ -1,5 +1,5 @@
 /**** BallMath.c - Essential routines for ArcBall.  ****/
-#include <math.h>
+#include <cmath>
 #include <Packages/rtrt/Core/BallMath.h>
 #include <Packages/rtrt/Core/BallAux.h>
 

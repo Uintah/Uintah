@@ -4,8 +4,8 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <Packages/rtrt/Core/Point4D.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

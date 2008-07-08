@@ -44,8 +44,8 @@
 #include <sci_comp_warn_fixes.h>
 #include <tcl.h>
 #include <tk.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 #include <map>
 #include <typeinfo>
 #include <iostream>

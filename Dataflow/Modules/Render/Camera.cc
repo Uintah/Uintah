@@ -49,7 +49,7 @@
 #include <unistd.h>
 #endif
 
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 #include <map>

@@ -11,9 +11,9 @@
 #include <GL/glx.h>
 #include <GL/glu.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <sci_values.h>
-#include <stdio.h>
+#include <cstdio>
 
 using namespace rtrt;
 using namespace SCIRun;

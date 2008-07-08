@@ -10,7 +10,7 @@
 #include <sstream>
 #include <fstream>
 
-#include <float.h>
+#include <cfloat>
 
 using namespace std;
 

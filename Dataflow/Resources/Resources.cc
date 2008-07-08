@@ -29,7 +29,7 @@
 
 // Resources.cc - Interface to module-finding and loading mechanisms
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <ctype.h>

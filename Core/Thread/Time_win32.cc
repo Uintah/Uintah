@@ -32,10 +32,10 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadError.h>
-#include <stdio.h>
+#include <cstdio>
 #include <windows.h>
 #include <Mmsystem.h> // windows time functions
-#include <errno.h>
+#include <cerrno>
 
 static bool initialized=false;
 static DWORD start_time; // measured in milliseconds

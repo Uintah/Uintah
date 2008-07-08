@@ -8,7 +8,7 @@
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/UV.h>
 #include <Core/Geometry/Transform.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
 class UVCylinder;

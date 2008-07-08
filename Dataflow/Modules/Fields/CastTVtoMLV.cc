@@ -47,7 +47,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <math.h>
+#include <cmath>
 
 #include <vector>
 #include <iostream>

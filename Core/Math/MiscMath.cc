@@ -42,7 +42,7 @@
 
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Expon.h>
-#include <math.h>
+#include <cmath>
 #ifdef __sgi
 #include <ieeefp.h>
 #endif
@@ -50,7 +50,7 @@
 #include <fp_class.h>
 #endif
 #ifdef _WIN32
-#include <float.h>
+#include <cfloat>
 #define finite _finite
 #endif
 namespace SCIRun {

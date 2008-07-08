@@ -18,7 +18,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 using std::cerr;

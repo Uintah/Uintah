@@ -24,7 +24,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <stdio.h>
+#include <cstdio>
 
 
 /* pointExtract.cc - an AnalysisModule

@@ -6,16 +6,16 @@
 
 #include <Packages/rtrt/Core/Token.h>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 #ifdef _WIN32
-#include <float.h>
+#include <cfloat>
 #else
 #include <sci_values.h>
 #endif
 #include <sys/stat.h>
 #include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdlib>
 
 
 

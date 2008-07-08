@@ -13,8 +13,8 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 namespace rtrt {
 class PPMImage;

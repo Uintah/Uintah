@@ -41,7 +41,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 
 #define GLOBUS_L_LIBC_MAX_ERR_SIZE 512
 

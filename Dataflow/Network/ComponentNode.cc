@@ -43,8 +43,8 @@
 #include <Core/Util/RWS.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include <iostream>
 #include <sstream>

@@ -1,7 +1,7 @@
 #ifndef __GUV_CONSTITUTIVE_MODEL_H__
 #define __GUV_CONSTITUTIVE_MODEL_H__
 
-#include <math.h>
+#include <cmath>
 #include "ShellMaterial.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>

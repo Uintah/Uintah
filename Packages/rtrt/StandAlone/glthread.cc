@@ -11,7 +11,7 @@
 #include "Thread/Runnable.h"
 #endif
 
-#include <string.h>
+#include <cstring>
 #include <iostream>
 
 extern void run_gl_test();

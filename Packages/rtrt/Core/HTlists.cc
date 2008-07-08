@@ -10,8 +10,8 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 using namespace std;
 

@@ -27,7 +27,7 @@
 #include <iostream>
 #include <algorithm>
 #include <map>
-#include <math.h>
+#include <cmath>
 
 #define SELECT_RANGETREE
 #define BRYAN_SELECT_CACHE

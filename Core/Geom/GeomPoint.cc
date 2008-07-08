@@ -266,7 +266,7 @@ GeomTimedParticles::GeomTimedParticles(const GeomTimedParticles&)
   cerr << "No real Copy Constructor...\n";
 }
 
-#include <stdio.h>
+#include <cstdio>
 
 GeomTimedParticles::GeomTimedParticles(char *fname)
 :drawMode(0),cmap(0)

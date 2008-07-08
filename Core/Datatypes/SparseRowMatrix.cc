@@ -56,7 +56,7 @@
 using std::cerr;
 using std::endl;
 
-#include <stdio.h>
+#include <cstdio>
 #include <memory.h>
 
 namespace SCIRun {

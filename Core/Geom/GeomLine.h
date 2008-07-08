@@ -49,7 +49,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Thread/Mutex.h>
 
-#include <stdlib.h>	// For size_t
+#include <cstdlib>	// For size_t
 
 #include <Core/Geom/share.h>
 

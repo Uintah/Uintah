@@ -2,7 +2,7 @@
 #ifndef MUSILRNG_H
 #define MUSILRNG_H 1
 
-#include <math.h>
+#include <cmath>
 
 namespace rtrt {
 

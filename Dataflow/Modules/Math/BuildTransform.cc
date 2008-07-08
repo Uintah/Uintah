@@ -53,7 +53,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

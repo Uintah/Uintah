@@ -49,7 +49,7 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/LinAlg.h>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 using std::endl;
 using std::cerr;
 

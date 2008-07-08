@@ -37,7 +37,7 @@
 #include <Packages/Uintah/Core/Datatypes/PSet.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 using std::cerr;
 

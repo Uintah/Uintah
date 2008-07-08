@@ -57,7 +57,7 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <stdio.h>
+#include <cstdio>
 #include <algorithm>
 
 using namespace SCIRun;

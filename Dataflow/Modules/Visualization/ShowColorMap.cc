@@ -55,8 +55,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/GeomSticky.h>
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <iostream>
 
 namespace SCIRun {

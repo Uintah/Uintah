@@ -47,8 +47,8 @@
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 using std::cerr;
 using std::ifstream;

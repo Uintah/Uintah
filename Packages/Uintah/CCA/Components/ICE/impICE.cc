@@ -18,7 +18,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Exceptions/InternalError.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace SCIRun;
 using namespace Uintah;

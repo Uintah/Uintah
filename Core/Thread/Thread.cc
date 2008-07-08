@@ -47,9 +47,9 @@
 #include <Core/Thread/ThreadError.h>
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Time.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 
 #if defined(_AIX)
@@ -58,7 +58,7 @@
 #  include <strings.h>
 #endif
 
-#include <string.h>
+#include <cstring>
 #include <sys/types.h>
 #ifdef _WIN32
 #include <windows.h>

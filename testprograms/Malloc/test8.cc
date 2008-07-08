@@ -30,8 +30,8 @@
 
 #ifdef __sgi
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <sys/types.h>
 #include <sys/prctl.h>
 #include <sys/wait.h>

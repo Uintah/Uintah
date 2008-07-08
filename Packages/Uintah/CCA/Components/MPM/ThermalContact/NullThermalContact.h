@@ -10,7 +10,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
-#include <math.h>
+#include <cmath>
 
 namespace Uintah {
 using namespace SCIRun;

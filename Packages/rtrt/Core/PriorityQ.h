@@ -2,8 +2,8 @@
 #ifndef PRIORITYQ_H
 #define PRIORITYQ_H 1
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 //namespace rtrt { 
 

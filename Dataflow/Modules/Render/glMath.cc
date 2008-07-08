@@ -30,7 +30,7 @@
 
 #include <Dataflow/Modules/Render/glMath.h>
 
-#include <math.h>
+#include <cmath>
 
 /* 4x4 unit matrix. */
 

@@ -1,6 +1,6 @@
 
 #include "JohnsonCookDamage.h"
-#include <math.h>
+#include <cmath>
 
 using namespace Uintah;
 using namespace SCIRun;

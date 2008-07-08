@@ -29,9 +29,9 @@
 
 #include <Core/Util/RWS.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <Core/Util/notset.h>
 

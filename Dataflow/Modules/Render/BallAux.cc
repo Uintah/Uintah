@@ -28,7 +28,7 @@
 
 
 /***** BallAux.c *****/
-#include <math.h>
+#include <cmath>
 #include <Dataflow/Modules/Render/BallAux.h>
 
 Quat qOne(0, 0, 0, 1);

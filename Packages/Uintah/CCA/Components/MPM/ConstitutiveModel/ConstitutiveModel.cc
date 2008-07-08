@@ -12,7 +12,7 @@
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Malloc/Allocator.h>
-#include <math.h>
+#include <cmath>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

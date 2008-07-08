@@ -1,11 +1,11 @@
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <errno.h>
+#include <cerrno>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 #include "DaVinci.h"
 #include "graphview.h"
 #include "GV_TaskGraph.h"

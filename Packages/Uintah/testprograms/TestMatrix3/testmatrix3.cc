@@ -1,12 +1,12 @@
 #include "testmatrix3.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <stdlib.h>
+#include <cstdlib>
 #ifndef _WIN32
 #include <unistd.h>
 #else
 #include <process.h>
 #endif
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 using namespace std;

@@ -56,7 +56,7 @@
 using std::istream;
 using std::ostream;
 
-#include <stdio.h>
+#include <cstdio>
 
 #ifdef HAVE_TEEM
 #  include <teem/ten.h>

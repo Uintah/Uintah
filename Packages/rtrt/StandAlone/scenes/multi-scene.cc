@@ -14,8 +14,8 @@
 #endif
 
 #include <dlfcn.h>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 #include <iostream>
 #include <vector>

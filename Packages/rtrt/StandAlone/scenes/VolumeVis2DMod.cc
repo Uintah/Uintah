@@ -18,8 +18,8 @@
 #include <teem/nrrd.h>
 #include <iostream>
 #include <fstream>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <vector>
 #include <string>
 

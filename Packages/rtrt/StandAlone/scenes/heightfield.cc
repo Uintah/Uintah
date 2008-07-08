@@ -16,8 +16,8 @@
 #include <iostream>
 #include <fstream>
 
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 

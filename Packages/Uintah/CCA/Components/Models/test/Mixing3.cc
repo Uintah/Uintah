@@ -23,7 +23,7 @@
 #include <cantera/IdealGasMix.h>
 #include <cantera/zerodim.h>
 #include <cantera/equilibrium.h>
-#include <stdio.h>
+#include <cstdio>
 
 // TODO:
 // SGI build

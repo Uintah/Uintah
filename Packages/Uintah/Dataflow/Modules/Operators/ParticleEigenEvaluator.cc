@@ -1,5 +1,5 @@
 #include "ParticleEigenEvaluator.h"
-#include <math.h>
+#include <cmath>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
 #include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>

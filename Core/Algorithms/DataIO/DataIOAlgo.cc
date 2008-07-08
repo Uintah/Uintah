@@ -31,8 +31,8 @@
 #else
 #include <io.h>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h> 

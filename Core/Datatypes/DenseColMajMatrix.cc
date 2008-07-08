@@ -39,7 +39,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <sci_defs/lapack_defs.h>
 #include <sci_defs/blas_defs.h>
@@ -55,7 +55,7 @@
 #include <Core/Exceptions/FileNotFound.h>
 #include <iostream>
 #include <vector>
-#include <string.h>
+#include <cstring>
 
 #if defined(HAVE_LAPACK)
 #include <Core/Math/sci_lapack.h>

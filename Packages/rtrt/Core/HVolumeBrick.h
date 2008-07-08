@@ -5,7 +5,7 @@
 #include <Core/Thread/WorkQueue.h>
 #include <Packages/rtrt/Core/VolumeBase.h>
 #include <Core/Geometry/Point.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
 

@@ -10,9 +10,9 @@
 #include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/GridTris.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstring>
+#include <cstdio>
 #include <Packages/rtrt/Core/ply.h>
 #include <Packages/rtrt/Core/PLYReader.h>
 

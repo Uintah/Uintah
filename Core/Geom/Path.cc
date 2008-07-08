@@ -55,7 +55,7 @@ POSSIBLE REVISIONS
 #include <Core/Geometry/Quaternion.h>
 #include <Core/Util/Assert.h>
 #include <Core/Math/MiscMath.h>
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 namespace SCIRun {

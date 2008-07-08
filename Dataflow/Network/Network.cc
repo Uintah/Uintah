@@ -55,7 +55,7 @@
 #ifdef _WIN32
 #include <io.h>
 #endif
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 using namespace SCIRun;

@@ -4,7 +4,7 @@
 
 #include <Packages/rtrt/Core/Ring.h>
 #include <Packages/rtrt/Core/Satellite.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
 class RingSatellite;

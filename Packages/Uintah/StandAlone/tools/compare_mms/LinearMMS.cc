@@ -1,7 +1,7 @@
 
 #include <Packages/Uintah/StandAlone/tools/compare_mms/LinearMMS.h>
 
-#include <math.h>
+#include <cmath>
 
 // Depending on speed issues and how large these functions become, it
 // is possible that they should be moved to the .h files.

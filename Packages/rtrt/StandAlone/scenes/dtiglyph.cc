@@ -27,10 +27,10 @@
 #include <fcntl.h>
 #include <fstream>
 #include <iostream>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sci_values.h>

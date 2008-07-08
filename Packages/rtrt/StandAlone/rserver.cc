@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <vector>
 #include <strings.h>
-#include <errno.h>
+#include <cerrno>
 using namespace std;
 using namespace rtrt;
 using namespace SCIRun;

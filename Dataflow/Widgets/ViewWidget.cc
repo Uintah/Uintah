@@ -50,7 +50,7 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
-#include <math.h>
+#include <cmath>
 
 namespace SCIRun {
 

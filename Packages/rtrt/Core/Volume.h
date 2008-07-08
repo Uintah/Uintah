@@ -4,7 +4,7 @@
 
 #include <Packages/rtrt/Core/VolumeBase.h>
 #include <Core/Geometry/Point.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <Packages/rtrt/Core/Array1.h>
 

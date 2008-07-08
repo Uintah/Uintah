@@ -11,7 +11,7 @@
 
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
-#include <math.h>
+#include <cmath>
 #include <Packages/rtrt/Core/PPMImage.h>
 #ifdef HAVE_PNG
 #  include <Packages/rtrt/Core/PNGImage.h>
@@ -22,8 +22,8 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 using namespace rtrt;
 using namespace std;

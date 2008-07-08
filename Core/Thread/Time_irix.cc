@@ -47,12 +47,12 @@
 #include <Core/Thread/ThreadError.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/syssgi.h>
 #include <sys/time.h>
-#include <errno.h>
+#include <cerrno>
 
 using namespace SCIRun;
 

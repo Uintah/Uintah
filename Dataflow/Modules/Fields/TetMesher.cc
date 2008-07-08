@@ -44,8 +44,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <algorithm>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <CMLTetMesher.hpp>
 
 namespace SCIRun {

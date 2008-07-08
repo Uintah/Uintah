@@ -16,8 +16,8 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <fstream>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using SCIRun::Thread;
 using namespace rtrt;

@@ -20,7 +20,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <cstring>
 #include <sgi_stl_warnings_on.h>
 
 // TODO:

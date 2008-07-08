@@ -39,11 +39,11 @@
  */
 
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cerrno>
 #include <strings.h>
-#include <string.h>
+#include <cstring>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>

@@ -5,7 +5,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <unistd.h>
-#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 

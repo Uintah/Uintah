@@ -41,7 +41,7 @@
 
 #include <sci_defs/lapack_defs.h>
 
-#include <math.h>
+#include <cmath>
 #include <Core/Math/sci_lapack.h>
 #include <Core/Util/Assert.h>
 

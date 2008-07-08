@@ -2,7 +2,7 @@
 
 #include <sci_defs/mpi_defs.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <mpi.h>
 #include <iostream>
 #include <vector>

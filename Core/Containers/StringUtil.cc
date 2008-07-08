@@ -42,8 +42,8 @@
 
 #include <Core/Util/Assert.h>
 #include <Core/Containers/StringUtil.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <ctype.h> // for toupper() (at least for linux RH8)
 
 namespace SCIRun {

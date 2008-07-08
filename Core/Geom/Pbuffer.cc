@@ -39,7 +39,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <sci_glu.h>
 #include <sci_glx.h>
@@ -321,8 +321,8 @@ using std::string;
 #ifdef __APPLE__
 
 #  include <mach-o/dyld.h>
-#  include <stdlib.h>
-#  include <string.h>
+#  include <cstdlib>
+#  include <cstring>
 
    static void *NSGLGetProcAddress (const GLubyte *name)
    {

@@ -49,7 +49,7 @@
 #include <Core/Containers/StringUtil.h>
 
 #include <teem/air.h>
-#include <limits.h>
+#include <climits>
 
 namespace SCIRun {
 

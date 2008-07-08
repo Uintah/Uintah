@@ -43,7 +43,7 @@
 #include <Core/CCA/PIDL/MxNArrSynch.h>
 #include <Core/Thread/Thread.h>
 #include <Core/CCA/PIDL/MxNMetaSynch.h>
-#include <assert.h>
+#include <cassert>
 using namespace SCIRun;   
 using namespace std;
 

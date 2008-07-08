@@ -79,15 +79,15 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
-#include <errno.h>
+#include <cerrno>
 extern "C" {
 #include <semaphore.h>
 }
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <fstream>
 #include <string>

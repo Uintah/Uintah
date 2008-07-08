@@ -44,10 +44,10 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadError.h>
-#include <stdio.h>
+#include <cstdio>
 #include <sys/time.h>
-#include <string.h>
-#include <errno.h>
+#include <cstring>
+#include <cerrno>
 #ifdef __linux
 #include <time.h>
 #endif

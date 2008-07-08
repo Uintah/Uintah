@@ -40,15 +40,15 @@
 
 
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include <sstream>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <errno.h>
+#include <cerrno>
 #include <unistd.h>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>

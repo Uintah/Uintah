@@ -1,6 +1,6 @@
 
 #include <Packages/rtrt/Core/HVolumeVG.h>
-#include <limits.h>
+#include <climits>
 
 using rtrt::VG;
 

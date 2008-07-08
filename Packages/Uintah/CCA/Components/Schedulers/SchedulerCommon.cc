@@ -31,12 +31,12 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <errno.h>
+#include <cerrno>
 #include <sstream>
 #include <string>
 #include <map>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
 
 #if defined(_WIN32) || defined(REDSTORM)
 #  include <time.h>

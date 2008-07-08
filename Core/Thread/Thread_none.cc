@@ -66,11 +66,11 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <unistd.h>
 #include <sys/errno.h>
 #include <sys/mman.h>

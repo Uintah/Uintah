@@ -49,7 +49,7 @@
 #include <iostream>
 using std::ostream;
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

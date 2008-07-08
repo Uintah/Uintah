@@ -42,7 +42,7 @@
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Fields/CastMLVtoHV.h>
 #include <Core/Containers/Handle.h>
-#include <math.h>
+#include <cmath>
 
 #include <vector>
 #include <iostream>

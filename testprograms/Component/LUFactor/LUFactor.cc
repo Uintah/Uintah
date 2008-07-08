@@ -40,7 +40,7 @@
  *  Copyright (C) 2002 U of U
  */
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <iostream>
 #include <algorithm>

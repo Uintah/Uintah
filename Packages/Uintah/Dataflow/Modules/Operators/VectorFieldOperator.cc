@@ -5,7 +5,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
 //#include <SCICore/Math/Mat.h>
 

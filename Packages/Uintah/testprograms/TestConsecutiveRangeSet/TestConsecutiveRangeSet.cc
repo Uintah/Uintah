@@ -1,14 +1,14 @@
 #include "TestConsecutiveRangeSet.h"
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <sstream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #ifndef _WIN32
 #include <unistd.h>
 #else
 #include <process.h>
 #endif
-#include <limits.h>
+#include <climits>
 
 using namespace SCIRun;
 

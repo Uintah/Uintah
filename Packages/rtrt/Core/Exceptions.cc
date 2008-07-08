@@ -22,8 +22,8 @@
 #include <sgi_stl_warnings_on.h>
 using namespace std;
 
-#include <stdlib.h>		// for abort()
-#include <string.h>
+#include <cstdlib>		// for abort()
+#include <cstring>
 
 // The exception subroutine...
 // Print an error and abort

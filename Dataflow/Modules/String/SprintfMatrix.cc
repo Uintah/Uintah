@@ -35,7 +35,7 @@
  *
  */
 
-#include <stdio.h>
+#include <cstdio>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/String.h>

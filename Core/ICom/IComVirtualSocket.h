@@ -38,7 +38,7 @@
 #ifndef JGS_SCI_CORE_ICOM_VIRTUALSOCKET_H
 #define JGS_SCI_CORE_ICOM_VIRTUALSOCKET_H 1
 
-#include <errno.h>
+#include <cerrno>
 #include <Core/ICom/IComBase.h>
 #include <Core/ICom/IComPacket.h>
 #include <Core/ICom/IComAddress.h>

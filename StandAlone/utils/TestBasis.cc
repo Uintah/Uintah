@@ -32,7 +32,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <Core/Basis/Bases.h>
 

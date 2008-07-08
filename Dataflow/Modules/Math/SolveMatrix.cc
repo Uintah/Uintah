@@ -57,8 +57,8 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 
 #include <iostream>
 #include <sstream>

@@ -43,7 +43,7 @@
 #include <Framework/Corba/ProvidesPort.h>
 #include <Framework/Corba/Component.h>
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 namespace SCIRun {
 namespace corba {

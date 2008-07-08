@@ -44,9 +44,9 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
-#include <float.h>
+#include <cfloat>
 #include <time.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace Uintah {
 

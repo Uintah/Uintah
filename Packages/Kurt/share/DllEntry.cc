@@ -3,7 +3,7 @@
 #ifdef _WIN32
 
 #include <afxwin.h>
-#include <stdio.h>
+#include <cstdio>
 
 BOOL APIENTRY DllMain(HANDLE hModule, 
                       DWORD  ul_reason_for_call, 

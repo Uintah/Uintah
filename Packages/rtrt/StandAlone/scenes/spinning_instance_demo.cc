@@ -22,8 +22,8 @@
 #include <Packages/rtrt/Core/Instance.h>
 #include <Packages/rtrt/Core/SpinningInstance.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 

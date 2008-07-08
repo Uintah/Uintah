@@ -29,7 +29,7 @@
 #include <Core/Services/Service.h>
 #include <Core/Services/SimpleService.h>
 #include <Core/Services/FileTransfer.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <list>
 

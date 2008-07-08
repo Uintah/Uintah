@@ -42,10 +42,10 @@
  */
 
 #include <Core/Thread/Thread_unix.h>
-#include <stdio.h>
+#include <cstdio>
 #ifdef _WIN32
 #include <signal.h>
-#include <errno.h>
+#include <cerrno>
 #else
 #include <sys/errno.h>
 #include <sys/signal.h>

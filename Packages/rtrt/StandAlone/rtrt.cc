@@ -30,9 +30,9 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <dlfcn.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/param.h>
 
 using namespace rtrt;
@@ -51,9 +51,9 @@ extern bool pin;
 #include <sys/hwgraph.h>
 #include <sys/stat.h>
 #include <invent.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 static void mld_alloc(long size, int nmld, 
 		      pmo_handle_t*& mlds, pmo_handle_t& mldset)
 {

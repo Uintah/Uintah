@@ -21,8 +21,8 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 
 using namespace std;
 using namespace rtrt;

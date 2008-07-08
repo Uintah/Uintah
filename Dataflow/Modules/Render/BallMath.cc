@@ -28,7 +28,7 @@
 
 
 /**** BallMath.c - Essential routines for ArcBall.  ****/
-#include <math.h>
+#include <cmath>
 #include <Dataflow/Modules/Render/BallMath.h>
 #include <Dataflow/Modules/Render/BallAux.h>
 

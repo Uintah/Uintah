@@ -32,7 +32,7 @@
 
 #include "SlaveDatabase.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace dav {
 

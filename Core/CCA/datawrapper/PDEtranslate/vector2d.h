@@ -33,9 +33,9 @@
 #ifndef VECTOR2D_H
 #define VECTOR2D_H
 
-#include <math.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <cmath>
+#include <cstdlib>
+#include <cassert>
 #include <iostream>
 
 class vector2d  {

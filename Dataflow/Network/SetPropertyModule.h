@@ -43,7 +43,7 @@
 #include <Core/Containers/Handle.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace SCIRun {
 

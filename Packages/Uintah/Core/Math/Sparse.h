@@ -2,7 +2,7 @@
 #define __sparse_matrix_h
 
 #include <map>
-#include <assert.h>
+#include <cassert>
 #include <sgi_stl_warnings_off.h>
 #include <valarray>
 #include <numeric>

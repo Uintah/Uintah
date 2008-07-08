@@ -46,7 +46,7 @@
 #include <Core/Malloc/mem_init.h>
 
 #if defined(__sun) || defined(_WIN32)
-#  include <string.h>
+#  include <cstring>
 #  define bzero(p,sz)  memset(p,0, sz);
 #elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
 //  do nothing

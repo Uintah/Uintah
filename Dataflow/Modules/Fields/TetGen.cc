@@ -44,8 +44,8 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Modules/Fields/TetGen.h>
 #include <algorithm>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 namespace SCIRun {
 

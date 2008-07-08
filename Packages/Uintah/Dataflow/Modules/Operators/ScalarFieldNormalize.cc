@@ -1,5 +1,5 @@
 
-#include <math.h>
+#include <cmath>
 
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>

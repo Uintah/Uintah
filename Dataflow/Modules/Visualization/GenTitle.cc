@@ -39,8 +39,8 @@
  *  Copyright (C) 2004 SCI Institute
  */
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>

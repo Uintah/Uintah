@@ -32,7 +32,7 @@
 */
 
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 using namespace SCIRun;
 using namespace std;

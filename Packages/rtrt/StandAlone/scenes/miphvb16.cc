@@ -5,9 +5,9 @@
 #include <Packages/rtrt/Core/MIPHVB16.h>
 #include <Packages/rtrt/Core/rtrt.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstring>
+#include <cstdlib>
 
 using namespace rtrt;
 using namespace std;

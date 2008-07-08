@@ -49,13 +49,13 @@
 #  include <sys/wait.h>
 #  include <sys/types.h>
 
-#  include <stdio.h>
-#  include <stddef.h>
-#  include <stdlib.h>
+#  include <cstdio>
+#  include <cstddef>
+#  include <cstdlib>
 #  include <unistd.h>
 #  include <signal.h>
-#  include <errno.h>
-#  include <string.h>
+#  include <cerrno>
+#  include <cstring>
 #  include <pthread.h>
 
 #  include <Core/Malloc/Allocator.h>

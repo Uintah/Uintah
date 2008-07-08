@@ -18,9 +18,9 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <zlib.h>
-#include <math.h>
-#include <errno.h>
-#include <string.h>
+#include <cmath>
+#include <cerrno>
+#include <cstring>
 
 using namespace std;
 using namespace Uintah;

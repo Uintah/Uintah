@@ -27,8 +27,8 @@
 #include <Packages/rtrt/Core/Halo.h>
 #include <Packages/rtrt/Core/LightMaterial.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 

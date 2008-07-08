@@ -28,7 +28,7 @@
 #include <Packages/rtrt/Core/ppm.h>
 #include <Packages/rtrt/Core/prefilter.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace rtrt;
 using namespace std;

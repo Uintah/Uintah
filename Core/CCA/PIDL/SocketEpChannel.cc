@@ -42,8 +42,8 @@
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>

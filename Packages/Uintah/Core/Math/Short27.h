@@ -9,7 +9,7 @@
 #include <Core/Util/Assert.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h> // for get_funTD(Short27) prototype
 
-#include <math.h>
+#include <cmath>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <vector>

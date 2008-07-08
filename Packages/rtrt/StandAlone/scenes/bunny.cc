@@ -15,9 +15,9 @@
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/Checker.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstring>
+#include <cstdio>
 #include <sci_values.h>
 #include <Packages/rtrt/Core/Tri.h>
 

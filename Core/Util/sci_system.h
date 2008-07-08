@@ -32,7 +32,7 @@
 
 #ifndef __linux
 #define sci_system system
-#include <stdlib.h>
+#include <cstdlib>
 #else
 
 int sci_system (const char * string);

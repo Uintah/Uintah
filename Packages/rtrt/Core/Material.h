@@ -6,7 +6,7 @@
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Array1.h>
-#include <math.h>
+#include <cmath>
 
 namespace rtrt {
   class Material;

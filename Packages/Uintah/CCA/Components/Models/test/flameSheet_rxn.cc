@@ -22,7 +22,7 @@
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
-#include <stdio.h>
+#include <cstdio>
 
 using namespace Uintah;
 using namespace std;

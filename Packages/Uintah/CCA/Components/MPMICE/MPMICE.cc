@@ -29,8 +29,8 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
 #include <Core/Containers/StaticArray.h>
-#include <float.h>
-#include <stdio.h>
+#include <cfloat>
+#include <cstdio>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

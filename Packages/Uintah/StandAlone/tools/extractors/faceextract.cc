@@ -39,7 +39,7 @@
 #include <iomanip>
 #include <algorithm>
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace SCIRun;
 using namespace std;

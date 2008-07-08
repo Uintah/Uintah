@@ -62,7 +62,7 @@
 
 // Standard lib includes
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 #include <Core/Algorithms/DataIO/share.h>
 namespace SCIRun {

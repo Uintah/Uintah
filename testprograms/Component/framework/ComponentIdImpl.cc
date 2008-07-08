@@ -33,7 +33,7 @@
 #include <sstream>
 #include <iostream>
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace sci_cca {
 

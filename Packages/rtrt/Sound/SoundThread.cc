@@ -15,9 +15,9 @@
 
 #include <iostream>
 
-#include <math.h>
-#include <stdio.h>
-#include <errno.h>
+#include <cmath>
+#include <cstdio>
+#include <cerrno>
 
 using namespace rtrt;
 using namespace std;

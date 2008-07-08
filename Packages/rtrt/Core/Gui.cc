@@ -63,7 +63,7 @@
 
 #include <unistd.h>  // for sleep
 #include <strings.h> // for bzero
-#include <errno.h>
+#include <cerrno>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

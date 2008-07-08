@@ -18,7 +18,7 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
 

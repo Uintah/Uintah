@@ -3,7 +3,7 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
 #include <Core/Containers/StaticArray.h>
-#include <math.h>
+#include <cmath>
 
 namespace Uintah {
 
