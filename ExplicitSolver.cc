@@ -40,7 +40,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #endif
 
-#include <math.h>
+#include <cmath>
 
 using namespace Uintah;
 

@@ -22,7 +22,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 using namespace std;
