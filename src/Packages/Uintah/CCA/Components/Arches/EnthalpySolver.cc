@@ -90,8 +90,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("EnthalpySolver");
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
-    db->getWithDefault("radiationCalcFreq",d_radCalcFreq,3);
-    db->getWithDefault("radCalcForAllRKSteps",d_radRKsteps,false);
+    db->getWithDefault("radiationCalcFreq",         d_radCalcFreq,3);
+    db->getWithDefault("radCalcForAllRKSteps",      d_radRKsteps,false);
     db->getWithDefault("radCalcForAllImplicitSteps",d_radImpsteps,false);
 //    if (db->findBlock("radiationCalcFreq"))
 //      db->require("radiationCalcFreq",d_radCalcFreq);
@@ -112,48 +112,64 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
-    if (conv_scheme == "central-upwind") d_conv_scheme = 0;
-      else if (conv_scheme == "flux_limited") d_conv_scheme = 1;
-        else throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
+  
+  if (conv_scheme == "central-upwind"){ 
+    d_conv_scheme = 0;
+  }else if (conv_scheme == "flux_limited"){ 
+    d_conv_scheme = 1;
+  }else{ 
+    throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
+  }
+        
   string limiter_type;
   if (d_conv_scheme == 1) {
     db->getWithDefault("limiter_type",limiter_type,"superbee");
-    if (limiter_type == "superbee") d_limiter_type = 0;
-      else if (limiter_type == "vanLeer") d_limiter_type = 1;
-        else if (limiter_type == "none") {
-          d_limiter_type = 2;
-          cout << "WARNING! Running central scheme for scalar," << endl;
-          cout << "which can be unstable." << endl;
-        }
-          else if (limiter_type == "central-upwind") d_limiter_type = 3;
-            else if (limiter_type == "upwind") d_limiter_type = 4;
-              else throw InvalidValue("Flux limiter type "
-                                           "not supported: " + limiter_type, __FILE__, __LINE__);
-  string boundary_limiter_type;
-  d_boundary_limiter_type = 3;
-  if (d_limiter_type < 3) {
-    db->getWithDefault("boundary_limiter_type",boundary_limiter_type,"central-upwind");
-    if (boundary_limiter_type == "none") {
-          d_boundary_limiter_type = 2;
-          cout << "WARNING! Running central scheme for scalar on the boundaries," << endl;
-          cout << "which can be unstable." << endl;
+    if (limiter_type == "superbee"){ 
+      d_limiter_type = 0;
+    }else if (limiter_type == "vanLeer"){ 
+      d_limiter_type = 1;
+    }else if (limiter_type == "none") {
+      d_limiter_type = 2;
+      cout << "WARNING! Running central scheme for scalar," << endl;
+      cout << "which can be unstable." << endl;
     }
-      else if (boundary_limiter_type == "central-upwind") d_boundary_limiter_type = 3;
-        else if (boundary_limiter_type == "upwind") d_boundary_limiter_type = 4;
-          else throw InvalidValue("Flux limiter type on the boundary"
-                                  "not supported: " + boundary_limiter_type, __FILE__, __LINE__);
-    d_central_limiter = false;
-    if (d_limiter_type < 2)
-      db->getWithDefault("central_limiter",d_central_limiter,false);
-  }
+    else if (limiter_type == "central-upwind"){
+      d_limiter_type = 3;
+    }else if (limiter_type == "upwind"){
+      d_limiter_type = 4;
+    }else{
+      throw InvalidValue("Flux limiter type not supported: " + limiter_type, __FILE__, __LINE__);
+    }
+    
+    string boundary_limiter_type;
+    d_boundary_limiter_type = 3;
+    if (d_limiter_type < 3) {
+      db->getWithDefault("boundary_limiter_type",boundary_limiter_type,"central-upwind");
+      if (boundary_limiter_type == "none") {
+        d_boundary_limiter_type = 2;
+        cout << "WARNING! Running central scheme for scalar on the boundaries," << endl;
+        cout << "which can be unstable." << endl;
+      }else if (boundary_limiter_type == "central-upwind"){ 
+        d_boundary_limiter_type = 3;
+      }else if (boundary_limiter_type == "upwind"){
+        d_boundary_limiter_type = 4;
+      }else{
+       throw InvalidValue("Flux limiter type on the boundary"
+                                    "not supported: " + boundary_limiter_type, __FILE__, __LINE__);
+      }
+      d_central_limiter = false;
+      if (d_limiter_type < 2){
+        db->getWithDefault("central_limiter",d_central_limiter,false);
+      }
+    }
   }
 
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
   
-  if (d_doMMS)
-          d_source->problemSetup(db);
-  
+  if (d_doMMS){
+    d_source->problemSetup(db);
+  }
   d_rhsSolver = scinew RHSSolver();
 
   d_dynScalarModel = d_turbModel->getDynScalarModel();
@@ -167,12 +183,13 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
       db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
     // if it is not set in both places
-    if ((d_turbPrNo == 0.0)&&(model_turbPrNo == 0.0))
-          throw InvalidValue("Turbulent Prandtl number is not specified for"
+    if ((d_turbPrNo == 0.0)&&(model_turbPrNo == 0.0)){
+      throw InvalidValue("Turbulent Prandtl number is not specified for"
                              "mixture fraction ", __FILE__, __LINE__);
     // if it is set in turbulence model
-    else if (d_turbPrNo == 0.0)
+    }else if (d_turbPrNo == 0.0){
       d_turbPrNo = model_turbPrNo;
+    }
   }
 
   d_discretize->setTurbulentPrandtlNumber(d_turbPrNo);
@@ -232,6 +249,7 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   string taskname =  "EnthalpySolver::BuildCoeff" +
                      timelabels->integrator_step_name;
   if (doing_EKT_now) taskname += "EKTnow";
+  
   Task* tsk = scinew Task(taskname, this,
                           &EnthalpySolver::buildLinearMatrix,
                           timelabels, d_EKTCorrection, doing_EKT_now);
@@ -241,73 +259,63 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
                        " radiation solve per timestep.", __FILE__, __LINE__);
 
   Task::WhichDW parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
-  else parent_old_dw = Task::OldDW;
+  if (timelabels->recursion){ 
+    parent_old_dw = Task::ParentOldDW;
+  }else{ 
+    parent_old_dw = Task::OldDW;
+  }
 
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   
   // This task requires enthalpy and density from old time step for transient
   // calculation
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,
-                Ghost::AroundCells, Arches::TWOGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
-                Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Ghost::GhostType  gn = Ghost::None;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_enthalpySPLabel,  gac, 2);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,   gac, 2);
 
   Task::WhichDW old_values_dw;
-  if (timelabels->use_old_values) old_values_dw = parent_old_dw;
-  else old_values_dw = Task::NewDW;
-
-  tsk->requires(old_values_dw, d_lab->d_enthalpySPLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(old_values_dw, d_lab->d_densityCPLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (timelabels->use_old_values){
+    old_values_dw = parent_old_dw;
+  }else{ 
+    old_values_dw = Task::NewDW;
+  }
+  tsk->requires(old_values_dw, d_lab->d_enthalpySPLabel,  gn, 0);
+  tsk->requires(old_values_dw, d_lab->d_densityCPLabel,   gn, 0);
 
   if (d_dynScalarModel)
-    tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel,
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyDiffusivityLabel, gac, 2);
   else
-    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,        gac, 2);
 
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->requires(Task::OldDW, d_lab->d_tempINLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::OldDW, d_lab->d_cpINLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::OldDW, d_lab->d_tempINLabel,  gac, 1);
+    tsk->requires(Task::OldDW, d_lab->d_cpINLabel,    gac, 1);
     if (d_radiationCalc) {
       if (d_DORadiationCalc) {
-        tsk->requires(Task::OldDW, d_lab->d_co2INLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::OldDW, d_lab->d_co2INLabel,   gac, 1);
+        tsk->requires(Task::OldDW, d_lab->d_h2oINLabel,   gac, 1);
+        tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,gac, 1);
       }
     } 
   }
   else {
-    tsk->requires(Task::NewDW, d_lab->d_tempINLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    tsk->requires(Task::NewDW, d_lab->d_cpINLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_tempINLabel,  gac, 1);
+    tsk->requires(Task::NewDW, d_lab->d_cpINLabel,    gac, 1);
     if (d_radiationCalc) {
       if (d_DORadiationCalc) {
-        tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_h2oINLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        tsk->requires(Task::NewDW, d_lab->d_sootFVINLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        tsk->requires(Task::NewDW, d_lab->d_co2INLabel,   gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_h2oINLabel,   gac, 1);
+        tsk->requires(Task::NewDW, d_lab->d_sootFVINLabel,gac, 1);
       }
     } 
   }
@@ -315,29 +323,21 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     if (d_radiationCalc) {
-      if (!d_DORadiationCalc)
-        tsk->requires(Task::OldDW, d_lab->d_absorpINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (!d_DORadiationCalc){
+        tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gn, 0);
+      }
       if (d_DORadiationCalc) {
-        tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
-        tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
+        tsk->requires(Task::OldDW, d_lab->d_radiationSRCINLabel,    gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxEINLabel,  gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxWINLabel,  gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxNINLabel,  gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxSINLabel,  gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxTINLabel,  gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_radiationFluxBINLabel,  gn, 0);
+        tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,           gn, 0);
         /*
         tsk->requires(Task::OldDW, d_lab->d_abskgINLabel,
-                      Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                      gac, 1);
         */
       }
     } 
@@ -345,32 +345,24 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   else {
     if (d_radiationCalc) {
       if (!d_DORadiationCalc)
-        tsk->requires(Task::NewDW, d_lab->d_absorpINLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
+        tsk->requires(Task::NewDW, d_lab->d_absorpINLabel, gn, 0);
     } 
   }
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
-
-    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,   gn, 0);
+    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_CCLabel,gn, 0);
   }
 
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-    tsk->computes(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
-    tsk->computes(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
+    tsk->computes(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->computes(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl, oams);
     tsk->computes(d_lab->d_enthNonLinSrcSBLMLabel);
   }
   else {
-    tsk->modifies(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
-    tsk->modifies(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl,
-                  Task::OutOfDomain);
+    tsk->modifies(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->modifies(d_lab->d_enthDiffCoefLabel, d_lab->d_stencilMatl, oams);
     tsk->modifies(d_lab->d_enthNonLinSrcSBLMLabel);
   }
 
@@ -406,22 +398,25 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
   }
 
   if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
-    if (d_radiationCalc)
-      if (d_DORadiationCalc)
-        tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
-                      Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (d_radiationCalc){
+      if (d_DORadiationCalc){
+        tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel, gn, 0);
+      }
+    }
   }
-  if (doing_EKT_now)
+  if (doing_EKT_now){
     tsk->requires(Task::NewDW, timelabels->negativeEKTDensityGuess);
-  else
+  }else{
     tsk->requires(Task::NewDW, timelabels->negativeDensityGuess);
+  }
 
-  if (doing_EKT_now)
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  if (doing_EKT_now){
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       tsk->computes(d_lab->d_enthalpyEKTLabel);
-    else
+    }else{
       tsk->modifies(d_lab->d_enthalpyEKTLabel);
-
+    }
+  }
   tsk->modifies(d_lab->d_enthalpyBoundarySrcLabel);                  
 
   //  sched->addTask(tsk, patches, matls);
@@ -468,9 +463,14 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(nDG, timelabels->negativeDensityGuess);
   negativeDensityGuess = nDG;
 
-    if (d_radiationCalc)
-      if (d_DORadiationCalc)
-        d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
+  if (d_radiationCalc){
+    if (d_DORadiationCalc)
+      d_DORadiation->d_linearSolver->matrixCreate(d_perproc_patches, patches);
+  }
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Ghost::GhostType  gn = Ghost::None;      
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -489,55 +489,46 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     // from old_dw get PCELL, DENO, FO
-    new_dw->get(constEnthalpyVars.cellType, d_lab->d_cellTypeLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(constEnthalpyVars.cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
 
     DataWarehouse* old_values_dw;
-    if (timelabels->use_old_values) old_values_dw = parent_old_dw;
-    else old_values_dw = new_dw;
-    
-    old_values_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpySPLabel,
-                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-    old_values_dw->get(constEnthalpyVars.old_density, d_lab->d_densityCPLabel, 
-                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+    if (timelabels->use_old_values){
+      old_values_dw = parent_old_dw;
+    }else{ 
+      old_values_dw = new_dw;
+    }
+    old_values_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0);
+    old_values_dw->get(constEnthalpyVars.old_density, d_lab->d_densityCPLabel,   matlIndex, patch, gn, 0);
 
     // from new_dw get DEN, VIS, F, U, V, W
-    new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, matlIndex, patch,  gac, 2);
 
     if (d_dynScalarModel)
       new_dw->get(constEnthalpyVars.viscosity,
                   d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+                   gac, 2);
     else
       new_dw->get(constEnthalpyVars.viscosity, d_lab->d_viscosityCTSLabel, 
-                  matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+                  matlIndex, patch,  gac, 2);
 
     new_dw->get(constEnthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, gn, 0);
     if (d_conv_scheme > 0) {
       new_dw->get(constEnthalpyVars.scalar, d_lab->d_enthalpySPLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+                matlIndex, patch,  gac, 2);
     }
     // for explicit get old values
-    new_dw->get(constEnthalpyVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
-                matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-    {
-    old_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    old_dw->get(constEnthalpyVars.cp, d_lab->d_cpINLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(constEnthalpyVars.uVelocity, d_lab->d_uVelocitySPBCLabel,  matlIndex, patch, gaf, 1);
+    new_dw->get(constEnthalpyVars.vVelocity, d_lab->d_vVelocitySPBCLabel,  matlIndex, patch, gaf, 1);
+    new_dw->get(constEnthalpyVars.wVelocity, d_lab->d_wVelocitySPBCLabel,  matlIndex, patch, gaf, 1);
+    
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+      old_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, matlIndex, patch, gac, 1);
+      old_dw->get(constEnthalpyVars.cp,         d_lab->d_cpINLabel,   matlIndex, patch, gac, 1);
     }
     else {
-    new_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(constEnthalpyVars.cp, d_lab->d_cpINLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->getCopy(enthalpyVars.temperature, d_lab->d_tempINLabel, matlIndex, patch, gac, 1);
+      new_dw->get(constEnthalpyVars.cp,         d_lab->d_cpINLabel,   matlIndex, patch, gac, 1);
     }
 
     // allocate matrix coeffs
@@ -577,28 +568,22 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
       new_dw->allocateTemporary(enthalpyVars.scalarConvectCoeff[ii],  patch);
       enthalpyVars.scalarConvectCoeff[ii].initialize(0.0);
     }
+    
     new_dw->allocateTemporary(enthalpyVars.scalarLinearSrc,  patch);
     enthalpyVars.scalarLinearSrc.initialize(0.0);
 
     if (d_radiationCalc) {
       if (d_DORadiationCalc) {
-        if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        {
-        old_dw->get(constEnthalpyVars.co2, d_lab->d_co2INLabel, 
-                    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        old_dw->get(constEnthalpyVars.h2o, d_lab->d_h2oINLabel, 
-                    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        old_dw->get(constEnthalpyVars.sootFV, d_lab->d_sootFVINLabel, 
-                    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+        if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+          old_dw->get(constEnthalpyVars.co2,    d_lab->d_co2INLabel,    matlIndex, patch, gac, 1);
+          old_dw->get(constEnthalpyVars.h2o,    d_lab->d_h2oINLabel,    matlIndex, patch, gac, 1);
+          old_dw->get(constEnthalpyVars.sootFV, d_lab->d_sootFVINLabel, matlIndex, patch, gac, 1);
 
         }
         else {
-        new_dw->get(constEnthalpyVars.co2, d_lab->d_co2INLabel, 
-                    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(constEnthalpyVars.h2o, d_lab->d_h2oINLabel, 
-                    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        new_dw->get(constEnthalpyVars.sootFV, d_lab->d_sootFVINLabel, 
-                    matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+          new_dw->get(constEnthalpyVars.co2,    d_lab->d_co2INLabel,    matlIndex, patch, gac, 1);
+          new_dw->get(constEnthalpyVars.h2o,    d_lab->d_h2oINLabel,    matlIndex, patch, gac, 1);
+          new_dw->get(constEnthalpyVars.sootFV, d_lab->d_sootFVINLabel, matlIndex, patch, gac, 1);
         }
       }
     }
@@ -608,75 +593,74 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
             &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
           old_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
-                      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                      matlIndex, patch, gn, 0);
       else
           new_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
-                      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                      matlIndex, patch, gn, 0);
       }
       if (d_DORadiationCalc) {
         if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-            &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now))))
-        {
-        new_dw->allocateAndPut(enthalpyVars.qfluxe,
-                               d_lab->d_radiationFluxEINLabel,matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.qfluxe, d_lab->d_radiationFluxEINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        new_dw->allocateAndPut(enthalpyVars.qfluxw,
-                               d_lab->d_radiationFluxWINLabel,matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        new_dw->allocateAndPut(enthalpyVars.qfluxn,
-                               d_lab->d_radiationFluxNINLabel,matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.qfluxn, d_lab->d_radiationFluxNINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        new_dw->allocateAndPut(enthalpyVars.qfluxs,
-                               d_lab->d_radiationFluxSINLabel,matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.qfluxs, d_lab->d_radiationFluxSINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        new_dw->allocateAndPut(enthalpyVars.qfluxt,
-                               d_lab->d_radiationFluxTINLabel,matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.qfluxt, d_lab->d_radiationFluxTINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        new_dw->allocateAndPut(enthalpyVars.qfluxb,
-                               d_lab->d_radiationFluxBINLabel,matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.qfluxb, d_lab->d_radiationFluxBINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+            &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
+          new_dw->allocateAndPut(enthalpyVars.qfluxe,
+                                 d_lab->d_radiationFluxEINLabel,matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.qfluxe, d_lab->d_radiationFluxEINLabel,
+                          matlIndex, patch, gn, 0);
+          new_dw->allocateAndPut(enthalpyVars.qfluxw,
+                                 d_lab->d_radiationFluxWINLabel,matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.qfluxw, d_lab->d_radiationFluxWINLabel,
+                          matlIndex, patch, gn, 0);
+          new_dw->allocateAndPut(enthalpyVars.qfluxn,
+                                 d_lab->d_radiationFluxNINLabel,matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.qfluxn, d_lab->d_radiationFluxNINLabel,
+                          matlIndex, patch, gn, 0);
+          new_dw->allocateAndPut(enthalpyVars.qfluxs,
+                                 d_lab->d_radiationFluxSINLabel,matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.qfluxs, d_lab->d_radiationFluxSINLabel,
+                          matlIndex, patch, gn, 0);
+          new_dw->allocateAndPut(enthalpyVars.qfluxt,
+                                 d_lab->d_radiationFluxTINLabel,matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.qfluxt, d_lab->d_radiationFluxTINLabel,
+                          matlIndex, patch, gn, 0);
+          new_dw->allocateAndPut(enthalpyVars.qfluxb,
+                                 d_lab->d_radiationFluxBINLabel,matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.qfluxb, d_lab->d_radiationFluxBINLabel,
+                          matlIndex, patch, gn, 0);
 
-        new_dw->allocateAndPut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
-                               matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+          new_dw->allocateAndPut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
+                                 matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
+                          matlIndex, patch, gn, 0);
 
-        new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
-                               matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
-                        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-        /*
-        new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
-                               matlIndex, patch);
-        old_dw->copyOut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
-                        matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
-        */
+          new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
+                                 matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
+                          matlIndex, patch, gn, 0);
+          /*
+          new_dw->allocateAndPut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
+                                 matlIndex, patch);
+          old_dw->copyOut(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
+                          matlIndex, patch, gac, 1);
+          */
         }
         else {
-        new_dw->getModifiable(enthalpyVars.qfluxe,
-                               d_lab->d_radiationFluxEINLabel,matlIndex, patch);
-        new_dw->getModifiable(enthalpyVars.qfluxw,
-                               d_lab->d_radiationFluxWINLabel,matlIndex, patch);
-        new_dw->getModifiable(enthalpyVars.qfluxn,
-                               d_lab->d_radiationFluxNINLabel,matlIndex, patch);
-        new_dw->getModifiable(enthalpyVars.qfluxs,
-                               d_lab->d_radiationFluxSINLabel,matlIndex, patch);
-        new_dw->getModifiable(enthalpyVars.qfluxt,
-                               d_lab->d_radiationFluxTINLabel,matlIndex, patch);
-        new_dw->getModifiable(enthalpyVars.qfluxb,
-                               d_lab->d_radiationFluxBINLabel,matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.qfluxe,
+                                 d_lab->d_radiationFluxEINLabel,matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.qfluxw,
+                                 d_lab->d_radiationFluxWINLabel,matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.qfluxn,
+                                 d_lab->d_radiationFluxNINLabel,matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.qfluxs,
+                                 d_lab->d_radiationFluxSINLabel,matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.qfluxt,
+                                 d_lab->d_radiationFluxTINLabel,matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.qfluxb,
+                                 d_lab->d_radiationFluxBINLabel,matlIndex, patch);
 
-        new_dw->getModifiable(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
-                               matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.src, d_lab->d_radiationSRCINLabel,
+                                 matlIndex, patch);
 
-        new_dw->getModifiable(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
-                               matlIndex, patch);
+          new_dw->getModifiable(enthalpyVars.ABSKG, d_lab->d_abskgINLabel,
+                                 matlIndex, patch);
         }
       }
       else {
@@ -704,10 +688,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
   
       new_dw->get(constEnthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
-                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, gn, 0);
 
       new_dw->get(constEnthalpyVars.mmEnthSp, d_MAlab->d_enth_mmLinSrc_CCLabel,
-                  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  matlIndex, patch, gn, 0);
 
     }
 
@@ -750,6 +734,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (negativeDensityGuess > 0.0) {
       if (pc->myrank() == 0)
         cout << "Applying old density fix for enthalpy" << endl;
+        
       IntVector idxLo = patch->getFortranCellLowIndex__New();
       IntVector idxHi = patch->getFortranCellHighIndex__New();
       double areaew, areans, areatb, div;
@@ -825,7 +810,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
           bool d_energyEx = d_boundaryCondition->getIfCalcEnergyExchange();
           new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
-                      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                      matlIndex, patch, gn, 0);
           d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType,
                                                    solidTemp, enthalpyVars.temperature,
                                                    d_energyEx);
@@ -893,14 +878,10 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     CCVariable<double> enthalpy;
     if (doing_EKT_now) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyEKTLabel, 
-                  matlIndex, patch);
+        new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpyEKTLabel, matlIndex, patch);
       else
-        new_dw->getModifiable(enthalpy, d_lab->d_enthalpyEKTLabel, 
-                  matlIndex, patch);
-
-        new_dw->copyOut(enthalpy, d_lab->d_enthalpySPLabel,
-                  matlIndex, patch);
+        new_dw->getModifiable(enthalpy, d_lab->d_enthalpyEKTLabel, matlIndex, patch);
+        new_dw->copyOut(enthalpy,       d_lab->d_enthalpySPLabel,  matlIndex, patch);
     }
 
   }
@@ -926,33 +907,33 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched,
                           timelabels, d_EKTCorrection, doing_EKT_now);
   
   Task::WhichDW parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
-  else parent_old_dw = Task::OldDW;
+  if (timelabels->recursion){
+    parent_old_dw = Task::ParentOldDW;
+  }else{ 
+    parent_old_dw = Task::OldDW;
+  }
+  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn = Ghost::None;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
+  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,     gac, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_densityGuessLabel, gn, 0);
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_densityGuessLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  if (timelabels->multiple_steps)
-    tsk->requires(Task::NewDW, d_lab->d_enthalpyTempLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  else
-    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_enthCoefSBLMLabel, 
-                d_lab->d_stencilMatl, Task::OutOfDomain,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcSBLMLabel, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+  if (timelabels->multiple_steps){
+    tsk->requires(Task::NewDW, d_lab->d_enthalpyTempLabel, gac, 1);
+  }else{
+    tsk->requires(Task::OldDW, d_lab->d_enthalpySPLabel,   gac, 1);
+  }
+  
+  tsk->requires(Task::NewDW,   d_lab->d_enthCoefSBLMLabel, 
+                               d_lab->d_stencilMatl, oams, gn, 0);
+                               
+  tsk->requires(Task::NewDW,   d_lab->d_enthNonLinSrcSBLMLabel, gn, 0);
 
   if (d_MAlab) {
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,gn, 0);
   } 
 
   if (doing_EKT_now)
@@ -976,13 +957,19 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
                                     bool doing_EKT_now)
 {
   DataWarehouse* parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-  else parent_old_dw = old_dw;
-
+  if (timelabels->recursion){ 
+    parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  }else{
+    parent_old_dw = old_dw;
+  }
+  
   delt_vartype delT;
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn = Ghost::None;
+
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -993,63 +980,64 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     ArchesConstVariables constEnthalpyVars;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    else 
+    }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+    }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constEnthalpyVars.cellType, d_lab->d_cellTypeLabel,
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(constEnthalpyVars.cellType,      d_lab->d_cellTypeLabel, 
+                matlIndex, patch, gac, 1);
 
     new_dw->get(constEnthalpyVars.density_guess, d_lab->d_densityGuessLabel, 
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, gn, 0);
 
     if (timelabels->multiple_steps)
       new_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpyTempLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, gac, 1);
     else
       old_dw->get(constEnthalpyVars.old_enthalpy, d_lab->d_enthalpySPLabel, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, gac, 1);
 
     // for explicit calculation
     if (doing_EKT_now) {
-      new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpyEKTLabel, 
-                  matlIndex, patch);
-      new_dw->getModifiable(enthalpyVars.scalar, d_lab->d_enthalpyEKTLabel, 
-                  matlIndex, patch);
+      new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpyEKTLabel, matlIndex, patch);
+      new_dw->getModifiable(enthalpyVars.scalar,   d_lab->d_enthalpyEKTLabel, matlIndex, patch);
     }
     else {
-      new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
-                  matlIndex, patch);
-      new_dw->getModifiable(enthalpyVars.scalar, d_lab->d_enthalpySPLabel, 
-                  matlIndex, patch);
+      new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel,  matlIndex, patch);
+      new_dw->getModifiable(enthalpyVars.scalar,   d_lab->d_enthalpySPLabel,  matlIndex, patch);
     }
 
-    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++){
       new_dw->get(constEnthalpyVars.scalarCoeff[ii],
                   d_lab->d_enthCoefSBLMLabel, 
-                  ii, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                  ii, patch, gn, 0);
+    }
+                  
     new_dw->get(constEnthalpyVars.scalarNonlinearSrc,
                 d_lab->d_enthNonLinSrcSBLMLabel,
-                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                matlIndex, patch, gn, 0);
 
 
     if (d_MAlab) {
       new_dw->get(constEnthalpyVars.voidFraction, d_lab->d_mmgasVolFracLabel,
-                      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                      matlIndex, patch, gn, 0);
     }
 
     // make it a separate task later
-    if (d_MAlab) 
+    if (d_MAlab){ 
       d_boundaryCondition->enthalpyLisolve_mm(pc, patch, delta_t, 
                                               &enthalpyVars, 
                                               &constEnthalpyVars, 
                                               cellinfo);
-    else
+    }
+    else{
       d_rhsSolver->enthalpyLisolve(pc, patch, delta_t, 
                                       &enthalpyVars, &constEnthalpyVars,
                                       cellinfo);
+    }
 
 
 // Outlet bc is done here not to change old enthalpy
