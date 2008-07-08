@@ -39,7 +39,7 @@
 #include <fstream>
 #include <sgi_stl_warnings_off.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 using std::cerr;
 using std::ifstream;

@@ -67,7 +67,7 @@
 #define __mbstate_t mbstate_t
 #endif
 
-#include <stdlib.h> // for getenv()
+#include <cstdlib> // for getenv()
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>

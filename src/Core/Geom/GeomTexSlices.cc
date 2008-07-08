@@ -44,7 +44,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #ifdef _WIN32
-#include <string.h>
+#include <cstring>
 #else
 #include <strings.h>
 #endif

@@ -29,10 +29,10 @@
 
 /* FileUtils.cc */
 
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <time.h>
 
 #include <sys/stat.h>
@@ -670,7 +670,7 @@ changeExtension( const string & filename, const string &extension)
 
 
 #ifdef _WIN32
-#  include <errno.h>
+#  include <cerrno>
 struct DIR
 {
   long file_handle;

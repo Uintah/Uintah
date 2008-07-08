@@ -7,11 +7,11 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPlastic.h>
 
-#include <math.h>
+#include <cmath>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 #ifdef _WIN32
-#include <float.h>
+#include <cfloat>
 #define isnan _isnan
 #endif
 

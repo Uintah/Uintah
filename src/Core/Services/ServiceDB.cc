@@ -39,8 +39,8 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <ctype.h>
 #include <sys/stat.h>
 

@@ -73,7 +73,7 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 using namespace std;
   
 namespace SCIRun {

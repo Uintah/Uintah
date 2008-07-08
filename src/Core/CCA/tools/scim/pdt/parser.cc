@@ -85,7 +85,7 @@
 #line 31 "pdt/parser.y"
 
 
-#include <stdio.h>
+#include <cstdio>
 extern "C" {
 extern int pdtlex(void);
 int pdterror(char*);
@@ -95,7 +95,7 @@ extern char* pdt_curfile;
 extern int pdt_lineno;
 
 #define YYDEBUG 1
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include "../IR.h"
 #include "pdtParser.h"
@@ -234,7 +234,7 @@ typedef union YYSTYPE {
 #  define YYSTACK_FREE(Ptr) do { /* empty */; } while (0)
 # else
 #  if defined (__STDC__) || defined (__cplusplus)
-#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#   include <cstdlib> /* INFRINGES ON USER NAME SPACE */
 #   define YYSIZE_T size_t
 #  endif
 #  define YYSTACK_ALLOC malloc
@@ -502,7 +502,7 @@ static const unsigned char pdtstos[] =
 #endif
 #if ! defined (YYSIZE_T)
 # if defined (__STDC__) || defined (__cplusplus)
-#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#  include <cstddef> /* INFRINGES ON USER NAME SPACE */
 #  define YYSIZE_T size_t
 # endif
 #endif
@@ -571,7 +571,7 @@ while (0)
 #if YYDEBUG
 
 # ifndef YYFPRINTF
-#  include <stdio.h> /* INFRINGES ON USER NAME SPACE */
+#  include <cstdio> /* INFRINGES ON USER NAME SPACE */
 #  define YYFPRINTF fprintf
 # endif
 

@@ -40,7 +40,7 @@
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

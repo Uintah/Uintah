@@ -2,8 +2,8 @@
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Packages/Uintah/Core/Math/Rand48.h>
 #include <Core/Math/MiscMath.h>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 using namespace std;
 using namespace SCIRun;

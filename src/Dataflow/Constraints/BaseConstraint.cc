@@ -39,8 +39,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <Dataflow/Constraints/BaseConstraint.h>
 #include <iostream>
 using std::endl;

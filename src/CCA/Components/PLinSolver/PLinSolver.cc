@@ -42,13 +42,13 @@
 #include <CCA/Components/PLinSolver/PLinSolver.h>
 #include <Core/CCA/PIDL/MxNArrayRep.h>
 #include <iostream>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <qmessagebox.h>
-#include <string.h>
+#include <cstring>
 
 using namespace SCIRun;
 using namespace std;

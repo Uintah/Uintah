@@ -14,7 +14,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace rtrt;
 using namespace std;

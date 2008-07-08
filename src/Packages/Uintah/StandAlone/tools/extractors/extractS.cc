@@ -26,9 +26,9 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
+#include <cstdio>
+#include <cmath>
+#include <ctime>
 #include <algorithm>
 
 using namespace SCIRun;

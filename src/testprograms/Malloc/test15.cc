@@ -17,18 +17,18 @@
 
 #ifdef __linux /* only linux seems to have a problem with this */
 #include <Core/Util/sci_system.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Malloc/Allocator.h>
-#include <stdio.h>
-#include <stddef.h>
+#include <cstdio>
+#include <cstddef>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
-#include <errno.h>
+#include <cerrno>
 
 #include <pthread.h>
 
@@ -224,7 +224,7 @@ main(int,char **)
 
 #else // #ifdef __linux
 
-#include <stdio.h>
+#include <cstdio>
 
 int
 main(char **, int )

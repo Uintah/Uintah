@@ -44,7 +44,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterfaceAux.h>
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

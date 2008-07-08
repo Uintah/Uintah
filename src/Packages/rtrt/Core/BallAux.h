@@ -2,7 +2,7 @@
 #ifndef _H_BallAux
 #define _H_BallAux
 
-#include <math.h>
+#include <cmath>
 
 namespace rtrt {
 

@@ -50,8 +50,8 @@
 #include <itksys/SystemTools.hxx>
 
 #include <zlib.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 namespace itk
 {

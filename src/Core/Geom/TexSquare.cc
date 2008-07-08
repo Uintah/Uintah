@@ -44,7 +44,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
-#include <string.h>
+#include <cstring>
 
 using std::ostream;
 

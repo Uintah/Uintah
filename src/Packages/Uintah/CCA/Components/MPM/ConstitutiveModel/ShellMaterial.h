@@ -1,7 +1,7 @@
 #ifndef __SHELL_CONSTITUTIVE_MODEL_H__
 #define __SHELL_CONSTITUTIVE_MODEL_H__
 
-#include <math.h>
+#include <cmath>
 #include "ConstitutiveModel.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>

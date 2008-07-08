@@ -71,7 +71,7 @@ POSSIBLE REVISIONS
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
-#include <math.h>
+#include <cmath>
 
 #include <Core/Geometry/share.h>
 

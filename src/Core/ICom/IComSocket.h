@@ -38,7 +38,7 @@
 #if !defined(IComSocket_h)
 #define IComSocket_h
 
-#include <errno.h>
+#include <cerrno>
 #include <Core/ICom/IComBase.h>
 #include <Core/ICom/IComPacket.h>
 #include <Core/ICom/IComAddress.h>

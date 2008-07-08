@@ -54,7 +54,7 @@
 #else
 #include <windows.h>
 #endif
-#include <limits.h>
+#include <climits>
 #include <iostream>
 using std::cerr;
 using std::endl;

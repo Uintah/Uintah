@@ -42,8 +42,8 @@
 
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Thread.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #ifdef _WIN32
 #define for if(0);else for

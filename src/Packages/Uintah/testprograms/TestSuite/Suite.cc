@@ -1,7 +1,7 @@
 #include "Suite.h"
 #include <iostream>
 #include <string>
-#include <assert.h>
+#include <cassert>
 
 // construct a Suite with the given name
 Suite::Suite(const string& name)

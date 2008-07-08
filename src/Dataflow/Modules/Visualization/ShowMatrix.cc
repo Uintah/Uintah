@@ -58,7 +58,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <map>
 

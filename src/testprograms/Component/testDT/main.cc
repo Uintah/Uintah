@@ -55,7 +55,7 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <time.h>
 
 using namespace SCIRun;

@@ -7,7 +7,7 @@
 
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

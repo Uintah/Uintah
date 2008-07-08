@@ -49,11 +49,11 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sci_values.h>

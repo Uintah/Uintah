@@ -48,9 +48,9 @@
 
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
+#include <cstdlib>
+#include <cassert>
+#include <cstring>
 
 using std::cerr;
 using std::ifstream;

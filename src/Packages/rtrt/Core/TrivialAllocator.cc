@@ -13,7 +13,7 @@
  */
 
 #include <Packages/rtrt/Core/TrivialAllocator.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #define PAGESIZE (256*1024-64)  // Leave some room for malloc's overhead
 

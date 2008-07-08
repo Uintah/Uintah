@@ -36,7 +36,7 @@
  */
 
 #include <Core/ICom/IComINetSocket.h>
-#include <string.h>
+#include <cstring>
 
 #include <unistd.h> // for close()
 

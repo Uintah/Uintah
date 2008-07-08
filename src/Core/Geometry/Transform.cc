@@ -47,9 +47,9 @@
 #include <Core/Math/Trig.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 #include <sgi_stl_warnings_on.h>
-#include <stdio.h>
+#include <cstdio>
 
 using namespace SCIRun;
 using namespace std;

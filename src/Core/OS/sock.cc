@@ -40,7 +40,7 @@
 
 #include <iostream>
 #include <signal.h>
-#include <stdio.h>
+#include <cstdio>
 
 #ifdef _AIX
 #  include <strings.h>  // for bzero
@@ -54,7 +54,7 @@
 				// socket constructor can
 //#pragma init_seg(lib)
 #else
-#include <errno.h>
+#include <cerrno>
 				// do I need to do this under unix &
 				// how?
 #endif

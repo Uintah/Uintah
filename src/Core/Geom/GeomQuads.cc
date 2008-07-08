@@ -52,7 +52,7 @@
 
 using std::cerr;
 using std::ostream;
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

@@ -12,7 +12,7 @@
 #include "PlasticityModels/ShearModulusModel.h"
 #include "PlasticityModels/MeltingTempModel.h"
 #include "PlasticityModels/SpecificHeatModel.h"
-#include <math.h>
+#include <cmath>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>

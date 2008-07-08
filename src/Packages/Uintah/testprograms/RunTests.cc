@@ -17,7 +17,7 @@
 #include "TestConsecutiveRangeSet/TestConsecutiveRangeSet.h"
 #include "TestRangeTree/TestRangeTree.h"
 #include "TestBoxGrouper/TestBoxGrouper.h"
-#include <stdlib.h>
+#include <cstdlib>
 #ifndef _WIN32
 #include <unistd.h>
 #else

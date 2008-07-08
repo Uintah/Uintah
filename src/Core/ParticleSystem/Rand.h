@@ -35,9 +35,9 @@
 #include <Vector.h>
 #endif
 
-#include <assert.h>
-#include <math.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
 
 #define DIVRAND         ( 1.0 / RAND_MAX )
 

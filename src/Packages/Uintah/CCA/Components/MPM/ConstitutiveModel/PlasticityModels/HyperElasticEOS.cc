@@ -1,6 +1,6 @@
 
 #include "HyperElasticEOS.h"
-#include <math.h>
+#include <cmath>
 
 using namespace Uintah;
 using namespace SCIRun;

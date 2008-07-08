@@ -1,9 +1,9 @@
 #include <Packages/Uintah/StandAlone/tools/dumpfields/Args.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <float.h>
-#include <string.h>
-#include <limits.h>
-#include <stdlib.h>
+#include <cfloat>
+#include <cstring>
+#include <climits>
+#include <cstdlib>
 #include <iostream>
 
 using namespace std;

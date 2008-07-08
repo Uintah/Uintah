@@ -39,7 +39,7 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>

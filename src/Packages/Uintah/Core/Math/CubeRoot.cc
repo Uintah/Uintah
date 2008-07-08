@@ -15,7 +15,7 @@
  *  	    	    Old-style function definitions,
  *  	    	    IsZero() as a macro
  *  Nov 23, 1990    Some systems do not declare acos() and cbrt() in
- *                  <math.h>, though the functions exist in the library.
+ *                  <cmath>, though the functions exist in the library.
  *                  If large coefficients are used, EQN_EPS should be
  *                  reduced considerably (e.g. to 1E-30), results will be
  *                  correct but multiple roots might be reported more
@@ -23,8 +23,8 @@
  */
 
 #include    <Packages/Uintah/Core/Math/CubeRoot.h>
-#include    <math.h>
-#include    <stdio.h>
+#include    <cmath>
+#include    <cstdio>
 
 
 /* epsilon surrounding for near zero values */

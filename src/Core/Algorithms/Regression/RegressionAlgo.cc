@@ -32,8 +32,8 @@
 #include <Core/Util/Environment.h>
 #include <Core/OS/Dir.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #ifndef _WIN32
 #include <unistd.h>

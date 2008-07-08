@@ -7,7 +7,7 @@
 #  include <Core/Util/Endian.h> // for long64 and the like
 #endif
 
-#include <float.h>
+#include <cfloat>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

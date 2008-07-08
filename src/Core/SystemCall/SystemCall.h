@@ -50,7 +50,7 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>

@@ -17,11 +17,11 @@
 //
 ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <assert.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cassert>
+#include <cstring>
 
 #include <Packages/rtrt/Core/Color.h>
 

@@ -33,7 +33,7 @@
 #define Basis_h
 
 #include <vector>
-#include <float.h>
+#include <cfloat>
 #include <Core/Util/Assert.h>
 
 namespace SCIRun {

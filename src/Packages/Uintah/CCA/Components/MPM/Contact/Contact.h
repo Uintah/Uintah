@@ -6,7 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <math.h>
+#include <cmath>
 
 namespace Uintah {
 using namespace SCIRun;

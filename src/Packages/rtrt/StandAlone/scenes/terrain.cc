@@ -26,7 +26,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
+#include <cmath>
 #include <ctype.h>
 
 #if defined(__sgi)  // breaks linux build

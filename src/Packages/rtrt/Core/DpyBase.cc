@@ -19,8 +19,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <X11/keysym.h>
 #include <sci_values.h>
 #include <unistd.h> // For sleep()

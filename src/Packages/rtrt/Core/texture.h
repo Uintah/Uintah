@@ -7,7 +7,7 @@
 #include <GL/glu.h>
 #include <GL/glx.h>
 
-#include <math.h>
+#include <cmath>
 
 #define textureHeight 256
 #define textureWidth 256

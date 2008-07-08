@@ -55,8 +55,8 @@
 #include <Core/Init/init.h>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #ifdef _WIN32
 #define SHARE __declspec(dllimport)

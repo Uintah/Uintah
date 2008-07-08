@@ -34,7 +34,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
-#include <math.h>
+#include <cmath>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -44,7 +44,7 @@
 
 #ifdef _WIN32
 #include <process.h>
-#include <float.h>
+#include <cfloat>
 #define isnan _isnan
 #endif
 

@@ -17,11 +17,11 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <string.h>
+#include <cstring>
 #include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;

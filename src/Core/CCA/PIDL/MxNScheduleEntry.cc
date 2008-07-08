@@ -42,7 +42,7 @@
 
 #include <Core/CCA/PIDL/MxNScheduleEntry.h>
 #include <Core/Thread/Thread.h>
-#include <assert.h>
+#include <cassert>
 using namespace SCIRun;   
 
 MxNScheduleEntry::MxNScheduleEntry()

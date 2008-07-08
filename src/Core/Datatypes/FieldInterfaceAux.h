@@ -51,7 +51,7 @@
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/DynamicLoader.h>
-#include <float.h> // for DBL_MAX
+#include <cfloat> // for DBL_MAX
 
 #include <Core/Datatypes/share.h>
 

@@ -46,14 +46,14 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadError.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 
 #include <sn/mmtimer.h>
 

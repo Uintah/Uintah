@@ -9,7 +9,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace Uintah;
 using namespace SCIRun;

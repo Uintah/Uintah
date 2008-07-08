@@ -53,7 +53,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <errno.h>
+#include <cerrno>
 
 #include <iostream>
 #include <Framework/Corba/Port.h>
@@ -61,7 +61,7 @@
 #include <Framework/Corba/Services.h>
 
 extern "C" {
- #include <string.h>
+ #include <cstring>
 }
 
 namespace SCIRun {

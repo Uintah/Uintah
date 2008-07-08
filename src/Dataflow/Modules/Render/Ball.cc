@@ -45,7 +45,7 @@
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Modules/Render/BallMath.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>

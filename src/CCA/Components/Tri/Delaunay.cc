@@ -41,8 +41,8 @@
 #include <CCA/Components/Tri/Delaunay.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <fstream>
 
 namespace Tri {

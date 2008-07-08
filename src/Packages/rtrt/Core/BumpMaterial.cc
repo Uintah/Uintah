@@ -11,7 +11,7 @@
 #include <Packages/rtrt/Core/UVMapping.h>
 #include <Packages/rtrt/Core/vec.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace rtrt;
 using namespace SCIRun;

@@ -9,7 +9,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 
 using namespace rtrt;

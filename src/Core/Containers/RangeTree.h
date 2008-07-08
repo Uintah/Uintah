@@ -37,8 +37,8 @@
 #include <list>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <limits.h>
-#include <math.h>
+#include <climits>
+#include <cmath>
 
 namespace SCIRun {
 /**************************************

@@ -6,9 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-#include <math.h>
-#include <limits.h>
-#include <string.h>
+#include <cmath>
+#include <climits>
+#include <cstring>
 using namespace std;
 
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>

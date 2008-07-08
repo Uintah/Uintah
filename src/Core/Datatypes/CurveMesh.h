@@ -54,7 +54,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
-#include <float.h>
+#include <cfloat>
 #include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {

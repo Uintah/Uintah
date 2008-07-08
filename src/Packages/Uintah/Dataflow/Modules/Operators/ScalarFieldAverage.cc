@@ -10,7 +10,7 @@
 
 #include "ScalarFieldAverage.h"
 
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 using std::cerr;

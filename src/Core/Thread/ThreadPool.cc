@@ -46,7 +46,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

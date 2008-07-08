@@ -33,7 +33,7 @@
 #define Locate_h
 
 #include <vector>
-#include <math.h>
+#include <cmath>
 
 #include <iostream>
 #include <fstream>

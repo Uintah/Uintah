@@ -6,11 +6,11 @@
 #endif
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookPlastic.h>
-#include <math.h>
+#include <cmath>
 
 #ifdef _WIN32
 #include <process.h>
-#include <float.h>
+#include <cfloat>
 #define isnan _isnan
 #endif
 

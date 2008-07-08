@@ -31,9 +31,9 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/time.h>
-#include <assert.h>
+#include <cassert>
 #include <unistd.h>
 
 #include <Core/Util/Environment.h>

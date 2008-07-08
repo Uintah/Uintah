@@ -5,7 +5,7 @@
 #include <Packages/rtrt/Core/InvisibleMaterial.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/HitInfo.h>
-#include <math.h>
+#include <cmath>
 
 namespace rtrt {
 class HaloMaterial;

@@ -47,8 +47,8 @@
 
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <assert.h>
+#include <cstdlib>
+#include <cassert>
 
 using std::cerr;
 using std::ifstream;

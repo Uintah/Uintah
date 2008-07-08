@@ -20,8 +20,8 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <X11/keysym.h>
 
 using namespace std;

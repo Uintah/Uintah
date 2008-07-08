@@ -36,7 +36,7 @@
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Util/RWS.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 
 namespace SCIRun {

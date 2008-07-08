@@ -3,7 +3,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <math.h>
+#include <cmath>
 
 #ifdef _WIN32
 #define copysign _copysign

@@ -1,7 +1,7 @@
 #include "CubicPolyRoots.h"
-#include <math.h>
+#include <cmath>
 #include <iostream>
-#include <assert.h>
+#include <cassert>
 
 #define PI 3.14159265358979323846
 bool test(double b, double c, double d, double x);

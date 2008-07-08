@@ -56,8 +56,8 @@
 #include <Core/Init/init.h>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 using std::cerr;
 using std::ifstream;

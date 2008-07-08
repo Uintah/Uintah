@@ -44,7 +44,7 @@
 #include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <float.h>
+#include <cfloat>
 
 #ifdef _WIN32
 #  undef max

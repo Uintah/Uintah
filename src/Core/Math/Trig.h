@@ -31,7 +31,7 @@
 #ifndef Math_Trig_h
 #define Math_Trig_h 1
 
-#include <math.h>
+#include <cmath>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846

@@ -16,9 +16,9 @@
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sci_values.h>
-#include <limits.h>
+#include <climits>
 
 using namespace rtrt;
 using SCIRun::Mutex;

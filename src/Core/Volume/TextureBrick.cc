@@ -29,7 +29,7 @@
 //    Author : Milan Ikits
 //    Date   : Wed Jul 14 16:03:05 2004
 
-#include <math.h>
+#include <cmath>
 
 #include <Core/Volume/TextureBrick.h>
 #include <Core/Volume/Utils.h>

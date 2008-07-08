@@ -38,7 +38,7 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-#include <stddef.h>
+#include <cstddef>
 
 #define PLY_ASCII      1        /* ascii PLY file */
 #define PLY_BINARY_BE  2        /* binary PLY file, big endian */

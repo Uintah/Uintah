@@ -15,8 +15,8 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <fstream>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Mutex.h>
 

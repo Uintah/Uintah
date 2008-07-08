@@ -48,7 +48,7 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace SCIRun {
 

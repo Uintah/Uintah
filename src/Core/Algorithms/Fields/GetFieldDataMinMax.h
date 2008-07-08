@@ -31,7 +31,7 @@
 
 
 #include <Core/Algorithms/Util/DynamicAlgo.h>
-#include <float.h>
+#include <cfloat>
 
 
 namespace SCIRunAlgo {

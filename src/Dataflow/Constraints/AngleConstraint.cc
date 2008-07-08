@@ -46,7 +46,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/NotFinished.h>
 
-#include <math.h>
+#include <cmath>
 
 #include <iostream>
 

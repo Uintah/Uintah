@@ -22,7 +22,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 using namespace Uintah;

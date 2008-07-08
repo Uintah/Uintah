@@ -31,8 +31,8 @@
 
 #include <iostream>
 #include <vector>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 using std::vector;

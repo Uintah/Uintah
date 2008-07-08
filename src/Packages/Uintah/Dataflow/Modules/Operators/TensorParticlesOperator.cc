@@ -7,7 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
 
-#include <math.h>
+#include <cmath>
 
 namespace Uintah {
 

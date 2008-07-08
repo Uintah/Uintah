@@ -15,7 +15,7 @@
  *  Copyright (C) 2000 U of U
  */
 
-#include <assert.h>
+#include <cassert>
 
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -39,10 +39,10 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
-#include <stdio.h>
-#include <math.h>
-#include <float.h>
-#include <errno.h>
+#include <cstdio>
+#include <cmath>
+#include <cfloat>
+#include <cerrno>
 #include <algorithm>
 
 #include "utils.h"

@@ -1,8 +1,8 @@
 #ifndef POINT2D_H
 #define POINT2D_H
 
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 
 namespace rtrt {
 

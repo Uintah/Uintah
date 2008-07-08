@@ -43,7 +43,7 @@
 #ifndef Malloc_AllocOS_h
 #define Malloc_AllocOS_h 1
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace SCIRun {
   class Allocator;

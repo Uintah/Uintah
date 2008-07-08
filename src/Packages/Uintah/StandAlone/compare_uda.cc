@@ -35,7 +35,7 @@
 #include <iterator>
 #include <algorithm>
 #include <iomanip>
-#include <math.h>
+#include <cmath>
 
 using namespace SCIRun;
 using namespace std;

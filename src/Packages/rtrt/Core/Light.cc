@@ -3,7 +3,7 @@
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/LightMaterial.h>
 #include <Packages/rtrt/Core/HaloMaterial.h>
-#include <math.h>
+#include <cmath>
 
 using namespace rtrt;
 using namespace SCIRun;  

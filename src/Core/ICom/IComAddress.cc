@@ -34,8 +34,8 @@
 
  
 #include <Core/ICom/IComAddress.h> 
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 #define JGS_SCIRUNS_DEFAULT_PORT "9554"
 #define JGS_SCIRUN_DEFAULT_PORT "9553"

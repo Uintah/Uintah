@@ -42,7 +42,7 @@
 
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Malloc/Allocator.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace SCIRun {
 

@@ -51,7 +51,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef _WIN32
 #include <process.h>

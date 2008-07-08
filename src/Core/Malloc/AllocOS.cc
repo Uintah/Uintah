@@ -51,9 +51,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #endif
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstring>
+#include <cerrno>
 #include <fcntl.h>
 #define ALIGN 16
 

@@ -43,8 +43,8 @@
 #include <Core/Datatypes/Color.h>
 
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <fcntl.h>
 #include <iostream>
 

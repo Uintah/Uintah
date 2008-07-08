@@ -14,9 +14,9 @@
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/Checker.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstring>
+#include <cstdio>
 #include <Packages/rtrt/Core/Tri.h>
 #include <Packages/rtrt/Core/Mesh.h>
 #include <Packages/rtrt/Core/Bezier.h>

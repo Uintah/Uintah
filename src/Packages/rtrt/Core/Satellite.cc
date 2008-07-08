@@ -5,7 +5,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
   // These are found in Gui.cc

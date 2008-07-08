@@ -2,8 +2,8 @@
 #define SOLIDNOISE3_H
 
 
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <cmath>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 

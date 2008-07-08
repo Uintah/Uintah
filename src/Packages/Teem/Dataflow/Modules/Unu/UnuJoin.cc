@@ -39,7 +39,7 @@
 
 #include <iostream>
 using std::endl;
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCITeem {
 using namespace SCIRun;

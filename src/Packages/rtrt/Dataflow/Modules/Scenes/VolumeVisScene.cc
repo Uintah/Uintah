@@ -42,14 +42,14 @@
 #include <nrrd.h>
 #include <iostream>
 #include <fstream>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <vector>
 #include <string>
 #include <vector>
-#include <float.h>
+#include <cfloat>
 #include <time.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
 

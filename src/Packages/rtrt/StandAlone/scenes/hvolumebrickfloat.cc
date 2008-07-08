@@ -34,9 +34,9 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <math.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstring>
+#include <cstdlib>
 
 using namespace rtrt;
 using SCIRun::Thread;

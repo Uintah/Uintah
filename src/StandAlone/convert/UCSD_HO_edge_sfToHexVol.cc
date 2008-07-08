@@ -53,7 +53,7 @@
 #include <sci_hash_set.h>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace SCIRun;
 

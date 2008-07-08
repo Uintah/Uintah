@@ -4,7 +4,7 @@
 #include <Packages/Uintah/Dataflow/Modules/Operators/Schlieren.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
-#include <math.h>
+#include <cmath>
 
 using namespace SCIRun;
 

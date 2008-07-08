@@ -44,7 +44,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiInterface.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 

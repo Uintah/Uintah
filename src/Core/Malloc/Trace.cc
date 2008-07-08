@@ -42,8 +42,8 @@
 #include <Core/Malloc/Trace.h>
 
 #include <malloc.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 
 using namespace std;
 using namespace SCIRun;

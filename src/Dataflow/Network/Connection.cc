@@ -41,7 +41,7 @@
  */
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #ifndef _WIN32
 #include <unistd.h>
 #else

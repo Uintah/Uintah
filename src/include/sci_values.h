@@ -38,7 +38,7 @@
 #if !defined(SCI_VALUES_H)
 #define SCI_VALUES_H
 
-#include <limits.h>
-#include <float.h>
+#include <climits>
+#include <cfloat>
 
 #endif  /* #define SCI_VALUES_H */

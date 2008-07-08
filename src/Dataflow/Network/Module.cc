@@ -61,7 +61,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <stdio.h>
+#include <cstdio>
 #include <stack>
 
 using namespace std;

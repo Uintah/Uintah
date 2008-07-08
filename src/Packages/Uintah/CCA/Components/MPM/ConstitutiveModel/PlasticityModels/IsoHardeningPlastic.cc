@@ -2,7 +2,7 @@
 #include "IsoHardeningPlastic.h"        
 #include <Packages/Uintah/Core/Math/FastMatrix.h>       
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 using namespace Uintah;

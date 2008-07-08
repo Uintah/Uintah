@@ -38,7 +38,7 @@
 
 #include <unistd.h>
 #include <cstdlib>
-
+#include <cstring>
 #include <vector>
 #include <iostream>
 #include <string>

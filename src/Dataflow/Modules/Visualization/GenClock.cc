@@ -39,7 +39,7 @@
  *  Copyright (C) 2004 SCI Institute
  */
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
@@ -54,7 +54,7 @@
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSticky.h>
-#include <string.h>
+#include <cstring>
 
 namespace SCIRun {
 

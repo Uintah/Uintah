@@ -1,7 +1,7 @@
 
 #include <Packages/Uintah/StandAlone/tools/compare_mms/SineMMS.h>
 
-#include <math.h>
+#include <cmath>
 #include <iostream>
 
 using std::cout;

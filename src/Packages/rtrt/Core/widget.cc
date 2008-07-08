@@ -3,9 +3,9 @@
 #include <Packages/rtrt/Core/shape.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 using namespace rtrt;
 

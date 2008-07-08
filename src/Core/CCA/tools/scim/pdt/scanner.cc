@@ -8,7 +8,7 @@
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 
 
@@ -22,7 +22,7 @@
 
 #ifdef __cplusplus
 
-#include <stdlib.h>
+#include <cstdlib>
 
 /* Use prototypes in function declarations. */
 #define YY_USE_PROTOS
@@ -44,7 +44,7 @@
  #pragma warn -rch
  #pragma warn -use
 #include <io.h>
-#include <stdlib.h>
+#include <cstdlib>
 #define YY_USE_CONST
 #define YY_USE_PROTOS
 #endif
@@ -487,7 +487,7 @@ char *pdttext;
 #line 31 "pdt/scanner.l"
 #include "../IR.h"
 #include "parser.h"
-#include <string.h>
+#include <cstring>
 
 int pdt_lineno;
 char* pdt_curfile;
@@ -551,7 +551,7 @@ YY_MALLOC_DECL
 #else
 #if __STDC__
 #ifndef __cplusplus
-#include <stdlib.h>
+#include <cstdlib>
 #endif
 #else
 /* Just try to get by without declaring the routines.  This will fail

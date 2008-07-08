@@ -64,8 +64,8 @@
 #include <iomanip>
 #include <algorithm>
 
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 
 using namespace SCIRun;
 using namespace std;

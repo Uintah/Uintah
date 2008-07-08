@@ -39,10 +39,10 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cerrno>
+#include <cstring>
 #include <sys/types.h>
 #ifndef _WIN32
 #include <unistd.h>

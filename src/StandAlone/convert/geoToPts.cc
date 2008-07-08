@@ -7,8 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 using namespace std;
 

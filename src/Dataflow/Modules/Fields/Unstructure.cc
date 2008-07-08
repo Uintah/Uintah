@@ -50,7 +50,7 @@
 #include <Core/Containers/Handle.h>
 
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

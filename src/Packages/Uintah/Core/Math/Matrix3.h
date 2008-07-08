@@ -13,7 +13,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
 
-#include <math.h>
+#include <cmath>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>

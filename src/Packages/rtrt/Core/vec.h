@@ -116,7 +116,7 @@
 
 #ifndef VEC_H
 #define VEC_H 4
-#include <math.h>	/* for definition of floor() */
+#include <cmath>	/* for definition of floor() */
 #define SET2(to,from)	\
 		((to)[0] = (from)[0], \
 		 (to)[1] = (from)[1])

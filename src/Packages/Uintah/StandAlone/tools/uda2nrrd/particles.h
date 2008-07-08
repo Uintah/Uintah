@@ -4,7 +4,7 @@
 #include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
 #include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <string>
 #include <vector>

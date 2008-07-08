@@ -4,10 +4,10 @@
 #include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Malloc/Allocator.h>
 #include <sci_gl.h>
-#include <math.h>
-#include <float.h>
-#include <limits.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cfloat>
+#include <climits>
+#include <cstdlib>
 #include <iostream>
 
 namespace Uintah {

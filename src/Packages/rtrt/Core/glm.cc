@@ -10,14 +10,14 @@
 /* includes */
 #include <Packages/rtrt/Core/glm.h>
 
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+#include <cassert>
 #include <malloc.h>
-#include <stdlib.h>
+#include <cstdlib>
 
-#include <limits.h>
+#include <climits>
 
 /* defines */
 #define T(x) model->triangles[(x)]

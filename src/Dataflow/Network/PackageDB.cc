@@ -44,7 +44,7 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h> // for LSTAT
 
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <ctype.h>
 #include <string>

@@ -1,5 +1,5 @@
 /***** BallAux.c *****/
-#include <math.h>
+#include <cmath>
 #include <Packages/rtrt/Core/BallAux.h>
 
 using namespace rtrt;

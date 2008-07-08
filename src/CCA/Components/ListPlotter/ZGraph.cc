@@ -30,7 +30,7 @@
 
 #include <vector>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 
 ZGraph::ZGraph(wxWindow *parent)

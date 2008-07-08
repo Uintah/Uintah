@@ -7,7 +7,7 @@
 
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SCGPlastic.h>
 
-#include <math.h>
+#include <cmath>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -16,7 +16,7 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
 #ifdef _WIN32
-#include <float.h>
+#include <cfloat>
 #define isnan _isnan
 #endif
 

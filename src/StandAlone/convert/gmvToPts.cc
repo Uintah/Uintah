@@ -15,8 +15,8 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 using namespace std;
 

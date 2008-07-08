@@ -188,7 +188,7 @@ void decompose(int numProcessors, int sizex, int sizey, int sizez,
     }
 }
 
-#include <stdlib.h>
+#include <cstdlib>
 
 main(int argc, char* argv[])
 {

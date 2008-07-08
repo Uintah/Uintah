@@ -7,7 +7,7 @@
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/SeaLambertian.h>
 #include <Core/Thread/Time.h>
-#include <math.h>
+#include <cmath>
 
 using namespace rtrt;
 using namespace SCIRun;

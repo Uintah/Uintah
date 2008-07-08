@@ -11,7 +11,7 @@
 
 #include <Core/Math/Expon.h>
 
-#include <math.h>
+#include <cmath>
 
 //#ifndef HAVE_FASTM
 //#define fsqrt sqrt

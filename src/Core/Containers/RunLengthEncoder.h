@@ -44,7 +44,7 @@
 typedef long ssize_t;
 #endif
 
-#include <errno.h>
+#include <cerrno>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>

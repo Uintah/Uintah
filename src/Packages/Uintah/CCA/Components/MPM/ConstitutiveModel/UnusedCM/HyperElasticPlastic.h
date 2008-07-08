@@ -6,7 +6,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
-#include <math.h>
+#include <cmath>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 

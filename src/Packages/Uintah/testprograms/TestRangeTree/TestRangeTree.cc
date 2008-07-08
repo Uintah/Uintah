@@ -1,14 +1,14 @@
 #include "TestRangeTree.h"
 #include <Core/Containers/RangeTree.h>
 #include "Point.h"
-#include <stdlib.h>
+#include <cstdlib>
 #ifndef _WIN32
 #include <unistd.h>
 #include <sys/time.h>
 #endif
-#include <math.h>
+#include <cmath>
 #include <iostream>
-#include <string.h>
+#include <cstring>
 
 using namespace std;
 using namespace SCIRun;

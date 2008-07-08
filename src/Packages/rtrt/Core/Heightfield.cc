@@ -10,7 +10,7 @@
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Mutex.h>
 
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <fcntl.h>
 

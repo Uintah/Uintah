@@ -1,6 +1,6 @@
 #include "VonMisesYield.h"
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <math.h>
+#include <cmath>
 
 using namespace Uintah;
 using namespace SCIRun;

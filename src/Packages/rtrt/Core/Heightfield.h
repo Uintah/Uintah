@@ -10,7 +10,7 @@
 
 #include <sci_defs/template_defs.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
   template<class A, class B> class Heightfield;

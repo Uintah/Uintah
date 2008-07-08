@@ -18,8 +18,8 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 using std::cerr;
 using std::endl;

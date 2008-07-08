@@ -15,8 +15,8 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #if !defined(__linux) && !defined(__APPLE__)
 #include <bstring.h>

@@ -13,7 +13,7 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Array1.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
   class Glyph;

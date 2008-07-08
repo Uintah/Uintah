@@ -6,7 +6,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
-#include <math.h>
+#include <cmath>
 
 
 using namespace SCIRun;

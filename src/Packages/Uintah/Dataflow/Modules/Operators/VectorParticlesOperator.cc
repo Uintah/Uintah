@@ -6,7 +6,7 @@
 
 #include <Core/Malloc/Allocator.h>
 
-#include <math.h>
+#include <cmath>
 
 //#include <SCICore/Math/Mat.h>
 

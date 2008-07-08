@@ -45,11 +45,11 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <curses.h>
 #include <panel.h>
 #include <menu.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
 #include <CCA/Components/TxtBuilder/DropMenu.h>
 #include <CCA/Components/TxtBuilder/TxtModule.h>

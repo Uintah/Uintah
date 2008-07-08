@@ -186,7 +186,7 @@ void GeomGrid::compute_normals()
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 using std::ostream;
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

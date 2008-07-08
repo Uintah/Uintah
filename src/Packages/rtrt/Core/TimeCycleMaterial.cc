@@ -6,7 +6,7 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Context.h>
-#include <math.h>
+#include <cmath>
 #include <Core/Thread/Time.h>
 
 using namespace rtrt;

@@ -39,7 +39,7 @@
 #ifndef Core_OS_sock_H
 #define Core_OS_sock_H
 
-#include <string.h>
+#include <cstring>
 
 #ifdef _WIN32
 #include <winsock2.h>

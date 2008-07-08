@@ -21,7 +21,7 @@
 #include <Packages/rtrt/Core/Rect.h>
 #include <fstream>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace SCIRun;
 using namespace rtrt;

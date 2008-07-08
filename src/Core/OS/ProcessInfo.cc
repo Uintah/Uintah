@@ -48,8 +48,8 @@
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #if defined( __sgi ) || defined ( __alpha ) || defined ( _AIX )
 #  include <fcntl.h>

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <sgi_stl_warnings_on.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include <teem/nrrd.h>
 

@@ -43,7 +43,7 @@
 #include <CCA/Components/TxtBuilder/TxtNetwork.h>
 #include <CCA/Components/TxtBuilder/PopMenu.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <string.h>
+#include <cstring>
 #include <sstream>
 
 using namespace std;

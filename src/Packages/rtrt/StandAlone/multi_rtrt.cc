@@ -17,9 +17,9 @@
 #include <Packages/rtrt/Core/rtrt.h>
 #include <dlfcn.h>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sys/param.h>
 
 using namespace rtrt;

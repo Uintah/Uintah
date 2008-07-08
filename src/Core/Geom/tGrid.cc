@@ -47,7 +47,7 @@
 using std::cerr;
 using std::ostream;
 #ifdef _WIN32
-#include <string.h>
+#include <cstring>
 #include <memory.h>
 #else
 #include <strings.h>

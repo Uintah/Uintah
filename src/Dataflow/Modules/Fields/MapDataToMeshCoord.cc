@@ -51,9 +51,9 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
 
 namespace SCIRun {
 

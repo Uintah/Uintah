@@ -45,7 +45,7 @@
 
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h> // for M_PI
-#include <math.h>
+#include <cmath>
 
 #include <Core/Math/share.h>
 

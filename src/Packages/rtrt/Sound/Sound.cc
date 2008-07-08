@@ -2,8 +2,8 @@
 #include <Packages/rtrt/Sound/Sound.h>
 #include <Packages/rtrt/Sound/SoundThread.h>
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <iostream>
 

@@ -2,7 +2,7 @@
 #ifndef MISCMATH_H
 #define MISCMATH_H 1
 
-#include <math.h>
+#include <cmath>
 
 //namespace rtrt {
 

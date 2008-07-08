@@ -8,7 +8,7 @@
 
 #include <Core/Geometry/Point.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
 

@@ -45,7 +45,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/GuiInterface.h>
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCIRun {
 

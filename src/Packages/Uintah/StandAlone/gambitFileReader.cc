@@ -6,13 +6,13 @@
 #include <string>                      
 #include <fstream>  
 #include <vector>                   
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #define d_SMALL_NUM 1e-100;
 using namespace std;
 
 #ifdef _WIN32
-#include <float.h>
+#include <cfloat>
 #define finite _finite
 #endif
 

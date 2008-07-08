@@ -38,7 +38,7 @@
 #include <algorithm>
 #include <sstream>
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 using namespace std;
 
 //using spectest::ref;

@@ -32,8 +32,8 @@
 
 #include <Core/Util/Socket.h>
 #include <string>
-#include <string.h>
-#include <errno.h>
+#include <cstring>
+#include <cerrno>
 
 #ifdef _WIN32
 #  define socklen_t int

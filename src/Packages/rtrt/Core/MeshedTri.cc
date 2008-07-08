@@ -15,7 +15,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace rtrt;
 using namespace SCIRun;

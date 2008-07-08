@@ -44,8 +44,8 @@
 #include <sci_wx.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 

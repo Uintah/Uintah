@@ -50,7 +50,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_off.h>
-#include <stdio.h>
+#include <cstdio>
 
 using std::istream;
 using std::ostream;

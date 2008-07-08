@@ -262,7 +262,15 @@ mem_check () {
         return;
     fi
 
+    echo $n
     MALLOC_STATS=$n.mem
+
+    leak=`grep src $MALLOC_STATS`
+    if test -n "$leak"; then
+        echo $leak
+    else
+        echo "No memory leaks"
+    fi
     
 
 }

@@ -39,7 +39,7 @@
  */
 
 #include <CCA/Components/TxtBuilder/PopMenu.h>
-#include <string.h>
+#include <cstring>
 
 using namespace SCIRun;
 

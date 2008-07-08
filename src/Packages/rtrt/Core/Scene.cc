@@ -29,7 +29,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
 
 using namespace rtrt;

@@ -47,8 +47,8 @@
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <list>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <set>
 
 #ifdef _MSC_VER

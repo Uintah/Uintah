@@ -52,7 +52,7 @@
 #include <iostream>
 #include <algorithm>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace SCIRun {
 

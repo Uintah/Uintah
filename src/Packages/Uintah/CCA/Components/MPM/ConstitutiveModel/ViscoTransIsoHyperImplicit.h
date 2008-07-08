@@ -12,7 +12,7 @@
 #define __Visco_Trans_Iso_Hyper_Implicit_CONSTITUTIVE_MODEL_H__
 
 
-#include <math.h>
+#include <cmath>
 #include "ConstitutiveModel.h"
 #include "ImplicitCM.h"
 #include <Packages/Uintah/Core/Math/Matrix3.h>

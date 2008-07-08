@@ -35,12 +35,12 @@
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
 // general libs
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <vector>
-#include <float.h>
+#include <cfloat>
 #include <time.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace rtrt {
 

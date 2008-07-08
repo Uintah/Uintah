@@ -1,9 +1,9 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Kurt/Dataflow/Modules/Visualization/GLSLShader.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>

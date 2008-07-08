@@ -61,8 +61,8 @@
 
 #include <iostream>
 #include <fstream>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 using std::cerr;
 using std::ifstream;

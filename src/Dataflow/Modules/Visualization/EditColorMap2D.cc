@@ -50,7 +50,7 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Util/Endian.h>
-#include <stdio.h>
+#include <cstdio>
 #include <stack>
 #include <set>
 #include <sstream>

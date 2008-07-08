@@ -47,7 +47,7 @@
 #include <iosfwd>
 #include <algorithm>
 #include <sgi_stl_warnings_on.h>
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <iostream>
 #include <Core/CCA/SSIDL/array.h>

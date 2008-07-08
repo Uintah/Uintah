@@ -8,8 +8,8 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <iostream>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 
 // This is a benchmark scene.  Please do not modify it... - Steve
 

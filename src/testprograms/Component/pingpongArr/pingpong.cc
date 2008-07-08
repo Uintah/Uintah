@@ -53,7 +53,7 @@
 #include <testprograms/Component/pingpongArr/PingPong_impl.h>
 #include <testprograms/Component/pingpongArr/PingPong_sidl.h>
 #include <Core/Thread/Time.h>
-#include <assert.h>
+#include <cassert>
 #include <unistd.h>
 
 using namespace std;

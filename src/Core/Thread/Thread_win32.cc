@@ -63,8 +63,8 @@
 #include <windows.h>
 #include <excpt.h>
 #include <signal.h>
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 #include <iostream>
 #include <map>
 #undef private

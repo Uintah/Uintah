@@ -7,7 +7,7 @@
  * Copyright 2000
  */
 
-#include <math.h>
+#include <cmath>
 /* Functors used by ScalarFieldOperator and ScalarParticlesOperator */
 
 // Unary Operators

@@ -16,7 +16,7 @@
 //
 
 #include <teem/nrrd.h>
-#include <stdio.h>
+#include <cstdio>
 
 #include <vector>
 #include <string>

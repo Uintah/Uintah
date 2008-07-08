@@ -52,7 +52,7 @@
 #include <sstream>
 #include <unistd.h>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace SCIRun;
 

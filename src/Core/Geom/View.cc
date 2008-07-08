@@ -40,7 +40,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <stdio.h>
+#include <cstdio>
 #include <Core/Geom/View.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Math/Trig.h>

@@ -114,7 +114,7 @@ typedef struct {
  * this copyright message remains intact.
  ************************************************************************/
 
-#include <string.h>
+#include <cstring>
 
 #if defined(_WIN32) || defined(__WIN32__)
 #       if defined(_MSC_VER)

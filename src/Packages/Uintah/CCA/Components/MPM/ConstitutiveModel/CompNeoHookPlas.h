@@ -17,7 +17,7 @@ namespace SCIRun {
 } // namespace SCIRun
 
 #include "ConstitutiveModel.h"  
-#include <math.h>
+#include <cmath>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 

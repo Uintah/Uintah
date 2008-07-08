@@ -2,7 +2,7 @@
 /* Ken Shoemake, 1993 */
 #include <Packages/rtrt/Core/Ball.h>
 #include <Packages/rtrt/Core/BallMath.h>
-#include <stdio.h>
+#include <cstdio>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glx.h>

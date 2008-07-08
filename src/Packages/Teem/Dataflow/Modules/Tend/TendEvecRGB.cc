@@ -39,7 +39,7 @@
 #include <sstream>
 #include <iostream>
 using std::endl;
-#include <stdio.h>
+#include <cstdio>
 
 namespace SCITeem {
 

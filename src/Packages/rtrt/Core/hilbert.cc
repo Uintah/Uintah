@@ -337,7 +337,7 @@ hilbert_c2i( int n, int m, int a[], long int *r)
 
 
 #ifdef test
-#include <stdio.h>
+#include <cstdio>
 
 main()
 {

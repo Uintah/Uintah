@@ -43,7 +43,7 @@
 #include <sci_defs/thread_defs.h>
 #include <sci_defs/malloc_defs.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdio.h>
 #ifdef SCI_PTHREAD
 #include <pthread.h>

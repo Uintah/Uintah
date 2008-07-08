@@ -14,8 +14,8 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <sys/socket.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <strings.h>

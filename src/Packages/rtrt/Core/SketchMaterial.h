@@ -16,7 +16,7 @@
 
 #include <teem/nrrd.h>
 #include <teem/gage.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 extern "C"
 int _gageLocationSet (gageContext *ctx, gage_t x, gage_t y, gage_t z);

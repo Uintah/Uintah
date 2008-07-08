@@ -20,11 +20,11 @@
 #  define MPIPP_H
 #endif
 #include <string>
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <assert.h>
+#include <cmath>
+#include <cstdlib>
+#include <cstdio>
+#include <cstdarg>
+#include <cassert>
 
 /*------------- Useful constants -------------*/
 

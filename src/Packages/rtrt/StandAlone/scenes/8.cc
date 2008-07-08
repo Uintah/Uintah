@@ -17,7 +17,7 @@
 #include "Checker.h"
 #include "Box.h"
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include "string.h"
 
 using namespace rtrt;

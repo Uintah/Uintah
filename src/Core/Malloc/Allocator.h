@@ -63,7 +63,7 @@
 #    include <sgi_stl_warnings_on.h>
 #  endif
 
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace SCIRun {
   

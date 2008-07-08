@@ -20,7 +20,7 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <math.h>
+#include <cmath>
 #include <Core/Math/MiscMath.h>
 
 

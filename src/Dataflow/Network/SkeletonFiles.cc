@@ -119,7 +119,7 @@ char dllentry_skeleton[] = \
 "#ifdef _WIN32\n"
 "\n"
 "#include <windows.h>\n"
-"#include <stdio.h>\n"
+"#include <cstdio>\n"
 "\n"
 "BOOL APIENTRY DllMain(HANDLE hModule, \n"
 "                      DWORD  ul_reason_for_call, \n"

@@ -1,6 +1,6 @@
 // MPMArches.cc
 
-#include <string.h>
+#include <cstring>
 #include <fstream>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Core/Containers/StaticArray.h>

@@ -43,7 +43,7 @@
 #include <Core/CCA/PIDL/MxNMetaSynch.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ConditionVariable.h>
-#include <assert.h>
+#include <cassert>
 using namespace SCIRun;   
 
 MxNMetaSynch::MxNMetaSynch(int size)

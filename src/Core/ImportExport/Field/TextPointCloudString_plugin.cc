@@ -57,7 +57,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef _WIN32
 #define SCISHARE __declspec(dllexport)
