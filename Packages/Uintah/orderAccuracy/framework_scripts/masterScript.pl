@@ -1,4 +1,36 @@
 #!/usr/bin/perl -w
+
+#______________________________________________________________________
+#  MasterScript.pl:
+#  Perl script that controls the order of analysis framework scripts
+#  This script reads a xml configuration file for each uintah component 
+#  and runs the order of accuracy tests listed in test_config_files/component
+#  Each OA test has a corresponding comparison program that returns the L2nom
+#
+#
+#  Algorithm:
+#  - create the output directory
+#  - read in the configuration file components.xml (contains a list of components to test)
+#  - set the path
+#
+#  Loop over each Uintah component
+#    - create a results directory for that component
+#    - read in "whatToRun.xml" (list of tests to run)
+#    - add comparison utilities path to PATH
+#
+#    Loop over each Uintah component test
+#      - create a results directory
+#      - copy config files and sus to that directory
+#      - run the test
+#    end loop
+#  end loop
+#
+#  Perl Dependencies:  
+#    libxml-simple-perl
+#    libxml-dumper-perl
+#
+#______________________________________________________________________
+
 use strict;
 use XML::Simple;
 use Data::Dumper;
@@ -6,29 +38,45 @@ use Cwd;
 
 my $simple = XML::Simple->new(ForceArray=>1);
 
+if( $#ARGV == -1){
+  print "\n\nmasterScript.pl <path to orderAccuracy directory> \n";
+  print "Now exiting\n \n";
+  exit;
+}
+
 # Define the paths
-my $base_path          = $ARGV[0];
+my $base_path          = $ARGV[0];    # path to orderAccuracy scripts
 my $config_files_path  = $base_path . "/test_config_files";  # configurations files
 my $scripts_path       = $base_path . "/framework_scripts";  # framework scripts 
+my $compareUtil_path   = $base_path . "/comparisonUtils";    # comparison utilities
 
-print " $base_path \n $config_files_path \n $scripts_path \n";
+if (! -e $base_path."/framework_scripts" ){
+  print "\n\nError: You must specify the path to the orderAccuracy directory ($base_path)\n";
+  print " Now exiting\n";
+  exit
+}
+print " $base_path \n $config_files_path \n $scripts_path \n $compareUtil_path\n";
 
 
-# create base directory
+#__________________________________
+# create the base testing directory
 system("/bin/rm -rf order_of_accuracy");
 mkdir("order_of_accuracy") || die "cannot mkdir(order_of_accuracy) $!";
 chdir("order_of_accuracy");
 my $curr_path = cwd;
 
 
+#__________________________________
 # read in components.xml
 my $xml = $simple->XMLin($config_files_path . "/components.xml");
 my @components = @{$xml->{component}};
 my $sus_path   = $xml->{sus_path}[0];
 
-# add sus_path and framework_scripts to the path
+
+#__________________________________
+# add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
-$ENV{"PATH"} = "$sus_path:$scripts_path:$orgPath";
+$ENV{"PATH"} = "$compareUtil_path:$sus_path:$scripts_path:$orgPath";
 
 system("which sus") == 0 ||  die("Cannot find the command sus $@");
 
@@ -42,7 +90,7 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    chdir($component);
    print "----------------------------------------------  $component \n";
          
-   my $fw_path = $config_files_path."/".$component;  # path to framework config files
+   my $fw_path = $config_files_path."/".$component;  # path to component config files
   
    # read whatToRun.xml file into data array
    my $whatToRun = $simple->XMLin($fw_path."/whatToRun.xml");
@@ -51,6 +99,8 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    my $p   = $whatToRun->{compareUtil_path}[0];
    my $orgPath = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
+   
+   print "path $p\n";
  
    #__________________________________
    # loop over all tests
@@ -58,13 +108,14 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    #   - copy config_files_path_pathig & input files
    my @tests = @{$whatToRun->{test}};
    my $i=0;
+   
    for($i = 0; $i<=$#tests; $i++){
      my $test     = $tests[$i];
      my $testName = $test->{name}[0];
      my $upsFile  = $test->{ups}[0];
      my $tstFile  = $test->{tst}[0];
     
-     mkdir($testName) || die "cannot mkdir($testName) $!";
+     mkdir($testName) || die "ERROR:masterScript.pl:cannot mkdir($testName) $!";
      chdir($testName);
      
      print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile\n";
