@@ -311,7 +311,7 @@ link_inputs:
 link_orderAccuracy:
 	@( if ! test -L Packages/Uintah/StandAlone/orderAccuracy; then \
                echo "Creating link to orderAccuracy directory." ; \
-	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/orderAccuracy; \
+	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/orderAccuracy Packages/Uintah/StandAlone; \
 	   fi )          
           
 link_tools:
