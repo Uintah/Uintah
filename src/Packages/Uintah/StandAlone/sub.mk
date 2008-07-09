@@ -308,6 +308,12 @@ link_inputs:
 	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs; \
 	   fi )
           
+link_orderAccuracy:
+	@( if ! test -L Packages/Uintah/StandAlone/orderAccuracy; then \
+               echo "Creating link to orderAccuracy directory." ; \
+	       ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/orderAccuracy; \
+	   fi )          
+          
 link_tools:
 	@( if ! test -L Packages/Uintah/StandAlone/puda; then \
                echo "Creating link to all the tools." ; \
