@@ -7,9 +7,9 @@
 </AllTests>
 <Test>
     <Title>25</Title>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
-    <compCommand>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compCommand>
+    <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compare_cmd>
     <x>25</x>
     <replace_lines>
       <resolution>   [10,25,1]          </resolution>
@@ -17,9 +17,9 @@
 </Test>
 <Test>
     <Title>50</Title>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
-    <compCommand>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compCommand>
+    <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compare_cmd>
     <x>50</x>
     <replace_lines>
       <resolution>   [10,50,1]          </resolution>
@@ -27,9 +27,9 @@
 </Test>
 <Test>
     <Title>100</Title>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
-    <compCommand>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compCommand>
+    <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compare_cmd>
     <x>100</x>
     <replace_lines>
       <resolution>   [10,100,1]          </resolution>
@@ -38,9 +38,9 @@
 
 <Test>
     <Title>200</Title>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
-    <compCommand>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compCommand>
+    <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compare_cmd>
     <x>200</x>
     <replace_lines>
       <resolution>   [10,200,1]          </resolution>
@@ -49,9 +49,9 @@
 
 <Test>
     <Title>400</Title>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
-    <compCommand>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compCommand>
+    <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 0 -plot false</compare_cmd>
     <x>400</x>
     <replace_lines>
       <resolution>   [10,400,1]          </resolution>

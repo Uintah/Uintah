@@ -5,7 +5,7 @@
   <Meta>
     <Title>75</Title>
     <upsFile>advectPS.ups</upsFile>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
     <x>75</x>
   </Meta>
@@ -22,7 +22,7 @@
   <Meta>
     <Title>100</Title>
     <upsFile>advectPS.ups</upsFile>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
     <x>100</x>
   </Meta>
@@ -38,7 +38,7 @@
   <Meta>
     <Title>125</Title>
     <upsFile>advectPS.ups</upsFile>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
     <x>125</x>
   </Meta>
@@ -54,7 +54,7 @@
   <Meta>
     <Title>150</Title>
     <upsFile>advectPS.ups</upsFile>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
     <x>150</x>
   </Meta>
@@ -71,7 +71,7 @@
   <Meta>
     <Title>175</Title>
     <upsFile>advectPS.ups</upsFile>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
     <x>175</x>
   </Meta>
@@ -86,7 +86,7 @@
   <Meta>
     <Title>200</Title>
     <upsFile>advectPS.ups</upsFile>
-    <Interactive>sus -ice </Interactive>
+    <sus_cmd>sus -ice </sus_cmd>
     <Study>Res.Study</Study>
     <x>200</x>
   </Meta>
