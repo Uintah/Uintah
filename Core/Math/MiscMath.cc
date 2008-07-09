@@ -53,6 +53,7 @@
 #include <cfloat>
 #define finite _finite
 #endif
+using namespace std;
 namespace SCIRun {
 
 double MakeReal(double value)
