@@ -1856,6 +1856,7 @@ get_neighbors_stencil(vector<pair<bool,typename Node::index_type> > &nbrs,
     for (int j = idx.j_ - 1; j <= int(idx.j_) + 1; j++)
       for (int i = idx.i_ - 1; i <= int(idx.i_) + 1; i++)
         if (i != int(idx.i_) || j != int(idx.j_) || k != int(idx.k_))
+        {
           if (i >= int(this->min_i_) && j >= int(this->min_j_) && k >= int(this->min_k_) &&
               i <= int(this->min_i_+this->ni_) && j <= int(this->min_j_+this->nj_) &&
               i <= int(this->min_k_+this->nk_) &&
@@ -1863,6 +1864,7 @@ get_neighbors_stencil(vector<pair<bool,typename Node::index_type> > &nbrs,
             nbrs.push_back(make_pair(true,typename Node::index_type(this,i,j,k)));
           else
             nbrs.push_back(make_pair(false,typename Node::index_type(0,0,0,0)));
+        }
 }
 
 
