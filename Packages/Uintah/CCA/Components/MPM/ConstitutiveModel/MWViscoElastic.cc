@@ -84,13 +84,6 @@ void MWViscoElastic::outputProblemSpec(ProblemSpecP& ps,
   cm_ps->appendElement("ve_bulk_modulus",d_initialData.VE_Bulk);
   cm_ps->appendElement("ve_volumetric_viscosity",d_initialData.V_Viscosity);
   cm_ps->appendElement("ve_deviatoric_viscosity",d_initialData.D_Viscosity);
-
-  VarLabel::destroy(pStress_eLabel);
-  VarLabel::destroy(pStress_veLabel);
-  VarLabel::destroy(pStress_ve_vLabel);
-  VarLabel::destroy(pStress_ve_dLabel);
-  VarLabel::destroy(pStress_e_vLabel);
-  VarLabel::destroy(pStress_e_dLabel);
 }
 
 
@@ -152,6 +145,7 @@ void MWViscoElastic::allocateCMDataAddRequires(Task* task,
   task->requires(Task::NewDW, pStress_ve_dLabel, matlset, gnone);
   task->requires(Task::NewDW, pStress_e_vLabel,  matlset, gnone);
   task->requires(Task::NewDW, pStress_e_dLabel,  matlset, gnone);
+  task->requires(Task::NewDW, pStress_eLabel,    matlset, gnone);
 }
 
 
@@ -429,6 +423,18 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void MWViscoElastic::addInitialComputesAndRequires(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet*) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(pStress_ve_vLabel, matlset);
+  task->computes(pStress_ve_dLabel, matlset);
+  task->computes(pStress_e_vLabel,  matlset);
+  task->computes(pStress_e_dLabel,  matlset);
+  task->computes(pStress_eLabel,    matlset);
+
+}
 
 void MWViscoElastic::addComputesAndRequires(Task* task,
                                          const MPMMaterial* matl,
@@ -439,6 +445,20 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
+
+  // Add requires local to this model
+  Ghost::GhostType  gnone = Ghost::None;
+  task->computes(pStress_ve_vLabel, matlset);
+  task->computes(pStress_ve_dLabel, matlset);
+  task->computes(pStress_e_vLabel,  matlset);
+  task->computes(pStress_e_dLabel,  matlset);
+  task->computes(pStress_eLabel,    matlset);
+
+  task->requires(Task::OldDW, pStress_ve_vLabel, matlset, gnone);
+  task->requires(Task::OldDW, pStress_ve_dLabel, matlset, gnone);
+  task->requires(Task::OldDW, pStress_e_vLabel,  matlset, gnone);
+  task->requires(Task::OldDW, pStress_e_dLabel,  matlset, gnone);
+  task->requires(Task::OldDW, pStress_eLabel,    matlset, gnone);
 }
 
 void 
