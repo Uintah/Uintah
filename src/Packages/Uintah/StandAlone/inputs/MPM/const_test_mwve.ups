@@ -46,7 +46,7 @@
        <MPM>
            <material>
               <density>1.e9</density>
-              <constitutive_model type="mw_visco_elastic">
+              <constitutive_model type="hypo_elastic">
                  <G>12.e6</G>
                  <K>32.e6</K>
                </constitutive_model>
