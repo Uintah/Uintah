@@ -42,10 +42,12 @@ $data = $xml->XMLin("$tstFile");
 
 #__________________________________
 # copy gnuplot script
-my $gpFile = $data->{gnuplotFile}->[0];
-                
-$gpFile    = $config_files_path."/".$gpFile;
-system("cp -f $gpFile .");
+my $gpFile = $data->{gnuplot}[0]->{script}[0];
+
+if($gpFile ne ""){                
+  $gpFile    = $config_files_path."/".$gpFile;
+  system("cp -f $gpFile .");
+}
 
 #__________________________________
 # determing the ups basename

@@ -71,7 +71,7 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
 
   #__________________________________
   # Run the comparison tests
-  my $comp_output = "out.$x.cmp";
+  my $comp_output = "out.$x[$k].cmp";
   $uda  = $ups_basename."_$test_title[$k]".".uda";
   
   print "\nLaunching:  $compUtil_cmd[$k] -o $comp_output -uda $uda\n\n";
@@ -89,11 +89,21 @@ for ($k = $startLoop; $k<=$endLoop; $k++){
 
 #______________________________________________________________________
 # Plot results gnuplot script
-$gnuplotFile = $data->{gnuplotFile}[0];        # if a user provides a gnuplot file
+$gpData = $data->{gnuplot}[0];
+$gpFile = $gpData->{script}[0];        # if a user provides a gnuplot file
 
 
-if ( $gnuplotFile ne "") {
-  print "Now plotting Analysis with $gnuplotFile \n";
-  `gnuplot $gnuplotFile >&gp.out`;
+if ( $gpFile ne "") {
+
+  # modify the plot script
+  $title = $gpData->{title}[0];
+  $xlabel= $gpData->{xlabel}[0];
+  $ylabel= $gpData->{ylabel}[0];
+  system("sed", "-i", "s/#title/set title '$title'/g", "$gpFile");
+  system("sed", "-i", "s/#xlabel/set xlabel '$xlabel'/g", "$gpFile");
+  system("sed", "-i", "s/#ylabel/set ylabel '$ylabel'/g", "$gpFile");
+ 
+  print "Now plotting Analysis with $gpFile \n";
+  `gnuplot $gpFile >&gp.out`;
 }
 

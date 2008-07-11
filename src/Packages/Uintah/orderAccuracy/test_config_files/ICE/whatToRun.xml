@@ -1,6 +1,6 @@
 <config>
 <compareUtil_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone/tools/compare_mms:/home/harman/working_on/orderAccuracy/comparisonUtils</compareUtil_path>
-<!--
+
 <test>
   <name>advect_X_FO</name>
   <ups>advectPS.ups</ups>
@@ -20,14 +20,16 @@
 </test>
 
 <test>
-  <name>MMS</name>
-  <ups>mms_1.ups</ups>
-  <tst>mms_dx.tst</tst>
-</test>
--->
-<test>
   <name>Rayleigh</name>
   <ups>rayleigh.ups</ups>
   <tst>rayleigh_dy.tst</tst>
 </test>
+<!--
+<test>
+  <name>MMS</name>
+  <ups>mms_1.ups</ups>
+  <tst>mms_dx.tst</tst>
+</test>
+
+-->
 </config>

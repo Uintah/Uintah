@@ -1,7 +1,13 @@
 <start>
 <upsFile>advectPS.ups</upsFile>
 <Study>Res.Study</Study>
-<gnuplotFile>plotScript.gp</gnuplotFile>
+
+<gnuplot>
+  <script>plotScript.gp</script>s
+  <title>ICE:Advection Test Y dir</title>
+  <ylabel>Error</ylabel>
+  <xlabel>Resolution</xlabel>
+</gnuplot>
 
 <AllTests>
   <replace_lines>
