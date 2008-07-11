@@ -65,10 +65,14 @@
 
            <material>
               <density>1.e3</density>
-              <constitutive_model type="mw_visco_elastic">
-                 <G>12.e6</G>
-                 <K>32.e6</K>
-               </constitutive_model>
+              <constitutive_model type = "mw_visco_elastic">
+                 <e_shear_modulus>6.e3</e_shear_modulus>
+                 <e_bulk_modulus>16.e3</e_bulk_modulus>
+                 <ve_shear_modulus>1.0e7</ve_shear_modulus>
+                 <ve_bulk_modulus>1.0e7</ve_bulk_modulus>
+                 <ve_volumetric_viscosity>1.0e15</ve_volumetric_viscosity>
+                 <ve_deviatoric_viscosity>1000000</ve_deviatoric_viscosity>
+              </constitutive_model>
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
