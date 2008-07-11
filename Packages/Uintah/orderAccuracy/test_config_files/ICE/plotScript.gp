@@ -4,9 +4,9 @@ set logscale x
 set logscale y
 set grid xtics ytics
 
-set title "Rayleigh Problem"
-set xlabel "Spatial Resolution"
-set ylabel "Error"
+#title
+#xlabel
+#ylabel
 set output "orderAccuracy.png"
 
 # generate the curvefit
