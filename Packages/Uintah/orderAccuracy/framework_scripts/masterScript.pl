@@ -2,16 +2,21 @@
 
 #______________________________________________________________________
 #  MasterScript.pl:
+#
+#  input:  path to orderAccuracy directory
+#
 #  Perl script that controls the order of analysis framework scripts
-#  This script reads a xml configuration file for each uintah component 
-#  and runs the order of accuracy tests listed in test_config_files/component
-#  Each OA test has a corresponding comparison program that returns the L2nom
+#  This script reads a master xml configuration file <components.xml> and 
+#  for each uintah component listed and runs the order of accuracy tests
+#  listed in test_config_files/component/whatToRun.xml file.
+#
+#  Each OA test should have a corresponding comparison program that returns the L2nom
 #
 #
 #  Algorithm:
 #  - create the output directory
 #  - read in the configuration file components.xml (contains a list of components to test)
-#  - set the path
+#  - set the path so subsequent command calls work.
 #
 #  Loop over each Uintah component
 #    - create a results directory for that component
@@ -135,13 +140,7 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      my $testing_path = $curr_path."/".$component."/".$testName;
      chdir($fw_path);
      system("cp -f $upsFile $tstFile $testing_path");
-      
-     my $tst = $simple->XMLin($fw_path."/".$tstFile);
-     my $gnuplotScript = $tst->{gnuplotFile}->[0];
-     system("cp -f $gnuplotScript $testing_path");
-      
-     print "$testing_path \n";
-     
+          
      chdir($testing_path);
      
      # make a symbolic link to sus
@@ -150,8 +149,8 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      
      #__________________________________
      # run the tests
-     print "\n\n Launching run_tests.pl $testing_path/$tstFile\n\n";
-     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile");
+     print "\n\nLaunching: run_tests.pl $testing_path/$tstFile\n\n";
+     my @args = (" $scripts_path/run_tests.pl","$testing_path/$tstFile", "$fw_path");
      system("@args")==0  or die("ERROR(masterScript.pl): \tFailed running: (@args) \n");
      
      chdir("..");

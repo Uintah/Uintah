@@ -1,83 +1,99 @@
 #!/usr/bin/perl
+#______________________________________________________________________
+#  analyze_results.pl
+#  Perl script used to call the comparison utility to comput the L2norm
+#  for each test and plot the results
+#
+# Algorithm
+#   - find the basename of the ups file-used to determine the uda name
+#   - read in the test information into an array
+#   - multiple tests to analyze or one
+#    
+#   Loop over tests
+#     - run the comparisonUtility on the uda
+#     - concatenate the results to a master L2norm.dat
+#   end Loop
+#
+#   - If there is a gnuplot script then plot the L2norm.dat
+#
+#  Perl Dependencies:  
+#    libxml-simple-perl
+#    libxml-dumper-perl
+#______________________________________________________________________
 
 use XML::Simple;
 use Data::Dumper;
 $xml = new XML::Simple(forcearray => 1);
+$tstFile = $ARGV[0];
+$testNum = $ARGV[1];
 
-# read XML file
-$data = $xml->XMLin("$ARGV[0]", KeepRoot => 1);
+# read tst file
+$data = $xml->XMLin("$tstFile");
 
-$gnuplotFile = $data->{start}->[0]->{gnuplotFile}->[0];        # if a user provides a gnuplot file
+#__________________________________
+# find the basename of the ups file
+$upsFile         =$data->{upsFile}->[0];
+my $ups_basename = $upsFile;
+$ups_basename    =~ s/.ups//;                               # Removing the extension .ups so that we can use this to build our uda file names
 
-foreach $e (@{$data->{start}->[0]->{Test}}){
+#__________________________________
+# load details of each test into arrays
+foreach $e (@{$data->{Test}}){
+  $test_title[$i]     =$e->{Title}->[0];                    # test title
+  $sus_cmd[$i]        =$e->{sus_cmd}->[0];                  # sus command
+  $study[$i]          =$e->{Study}->[0];                    #Study Name
+  $x[$i]              =$e->{x}->[0];
+  $compUtil_cmd[$i]   =$e->{compare_cmd}->[0];              #comparison utility command
+  $i++;     
+}
+$num_of_tests=$i -1;
 
-  $test_title   = $e->{Title}->[0];
-  $compUtil_cmd = $e->{compareUtil}->[0];
-  $output_file  = $test_title;
-  $output_file  =~ tr/" "/"_"/;  # Replacing the spaces with underscores
-  $x            = $e->{x}->[0];
-  
-  @uda_files = @{$e->{uda}};
+
+#__________________________________
+# define the looping limits
+if ( $testNum eq "all"){
+  $startLoop = 0;
+  $endLoop   = $num_of_tests;
+}else{
+  $startLoop = $testNum;
+  $endLoop   = $testNum;
+}
+
+#__________________________________
+# main loop
+$k = 0;
+for ($k = $startLoop; $k<=$endLoop; $k++){
   
   #__________________________________
   # bulletproofing
-  my @stripped_cmd = split(/ /,$compUtil_cmd);  # remove command options
+  my @stripped_cmd = split(/ /,$compUtil_cmd[$k]);  # remove command options
   system("which $stripped_cmd[0] >& /dev/null")==0 or die("ERROR(analyze_Analysis.pl): \tThe comparison script/command ($compUtil_cmd) could not be found\n");
 
-  # main loop
-  for ($k = 0 ; $k<=$#uda_files; $k++){ 
-    #__________________________________
-    # Run the comparison tests
-    my $comp_output = "out.$x.cmp";
-    print "Running:  $compUtil_cmd -o $comp_output -uda $uda_files[$k]\n";
-    `rm -f $comp_output`;  
-   
-    @args = ("$compUtil_cmd","-o","$comp_output","-uda","$uda_files[$k]");
-    system("@args")==0 or die("ERROR(analyze_Analysis.pl): @args failed: $?");
-    
-    $L2norm = `cat $comp_output`;
-    chomp($L2norm);
-    `echo $x $L2norm >> L2norm.dat`;
-    system("rm $comp_output");
-  }
-
-
-  #______________________________________________________________________
-  # Create a default gnuplot script
-  if ( $gnuplotFile eq "") {
-    print "Using Default gnuplot Script\n";
-    
-    open(gpFile, "> plotScript.gp");
-    print gpFile "set term png \n";
-    print gpFile "set autoscale\n";
-    print gpFile "set logscale x\n";
-    print gpFile "set logscale y\n";
-    print gpFile "set grid xtics ytics\n";
-    
-    print gpFile "set title \"$test_title\"\n";
-    print gpFile "set output \"orderAccuracy.png\"\n";
-
-
-    # generate the curvefit
-    print gpFile "f1(x) = a1*x**b1                # define the function to be fit \n";
-    print gpFile "a1 = 0.1; b1 = 0.01;            # initial guess for a1 and b1 \n";
-    print gpFile "fit f1(x) 'L2norm.dat' using 1:2 via a1, b1 \n \n";
-    
-    print gpFile "set label 'Error = a * (Spatial Resolution)^b' at screen 0.2,0.4 \n";
-    print gpFile "set label 'a = %3.5g',a1      at screen 0.2,0.375 \n";
-    print gpFile "set label 'b = %3.5g',b1      at screen 0.2,0.35  \n\n";
-    
-    # comparing against a baseline
-    if (-e "baseLine/L2norm.dat"){
-      print gpFile "plot \'L2norm.dat\' using 1:2 t \'Current test\' with linespoints, \'baseLine/L2norm.dat\' using 1:2 t \'Base Line\' with linespoints\n";
-    }else{
-      print gpFile "plot 'L2norm.dat' using 1:2 t 'Current test' with linespoints, f1(x) title 'curve fit' \n";
-    }
-    close(gpFile);
-          
-    `gnuplot plotScript.gp >&gp.out`;
-  } else{
-    print "Now plotting Analysis with $gnuplotFile \n";
-    `gnuplot $gnuplotFile >&gp.out`;
-  }
+  #__________________________________
+  # Run the comparison tests
+  my $comp_output = "out.$x.cmp";
+  $uda  = $ups_basename."_$test_title[$k]".".uda";
+  
+  print "\nLaunching:  $compUtil_cmd[$k] -o $comp_output -uda $uda\n\n";
+  `rm -f $comp_output`;  
+  
+  @args = ("$compUtil_cmd[$k]","-o","$comp_output","-uda","$uda");
+  system("@args")==0 or die("ERROR(analyze_Analysis.pl): @args failed: $?");
+  
+  # concatenate results
+  $L2norm = `cat $comp_output`;
+  chomp($L2norm);
+  `echo $x[$k] $L2norm >> L2norm.dat`;
+  system("rm $comp_output");
 }
+
+#______________________________________________________________________
+# Plot results gnuplot script
+$gnuplotFile = $data->{gnuplotFile}[0];        # if a user provides a gnuplot file
+
+
+if ( $gnuplotFile ne "") {
+  print "Now plotting Analysis with $gnuplotFile \n";
+  `gnuplot $gnuplotFile >&gp.out`;
+}
+

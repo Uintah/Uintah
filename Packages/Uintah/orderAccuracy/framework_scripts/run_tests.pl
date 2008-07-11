@@ -17,12 +17,10 @@
 #     - create a new ups file
 #     - change the output uda name
 #     - replace lines in ups file
-#     - <pbs section not used>
-#     - create a xml file that is read by analyze_results.pl
 #     - run the test
 #
 #     if(comparison Command )
-#       -run analyze_results.pl
+#       -run analyze_results.pl <tst file> < test number> 
 #     endif
 #   end Loop
 #
@@ -36,29 +34,32 @@ use Data::Dumper;
 use Cwd;
 # create object
 $xml = new XML::Simple(forcearray => 1);
+$tstFile           = $ARGV[0];
+$config_files_path = $ARGV[1];
 
 # read XML file
-$data = $xml->XMLin("$ARGV[0]");
+$data = $xml->XMLin("$tstFile");
 
 #__________________________________
-# Read in the test data
-my $i=0;
+# copy gnuplot script
+my $gpFile = $data->{gnuplotFile}->[0];
+                
+$gpFile    = $config_files_path."/".$gpFile;
+system("cp -f $gpFile .");
 
-my $gnuplotFile = $data->{gnuplotFile}->[0];                # if a user provides a gnuplot file
-
+#__________________________________
+# determing the ups basename
 $upsFile         =$data->{upsFile}->[0];
 my $ups_basename = $upsFile;
-$ups_basename    =~ s/.ups//;                               # Removing the extension .ups so that we can use this to build our uda file names
+$ups_basename    =~ s/.ups//;                     # Removing the extension .ups so that we can use this to build our uda file names
 
+#__________________________________
+# Read in the test data from xml file
+my $i = 0;
 foreach $e (@{$data->{Test}}){
-
-  $test_title[$i]     =$e->{Title}->[0];                    # test title
-  $sus_cmd[$i]        =$e->{sus_cmd}->[0];                 # sus command
-
-  $study[$i]          =$e->{Study}->[0];                    #Study Name
-  $x[$i]              =$e->{x}->[0];
-  $compUtil_cmd[$i]   =$e->{compare_cmd}->[0];              #comparison utility command
-  
+  $test_title[$i]     =$e->{Title}->[0];          # test title
+  $sus_cmd[$i]        =$e->{sus_cmd}->[0];        # sus command
+  $compUtil_cmd[$i]   =$e->{compare_cmd}->[0];    # comparison utility command
   $i++;     
 }
 $num_of_tests=$i;
@@ -68,10 +69,6 @@ $num_of_tests=$i;
 my @stripped_cmd = split(/ /,$compUtil_cmd[0]);  # remove command options
 my $cmd = `which $stripped_cmd[0]`;
 system("ln -s $cmd");
-
-
-`rm -f compareAll.xml`;
-`echo \\<start\\> \| tee -a compareAll.xml`;
 
 #__________________________________
 # Read in all of the replacement patterns 
@@ -146,8 +143,6 @@ open(statsFile,">out.stat");
 #__________________________________
 # Creating new ups files for each test
 for ($i=0;$i<$num_of_tests;$i++){
-  #open(inpFile, $upsFile) or die("ERROR(run_tests.pl): $upsFile, File Not Found");
-
   if (! -e $upsFile ){
     print "\n\nERROR(run_tests.pl): $upsFile, File Not Found";
     print " Now exiting\n";
@@ -159,7 +154,6 @@ for ($i=0;$i<$num_of_tests;$i++){
 
   $test_ups     = $ups_basename."_$test_title[$i]".".ups";
   $udaFilename  = $ups_basename."_$test_title[$i]".".uda";
-  $compFilename = $test_title[$i]."_comp.xml";
   $test_output  = "out.".$test_title[$i];
 
   # change the uda filename in each ups file
@@ -180,23 +174,6 @@ for ($i=0;$i<$num_of_tests;$i++){
   }
   print "---------------------\n";
 
-  #__________________________________
-  # Create a comparison config file _if_ the comparison command is specified
-  # This is read in by analyze_results.pl
-
-  if($compUtil_cmd[$i]){
-    `rm -fr $compFilename`;
-    
-    `echo \\<start\\> \|  tee -a $compFilename`;
-    `echo \\<gnuplotFile\\>$gnuplotFile\\</gnuplotFile\\> \|tee -a $compFilename compareAll.xml`;
-    `echo \\<Test\\>  \|  tee -a $compFilename compareAll.xml`;
-    `echo \\<Title\\>$study[$i]\\</Title\\>  \| tee -a $compFilename compareAll.xml`;
-    `echo \\<compareUtil\\>$compUtil_cmd[$i]\\</compareUtil\\>  \| tee -a $compFilename compareAll.xml`;
-    `echo \\<x\\>$x[$i]\\</x\\>  \| tee -a $compFilename compareAll.xml`;
-    `echo \\<uda\\>$udaFilename\\</uda\\>  \| tee -a $compFilename compareAll.xml`;
-    `echo \\</Test\\>  \| tee -a $compFilename compareAll.xml`;
-    `echo \\</start\\> \| tee -a $compFilename`;
-  }
   
   #__________________________________
   print statsFile "Test Name :       "."$test_title[$i]"."\n";
@@ -206,7 +183,7 @@ for ($i=0;$i<$num_of_tests;$i++){
   print statsFile "compareCmd: "."$compUtil_cmd[$i]"."\n";
   
   print statsFile "Command Used : "."$sus_cmd[$i] $test_ups"."\n";
-  print "Launching $sus_cmd[$i] $test_ups\n";
+  print "Launching: $sus_cmd[$i] $test_ups\n";
   $now = time();
 
   @args = ("$sus_cmd[$i]","$test_ups",">& $test_output");
@@ -215,11 +192,9 @@ for ($i=0;$i<$num_of_tests;$i++){
   #__________________________________
   # execute comparison
   if($compUtil_cmd[$i]){
-    print "\n\nLaunching analyze_results.pl $compFilename\n\n";
-    @args = ("analyze_results.pl","$compFilename");
+    print "\nLaunching: analyze_results.pl $tstFile test $i\n";
+    @args = ("analyze_results.pl","$tstFile", "$i");
     system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");
-
-    system("rm $compFilename");
   }
   $fin = time()-$now;
   print  statsFile "Running Time : ".$fin."\n";
@@ -228,5 +203,3 @@ for ($i=0;$i<$num_of_tests;$i++){
 
 close(statsFile);
 
-
-`echo \\</start\\> \| tee -a compareAll.xml`;
