@@ -1010,7 +1010,16 @@ makeCompositeBox(typename SBS::BoxHashMap& boxMap, BoxPIterator begin, BoxPItera
     high = Max(high, box->getHigh());
     totalVolume += box->getVolume();
   }
-  return scinew CB(basicBoxes, Region(low, high), totalVolume);
+
+  // On some (newer version/pickier?) compilers, the Region() function
+  // apparently is overloaded and the compiler can't determine what to
+  // use unless it is explicitly qualified by the fact that it is from
+  // SuperBox<>.  The orginal 'return' statement is left here for now
+  // for comparison.
+  //
+  //  return scinew CB(basicBoxes, Region(low, high), totalVolume);
+  //
+  return scinew CB(basicBoxes, SuperBox<BoxP, Point, Volume, Value, Evaluator>::Region(low, high), totalVolume);
 }
 
 
