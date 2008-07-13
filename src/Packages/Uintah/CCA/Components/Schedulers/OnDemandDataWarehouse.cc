@@ -42,6 +42,7 @@
 #include <string>
 #include <sstream>
 #include <cstdio>
+#include <cstring>
 
 //#define WAYNE_DEBUG
 
