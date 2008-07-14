@@ -60,8 +60,6 @@ if (! -e $base_path."/framework_scripts" ){
   print " Now exiting\n";
   exit
 }
-print " $base_path \n $config_files_path \n $scripts_path \n $compareUtil_path\n";
-
 
 #__________________________________
 # create the base testing directory
@@ -93,7 +91,7 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    my $component = $components[$c];
    mkdir($component) || die "cannot mkdir($component) $!";
    chdir($component);
-   print "----------------------------------------------  $component \n";
+   print "----------------------------------------------------------------  $component \n";
          
    my $fw_path = $config_files_path."/".$component;  # path to component config files
   
@@ -105,8 +103,6 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
    my $orgPath = $ENV{"PATH"};
    $ENV{"PATH"} = "$p:$orgPath";
    
-   print "path $p\n";
- 
    #__________________________________
    # loop over all tests
    #   - make test directories
@@ -123,8 +119,9 @@ system("which sus") == 0 ||  die("Cannot find the command sus $@");
      mkdir($testName) || die "ERROR:masterScript.pl:cannot mkdir($testName) $!";
      chdir($testName);
      
+     print "\n\n=======================================================================================\n";
      print "Test Name: $testName, ups File : $upsFile, tst File: $tstFile\n";
-     
+     print "=======================================================================================\n";
      # bulletproofing
      # do these files exist
      if (! -e $fw_path."/".$upsFile || 
