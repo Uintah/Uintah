@@ -43,17 +43,18 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Expon.h>
 #include <cmath>
+
 #ifdef __sgi
-#include <ieeefp.h>
+#  include <ieeefp.h>
 #endif
 #ifdef __digital__
-#include <fp_class.h>
+#  include <fp_class.h>
 #endif
 #ifdef _WIN32
-#include <cfloat>
-#define finite _finite
+#  include <cfloat>
+#  define finite _finite
 #endif
-using namespace std;
+
 namespace SCIRun {
 
 double MakeReal(double value)
@@ -75,7 +76,7 @@ double MakeReal(double value)
     if (c == _FPCLASS_PINF) is_inf = 1;
     if (c == _FPCLASS_NINF) is_inf = -1;
 #else
-    is_inf  = isinf(value);
+    is_inf  = std::isinf(value);
 #endif
     if (is_inf == 1) value = (double)(0x7fefffffffffffffULL);
     if (is_inf == -1) value = (double)(0x0010000000000000ULL);
