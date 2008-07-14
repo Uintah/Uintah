@@ -29,6 +29,7 @@ namespace Uintah
     while(!iter1.done())
     {
       add(*iter1);
+      iter1++;
     }     
   }
   std::ostream& operator<<(std::ostream& out, const Uintah::DifferenceIterator& b)

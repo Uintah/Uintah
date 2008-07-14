@@ -56,24 +56,24 @@ namespace Uintah {
       inline void operator++(int) {
         // This does not return the old iterator due to performance problems
         // on some compilers...
-        if(++d_cur.modifiable_x() >= d_e.x()){
-          d_cur.modifiable_x() = d_s.x();
+        if(++d_cur.modifiable_z() >= d_e.z()){
+          d_cur.modifiable_z() = d_s.z();
           if(++d_cur.modifiable_y() >= d_e.y()){
             d_cur.modifiable_y() = d_s.y();
-            ++d_cur.modifiable_z();
-            if(d_cur.modifiable_z() >= d_e.z())
+            ++d_cur.modifiable_x();
+            if(d_cur.modifiable_x() >= d_e.x())
               d_done=true;
           }
         }
       }
 
       inline GridIterator& operator++() {
-        if(++d_cur.modifiable_x() >= d_e.x()){
-          d_cur.modifiable_x() = d_s.x();
+        if(++d_cur.modifiable_z() >= d_e.z()){
+          d_cur.modifiable_z() = d_s.z();
           if(++d_cur.modifiable_y() >= d_e.y()){
             d_cur.modifiable_y() = d_s.y();
-            ++d_cur.modifiable_z();
-            if(d_cur.modifiable_z() >= d_e.z())
+            ++d_cur.modifiable_x();
+            if(d_cur.modifiable_x() >= d_e.x())
               d_done=true;
           }
         }
@@ -84,12 +84,12 @@ namespace Uintah {
         GridIterator old(*this);
 
         for (int i = 0; i < step; i++) {
-          if(++d_cur.modifiable_x() >= d_e.x()){
-            d_cur.modifiable_x() = d_s.x();
+          if(++d_cur.modifiable_z() >= d_e.z()){
+            d_cur.modifiable_z() = d_s.z();
             if(++d_cur.modifiable_y() >= d_e.y()){
               d_cur.modifiable_y() = d_s.y();
-              ++d_cur.modifiable_z();
-              if(d_cur.modifiable_z() >= d_e.z())
+              ++d_cur.modifiable_x();
+              if(d_cur.modifiable_x() >= d_e.x())
                 d_done=true;
             }
           }
