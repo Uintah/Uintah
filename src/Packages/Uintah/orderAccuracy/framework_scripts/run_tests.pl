@@ -159,7 +159,7 @@ for ($i=0;$i<$num_of_tests;$i++){
   $test_output  = "out.".$test_title[$i];
 
   # change the uda filename in each ups file
-  print "---------------------\n";
+  print "\n--------------------------------------------------\n";
   print "Now modifying $test_ups\n";
   
   system(" cp $upsFile $test_ups");
@@ -174,8 +174,6 @@ for ($i=0;$i<$num_of_tests;$i++){
     system("replace_XML_line", "$rp", "$test_ups");
     print "\t\t$rp\n"
   }
-  print "---------------------\n";
-
   
   #__________________________________
   print statsFile "Test Name :       "."$test_title[$i]"."\n";
