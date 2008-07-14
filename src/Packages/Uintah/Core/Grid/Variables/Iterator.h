@@ -6,7 +6,7 @@
 #include <Core/Util/Assert.h>
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
 #include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
-
+using namespace std;
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -43,6 +43,12 @@ namespace Uintah {
   class UINTAHSHARE Iterator {
     public:
       Iterator() : iter_(NULL) {}
+
+      Iterator(const BaseIterator &it)
+      {
+        iter_= (&it)->clone();
+      }
+
       ~Iterator()
       {
         if(iter_!=NULL)
@@ -130,10 +136,34 @@ namespace Uintah {
 
         return *this;
       }
-
+      
       inline void reset()
       {
         iter_->reset();
+      }
+      
+      bool operator==(const Iterator& b)
+      {
+        Iterator i1(*this);
+        Iterator i2(*this);
+
+        for(i1.reset(),i2.reset();!i1.done() && !i2.done();i1++,i2++)
+        {
+          if(*i1!=*i2)
+          {
+            return false;
+          }
+        }
+
+        if(!i1.done() && !i2.done())
+          return false;
+
+        return true;
+      }
+
+      bool operator!=(const Iterator& b)
+      {
+        return !operator==(b);
       }
 
     private:

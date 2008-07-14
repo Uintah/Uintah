@@ -32,15 +32,18 @@ namespace Uintah
         iter2++;              
       }
     }
+
     //add remaining cells in iter1
     while(!iter1.done())
     {
       add(*iter1);
+      iter1++;
     }     
     //add remaining cells in iter2
     while(!iter2.done())
     {
       add(*iter2);
+      iter2++;
     }     
   }
   std::ostream& operator<<(std::ostream& out, const Uintah::UnionIterator& b)
