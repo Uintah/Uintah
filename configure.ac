@@ -588,11 +588,11 @@ SCI_ARG_ENABLE(memory-init,
                  Force all new'd and malloc'd memory to be initialied to the value given - defaults to 127.),
   [enable_memory_initialization="$enableval"],
   [enable_memory_initialization=${enable_memory_initialization='no'}])
-SCI_ARG_ENABLE(sci-trace,
-  AC_HELP_STRING(--enable-sci-malloc-trace,
-                 Use SCI memory trace functionality.  Note: you cannot use sci-malloc at the same time.),
-  [enable_sci_malloc_trace="$enableval"],
-  [enable_sci_malloc_trace=${enable_sci_malloc_trace='no'}])
+SCI_ARG_WITH(MallocTrace,
+  AC_HELP_STRING(--with-MallocTrace=DIR,
+                 Use MallocTrace library.  Note: you cannot use sci-malloc at the same time.),
+  [with_malloc_trace="$withval"],
+  [with_malloc_trace=""])
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3)),
@@ -661,8 +661,8 @@ SCI_ARG_ENABLE(no-dynamic-cast,
   [enable_no_dynamic_cast="$enableval"],
   [enable_no_dynamic_cast=${enable_no_dynamic_cast='no'}])
 
-if test "$enable_sci_malloc" = "yes" -a "$enable_sci_malloc_trace" = "yes"; then
-   AC_MSG_ERROR( "You cannot use both --enable-sci-malloc-trace and --enable-sci-malloc!" )
+if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" != "no"; then
+   AC_MSG_ERROR( "You cannot use both --with-malloc-trace and --enable-sci-malloc!" )
 fi
 
 if test "$enable_memory_initialization" != "no"; then
@@ -1122,14 +1122,10 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
-if test "$enable_sci_malloc_trace" = "yes"; then
+if test "$with_malloc_trace" != "no"; then
   if test "$IS_OSX" = "yes"; then
       AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
   fi
-  DEF_MALLOC_TRACE="#define SCI_MALLOC_TRACE 1"
-  TRACE_ON="yes"
-else
-  DEF_MALLOC_TRACE=""
 fi
 
 if test "$enable_scinew_line_numbers" = "yes"; then
@@ -1149,8 +1145,6 @@ AC_SUBST(TIME_IMPL)
 
 AC_SUBST(DEF_MALLOC)
 AC_SUBST(DEF_MALLOC_LINENUMBERS)
-AC_SUBST(DEF_MALLOC_TRACE)
-AC_SUBST(TRACE_ON)
 sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)
@@ -1251,6 +1245,36 @@ if test "$pkg_Uintah" = "yes"; then
   if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
     sci_required_fortran=no
   fi
+  
+  ##  --  search for MallocTrace ------------------------
+
+  if test "$with_malloc_trace"; then
+    if test "$with_malloc_trace" = "yes"; then
+      AC_MSG_ERROR( --with-malloc_trace=DIR requires a Directory be provided. )
+    else
+      AC_MSG_CHECKING(for MallocTrace files (For now we are just verifying the existence of lib and .h files)) 
+      if test ! -d $with_malloc_trace; then
+        AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
+      fi
+      if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
+        AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+      fi
+      if test ! -f $with_malloc_trace/include/MallocTrace.h; then
+        AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
+      fi
+    fi
+    AC_MSG_RESULT(yes)
+    DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
+    INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
+    MALLOC_TRACE_LIB_DIR_FLAG="-L$with_malloc_trace/lib/shared"
+    MALLOC_TRACE_LIB_FLAG="-lMallocTrace -lMallocTraceMPI"
+
+  fi
+  AC_SUBST(DEF_MALLOC_TRACE)
+  AC_SUBST(INC_MALLOC_TRACE_H)
+  AC_SUBST(MALLOC_TRACE_LIB_FLAG)
+  AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
+
 
   ##  --  search for Zoltan ------------------------
 
