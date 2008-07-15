@@ -147,7 +147,9 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
     return NULL;
 #endif // DISABLE_SCI_MALLOC
 }
-
+#ifdef MALLOC_TRACE
+#include <MallocTraceOff.h>
+#endif
 void OSHunk::free(OSHunk* hunk)
 {
 #ifndef DISABLE_SCI_MALLOC
@@ -174,6 +176,9 @@ void OSHunk::free(OSHunk* hunk)
     }
 #endif // DISABLE_SCI_MALLOC
 }
+#ifdef MALLOC_TRACE
+#include <MallocTraceOn.h>
+#endif
 
 } // End namespace SCIRun
 

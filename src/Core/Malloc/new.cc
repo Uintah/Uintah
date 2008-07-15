@@ -76,7 +76,7 @@ namespace SCIRun {
   void AllocatorResetDefaultTagLineNumber() {}
 
 }
-
+#ifndef MALLOC_TRACE
 void* operator new(size_t size, Allocator*, const char*, int)
 {
   void* mem=new char[size];
@@ -97,7 +97,7 @@ void* operator new[](size_t size, Allocator*, const char*, int)
 #endif
   return mem;
 }
-
+#endif
 #else // ifdef DISABLE_SCI_MALLOC
 
 static const char* default_new_tag = "Unknown - operator new";

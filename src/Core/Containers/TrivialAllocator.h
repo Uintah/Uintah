@@ -52,9 +52,6 @@
 
 namespace SCIRun {
 
-#ifdef MALLOC_TRACE
-  #include "MallocTraceOff.h"
-#endif 
 class TrivialAllocator {
     struct List {
 	List* next;
@@ -72,11 +69,14 @@ public:
     SCISHARE ~TrivialAllocator();
 
     inline void* alloc();
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOff.h"
+#endif 
     inline void free(void*);
-};
 #ifdef MALLOC_TRACE
   #include "MallocTraceOn.h"
 #endif 
+};
 
 inline void* TrivialAllocator::alloc()
 {
