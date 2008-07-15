@@ -268,6 +268,9 @@ int main(int argc, char *argv[])
             // ADB: change this to always be 128 bytes, so that we can 
             // cleanly read the header off a binary file
             FILE* dest = fopen(of_name.c_str(), "wb");
+            if(dest==0){
+              cout << "FATAL ERROR : Failed opening points file" << endl;
+            }
             double x[6];
             x[0] = min.x(), x[1] = min.y(), x[2] = min.z();
             x[3] = max.x(), x[4] = max.y(), x[5] = max.z();
