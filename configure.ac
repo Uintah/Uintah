@@ -661,8 +661,8 @@ SCI_ARG_ENABLE(no-dynamic-cast,
   [enable_no_dynamic_cast="$enableval"],
   [enable_no_dynamic_cast=${enable_no_dynamic_cast='no'}])
 
-if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" != "no"; then
-   AC_MSG_ERROR( "You cannot use both --with-malloc-trace and --enable-sci-malloc!" )
+if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
+   AC_MSG_ERROR( "You cannot use both --with-MallocTrace and --enable-sci-malloc!" )
 fi
 
 if test "$enable_memory_initialization" != "no"; then
@@ -1122,7 +1122,7 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
-if test "$with_malloc_trace" != "no"; then
+if test "$with_malloc_trace" ; then
   if test "$IS_OSX" = "yes"; then
       AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
   fi

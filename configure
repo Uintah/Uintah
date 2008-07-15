@@ -3154,9 +3154,9 @@ fi;
   sci_arg_enable_list="$sci_arg_enable_list --enable-no-dynamic-cast --disable-no-dynamic-cast"
 
 
-if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" != "no"; then
-   { { echo "$as_me:$LINENO: error: \"You cannot use both --with-malloc-trace and --enable-sci-malloc!\" " >&5
-echo "$as_me: error: \"You cannot use both --with-malloc-trace and --enable-sci-malloc!\" " >&2;}
+if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
+   { { echo "$as_me:$LINENO: error: \"You cannot use both --with-MallocTrace and --enable-sci-malloc!\" " >&5
+echo "$as_me: error: \"You cannot use both --with-MallocTrace and --enable-sci-malloc!\" " >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -7218,7 +7218,7 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
 fi
 
-if test "$with_malloc_trace" != "no"; then
+if test "$with_malloc_trace" ; then
   if test "$IS_OSX" = "yes"; then
       { { echo "$as_me:$LINENO: error: Malloc trace is not supported on Mac OSX..." >&5
 echo "$as_me: error: Malloc trace is not supported on Mac OSX..." >&2;}
