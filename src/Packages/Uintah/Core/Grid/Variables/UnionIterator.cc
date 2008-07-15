@@ -17,7 +17,7 @@ namespace Uintah
         iter1++;
         iter2++;
       }
-      else if(*iter1<*iter2) //in iter1 only
+      else if(compare(*iter1,*iter2)) //in iter1 only
       {
         //add to list
         add(*iter1);
