@@ -121,29 +121,25 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  Ghost::GhostType  gn  = Ghost::None; 
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gaf = Ghost::AroundFaces;
+  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,  gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
       
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->computes(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
-                  Task::OutOfDomain);
+                  oams);
   }else{ 
     tsk->modifies(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
-                  Task::OutOfDomain);
+                  oams);
   }
     
   sched->addTask(tsk, patches, matls);
@@ -161,19 +157,14 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
   
-  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_newCCUVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCVVelocityLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_newCCWVelocityLabel, gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
-                d_lab->d_symTensorMatl, Task::OutOfDomain,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                d_lab->d_symTensorMatl, oams, gac, 1);
   
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
   
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -200,23 +191,16 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as an array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells,
-                Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,         gac,1);
+  tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,   gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel, gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
 
-  tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeLabel,
-                Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMLLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
 
   // for multimaterial
   if (d_MAlab){
-    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
   
   // Computes
@@ -257,22 +241,16 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
-
-    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch,
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-                Ghost::AroundFaces, Arches::ONEGHOSTCELL);
-    new_dw->get(uVelCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(vVelCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(wVelCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    new_dw->get(uVel,     d_lab->d_uVelocitySPBCLabel,  matlIndex, patch, gaf, 1);
+    new_dw->get(vVel,     d_lab->d_vVelocitySPBCLabel,  matlIndex, patch, gaf, 1);
+    new_dw->get(wVel,     d_lab->d_wVelocitySPBCLabel,  matlIndex, patch, gaf, 1);
+    new_dw->get(uVelCC,   d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(vVelCC,   d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(wVelCC,   d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,       matlIndex, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -722,15 +700,11 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
 
-    new_dw->get(ccuVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccvVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-    new_dw->get(ccwVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(ccuVel,   d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(ccvVel,   d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(ccwVel,   d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,       matlIndex, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -747,7 +721,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     StencilMatrix<constCCVariable<double> > SIJ; //6 point tensor
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++){
       new_dw->get(SIJ[ii], d_lab->d_strainTensorCompLabel, ii, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  gac, 1);
     }
 //    StencilMatrix<Array3<double> > LIJ;    //6 point tensor
 //    StencilMatrix<Array3<double> > MIJ;    //6 point tensor
@@ -1791,7 +1765,8 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
 
 
-
+//______________________________________________________________________
+//
 void 
 IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                         const PatchSubset* patches,
@@ -1821,27 +1796,21 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }
     Cs.initialize(0.0);
 
-    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,
-                           matlIndex, patch);
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
 
-    new_dw->get(IsI,d_lab->d_strainMagnitudeLabel, matlIndex, patch, 
-                Ghost::None, Arches::ZEROGHOSTCELLS);
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    
+    new_dw->get(IsI,d_lab->d_strainMagnitudeLabel,    matlIndex, patch, gn, 0);
     // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
-    new_dw->get(MLI,d_lab->d_strainMagnitudeMLLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-                
-    new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, matlIndex, patch, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
-
-    new_dw->get(den, d_lab->d_densityCPLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(MLI, d_lab->d_strainMagnitudeMLLabel, matlIndex, patch, gac, 1);  
+    new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, matlIndex, patch, gac, 1);
+    new_dw->get(den, d_lab->d_densityCPLabel,         matlIndex, patch, gac, 1);
 
     if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-                  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, gn, 0);
     }
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -2076,23 +2045,20 @@ IncDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
+  Ghost::GhostType  gac = Ghost::AroundCells;
   if (doing_EKT_now){
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
   }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
   }
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,  gac, 1);
 
   // Computes
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
      tsk->computes(d_lab->d_scalarVarSPLabel);
      tsk->computes(d_lab->d_normalizedScalarVarLabel);
-  }
-  else {
+  }else {
      tsk->modifies(d_lab->d_scalarVarSPLabel);
      tsk->modifies(d_lab->d_normalizedScalarVarLabel);
   }
@@ -2116,17 +2082,16 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    // Variables
+
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     CCVariable<double> normalizedScalarVar;
-    // Get the velocity, density and viscosity from the old data warehouse
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
     if (doing_EKT_now){
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch, gac, 1);
     }else{
-      new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(scalar, d_lab->d_scalarSPLabel,  matlIndex, patch, gac, 1);
     }
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
@@ -2147,7 +2112,7 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                  gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -2160,8 +2125,9 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 #endif
     
-    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+    int ngc = 1; // number of ghost cells
+    IntVector idxLo = patch->getExtraCellLowIndex__New(ngc);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(ngc);
     Array3<double> phiSqr(idxLo, idxHi);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
@@ -2364,19 +2330,16 @@ IncDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
   
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
-  // assuming scalar dissipation is computed before turbulent viscosity calculation 
-  if (doing_EKT_now){
-    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  }
-  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  // assuming scalar dissipation is computed before turbulent viscosity calculation
 
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  if (doing_EKT_now){
+    tsk->requires(Task::NewDW, d_lab->d_scalarEKTLabel, gac, 1);
+  }else{
+    tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,  gac, 1);
+  }
+  tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,gac, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,    gac, 1);
 
   // Computes
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
@@ -2409,15 +2372,13 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     constCCVariable<double> scalar;
     CCVariable<double> scalarDiss;  // dissipation..chi
 
+    Ghost::GhostType  gac = Ghost::AroundCells;
     if (doing_EKT_now){
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(scalar,  d_lab->d_scalarEKTLabel,    matlIndex, patch, gac, 1);
     }else{
-      new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      new_dw->get(scalar,  d_lab->d_scalarSPLabel,     matlIndex, patch, gac, 1);
     }
-    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,
-                Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch, gac, 1);
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
@@ -2430,8 +2391,7 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     scalarDiss.initialize(0.0);
 
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
