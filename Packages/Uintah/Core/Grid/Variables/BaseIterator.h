@@ -37,7 +37,8 @@ namespace Uintah {
     DESCRIPTION
     Base class for all iterators.  In Uintah an iterator is both a container
     and an iterator.  In order to be considered valid the iterator must visit
-    the container in a sorted order from low to high.  In addition, each cell 
+    the container in a sorted order from low to high (according to Uintah's 
+    defined order, which is Z,Y,X).  In addition, each cell 
     can only be in the iterator once.  These conditions are not strictly 
     enforced and thus it is up to the creater of the iterator to enforce 
     these conditions.
@@ -106,7 +107,28 @@ namespace Uintah {
        * resets the iterator to the begining
        */
       virtual void reset() = 0;
+
     }; // end class BaseIterator
+    
+   /**
+    * Returns true if a is less than b according to the way uintah
+    * lays out it's iterators (Z then Y then X)
+    */
+    static bool compare(const IntVector &a, const IntVector &b)
+      {
+        if(a.z()<b.z())
+          return true;
+        else if( b.z() < a.z())
+          return false;
+        else if(a.y()<b.y())
+          return true;
+        else if( b.y() < a.y())
+          return false;
+        else if(a.x()<b.x())
+          return true;
+        else
+          return false;
+      }
 
 } // End namespace Uintah
   
