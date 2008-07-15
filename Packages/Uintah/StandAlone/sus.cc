@@ -162,10 +162,11 @@ usage( const std::string & message,
 }
 
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-
 int
 main( int argc, char** argv )
 {
+  string oldTag;
+  MALLOC_TRACE_TAG_SCOPE("main()");
   // turn off Thread asking so sus can cleanly exit on abortive behavior.  
   // Can override this behavior with the environment variable SCI_SIGNALMODE
   Thread::setDefaultAbortMode("exit");
@@ -375,11 +376,10 @@ main( int argc, char** argv )
 
   bool thrownException = false;
   
-#if defined(SCI_MALLOC_TRACE)
+#if defined(MALLOC_TRACE)
   ostringstream traceFilename;
-  traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank() << ".txt";
-  mallocTraceInfo.setOutputFilename( traceFilename.str().c_str(),
-                                     "this could be some important info to log..." );
+  traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
+  MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
   //mallocTraceInfo.setTracingState( false );
 #endif
 
@@ -414,7 +414,8 @@ main( int argc, char** argv )
 #endif
     }
   }
-  
+ 
+    MALLOC_TRACE_TAG("main():create components");
   //______________________________________________________________________
   // Create the components
   try {
@@ -532,6 +533,7 @@ main( int argc, char** argv )
     if (emit_graphs) 
       sched->doEmitTaskGraphDocs();
     
+    MALLOC_TRACE_TAG(oldTag);
     /*
      * Start the simulation controller
      */

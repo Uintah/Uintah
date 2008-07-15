@@ -54,7 +54,7 @@ ALLTARGETS := $(ALLTARGETS) $(PROGRAM)
 ALLSRCS := $(ALLSRCS) $(SRCS)
 
 # Tuck the value of $(LIBS) away in a mangled variable
-$(PROGRAM)_LIBS := $(LIBS)
+$(PROGRAM)_LIBS := $(LIBS) ${MALLOC_TRACE_LIBRARY}
 
 # The dependencies can be either .o files or .so files.  The .so
 # files are other shared libraries within the PSE.  This allows

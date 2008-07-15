@@ -1,4 +1,4 @@
-#include <mpi.h>
+#include <sci_defs/mpi_defs.h>
 #include <iostream
 
 int

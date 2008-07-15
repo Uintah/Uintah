@@ -3,7 +3,6 @@
 #define UINTAH_HOMEBREW_BufferInfo_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <mpi.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>

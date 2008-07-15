@@ -1376,6 +1376,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
 
 bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
+  MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
   TAU_PROFILE("DynamicLoadBalancer::possiblyDynamicallyReallocate()", " ", TAU_USER);
 
   if (d_myworld->myrank() == 0)

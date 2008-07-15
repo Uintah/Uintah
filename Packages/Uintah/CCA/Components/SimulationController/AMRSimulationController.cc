@@ -60,6 +60,8 @@ AMRSimulationController::~AMRSimulationController()
 void
 AMRSimulationController::run()
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
+
    bool log_dw_mem=false;
 #ifndef DISABLE_SCI_MALLOC
    ProblemSpecP debug = d_ups->findBlock("debug");
@@ -127,6 +129,7 @@ AMRSimulationController::run()
    while( ( t < d_timeinfo->maxTime ) && 
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
+     MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
      if(dbg_barrier.active())
      {
        for(int i=0;i<4;i++)
@@ -349,6 +352,7 @@ AMRSimulationController::run()
 void
 AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel)
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleCompile()");
   //amrout << "Start AMRSimulationController::subCycleCompile, level=" << numLevel << '\n';
   // We are on (the fine) level numLevel
   LevelP fineLevel = grid->getLevel(numLevel);
@@ -429,6 +433,7 @@ AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride,
 void
 AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwStride, int levelNum, bool rootCycle)
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleExecutue()");
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
   // timestep work, and 1 for the errorEstimate and stableTimestep, where n
   // is the number of levels.
@@ -532,6 +537,7 @@ bool
 AMRSimulationController::needRecompile(double time, double delt,
 				       const GridP& grid)
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::needRecompile()");
   // Currently, d_output, d_sim, d_lb, d_regridder can request a recompile.  --bryan
   bool recompile = false;
   
@@ -548,6 +554,7 @@ AMRSimulationController::needRecompile(double time, double delt,
 void
 AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doInitialTimestep()");
   double start = Time::currentSeconds();
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, 1);
@@ -622,6 +629,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 //______________________________________________________________________
 bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimestep)
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
   TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
@@ -690,6 +698,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 void
 AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::Recompile()");
   if(d_myworld->myrank() == 0)
     cout << "Compiling taskgraph...\n";
   d_lastRecompileTimestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -771,6 +780,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
 void
 AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
   TAU_PROFILE("AMRSimulationController::executeTimestep()"," ", TAU_USER);
   // If the timestep needs to be
   // restarted, this loop will execute multiple times.
@@ -844,6 +854,7 @@ void
 AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
                                                         SchedulerP& sched )
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::scheduleComputeStableTimestep()");
   for (int i = 0; i < grid->numLevels(); i++) {
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
   }
@@ -862,6 +873,7 @@ AMRSimulationController::coarsenDelt( const ProcessorGroup*,
                                       DataWarehouse* /*old_dw*/,
                                       DataWarehouse* new_dw )
 {
+  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::coarsenDelt()");
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
   if (patches->size() == 0 || new_dw->exists(d_sharedState->get_delt_label(), -1, 0))

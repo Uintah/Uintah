@@ -20,7 +20,6 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <mpi.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <sstream>
@@ -185,6 +184,7 @@ void
 MPIScheduler::initiateTask( DetailedTask          * task,
 			    bool only_old_recvs, int abort_point, int iteration )
 {
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
   long long start_total_comm_flops = mpi_info_.totalcommflops;
   long long start_total_exec_flops = mpi_info_.totalexecflops;
@@ -455,6 +455,7 @@ bool operator()(DependencyBatch* a, DependencyBatch* b)
 void
 MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration)
 {
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
   double recvstart = Time::currentSeconds();
   TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER); 
 
@@ -640,6 +641,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
 void
 MPIScheduler::processMPIRecvs(int how_much)
 {
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs");
   TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
 
   // Should only have external receives in the MixedScheduler version which
@@ -677,6 +679,7 @@ MPIScheduler::processMPIRecvs(int how_much)
 void
 MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::execute");
   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
   
   TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER); 

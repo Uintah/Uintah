@@ -44,6 +44,11 @@
 #include <Core/Malloc/mem_init.h>
 
 #include <Core/Malloc/Allocator.h>
+
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOff.h"
+#endif 
+
 #include <Core/Malloc/AllocPriv.h>
 #include <new>
 
@@ -256,5 +261,9 @@ void* operator new[](size_t size, Allocator* a, const char* tag, int linenum)
 #endif
   return mem;
 }
+
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOn.h"
+#endif 
 
 #endif // ifdef DISABLE_SCI_MALLOC

@@ -1,5 +1,4 @@
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <mpi.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>

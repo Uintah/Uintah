@@ -808,6 +808,7 @@ ProblemSpecReader::validateAttribute( Tag * root, xmlAttr * attr )
 void
 ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int level /* = 0 */ )
 {
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validate");
   if( !uintahSpec_ ) {
     return;
   }
@@ -931,6 +932,7 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int le
 void
 ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
 {
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecRader::validateProblemSpec");
   // Currently, the readInputFile() (and thus this validation) is called
   // multiple times (once for the initial .ups, but then again for 
   // saving data archives and such...)  this (temporary?) hack is used
@@ -993,6 +995,7 @@ ProblemSpecReader::~ProblemSpecReader()
 ProblemSpecP
 ProblemSpecReader::readInputFile( bool validate /* = false */ )
 {
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecRader::readInputFile");
   if (d_xmlData != 0)
     return d_xmlData;
 

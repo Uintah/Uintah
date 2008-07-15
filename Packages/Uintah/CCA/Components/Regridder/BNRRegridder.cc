@@ -99,6 +99,7 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid)
 {
+  MALLOC_TRACE_TAG_SCOPE("BNRRegridder::regrid");
   double t[6]={0};
   double avg[6];
   
@@ -290,6 +291,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
 {
+  MALLOC_TRACE_TAG_SCOPE("BNRRegridd::CreateGrid");
   TAU_PROFILE("BNRRegridder::CreateGrid()", " ", TAU_USER);
 
   Grid* newGrid = scinew Grid();
@@ -323,6 +325,7 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
 }
 void BNRRegridder::CreateCoarseFlagSets(Grid *oldGrid, vector<set<IntVector> > &coarse_flag_sets)
 {
+  MALLOC_TRACE_TAG_SCOPE("BNRRegridder::CreateCoarseFlagSets");
   TAU_PROFILE("BNRRegridder::CreateCoarseFlagSets()", " ", TAU_USER);
   DataWarehouse *dw=sched_->getLastDW();
 
@@ -389,6 +392,7 @@ void BNRRegridder::OutputGridStats(vector< vector<Region> > &patch_sets, Grid* n
 
 void BNRRegridder::RunBR( vector<IntVector> &flags, vector<Region> &patches)
 {
+  MALLOC_TRACE_TAG_SCOPE("BNRRegridder::RunBR");
   TAU_PROFILE("BNRRegridder::RunBR()", " ", TAU_USER);
   int rank=d_myworld->myrank();
   int numprocs=d_myworld->size();
@@ -731,6 +735,7 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
 //to do in parallel since the number of patches is typically very small
 void BNRRegridder::PostFixup(vector<Region> &patches)
 {
+  MALLOC_TRACE_TAG_SCOPE("BNRRegridder::PostFixup");
   TAU_PROFILE("BNRRegridder::PostFixup()", " ", TAU_USER);
   //calculate total volume
   int volume=0;
@@ -787,6 +792,7 @@ void BNRRegridder::PostFixup(vector<Region> &patches)
 void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags, 
                                   const vector<const Patch*>& coarse_patches, int l)
 {
+  MALLOC_TRACE_TAG_SCOPE("BNRRegridder::AddSafetyLayer");
   TAU_PROFILE("BNRRegridder::AddSafetyLayer()", " ", TAU_USER);
   if (coarse_patches.size() == 0)
     return;

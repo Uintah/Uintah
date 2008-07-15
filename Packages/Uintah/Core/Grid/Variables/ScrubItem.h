@@ -11,6 +11,10 @@ namespace Uintah {
 using SCIRun::TrivialAllocator;
 class VarLabel;
 
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOff.h"
+#endif 
+
 struct ScrubItem {
   ScrubItem* next;
   const VarLabel* label;
@@ -45,6 +49,9 @@ struct ScrubItem {
   }
 
 };
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOn.h"
+#endif 
 
 }
 

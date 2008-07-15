@@ -34,7 +34,6 @@
 //
 
 #include <sci_defs/mpi_defs.h>
-#include <mpi.h>
 
 #include <algorithm>
 #include <vector>
