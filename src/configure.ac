@@ -1266,9 +1266,8 @@ if test "$pkg_Uintah" = "yes"; then
     AC_MSG_RESULT(yes)
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    MALLOC_TRACE_LIB_DIR_FLAG="-L$with_malloc_trace/lib/shared"
+    MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace -lMallocTraceMPI"
-
   fi
   AC_SUBST(DEF_MALLOC_TRACE)
   AC_SUBST(INC_MALLOC_TRACE_H)

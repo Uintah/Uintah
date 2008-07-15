@@ -196,7 +196,6 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
        throw InternalError("Bad MPI Init", __FILE__, __LINE__);
      }
 #endif
-
 #ifdef THREADED_MPI_AVAILABLE
      if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) )
 	                                                     != MPI_SUCCESS)

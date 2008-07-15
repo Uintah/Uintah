@@ -17,6 +17,7 @@
 #include <Core/Containers/Array1.h>
 
 #ifdef HAVE_PETSC
+#undef PETSC_USE_LOG
 extern "C" {
 #  include <petscmat.h>
 }

@@ -817,6 +817,7 @@ _____________________________________________________________________*/
 void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
+  MALLOC_TRACE_TAG_SCOPE("ICE::scheduleTimeAdvance()");
   if (d_sharedState->isLockstepAMR()) {
     if (level->getIndex() == 0)
       scheduleLockstepTimeAdvance(level->getGrid(), sched);

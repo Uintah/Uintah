@@ -178,6 +178,7 @@ void
 OnDemandDataWarehouse::put(Variable* var, const VarLabel* label,
 			   int matlIndex, const Patch* patch)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(variable):" + label->getName());
    union {
       ReductionVariableBase* reduction;
       SoleVariableBase* sole;
@@ -742,6 +743,7 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 			   const VarLabel* label, const Level* level,
 			   int matlIndex /* = -1 */)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Reduction):" + label->getName());
   ASSERT(!d_finalized);
   d_lock.writeLock();
 
@@ -781,6 +783,7 @@ OnDemandDataWarehouse::put(const SoleVariableBase& var,
 			   const VarLabel* label, const Level* level,
 			   int matlIndex /* = -1 */)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Sole Variable):" + label->getName());
   ASSERT(!d_finalized);
   d_lock.writeLock();
 
@@ -817,6 +820,7 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
                                             IntVector low /* = (0,0,0) */,
                                             IntVector high /* = (0,0,0) */)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::createParticleSubset):");
   d_lock.writeLock();
 
   if (low == high && high == IntVector(0,0,0)) {
@@ -878,7 +882,7 @@ OnDemandDataWarehouse::printParticleSubsets()
   cout << "----------------------------------------------\n";
   cout << "-- Particle Subsets: \n\n";
   psetDBType::iterator iter;
-  cout << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
+  cout << d_myworld->myrank() << " Availabel psets on DW " << d_generation << ":\n";
   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
     cout << d_myworld->myrank() << " " <<*(iter->second) << endl;
   }
@@ -1237,6 +1241,7 @@ void
 OnDemandDataWarehouse::allocateTemporary(ParticleVariableBase& var,
                                          ParticleSubset* pset)
 {  
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateTemporary(Particle Variable):");
   //TAU_PROFILE("allocateTemporary()", "OnDemand.cc", TAU_USER);
   var.allocate(pset);
 }
@@ -1246,6 +1251,7 @@ OnDemandDataWarehouse::allocateAndPut(ParticleVariableBase& var,
                                       const VarLabel* label,
                                       ParticleSubset* pset)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateAndPut(Particle Variable):" + label->getName());
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
   
@@ -1264,6 +1270,7 @@ void
 OnDemandDataWarehouse::put(ParticleVariableBase& var,
                            const VarLabel* label, bool replace /*= false*/)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Particle Variable):" + label->getName());
   ASSERT(!d_finalized);  
 
    ParticleSubset* pset = var.getParticleSubset();
@@ -1304,6 +1311,7 @@ void OnDemandDataWarehouse::copyOut(ParticleVariableBase& var, const VarLabel* l
 void OnDemandDataWarehouse::getCopy(ParticleVariableBase& var, const VarLabel* label,
                                     ParticleSubset* pset)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getCopy(Particle Variable):" + label->getName());
   constParticleVariableBase* constVar = var.cloneConstType();
   this->get(*constVar, label, pset);
   var.allocate(pset);
@@ -1346,6 +1354,7 @@ allocateTemporary(GridVariableBase& var, const Patch* patch,
                   Ghost::GhostType gtype, int numGhostCells,
 		  const IntVector& boundaryLayer)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateTemporary(Grid Variable)");
   IntVector lowIndex, highIndex;
   IntVector lowOffset, highOffset;
   Patch::VariableBasis basis = Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), false);
@@ -1368,6 +1377,7 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
                int matlIndex, const Patch* patch,
                Ghost::GhostType gtype, int numGhostCells)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateAndPut(Grid Variable):" + label->getName());
   if (d_finalized)
     cerr << "  DW " << getID() << " finalized!\n";
   ASSERT(!d_finalized);
@@ -1601,6 +1611,7 @@ void OnDemandDataWarehouse::copyOut(GridVariableBase& var, const VarLabel* label
 				     int matlIndex, const Patch* patch,
 				     Ghost::GhostType gtype, int numGhostCells)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::copyOut(Grid Variable):" + label->getName());
   GridVariableBase* tmpVar = var.cloneType();
   getGridVar(*tmpVar, label, matlIndex, patch, gtype, numGhostCells);
   var.copyData(tmpVar);
@@ -1611,6 +1622,7 @@ void OnDemandDataWarehouse::getCopy(GridVariableBase& var, const VarLabel* label
 				     int matlIndex, const Patch* patch,
 				     Ghost::GhostType gtype, int numGhostCells)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getCopy(Grid Variable):" + label->getName());
   GridVariableBase* tmpVar = var.cloneType();
   getGridVar(*tmpVar, label, matlIndex, patch, gtype, numGhostCells);
   var.allocate(tmpVar);
@@ -1626,6 +1638,7 @@ OnDemandDataWarehouse::put(GridVariableBase& var,
                            int matlIndex, const Patch* patch,
                            bool replace /*= false*/)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Grid Variable):" + label->getName());
   ASSERT(!d_finalized);
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));    
@@ -1678,6 +1691,7 @@ OnDemandDataWarehouse::put(PerPatchBase& var,
                            int matlIndex, const Patch* patch,
                            bool replace /*= false*/)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Per Patch Variable):" + label->getName());
   ASSERT(!d_finalized);  
   //checkPutAccess(label, replace);
   
@@ -1699,6 +1713,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
                                  const IntVector& low, const IntVector& high,
                                  bool useBoundaryCells /*=true*/)
 {
+  MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getRegion(Grid Variable):" + label->getName());
   GridVariableBase* var = constVar.cloneType();
   var->allocate(low, high);
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);

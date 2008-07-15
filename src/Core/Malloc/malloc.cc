@@ -42,6 +42,11 @@
 #include <sci_defs/malloc_defs.h>
 
 #include <Core/Malloc/Allocator.h>
+
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOff.h"
+#endif 
+
 #include <Core/Malloc/AllocPriv.h>
 #include <Core/Malloc/mem_init.h>
 
@@ -142,5 +147,9 @@ void* valloc(size_t size) THROWCLAUSE
     return default_allocator->memalign(getpagesize(), size,
                "Unknown - valloc");
 }
+
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOn.h"
+#endif 
 
 #endif

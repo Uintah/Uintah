@@ -46,10 +46,15 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Malloc/Allocator.h>
 
+
+
 #include <Core/Containers/share.h>
 
 namespace SCIRun {
 
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOff.h"
+#endif 
 class TrivialAllocator {
     struct List {
 	List* next;
@@ -69,6 +74,9 @@ public:
     inline void* alloc();
     inline void free(void*);
 };
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOn.h"
+#endif 
 
 inline void* TrivialAllocator::alloc()
 {
@@ -95,8 +103,15 @@ inline void* TrivialAllocator::alloc()
     return p;
 }
 
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOff.h"
+#endif 
+
 inline void TrivialAllocator::free(void* rp)
 {
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOn.h"
+#endif 
     if(ta_disable){
 	delete[] (char*)rp;
 	return;

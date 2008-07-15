@@ -50,18 +50,36 @@
 //
 // For more information on using the SCI Memory Trace facility, see Trace.h.
 
-#if SCI_MALLOC_TRACE == 1 && ( !defined(DISABLE_SCI_MALLOC) || DISABLE_SCI_MALLOC != 1 )
-#  error SCI_MALLOC_TRACE and !DISABLE_SCI_MALLOC may not both be set!
+#if MALLOC_TRACE == 1 && ( !defined(DISABLE_SCI_MALLOC) || DISABLE_SCI_MALLOC != 1 )
+#  error MALLOC_TRACE and !DISABLE_SCI_MALLOC may not both be set!
 #endif
 
-#if defined( SCI_MALLOC_TRACE )
-#  include <Core/Malloc/Trace.h>
+#if defined( MALLOC_TRACE )
+
+//define define scinew to new so MallocTrace catches the calls
+#  define scinew new
+
+//include malloc trace functions
+#include "MallocTrace.h"
+
+//include problematic headers
+#include <algorithm>
+#include <valarray>
+
+//turn on tracing
+#include "MallocTraceOn.h"
+
 #elif !defined( DISABLE_SCI_MALLOC )
 #  ifndef _WIN32
 #    include <sgi_stl_warnings_off.h>
 #    include <unistd.h>
 #    include <sgi_stl_warnings_on.h>
 #  endif
+
+//set these macros to be blank so everything will compile without MallocTrace
+#define MALLOC_TRACE_TAG_SCOPE(tag) ;
+#define MALLOC_TRACE_TAG(tag) ;
+#define MALLOC_TRACE_LOG_FILE(file) ;
 
 #include <cstdlib>
 
@@ -139,11 +157,17 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 #    define scinew new(SCIRun::default_allocator, __FILE__, __LINE__)
 #  endif
 
-#else
+#else  // MALLOC_TRACE
+
    // Not tracing and not using sci malloc...
 #  define scinew new
 
-#endif // SCI_MALLOC_TRACE
+//set these macros to be blank so everything will compile without MallocTrace
+#define MALLOC_TRACE_TAG_SCOPE(tag) ;
+#define MALLOC_TRACE_TAG(tag) ;
+#define MALLOC_TRACE_LOG_FILE(file) ;
+
+#endif // MALLOC_TRACE
 
 #endif // Malloc_Allocator_h 1
  

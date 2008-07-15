@@ -2,7 +2,7 @@
 #include "util.h"
 #include "Level.h"
 #include "Patch.h"
-#include <mpi.h>
+#include <sci_defs/mpi_defs.h>
 using namespace std;
 
 void

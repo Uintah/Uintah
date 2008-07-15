@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 
 #include <Packages/Uintah/Core/Parallel/uintahshare.h>
+
 namespace Uintah {
 
 /**************************************

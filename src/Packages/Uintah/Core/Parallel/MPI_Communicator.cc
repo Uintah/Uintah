@@ -1,6 +1,5 @@
 #if !defined(__APPLE__) && !defined(__sgi)
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <mpi.h>
 // We mustn't call the PMPI routines when using TAU, or they won't get profiled.
 #if defined(LAM_MPI) && !defined(USE_TAU_PROFILING)
 #include <iostream>
@@ -23,6 +22,10 @@
 
 using namespace std;
 using namespace SCIRun;
+
+#ifdef MALLOC_TRACE
+#include "MallocTraceMPIOff.h"
+#endif
 
 
 MpiCall::MpiCall(){
@@ -295,5 +298,10 @@ RET_TYPE MPI_CALL(NAME)(CALLSIG){\
 } \
 
 #include <Packages/Uintah/Core/Parallel/stubs.h>
+
+#ifdef MALLOC_TRACE
+#include "MallocTraceMPIOn.h"
+#endif
+
 #endif
 #endif

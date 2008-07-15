@@ -3,7 +3,6 @@
 #include <sci_defs/mpi_defs.h>
 
 #include <cstdlib>
-#include <mpi.h>
 #include <iostream>
 #include <vector>
 #include <queue>

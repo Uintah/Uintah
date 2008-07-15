@@ -7443,9 +7443,8 @@ echo "$as_me: error: '$with_malloc_trace/include/MallocTrace.h' does not exist. 
 echo "${ECHO_T}yes" >&6
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    MALLOC_TRACE_LIB_DIR_FLAG="-L$with_malloc_trace/lib/shared"
+    MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace -lMallocTraceMPI"
-
   fi
 
 
