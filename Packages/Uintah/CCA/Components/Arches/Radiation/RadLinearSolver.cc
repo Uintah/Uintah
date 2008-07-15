@@ -1,6 +1,5 @@
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Thread/Time.h>
