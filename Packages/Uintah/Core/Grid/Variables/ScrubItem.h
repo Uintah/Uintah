@@ -38,6 +38,7 @@ struct ScrubItem {
 
   UINTAHSHARE static TrivialAllocator scrub_alloc;
 
+#ifndef MALLOC_TRACE //disable new/delete overloads if MALLOC_TRACE is on
   void* operator new(size_t)
   {
     return scrub_alloc.alloc();
@@ -47,6 +48,7 @@ struct ScrubItem {
   {	
     scrub_alloc.free(rp);
   }
+#endif
 
 };
 #ifdef MALLOC_TRACE

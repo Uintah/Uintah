@@ -43,9 +43,6 @@
 
 #include <Core/Malloc/Allocator.h>
 
-#ifdef MALLOC_TRACE
-  #include "MallocTraceOff.h"
-#endif 
 
 #include <Core/Malloc/AllocPriv.h>
 #include <Core/Malloc/mem_init.h>
@@ -71,6 +68,10 @@
 #  define THROWCLAUSE
 #endif
 
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOff.h"
+#endif 
+
 extern "C" {
   void* malloc(size_t size) THROWCLAUSE;
   void free(void* ptr) THROWCLAUSE;
@@ -79,6 +80,10 @@ extern "C" {
   void* memalign(size_t, size_t) THROWCLAUSE;
   void* valloc(size_t) THROWCLAUSE;
 }
+
+#ifdef MALLOC_TRACE
+  #include "MallocTraceOn.h"
+#endif 
 
 #ifndef DISABLE_SCI_MALLOC
 
@@ -148,8 +153,5 @@ void* valloc(size_t size) THROWCLAUSE
                "Unknown - valloc");
 }
 
-#ifdef MALLOC_TRACE
-  #include "MallocTraceOn.h"
-#endif 
 
 #endif

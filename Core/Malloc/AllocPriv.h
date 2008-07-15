@@ -129,8 +129,14 @@ struct Allocator {
     
     void* memalign(size_t alignment, size_t size, const char* tag);
     void* alloc(size_t size, const char* tag, int linenum);
+#ifdef MALLOC_TRACE
+#include <MallocTraceOff.h>
+#endif
     void free(void*);
     void* realloc(void* p, size_t size);
+#ifdef MALLOC_TRACE
+#include <MallocTraceOn.h>
+#endif
 
     int strict;
     int lazy;

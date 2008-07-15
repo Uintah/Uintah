@@ -424,9 +424,6 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
     }
   }
 }
-//#ifdef MALLOC_TRACE
-//  #include "MallocTraceOff.h"
-//#endif 
 
 // used to be in terms of the dw index within the scheduler,
 // but now store WhichDW.  This enables multiple tg execution
@@ -446,9 +443,6 @@ void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
   if (scrubout.active() && (var->getName() == dbgScrubVar || dbgScrubVar == "") && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1))
     scrubout << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex << "/" << *var << ": " << result->count << endl;
 }
-//#ifdef MALLOC_TRACE
-//  #include "MallocTraceOn.h"
-//#endif 
 
 void DetailedTasks::setScrubCount(const Task::Dependency* req, int matl, const Patch* patch,
                                   vector<OnDemandDataWarehouseP>& dws)
