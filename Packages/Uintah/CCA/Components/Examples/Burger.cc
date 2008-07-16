@@ -107,7 +107,7 @@ void Burger::initialize(const ProcessorGroup*,
     IntVector l = patch->getNodeLowIndex__New();
     IntVector h = patch->getNodeHighIndex__New();
     
-    for( NodeIterator iter=patch->getNodeIterator(); !iter.done(); iter++ ){
+    for( NodeIterator iter=patch->getNodeIterator__New(); !iter.done(); iter++ ){
       IntVector n = *iter;
       Point p = patch->nodePosition(n);
       u[n] = sin( p.x() * 3.14159265358 ) + sin( p.y() * 2*3.14159265358)  +  sin( p.z() * 3*3.14159265358);
