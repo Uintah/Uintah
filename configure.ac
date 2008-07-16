@@ -1997,8 +1997,8 @@ if test -z "$thirdparty"; then
   sci_compiler_vers=gcc-3.0.4
 
   if test "$sci_tp_arch" = "Darwin"; then
-     # Add on to the path info on whether it is a PPC or Intel Processor
-     sci_tp_arch=$sci_tp_arch-`uname -p`
+     # Add on to the path info on whether it is a PPC or Intel Processor, and which os version
+     sci_tp_arch=$sci_tp_arch-`uname -p`-`uname -r`
   fi
 
   # Try to figure out the compilers version (as it is used in the thirdparty directory name.)
