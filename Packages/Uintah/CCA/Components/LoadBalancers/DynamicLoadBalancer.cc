@@ -55,6 +55,7 @@ DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
   if( zz == NULL ){
     throw InternalError("Zoltan creation failed!", __FILE__, __LINE__);
    }
+  zz->Set_Param("TFLOPS_SPECIAL", "1");
 #endif
 }
 
