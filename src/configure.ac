@@ -2940,6 +2940,12 @@ else
     _sci_inc="$with_png/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
+  else
+    # If --with-png not specified, and png.h is in the 3P, then look there by default.
+    if test -f "$sci_thirdparty_include"/png.h; then
+      _sci_lib="$sci_thirdparty_lib"
+      _sci_inc="$sci_thirdparty_include"
+    fi
   fi 
 fi
 
