@@ -517,6 +517,7 @@ bool Level::containsPointInRealCells(const Point& p) const
 
 void Level::finalizeLevel()
 {
+  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
   TAU_PROFILE("Level::finalizeLevel()", " ", TAU_USER);
   each_patch = scinew PatchSet();
   each_patch->addReference();
@@ -545,6 +546,7 @@ void Level::finalizeLevel()
 
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
+  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
   TAU_PROFILE("Level::finalizeLevel(periodic)", " ", TAU_USER);
 
   // set each_patch and all_patches before creating virtual patches
@@ -610,6 +612,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 }
 void Level::setBCTypes()
 {
+  MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
   TAU_PROFILE("Level::setBCTypes", " ", TAU_USER);
 #ifdef SELECT_GRID
    if(d_patchDistribution.x() >= 0 && d_patchDistribution.y() >= 0 &&
