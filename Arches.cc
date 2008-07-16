@@ -35,6 +35,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -158,27 +159,16 @@ Arches::problemSetup(const ProblemSpecP& params,
     db_mms->getWithDefault("whichMMS", d_mms, "constantMMS");
     if (d_mms == "constantMMS") {
       ProblemSpecP db_mms0 = db_mms->findBlock("constantMMS");
-      db_mms0->getWithDefault("cu",cu,0.0);
-      db_mms0->getWithDefault("cv",cv,0.0);
-      db_mms0->getWithDefault("cw",cw,0.0);
-      db_mms0->getWithDefault("cp",cp,0.0);
-      db_mms0->getWithDefault("phi0",phi0,0.0);
-    }
-    else if (d_mms == "gao1MMS") {
-      ProblemSpecP db_mms1 = db_mms->findBlock("gao1MMS");
-      db_mms1->getWithDefault("cu",cu,1.0);
-      db_mms1->getWithDefault("cv",cv,1.0);
-      db_mms1->getWithDefault("cw",cw,1.0);
-      db_mms1->getWithDefault("cp",cp,1.0);
-      db_mms1->getWithDefault("phi0",phi0,0.5);
-    }
-    else if (d_mms == "thornock1MMS") {
-      ProblemSpecP db_mms2 = db_mms->findBlock("thornock1MMS");
-      db_mms2->require("cu",cu);
+      db_mms0->getWithDefault("cu",d_cu,0.0);
+      db_mms0->getWithDefault("cv",d_cv,0.0);
+      db_mms0->getWithDefault("cw",d_cw,0.0);
+      db_mms0->getWithDefault("cp",d_cp,0.0);
+      db_mms0->getWithDefault("phi0",d_phi0,0.0);
+      db_mms0->getWithDefault("esphi0",d_esphi0,0.0);
     }
     else if (d_mms == "almgrenMMS") {
       ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
-      db_mms3->require("amplitude",amp);
+      db_mms3->require("amplitude",d_amp);
     }
     else
       throw InvalidValue("current MMS "
@@ -1234,6 +1224,12 @@ Arches::sched_mmsInitialCondition(const LevelP& level,
   tsk->modifies(d_lab->d_pressurePSLabel);
   tsk->modifies(d_lab->d_scalarSPLabel);
 
+  if (d_calcExtraScalars){
+    for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++){
+      tsk->modifies(d_extraScalars[i]->getScalarLabel());
+    }
+  }
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
@@ -1263,334 +1259,85 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
     new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
     new_dw->getModifiable(pressure,  d_lab->d_pressurePSLabel,    matlIndex, patch);
     new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      matlIndex, patch);
-    
+   
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
+    
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
     double pi = acos(-1.0);
 
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-
-          IntVector currCell(colX, colY, colZ);
-          if (d_mms == "constantMMS") {
-            pressure[currCell] = cp;
-            scalar[currCell]   = phi0;
-          }
-          else if (d_mms == "gao1MMS") {
-            pressure[currCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
-            scalar[currCell] = phi0;
-          }
-          else if (d_mms == "thornock1MMS") {
-          }
-          else if (d_mms == "almgrenMMS") {
-            // for mms in x-y plane
-            pressure[currCell]  = -amp*amp/4 * (cos(4.0*pi*cellinfo->xx[colX])
-                         +  cos(4.0*pi*cellinfo->yy[colY]));
-            scalar[currCell]    = 0.0;
-          }
+    //CELL centered variables
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      IntVector currCell = *iter; 
+    
+      if (d_mms == "constantMMS") { 
+        pressure[*iter] = d_cp;
+        scalar[*iter]   = d_phi0;
+        if (d_calcExtraScalars) {
+      
+          for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
+           CCVariable<double> extra_scalar;
+           new_dw->allocateAndPut(extra_scalar,
+                                  d_extraScalars[i]->getScalarLabel(),
+                                  matlIndex, patch);
+           extra_scalar.initialize(d_esphi0);
+         }
         }
+      } else if (d_mms == "almgrenMMS") {         
+        pressure[*iter] = -d_amp*d_amp/4 * (cos(4.0*pi*cellinfo->xx[currCell.x()])
+                          + cos(4.0*pi*cellinfo->yy[currCell.y()]));
+        scalar[*iter]   = 0.0;
       }
     }
 
     //X-FACE centered variables 
-    idxLo = patch->getSFCXFORTLowIndex();
-    idxHi = patch->getSFCXFORTHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          if (d_mms == "constantMMS") {
-            uVelocity[currCell] = cu;
-          }
-          else if (d_mms == "gao1MMS") {
-            uVelocity[currCell] = cu*cellinfo->xu[colX];
-          }
-          else if (d_mms == "thornock1MMS") {
-          }
-          else if (d_mms == "almgrenMMS") {
-            // for mms in x-y plane
-            uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-              * sin(2.0*pi*cellinfo->yy[colY]);
-          }
-        }
+    for (CellIterator iter=patch->getSFCXIterator__New(); !iter.done(); iter++){
+      IntVector currCell = *iter; 
+
+      if (d_mms == "constantMMS") { 
+        uVelocity[*iter] = d_cu; 
+      } else if (d_mms == "almgrenMMS") { 
+        // for mms in x-y plane
+        uVelocity[*iter] = 1 - d_amp * cos(2.0*pi*cellinfo->xu[currCell.x()])
+                           * sin(2.0*pi*cellinfo->yy[currCell.y()]);       
       }
     }
 
     //Y-FACE centered variables 
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+    for (CellIterator iter=patch->getSFCYIterator__New(); !iter.done(); iter++){
+      IntVector currCell = *iter; 
 
-          IntVector currCell(colX, colY, colZ);
-
-          if (d_mms == "constantMMS") {
-            vVelocity[currCell] = cv;
-          }
-          else if (d_mms == "gao1MMS") {
-            vVelocity[currCell] = cv*cellinfo->yv[colY];
-          }
-          else if (d_mms == "thornock1MMS") {
-          }
-          else if (d_mms == "almgrenMMS") {
-            // for mms in x-y plane
-
-            vVelocity[currCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-              * cos(2.0*pi*cellinfo->yv[colY]);
-
-          }
-        }
-      }
-    }
-    //Z-FACE centered variables 
-    idxLo = patch->getSFCZFORTLowIndex();
-    idxHi = patch->getSFCZFORTHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-
-          IntVector currCell(colX, colY, colZ);
-
-          if (d_mms == "constantMMS") {
-            wVelocity[currCell] = cw;
-          }
-          else if (d_mms == "gao1MMS") {
-            wVelocity[currCell] = cw*cellinfo->zw[colZ];
-          }
-          else if (d_mms == "thornock1MMS") {
-          }
-          else if (d_mms == "almgrenMMS") {
-            // for mms in x-y plane
-            //double pi = acos(-1.0);
-
-            wVelocity[currCell] = 0.0;
-          }
-        }
-      }
-    }
-
-
-    bool doit=false;
-
-    if (doit){
-
-      //debugging for now...find a better way plz
-
-
-    //ALSO need to fill the boundaries
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-    //WARNING!!!
-    //For now we will assume if xminus, xplus, ..., are true, then 
-    // we need to set mms boundary condition
-    //int wall_celltypeval = wallCellType();      
-
-    if (xminus) {
-
-      int colX = idxLo.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      if (d_mms == "constantMMS") { 
+        vVelocity[*iter] = d_cv; 
+      } else if (d_mms == "almgrenMMS") { 
+        // for mms in x-y plane
+        vVelocity[*iter] = 1 + d_amp * sin(2.0*pi*cellinfo->xx[currCell.x()])
+                              * cos(2.0*pi*cellinfo->yv[currCell.y()]); 
         
-          IntVector currCell(colX, colY, colZ);
-          IntVector xminusCell(colX-1, colY, colZ);
-
-          //if (cellType[xminusCell] == wall_celltypeval){
-
-          if (d_mms == "gao1MMS"){
-           
-            scalar[xminusCell]    = phi0;
-            uVelocity[currCell]   = cu*cellinfo->xu[colX];
-            uVelocity[xminusCell] = cu*cellinfo->xu[colX-1];
-            vVelocity[xminusCell] = cv*cellinfo->yv[colY];
-            wVelocity[xminusCell] = cw*cellinfo->zw[colZ];
-            pressure[xminusCell]  = cp*(cellinfo->xx[colX-1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
-            
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-            double pi = acos(-1.0);
-            uVelocity[currCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-                                          * sin(2.0*pi*cellinfo->yy[colY]);
-            uVelocity[xminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX-1])
-                                            * sin(2.0*pi*cellinfo->yy[colY]);
-            vVelocity[xminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX-1])
-                                            * cos(2.0*pi*cellinfo->yv[colY]);
-            wVelocity[xminusCell] = 0.0;
-          }
-        }
-      }
-    }   
-
-    if (xplus) {
-      int colX = idxHi.x();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-          
-          IntVector currCell(colX, colY, colZ);
-          IntVector xplusCell(colX+1, colY, colZ);
-          
-          if (d_mms == "gao1MMS"){
-            scalar[xplusCell]    = phi0;
-            uVelocity[xplusCell] = cu*cellinfo->xu[colX+1];
-            vVelocity[xplusCell] = cv*cellinfo->yv[colY];
-            wVelocity[xplusCell] = cw*cellinfo->zw[colZ];
-            pressure[xplusCell]  = cp*(cellinfo->xx[colX+1]+cellinfo->yy[colY]+cellinfo->zz[colZ]);
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-            double pi = acos(-1.0);
-            uVelocity[xplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX+1])
-                                           * sin(2.0*pi*cellinfo->yy[colY]);
-            vVelocity[xplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX+1])
-                                           * cos(2.0*pi*cellinfo->yv[colY]);
-            wVelocity[xplusCell] = 0.0;
-          }
-        }
-      }
-    }    
-
-    if (yminus) {
-      int colY = idxLo.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          
-          IntVector currCell(colX, colY, colZ);
-          IntVector yminusCell(colX, colY-1, colZ);
-          
-          if (d_mms == "gao1MMS"){
-            scalar[yminusCell]    = phi0;
-            uVelocity[yminusCell] = cu*cellinfo->xu[colX];
-            vVelocity[currCell]   = cv*cellinfo->yv[colY];
-            vVelocity[yminusCell] = cv*cellinfo->yv[colY-1];
-            wVelocity[yminusCell] = cw*cellinfo->zw[colZ];
-            pressure[yminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY-1]+cellinfo->zz[colZ]);
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-            double pi = acos(-1.0);
-            uVelocity[yminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-                                            * sin(2.0*pi*cellinfo->yy[colY-1]);
-            vVelocity[yminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-                                            * cos(2.0*pi*cellinfo->yv[colY-1]);
-            vVelocity[currCell]   = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-                                            * cos(2.0*pi*cellinfo->yv[colY]);
-            wVelocity[yminusCell] = 0.0;
-
-          }
-          
-        }
-      }
-    }    
-
-    if (yplus) {
-      int colY = idxHi.y();
-      for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          
-          IntVector currCell(colX, colY, colZ);
-          IntVector yplusCell(colX, colY+1, colZ);
-          
-          //if (cellType[yplusCell] == wall_celltypeval){
-          
-          if (d_mms == "gao1MMS"){
-            scalar[yplusCell]    = phi0;
-            uVelocity[yplusCell] = cu*cellinfo->xu[colX];
-            vVelocity[yplusCell] = cv*cellinfo->yv[colY+1];
-            wVelocity[yplusCell] = cw*cellinfo->zw[colZ];
-            pressure[yplusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY+1]+cellinfo->zz[colZ]);
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-            double pi = acos(-1.0);
-            uVelocity[yplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-                                           * sin(2.0*pi*cellinfo->yy[colY+1]);
-            vVelocity[yplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-                                           * cos(2.0*pi*cellinfo->yv[colY+1]);
-            wVelocity[yplusCell] = 0.0;
-          }
-        }
-      }
-    }    
-
-    if (zminus) {
-      int colZ = idxLo.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          
-          IntVector currCell(colX, colY, colZ);
-          IntVector zminusCell(colX, colY, colZ-1);
-          
-          if (d_mms == "gao1MMS"){
-            scalar[zminusCell]    = phi0;
-            uVelocity[zminusCell] = cu*cellinfo->xu[colX];
-            vVelocity[zminusCell] = cv*cellinfo->yv[colY];
-            wVelocity[currCell]   = cw*cellinfo->zw[colZ];
-            wVelocity[zminusCell] = cw*cellinfo->zw[colZ-1];
-            pressure[zminusCell]  = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ-1]);
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-            double pi = acos(-1.0);
-            uVelocity[zminusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-                                            * sin(2.0*pi*cellinfo->yy[colY]);
-            vVelocity[zminusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-                                            * cos(2.0*pi*cellinfo->yv[colY]);
-            wVelocity[currCell] = 0.0;
-            wVelocity[zminusCell] = 0.0;
-          }            
-        }
-      }
-    }    
-
-    if (zplus) {
-      int colZ = idxHi.z();
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          
-          IntVector currCell(colX, colY, colZ);
-          IntVector zplusCell(colX, colY, colZ+1);
-          
-          if (d_mms == "gao1MMS"){
-            scalar[zplusCell] = phi0;
-            uVelocity[zplusCell] = cu*cellinfo->xu[colX];
-            vVelocity[zplusCell] = cv*cellinfo->yv[colY];
-            wVelocity[zplusCell] = cw*cellinfo->zw[colZ+1];
-            pressure[zplusCell] = cp*(cellinfo->xx[colX]+cellinfo->yy[colY]+cellinfo->zz[colZ+1]);
-          }
-          else if (d_mms == "thornock1MMS"){
-            }
-          else if (d_mms == "almgrenMMS"){
-            double pi = acos(-1.0);
-            uVelocity[zplusCell] = 1 - amp * cos(2.0*pi*cellinfo->xu[colX])
-                                           * sin(2.0*pi*cellinfo->yy[colY]);
-            vVelocity[zplusCell] = 1 + amp * sin(2.0*pi*cellinfo->xx[colX])
-                                           * cos(2.0*pi*cellinfo->yv[colY]);
-            wVelocity[zplusCell] = 0.0;
-          }            
-        }
       }
     }
+
+    //Z-FACE centered variables 
+    for (CellIterator iter=patch->getSFCZIterator__New(); !iter.done(); iter++){
+
+      if (d_mms == "constantMMS") { 
+        wVelocity[*iter] = d_cw; 
+      } else if (d_mms == "almgrenMMS") { 
+        // for mms in x-y plane
+        wVelocity[*iter] =  0.0;
+      }
     }
+
+    // Previously, we had the boundaries initialized here (below this comment).  I have removed
+    // this since a) it seemed incorrect and b) because it would fit better
+    // where BC's were applied.  Note that b) implies that we have a better
+    // BC abstraction.
+    // -Jeremy
+
   }
 }
 

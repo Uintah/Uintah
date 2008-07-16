@@ -232,22 +232,6 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       db_whichmms->getWithDefault("cp",cp,1.0);
       db_whichmms->getWithDefault("phi0",phi0,0.5);
     }
-    else if (d_mms == "gao1MMS") {
-      ProblemSpecP db_whichmms = db_mmsblock->findBlock("gao1MMS");
-      db_whichmms->require("rhoair",   d_airDensity);
-      db_whichmms->require("rhohe",    d_heDensity);
-      db_whichmms->require("gravity",  d_gravity);//Vector
-      db_whichmms->require("viscosity",d_viscosity); 
-      db_whichmms->getWithDefault("cu",cu,1.0);
-      db_whichmms->getWithDefault("cv",cv,1.0);
-      db_whichmms->getWithDefault("cw",cw,1.0);
-      db_whichmms->getWithDefault("cp",cp,1.0);
-      db_whichmms->getWithDefault("phi0",phi0,0.5);
-    }
-    else if (d_mms == "thornock1MMS") {
-      ProblemSpecP db_whichmms = db_mmsblock->findBlock("thornock1MMS");
-      db_whichmms->require("cu",cu);
-    }
     else if (d_mms == "almgrenMMS") {
       ProblemSpecP db_whichmms = db_mmsblock->findBlock("almgrenMMS");
       db_whichmms->getWithDefault("amplitude",amp,0.0);
