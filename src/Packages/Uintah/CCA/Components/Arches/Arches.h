@@ -299,9 +299,9 @@ private:
     bool d_underflow;
     string d_mms;
     //linear mms
-    double cu,cv,cw,cp,phi0;
+    double d_cu,d_cv,d_cw,d_cp,d_phi0,d_esphi0;
     //sine mms
-    double amp;
+    double d_amp;
     bool d_calcExtraScalars;
     ExtraScalarSolver* d_extraScalarSolver;
     vector<ExtraScalarSolver*> d_extraScalars;
