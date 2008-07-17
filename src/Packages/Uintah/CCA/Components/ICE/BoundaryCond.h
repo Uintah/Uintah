@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/DensityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -171,6 +172,9 @@ bool getIteratorBCValueBCKind( const Patch* patch,
 						       "Symmetric", bound_ptr, 
 							nu, child);
 
+  const SymmetryBoundCond* new_sym_bc = 
+    dynamic_cast<const SymmetryBoundCond *>(sym_bc);
+
   const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);       
 
   bc_value=T(-9);
@@ -179,7 +183,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     bc_value = new_bcs->getValue();
     bc_kind = new_bcs->getKind();
   }        
-  if (sym_bc != 0) {       // symmetric
+  if (new_sym_bc != 0) {       // symmetric
     bc_kind = "symmetric";
   }
   if (desc == "zeroNeumann" ){
