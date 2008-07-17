@@ -53,9 +53,12 @@ namespace Uintah {
       maxd=1;
     if(range[2]>range[maxd])
       maxd=2;
-      
+     
+    //sort on maiximum dimension
     sortDim_=maxd;
     sort(begin,end);
+
+    //split the list in half
 
     //create left and right nodes/leafs
     unsigned int size=(end-begin);
