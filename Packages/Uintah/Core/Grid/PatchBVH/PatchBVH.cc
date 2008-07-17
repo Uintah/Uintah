@@ -40,7 +40,32 @@ namespace Uintah {
       PatchBVHBase::PatchKeyVal key;
 
       key.patch=*iter;
-      key.center= ((*iter)->getExtraNodeLowIndex__New()+(*iter)->getExtraNodeHighIndex__New())*IntVector(.5,.5,.5);
+      key.center= ((*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New())*IntVector(.5,.5,.5);
+
+      patches_.push_back(key);
+    }
+
+
+    if(patches_.size()>PatchBVHBase::getLeafSize())
+    {
+      //create a node
+      root_=new PatchBVHNode(patches_.begin(), patches_.end());
+    }
+    else
+    {
+      //create a leaf
+      root_=new PatchBVHLeaf(patches_.begin(), patches_.end());
+    }
+  }
+  
+  PatchBVH::PatchBVH(const std::vector<Patch*>& patches)
+  {
+    for(std::vector<Patch*>::const_iterator iter=patches.begin();iter<patches.end();iter++)
+    {
+      PatchBVHBase::PatchKeyVal key;
+
+      key.patch=*iter;
+      key.center= ((*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New())*IntVector(.5,.5,.5);
 
       patches_.push_back(key);
     }

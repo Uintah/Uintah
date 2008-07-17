@@ -36,13 +36,13 @@ namespace Uintah {
   PatchBVHNode::PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end) : left_(NULL), right_(NULL)
   {
     //set bounding box
-    low_=begin->patch->getExtraNodeLowIndex__New();
-    high_=begin->patch->getExtraNodeHighIndex__New();
+    low_=begin->patch->getCellLowIndex__New();
+    high_=begin->patch->getCellHighIndex__New();
 
     for(std::vector<PatchKeyVal>::iterator iter=begin+1; iter<end; iter++)
     {
-       low_=Min(low_,iter->patch->getExtraNodeLowIndex__New());
-       high_=Max(high_,iter->patch->getExtraNodeHighIndex__New());
+       low_=Min(low_,iter->patch->getCellLowIndex__New());
+       high_=Max(high_,iter->patch->getCellHighIndex__New());
     }
 
     //find maximum dimension
