@@ -8,7 +8,8 @@ SUBDIRS := \
         $(SRCDIR)/TestRangeTree \
         $(SRCDIR)/TestBoxGrouper \
         $(SRCDIR)/BNRRegridder \
-				$(SRCDIR)/IteratorTest
+				$(SRCDIR)/IteratorTest \
+				$(SRCDIR)/PatchBVH
 
 #       $(SRCDIR)/SFCTest \
 
