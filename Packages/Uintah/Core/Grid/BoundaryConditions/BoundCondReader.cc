@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/UnionBCData.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCData.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/Auxiliary.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
@@ -24,6 +25,7 @@
 #include   <string>
 #include   <map>
 #include   <iterator>
+#include   <set>
 #include <sgi_stl_warnings_on.h>
 
 using namespace std;
@@ -301,6 +303,22 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
       delete bc;
     }
+
+    // Add the Auxillary boundary condition type
+#if 1
+    set<int> materials;
+    for (multimap<int,BoundCondBase*>::const_iterator i = bctype_data.begin();
+         i != bctype_data.end(); i++) {
+      //      cout << "mat id = " << i->first << endl;
+      materials.insert(i->first);
+    }
+    for (set<int>::const_iterator i = materials.begin(); i != materials.end();
+         i++) {
+      AuxiliaryBoundCond* bc = scinew AuxiliaryBoundCond();
+      bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
+      delete bc;
+    }
+#endif
 
     // Print out all of the bcs just created
     multimap<int,BoundCondBase*>::const_iterator it;
