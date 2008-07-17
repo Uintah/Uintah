@@ -651,7 +651,7 @@ void setBC(CCVariable<double>& var_CC,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind = "NotSet";
-      vector<IntVector> *bound_ptr;
+      vector<IntVector> *bound_ptr = 0;
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
 					       bc_value, bound_ptr,bc_kind); 
