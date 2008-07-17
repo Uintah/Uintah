@@ -399,9 +399,9 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
           
           temp_bcs = patch->getArrayBCValues(face,matl,"Temperature",nu,
                                              nbound_ptr,child);
-          if (temp_bcs != 0) {
-            const TemperatureBoundCond* bc =
-              dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
+          const TemperatureBoundCond* bc =
+            dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
+          if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end();
                    boundary++) {
