@@ -110,11 +110,12 @@ namespace Uintah {
 
     }; // end class BaseIterator
     
+
    /**
     * Returns true if a is less than b according to the way uintah
     * lays out it's iterators (Z then Y then X)
     */
-    static bool compare(const IntVector &a, const IntVector &b)
+    bool compare(const IntVector &a, const IntVector &b)
       {
         if(a.z()<b.z())
           return true;
@@ -129,7 +130,6 @@ namespace Uintah {
         else
           return false;
       }
-
 } // End namespace Uintah
   
 #endif
