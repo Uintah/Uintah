@@ -1,6 +1,6 @@
 
-#ifndef UINTAH_HOMEBREW_BaseIterator_H
-#define UINTAH_HOMEBREW_BaseIterator_H
+#ifndef UINTAH_BaseIterator_H
+#define UINTAH_BaseIterator_H
 
 #include <ostream>
 using namespace std;
@@ -48,88 +48,89 @@ namespace Uintah {
    ****************************************/
 
   class UINTAHSHARE BaseIterator : 
-    public std::iterator<std::forward_iterator_tag, IntVector> {
-      friend class Iterator;
-      public:
-
-      virtual ~BaseIterator() {}
-
-      /**
-       * prefix operator to move the iterator forward
-       */
-      virtual BaseIterator& operator++()=0; 
-
-      /**
-       * postfix operator to move the iterator forward
-       * does not return the iterator because of performance issues
-       */
-      virtual void operator++(int) = 0;
-
-      /**
-       * returns true if the iterator is done
-       */    
-      virtual bool done() const = 0;
-
-      /**
-       * returns the IntVector that the current iterator is pointing at
-       */
-      virtual IntVector operator*() const=0;
-
-      /**
-       * Return the first element of the iterator
-       */
-      virtual IntVector begin() const=0;
-
-      /**
-       * Return the last element of the iterator
-       */
-      virtual IntVector end() const=0;
-
-      protected:
-      /**
-       * Prevent this class from being instantiated, use an inherited class instead
-       */
-      BaseIterator() {};
-
-      private:
-      /**
-       * Returns a pointer to a deep copy of the virtual class
-       * this should be used only by the Iterator class
-       */
-      virtual BaseIterator* clone() const = 0;
-
-      /**
-       * send iterator information to the ostream 
-       */
-      virtual ostream& put(ostream&) const = 0;
-
-      /**
-       * resets the iterator to the begining
-       */
-      virtual void reset() = 0;
-
-    }; // end class BaseIterator
-
-
-  /**
-   * Returns true if a is less than b according to the way uintah
-   * lays out it's iterators (Z then Y then X)
-   */
-  bool compareIt(const IntVector &a, const IntVector &b)
+    public std::iterator<std::forward_iterator_tag, IntVector> 
   {
-    if(a.z()<b.z())
-      return true;
-    else if( b.z() < a.z())
-      return false;
-    else if(a.y()<b.y())
-      return true;
-    else if( b.y() < a.y())
-      return false;
-    else if(a.x()<b.x())
-      return true;
-    else
-      return false;
-  }
+    friend class Iterator;
+    public:
+
+    virtual ~BaseIterator() {}
+
+    /**
+     * prefix operator to move the iterator forward
+     */
+    virtual BaseIterator& operator++()=0; 
+
+    /**
+     * postfix operator to move the iterator forward
+     * does not return the iterator because of performance issues
+     */
+    virtual void operator++(int) = 0;
+
+    /**
+     * returns true if the iterator is done
+     */    
+    virtual bool done() const = 0;
+
+    /**
+     * returns the IntVector that the current iterator is pointing at
+     */
+    virtual IntVector operator*() const=0;
+
+    /**
+     * Return the first element of the iterator
+     */
+    virtual IntVector begin() const=0;
+
+    /**
+     * Return the last element of the iterator
+     */
+    virtual IntVector end() const=0;
+
+    protected:
+    /**
+     * Returns true if a is less than b according to the way uintah
+     * lays out it's iterators (Z then Y then X)
+     */
+    static bool compare(const IntVector &a, const IntVector &b)
+    {
+      if(a.z()<b.z())
+        return true;
+      else if( b.z() < a.z())
+        return false;
+      else if(a.y()<b.y())
+        return true;
+      else if( b.y() < a.y())
+        return false;
+      else if(a.x()<b.x())
+        return true;
+      else
+        return false;
+    }
+    /**
+     * Prevent this class from being instantiated, use an inherited class instead
+     */
+    BaseIterator() {};
+
+    private:
+    /**
+     * Returns a pointer to a deep copy of the virtual class
+     * this should be used only by the Iterator class
+     */
+    virtual BaseIterator* clone() const = 0;
+
+    /**
+     * send iterator information to the ostream 
+     */
+    virtual ostream& put(ostream&) const = 0;
+
+    /**
+     * resets the iterator to the begining
+     */
+    virtual void reset() = 0;
+
+  }; // end class BaseIterator
+
+
 } // End namespace Uintah
   
 #endif
