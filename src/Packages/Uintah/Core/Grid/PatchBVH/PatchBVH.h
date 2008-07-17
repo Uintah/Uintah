@@ -41,6 +41,7 @@ namespace Uintah {
   {
     public:
       PatchBVH(const std::vector<const Patch*>& patches);
+      PatchBVH(const std::vector<Patch*>& patches);
 
       ~PatchBVH();
 
