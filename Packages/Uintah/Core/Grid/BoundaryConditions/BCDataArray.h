@@ -56,7 +56,8 @@ namespace Uintah {
 
      /// Get the boundary condition data for a given material and a given
      /// type for a given child.
-     const BoundCondBase* getBoundCondData(int mat_id,string type, int i) const;
+     const BoundCondBase* getBoundCondData(int mat_id,const string type, 
+                                           int i) const;
 
      /// Determine the iterator limits.
      void determineIteratorLimits(Patch::FaceType face, const Patch* patch);
