@@ -1,6 +1,8 @@
 #ifndef UDA2NRRD_PARTICLES_H
 #define UDA2NRRD_PARTICLES_H
 
+#include "particleData.h"
+
 #include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
 #include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
 
@@ -13,6 +15,9 @@
 //
 // If 'data' is NULL, then the data is in the x, y, and z arrays. 
 //
+
+typedef vector<Matrix3> matrixVec;
+
 struct ParticleDataContainer {
   ParticleDataContainer() :
     name( "name not set" ),
@@ -34,6 +39,10 @@ struct ParticleDataContainer {
   float      * data;
   float      * x, * y, * z;
   unsigned int numParticles;
+  
+  // Addition
+  matrixVec* matrixRep; // matrix repository
+  int type; // 1 -> Vectors, 2 -> Tensors
 };
 
 //
@@ -48,10 +57,11 @@ struct ParticleDataContainer {
 
 template<class PartT>
 ParticleDataContainer
-handleParticleData( QueryInfo & qinfo );
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication );
 
 void
 saveParticleData( std::vector<ParticleDataContainer> & data,
-                  const std::string                  & filename );
+                  const std::string                  & filename,
+				  variables & varColln );
 
 #endif // UDA2NRRD_PARTICLES_H
