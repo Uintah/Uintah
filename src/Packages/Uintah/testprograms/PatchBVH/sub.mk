@@ -12,6 +12,7 @@ PSELIBS := \
         Core/Exceptions                          \
         Core/Geometry                            \
         Packages/Uintah/Core/Grid                \
+        Packages/Uintah/Core/Util                
 
 LIBS := 
 
