@@ -306,7 +306,7 @@ void BCDataArray::combineBCGeometryTypes_NEW(int mat_id)
 }
 
 const BoundCondBase* 
-BCDataArray::getBoundCondData(int mat_id, string type, int i) const
+BCDataArray::getBoundCondData(int mat_id, const string type, int i) const
 {
   BCData new_bc,new_bc_all;
   // Need to check two scenarios -- the given mat_id and the all mat_id (-1)
@@ -318,6 +318,11 @@ BCDataArray::getBoundCondData(int mat_id, string type, int i) const
     bool found_it = new_bc.find(type);
     if (found_it == true)
       return new_bc.getBCValues(type);
+    else {
+      found_it = new_bc.find("Auxiliary");
+      if (found_it)
+        return new_bc.getBCValues("Auxiliary");
+    }
   }
   // Check the mat_id = "all" case
   itr = d_BCDataArray.find(-1);
@@ -327,8 +332,12 @@ BCDataArray::getBoundCondData(int mat_id, string type, int i) const
       bool found_it = new_bc_all.find(type);
       if (found_it == true)
         return new_bc_all.getBCValues(type);
-      else
-        return 0;
+      else {
+        found_it = new_bc_all.find("Auxiliary");
+        if (found_it)
+          return new_bc_all.getBCValues("Auxiliary");
+      }
+      return 0;
     }
   }
   return 0;
