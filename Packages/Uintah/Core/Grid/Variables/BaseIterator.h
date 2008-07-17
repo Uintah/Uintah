@@ -53,18 +53,18 @@ namespace Uintah {
       public:
 
       virtual ~BaseIterator() {}
-      
+
       /**
        * prefix operator to move the iterator forward
        */
       virtual BaseIterator& operator++()=0; 
-      
+
       /**
        * postfix operator to move the iterator forward
        * does not return the iterator because of performance issues
        */
       virtual void operator++(int) = 0;
-      
+
       /**
        * returns true if the iterator is done
        */    
@@ -97,7 +97,7 @@ namespace Uintah {
        * this should be used only by the Iterator class
        */
       virtual BaseIterator* clone() const = 0;
-      
+
       /**
        * send iterator information to the ostream 
        */
@@ -109,27 +109,27 @@ namespace Uintah {
       virtual void reset() = 0;
 
     }; // end class BaseIterator
-    
 
-   /**
-    * Returns true if a is less than b according to the way uintah
-    * lays out it's iterators (Z then Y then X)
-    */
-    bool compare(const IntVector &a, const IntVector &b)
-      {
-        if(a.z()<b.z())
-          return true;
-        else if( b.z() < a.z())
-          return false;
-        else if(a.y()<b.y())
-          return true;
-        else if( b.y() < a.y())
-          return false;
-        else if(a.x()<b.x())
-          return true;
-        else
-          return false;
-      }
+
+  /**
+   * Returns true if a is less than b according to the way uintah
+   * lays out it's iterators (Z then Y then X)
+   */
+  bool compareIt(const IntVector &a, const IntVector &b)
+  {
+    if(a.z()<b.z())
+      return true;
+    else if( b.z() < a.z())
+      return false;
+    else if(a.y()<b.y())
+      return true;
+    else if( b.y() < a.y())
+      return false;
+    else if(a.x()<b.x())
+      return true;
+    else
+      return false;
+  }
 } // End namespace Uintah
   
 #endif
