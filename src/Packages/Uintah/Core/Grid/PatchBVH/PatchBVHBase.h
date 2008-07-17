@@ -15,14 +15,14 @@ namespace Uintah {
   /**************************************
 
     CLASS
-    PatchBVHBase
+      PatchBVHBase
 
-    A Bounding Volume Hiearchy for querying patches that are 
-    within a given range.  This class is a the base class for leafs and nodes.
+      A Bounding Volume Hiearchy for querying patches that are 
+      within a given range.  This class is a the base class for leafs and nodes.
 
     GENERAL INFORMATION
 
-    PatchBVHBase.h
+      PatchBVHBase.h
 
     Justin Luitjens
     Department of Computer Science
@@ -30,19 +30,32 @@ namespace Uintah {
 
     Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 
-    Copyright (C) 2008 SCI Group
+    Copyright (C) 2008 - University of Utah
 
     KEYWORDS
-    PatchBVH
+      PatchBVH
 
     DESCRIPTION
-    The PatchBVH is used for querying patches within a given range.
+      The PatchBVH is used for querying patches within a given range.
+
     WARNING
 
    ****************************************/
 
   class PatchBVHBase 
   {
+  public:
+    PatchBVHBase() {};
+
+    virtual ~PatchBVHBase() {} ;
+
+    virtual void query(const IntVector& low, const IntVector& high, Level::selectType& patches)=0;
+
+    static unsigned int getLeafSize() { return leafSize_; }
+    static void setLeafSize(int leafSize) { leafSize_=leafSize; }
+
+  protected:
+
     friend class PatchBVH;
     struct PatchKeyVal
     {
@@ -53,18 +66,6 @@ namespace Uintah {
       const Patch* patch;
       IntVector center;
     };
-    public:
-    PatchBVHBase() {};
-
-    virtual ~PatchBVHBase() {} ;
-
-    virtual void query(const IntVector& low, const IntVector& high, Level::selectType& patches)=0;
-
-    static unsigned int getLeafSize() { return leafSize_; }
-    static void setLeafSize(int leafSize) { leafSize_=leafSize; }
-
-    protected:
-
     /**
      * Returns true if the given range intersects my volume
      */
