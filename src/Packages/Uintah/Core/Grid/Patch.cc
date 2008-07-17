@@ -345,9 +345,12 @@ Patch::getArrayBCValues(Patch::FaceType face,
   BCDataArray* bcd = (*d_arrayBCS)[face];
   if (bcd) {
     const BoundCondBase* bc = bcd->getBoundCondData(mat_id,type,child);
-    bcd->getBoundaryIterator(mat_id,bound_ptr,child);
-    bcd->getNBoundaryIterator(mat_id,nbound_ptr,child);
-    return bc;
+    if (bc) {
+      bcd->getBoundaryIterator(mat_id,bound_ptr,child);
+      bcd->getNBoundaryIterator(mat_id,nbound_ptr,child);
+      return bc;
+    } else
+      return 0;
   } else
     return 0;
 }
