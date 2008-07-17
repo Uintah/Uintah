@@ -7,6 +7,7 @@ SRCDIR   := Packages/Uintah/Core/Grid
 SUBDIRS := \
 	$(SRCDIR)/BoundaryConditions \
 	$(SRCDIR)/Variables \
+	$(SRCDIR)/PatchBVH
 
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
