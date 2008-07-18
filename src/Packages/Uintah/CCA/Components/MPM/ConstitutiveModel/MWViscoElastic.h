@@ -43,6 +43,11 @@ namespace Uintah {
     const VarLabel* pStress_ve_dLabel;
     const VarLabel* pStress_e_vLabel;
     const VarLabel* pStress_e_dLabel;
+    const VarLabel* pStress_eLabel_preReloc;
+    const VarLabel* pStress_ve_vLabel_preReloc;
+    const VarLabel* pStress_ve_dLabel_preReloc;
+    const VarLabel* pStress_e_vLabel_preReloc;
+    const VarLabel* pStress_e_dLabel_preReloc;
 
     // Prevent copying of this class
     // copy constructor
