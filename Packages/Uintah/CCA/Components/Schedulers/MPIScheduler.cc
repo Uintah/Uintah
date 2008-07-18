@@ -88,6 +88,11 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
   d_lasttime=Time::currentSeconds();
   reloc_new_posLabel_=0;
 
+  // Sometimes it is easier to only see the spew on one processor...
+  //if( d_myworld->myrank() == 0 ) {
+  //  taskdbg.setActive( false );
+  //}
+
   if (timeout.active()) {    
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
@@ -241,8 +246,9 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   start_counters(0, 19);
 #endif
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC)
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+  }
 
   vector<DataWarehouseP> plain_old_dws(dws.size());
   for(int i=0;i<(int)dws.size();i++)
@@ -252,8 +258,9 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   task->doit(d_myworld, dws, plain_old_dws);
   //AllocatorSetDefaultTag(tag);
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC)
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+  }
 
 #ifdef USE_PERFEX_COUNTERS
   read_counters(0, &dummy, 19, &exec_flops);
@@ -310,7 +317,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
   mpi_info_.totalcommflops += send_flops;
 #endif
   
-}
+} // end runTask()
 
 void
 MPIScheduler::runReductionTask( DetailedTask         * task )
@@ -430,8 +437,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
       MPI_Pack_size(count, datatype, d_myworld->getComm(), &bytes);
 #endif
       sendsLock.lock(); // Dd: ??
-      sends_.add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(),
-                 batch->messageTag);
+      sends_.add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
       sendsLock.unlock(); // Dd: ??
       mpi_info_.totalsendmpi += Time::currentSeconds() - start;
     }
