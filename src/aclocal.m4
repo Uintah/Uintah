@@ -1084,7 +1084,6 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_required_gmake=no 
   sci_required_gzopen=no
   sci_required_hypre=no
-  sci_required_insight=no
   sci_required_java=no
   sci_required_jpeg=no
   sci_required_lapack=no
@@ -1122,15 +1121,8 @@ AC_DEFUN([SCI_SET_PACKAGE_CHECKS], [
 eval pkg_$1=yes
 
 case $1 in
-  BioPSE)
-  ;;
   Teem)
     sci_required_teem=yes
-  ;;
-  VDT)
-    sci_required_vdt=yes
-  ;;
-  MatlabInterface)
   ;;
   Uintah)
     sci_required_fortran=yes
@@ -1138,58 +1130,12 @@ case $1 in
     sci_required_perl=yes
     sci_required_tools=yes
   ;;
-  Fusion)
-  ;;
-  PCS)
-  ;;
-  DataIO)
-    sci_required_mdsplus=yes
-    sci_required_hdf5=yes
-  ;;
-  SCIJump)
-    sci_required_babel=yes
-    sci_required_ncurses=yes
-  ;;
-  Plume)
-    if test "$plume_checked" = "no"; then
-      plume_checked=yes
-      sci_required_loki=yes
-      sci_required_boost=yes
-      sci_required_tena=yes
-      #sci_required_qt=no
-      enable_scijump=yes
-
-      if test "$package" != "all"; then
-        package="$package Plume"
-      fi
-   fi
-  ;;
-  Remote)
-    sci_required_jpeg=yes
-    sci_required_tiff=yes
-  ;;
-  NetSolve)
-    sci_required_netsolve=yes
-  ;;
   rtrt)
     sci_required_glut=yes
     sci_required_glui=yes
     sci_required_oogl=yes
     sci_required_audio=yes 
     sci_required_teem=yes
-  ;;
-  Insight)
-    sci_required_insight=yes
-    sci_required_xalan=yes
-  ;;
-  Volume)
-    case $2 in 
-     *-darwin*)
-	sci_required_glew=yes
-	;;
-     *)
-        ;;
-    esac
   ;;
   Ptolemy)
   ;;

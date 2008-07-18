@@ -133,7 +133,7 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
 
 prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
 	@echo "Dummy file to keep Makefile 'prereqs' from continually firing..." >  prereqs
@@ -177,18 +177,6 @@ app: all
 	@mv $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun-bin
 	@cp -rp $(SRCTOP)/scripts/SCIRun $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/
 	chmod a+x $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/SCIRun*
-	@echo Copying BioImage
-	@mkdir -p $(SCIRUN_APP_DIR)/BioImage.app/Contents/MacOS
-	@cp -rp $(SRCTOP)/scripts/BioImage $(SCIRUN_APP_DIR)/BioImage.app/Contents/MacOS
-	@chmod a+x $(SCIRUN_APP_DIR)/BioImage.app/Contents/MacOS/BioImage
-	@echo Copying BioTensor
-	@mkdir -p $(SCIRUN_APP_DIR)/BioTensor.app/Contents/MacOS
-	@cp -rp $(SRCTOP)/scripts/BioTensor $(SCIRUN_APP_DIR)/BioTensor.app/Contents/MacOS
-	@chmod a+x $(SCIRUN_APP_DIR)/BioTensor.app/Contents/MacOS/BioTensor
-	@echo Copying BioFEM
-	@mkdir -p $(SCIRUN_APP_DIR)/BioFEM.app/Contents/MacOS
-	@cp -rp $(SRCTOP)/scripts/BioFEM $(SCIRUN_APP_DIR)/BioFEM.app/Contents/MacOS
-	@chmod a+x $(SCIRUN_APP_DIR)/BioFEM.app/Contents/MacOS/BioFEM
 	@touch app
 
 dmg: app
@@ -276,7 +264,6 @@ endif
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
-	rm -f BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -336,47 +323,6 @@ ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 else
   # If we are making the special target "objs", we skip the dependencies.
   # This is a hack for a "quick" compile.
-endif
-
-# Copy Power App short cuts to the obj directory.
-ifeq ($(findstring Teem,$(LOAD_PACKAGE)),Teem)
-  $(OBJTOP)/BioTensor : $(SRCDIR)/Packages/Teem/nets/PowerApps/BioTensor
-	@(sed -e "s%__SRC_DIR__%$(SRCTOP_ABS)%" $(SRCDIR)/Packages/Teem/nets/PowerApps/BioTensor | sed -e "s%__OBJ_DIR__%$(OBJTOP_ABS)%" > $(OBJTOP)/BioTensor)
-	@chmod +x BioTensor
-else
-  $(OBJTOP)/BioTensor :
-endif
-
-ifeq ($(findstring BioPSE,$(LOAD_PACKAGE)),BioPSE)
-  $(OBJTOP)/BioFEM : $(SRCDIR)/Packages/BioPSE/nets/PowerApps/BioFEM
-	@(sed -e "s%__SRC_DIR__%$(SRCTOP_ABS)%" $(SRCDIR)/Packages/BioPSE/nets/PowerApps/BioFEM | sed -e "s%__OBJ_DIR__%$(OBJTOP_ABS)%" > $(OBJTOP)/BioFEM)
-	@chmod +x BioFEM
-else
-  $(OBJTOP)/BioFEM :
-endif
-
-ifeq ($(findstring Teem,$(LOAD_PACKAGE)),Teem)
-  $(OBJTOP)/BioImage : $(SRCDIR)/Packages/Teem/nets/PowerApps/BioImage
-	@(sed -e "s%__SRC_DIR__%$(SRCTOP_ABS)%" $(SRCDIR)/Packages/Teem/nets/PowerApps/BioImage | sed -e "s%__OBJ_DIR__%$(OBJTOP_ABS)%" > $(OBJTOP)/BioImage)
-	@chmod +x BioImage
-else
-  $(OBJTOP)/BioImage :
-endif
-
-ifeq ($(findstring Fusion,$(LOAD_PACKAGE)),Fusion)
-  $(OBJTOP)/FusionViewer : $(SRCDIR)/Packages/Fusion/nets/PowerApps/FusionViewer
-	@(sed -e "s%__SRC_DIR__%$(SRCTOP_ABS)%" $(SRCDIR)/Packages/Fusion/nets/PowerApps/FusionViewer | sed -e "s%__OBJ_DIR__%$(OBJTOP_ABS)%" > $(OBJTOP)/FusionViewer)
-	@chmod +x FusionViewer
-else
-  $(OBJTOP)/FusionViewer :
-endif
-
-ifeq ($(findstring Insight,$(LOAD_PACKAGE)),Insight)
-  $(OBJTOP)/LevelSetSegmenter : $(SRCDIR)/Packages/Insight/nets/PowerApps/LevelSetSegmenter
-	@(sed -e "s%__SRC_DIR__%$(SRCTOP_ABS)%" $(SRCDIR)/Packages/Insight/nets/PowerApps/LevelSetSegmenter | sed -e "s%__OBJ_DIR__%$(OBJTOP_ABS)%" > $(OBJTOP)/LevelSetSegmenter)
-	@chmod +x LevelSetSegmenter
-else
-  $(OBJTOP)/LevelSetSegmenter :
 endif
 
 vc: prereqs $(VCSOLUTION) $(ALLTCLINDEXES)

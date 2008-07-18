@@ -212,6 +212,18 @@ SCI_ARG_WITH(thirdparty,
                 Use the Thirdparty_install installation in DIR. This is output from the Thirdparty_install install script. The default is /usr/local/SCIRun/Thirdparty/ followed by: <version>/<OS>/<compiler>-<32 or 64>bit),
   [thirdparty="$withval"],
   [thirdparty=""])
+SCI_ARG_WITH(atlas,
+  AC_HELP_STRING(--with-atlas=DIR,
+                 Use the atlas (for lapack/blas) installation in DIR),
+  [with_atlas="$withval"
+   sci_required_atlas=yes],
+  [with_atlas=""])
+SCI_ARG_WITH(mkl,
+  AC_HELP_STRING(--with-mkl=DIR,
+                 Use the mkl (for lapack/blas) installation in DIR),
+  [with_mkl="$withval"
+   sci_required_mkl=yes],
+  [with_mkl=""])
 SCI_ARG_WITH(blas,
   AC_HELP_STRING(--with-blas=DIR,
                  Use the blas installation in DIR),
@@ -353,19 +365,6 @@ SCI_ARG_WITH(ssl,
   [with_ssl="$withval"
    sci_required_ssl=yes],
   [with_ssl=""])
-SCI_ARG_WITH(insight,
-  AC_HELP_STRING(--with-insight=DIR,
-	         Use the Insight installation in DIR),
-  [with_insight="$withval"
-   sci_required_insight=yes
-   sci_required_gdcm=yes],
-  [with_insight=""])
-SCI_ARG_WITH(gdcm,
-  AC_HELP_STRING(--with-gdcm=DIR,
-	         Use the GDCM installation in DIR),
-  [with_gdcm="$withval"
-   sci_required_gdcm=yes],
-  [with_gdcm=""])
 SCI_ARG_WITH(ncurses,
   AC_HELP_STRING(--with-ncurses=DIR,
                  Use the Ncurses installation in DIR),
@@ -555,7 +554,7 @@ SCI_ARG_ENABLE(perfex,
 SCI_ARG_ENABLE(package,
   AC_HELP_STRING(--enable-package=<list>,
                  Use the SCIRun packages specified by list.
-                 example: --enable-package='BioPSE Teem'),
+                 example: --enable-package='Uintah Teem'),
   [package="$enableval"],
   [package=""])
 SCI_ARG_ENABLE(dataflow,
@@ -748,30 +747,6 @@ for i in $package; do
    SCI_SET_PACKAGE_CHECKS($i, $host)
 done
 
-if test "$pkg_BioPSE" = "yes" || test "$pkg_Insight" = "yes" ||
-   test "$pgk_MatlabInterface" = "yes" || test "$pkg_DataIO" = "yes" ||
-   test "$pkg_Fusion" = "yes"; then
-   if test "$pkg_Teem" != "yes"; then
-      AC_MSG_WARN(User did not enable the Teem package but it is required by)
-      AC_MSG_WARN(an enabled package(s)... adding it to the list of requested packages.)
-      PACKAGE_DIRS=$PACKAGE_DIRS" Packages/Teem"
-      # set the package dependent checks
-      SCI_SET_PACKAGE_CHECKS(Teem, $host)
-      package="$package Teem"
-   fi
-fi
-
-if test "$pkg_Fusion" = "yes"; then
-  if test "$pkg_DataIO" != "yes"; then
-      AC_MSG_WARN(User did not enable the DataIO package but it is required by)
-      AC_MSG_WARN(the Fusion package... adding it to the list of requested packages.)
-      PACKAGE_DIRS=$PACKAGE_DIRS" Packages/DataIO"
-      # set the package dependent checks
-      SCI_SET_PACKAGE_CHECKS(DataIO, $host)
-      package="$package DataIO"
-  fi
-fi
-
 if test "$pkg_Ptolemy" = "yes"; then
   ## check PtolemyII version?
   if test -z "$with_ptolemyII"; then
@@ -780,16 +755,6 @@ if test "$pkg_Ptolemy" = "yes"; then
     sci_required_ptolemyII=yes
     sci_required_java=yes
   fi
-fi
-
-
-if test "$pkg_Insight" = "yes"; then
-  if test -z "$sci_required_insight"; then
-    AC_MSG_WARN(Insight is required by the Insight package.)
-    AC_MSG_WARN(Use the --with-insight=DIR option if Insight is not located in Thirdparty.)
-    sci_required_insight=yes
-  fi
-
 fi
 
 # Make sure the Package directories exist.
@@ -3478,46 +3443,93 @@ AC_SUBST(TETGEN_LIB_DIR_FLAG)
 AC_SUBST(DEF_TETGEN)
 AC_SUBST(HAVE_TETGEN)
 
-##  --  search for atlas stuff  -------------------------------------------
+##  --  search for mkl (optimized blas/lapack) stuff  -------------------------------------
 
-if test "$with_blas" && test "$with_atlas"; then
-  AC_MSG_ERROR(You cannot use both --with-blas and --with-atlas.)
-fi
+if test "$with_mkl"; then
 
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
+  if test "$with_blas" && test "$with_mkl"; then
+    AC_MSG_ERROR(You cannot use both --with-blas and --with-mkl.)
+  fi
+  if test "$with_atlas" && test "$with_mkl"; then
+    AC_MSG_ERROR(You cannot use both --with-atlas and --with-mkl.)
+  fi
 
-if test "$with_atlas" = "yes"; then
-  _sci_optional=required
-elif test "$with_atlas"; then
-  _sci_lib="$with_atlas/lib"
-  _sci_inc="$with_atlas/include"
-  _sci_optional=specific
-fi
+  if test "$with_mkl" = "yes"; then
+    _sci_lib=
+    _sci_inc=
+    _sci_optional=required
+  elif test "$with_mkl"; then
+    _sci_lib="$with_mkl/lib"
+    _sci_inc="$with_mkl/include"
+    _sci_optional=specific
+  fi
 
-case $host in
-  *-darwin*)
-     if test "$with_atlas" && test "$with_atlas" != yes ; then
-       AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
-     fi
-     SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
-                  -faltivec,,,-framework vecLib,,$_sci_optional)
-     ;;
-   *)
-     SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
-             $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
-     ;;
-esac
+  case $host in
+    *-darwin*)
+       AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
+       ;;
+     *)
+       SCI_TRY_LINK(BLAS,mkl version of (blas) libraries and headers,mkl_cblas.h,
+                    $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,-lpthread,,$_sci_optional)
+       SCI_TRY_LINK(LAPACK,mkl version of (lapack) libraries and headers,mkl_lapack.h,
+                    $_sci_inc,mkl mkl_def guide,$_sci_lib,-lpthread,,$_sci_optional)
+       ;;
+  esac
 
-HAVE_CBLAS=$HAVE_BLAS
-DEF_CBLAS=$DEF_BLAS
-
-if test "$HAVE_BLAS" = "yes"; then
-  DEF_BLAS="#define HAVE_BLAS 1"
+  CBLAS_H="mkl_cblas.h"
+  HAVE_CBLAS=$HAVE_BLAS
   DEF_CBLAS="#define HAVE_CBLAS 1"
+  DEF_BLAS="#define HAVE_BLAS 1"
   sci_required_blas=no
 fi
+
+##  --  search for atlas (optimized blas/lapack) stuff  -------------------------------------
+
+if test ! "$HAVE_BLAS"; then
+  # MKL test above did not find mkl... so look for atlas
+
+  if test "$with_atlas" -a "$with_blas"; then
+    AC_MSG_ERROR(You cannot use both --with-blas and --with-atlas.)
+  fi
+
+  _sci_lib=
+  _sci_inc=
+  _sci_optional=optional
+
+  if test "$with_atlas" = "yes"; then
+    _sci_optional=required
+  elif test "$with_atlas"; then
+    _sci_lib="$with_atlas/lib"
+    _sci_inc="$with_atlas/include"
+    _sci_optional=specific
+  fi
+
+  case $host in
+    *-darwin*)
+       if test "$with_atlas" && test "$with_atlas" != yes ; then
+         AC_MSG_ERROR(Don't specify a path for atlas when on a Mac (we use vecLib by default.))
+       fi
+       SCI_TRY_LINK(BLAS,atlas version of libraries and headers (OSX),vecLib/cblas.h,
+                    -faltivec,,,-framework vecLib,,$_sci_optional)
+       ;;
+     *)
+       SCI_TRY_LINK(BLAS,atlas version of libraries and headers,cblas.h,
+                    $_sci_inc,cblas f77blas atlas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+       ;;
+  esac
+
+  HAVE_CBLAS=$HAVE_BLAS
+  DEF_CBLAS=$DEF_BLAS
+
+  if test "$HAVE_BLAS" = "yes"; then
+    DEF_BLAS="#define HAVE_BLAS 1"
+    DEF_CBLAS="#define HAVE_CBLAS 1"
+    CBLAS_H="cblas.h"
+    sci_required_blas=no
+  fi
+fi
+
+AC_SUBST(CBLAS_H)
 
 
 ##  --  search for blas stuff  -------------------------------------------
@@ -3609,55 +3621,61 @@ sci_defs_files="$sci_defs_files include/sci_defs/blas_testdefs.h"
 
 ##  --  search for lapack stuff  -----------------------------------------
 
-if test "$with_lapack"; then
-   _sci_lib="$with_lapack/lib"
-else
-   _sci_lib="$LIB_DIR_BLAS"
-fi
-
-case $host in
-  *-darwin*)
-     SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,
-        vecLib/clapack.h,,,,-faltivec -framework vecLib,,optional)
-     if test "$HAVE_LAPACK" = yes ; then
-        LAPACK_LIB_FLAG="-faltivec -framework vecLib"
-     fi
-     ;;
-   *)
-     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
-     ;;
-esac
-
 if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
-fi
+  # if HAVE_LAPACK is yes at this point, then atlas/mkl has been found and we
+  # don't want to check for it here.
 
-# In some cases, some files need complib.sgimath_mp for the lapack
-# library.  I have created this new var LAPACKMP to keep track of this
-# information.  If the configure script finds complib.sgimath_mp, then
-# the LAPACKMP vars will be updated.  If it does not, then the LAPACK
-# vars will be used.
-HAVE_LAPACKMP=$HAVE_LAPACK
-LAPACKMP_LIB_FLAG=$LAPACK_LIB_FLAG
-LAPACKMP_LIB_DIR_FLAG=$LAPACK_LIB_DIR_FLAG
-
-if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
-  if test "$HAVE_LAPACK" = "yes"; then
-       AC_MSG_WARN(Using complib for lapack)
-       SCI_TRY_LINK(LAPACKMP,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
+  if test "$with_lapack"; then
+     _sci_lib="$with_lapack/lib"
+  else
+     _sci_lib="$LIB_DIR_BLAS"
   fi
-fi
 
-if test "$HAVE_LAPACK" = "yes"; then
-  DEF_LAPACK="#define HAVE_LAPACK 1"
-fi
+  case $host in
+    *-darwin*)
+       SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,
+                    vecLib/clapack.h,,,,-faltivec -framework vecLib,,optional)
+       if test "$HAVE_LAPACK" = yes ; then
+          LAPACK_LIB_FLAG="-faltivec -framework vecLib"
+       fi
+       ;;
+     *)
+       SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+       ;;
+  esac
 
-if test "$sci_required_lapack" = "yes" -o "$with_lapack" && test ! "$DEF_LAPACK"; then
-  echo
-  AC_MSG_WARN(Could not find LAPACK in $_sci_lib)
-  AC_MSG_ERROR(The required LAPACK component is missing.)
-  echo
+  if test "$HAVE_LAPACK" != "yes"; then
+    SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+  fi
+
+  # In some cases, some files need complib.sgimath_mp for the lapack
+  # library.  I have created this new var LAPACKMP to keep track of this
+  # information.  If the configure script finds complib.sgimath_mp, then
+  # the LAPACKMP vars will be updated.  If it does not, then the LAPACK
+  # vars will be used.
+  HAVE_LAPACKMP=$HAVE_LAPACK
+  LAPACKMP_LIB_FLAG=$LAPACK_LIB_FLAG
+  LAPACKMP_LIB_DIR_FLAG=$LAPACK_LIB_DIR_FLAG
+
+  if test "$HAVE_LAPACK" != "yes"; then
+    SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
+    if test "$HAVE_LAPACK" = "yes"; then
+         AC_MSG_WARN(Using complib for lapack)
+         SCI_TRY_LINK(LAPACKMP,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
+    fi
+  fi
+
+  if test "$HAVE_LAPACK" = "yes"; then
+    DEF_LAPACK="#define HAVE_LAPACK 1"
+  fi
+
+  if test "$sci_required_lapack" = "yes" -o "$with_lapack" && test ! "$DEF_LAPACK"; then
+    echo
+    AC_MSG_WARN(Could not find LAPACK in $_sci_lib)
+    AC_MSG_ERROR(The required LAPACK component is missing.)
+    echo
+  fi
+
 fi
 
 AC_SUBST(HAVE_LAPACK)
@@ -4144,297 +4162,6 @@ AC_SUBST(PETSC_UNI_LIB_DIR_FLAG)
 AC_SUBST(DEF_PETSC_UNI)
 AC_SUBST(INC_PETSC_UNI_H)
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
-
-##  --  search for Insight  ---------------------------------------------------
-if test "$sci_required_insight" = "yes"; then
-
-  # Insight is a large distribution. 
-  # we do not want to check all of it. We thus check only if the
-  # include and lib Insight dirs exist.
-
-  AC_MSG_CHECKING(for Insight.)
-
-  if test "$with_insight"; then
-    dir="$with_insight/lib/InsightToolkit"
-  else
-    dir="$sci_thirdparty_lib/InsightToolkit"
-  fi
-
-  if test -a "$dir/ITKConfig.cmake"; then
-    INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
-    insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
-    INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKNumerics -lITKStatistics -lITKBasicFilters -lITKSpatialObject -lITKEXPAT -lITKCommon -lITKniftiio -litkgdcm -lITKznz -litkvnl -litkvnl_inst -litkvnl_algo -litkvcl -litksys -lITKDICOMParser"
-
-    if test "$IS_WIN" = "yes"; then
-	libBegin=""
-	ext="lib" #windows's so is dll, not lib, but we link against the lib
-    else
-	libBegin="lib"
-	ext="$SO_OR_ARCHIVE_EXTENSION"
-    fi
-
-    if test -a "$insight_libs_dir/"$libBegin"itkzlib.$ext"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
-    elif test "$HAVE_Z" = "yes"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $Z_LIB_DIR_FLAG $Z_LIB_FLAG"
-    fi
-
-    if test -a "$insight_libs_dir/"$libBegin"itktiff.$ext"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff"
-    elif test "$HAVE_TIFF" = "yes"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $TIFF_LIB_DIR_FLAG $TIFF_LIB_FLAG"
-    fi
-
-
-    INSIGHT_JPEG_LINKED=no
-
-    if test -a "$insight_libs_dir/"$libBegin"itkjpeg8.$ext"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg8"
-       INSIGHT_JPEG_LINKED=yes
-    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       INSIGHT_JPEG_LINKED=yes
-    fi
-
-    if test -a "$insight_libs_dir/"$libBegin"itkjpeg12.$ext"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg12"
-       INSIGHT_JPEG_LINKED=yes
-    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       INSIGHT_JPEG_LINKED=yes
-    fi
-
-    if test -a "$insight_libs_dir/"$libBegin"itkjpeg16.$ext"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
-       INSIGHT_JPEG_LINKED=yes
-    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       INSIGHT_JPEG_LINKED=yes
-    fi
-
-    if test -a "$insight_libs_dir/"$libBegin"itkopenjpeg.$ext"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkopenjpeg"
-       INSIGHT_JPEG_LINKED=yes
-    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       INSIGHT_JPEG_LINKED=yes
-    fi
-
-    if test -a "$insight_libs_dir/"$libBegin"itkjpeg.$ext" && test "$INSIGHT_JPEG_LINKED" = "no"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
-       INSIGHT_JPEG_LINKED=yes
-    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       INSIGHT_JPEG_LINKED=yes
-    fi
-
-    if test -a "$insight_libs_dir/"$libBegin"ITKNrrdIO.$ext"; then
-       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO"
-    fi
-
-    if ! test "$HAVE_PNG" = "yes"; then
-      echo "note: using libitkpng"
-      INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkpng"
-    else
-      INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $PNG_LIB_DIR_FLAG $PNG_LIB_FLAG"
-    fi
-
-
-#    INSIGHT_VERSION_MINOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MINOR' | sed 's/SET(ITK_VERSION_MINOR \"//' | sed 's/\")//' | tr -d '\r'`"
-#    INSIGHT_VERSION_MAJOR="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_VERSION_MAJOR' | sed 's/SET(ITK_VERSION_MAJOR \"//' | sed 's/\")//' | tr -d '\r'`"
-#    if test "$INSIGHT_VERSION_MAJOR" = "2"; then
-#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -lITKNrrdIO -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
-#    elif test "$INSIGHT_VERSION_MINOR" = "9"; then
-#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg8 -litkjpeg12 -litkjpeg16"
-#    elif test "$INSIGHT_VERSION_MINOR" = "8" || test "$INSIGHT_VERSION_MINOR" = "6"; then
-#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litktiff -litkjpeg"
-#    elif test "$INSIGHT_VERSION_MINOR" = "4"; then
-#       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg"
-#    fi
-
-
-#    INSIGHT_LIB_FLAG="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARIES' | sed 's/SET(ITK_LIBRARIES//' | sed 's/)//' | sed 's/ / -l/g'`" 
-
-    DEF_INSIGHT="#define HAVE_INSIGHT 1"
-    HAVE_INSIGHT="yes"
-
-    AC_MSG_RESULT($dir)
-  else
-    AC_MSG_ERROR(not found... Insight is required to build)
-  fi
- 
-  if test "$with_insight" && test ! "$DEF_INSIGHT"; then
-    echo
-    AC_MSG_ERROR(One or more of the INSIGHT components is missing.)
-    echo
-  fi
-
-fi
-
-AC_SUBST(HAVE_INSIGHT)
-AC_SUBST(DEF_INSIGHT)
-AC_SUBST(INC_INSIGHT_H)
-AC_SUBST(INSIGHT_LIB_FLAG)
-AC_SUBST(INSIGHT_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/insight_testdefs.h"
-
-
-
-##  --  search for GDCM  ---------------------------------------------------
-if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && test -a "/usr/local/lib/gdcm"); then
-  # GDCM is a large distribution.
-  # we do not want to check all of it. We thus check only if the
-  # include and lib GDCM dirs exist.
-
-  echo "$as_me:$LINENO: checking for GDCM." >&5
-  echo $ECHO_N "checking for GDCM.... $ECHO_C" >&6
-
-  # Check directory specified during configure, else check
-  # standard places
-  if test "$with_gdcm"; then
-    dir="$with_gdcm"
-  elif test "$with_insight"; then
-    dir="$with_insight/lib/InsightToolkit"
-  else
-    dir="/usr/local"
-  fi
-
-  # determine if dir is pointing to a user build (that contains  makefiles)
-  # or an installation (i.e. /usr/local), or an Insight build
-
-  using_itk="no"
-  gdcm_src=""
-  INC_GDCM_H=""
-  gdcm_libs_dir=""
-
-  found_gdcm_comp="no"
-
-  if test -a "$dir/Makefile"; then
-
-    if test -a "$dir/ITKConfig.cmake"; then
-      # GDCM distributed with the Insight Toolkit (user's binary)
-      if test -a "$dir/Utilities/gdcm"; then
-            using_itk="yes"
-	    insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
-	    gdcm_src="$insight_src/Utilities/gdcm/src"
-            INC_GDCM_H="-I$dir/Utilities/gdcm -I$gdcm_src"
-	    gdcm_libs_dir="$dir/bin"
-	    found_gdcm_comp="yes"
-      fi
-
-    else
-      # normal user installation of GDCM
-      gdcm_src="`cat $dir/Makefile | grep 'CMAKE_CURRENT_SOURCE =' | sed 's/CMAKE_CURRENT_SOURCE = //'`"
-      INC_GDCM_H="-I$dir -I$gdcm_src/src"
-      gdcm_libs_dir="$dir/bin"
-      found_gdcm_comp="yes"
-    fi
-
-  elif test -a "$dir/include/gdcm" && test -a "$dir/lib/gdcm"; then
-    # standard installation
-    INC_GDCM_H="-I$dir/include/gdcm"
-    gdcm_libs_dir="$dir/lib/gdcm"
-    found_gdcm_comp="yes"
-
-  elif test -a "$dir/ITKConfig.cmake"; then
-      # GDCM distributed with the Insight Toolkit (make install)
-      using_itk="yes"
-      insight_src="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_SOURCE_DIR ' $dir/ITKConfig.cmake | sed -e 's/SET(ITK_SOURCE_DIR //' | sed -e 's/)//' | sed -e 's/"//' | sed -e 's/"//'`"
-      gdcm_src="$insight_src/Utilities/gdcm/src"
-
-      if test "$IS_WIN" = "no"; then
-        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/\n/g' | tr -d '\r' | grep InsightToolkit | head -n 1`"
-      else
-        # the sed '; -> \n' doesn't quite produce the right results - awk off the first entry instead
-        insight_include="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"//' | sed 's/\")//' | awk -F ';' '{print $1}'`"
-      fi
-
-      if test -a "$insight_include/gdcm/src"; then     
-           INC_GDCM_H="-I$gdcm_src -I$insight_include/gdcm/src"
-           gdcm_libs_dir="$dir"
-           found_gdcm_comp="yes"
-      fi      
-
-
-
-  elif test -a "/usr/local/include/gdcm" && test -a "/usr/local/lib/gdcm"; then
-    INC_GDCM_H="-I/usr/local/include/gdcm"
-    gdcm_libs_dir="/usr/local/lib/gdcm"
-    found_gdcm_comp="yes"
-
-  else
-    echo
-    AC_MSG_ERROR(Cannot find GDCM configure files.)
-    echo
-  fi
-
-  if test $found_gdcm_comp = "yes"; then
-
-     GDCM_LIB_DIR_FLAG="$LDRUN_PREFIX$gdcm_libs_dir -L$gdcm_libs_dir"
-
-     GDCM_LIB_FLAG=""
-
-     if test $using_itk = "yes"; then
-       GDCM_LIB_FLAG="-litkgdcm"
-       if test $IS_WIN = "yes"; then
-         # don't know why, but windows needs them...
-         GDCM_LIB_FLAG="$GDCM_LIB_FLAG SnmpAPI.lib ws2_32.lib"
-       fi
-     else
-       GDCM_LIB_FLAG="-lgdcm"
-     fi
-
-     GDCM_JPEG_LINKED=no
-
-     if test -a "$gdcm_libs_dir/libgdcmjpeg8.$SO_OR_ARCHIVE_EXTENSION"; then
-       GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg8"
-       GDCM_JPEG_LINKED=yes
-     elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
-       GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       GDCM_JPEG_LINKED=yes
-     fi
-
-     if test -a "$gdcm_libs_dir/libgdcmjpeg12.$SO_OR_ARCHIVE_EXTENSION"; then
-       GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg12"
-       GDCM_JPEG_LINKED=yes
-     elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
-       GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       GDCM_JPEG_LINKED=yes
-     fi
-
-     if test -a "$gdcm_libs_dir/libgdcmjpeg16.$SO_OR_ARCHIVE_EXTENSION"; then
-       GDCM_LIB_FLAG="$GDCM_LIB_FLAG -lgdcmjpeg16"
-       GDCM_JPEG_LINKED=yes
-     elif test "$HAVE_JPEG" = "yes" && test "$GDCM_JPEG_LINKED" = "no" ; then
-       GDCM_LIB_FLAG="$GDCM_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
-       GDCM_JPEG_LINKED=yes
-     fi
-
-     DEF_GDCM="#define HAVE_GDCM 1"
-     HAVE_GDCM="yes"
-
-     echo "$as_me:$LINENO: result: $dir" >&5
-     echo "${ECHO_T}$dir" >&6
-
-     if test "$with_gdcm" && test ! "$DEF_GDCM"; then
-       echo
-       { { echo "$as_me:$LINENO: error: One or more of the GDCM components is missing." >&5
-       echo "$as_me: error: One or more of the GDCM components is missing." >&2;}
-      { (exit 1); exit 1; }; }
-       echo
-     fi
-   else
-      HAVE_GDCM="no"
-   fi
-fi
-
-AC_SUBST(HAVE_GDCM)
-AC_SUBST(DEF_GDCM)
-AC_SUBST(INC_GDCM_H)
-AC_SUBST(GDCM_LIB_FLAG)
-AC_SUBST(GDCM_LIB_DIR_FLAG)
-
 
 ##  --  search for Ptolemy II ---------------------------------------------------
 
