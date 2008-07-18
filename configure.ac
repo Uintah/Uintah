@@ -2529,6 +2529,12 @@ if test "$DEF_HASHMAP" = "None"; then
                  stdext::hash_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
 fi
+# gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
+if test "$DEF_HASHMAP" = "None"; then
+  AC_TRY_COMPILE([#include <backward/hash_map>
+                 __gnu_cxx::hash_map<int, int> xx;], ,
+		 [DEF_HASHMAP=HAVE_GNU_BACKWARD_HASHMAP])
+fi
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
                  __gnu_cxx::hash_map<int, int> xx;], ,
