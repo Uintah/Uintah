@@ -44,29 +44,33 @@
 
 #include <Core/Malloc/AllocOS.h>
 #include <Core/Malloc/AllocPriv.h>
+
 #ifdef __APPLE__
-#include <sys/types.h>
+#  include <sys/types.h>
 #endif
+
 #ifndef _WIN32
-#include <sys/mman.h>
-#include <unistd.h>
+#  include <sys/mman.h>
+#  include <unistd.h>
 #endif
+
 #include <cstdio>
 #include <cstring>
 #include <cerrno>
 #include <fcntl.h>
+
 #define ALIGN 16
 
 #if defined(sun) || defined(__linux)
-#define MMAP_TYPE char
+#  define MMAP_TYPE char
 #else
-#define MMAP_TYPE void
+#  define MMAP_TYPE void
 #endif
 
 namespace SCIRun {
 
 #ifndef DISABLE_SCI_MALLOC
-static int devzero_fd=-1;
+  static int devzero_fd=-1;
 #endif
 
 OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
@@ -86,13 +90,13 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 	  }
        }
 #ifdef SCI_64BITS
-#ifdef __sgi
+#  ifdef __sgi
        ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		  devzero_fd, 0);
-#else
+#  else
        ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		devzero_fd, 0);
-#endif
+#  endif
 #else
        ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		devzero_fd, 0);
@@ -147,10 +151,13 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
     return NULL;
 #endif // DISABLE_SCI_MALLOC
 }
+
 #ifdef MALLOC_TRACE
-#include <MallocTraceOff.h>
+#  include <MallocTraceOff.h>
 #endif
-void OSHunk::free(OSHunk* hunk)
+
+void
+OSHunk::free(OSHunk* hunk)
 {
 #ifndef DISABLE_SCI_MALLOC
    if(!hunk->returnable){
@@ -176,9 +183,9 @@ void OSHunk::free(OSHunk* hunk)
     }
 #endif // DISABLE_SCI_MALLOC
 }
+
 #ifdef MALLOC_TRACE
-#include <MallocTraceOn.h>
+#  include <MallocTraceOn.h>
 #endif
 
 } // End namespace SCIRun
-

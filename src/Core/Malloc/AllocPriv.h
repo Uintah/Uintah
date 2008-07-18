@@ -45,18 +45,18 @@
 
 #include <cstdlib>
 #include <stdio.h>
-#ifdef SCI_PTHREAD
-#include <pthread.h>
-#else
-#ifdef __sgi
-#include <abi_mutex.h>
-#else
-#if !defined(SCI_NOTHREAD) && !defined(_WIN32)
-#error "No lock implementation for this architecture"
-#endif
-#endif
-#endif
 
+#ifdef SCI_PTHREAD
+#  include <pthread.h>
+#else
+#  ifdef __sgi
+#    include <abi_mutex.h>
+#  else
+#    if !defined(SCI_NOTHREAD) && !defined(_WIN32)
+#      error "No lock implementation for this architecture"
+#    endif
+#  endif
+#endif
 
 namespace SCIRun {
 
@@ -98,9 +98,9 @@ struct Allocator {
 #ifdef SCI_PTHREAD
    pthread_mutex_t the_lock;
 #else
-#ifdef __sgi
+# ifdef __sgi
    abilock_t the_lock;
-#endif
+# endif
 #endif
     void initlock();
     inline void lock();
@@ -130,12 +130,12 @@ struct Allocator {
     void* memalign(size_t alignment, size_t size, const char* tag);
     void* alloc(size_t size, const char* tag, int linenum);
 #ifdef MALLOC_TRACE
-#include <MallocTraceOff.h>
+#  include <MallocTraceOff.h>
 #endif
     void free(void*);
     void* realloc(void* p, size_t size);
 #ifdef MALLOC_TRACE
-#include <MallocTraceOn.h>
+#  include <MallocTraceOn.h>
 #endif
 
     int strict;
