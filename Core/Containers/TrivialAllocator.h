@@ -70,11 +70,11 @@ public:
 
     inline void* alloc();
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOff.h"
+#  include "MallocTraceOff.h"
 #endif 
     inline void free(void*);
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOn.h"
+#  include "MallocTraceOn.h"
 #endif 
 };
 
@@ -104,13 +104,13 @@ inline void* TrivialAllocator::alloc()
 }
 
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOff.h"
+#  include "MallocTraceOff.h"
 #endif 
 
 inline void TrivialAllocator::free(void* rp)
 {
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOn.h"
+#  include "MallocTraceOn.h"
 #endif 
     if(ta_disable){
 	delete[] (char*)rp;
@@ -124,6 +124,5 @@ inline void TrivialAllocator::free(void* rp)
 }
 
 } // End namespace SCIRun
-
 
 #endif
