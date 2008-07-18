@@ -141,7 +141,7 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
@@ -161,26 +161,26 @@ SmagorinskyModel::reComputeTurbSubmodel(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None; 
      
     
-    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,matlIndex, patch);
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,indx, patch);
                            
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
                 
-    new_dw->get(density,     d_lab->d_densityCPLabel,      matlIndex, patch, gn,  0);
-    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(density,     d_lab->d_densityCPLabel,      indx, patch, gn,  0);
+    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
     
     if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,gn, 0);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
     }
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -377,7 +377,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
@@ -386,30 +386,30 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     // Get the velocity, density and viscosity from the old data warehouse
     Ghost::GhostType  gac = Ghost::AroundCells;
     if (doing_EKT_now){
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch,gac, 1);
+      new_dw->get(scalar, d_lab->d_scalarEKTLabel, indx, patch,gac, 1);
     }else{
-      new_dw->get(scalar, d_lab->d_scalarSPLabel,  matlIndex, patch,gac, 1);
+      new_dw->get(scalar, d_lab->d_scalarSPLabel,  indx, patch,gac, 1);
     }
     
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-      new_dw->allocateAndPut(scalarVar,           d_lab->d_scalarVarSPLabel,         matlIndex,patch);
-      new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,patch);
+      new_dw->allocateAndPut(scalarVar,           d_lab->d_scalarVarSPLabel,         indx,patch);
+      new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx,patch);
     }
     else {
-      new_dw->getModifiable(scalarVar,           d_lab->d_scalarVarSPLabel,         matlIndex,patch);
-      new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,patch);
+      new_dw->getModifiable(scalarVar,           d_lab->d_scalarVarSPLabel,         indx,patch);
+      new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx,patch);
     }
     scalarVar.initialize(0.0);
     normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -623,7 +623,7 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
@@ -631,29 +631,28 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
     
     if (doing_EKT_now){
-      new_dw->get(scalar, d_lab->d_scalarEKTLabel, matlIndex, patch, gac, 1);
+      new_dw->get(scalar, d_lab->d_scalarEKTLabel, indx, patch, gac, 1);
     }else{
-      new_dw->get(scalar, d_lab->d_scalarSPLabel,  matlIndex, patch, gac, 1);
+      new_dw->get(scalar, d_lab->d_scalarSPLabel,  indx, patch, gac, 1);
     }              
                   
-    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch,gac, 1);
+    new_dw->get(viscosity, d_lab->d_viscosityCTSLabel, indx, patch,gac, 1);
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First) 
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
-       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,
-                              matlIndex, patch);
+       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel,indx, patch);
     }else{
-       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel, indx, patch);
     }
     scalarDiss.initialize(0.0);
 
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }

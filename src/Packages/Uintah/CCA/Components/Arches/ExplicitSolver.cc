@@ -855,7 +855,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constSFCXVariable<double> oldUVel;
     constSFCYVariable<double> oldVVel;
@@ -896,8 +896,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -908,17 +908,17 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     Ghost::GhostType  gn = Ghost::None;
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      old_dw->get(oldUVel,     d_lab->d_uVelocitySPBCLabel, matlIndex, patch,   gaf, 1);
-      old_dw->get(oldVVel,     d_lab->d_vVelocitySPBCLabel, matlIndex, patch,   gaf, 1);
-      old_dw->get(oldWVel,     d_lab->d_wVelocitySPBCLabel, matlIndex, patch,   gaf, 1);
-      new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel,    matlIndex, patch,  gaf, 1);
-      new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel,    matlIndex, patch,  gaf, 1);
-      new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel,    matlIndex, patch,  gaf, 1);
+      old_dw->get(oldUVel,     d_lab->d_uVelocitySPBCLabel, indx, patch,   gaf, 1);
+      old_dw->get(oldVVel,     d_lab->d_vVelocitySPBCLabel, indx, patch,   gaf, 1);
+      old_dw->get(oldWVel,     d_lab->d_wVelocitySPBCLabel, indx, patch,   gaf, 1);
+      new_dw->get(uHatVel_FCX, d_lab->d_uVelRhoHatLabel,    indx, patch,  gaf, 1);
+      new_dw->get(vHatVel_FCY, d_lab->d_vVelRhoHatLabel,    indx, patch,  gaf, 1);
+      new_dw->get(wHatVel_FCZ, d_lab->d_wVelRhoHatLabel,    indx, patch,  gaf, 1);
 
-      new_dw->allocateAndPut(oldCCVel,   d_lab->d_oldCCVelocityLabel, matlIndex, patch);
-      new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel, matlIndex, patch);
-      new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel, matlIndex, patch);
-      new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel, matlIndex, patch);
+      new_dw->allocateAndPut(oldCCVel,   d_lab->d_oldCCVelocityLabel, indx, patch);
+      new_dw->allocateAndPut(uHatVel_CC, d_lab->d_uVelRhoHat_CCLabel, indx, patch);
+      new_dw->allocateAndPut(vHatVel_CC, d_lab->d_vVelRhoHat_CCLabel, indx, patch);
+      new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel, indx, patch);
 
       oldCCVel.initialize(Vector(0.0,0.0,0.0));
       uHatVel_CC.initialize(0.0);
@@ -1118,35 +1118,35 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       }
     } 
 
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(drhodt,  d_lab->d_filterdrhodtLabel,  matlIndex, patch, gn, 0);
-    new_dw->get(density, d_lab->d_densityCPLabel,     matlIndex, patch, gac, 1);
+    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(drhodt,  d_lab->d_filterdrhodtLabel,  indx, patch, gn, 0);
+    new_dw->get(density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
     new_dw->get(div_constraint, 
-                         d_lab->d_divConstraintLabel, matlIndex, patch, gn, 0);
+                         d_lab->d_divConstraintLabel, indx, patch, gn, 0);
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(newCCVel,      d_lab->d_newCCVelocityLabel,     matlIndex, patch);
-      new_dw->allocateAndPut(newCCVelMag,   d_lab->d_newCCVelMagLabel,       matlIndex, patch);
-      new_dw->allocateAndPut(newCCUVel,     d_lab->d_newCCUVelocityLabel,    matlIndex, patch);
-      new_dw->allocateAndPut(newCCVVel,     d_lab->d_newCCVVelocityLabel,    matlIndex, patch);
-      new_dw->allocateAndPut(newCCWVel,     d_lab->d_newCCWVelocityLabel,    matlIndex, patch);
-      new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel,     matlIndex, patch);
-      new_dw->allocateAndPut(divergence,    d_lab->d_velocityDivergenceLabel,matlIndex, patch);
-      new_dw->allocateAndPut(div_residual,  d_lab->d_velDivResidualLabel,    matlIndex, patch);
-      new_dw->allocateAndPut(residual,      d_lab->d_continuityResidualLabel,matlIndex, patch);
+      new_dw->allocateAndPut(newCCVel,      d_lab->d_newCCVelocityLabel,     indx, patch);
+      new_dw->allocateAndPut(newCCVelMag,   d_lab->d_newCCVelMagLabel,       indx, patch);
+      new_dw->allocateAndPut(newCCUVel,     d_lab->d_newCCUVelocityLabel,    indx, patch);
+      new_dw->allocateAndPut(newCCVVel,     d_lab->d_newCCVVelocityLabel,    indx, patch);
+      new_dw->allocateAndPut(newCCWVel,     d_lab->d_newCCWVelocityLabel,    indx, patch);
+      new_dw->allocateAndPut(kineticEnergy, d_lab->d_kineticEnergyLabel,     indx, patch);
+      new_dw->allocateAndPut(divergence,    d_lab->d_velocityDivergenceLabel,indx, patch);
+      new_dw->allocateAndPut(div_residual,  d_lab->d_velDivResidualLabel,    indx, patch);
+      new_dw->allocateAndPut(residual,      d_lab->d_continuityResidualLabel,indx, patch);
     }
     else {
-      new_dw->getModifiable(newCCVel,       d_lab->d_newCCVelocityLabel,      matlIndex, patch);
-      new_dw->getModifiable(newCCVelMag,    d_lab->d_newCCVelMagLabel,        matlIndex, patch);
-      new_dw->getModifiable(newCCUVel,      d_lab->d_newCCUVelocityLabel,     matlIndex, patch);
-      new_dw->getModifiable(newCCVVel,      d_lab->d_newCCVVelocityLabel,     matlIndex, patch);
-      new_dw->getModifiable(newCCWVel,      d_lab->d_newCCWVelocityLabel,     matlIndex, patch);
-      new_dw->getModifiable(kineticEnergy,  d_lab->d_kineticEnergyLabel,      matlIndex, patch);
-      new_dw->getModifiable(divergence,     d_lab->d_velocityDivergenceLabel, matlIndex, patch);
-      new_dw->getModifiable(div_residual,   d_lab->d_velDivResidualLabel,     matlIndex, patch);
-      new_dw->getModifiable(residual,       d_lab->d_continuityResidualLabel, matlIndex, patch);
+      new_dw->getModifiable(newCCVel,       d_lab->d_newCCVelocityLabel,      indx, patch);
+      new_dw->getModifiable(newCCVelMag,    d_lab->d_newCCVelMagLabel,        indx, patch);
+      new_dw->getModifiable(newCCUVel,      d_lab->d_newCCUVelocityLabel,     indx, patch);
+      new_dw->getModifiable(newCCVVel,      d_lab->d_newCCVVelocityLabel,     indx, patch);
+      new_dw->getModifiable(newCCWVel,      d_lab->d_newCCWVelocityLabel,     indx, patch);
+      new_dw->getModifiable(kineticEnergy,  d_lab->d_kineticEnergyLabel,      indx, patch);
+      new_dw->getModifiable(divergence,     d_lab->d_velocityDivergenceLabel, indx, patch);
+      new_dw->getModifiable(div_residual,   d_lab->d_velDivResidualLabel,     indx, patch);
+      new_dw->getModifiable(residual,       d_lab->d_continuityResidualLabel, indx, patch);
     }
     newCCVel.initialize(Vector(0.0,0.0,0.0));
     newCCUVel.initialize(0.0);
@@ -1420,7 +1420,7 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> vorticityX, vorticityY, vorticityZ, vorticity;
 
@@ -1432,29 +1432,29 @@ ExplicitSolver::computeVorticity(const ProcessorGroup* ,
     IntVector idxHi = patch->getFortranCellHighIndex__New();
 
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(newCCUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(newCCVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(newCCWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(newCCUVel, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(newCCVVel, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(newCCWVel, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(vorticityX, d_lab->d_vorticityXLabel, matlIndex, patch);
-      new_dw->allocateAndPut(vorticityY, d_lab->d_vorticityYLabel, matlIndex, patch);
-      new_dw->allocateAndPut(vorticityZ, d_lab->d_vorticityZLabel, matlIndex, patch);
-      new_dw->allocateAndPut(vorticity,  d_lab->d_vorticityLabel,  matlIndex, patch);
+      new_dw->allocateAndPut(vorticityX, d_lab->d_vorticityXLabel, indx, patch);
+      new_dw->allocateAndPut(vorticityY, d_lab->d_vorticityYLabel, indx, patch);
+      new_dw->allocateAndPut(vorticityZ, d_lab->d_vorticityZLabel, indx, patch);
+      new_dw->allocateAndPut(vorticity,  d_lab->d_vorticityLabel,  indx, patch);
     }
     else {
-      new_dw->getModifiable(vorticityX, d_lab->d_vorticityXLabel, matlIndex, patch);
-      new_dw->getModifiable(vorticityY, d_lab->d_vorticityYLabel, matlIndex, patch);
-      new_dw->getModifiable(vorticityZ, d_lab->d_vorticityZLabel, matlIndex, patch);
-      new_dw->getModifiable(vorticity,  d_lab->d_vorticityLabel,  matlIndex, patch);
+      new_dw->getModifiable(vorticityX, d_lab->d_vorticityXLabel, indx, patch);
+      new_dw->getModifiable(vorticityY, d_lab->d_vorticityYLabel, indx, patch);
+      new_dw->getModifiable(vorticityZ, d_lab->d_vorticityZLabel, indx, patch);
+      new_dw->getModifiable(vorticity,  d_lab->d_vorticityLabel,  indx, patch);
     }
     vorticityX.initialize(0.0);
     vorticityY.initialize(0.0);
@@ -1548,7 +1548,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     double time = d_lab->d_sharedState->getElapsedTime();
 
   // Get the new velocity
@@ -1565,23 +1565,23 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     constCCVariable<double> mixtureFraction;
     constCCVariable<double> kineticEnergy;
     
-    new_dw->get(newUVel,    d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(newVVel,    d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(newWVel,    d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    new_dw->get(newUVel,    d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(newVVel,    d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(newWVel,    d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
 
-    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gn, 0);
-    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gn, 0);
-    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gn, 0);
+    new_dw->get(newintUVel, d_lab->d_newCCUVelocityLabel, indx, patch, gn, 0);
+    new_dw->get(newintVVel, d_lab->d_newCCVVelocityLabel, indx, patch, gn, 0);
+    new_dw->get(newintWVel, d_lab->d_newCCWVelocityLabel, indx, patch, gn, 0);
 
-    new_dw->get(density,         d_lab->d_densityCPLabel,    matlIndex, patch, gn, 0);
-    new_dw->get(viscosity,       d_lab->d_viscosityCTSLabel, matlIndex, patch, gn, 0);
-    new_dw->get(pressure,        d_lab->d_pressurePSLabel,   matlIndex, patch, gn, 0);
-    new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel,     matlIndex, patch, gn, 0);
-    new_dw->get(kineticEnergy,   d_lab->d_kineticEnergyLabel,matlIndex, patch, gn, 0);
+    new_dw->get(density,         d_lab->d_densityCPLabel,    indx, patch, gn, 0);
+    new_dw->get(viscosity,       d_lab->d_viscosityCTSLabel, indx, patch, gn, 0);
+    new_dw->get(pressure,        d_lab->d_pressurePSLabel,   indx, patch, gn, 0);
+    new_dw->get(mixtureFraction, d_lab->d_scalarSPLabel,     indx, patch, gn, 0);
+    new_dw->get(kineticEnergy,   d_lab->d_kineticEnergyLabel,indx, patch, gn, 0);
     
     constCCVariable<double> mixFracVariance;
     if (d_calcVariance) {
-      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, matlIndex, patch, gn, 0);
+      new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, indx, patch, gn, 0);
     }
     
     constCCVariable<double> gasfraction;
@@ -1594,20 +1594,20 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     constSFCYVariable<double> totHtFluxY;
     constSFCZVariable<double> totHtFluxZ;
     if (d_MAlab) {
-      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, gn, 0);
-      new_dw->get(tempSolid,   d_MAlab->integTemp_CCLabel, matlIndex, patch, gn, 0);
-      new_dw->get(totalHT,     d_MAlab->totHT_CCLabel,     matlIndex, patch, gn, 0);
-      new_dw->get(totalHT_FCX, d_MAlab->totHT_FCXLabel,    matlIndex, patch, gn, 0);
-      new_dw->get(totalHT_FCY, d_MAlab->totHT_FCYLabel,    matlIndex, patch, gn, 0);
-      new_dw->get(totalHT_FCZ, d_MAlab->totHT_FCZLabel,    matlIndex, patch, gn, 0);
-      new_dw->get(totHtFluxX,  d_MAlab->totHtFluxXLabel,   matlIndex, patch, gn, 0);
-      new_dw->get(totHtFluxY,  d_MAlab->totHtFluxYLabel,   matlIndex, patch, gn, 0);
-      new_dw->get(totHtFluxZ,  d_MAlab->totHtFluxZLabel,   matlIndex, patch, gn, 0);
+      new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, indx, patch, gn, 0);
+      new_dw->get(tempSolid,   d_MAlab->integTemp_CCLabel, indx, patch, gn, 0);
+      new_dw->get(totalHT,     d_MAlab->totHT_CCLabel,     indx, patch, gn, 0);
+      new_dw->get(totalHT_FCX, d_MAlab->totHT_FCXLabel,    indx, patch, gn, 0);
+      new_dw->get(totalHT_FCY, d_MAlab->totHT_FCYLabel,    indx, patch, gn, 0);
+      new_dw->get(totalHT_FCZ, d_MAlab->totHT_FCZLabel,    indx, patch, gn, 0);
+      new_dw->get(totHtFluxX,  d_MAlab->totHtFluxXLabel,   indx, patch, gn, 0);
+      new_dw->get(totHtFluxY,  d_MAlab->totHtFluxYLabel,   indx, patch, gn, 0);
+      new_dw->get(totHtFluxZ,  d_MAlab->totHtFluxZLabel,   indx, patch, gn, 0);
     }
 
     constCCVariable<double> temperature;
     if (d_enthalpySolve) 
-      new_dw->get(temperature, d_lab->d_tempINLabel, matlIndex, patch, gn, 0);
+      new_dw->get(temperature, d_lab->d_tempINLabel, indx, patch, gn, 0);
 
     for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
          iter != d_probePoints.end(); iter++) {
@@ -1663,22 +1663,22 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     
     constCCVariable<double> denMicro;
     CCVariable<double> denMicro_new;
     
     Ghost::GhostType  gn = Ghost::None;
     if (d_MAlab) {
-      old_dw->get(denMicro, d_lab->d_densityMicroLabel,  matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroINLabel, matlIndex, patch);
+      old_dw->get(denMicro, d_lab->d_densityMicroLabel,  indx, patch, gn, 0);
+      new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroINLabel, indx, patch);
       denMicro_new.copyData(denMicro);
     }
     constCCVariable<int> cellType;
     if (d_MAlab){
-      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch,gn, 0);
+      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, indx, patch,gn, 0);
     }else{
-      old_dw->get(cellType, d_lab->d_cellTypeLabel,   matlIndex, patch, gn, 0);
+      old_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
@@ -1691,75 +1691,75 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     constCCVariable<double> enthalpydiff;
     constCCVariable<double> reactscalardiff;
     
-    old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    old_dw->get(scalar,    d_lab->d_scalarSPLabel,      matlIndex, patch, gn, 0);
-    old_dw->get(density,   d_lab->d_densityCPLabel,     matlIndex, patch, gn, 0);
-    old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  matlIndex, patch, gn, 0);
+    old_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
+    old_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
+    old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
+    old_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
+    old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
+    old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
     
     if (d_enthalpySolve){
-      old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0);
+      old_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
     }
     
     if (d_dynScalarModel) {
       if (d_calScalar)
-        old_dw->get(scalardiff,      d_lab->d_scalarDiffusivityLabel,     matlIndex, patch, gn, 0);
+        old_dw->get(scalardiff,      d_lab->d_scalarDiffusivityLabel,     indx, patch, gn, 0);
       if (d_enthalpySolve)
-        old_dw->get(enthalpydiff,    d_lab->d_enthalpyDiffusivityLabel,   matlIndex, patch, gn, 0);
+        old_dw->get(enthalpydiff,    d_lab->d_enthalpyDiffusivityLabel,   indx, patch, gn, 0);
       if (d_reactingScalarSolve)
-        old_dw->get(reactscalardiff, d_lab->d_reactScalarDiffusivityLabel,matlIndex, patch, gn, 0);
+        old_dw->get(reactscalardiff, d_lab->d_reactScalarDiffusivityLabel,indx, patch, gn, 0);
     }
 
 
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
     CCVariable<int> cellType_new;
-    new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
+    new_dw->allocateAndPut(cellType_new, d_lab->d_cellTypeLabel, indx, patch);
     cellType_new.copyData(cellType);
 
     // Get the PerPatch CellInformation data from oldDW, initialize it if it is
     // not there
     if (!(d_MAlab)) {
       PerPatch<CellInformationP> cellInfoP;
-      if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
+      if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
         throw InvalidValue("cellInformation should not be initialized yet",
                            __FILE__, __LINE__);
-      if (old_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-        old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+      if (old_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+        old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
       else {
         cellInfoP.setData(scinew CellInformation(patch));
         //cout << "cellInfo INIT" << endl;
       }
-      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+      new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
 
     SFCXVariable<double> uVelocity_new;
-    new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocity_new, d_lab->d_uVelocitySPBCLabel, indx, patch);
     uVelocity_new.copyData(uVelocity); // copy old into new
     SFCYVariable<double> vVelocity_new;
-    new_dw->allocateAndPut(vVelocity_new, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelocity_new, d_lab->d_vVelocitySPBCLabel, indx, patch);
     vVelocity_new.copyData(vVelocity); // copy old into new
     SFCZVariable<double> wVelocity_new;
-    new_dw->allocateAndPut(wVelocity_new, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelocity_new, d_lab->d_wVelocitySPBCLabel, indx, patch);
     wVelocity_new.copyData(wVelocity); // copy old into new
     SFCXVariable<double> uVelRhoHat_new;
-    new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, indx, patch);
     uVelRhoHat_new.initialize(0.0);     // copy old into new
     SFCYVariable<double> vVelRhoHat_new;
-    new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
+    new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel, indx, patch);
     vVelRhoHat_new.initialize(0.0); // copy old into new
     SFCZVariable<double> wVelRhoHat_new;
-    new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, indx, patch);
     wVelRhoHat_new.initialize(0.0); // copy old into new
 
     CCVariable<double> scalar_new;
     CCVariable<double> scalar_temp;
-    new_dw->allocateAndPut(scalar_new, d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(scalar_new, d_lab->d_scalarSPLabel, indx, patch);
     scalar_new.copyData(scalar); // copy old into new
     
     
     if (d_timeIntegratorLabels[0]->multiple_steps) {
-      new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, indx, patch);
       scalar_temp.copyData(scalar); // copy old into new
     }
 
@@ -1767,11 +1767,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> new_reactscalar;
     CCVariable<double> temp_reactscalar;
     if (d_reactingScalarSolve) {
-      old_dw->get(reactscalar,                 d_lab->d_reactscalarSPLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(new_reactscalar,  d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      old_dw->get(reactscalar,                 d_lab->d_reactscalarSPLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(new_reactscalar,  d_lab->d_reactscalarSPLabel, indx, patch);
       new_reactscalar.copyData(reactscalar);
       if (d_timeIntegratorLabels[0]->multiple_steps) {
-        new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, matlIndex, patch);
+        new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarTempLabel, indx, patch);
         temp_reactscalar.copyData(reactscalar);
       }
     }
@@ -1779,26 +1779,26 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> new_enthalpy;
     CCVariable<double> temp_enthalpy;
     if (d_enthalpySolve) {
-      new_dw->allocateAndPut(new_enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(new_enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
       new_enthalpy.copyData(enthalpy);
       
       if (d_timeIntegratorLabels[0]->multiple_steps) {
-        new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, matlIndex, patch);
+        new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyTempLabel, indx, patch);
         temp_enthalpy.copyData(enthalpy);
       }
     }
     CCVariable<double> density_new;
-    new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, indx, patch);
     density_new.copyData(density); // copy old into new
     
     if (d_timeIntegratorLabels[0]->multiple_steps) {
       CCVariable<double> density_temp;
-      new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, matlIndex, patch);
+      new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, indx, patch);
       density_temp.copyData(density); // copy old into new
     }
 
     CCVariable<double> viscosity_new;
-    new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
     viscosity_new.copyData(viscosity); // copy old into new
     
     
@@ -1807,15 +1807,15 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> reactscalardiff_new;
     if (d_dynScalarModel) {
       if (d_calScalar) {
-        new_dw->allocateAndPut(scalardiff_new,      d_lab->d_scalarDiffusivityLabel, matlIndex, patch);
+        new_dw->allocateAndPut(scalardiff_new,      d_lab->d_scalarDiffusivityLabel, indx, patch);
         scalardiff_new.copyData(scalardiff); // copy old into new
       }
       if (d_enthalpySolve) {
-        new_dw->allocateAndPut(enthalpydiff_new,    d_lab->d_enthalpyDiffusivityLabel, matlIndex, patch);
+        new_dw->allocateAndPut(enthalpydiff_new,    d_lab->d_enthalpyDiffusivityLabel, indx, patch);
         enthalpydiff_new.copyData(enthalpydiff); // copy old into new
       }
       if (d_reactingScalarSolve) {
-        new_dw->allocateAndPut(reactscalardiff_new, d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch);
+        new_dw->allocateAndPut(reactscalardiff_new, d_lab->d_reactScalarDiffusivityLabel, indx, patch);
         reactscalardiff_new.copyData(reactscalardiff); // copy old into new
       }
     }
@@ -1829,9 +1829,9 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
       SFCYVariable<double> vmmsLnError;
       SFCZVariable<double> wmmsLnError;
       
-      new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, matlIndex, patch);
-      new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, matlIndex, patch);
-      new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, matlIndex, patch);
+      new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, indx, patch);
+      new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, indx, patch);
+      new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, indx, patch);
       
       uFmms.initialize(0.0);
       vFmms.initialize(0.0);
@@ -1839,23 +1839,23 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     }
     //Reaction rate term for CO2, read in from table
     CCVariable<double> zerosrcVar;
-    new_dw->allocateAndPut(zerosrcVar, d_lab->d_zerosrcVarLabel, matlIndex, patch);
+    new_dw->allocateAndPut(zerosrcVar, d_lab->d_zerosrcVarLabel, indx, patch);
     zerosrcVar.initialize(0.0);
 
     if (d_carbon_balance_es){  
       constCCVariable<double> co2Rate_old;
       CCVariable<double> co2Rate;
  
-      old_dw->get(co2Rate_old,        d_lab->d_co2RateLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+      old_dw->get(co2Rate_old,        d_lab->d_co2RateLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, indx, patch);
       co2Rate.initialize(0.0);
       co2Rate.copyData(co2Rate_old);
     }
     if (d_sulfur_balance_es){  
       constCCVariable<double> so2Rate_old;
       CCVariable<double> so2Rate;
-      old_dw->get(so2Rate_old,        d_lab->d_so2RateLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+      old_dw->get(so2Rate_old,        d_lab->d_so2RateLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, indx, patch);
       so2Rate.initialize(0.0);
       so2Rate.copyData(so2Rate_old);
     }
@@ -1866,11 +1866,11 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     SFCYVariable<double> vmomBoundarySrc;
     SFCZVariable<double> wmomBoundarySrc;
 
-    new_dw->allocateAndPut(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,  matlIndex, patch);
-    new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel,matlIndex, patch);
-    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,    matlIndex, patch);
-    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,    matlIndex, patch);
-    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,    matlIndex, patch);
+    new_dw->allocateAndPut(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,  indx, patch);
+    new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel,indx, patch);
+    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,    indx, patch);
+    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,    indx, patch);
+    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,    indx, patch);
 
     scalarBoundarySrc.initialize(0.0);
     enthalpyBoundarySrc.initialize(0.0);
@@ -1938,7 +1938,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     // gets for old dw variables
     constCCVariable<double> div;
@@ -1947,11 +1947,11 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     CCVariable<double> pressure_new;
     
     Ghost::GhostType  gn = Ghost::None;
-    old_dw->get(div,      d_lab->d_divConstraintLabel, matlIndex, patch, gn, 0);
-    old_dw->get(pressure, d_lab->d_pressurePSLabel,    matlIndex, patch, gn, 0);
+    old_dw->get(div,      d_lab->d_divConstraintLabel, indx, patch, gn, 0);
+    old_dw->get(pressure, d_lab->d_pressurePSLabel,    indx, patch, gn, 0);
     
-    new_dw->allocateAndPut(pressure_new, d_lab->d_pressurePSLabel,   matlIndex, patch);
-    new_dw->allocateAndPut(div_new,     d_lab->d_divConstraintLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressure_new, d_lab->d_pressurePSLabel,   indx, patch);
+    new_dw->allocateAndPut(div_new,     d_lab->d_divConstraintLabel, indx, patch);
     div_new.copyData(div); 
     pressure_new.copyData(pressure);
 
@@ -1959,14 +1959,14 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     CCVariable<double> pressureExtraProjection_new;
     if (d_extraProjection) {
       old_dw->get(pressureExtraProjection,
-                             d_lab->d_pressureExtraProjectionLabel, matlIndex, patch,  gn, 0);
+                             d_lab->d_pressureExtraProjectionLabel, indx, patch,  gn, 0);
       new_dw->allocateAndPut(pressureExtraProjection_new,
-                             d_lab->d_pressureExtraProjectionLabel, matlIndex, patch);
+                             d_lab->d_pressureExtraProjectionLabel, indx, patch);
       pressureExtraProjection_new.copyData(pressureExtraProjection);
     }
 
     CCVariable<double> pressureNLSource;
-    new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
     pressureNLSource.initialize(0.0);
 
     cout << "DOING DUMMY SOLVE " << endl;
@@ -2069,17 +2069,17 @@ ExplicitSolver::updatePressure(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch *patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> pressure_guess;
     CCVariable<double> pressure;
-    new_dw->getModifiable(pressure, timelabels->pressure_out, matlIndex, patch);
+    new_dw->getModifiable(pressure, timelabels->pressure_out, indx, patch);
     
     Ghost::GhostType  gn = Ghost::None;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      old_dw->get(pressure_guess, timelabels->pressure_guess, matlIndex, patch, gn, 0);
+      old_dw->get(pressure_guess, timelabels->pressure_guess, indx, patch, gn, 0);
     }else{
-      new_dw->get(pressure_guess, timelabels->pressure_guess, matlIndex, patch, gn, 0);
+      new_dw->get(pressure_guess, timelabels->pressure_guess, indx, patch, gn, 0);
     }
     
     IntVector idxLo = patch->getFortranCellLowIndex__New();
@@ -2143,7 +2143,7 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> temp_density;
@@ -2151,19 +2151,19 @@ ExplicitSolver::saveTempCopies(const ProcessorGroup*,
     CCVariable<double> temp_reactscalar;
     CCVariable<double> temp_enthalpy;
 
-    new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,matlIndex, patch);
-    new_dw->getModifiable(temp_scalar,  d_lab->d_scalarTempLabel, matlIndex, patch);
+    new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,indx, patch);
+    new_dw->getModifiable(temp_scalar,  d_lab->d_scalarTempLabel, indx, patch);
     
-    new_dw->copyOut(temp_density,       d_lab->d_densityCPLabel,  matlIndex, patch);
-    new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,   matlIndex, patch);
+    new_dw->copyOut(temp_density,       d_lab->d_densityCPLabel,  indx, patch);
+    new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel,   indx, patch);
     
     if (d_reactingScalarSolve) {
-      new_dw->getModifiable(temp_reactscalar, d_lab->d_reactscalarTempLabel,matlIndex, patch);
-      new_dw->copyOut(temp_reactscalar,       d_lab->d_reactscalarSPLabel,  matlIndex, patch);
+      new_dw->getModifiable(temp_reactscalar, d_lab->d_reactscalarTempLabel,indx, patch);
+      new_dw->copyOut(temp_reactscalar,       d_lab->d_reactscalarSPLabel,  indx, patch);
     }
     if (d_enthalpySolve) {
-      new_dw->getModifiable(temp_enthalpy, d_lab->d_enthalpyTempLabel,matlIndex, patch);
-      new_dw->copyOut(temp_enthalpy,       d_lab->d_enthalpySPLabel, matlIndex, patch);
+      new_dw->getModifiable(temp_enthalpy, d_lab->d_enthalpyTempLabel,indx, patch);
+      new_dw->copyOut(temp_enthalpy,       d_lab->d_enthalpySPLabel, indx, patch);
     }
   }
 }
@@ -2264,7 +2264,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> densityGuess;
@@ -2275,8 +2275,8 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
     constCCVariable<int> cellType;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -2291,21 +2291,21 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         &&((!(EKTCorrection))||((EKTCorrection)&&(doing_EKT_now)))){
-      new_dw->allocateAndPut(densityGuess, d_lab->d_densityGuessLabel, matlIndex, patch);
+      new_dw->allocateAndPut(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     }else{
-      new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,  matlIndex, patch);
+      new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,  indx, patch);
     }
-    old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,matlIndex, patch);
+    old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,indx, patch);
     
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
     
-    new_dw->get(density,   d_lab->d_densityCPLabel,     matlIndex,patch, gac, 1);
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex,patch, gaf, 1);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex,patch, gaf, 1);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex,patch, gaf, 1);
-    new_dw->get(cellType,  d_lab->d_cellTypeLabel,      matlIndex,patch, gn, 0);
+    new_dw->get(density,   d_lab->d_densityCPLabel,     indx,patch, gac, 1);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx,patch, gaf, 1);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx,patch, gaf, 1);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx,patch, gaf, 1);
+    new_dw->get(cellType,  d_lab->d_cellTypeLabel,      indx,patch, gn, 0);
     
 // Need to skip first timestep since we start with unprojected velocities
 //    int currentTimeStep=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
@@ -2439,7 +2439,7 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
    // }
       constCCVariable<double> densityEKT;
       if ((EKTCorrection)&&(!(doing_EKT_now))) {
-      new_dw->get(densityEKT, d_lab->d_densityEKTLabel, matlIndex, patch, 
+      new_dw->get(densityEKT, d_lab->d_densityEKTLabel, indx, patch, 
                   gn, 0);
         idxLo = patch->getExtraCellLowIndex__New();
         idxHi = patch->getExtraCellHighIndex__New();
@@ -2544,7 +2544,7 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> densityGuess;
@@ -2554,8 +2554,7 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
     else
       old_values_dw = new_dw;
 
-    new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,
-                     matlIndex, patch);
+    new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel, indx, patch);
     if (negativeDensityGuess > 0.0) {
       if (d_restart_on_negative_density_guess) {
         if (pc->myrank() == 0)
@@ -2566,8 +2565,7 @@ ExplicitSolver::checkDensityGuess(const ProcessorGroup* pc,
       else {
         if (pc->myrank() == 0)
           cout << "WARNING: got negative density guess. Reverting to old density." << endl;
-        old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
-                               matlIndex, patch);
+        old_values_dw->copyOut(densityGuess, d_lab->d_densityCPLabel, indx, patch);
       }
     }   
   }
@@ -2607,16 +2605,14 @@ ExplicitSolver::updateDensityGuess(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> densityGuess;
     constCCVariable<double> density;
 
-    new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,
-                     matlIndex, patch);
-    new_dw->copyOut(densityGuess, d_lab->d_densityCPLabel,
-                     matlIndex, patch);
+    new_dw->getModifiable(densityGuess, d_lab->d_densityGuessLabel,indx, patch);
+    new_dw->copyOut(densityGuess,       d_lab->d_densityCPLabel,   indx, patch);
   }
 }
 //****************************************************************************
@@ -2660,7 +2656,7 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> densityGuess;
@@ -2669,16 +2665,16 @@ ExplicitSolver::syncRhoF(const ProcessorGroup*,
     CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
 
-    new_dw->get(densityGuess, d_lab->d_densityGuessLabel, matlIndex, patch, Ghost::None, 0);
-    new_dw->get(density,      d_lab->d_densityCPLabel,    matlIndex, patch, Ghost::None, 0);
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->get(densityGuess, d_lab->d_densityGuessLabel, indx, patch, Ghost::None, 0);
+    new_dw->get(density,      d_lab->d_densityCPLabel,    indx, patch, Ghost::None, 0);
+    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
     
     if (d_reactingScalarSolve){
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
     }
     
     if (d_enthalpySolve){
-      new_dw->getModifiable(enthalpy,    d_lab->d_enthalpySPLabel,    matlIndex, patch);
+      new_dw->getModifiable(enthalpy,    d_lab->d_enthalpySPLabel,    indx, patch);
     }
     
     IntVector idxLo = patch->getExtraCellLowIndex__New();
@@ -2758,23 +2754,23 @@ ExplicitSolver::saveFECopies(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> temp_scalar;
     CCVariable<double> temp_reactscalar;
     CCVariable<double> temp_enthalpy;
 
-    new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel, matlIndex, patch);
-    new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(temp_scalar, d_lab->d_scalarFELabel, indx, patch);
+    new_dw->copyOut(temp_scalar,        d_lab->d_scalarSPLabel, indx, patch);
     
     if (d_reactingScalarSolve) {
-      new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarFELabel, matlIndex, patch);
-      new_dw->copyOut(temp_reactscalar,        d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(temp_reactscalar, d_lab->d_reactscalarFELabel, indx, patch);
+      new_dw->copyOut(temp_reactscalar,        d_lab->d_reactscalarSPLabel, indx, patch);
     }
     if (d_enthalpySolve) {
-      new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyFELabel,matlIndex, patch);
-      new_dw->copyOut(temp_enthalpy,        d_lab->d_enthalpySPLabel,matlIndex, patch);
+      new_dw->allocateAndPut(temp_enthalpy, d_lab->d_enthalpyFELabel,indx, patch);
+      new_dw->copyOut(temp_enthalpy,        d_lab->d_enthalpySPLabel,indx, patch);
     }
   }
 }
@@ -2865,7 +2861,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
@@ -2886,11 +2882,11 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     CCVariable<double>   gradpmmsLnError;
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(ummsLnError, d_lab->d_ummsLnErrorLabel, matlIndex, patch);
-      new_dw->allocateAndPut(vmmsLnError, d_lab->d_vmmsLnErrorLabel, matlIndex, patch);
-      new_dw->allocateAndPut(wmmsLnError, d_lab->d_wmmsLnErrorLabel, matlIndex, patch);
-      new_dw->allocateAndPut(smmsLnError, d_lab->d_smmsLnErrorLabel, matlIndex, patch);
-      new_dw->allocateAndPut(gradpmmsLnError, d_lab->d_gradpmmsLnErrorLabel, matlIndex, patch);
+      new_dw->allocateAndPut(ummsLnError, d_lab->d_ummsLnErrorLabel, indx, patch);
+      new_dw->allocateAndPut(vmmsLnError, d_lab->d_vmmsLnErrorLabel, indx, patch);
+      new_dw->allocateAndPut(wmmsLnError, d_lab->d_wmmsLnErrorLabel, indx, patch);
+      new_dw->allocateAndPut(smmsLnError, d_lab->d_smmsLnErrorLabel, indx, patch);
+      new_dw->allocateAndPut(gradpmmsLnError, d_lab->d_gradpmmsLnErrorLabel, indx, patch);
       ummsLnError.initialize(0.0);
       vmmsLnError.initialize(0.0);
       wmmsLnError.initialize(0.0);
@@ -2898,11 +2894,11 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       gradpmmsLnError.initialize(0.0);
     }
     else {
-      new_dw->getModifiable(ummsLnError, d_lab->d_ummsLnErrorLabel,     matlIndex, patch);
-      new_dw->getModifiable(vmmsLnError, d_lab->d_vmmsLnErrorLabel,     matlIndex, patch);
-      new_dw->getModifiable(wmmsLnError, d_lab->d_wmmsLnErrorLabel,     matlIndex, patch);
-      new_dw->getModifiable(smmsLnError, d_lab->d_smmsLnErrorLabel,     matlIndex, patch);
-      new_dw->getModifiable(smmsLnError, d_lab->d_gradpmmsLnErrorLabel, matlIndex, patch);
+      new_dw->getModifiable(ummsLnError, d_lab->d_ummsLnErrorLabel,     indx, patch);
+      new_dw->getModifiable(vmmsLnError, d_lab->d_vmmsLnErrorLabel,     indx, patch);
+      new_dw->getModifiable(wmmsLnError, d_lab->d_wmmsLnErrorLabel,     indx, patch);
+      new_dw->getModifiable(smmsLnError, d_lab->d_smmsLnErrorLabel,     indx, patch);
+      new_dw->getModifiable(smmsLnError, d_lab->d_gradpmmsLnErrorLabel, indx, patch);
       ummsLnError.initialize(0.0);
       vmmsLnError.initialize(0.0);
       wmmsLnError.initialize(0.0);
@@ -2911,18 +2907,18 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       
     }
     Ghost::GhostType  gn = Ghost::None;
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(pressure,  d_lab->d_pressurePSLabel,    matlIndex, patch, gn, 0);
-    new_dw->get(scalar,    d_lab->d_scalarSPLabel,      matlIndex, patch, gn, 0);
-    new_dw->get(uFmms,     d_lab->d_uFmmsLabel,         matlIndex, patch, gn, 0);
-    new_dw->get(vFmms,     d_lab->d_vFmmsLabel,         matlIndex, patch, gn, 0);
-    new_dw->get(wFmms,     d_lab->d_wFmmsLabel,         matlIndex, patch, gn, 0);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(pressure,  d_lab->d_pressurePSLabel,    indx, patch, gn, 0);
+    new_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
+    new_dw->get(uFmms,     d_lab->d_uFmmsLabel,         indx, patch, gn, 0);
+    new_dw->get(vFmms,     d_lab->d_vFmmsLabel,         indx, patch, gn, 0);
+    new_dw->get(wFmms,     d_lab->d_wFmmsLabel,         indx, patch, gn, 0);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -3249,15 +3245,15 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> densityGuess;
     constCCVariable<double> density;
     
     Ghost::GhostType  gn = Ghost::None;
-    new_dw->get(densityGuess, d_lab->d_densityGuessLabel, matlIndex, patch, gn, 0);
-    new_dw->get(density, d_lab->d_densityCPLabel,         matlIndex, patch, gn, 0);
+    new_dw->get(densityGuess, d_lab->d_densityGuessLabel, indx, patch, gn, 0);
+    new_dw->get(density, d_lab->d_densityCPLabel,         indx, patch, gn, 0);
 
     double densityLag = 0.0;
     IntVector idxLo = patch->getExtraCellLowIndex__New();

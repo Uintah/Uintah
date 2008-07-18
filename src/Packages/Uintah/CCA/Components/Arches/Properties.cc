@@ -469,7 +469,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<int> cellType;
@@ -538,28 +538,26 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     int indexforden = -1;
 
     PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     Ghost::GhostType  gn = Ghost::None;
     
     if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
-      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, gn, 0);
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
-                                                      matlIndex, patch, gn, 0);
+      new_dw->get(cellType,     d_lab->d_mmcellTypeLabel,   indx, patch, gn, 0);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch, gn, 0);
 #else
-      new_dw->get(cellType, d_lab->d_cellTypeLabel,   matlIndex, patch, gn, 0);
+      new_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
 #endif
     }else{
-      new_dw->get(cellType, d_lab->d_cellTypeLabel,   matlIndex, patch, gn, 0);
+      new_dw->get(cellType, d_lab->d_cellTypeLabel,   indx, patch, gn, 0);
     }
 
     //WARNING!
     //THIS is messy for extra scalars and will need to be fixed for EKT!!!!
     if (doing_EKT_now) {
-      new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, 
-                            matlIndex, patch);
+      new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, indx, patch);
       std::cout << "DANGER!  Extra scalars not supported for EKT yet" << endl;
     }
     //ExtraScalar for Density
@@ -577,186 +575,183 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         //found an extra scalar for density
         const VarLabel* extrascalarlabel;
         extrascalarlabel = d_extraScalars->at(indexforden)->getScalarLabel();
-        new_dw->getModifiable(extrascalar, extrascalarlabel,matlIndex, patch);
+        new_dw->getModifiable(extrascalar, extrascalarlabel,indx, patch);
       }
       else { //Standard scalar
         //Default to the standard scalar if no extrascalar 
         // is found that is labeled to be used for density
-        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
-                              matlIndex, patch);
+        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
       }
     }
     else {
-        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, 
-                              matlIndex, patch);
+        new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
     }
 
 
     if (d_calcVariance) {
-      new_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, 
-                        matlIndex, patch, gn, 0);
+      new_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, indx, patch, gn, 0);
     }
     
     //__________________________________
     if (d_calcReactingScalar) {
       if (doing_EKT_now){
-        new_dw->get(reactScalar, d_lab->d_reactscalarEKTLabel, matlIndex, patch, gn, 0);
+        new_dw->get(reactScalar, d_lab->d_reactscalarEKTLabel, indx, patch, gn, 0);
       }else{
-        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel,  matlIndex, patch, gn, 0);
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel,  indx, patch, gn, 0);
       }
     }
     
     //__________________________________
     if (d_calcEnthalpy){
       if (doing_EKT_now){
-        new_dw->getModifiable(enthalpy, d_lab->d_enthalpyEKTLabel, matlIndex, patch);
+        new_dw->getModifiable(enthalpy, d_lab->d_enthalpyEKTLabel, indx, patch);
       }else{
-        new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,  matlIndex, patch);
+        new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel,  indx, patch);
       }
     }
     //__________________________________
     if (doing_EKT_now){
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-        new_dw->allocateAndPut(new_density, d_lab->d_densityEKTLabel,matlIndex, patch);
+        new_dw->allocateAndPut(new_density, d_lab->d_densityEKTLabel,indx, patch);
       }else{
-        new_dw->getModifiable(new_density, d_lab->d_densityEKTLabel, matlIndex, patch);
+        new_dw->getModifiable(new_density, d_lab->d_densityEKTLabel, indx, patch);
       }
     }else{
-      new_dw->getModifiable(new_density,   d_lab->d_densityCPLabel,  matlIndex, patch);
+      new_dw->getModifiable(new_density,   d_lab->d_densityCPLabel,  indx, patch);
     }
     new_density.initialize(0.0);
     
     //__________________________________
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-      new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
 
       if (d_reactingFlow) {
-        new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel,     matlIndex, patch);
-        new_dw->allocateAndPut(cp,          d_lab->d_cpINLabel,       matlIndex, patch);
-        new_dw->allocateAndPut(co2,         d_lab->d_co2INLabel,      matlIndex, patch);
-        new_dw->allocateAndPut(h2o,         d_lab->d_h2oINLabel,      matlIndex, patch);
-        new_dw->allocateAndPut(heatLoss,    d_lab->d_heatLossLabel,   matlIndex, patch);
-        new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel,matlIndex, patch);
+        new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel,     indx, patch);
+        new_dw->allocateAndPut(cp,          d_lab->d_cpINLabel,       indx, patch);
+        new_dw->allocateAndPut(co2,         d_lab->d_co2INLabel,      indx, patch);
+        new_dw->allocateAndPut(h2o,         d_lab->d_h2oINLabel,      indx, patch);
+        new_dw->allocateAndPut(heatLoss,    d_lab->d_heatLossLabel,   indx, patch);
+        new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel,indx, patch);
         if (d_calcReactingScalar){
           new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-                                                                      matlIndex, patch);
+                                                                      indx, patch);
         }
       }
 
       if (d_co_output){
-        new_dw->allocateAndPut(co, d_lab->d_coINLabel,matlIndex, patch);
+        new_dw->allocateAndPut(co, d_lab->d_coINLabel,indx, patch);
       }
       
       //__________________________________
       if (d_sulfur_chem) {
-        new_dw->allocateAndPut(h2s,    d_lab->d_h2sINLabel,    matlIndex, patch);
-        new_dw->allocateAndPut(so2,    d_lab->d_so2INLabel,    matlIndex, patch);
-        new_dw->allocateAndPut(so3,    d_lab->d_so3INLabel,    matlIndex, patch);
-        new_dw->allocateAndPut(sulfur, d_lab->d_sulfurINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(h2s,    d_lab->d_h2sINLabel,    indx, patch);
+        new_dw->allocateAndPut(so2,    d_lab->d_so2INLabel,    indx, patch);
+        new_dw->allocateAndPut(so3,    d_lab->d_so3INLabel,    indx, patch);
+        new_dw->allocateAndPut(sulfur, d_lab->d_sulfurINLabel, indx, patch);
 
-        new_dw->allocateAndPut(s2,     d_lab->d_s2INLabel,     matlIndex, patch);
-        new_dw->allocateAndPut(sh,     d_lab->d_shINLabel,     matlIndex, patch);
-        new_dw->allocateAndPut(so,     d_lab->d_soINLabel,     matlIndex, patch);
-        new_dw->allocateAndPut(hso2,   d_lab->d_hso2INLabel,   matlIndex, patch);
+        new_dw->allocateAndPut(s2,     d_lab->d_s2INLabel,     indx, patch);
+        new_dw->allocateAndPut(sh,     d_lab->d_shINLabel,     indx, patch);
+        new_dw->allocateAndPut(so,     d_lab->d_soINLabel,     indx, patch);
+        new_dw->allocateAndPut(hso2,   d_lab->d_hso2INLabel,   indx, patch);
 
-        new_dw->allocateAndPut(hoso,   d_lab->d_hosoINLabel,   matlIndex, patch);
-        new_dw->allocateAndPut(hoso2,  d_lab->d_hoso2INLabel,  matlIndex, patch);
-        new_dw->allocateAndPut(sn,     d_lab->d_snINLabel,     matlIndex, patch);
-        new_dw->allocateAndPut(cs,     d_lab->d_csINLabel,     matlIndex, patch);
+        new_dw->allocateAndPut(hoso,   d_lab->d_hosoINLabel,   indx, patch);
+        new_dw->allocateAndPut(hoso2,  d_lab->d_hoso2INLabel,  indx, patch);
+        new_dw->allocateAndPut(sn,     d_lab->d_snINLabel,     indx, patch);
+        new_dw->allocateAndPut(cs,     d_lab->d_csINLabel,     indx, patch);
 
-        new_dw->allocateAndPut(ocs,    d_lab->d_ocsINLabel,    matlIndex, patch);
-        new_dw->allocateAndPut(hso,    d_lab->d_hsoINLabel,    matlIndex, patch);
-        new_dw->allocateAndPut(hos,    d_lab->d_hosINLabel,    matlIndex, patch);
-        new_dw->allocateAndPut(hsoh,   d_lab->d_hsohINLabel,   matlIndex, patch);
+        new_dw->allocateAndPut(ocs,    d_lab->d_ocsINLabel,    indx, patch);
+        new_dw->allocateAndPut(hso,    d_lab->d_hsoINLabel,    indx, patch);
+        new_dw->allocateAndPut(hos,    d_lab->d_hosINLabel,    indx, patch);
+        new_dw->allocateAndPut(hsoh,   d_lab->d_hsohINLabel,   indx, patch);
 
-        new_dw->allocateAndPut(h2so,   d_lab->d_h2soINLabel,   matlIndex, patch);
-        new_dw->allocateAndPut(hosho,  d_lab->d_hoshoINLabel,  matlIndex, patch);
-        new_dw->allocateAndPut(hs2,    d_lab->d_hs2INLabel,    matlIndex, patch);
-        new_dw->allocateAndPut(h2s2,   d_lab->d_h2s2INLabel,   matlIndex, patch);
+        new_dw->allocateAndPut(h2so,   d_lab->d_h2soINLabel,   indx, patch);
+        new_dw->allocateAndPut(hosho,  d_lab->d_hoshoINLabel,  indx, patch);
+        new_dw->allocateAndPut(hs2,    d_lab->d_hs2INLabel,    indx, patch);
+        new_dw->allocateAndPut(h2s2,   d_lab->d_h2s2INLabel,   indx, patch);
       }
       if (d_soot_precursors) {
-        new_dw->allocateAndPut(c2h2,   d_lab->d_c2h2INLabel,   matlIndex, patch);
-        new_dw->allocateAndPut(ch4,    d_lab->d_ch4INLabel,    matlIndex, patch);
+        new_dw->allocateAndPut(c2h2,   d_lab->d_c2h2INLabel,   indx, patch);
+        new_dw->allocateAndPut(ch4,    d_lab->d_ch4INLabel,    indx, patch);
       }
 
       if (d_radiationCalc) {
         if (!d_DORadiationCalc)
           new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
-                                                               matlIndex, patch);
-        new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
+                                                               indx, patch);
+        new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, indx,patch);
       }
 
       if (d_carbon_balance_es){       
-        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, indx, patch);
       }
       if (d_sulfur_balance_es){
-        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, indx, patch);
       }
     }
     else {
-      new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
+      new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
 
       if (d_reactingFlow) {
-        new_dw->getModifiable(temperature, d_lab->d_tempINLabel,      matlIndex, patch);
-        new_dw->getModifiable(cp,          d_lab->d_cpINLabel,        matlIndex, patch);
-        new_dw->getModifiable(co2,         d_lab->d_co2INLabel,       matlIndex, patch);
-        new_dw->getModifiable(h2o,         d_lab->d_h2oINLabel,       matlIndex, patch);
-        new_dw->getModifiable(heatLoss,    d_lab->d_heatLossLabel,    matlIndex, patch);
-        new_dw->getModifiable(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch);
+        new_dw->getModifiable(temperature, d_lab->d_tempINLabel,      indx, patch);
+        new_dw->getModifiable(cp,          d_lab->d_cpINLabel,        indx, patch);
+        new_dw->getModifiable(co2,         d_lab->d_co2INLabel,       indx, patch);
+        new_dw->getModifiable(h2o,         d_lab->d_h2oINLabel,       indx, patch);
+        new_dw->getModifiable(heatLoss,    d_lab->d_heatLossLabel,    indx, patch);
+        new_dw->getModifiable(enthalpyRXN, d_lab->d_enthalpyRXNLabel, indx, patch);
         if (d_calcReactingScalar)
           new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
-                                                                      matlIndex, patch);
+                                                                      indx, patch);
       }
 
       if (d_co_output){
-        new_dw->getModifiable(co, d_lab->d_coINLabel,   matlIndex, patch);
+        new_dw->getModifiable(co, d_lab->d_coINLabel,   indx, patch);
       }
       //__________________________________
       if (d_sulfur_chem) {
-        new_dw->getModifiable(h2s,    d_lab->d_h2sINLabel,   matlIndex, patch);
-        new_dw->getModifiable(so2,    d_lab->d_so2INLabel,   matlIndex, patch);
-        new_dw->getModifiable(so3,    d_lab->d_so3INLabel,   matlIndex, patch);
-        new_dw->getModifiable(sulfur, d_lab->d_sulfurINLabel,matlIndex, patch);
+        new_dw->getModifiable(h2s,    d_lab->d_h2sINLabel,   indx, patch);
+        new_dw->getModifiable(so2,    d_lab->d_so2INLabel,   indx, patch);
+        new_dw->getModifiable(so3,    d_lab->d_so3INLabel,   indx, patch);
+        new_dw->getModifiable(sulfur, d_lab->d_sulfurINLabel,indx, patch);
 
-        new_dw->getModifiable(s2,     d_lab->d_s2INLabel,    matlIndex, patch);
-        new_dw->getModifiable(sh,     d_lab->d_shINLabel,    matlIndex, patch);
-        new_dw->getModifiable(so,     d_lab->d_soINLabel,    matlIndex, patch);
-        new_dw->getModifiable(hso2,   d_lab->d_hso2INLabel,  matlIndex, patch);
+        new_dw->getModifiable(s2,     d_lab->d_s2INLabel,    indx, patch);
+        new_dw->getModifiable(sh,     d_lab->d_shINLabel,    indx, patch);
+        new_dw->getModifiable(so,     d_lab->d_soINLabel,    indx, patch);
+        new_dw->getModifiable(hso2,   d_lab->d_hso2INLabel,  indx, patch);
 
-        new_dw->getModifiable(hoso,   d_lab->d_hosoINLabel,  matlIndex, patch);
-        new_dw->getModifiable(hoso2,  d_lab->d_hoso2INLabel, matlIndex, patch);
-        new_dw->getModifiable(sn,     d_lab->d_snINLabel,    matlIndex, patch);
-        new_dw->getModifiable(cs,     d_lab->d_csINLabel,    matlIndex, patch);
+        new_dw->getModifiable(hoso,   d_lab->d_hosoINLabel,  indx, patch);
+        new_dw->getModifiable(hoso2,  d_lab->d_hoso2INLabel, indx, patch);
+        new_dw->getModifiable(sn,     d_lab->d_snINLabel,    indx, patch);
+        new_dw->getModifiable(cs,     d_lab->d_csINLabel,    indx, patch);
 
-        new_dw->getModifiable(ocs,    d_lab->d_ocsINLabel,   matlIndex, patch);
-        new_dw->getModifiable(hso,    d_lab->d_hsoINLabel,   matlIndex, patch);
-        new_dw->getModifiable(hos,    d_lab->d_hosINLabel,   matlIndex, patch);
-        new_dw->getModifiable(hsoh,   d_lab->d_hsohINLabel,  matlIndex, patch);
+        new_dw->getModifiable(ocs,    d_lab->d_ocsINLabel,   indx, patch);
+        new_dw->getModifiable(hso,    d_lab->d_hsoINLabel,   indx, patch);
+        new_dw->getModifiable(hos,    d_lab->d_hosINLabel,   indx, patch);
+        new_dw->getModifiable(hsoh,   d_lab->d_hsohINLabel,  indx, patch);
 
-        new_dw->getModifiable(h2so,   d_lab->d_h2soINLabel,  matlIndex, patch);
-        new_dw->getModifiable(hosho,  d_lab->d_hoshoINLabel, matlIndex, patch);
-        new_dw->getModifiable(hs2,    d_lab->d_hs2INLabel,   matlIndex, patch);
-        new_dw->getModifiable(h2s2,   d_lab->d_h2s2INLabel,  matlIndex, patch);
+        new_dw->getModifiable(h2so,   d_lab->d_h2soINLabel,  indx, patch);
+        new_dw->getModifiable(hosho,  d_lab->d_hoshoINLabel, indx, patch);
+        new_dw->getModifiable(hs2,    d_lab->d_hs2INLabel,   indx, patch);
+        new_dw->getModifiable(h2s2,   d_lab->d_h2s2INLabel,  indx, patch);
 
       }
       //__________________________________
       if (d_soot_precursors) {
-        new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel, matlIndex, patch);
-        new_dw->getModifiable(ch4, d_lab->d_ch4INLabel,   matlIndex, patch);
+        new_dw->getModifiable(c2h2, d_lab->d_c2h2INLabel, indx, patch);
+        new_dw->getModifiable(ch4, d_lab->d_ch4INLabel,   indx, patch);
       }
       //__________________________________
       if (d_radiationCalc) {
         if (!d_DORadiationCalc)
-          new_dw->getModifiable(absorption, d_lab->d_absorpINLabel, matlIndex, patch);
-        new_dw->getModifiable(sootFV,       d_lab->d_sootFVINLabel, matlIndex,patch);
+          new_dw->getModifiable(absorption, d_lab->d_absorpINLabel, indx, patch);
+        new_dw->getModifiable(sootFV,       d_lab->d_sootFVINLabel, indx,patch);
       }
 
       if (d_carbon_balance_es){
-        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+        new_dw->getModifiable(co2Rate, d_lab->d_co2RateLabel, indx, patch);
       }
       if (d_sulfur_balance_es){
-        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);                  
+        new_dw->getModifiable(so2Rate, d_lab->d_so2RateLabel, indx, patch);                  
       }
     }
     drhodf.initialize(0.0);
@@ -822,18 +817,18 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
 
     if (d_MAlab && !initialize) {
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel,  matlIndex, patch, gn, 0);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel,  indx, patch, gn, 0);
       
       if (d_DORadiationCalc && d_bc->getIfCalcEnergyExchange())
-        new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel,   matlIndex, patch, gn, 0);
+        new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel,   indx, patch, gn, 0);
     }
 
     if (d_MAlab) {
       if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
-        new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+        new_dw->allocateAndPut(denMicro, d_lab->d_densityMicroLabel, indx, patch);
       }else{
-        new_dw->getModifiable(denMicro, d_lab->d_densityMicroLabel, matlIndex, patch);
+        new_dw->getModifiable(denMicro, d_lab->d_densityMicroLabel, indx, patch);
       }
     }
 
@@ -1228,7 +1223,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
  
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> denMicro;
     constCCVariable<double> voidFraction;
@@ -1237,11 +1232,11 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> denMicro_new;
     
     Ghost::GhostType  gn = Ghost::None;
-    new_dw->get(denMicro,          d_lab->d_densityMicroINLabel,     matlIndex, patch, gn, 0);
-    new_dw->get(cellType,          d_lab->d_cellTypeLabel,           matlIndex, patch, gn, 0);
-    new_dw->get(voidFraction,      d_lab->d_mmgasVolFracLabel,       matlIndex, patch, gn, 0);
-    new_dw->getModifiable(density, d_lab->d_densityCPLabel,          matlIndex, patch);
-    new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroLabel, matlIndex, patch);
+    new_dw->get(denMicro,          d_lab->d_densityMicroINLabel,     indx, patch, gn, 0);
+    new_dw->get(cellType,          d_lab->d_cellTypeLabel,           indx, patch, gn, 0);
+    new_dw->get(voidFraction,      d_lab->d_mmgasVolFracLabel,       indx, patch, gn, 0);
+    new_dw->getModifiable(density, d_lab->d_densityCPLabel,          indx, patch);
+    new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroLabel, indx, patch);
     denMicro_new.copyData(denMicro);
 
     constCCVariable<double> tempIN;
@@ -1324,43 +1319,38 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 
     if (d_bc->getIfCalcEnergyExchange())
       if (d_DORadiationCalc)
-        new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, matlIndex, patch,gn, 0);
+        new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, indx, patch,gn, 0);
 
     if (d_reactingFlow) {
-      old_dw->get(tempIN,   d_lab->d_tempINLabel,   matlIndex, patch,gn, 0);
-      old_dw->get(cpIN,     d_lab->d_cpINLabel,     matlIndex, patch,gn, 0);
-      old_dw->get(co2IN,    d_lab->d_co2INLabel,    matlIndex, patch,gn, 0);
-      old_dw->get(heatLoss, d_lab->d_heatLossLabel, matlIndex, patch,gn, 0);
+      old_dw->get(tempIN,   d_lab->d_tempINLabel,   indx, patch,gn, 0);
+      old_dw->get(cpIN,     d_lab->d_cpINLabel,     indx, patch,gn, 0);
+      old_dw->get(co2IN,    d_lab->d_co2INLabel,    indx, patch,gn, 0);
+      old_dw->get(heatLoss, d_lab->d_heatLossLabel, indx, patch,gn, 0);
       /*
-      old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch,
+      old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, indx, patch,
                   gn, 0);
       */
       if (d_calcReactingScalar) {
-        old_dw->get(reactScalarSrc, d_lab->d_reactscalarSRCINLabel,
-                    matlIndex, patch, gn, 0);
+        old_dw->get(reactScalarSrc, d_lab->d_reactscalarSRCINLabel, indx, patch, gn, 0);
       }
 
-      new_dw->allocateAndPut(tempIN_new, d_lab->d_tempINLabel, 
-                             matlIndex, patch);
+      new_dw->allocateAndPut(tempIN_new,    d_lab->d_tempINLabel,   indx, patch);
       tempIN_new.copyData(tempIN);
 
-      new_dw->allocateAndPut(cpIN_new, d_lab->d_cpINLabel, matlIndex, patch);
+      new_dw->allocateAndPut(cpIN_new,      d_lab->d_cpINLabel,     indx, patch);
       cpIN_new.copyData(cpIN);
 
-      new_dw->allocateAndPut(co2IN_new, d_lab->d_co2INLabel, 
-                             matlIndex, patch);
+      new_dw->allocateAndPut(co2IN_new,     d_lab->d_co2INLabel,    indx, patch);
       co2IN_new.copyData(co2IN);
-      new_dw->allocateAndPut(heatLoss_new, d_lab->d_heatLossLabel, 
-                             matlIndex, patch);
+      
+      new_dw->allocateAndPut(heatLoss_new,  d_lab->d_heatLossLabel, indx, patch);
       heatLoss_new.copyData(heatLoss);
 
-      new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, 
-                             matlIndex, patch);
+      new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, indx, patch);
       enthalpyRXN_new.initialize(0.0);
 
       if (d_calcReactingScalar) {
-        new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,
-                               matlIndex, patch);
+        new_dw->allocateAndPut(reactScalarSrc_new, d_lab->d_reactscalarSRCINLabel,indx, patch);
         reactScalarSrc_new.copyData(reactScalarSrc);
       }
     }
@@ -1392,173 +1382,170 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     if (d_radiationCalc) {
 
       if (!d_DORadiationCalc) {
-        old_dw->get(absorpIN, d_lab->d_absorpINLabel, matlIndex, patch,
+        old_dw->get(absorpIN, d_lab->d_absorpINLabel, indx, patch,
                     gn, 0);
-        new_dw->allocateAndPut(absorpIN_new, d_lab->d_absorpINLabel, 
-                       matlIndex, patch);
+        new_dw->allocateAndPut(absorpIN_new, d_lab->d_absorpINLabel, indx, patch);
         absorpIN_new.copyData(absorpIN);
       }
 
 
-      old_dw->get(sootFVIN, d_lab->d_sootFVINLabel, matlIndex, patch,
+      old_dw->get(sootFVIN, d_lab->d_sootFVINLabel, indx, patch,
                   gn, 0);
 
       //      new_dw->allocateAndPut(abskgIN_new, d_lab->d_abskgINLabel, 
-      //                       matlIndex, patch);
+      //                       indx, patch);
       //      abskgIN_new.copyData(abskgIN);
 
-      new_dw->allocateAndPut(sootFVIN_new, d_lab->d_sootFVINLabel,
-                       matlIndex, patch);
+      new_dw->allocateAndPut(sootFVIN_new, d_lab->d_sootFVINLabel, indx, patch);
       sootFVIN_new.copyData(sootFVIN);
 
       if (d_DORadiationCalc) {
-        old_dw->get(h2oIN,            d_lab->d_h2oINLabel,           matlIndex, patch,gn, 0);
-        old_dw->get(radiationSRCIN,   d_lab->d_radiationSRCINLabel,  matlIndex, patch,gn, 0);
-        old_dw->get(radiationFluxEIN, d_lab->d_radiationFluxEINLabel,matlIndex, patch,gn, 0);
-        old_dw->get(radiationFluxWIN, d_lab->d_radiationFluxWINLabel,matlIndex, patch,gn, 0);
-        old_dw->get(radiationFluxNIN, d_lab->d_radiationFluxNINLabel,matlIndex, patch,gn, 0);
-        old_dw->get(radiationFluxSIN, d_lab->d_radiationFluxSINLabel,matlIndex, patch,gn, 0);
-        old_dw->get(radiationFluxTIN, d_lab->d_radiationFluxTINLabel,matlIndex, patch,gn, 0);
-        old_dw->get(radiationFluxBIN, d_lab->d_radiationFluxBINLabel,matlIndex, patch,gn, 0);
-        old_dw->get(abskg,            d_lab->d_abskgINLabel,         matlIndex, patch,gn, 0);
-        new_dw->allocateAndPut(h2oIN_new, d_lab->d_h2oINLabel,       matlIndex, patch);
+        old_dw->get(h2oIN,            d_lab->d_h2oINLabel,           indx, patch,gn, 0);
+        old_dw->get(radiationSRCIN,   d_lab->d_radiationSRCINLabel,  indx, patch,gn, 0);
+        old_dw->get(radiationFluxEIN, d_lab->d_radiationFluxEINLabel,indx, patch,gn, 0);
+        old_dw->get(radiationFluxWIN, d_lab->d_radiationFluxWINLabel,indx, patch,gn, 0);
+        old_dw->get(radiationFluxNIN, d_lab->d_radiationFluxNINLabel,indx, patch,gn, 0);
+        old_dw->get(radiationFluxSIN, d_lab->d_radiationFluxSINLabel,indx, patch,gn, 0);
+        old_dw->get(radiationFluxTIN, d_lab->d_radiationFluxTINLabel,indx, patch,gn, 0);
+        old_dw->get(radiationFluxBIN, d_lab->d_radiationFluxBINLabel,indx, patch,gn, 0);
+        old_dw->get(abskg,            d_lab->d_abskgINLabel,         indx, patch,gn, 0);
+        new_dw->allocateAndPut(h2oIN_new, d_lab->d_h2oINLabel,       indx, patch);
         h2oIN_new.copyData(h2oIN);
  
         new_dw->allocateAndPut(radiationSRCIN_new,
-                               d_lab->d_radiationSRCINLabel, matlIndex, patch);
+                               d_lab->d_radiationSRCINLabel, indx, patch);
         radiationSRCIN_new.copyData(radiationSRCIN);
  
         new_dw->allocateAndPut(radiationFluxEIN_new,
-                               d_lab->d_radiationFluxEINLabel, matlIndex, patch);
+                               d_lab->d_radiationFluxEINLabel, indx, patch);
         radiationFluxEIN_new.copyData(radiationFluxEIN);
  
         new_dw->allocateAndPut(radiationFluxWIN_new,
-                               d_lab->d_radiationFluxWINLabel, matlIndex, patch);
+                               d_lab->d_radiationFluxWINLabel, indx, patch);
         radiationFluxWIN_new.copyData(radiationFluxWIN);
  
         new_dw->allocateAndPut(radiationFluxNIN_new,
-                               d_lab->d_radiationFluxNINLabel, matlIndex, patch);
+                               d_lab->d_radiationFluxNINLabel, indx, patch);
         radiationFluxNIN_new.copyData(radiationFluxNIN);
  
         new_dw->allocateAndPut(radiationFluxSIN_new,
-                               d_lab->d_radiationFluxSINLabel, matlIndex, patch);
+                               d_lab->d_radiationFluxSINLabel, indx, patch);
         radiationFluxSIN_new.copyData(radiationFluxSIN);
  
         new_dw->allocateAndPut(radiationFluxTIN_new,
-                               d_lab->d_radiationFluxTINLabel, matlIndex, patch);
+                               d_lab->d_radiationFluxTINLabel, indx, patch);
         radiationFluxTIN_new.copyData(radiationFluxTIN);
  
         new_dw->allocateAndPut(radiationFluxBIN_new,
-                               d_lab->d_radiationFluxBINLabel, matlIndex, patch);
+                               d_lab->d_radiationFluxBINLabel, indx, patch);
         radiationFluxBIN_new.copyData(radiationFluxBIN);
  
         new_dw->allocateAndPut(abskg_new,
-                               d_lab->d_abskgINLabel, matlIndex, patch);
+                               d_lab->d_abskgINLabel, indx, patch);
         abskg_new.copyData(abskg);
       }
     }
 
     if (d_co_output) {
-      old_dw->get(coIN, d_lab->d_coINLabel, matlIndex, patch,
+      old_dw->get(coIN, d_lab->d_coINLabel, indx, patch,
                   gn, 0);
-      new_dw->allocateAndPut(coIN_new, d_lab->d_coINLabel,
-                             matlIndex, patch);
+      new_dw->allocateAndPut(coIN_new, d_lab->d_coINLabel,indx, patch);
       coIN_new.copyData(coIN);
     }
     
     if (d_sulfur_chem) {
-      old_dw->get(           h2sIN,     d_lab->d_h2sINLabel,matlIndex, patch,gn, 0);
-      new_dw->allocateAndPut(h2sIN_new, d_lab->d_h2sINLabel,matlIndex, patch);
+      old_dw->get(           h2sIN,     d_lab->d_h2sINLabel,indx, patch,gn, 0);
+      new_dw->allocateAndPut(h2sIN_new, d_lab->d_h2sINLabel,indx, patch);
       h2sIN_new.copyData(h2sIN);      
 
-      old_dw->get(           so2IN,     d_lab->d_so2INLabel, matlIndex, patch,gn, 0);
-      new_dw->allocateAndPut(so2IN_new, d_lab->d_so2INLabel, matlIndex, patch);
+      old_dw->get(           so2IN,     d_lab->d_so2INLabel, indx, patch,gn, 0);
+      new_dw->allocateAndPut(so2IN_new, d_lab->d_so2INLabel, indx, patch);
       so2IN_new.copyData(so2IN);
 
-      old_dw->get(           so3IN,     d_lab->d_so3INLabel, matlIndex, patch,gn, 0);
-      new_dw->allocateAndPut(so3IN_new, d_lab->d_so3INLabel, matlIndex, patch);
+      old_dw->get(           so3IN,     d_lab->d_so3INLabel, indx, patch,gn, 0);
+      new_dw->allocateAndPut(so3IN_new, d_lab->d_so3INLabel, indx, patch);
       so3IN_new.copyData(so3IN);
       
-      old_dw->get(           sulfurIN,   d_lab->d_sulfurINLabel,   matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(sulfurIN_new, d_lab->d_sulfurINLabel, matlIndex, patch);
+      old_dw->get(           sulfurIN,   d_lab->d_sulfurINLabel,   indx, patch, gn, 0);
+      new_dw->allocateAndPut(sulfurIN_new, d_lab->d_sulfurINLabel, indx, patch);
       sulfurIN_new.copyData(sulfurIN);
 
 //
-      old_dw->get(           s2IN,     d_lab->d_s2INLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(s2IN_new, d_lab->d_s2INLabel, matlIndex, patch);
+      old_dw->get(           s2IN,     d_lab->d_s2INLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(s2IN_new, d_lab->d_s2INLabel, indx, patch);
       s2IN_new.copyData(s2IN);
 
-      old_dw->get(           shIN,     d_lab->d_shINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(shIN_new, d_lab->d_shINLabel, matlIndex, patch);
+      old_dw->get(           shIN,     d_lab->d_shINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(shIN_new, d_lab->d_shINLabel, indx, patch);
       shIN_new.copyData(shIN);
 
-      old_dw->get(           soIN,     d_lab->d_soINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(soIN_new, d_lab->d_soINLabel, matlIndex, patch);
+      old_dw->get(           soIN,     d_lab->d_soINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(soIN_new, d_lab->d_soINLabel, indx, patch);
       soIN_new.copyData(soIN);
 
-      old_dw->get(           hso2IN,     d_lab->d_hso2INLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hso2IN_new, d_lab->d_hso2INLabel, matlIndex, patch);
+      old_dw->get(           hso2IN,     d_lab->d_hso2INLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hso2IN_new, d_lab->d_hso2INLabel, indx, patch);
       hso2IN_new.copyData(hso2IN);
 
 //
-      old_dw->get(           hosoIN,     d_lab->d_hosoINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hosoIN_new, d_lab->d_hosoINLabel, matlIndex, patch);
+      old_dw->get(           hosoIN,     d_lab->d_hosoINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hosoIN_new, d_lab->d_hosoINLabel, indx, patch);
       hosoIN_new.copyData(hosoIN);
 
-      old_dw->get(           hoso2IN,     d_lab->d_hoso2INLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hoso2IN_new, d_lab->d_hoso2INLabel, matlIndex, patch);
+      old_dw->get(           hoso2IN,     d_lab->d_hoso2INLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hoso2IN_new, d_lab->d_hoso2INLabel, indx, patch);
       hoso2IN_new.copyData(hoso2IN);
 
-      old_dw->get(           snIN,     d_lab->d_snINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(snIN_new, d_lab->d_snINLabel, matlIndex, patch);
+      old_dw->get(           snIN,     d_lab->d_snINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(snIN_new, d_lab->d_snINLabel, indx, patch);
       snIN_new.copyData(snIN);
 
-      old_dw->get(           csIN,     d_lab->d_csINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(csIN_new, d_lab->d_csINLabel, matlIndex, patch);
+      old_dw->get(           csIN,     d_lab->d_csINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(csIN_new, d_lab->d_csINLabel, indx, patch);
       csIN_new.copyData(csIN);
 
 //
-      old_dw->get(           ocsIN,     d_lab->d_ocsINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(ocsIN_new, d_lab->d_ocsINLabel, matlIndex, patch);
+      old_dw->get(           ocsIN,     d_lab->d_ocsINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(ocsIN_new, d_lab->d_ocsINLabel, indx, patch);
       ocsIN_new.copyData(ocsIN);
 
-      old_dw->get(           hsoIN,     d_lab->d_hsoINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hsoIN_new, d_lab->d_hsoINLabel, matlIndex, patch);
+      old_dw->get(           hsoIN,     d_lab->d_hsoINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hsoIN_new, d_lab->d_hsoINLabel, indx, patch);
       hsoIN_new.copyData(hsoIN);
 
-      old_dw->get(           hosIN,     d_lab->d_hosINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hosIN_new, d_lab->d_hosINLabel, matlIndex, patch);
+      old_dw->get(           hosIN,     d_lab->d_hosINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hosIN_new, d_lab->d_hosINLabel, indx, patch);
       hosIN_new.copyData(hosIN);
 
-      old_dw->get(           hsohIN,     d_lab->d_hsohINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hsohIN_new, d_lab->d_hsohINLabel, matlIndex, patch);
+      old_dw->get(           hsohIN,     d_lab->d_hsohINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hsohIN_new, d_lab->d_hsohINLabel, indx, patch);
       hsohIN_new.copyData(hsohIN);
 
 //
-      old_dw->get(           h2soIN,     d_lab->d_h2soINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(h2soIN_new, d_lab->d_h2soINLabel, matlIndex, patch);
+      old_dw->get(           h2soIN,     d_lab->d_h2soINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(h2soIN_new, d_lab->d_h2soINLabel, indx, patch);
       h2soIN_new.copyData(h2soIN);
 
-      old_dw->get(           hoshoIN,     d_lab->d_hoshoINLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hoshoIN_new, d_lab->d_hoshoINLabel, matlIndex, patch);
+      old_dw->get(           hoshoIN,     d_lab->d_hoshoINLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hoshoIN_new, d_lab->d_hoshoINLabel, indx, patch);
       hoshoIN_new.copyData(hoshoIN);
 
-      old_dw->get(           hs2IN,     d_lab->d_hs2INLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(hs2IN_new, d_lab->d_hs2INLabel, matlIndex, patch);
+      old_dw->get(           hs2IN,     d_lab->d_hs2INLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(hs2IN_new, d_lab->d_hs2INLabel, indx, patch);
       hs2IN_new.copyData(hs2IN);
 
-      old_dw->get(           h2s2IN,    d_lab->d_h2s2INLabel, matlIndex, patch, gn, 0);
-      new_dw->allocateAndPut(h2s2IN_new, d_lab->d_h2s2INLabel,matlIndex, patch);
+      old_dw->get(           h2s2IN,    d_lab->d_h2s2INLabel, indx, patch, gn, 0);
+      new_dw->allocateAndPut(h2s2IN_new, d_lab->d_h2s2INLabel,indx, patch);
       h2s2IN_new.copyData(h2s2IN);
     }
     
     if (d_soot_precursors) {
-      old_dw->get(           c2h2IN,     d_lab->d_c2h2INLabel,matlIndex, patch,gn, 0);
-      new_dw->allocateAndPut(c2h2IN_new, d_lab->d_c2h2INLabel,matlIndex, patch);
+      old_dw->get(           c2h2IN,     d_lab->d_c2h2INLabel,indx, patch,gn, 0);
+      new_dw->allocateAndPut(c2h2IN_new, d_lab->d_c2h2INLabel,indx, patch);
       c2h2IN_new.copyData(c2h2IN);      
 
-      old_dw->get(           ch4IN,     d_lab->d_ch4INLabel,  matlIndex, patch,gn, 0);
-      new_dw->allocateAndPut(ch4IN_new, d_lab->d_ch4INLabel,  matlIndex, patch);
+      old_dw->get(           ch4IN,     d_lab->d_ch4INLabel,  indx, patch,gn, 0);
+      new_dw->allocateAndPut(ch4IN_new, d_lab->d_ch4INLabel,  indx, patch);
       ch4IN_new.copyData(ch4IN);
     }
 
@@ -1657,7 +1644,7 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> denRefArray;
     constCCVariable<double> voidFraction;
@@ -1668,13 +1655,13 @@ Properties::computeDenRefArray(const ProcessorGroup*,
     double den_Ref = den_ref_var;
 
     if (d_MAlab) {
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, Ghost::None, 0);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch, Ghost::None, 0);
     }
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayLabel,  matlIndex, patch);
+      new_dw->allocateAndPut(denRefArray, d_lab->d_denRefArrayLabel,  indx, patch);
     }else{
-      new_dw->getModifiable(denRefArray, d_lab->d_denRefArrayLabel,   matlIndex, patch);
+      new_dw->getModifiable(denRefArray, d_lab->d_denRefArrayLabel,   indx, patch);
     }  
               
     denRefArray.initialize(den_Ref);
@@ -1748,7 +1735,7 @@ Properties::averageRKProps(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> old_density;
@@ -1766,28 +1753,28 @@ Properties::averageRKProps(const ProcessorGroup*,
     CCVariable<double> density_guess;
 
     Ghost::GhostType  gn = Ghost::None;
-    old_dw->get(old_density,  d_lab->d_densityCPLabel,    matlIndex, patch, gn, 0);
-    old_dw->get(old_scalar,   d_lab->d_scalarSPLabel,     matlIndex, patch, gn, 0);
+    old_dw->get(old_density,  d_lab->d_densityCPLabel,    indx, patch, gn, 0);
+    old_dw->get(old_scalar,   d_lab->d_scalarSPLabel,     indx, patch, gn, 0);
     
-    new_dw->get(rho1_density, d_lab->d_densityTempLabel,  matlIndex, patch, gn, 0);
-    new_dw->get(new_density,  d_lab->d_densityCPLabel,    matlIndex, patch, gn, 0);
-    new_dw->get(fe_scalar,    d_lab->d_scalarFELabel,     matlIndex, patch, gn, 0);
+    new_dw->get(rho1_density, d_lab->d_densityTempLabel,  indx, patch, gn, 0);
+    new_dw->get(new_density,  d_lab->d_densityCPLabel,    indx, patch, gn, 0);
+    new_dw->get(fe_scalar,    d_lab->d_scalarFELabel,     indx, patch, gn, 0);
     
-    new_dw->getModifiable(new_scalar,    d_lab->d_scalarSPLabel,     matlIndex, patch);
-    new_dw->getModifiable(density_guess, d_lab->d_densityGuessLabel, matlIndex, patch);
+    new_dw->getModifiable(new_scalar,    d_lab->d_scalarSPLabel,     indx, patch);
+    new_dw->getModifiable(density_guess, d_lab->d_densityGuessLabel, indx, patch);
     
     
     
     if (d_calcReactingScalar) {
-      old_dw->get(old_reactScalar,d_lab->d_reactscalarSPLabel, matlIndex, patch, gn, 0);
-      new_dw->get(fe_reactScalar, d_lab->d_reactscalarFELabel, matlIndex, patch, gn, 0);
-      new_dw->getModifiable(new_reactScalar, d_lab->d_reactscalarSPLabel,matlIndex, patch);
+      old_dw->get(old_reactScalar,d_lab->d_reactscalarSPLabel, indx, patch, gn, 0);
+      new_dw->get(fe_reactScalar, d_lab->d_reactscalarFELabel, indx, patch, gn, 0);
+      new_dw->getModifiable(new_reactScalar, d_lab->d_reactscalarSPLabel,indx, patch);
       
     }
     if (d_calcEnthalpy){
-      old_dw->get(old_enthalpy,   d_lab->d_enthalpySPLabel,     matlIndex, patch, gn, 0);
-      new_dw->get(fe_enthalpy,    d_lab->d_enthalpyFELabel,     matlIndex, patch, gn, 0);
-      new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      old_dw->get(old_enthalpy,   d_lab->d_enthalpySPLabel,     indx, patch, gn, 0);
+      new_dw->get(fe_enthalpy,    d_lab->d_enthalpyFELabel,     indx, patch, gn, 0);
+      new_dw->getModifiable(new_enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
     }
 
 
@@ -1890,11 +1877,9 @@ Properties::averageRKProps(const ProcessorGroup*,
       for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
         constCCVariable<double> old_extra_scalar;
         CCVariable<double> new_extra_scalar;
-        old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), 
-                    matlIndex, patch, gn, 0);
+        old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), indx, patch, gn, 0);
         new_dw->getModifiable(new_extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(), 
-                              matlIndex, patch);
+                              d_extraScalars->at(i)->getScalarLabel(), indx, patch);
         bool scalar_density_weighted =
                 d_extraScalars->at(i)->isDensityWeighted();
                 
@@ -1954,13 +1939,13 @@ Properties::saveTempDensity(const ProcessorGroup*,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> temp_density;
 
-    new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,matlIndex, patch);
-    new_dw->copyOut(temp_density,      d_lab->d_densityCPLabel,   matlIndex, patch);
+    new_dw->getModifiable(temp_density, d_lab->d_densityTempLabel,indx, patch);
+    new_dw->copyOut(temp_density,      d_lab->d_densityCPLabel,   indx, patch);
   }
 }
 //****************************************************************************
@@ -2061,7 +2046,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                      getArchesMaterial(archIndex)->getDWIndex(); 
 
     constCCVariable<double> new_density;
@@ -2073,23 +2058,23 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     Ghost::GhostType  gn = Ghost::None;
     
     if (doing_EKT_now){
-      new_dw->get(old_density,        d_lab->d_densityGuessLabel,    matlIndex, patch,gn, 0);
+      new_dw->get(old_density,        d_lab->d_densityGuessLabel,    indx, patch,gn, 0);
     }else{
-      parent_old_dw->get(old_density, d_lab->d_densityCPLabel,       matlIndex, patch,gn, 0);
+      parent_old_dw->get(old_density, d_lab->d_densityCPLabel,       indx, patch,gn, 0);
     }
     
-    parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, matlIndex, patch,gn, 0);
+    parent_old_dw->get(old_old_density, d_lab->d_densityOldOldLabel, indx, patch,gn, 0);
     
     
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-      new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
+      new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, indx, patch);
       density_oldold.copyData(old_density);
     }
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -2097,16 +2082,16 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     if (doing_EKT_now){
-      new_dw->get(new_density, d_lab->d_densityEKTLabel, matlIndex, patch, gn, 0);
+      new_dw->get(new_density, d_lab->d_densityEKTLabel, indx, patch, gn, 0);
     }else{
-      new_dw->get(new_density, d_lab->d_densityCPLabel,  matlIndex, patch, gn, 0);
+      new_dw->get(new_density, d_lab->d_densityCPLabel,  indx, patch, gn, 0);
     }
     
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
-      new_dw->allocateAndPut(filterdrhodt, d_lab->d_filterdrhodtLabel, matlIndex, patch);
+      new_dw->allocateAndPut(filterdrhodt, d_lab->d_filterdrhodtLabel, indx, patch);
     }else{
-      new_dw->getModifiable(filterdrhodt, d_lab->d_filterdrhodtLabel,  matlIndex, patch);
+      new_dw->getModifiable(filterdrhodt, d_lab->d_filterdrhodtLabel,  indx, patch);
     }
     filterdrhodt.initialize(0.0);
 
