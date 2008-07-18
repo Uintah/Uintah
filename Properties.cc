@@ -244,12 +244,13 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   
   //__________________________________
   if (d_calcReactingScalar)
+  {
     if (doing_EKT_now){
       tsk->requires(Task::NewDW, d_lab->d_reactscalarEKTLabel, gn, 0);
     }else{
       tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,  gn, 0);
     }
-    
+  }  
   if (d_calcEnthalpy){
     if (doing_EKT_now){
       tsk->modifies(d_lab->d_enthalpyEKTLabel);
@@ -1583,13 +1584,15 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
           }
           else{
             density[currCell] = 0.0;
-            if (d_bc->getIfCalcEnergyExchange())
-              if (d_DORadiationCalc)
+            if (d_bc->getIfCalcEnergyExchange()) {
+              if (d_DORadiationCalc) {
 
                 if (fixTemp) 
                   tempIN_new[currCell] = 298.0;
                 else
                   tempIN_new[currCell] = solidTemp[currCell];
+              }
+            }
           }
         }
       }
