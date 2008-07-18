@@ -270,6 +270,7 @@ int main(int argc, char *argv[])
             FILE* dest = fopen(of_name.c_str(), "wb");
             if(dest==0){
               cout << "FATAL ERROR : Failed opening points file" << endl;
+              exit(0);
             }
             double x[6];
             x[0] = min.x(), x[1] = min.y(), x[2] = min.z();
