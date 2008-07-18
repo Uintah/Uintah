@@ -960,12 +960,12 @@ DataArchiver::beginOutputTimestep( double time, double delt,
      MPI_Bcast(&currsecs, 1, MPI_INT, 0, d_myworld->getComm());
    
   // same thing for checkpoints
-  if ((d_checkpointInterval != 0.0 && time+delt >= d_nextCheckpointTime) ||
-      (d_checkpointTimestepInterval != 0 &&
-       timestep >= d_nextCheckpointTimestep) ||
-      (d_checkpointWalltimeInterval != 0 &&
-       currsecs >= d_nextCheckpointWalltime)) {
+  if( ( d_checkpointInterval != 0.0 && time+delt >= d_nextCheckpointTime ) ||
+      ( d_checkpointTimestepInterval != 0 && timestep >= d_nextCheckpointTimestep ) ||
+      ( d_checkpointWalltimeInterval != 0 && currsecs >= d_nextCheckpointWalltime ) ) {
+
     d_isCheckpointTimestep=true;
+
     string timestepDir;
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
                    grid, &timestepDir,
@@ -1539,7 +1539,7 @@ DataArchiver::outputReduction(const ProcessorGroup*,
         filename << ".dat\0";
       else
         filename << "_" << matlIndex << ".dat\0";
-          
+
 #ifdef __GNUG__
       ofstream out(filename.str().c_str(), ios::app);
 #else
@@ -1576,7 +1576,6 @@ DataArchiver::output(const ProcessorGroup*,
   }
 
  double start = Time::currentSeconds();
-
 
 #if SCI_ASSERTION_LEVEL >= 2
   // double-check to make sure only called once per level
