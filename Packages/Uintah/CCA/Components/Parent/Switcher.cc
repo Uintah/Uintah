@@ -358,7 +358,6 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
     }
     d_doCarryOverVarPerLevel[level->getIndex()].clear();
 
-    const PatchSet* procset = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
     // rebuild carry-over db
 
     // mark each var as carry over if it's not in the computed list

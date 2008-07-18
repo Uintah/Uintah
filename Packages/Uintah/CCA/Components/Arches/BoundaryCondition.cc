@@ -5120,7 +5120,7 @@ BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
           throw InvalidValue("Balance variable comming out of inlet", __FILE__, __LINE__);
 
         // Count balance variable comming through the air inlet
-        double scalarValue = fi->streamMixturefraction.d_mixVars[0];
+        //double scalarValue = fi->streamMixturefraction.d_mixVars[0];
         //if (scalarValue == 0.0)
           *varIN += varIN_inlet;
       } 
