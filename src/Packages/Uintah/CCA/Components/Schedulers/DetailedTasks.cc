@@ -349,7 +349,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	}
       }
     }
-  }
+  } // end for req
 
   // Scrub modifies
   for(const Task::Dependency* mod = task->getModifies(); mod != 0; mod=mod->next){
@@ -423,7 +423,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
       }
     }
   }
-}
+} // end scrub()
 
 // used to be in terms of the dw index within the scheduler,
 // but now store WhichDW.  This enables multiple tg execution
