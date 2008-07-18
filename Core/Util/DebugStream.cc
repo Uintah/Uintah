@@ -103,7 +103,7 @@ DebugStream::DebugStream(const string& iname, bool defaulton):
 
 DebugStream::~DebugStream()
 {
-  if(outstream && outstream != &cout){
+  if( outstream && ( outstream != &cerr && outstream != &cout ) ){
     delete(outstream);
   }
   delete dbgbuf;
