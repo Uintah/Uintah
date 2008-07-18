@@ -112,7 +112,6 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              double time = times[t];
               GridP grid = da->queryGrid(t);
 
               // Level loop
@@ -162,7 +161,6 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              double time = times[t];
               GridP grid = da->queryGrid(t);
 
               // Level loop
@@ -212,7 +210,6 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              double time = times[t];
               GridP grid = da->queryGrid(t);
 
               // Level loop
@@ -262,7 +259,6 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              double time = times[t];
               GridP grid = da->queryGrid(t);
 
               // Level loop
@@ -313,7 +309,6 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              double time = times[t];
               GridP grid = da->queryGrid(t);
 
               // Level loop

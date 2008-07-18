@@ -288,7 +288,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     
     IntVector offset = patch->faceDirection(face);
     IntVector axes = patch->faceAxes(face);
-    int P_dir = axes[0];  // principal direction
+    //int P_dir = axes[0];  // principal direction
     //int dir1  = axes[1];  // Jennifer double check what these indicies
     //int dir2  = axes[2];  // are for the different faces
     
@@ -362,23 +362,23 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
       throw InternalError("set_MicroSlipTemperature_BC: Slip_vars = null", __FILE__, __LINE__);
     } 
     // shortcuts  
-    constCCVariable<double>& gamma     = sv->gamma;
-    constCCVariable<double>& viscosity = sv->viscosity;
-    CCVariable<double>& lamda          = sv->lamda;
+    //constCCVariable<double>& gamma     = sv->gamma;
+    //constCCVariable<double>& viscosity = sv->viscosity;
+    //CCVariable<double>& lamda          = sv->lamda;
     constCCVariable<double>& Temp_CC  = sv->Temp_CC;
 
     IntVector axes = patch->faceAxes(face);
-    int P_dir = axes[0];  // principal direction
+    //int P_dir = axes[0];  // principal direction
     Vector DX = patch->dCell();
-    double dx = DX[P_dir];
-    double alpha_temperature = sv->alpha_temperature;
-    double gas_constant = 1.0;   // Need to do something here
+    //double dx = DX[P_dir];
+    //double alpha_temperature = sv->alpha_temperature;
+    //double gas_constant = 1.0;   // Need to do something here
     IntVector offset = patch->faceDirection(face);
     cout_dbg << "\n____________________Temp"<< endl;
 
     //__________________________________
     //    S I D E     
-    double A =( 2.0 - alpha_temperature) /alpha_temperature;
+    //double A =( 2.0 - alpha_temperature) /alpha_temperature;
     
     vector<IntVector>::const_iterator iter;
     for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {

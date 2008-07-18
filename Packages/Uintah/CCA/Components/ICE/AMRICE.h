@@ -293,7 +293,9 @@ void ICE::refluxOperator_applyCorrectionFluxes(
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;
+#ifdef REFLUX_DBG
           T q_CC_coarse_org = q_CC_coarse[c_CC];
+#endif          
           q_CC_coarse[c_CC] += Q_X_coarse_corr[c_FC];
                 
           count += one_zero;                       // keep track of how that face                        
@@ -315,7 +317,9 @@ void ICE::refluxOperator_applyCorrectionFluxes(
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;
+#ifdef REFLUX_DBG
           T q_CC_coarse_org = q_CC_coarse[c_CC];
+#endif
           q_CC_coarse[c_CC] += Q_Y_coarse_corr[c_FC];
           
           count += one_zero;                              
@@ -336,7 +340,9 @@ void ICE::refluxOperator_applyCorrectionFluxes(
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;             
+#ifdef REFLUX_DBG
           T q_CC_coarse_org = q_CC_coarse[c_CC];
+#endif
           q_CC_coarse[c_CC] += Q_Z_coarse_corr[c_FC];
           
           count += one_zero;                              

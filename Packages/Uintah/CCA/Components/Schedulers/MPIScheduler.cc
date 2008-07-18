@@ -186,10 +186,6 @@ MPIScheduler::initiateTask( DetailedTask          * task,
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER); 
-  long long start_total_comm_flops = mpi_info_.totalcommflops;
-  long long start_total_exec_flops = mpi_info_.totalexecflops;
-
-
 
 #ifdef USE_PERFEX_COUNTERS
   long long dummy, recv_flops;
