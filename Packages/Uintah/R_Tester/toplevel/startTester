@@ -340,7 +340,8 @@ if [ "$OS" == "Linux" ]; then
   OPT_CONFIGURE="$COMMON '--enable-optimize=-march=pentium4 -msse -msse2 -mfpmath=sse -O3' $OPT_CONFIGURE"
 else
 # Darwin
-  COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC/gcc-4.0.1-lam-32bit/petsc-2.3.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC/gcc-4.0.1-lam-32bit/hypre-2.0.0-install --with-mpi=/usr/local/lam-7.1.1"
+  export PETSC_ARCH=darwin9.4.0-c-real-opt
+  COMMON="--enable-package='Uintah Teem' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Darwin/PPC-9.4.0/gcc-4.0.1-openmpi-32bit --with-mpi=/usr/local/openmpi"
   DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
   OPT_CONFIGURE="$COMMON '--enable-optimize=-mcpu=7450 -O2 -fsigned-char -maltivec -mabi=altivec -mpowerpc-gfxopt' $OPT_CONFIGURE"
 fi
