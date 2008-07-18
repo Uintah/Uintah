@@ -42,8 +42,8 @@
 #include <mpi.h>
 
 #ifdef MALLOC_TRACE
-#include "MallocTraceMPI.h"
-#include "MallocTraceMPIOn.h"
+#  include "MallocTraceMPI.h"
+#  include "MallocTraceMPIOn.h"
 #endif
 
 #endif
