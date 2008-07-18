@@ -38,9 +38,6 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   pStress_eLabel = VarLabel::create( "p.stress_e",
                         ParticleVariable<Matrix3>::getTypeDescription() );
                                                                                 
-  pStress_veLabel = VarLabel::create( "p.stress_ve",
-                        ParticleVariable<Matrix3>::getTypeDescription() );
-                                                                                
   pStress_ve_vLabel = VarLabel::create( "p.stress_ve_v",
                         ParticleVariable<double>::getTypeDescription() );
                                                                                 
@@ -197,10 +194,22 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
 }
 
-void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& ,
-                                   std::vector<const VarLabel*>& )
+void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
+                                   std::vector<const VarLabel*>& to)
 {
+
   // Add the local particle state data for this constitutive model.
+  from.push_back(pStress_eLabel);
+  from.push_back(pStress_ve_vLabel);
+  from.push_back(pStress_ve_dLabel);
+  from.push_back(pStress_e_vLabel);
+  from.push_back(pStress_e_dLabel);
+
+  to.push_back(pStress_eLabel);
+  to.push_back(pStress_ve_vLabel);
+  to.push_back(pStress_ve_dLabel);
+  to.push_back(pStress_e_vLabel);
+  to.push_back(pStress_e_dLabel);
 }
 
 void MWViscoElastic::computeStableTimestep(const Patch* patch,
