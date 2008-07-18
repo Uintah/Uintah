@@ -2,9 +2,10 @@
 #ifndef UINTAH_HOMEBREW_BufferInfo_H
 #define UINTAH_HOMEBREW_BufferInfo_H
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/mpi_defs.h> // For mpi.h
+
 #include <sgi_stl_warnings_off.h>
-#include <vector>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/Core/Parallel/uintahshare.h>
