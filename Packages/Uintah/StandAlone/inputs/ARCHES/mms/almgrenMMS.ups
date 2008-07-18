@@ -23,7 +23,7 @@
   <DataArchiver>
     <filebase>xy_2DalmgrenMMS.uda</filebase>
     <outputInterval>0.01</outputInterval>
-    <outputInitTimestep/> 
+
     <save label = "totalKineticEnergy"/>
     <save label = "totalummsLnError"/>
     <save label = "totalummsExactSol"/>
@@ -41,7 +41,7 @@
     <save label = "velocityDivergence"/>
     <save label = "ummsLnError"/>
     <!--save label = "test1"/-->
-    <checkpoint cycle = "2" interval = "0.1"/>
+    <checkpoint cycle = "2" interval = "0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
 
