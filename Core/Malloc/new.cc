@@ -97,6 +97,17 @@ void* operator new[](size_t size, Allocator*, const char*, int)
 #endif
   return mem;
 }
+
+void operator delete(void* ptr, Allocator*, const char*, int)
+{
+  free(ptr);
+}
+
+void operator delete[](void* ptr, Allocator*, const char*, int)
+{
+  free(ptr);
+}
+
 #endif
 #else // ifdef DISABLE_SCI_MALLOC
 
@@ -261,6 +272,27 @@ void* operator new[](size_t size, Allocator* a, const char* tag, int linenum)
 #endif
   return mem;
 }
+
+void operator delete(void* ptr, Allocator* a, const char* tag, int linenum)
+{
+  if(!a){
+    if(!default_allocator)
+      MakeDefaultAllocator();
+      a=default_allocator;
+  }
+  a->free(ptr)
+}
+
+void operator delete[](void* ptr, Allocator* a, const char* tag, int linenum)
+{
+  if(!a){
+    if(!default_allocator)
+      MakeDefaultAllocator();
+      a=default_allocator;
+  }
+  a->free(ptr)
+}
+
 
 #ifdef MALLOC_TRACE
   #include "MallocTraceOn.h"
