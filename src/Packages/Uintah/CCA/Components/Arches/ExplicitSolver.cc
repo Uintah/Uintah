@@ -1969,7 +1969,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
     pressureNLSource.initialize(0.0);
 
-    cout << "DOING DUMMY SOLVE " << endl;
+    cout << "ExplicitSolver.cc: DOING DUMMY SOLVE " << endl;
 
     double uvwout = 0.0;
     double flowIN = 0.0;
