@@ -311,25 +311,25 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateTemporary(pstress_ve_new,                             pset);
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pstress_e_new,    pStress_eLabel,          pset);
-    new_dw->allocateAndPut(pstress_ve_v_new, pStress_ve_vLabel,       pset);
-    new_dw->allocateAndPut(pstress_ve_d_new, pStress_ve_dLabel,       pset);
-    new_dw->allocateAndPut(pstress_e_v_new,  pStress_e_vLabel,        pset);
-    new_dw->allocateAndPut(pstress_e_d_new,  pStress_e_dLabel,        pset);
+    new_dw->allocateAndPut(pstress_e_new,    pStress_eLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pstress_ve_v_new, pStress_ve_vLabel_preReloc,  pset);
+    new_dw->allocateAndPut(pstress_ve_d_new, pStress_ve_dLabel_preReloc,  pset);
+    new_dw->allocateAndPut(pstress_e_v_new,  pStress_e_vLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pstress_e_d_new,  pStress_e_dLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_new,      lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
     
-    old_dw->get(psize,               lb->pSizeLabel,               pset);
+    old_dw->get(psize,               lb->pSizeLabel,           pset);
     old_dw->get(pstress_e,           pStress_eLabel,           pset);
     old_dw->get(pstress_ve_v,        pStress_ve_vLabel,        pset);
     old_dw->get(pstress_ve_d,        pStress_ve_dLabel,        pset);
     old_dw->get(pstress_e_v,         pStress_e_vLabel,         pset);
     old_dw->get(pstress_e_d,         pStress_e_dLabel,         pset);
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
+    old_dw->get(px,                  lb->pXLabel,              pset);
+    old_dw->get(pmass,               lb->pMassLabel,           pset);
+    old_dw->get(pvelocity,           lb->pVelocityLabel,       pset);
+    old_dw->get(ptemperature,        lb->pTemperatureLabel,    pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
