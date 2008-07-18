@@ -37,17 +37,24 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   
   pStress_eLabel = VarLabel::create( "p.stress_e",
                         ParticleVariable<Matrix3>::getTypeDescription() );
-                                                                                
   pStress_ve_vLabel = VarLabel::create( "p.stress_ve_v",
                         ParticleVariable<double>::getTypeDescription() );
-                                                                                
   pStress_ve_dLabel = VarLabel::create( "p.stress_ve_d",
                         ParticleVariable<Matrix3>::getTypeDescription() );
-                                                                                
   pStress_e_vLabel = VarLabel::create( "p.stress_e_v",
                         ParticleVariable<double>::getTypeDescription() );
-                                                                                
   pStress_e_dLabel = VarLabel::create( "p.stress_e_d",
+                        ParticleVariable<Matrix3>::getTypeDescription() ); 
+
+  pStress_eLabel_preReloc = VarLabel::create( "p.stress_e+",
+                        ParticleVariable<Matrix3>::getTypeDescription() );
+  pStress_ve_vLabel_preReloc = VarLabel::create( "p.stress_ve_v+",
+                        ParticleVariable<double>::getTypeDescription() );
+  pStress_ve_dLabel_preReloc = VarLabel::create( "p.stress_ve_d+",
+                        ParticleVariable<Matrix3>::getTypeDescription() );
+  pStress_e_vLabel_preReloc = VarLabel::create( "p.stress_e_v+",
+                        ParticleVariable<double>::getTypeDescription() );
+  pStress_e_dLabel_preReloc = VarLabel::create( "p.stress_e_d+",
                         ParticleVariable<Matrix3>::getTypeDescription() ); 
 }
 
@@ -64,6 +71,16 @@ MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
 
 MWViscoElastic::~MWViscoElastic()
 {
+  VarLabel::destroy(pStress_eLabel);
+  VarLabel::destroy(pStress_ve_vLabel);
+  VarLabel::destroy(pStress_ve_dLabel);
+  VarLabel::destroy(pStress_e_vLabel);
+  VarLabel::destroy(pStress_e_dLabel);
+  VarLabel::destroy(pStress_eLabel_preReloc);
+  VarLabel::destroy(pStress_ve_vLabel_preReloc);
+  VarLabel::destroy(pStress_ve_dLabel_preReloc);
+  VarLabel::destroy(pStress_e_vLabel_preReloc);
+  VarLabel::destroy(pStress_e_dLabel_preReloc);
 }
 
 void MWViscoElastic::outputProblemSpec(ProblemSpecP& ps,
@@ -205,11 +222,11 @@ void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
   from.push_back(pStress_e_vLabel);
   from.push_back(pStress_e_dLabel);
 
-  to.push_back(pStress_eLabel);
-  to.push_back(pStress_ve_vLabel);
-  to.push_back(pStress_ve_dLabel);
-  to.push_back(pStress_e_vLabel);
-  to.push_back(pStress_e_dLabel);
+  to.push_back(pStress_eLabel_preReloc);
+  to.push_back(pStress_ve_vLabel_preReloc);
+  to.push_back(pStress_ve_dLabel_preReloc);
+  to.push_back(pStress_e_vLabel_preReloc);
+  to.push_back(pStress_e_dLabel_preReloc);
 }
 
 void MWViscoElastic::computeStableTimestep(const Patch* patch,
@@ -457,11 +474,11 @@ void MWViscoElastic::addComputesAndRequires(Task* task,
 
   // Add requires local to this model
   Ghost::GhostType  gnone = Ghost::None;
-  task->computes(pStress_ve_vLabel, matlset);
-  task->computes(pStress_ve_dLabel, matlset);
-  task->computes(pStress_e_vLabel,  matlset);
-  task->computes(pStress_e_dLabel,  matlset);
-  task->computes(pStress_eLabel,    matlset);
+  task->computes(pStress_ve_vLabel_preReloc, matlset);
+  task->computes(pStress_ve_dLabel_preReloc, matlset);
+  task->computes(pStress_e_vLabel_preReloc,  matlset);
+  task->computes(pStress_e_dLabel_preReloc,  matlset);
+  task->computes(pStress_eLabel_preReloc,    matlset);
 
   task->requires(Task::OldDW, pStress_ve_vLabel, matlset, gnone);
   task->requires(Task::OldDW, pStress_ve_dLabel, matlset, gnone);
