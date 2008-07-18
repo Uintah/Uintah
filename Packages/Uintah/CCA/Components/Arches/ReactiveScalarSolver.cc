@@ -288,15 +288,15 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
     ArchesConstVariables constReactscalarVars;
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -316,39 +316,34 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     Ghost::GhostType  gn = Ghost::None;
         
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    new_dw->get(constReactscalarVars.cellType,           d_lab->d_cellTypeLabel,      matlIndex, patch, gac, 1);
-    old_values_dw->get(constReactscalarVars.old_scalar,  d_lab->d_reactscalarSPLabel, matlIndex, patch, gn, 0);
-    old_values_dw->get(constReactscalarVars.old_density, d_lab->d_densityCPLabel,     matlIndex, patch, gn, 0);
+    new_dw->get(constReactscalarVars.cellType,           d_lab->d_cellTypeLabel,      indx, patch, gac, 1);
+    old_values_dw->get(constReactscalarVars.old_scalar,  d_lab->d_reactscalarSPLabel, indx, patch, gn, 0);
+    old_values_dw->get(constReactscalarVars.old_density, d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     
-    new_dw->get(constReactscalarVars.density, d_lab->d_densityCPLabel,    matlIndex, patch,  gac, 2);
-    new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarSPLabel, matlIndex, patch,  gac, 2);
+    new_dw->get(constReactscalarVars.density, d_lab->d_densityCPLabel,    indx, patch,  gac, 2);
+    new_dw->get(constReactscalarVars.scalar, d_lab->d_reactscalarSPLabel, indx, patch,  gac, 2);
     
     if (d_dynScalarModel){
       new_dw->get(constReactscalarVars.viscosity,
-                  d_lab->d_reactScalarDiffusivityLabel, matlIndex, patch, gac, 2);
+                  d_lab->d_reactScalarDiffusivityLabel, indx, patch, gac, 2);
     }else{
       new_dw->get(constReactscalarVars.viscosity, 
-                  d_lab->d_viscosityCTSLabel,           matlIndex, patch, gac, 2);
+                  d_lab->d_viscosityCTSLabel,           indx, patch, gac, 2);
     }
     
     // for explicit get old values
-    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
-                matlIndex, patch, gaf, 1);
-    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
-                matlIndex, patch, gaf, 1);
-    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
-                matlIndex, patch, gaf, 1);
+    new_dw->get(constReactscalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(constReactscalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(constReactscalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
 
     // computes reaction scalar source term in properties
     if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))){
       old_dw->get(constReactscalarVars.reactscalarSRC,
-                  d_lab->d_reactscalarSRCINLabel, 
-                  matlIndex, patch, gn, 0);
+                  d_lab->d_reactscalarSRCINLabel, indx, patch, gn, 0);
     }else{
       new_dw->get(constReactscalarVars.reactscalarSRC,
-                  d_lab->d_reactscalarSRCINLabel, 
-                  matlIndex, patch, gn, 0);
+                  d_lab->d_reactscalarSRCINLabel, indx, patch, gn, 0);
     }
 
 
@@ -366,8 +361,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       reactscalarVars.scalarDiffusionCoeff[ii].initialize(0.0);
     }
     new_dw->allocateAndPut(reactscalarVars.scalarNonlinearSrc,
-                           d_lab->d_reactscalNonLinSrcSBLMLabel,
-                           matlIndex, patch);
+                           d_lab->d_reactscalNonLinSrcSBLMLabel,indx, patch);
     reactscalarVars.scalarNonlinearSrc.initialize(0.0);
   }
   else {
@@ -381,8 +375,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       reactscalarVars.scalarDiffusionCoeff[ii].initialize(0.0);
     }
     new_dw->getModifiable(reactscalarVars.scalarNonlinearSrc,
-                          d_lab->d_reactscalNonLinSrcSBLMLabel,
-                          matlIndex, patch);
+                          d_lab->d_reactscalNonLinSrcSBLMLabel,indx, patch);
     reactscalarVars.scalarNonlinearSrc.initialize(0.0);
   }
 
@@ -449,11 +442,11 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     CCVariable<double> reactscalar;
     if (doing_EKT_now) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-        new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarEKTLabel, matlIndex, patch);
+        new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarEKTLabel, indx, patch);
       }else{
-        new_dw->getModifiable(reactscalar, d_lab->d_reactscalarEKTLabel,  matlIndex, patch);
+        new_dw->getModifiable(reactscalar, d_lab->d_reactscalarEKTLabel,  indx, patch);
       }
-      new_dw->copyOut(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      new_dw->copyOut(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
     }
   }
 }
@@ -539,7 +532,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables reactscalarVars;
     ArchesConstVariables constReactscalarVars;
@@ -549,32 +542,27 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
   
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-        new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+        new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
     
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constReactscalarVars.density_guess, d_lab->d_densityGuessLabel, 
-                      matlIndex, patch, gn, 0);
+    new_dw->get(constReactscalarVars.density_guess, d_lab->d_densityGuessLabel, indx, patch, gn, 0);
 
     if (timelabels->multiple_steps){
-      new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarTempLabel, 
-                      matlIndex, patch, gac, 1);
+      new_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarTempLabel, indx, patch, gac, 1);
     }else{
-      old_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarSPLabel, 
-                      matlIndex, patch, gac, 1);
+      old_dw->get(constReactscalarVars.old_scalar, d_lab->d_reactscalarSPLabel,   indx, patch, gac, 1);
     }
     
     // for explicit calculation
     if (doing_EKT_now){
-      new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarEKTLabel, 
-                                matlIndex, patch);
+      new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarEKTLabel, indx, patch);
     }else{
-      new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel, 
-                                matlIndex, patch);
+      new_dw->getModifiable(reactscalarVars.scalar, d_lab->d_reactscalarSPLabel,  indx, patch);
     }
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++){
@@ -583,11 +571,9 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     }
     
     new_dw->get(constReactscalarVars.scalarNonlinearSrc,
-                d_lab->d_reactscalNonLinSrcSBLMLabel,
-                matlIndex, patch, gn, 0);
+                d_lab->d_reactscalNonLinSrcSBLMLabel, indx, patch, gn, 0);
 
-    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
-                matlIndex, patch, gac, 1);
+    new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     // make it a separate task later
     d_rhsSolver->scalarLisolve(pc, patch, delta_t, 

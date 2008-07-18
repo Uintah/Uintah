@@ -76,13 +76,13 @@ ZeroExtraScalarSrc::addExtraScalarSrc(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> scalarNonlinSrc;
     CCVariable<double> zerosrcVar;
     
-    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label,matlIndex, patch);
-    new_dw->getModifiable(zerosrcVar,     d_lab->d_zerosrcVarLabel,  matlIndex, patch);
+    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label,indx, patch);
+    new_dw->getModifiable(zerosrcVar,     d_lab->d_zerosrcVarLabel,  indx, patch);
 
     //cout << "adding source for " << d_scalar_nonlin_src_label->getName() << endl;
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){

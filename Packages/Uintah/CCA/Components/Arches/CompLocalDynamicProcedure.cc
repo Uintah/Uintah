@@ -126,13 +126,13 @@ CompLocalDynamicProcedure::initializeSmagCoeff( const ProcessorGroup*,
                                                 DataWarehouse* new_dw,
                                                 const TimeIntegratorLabel* ) {
   int archIndex = 0; // only one arches material
-  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     CCVariable<double> Cs; //smag coeff 
-    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);  
+    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);  
     Cs.initialize(0.0);
   }
 }
@@ -539,7 +539,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -552,8 +552,8 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -562,23 +562,23 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     // Get the velocity
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
-    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(density, d_lab->d_densityCPLabel,  matlIndex, patch, gac, 2);
+    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(density, d_lab->d_densityCPLabel,  indx, patch, gac, 2);
     if (d_dynScalarModel) {
       if (d_calcScalar){
-        new_dw->get(scalar,     d_lab->d_scalarSPLabel,     matlIndex, patch, gac, 1);
+        new_dw->get(scalar,     d_lab->d_scalarSPLabel,     indx, patch, gac, 1);
       }
       if (d_calcEnthalpy){
-        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel,     matlIndex, patch, gac, 1);
+        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel,     indx, patch, gac, 1);
       }
       if (d_calcReactingScalar){
-        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, gac, 1);
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, indx, patch, gac, 1);
       }
     }
 
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 2);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 2);
 
     
     SFCXVariable<double> filterRhoU;
@@ -589,34 +589,34 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     CCVariable<double> filterRhoE;
     CCVariable<double> filterRhoRF;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(filterRhoU,  d_lab->d_filterRhoULabel, matlIndex, patch);
-      new_dw->allocateAndPut(filterRhoV,  d_lab->d_filterRhoVLabel, matlIndex, patch);
-      new_dw->allocateAndPut(filterRhoW,  d_lab->d_filterRhoWLabel, matlIndex, patch);
-      new_dw->allocateAndPut(filterRho,   d_lab->d_filterRhoLabel,  matlIndex, patch);
+      new_dw->allocateAndPut(filterRhoU,  d_lab->d_filterRhoULabel, indx, patch);
+      new_dw->allocateAndPut(filterRhoV,  d_lab->d_filterRhoVLabel, indx, patch);
+      new_dw->allocateAndPut(filterRhoW,  d_lab->d_filterRhoWLabel, indx, patch);
+      new_dw->allocateAndPut(filterRho,   d_lab->d_filterRhoLabel,  indx, patch);
       if (d_dynScalarModel) {
         if (d_calcScalar){
-          new_dw->allocateAndPut(filterRhoF,  d_lab->d_filterRhoFLabel, matlIndex, patch);
+          new_dw->allocateAndPut(filterRhoF,  d_lab->d_filterRhoFLabel, indx, patch);
         }
         if (d_calcEnthalpy){
-          new_dw->allocateAndPut(filterRhoE,  d_lab->d_filterRhoELabel, matlIndex, patch);
+          new_dw->allocateAndPut(filterRhoE,  d_lab->d_filterRhoELabel, indx, patch);
         }
         if (d_calcReactingScalar){
-          new_dw->allocateAndPut(filterRhoRF, d_lab->d_filterRhoRFLabel, matlIndex, patch);
+          new_dw->allocateAndPut(filterRhoRF, d_lab->d_filterRhoRFLabel, indx, patch);
         }
       }
     }
     else {
-      new_dw->getModifiable(filterRhoU, d_lab->d_filterRhoULabel, matlIndex, patch);
-      new_dw->getModifiable(filterRhoV, d_lab->d_filterRhoVLabel, matlIndex, patch);
-      new_dw->getModifiable(filterRhoW, d_lab->d_filterRhoWLabel, matlIndex, patch);
-      new_dw->getModifiable(filterRho,  d_lab->d_filterRhoLabel,  matlIndex, patch);
+      new_dw->getModifiable(filterRhoU, d_lab->d_filterRhoULabel, indx, patch);
+      new_dw->getModifiable(filterRhoV, d_lab->d_filterRhoVLabel, indx, patch);
+      new_dw->getModifiable(filterRhoW, d_lab->d_filterRhoWLabel, indx, patch);
+      new_dw->getModifiable(filterRho,  d_lab->d_filterRhoLabel,  indx, patch);
       if (d_dynScalarModel) {
         if (d_calcScalar)
-          new_dw->getModifiable(filterRhoF,  d_lab->d_filterRhoFLabel, matlIndex, patch);
+          new_dw->getModifiable(filterRhoF,  d_lab->d_filterRhoFLabel, indx, patch);
         if (d_calcEnthalpy)
-          new_dw->getModifiable(filterRhoE,  d_lab->d_filterRhoELabel, matlIndex, patch);
+          new_dw->getModifiable(filterRhoE,  d_lab->d_filterRhoELabel, indx, patch);
         if (d_calcReactingScalar)
-          new_dw->getModifiable(filterRhoRF, d_lab->d_filterRhoRFLabel, matlIndex, patch);
+          new_dw->getModifiable(filterRhoRF, d_lab->d_filterRhoRFLabel, indx, patch);
       }
     }
     filterRhoU.initialize(0.0);
@@ -917,7 +917,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -937,33 +937,33 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     
-    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel,    matlIndex, patch, gaf, 1);
-    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel,    matlIndex, patch, gaf, 1);
-    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel,    matlIndex, patch, gaf, 1);
-    new_dw->get(filterRhoU, d_lab->d_filterRhoULabel, matlIndex, patch, gaf, 1);
-    new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(filterRhoW, d_lab->d_filterRhoWLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(filterRho, d_lab->d_filterRhoLabel,   matlIndex, patch, gac, 1);
+    new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel,    indx, patch, gaf, 1);
+    new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel,    indx, patch, gaf, 1);
+    new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel,    indx, patch, gaf, 1);
+    new_dw->get(filterRhoU, d_lab->d_filterRhoULabel, indx, patch, gaf, 1);
+    new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel, indx, patch, gaf, 1);
+    new_dw->get(filterRhoW, d_lab->d_filterRhoWLabel, indx, patch, gaf, 1);
+    new_dw->get(filterRho, d_lab->d_filterRhoLabel,   indx, patch, gac, 1);
     
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        new_dw->get(scalar,     d_lab->d_scalarSPLabel,   matlIndex, patch, gac, 1);
-        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, matlIndex, patch, gac, 1);
+        new_dw->get(scalar,     d_lab->d_scalarSPLabel,   indx, patch, gac, 1);
+        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, indx, patch, gac, 1);
       }
       if (d_calcEnthalpy) {
-        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, matlIndex, patch, gac, 1);
-        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, matlIndex, patch, gac, 1);
+        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, indx, patch, gac, 1);
+        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, indx, patch, gac, 1);
       }
       if (d_calcReactingScalar) {
-        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, gac, 1);
-        new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel,   matlIndex, patch, gac, 1);
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, indx, patch, gac, 1);
+        new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel,   indx, patch, gac, 1);
       }
     }
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -1458,7 +1458,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
   TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> ccUVel;
     constCCVariable<double> ccVVel;
@@ -1475,31 +1475,31 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     // Get the velocity and density
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(ccUVel, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(ccVVel, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(ccWVel, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(den,       d_lab->d_densityCPLabel,   matlIndex, patch, gac, 1);
-    new_dw->get(filterRho, d_lab->d_filterRhoLabel,   matlIndex, patch, gac, 1);
-    old_dw->get(CsOld,     d_lab->d_CsLabel,          matlIndex, patch, gac, 1);
+    new_dw->get(ccUVel, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(ccVVel, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(ccWVel, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(den,       d_lab->d_densityCPLabel,   indx, patch, gac, 1);
+    new_dw->get(filterRho, d_lab->d_filterRhoLabel,   indx, patch, gac, 1);
+    old_dw->get(CsOld,     d_lab->d_CsLabel,          indx, patch, gac, 1);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        new_dw->get(scalar,     d_lab->d_scalarSPLabel,   matlIndex, patch, gac, 1);
-        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, matlIndex, patch, gac, 1);
+        new_dw->get(scalar,     d_lab->d_scalarSPLabel,   indx, patch, gac, 1);
+        new_dw->get(filterRhoF, d_lab->d_filterRhoFLabel, indx, patch, gac, 1);
       }
       if (d_calcEnthalpy) {
-        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, matlIndex, patch, gac, 1);
-        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, matlIndex, patch, gac, 1);
+        new_dw->get(enthalpy,   d_lab->d_enthalpySPLabel, indx, patch, gac, 1);
+        new_dw->get(filterRhoE, d_lab->d_filterRhoELabel, indx, patch, gac, 1);
       }
       if (d_calcReactingScalar) {
-        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, matlIndex, patch, gac, 1);
-        new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel,   matlIndex, patch, gac, 1);
+        new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, indx, patch, gac, 1);
+        new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel,   indx, patch, gac, 1);
       }
     }  
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -1604,46 +1604,46 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       lij[ii].initialize(0.0);
     }
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(IsImag, d_lab->d_strainMagnitudeLabel,   matlIndex, patch);
-      new_dw->allocateAndPut(MLI,    d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
-      new_dw->allocateAndPut(MMI,    d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
-      new_dw->allocateAndPut(alphaalpha,   d_lab->d_alphaalphaLabel,    matlIndex, patch);
-      new_dw->allocateAndPut(Lalpha,       d_lab->d_LalphaLabel,        matlIndex, patch);
-      new_dw->allocateAndPut(cbetaHATalpha,d_lab->d_cbetaHATalphaLabel, matlIndex, patch);
+      new_dw->allocateAndPut(IsImag, d_lab->d_strainMagnitudeLabel,   indx, patch);
+      new_dw->allocateAndPut(MLI,    d_lab->d_strainMagnitudeMLLabel, indx, patch);
+      new_dw->allocateAndPut(MMI,    d_lab->d_strainMagnitudeMMLabel, indx, patch);
+      new_dw->allocateAndPut(alphaalpha,   d_lab->d_alphaalphaLabel,    indx, patch);
+      new_dw->allocateAndPut(Lalpha,       d_lab->d_LalphaLabel,        indx, patch);
+      new_dw->allocateAndPut(cbetaHATalpha,d_lab->d_cbetaHATalphaLabel, indx, patch);
       if (d_dynScalarModel) {
         if (d_calcScalar) {
-          new_dw->allocateAndPut(scalarNum,  d_lab->d_scalarNumeratorLabel,   matlIndex, patch);
-          new_dw->allocateAndPut(scalarDenom,d_lab->d_scalarDenominatorLabel, matlIndex, patch);
+          new_dw->allocateAndPut(scalarNum,  d_lab->d_scalarNumeratorLabel,   indx, patch);
+          new_dw->allocateAndPut(scalarDenom,d_lab->d_scalarDenominatorLabel, indx, patch);
         }
         if (d_calcEnthalpy) {
-          new_dw->allocateAndPut(enthalpyNum,  d_lab->d_enthalpyNumeratorLabel,   matlIndex, patch);
-          new_dw->allocateAndPut(enthalpyDenom,d_lab->d_enthalpyDenominatorLabel, matlIndex, patch);
+          new_dw->allocateAndPut(enthalpyNum,  d_lab->d_enthalpyNumeratorLabel,   indx, patch);
+          new_dw->allocateAndPut(enthalpyDenom,d_lab->d_enthalpyDenominatorLabel, indx, patch);
         }
         if (d_calcReactingScalar) {
-          new_dw->allocateAndPut(reactScalarNum, d_lab->d_reactScalarNumeratorLabel,    matlIndex, patch);
-          new_dw->allocateAndPut(reactScalarDenom,d_lab->d_reactScalarDenominatorLabel, matlIndex, patch);
+          new_dw->allocateAndPut(reactScalarNum, d_lab->d_reactScalarNumeratorLabel,    indx, patch);
+          new_dw->allocateAndPut(reactScalarDenom,d_lab->d_reactScalarDenominatorLabel, indx, patch);
         }
       }
     }
     else {
-      new_dw->getModifiable(IsImag,       d_lab->d_strainMagnitudeLabel,   matlIndex, patch);
-      new_dw->getModifiable(MLI,          d_lab->d_strainMagnitudeMLLabel, matlIndex, patch);
-      new_dw->getModifiable(MMI,          d_lab->d_strainMagnitudeMMLabel, matlIndex, patch);
-      new_dw->getModifiable(alphaalpha,   d_lab->d_alphaalphaLabel,        matlIndex, patch);
-      new_dw->getModifiable(Lalpha,       d_lab->d_LalphaLabel,            matlIndex, patch);
-      new_dw->getModifiable(cbetaHATalpha,d_lab->d_cbetaHATalphaLabel,     matlIndex, patch);
+      new_dw->getModifiable(IsImag,       d_lab->d_strainMagnitudeLabel,   indx, patch);
+      new_dw->getModifiable(MLI,          d_lab->d_strainMagnitudeMLLabel, indx, patch);
+      new_dw->getModifiable(MMI,          d_lab->d_strainMagnitudeMMLabel, indx, patch);
+      new_dw->getModifiable(alphaalpha,   d_lab->d_alphaalphaLabel,        indx, patch);
+      new_dw->getModifiable(Lalpha,       d_lab->d_LalphaLabel,            indx, patch);
+      new_dw->getModifiable(cbetaHATalpha,d_lab->d_cbetaHATalphaLabel,     indx, patch);
       if (d_dynScalarModel) {
         if (d_calcScalar) {
-          new_dw->getModifiable(scalarNum,  d_lab->d_scalarNumeratorLabel,   matlIndex, patch);
-          new_dw->getModifiable(scalarDenom,d_lab->d_scalarDenominatorLabel, matlIndex, patch);
+          new_dw->getModifiable(scalarNum,  d_lab->d_scalarNumeratorLabel,   indx, patch);
+          new_dw->getModifiable(scalarDenom,d_lab->d_scalarDenominatorLabel, indx, patch);
         }
         if (d_calcEnthalpy) {
-          new_dw->getModifiable(enthalpyNum,  d_lab->d_enthalpyNumeratorLabel,   matlIndex, patch);
-          new_dw->getModifiable(enthalpyDenom,d_lab->d_enthalpyDenominatorLabel, matlIndex, patch);
+          new_dw->getModifiable(enthalpyNum,  d_lab->d_enthalpyNumeratorLabel,   indx, patch);
+          new_dw->getModifiable(enthalpyDenom,d_lab->d_enthalpyDenominatorLabel, indx, patch);
         }
         if (d_calcReactingScalar) {
-          new_dw->getModifiable(reactScalarNum,  d_lab->d_reactScalarNumeratorLabel, matlIndex, patch);
-          new_dw->getModifiable(reactScalarDenom,d_lab->d_reactScalarDenominatorLabel,matlIndex, patch);
+          new_dw->getModifiable(reactScalarNum,  d_lab->d_reactScalarNumeratorLabel, indx, patch);
+          new_dw->getModifiable(reactScalarDenom,d_lab->d_reactScalarDenominatorLabel,indx, patch);
         }
       }
     }
@@ -2232,7 +2232,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;
@@ -2258,30 +2258,30 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     CCVariable<double> reactScalardiff;
     
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-       new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);
+       new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
        if (d_dynScalarModel) {
          if (d_calcScalar) {
-           new_dw->allocateAndPut(ShF, d_lab->d_ShFLabel, matlIndex, patch);
+           new_dw->allocateAndPut(ShF, d_lab->d_ShFLabel, indx, patch);
          }
          if (d_calcEnthalpy) {
-           new_dw->allocateAndPut(ShE, d_lab->d_ShELabel, matlIndex, patch);
+           new_dw->allocateAndPut(ShE, d_lab->d_ShELabel, indx, patch);
          }
          if (d_calcReactingScalar) {
-           new_dw->allocateAndPut(ShRF, d_lab->d_ShRFLabel, matlIndex, patch);
+           new_dw->allocateAndPut(ShRF, d_lab->d_ShRFLabel, indx, patch);
          }
        }      
     }
     else {
-       new_dw->getModifiable(Cs, d_lab->d_CsLabel, matlIndex, patch);
+       new_dw->getModifiable(Cs, d_lab->d_CsLabel, indx, patch);
        if (d_dynScalarModel) {
          if (d_calcScalar) {
-           new_dw->getModifiable(ShF, d_lab->d_ShFLabel, matlIndex, patch);
+           new_dw->getModifiable(ShF, d_lab->d_ShFLabel, indx, patch);
          }
          if (d_calcEnthalpy) {
-           new_dw->getModifiable(ShE, d_lab->d_ShELabel, matlIndex, patch);
+           new_dw->getModifiable(ShE, d_lab->d_ShELabel, indx, patch);
          }
          if (d_calcReactingScalar) {
-           new_dw->getModifiable(ShRF, d_lab->d_ShRFLabel, matlIndex, patch);
+           new_dw->getModifiable(ShRF, d_lab->d_ShRFLabel, indx, patch);
          }
        }      
     }
@@ -2298,61 +2298,56 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       }
     }      
 
-    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,
-                           matlIndex, patch);
+    new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,indx, patch);
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        new_dw->getModifiable(scalardiff, d_lab->d_scalarDiffusivityLabel,
-                              matlIndex, patch);
+        new_dw->getModifiable(scalardiff,      d_lab->d_scalarDiffusivityLabel,     indx, patch);
       }
       if (d_calcEnthalpy) {
-        new_dw->getModifiable(enthalpydiff, d_lab->d_enthalpyDiffusivityLabel,
-                              matlIndex, patch);
+        new_dw->getModifiable(enthalpydiff,    d_lab->d_enthalpyDiffusivityLabel,   indx, patch);
       }
       if (d_calcReactingScalar) {
-        new_dw->getModifiable(reactScalardiff,
-                              d_lab->d_reactScalarDiffusivityLabel,
-                              matlIndex, patch);
+        new_dw->getModifiable(reactScalardiff, d_lab->d_reactScalarDiffusivityLabel,indx, patch);
       }
     }      
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn = Ghost::None;
-    new_dw->get(IsI,            d_lab->d_strainMagnitudeLabel,  matlIndex, patch, gn, 0);
+    new_dw->get(IsI,            d_lab->d_strainMagnitudeLabel,  indx, patch, gn, 0);
     // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
-    new_dw->get(MLI,            d_lab->d_strainMagnitudeMLLabel,matlIndex, patch, gac, 1);
-    new_dw->get(MMI,            d_lab->d_strainMagnitudeMMLabel,matlIndex, patch, gac, 1);
-    new_dw->get(alphaalpha,     d_lab->d_alphaalphaLabel,       matlIndex, patch, gac, 1);
-    new_dw->get(Lalpha,         d_lab->d_LalphaLabel,           matlIndex, patch, gac, 1);
-    new_dw->get(cbetaHATalpha,  d_lab->d_cbetaHATalphaLabel,    matlIndex, patch, gac, 1);
+    new_dw->get(MLI,            d_lab->d_strainMagnitudeMLLabel,indx, patch, gac, 1);
+    new_dw->get(MMI,            d_lab->d_strainMagnitudeMMLabel,indx, patch, gac, 1);
+    new_dw->get(alphaalpha,     d_lab->d_alphaalphaLabel,       indx, patch, gac, 1);
+    new_dw->get(Lalpha,         d_lab->d_LalphaLabel,           indx, patch, gac, 1);
+    new_dw->get(cbetaHATalpha,  d_lab->d_cbetaHATalphaLabel,    indx, patch, gac, 1);
     
     if (d_dynScalarModel) {
       if (d_calcScalar) {
-        new_dw->get(scalarNum,   d_lab->d_scalarNumeratorLabel,  matlIndex, patch, gac, 1);
-        new_dw->get(scalarDenom, d_lab->d_scalarDenominatorLabel,matlIndex, patch, gac, 1);
+        new_dw->get(scalarNum,   d_lab->d_scalarNumeratorLabel,  indx, patch, gac, 1);
+        new_dw->get(scalarDenom, d_lab->d_scalarDenominatorLabel,indx, patch, gac, 1);
       }
       if (d_calcEnthalpy) {
-        new_dw->get(enthalpyNum,   d_lab->d_enthalpyNumeratorLabel,  matlIndex, patch,gac, 1);
-        new_dw->get(enthalpyDenom, d_lab->d_enthalpyDenominatorLabel,matlIndex, patch,gac, 1);
+        new_dw->get(enthalpyNum,   d_lab->d_enthalpyNumeratorLabel,  indx, patch,gac, 1);
+        new_dw->get(enthalpyDenom, d_lab->d_enthalpyDenominatorLabel,indx, patch,gac, 1);
       }
       if (d_calcReactingScalar) {
-        new_dw->get(reactScalarNum,   d_lab->d_reactScalarNumeratorLabel,matlIndex,   patch,gac, 1);
-        new_dw->get(reactScalarDenom, d_lab->d_reactScalarDenominatorLabel,matlIndex, patch, gac, 1);
+        new_dw->get(reactScalarNum,   d_lab->d_reactScalarNumeratorLabel,indx,   patch,gac, 1);
+        new_dw->get(reactScalarDenom, d_lab->d_reactScalarDenominatorLabel,indx, patch, gac, 1);
       }
     }      
 
-    new_dw->get(den,       d_lab->d_densityCPLabel, matlIndex, patch, gac, 1);
-    new_dw->get(filterRho, d_lab->d_filterRhoLabel, matlIndex, patch, gac, 1);
-    new_dw->get(cellType,  d_lab->d_cellTypeLabel,  matlIndex, patch, gac, 1);
+    new_dw->get(den,       d_lab->d_densityCPLabel, indx, patch, gac, 1);
+    new_dw->get(filterRho, d_lab->d_filterRhoLabel, indx, patch, gac, 1);
+    new_dw->get(cellType,  d_lab->d_cellTypeLabel,  indx, patch, gac, 1);
 
     if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, gn, 0);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch, gn, 0);
     }
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -2887,20 +2882,20 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     constCCVariable<int> cellType;
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(scalar,   d_lab->d_scalarSPLabel, matlIndex, patch,gac, 1);    
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    new_dw->get(scalar,   d_lab->d_scalarSPLabel, indx, patch,gac, 1);    
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, indx, patch);
     }else{
-      new_dw->getModifiable(scalarVar,  d_lab->d_scalarVarSPLabel, matlIndex,patch);
+      new_dw->getModifiable(scalarVar,  d_lab->d_scalarVarSPLabel, indx,patch);
     }
     scalarVar.initialize(0.0);
     
@@ -3082,7 +3077,7 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
@@ -3090,27 +3085,27 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     CCVariable<double> scalarDiss;  // dissipation..chi
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, gac, 1);
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,gac, 1);
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, indx, patch, gac, 1);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,gac, 1);
     
     if (d_dynScalarModel){
-      new_dw->get(viscosity, d_lab->d_scalarDiffusivityLabel, matlIndex, patch, gac, 1);
+      new_dw->get(viscosity, d_lab->d_scalarDiffusivityLabel, indx, patch, gac, 1);
     }else{
-      new_dw->get(viscosity, d_lab->d_viscosityCTSLabel,      matlIndex, patch, gac, 1);
+      new_dw->get(viscosity, d_lab->d_viscosityCTSLabel,      indx, patch, gac, 1);
     }
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+       new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, indx, patch);
     }else{
-       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,  matlIndex, patch);
+       new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,  indx, patch);
     }
     scalarDiss.initialize(0.0);
 
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();

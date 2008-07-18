@@ -223,14 +223,14 @@ void ExtraScalarSolver::setInitialGuess(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> newscalar;
     constCCVariable<double> oldscalar;
 
-    new_dw->allocateAndPut(newscalar, d_scalar_label, matlIndex, patch);
+    new_dw->allocateAndPut(newscalar, d_scalar_label, indx, patch);
     newscalar.initialize(0.0);
-    old_dw->get(oldscalar, d_scalar_label, matlIndex, patch, Ghost::None, 0);
+    old_dw->get(oldscalar, d_scalar_label, indx, patch, Ghost::None, 0);
 
     newscalar.copyData(oldscalar); //copy old into new. see note.
 
@@ -416,15 +416,15 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables scalarVars;
     ArchesConstVariables constScalarVars;
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -434,7 +434,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     // from old_dw get PCELL, DENO, FO
-    new_dw->get(constScalarVars.cellType,  d_lab->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    new_dw->get(constScalarVars.cellType,  d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values){
@@ -442,12 +442,11 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }else{
       old_values_dw = new_dw;
     }
-    old_values_dw->get(constScalarVars.old_scalar, d_scalar_label, matlIndex, patch, gn, 0);
+    old_values_dw->get(constScalarVars.old_scalar, d_scalar_label, indx, patch, gn, 0);
     
     CCVariable<double> const_density;
     if (d_scalar_density_weighted){
-      old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
-                                                                   matlIndex, patch, gn, 0);
+      old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, indx, patch, gn, 0);
     }else {
       const_density.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
       const_density.initialize(1.0);
@@ -456,16 +455,14 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   
     // from new_dw get DEN, VIS, F, U, V, W
     if (d_scalar_density_weighted){
-      new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, 
-                  matlIndex, patch,  gac, 2);
+      new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, indx, patch,  gac, 2);
     }else{
       constScalarVars.density = const_density;
     }
     
     CCVariable<double> zero_viscosity;
     if (d_scalar_diffusion){
-      new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, 
-                  matlIndex, patch,  gac, 2);
+      new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, indx, patch,  gac, 2);
     }else {
       zero_viscosity.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
       zero_viscosity.initialize(0.0);
@@ -473,19 +470,14 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      old_dw->get(constScalarVars.scalar, d_scalar_label, 
-                  matlIndex, patch,  gac, 2);
+      old_dw->get(constScalarVars.scalar, d_scalar_label, indx, patch,  gac, 2);
     }else{
-      new_dw->get(constScalarVars.scalar, d_scalar_label, 
-                  matlIndex, patch,  gac, 2);
+      new_dw->get(constScalarVars.scalar, d_scalar_label, indx, patch,  gac, 2);
     }
     // for explicit get old values
-    new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
-                matlIndex, patch, gaf, 1);
-    new_dw->get(constScalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, 
-                matlIndex, patch, gaf, 1);
-    new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
-                matlIndex, patch, gaf, 1);
+    new_dw->get(constScalarVars.uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(constScalarVars.vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(constScalarVars.wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
 
  // allocate matrix coeffs
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -499,11 +491,11 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       scalarVars.scalarDiffusionCoeff[ii].initialize(0.0);
     }
     new_dw->allocateAndPut(scalarVars.scalarNonlinearSrc,
-                           d_scalar_nonlin_src_label, matlIndex, patch);
+                           d_scalar_nonlin_src_label, indx, patch);
     scalarVars.scalarNonlinearSrc.initialize(0.0);
 //#ifdef divergenceconstraint
 /*    new_dw->allocateAndPut(scalarVars.scalarDiffNonlinearSrc,
-                           d_lab->d_scalDiffCoefSrcLabel, matlIndex, patch);
+                           d_lab->d_scalDiffCoefSrcLabel, indx, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);*/
 //#endif
   }
@@ -517,11 +509,11 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       scalarVars.scalarDiffusionCoeff[ii].initialize(0.0);
     }
     new_dw->getModifiable(scalarVars.scalarNonlinearSrc,
-                          d_scalar_nonlin_src_label, matlIndex, patch);
+                          d_scalar_nonlin_src_label, indx, patch);
     scalarVars.scalarNonlinearSrc.initialize(0.0);
 //#ifdef divergenceconstraint
 /*    new_dw->getModifiable(scalarVars.scalarDiffNonlinearSrc,
-                          d_lab->d_scalDiffCoefSrcLabel, matlIndex, patch);
+                          d_lab->d_scalDiffCoefSrcLabel, indx, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);*/
 //#endif
   }
@@ -649,38 +641,27 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     /*CCVariable<double> scalar;
     if (doing_EKT_now) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        new_dw->allocateAndPut(scalar, d_lab->d_scalarEKTLabel, 
-                  matlIndex, patch);
+        new_dw->allocateAndPut(scalar, d_lab->d_scalarEKTLabel, indx, patch);
       else
-        new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel, 
-                  matlIndex, patch);
+        new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel,  indx, patch);
 
-        new_dw->copyOut(scalar, d_lab->d_scalarSPLabel,
-                  matlIndex, patch);
+        new_dw->copyOut(scalar, d_lab->d_scalarSPLabel, indx, patch);
     }*/
     CCVariable<double> scalar_temp;
     if (timelabels->multiple_steps) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-        new_dw->allocateAndPut(scalar_temp, d_scalar_temp_label, 
-                  matlIndex, patch);
-        old_dw->copyOut(scalar_temp, d_scalar_label,
-                  matlIndex, patch);
+        new_dw->allocateAndPut(scalar_temp, d_scalar_temp_label, indx, patch);
+        old_dw->copyOut(scalar_temp,        d_scalar_label,      indx, patch);
       }else {
-        new_dw->getModifiable(scalar_temp, d_scalar_temp_label,
-                  matlIndex, patch);
-        new_dw->copyOut(scalar_temp, d_scalar_label,
-                  matlIndex, patch);
+        new_dw->getModifiable(scalar_temp,  d_scalar_temp_label, indx, patch);
+        new_dw->copyOut(scalar_temp,        d_scalar_label,      indx, patch);
       }
     }
     CCVariable<double> new_scalar;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(new_scalar, d_scalar_label, 
-                matlIndex, patch);
-      old_dw->copyOut(new_scalar, d_scalar_label,
-                matlIndex, patch);
-
+      new_dw->allocateAndPut(new_scalar, d_scalar_label, indx, patch);
+      old_dw->copyOut(new_scalar,        d_scalar_label, indx, patch);
     }
-
   }
 }
 
@@ -774,15 +755,15 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
+    int indx = d_lab->d_sharedState->
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables scalarVars;
     ArchesConstVariables constScalarVars;
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -793,8 +774,7 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
     CCVariable<double> const_density;
     if (d_scalar_density_weighted){
-      new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, 
-                  matlIndex, patch, gn, 0);
+      new_dw->get(constScalarVars.density_guess, d_lab->d_densityGuessLabel, indx, patch, gn, 0);
     }else {
       const_density.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
       const_density.initialize(1.0);
@@ -802,28 +782,24 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     }
 
     if (timelabels->multiple_steps){
-      new_dw->get(constScalarVars.old_scalar, d_scalar_temp_label, 
-                                                              matlIndex, patch, gac, 1);
+      new_dw->get(constScalarVars.old_scalar, d_scalar_temp_label, indx, patch, gac, 1);
     }else{
-      old_dw->get(constScalarVars.old_scalar, d_scalar_label, matlIndex, patch, gac, 1);
+      old_dw->get(constScalarVars.old_scalar, d_scalar_label,      indx, patch, gac, 1);
     }
     // for explicit calculation
 /*    if (doing_EKT_now)
-      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, 
-                  matlIndex, patch);
+      new_dw->getModifiable(scalarVars.scalar, d_lab->d_scalarEKTLabel, indx, patch);
     else*/
-      new_dw->getModifiable(scalarVars.scalar, d_scalar_label, matlIndex, patch);
+      new_dw->getModifiable(scalarVars.scalar, d_scalar_label, indx, patch);
 
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++){
       new_dw->get(constScalarVars.scalarCoeff[ii], d_scalar_coef_label, ii, patch, gn, 0);
     }
     
-    new_dw->get(constScalarVars.scalarNonlinearSrc,d_scalar_nonlin_src_label, matlIndex, patch, gn, 0);
-
-    new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel,matlIndex,patch, gac, 1);
+    new_dw->get(constScalarVars.scalarNonlinearSrc,d_scalar_nonlin_src_label, indx, patch, gn, 0);
+    new_dw->get(constScalarVars.cellType,         d_lab->d_cellTypeLabel,     indx,patch, gac, 1);
     if (d_MAlab) {
-      new_dw->get(constScalarVars.voidFraction, d_lab->d_mmgasVolFracLabel,
-                                                                matlIndex, patch, gn, 0);
+      new_dw->get(constScalarVars.voidFraction, d_lab->d_mmgasVolFracLabel,indx, patch, gn, 0);
     }
 
     // make it a separate task later
