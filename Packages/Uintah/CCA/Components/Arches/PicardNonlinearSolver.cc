@@ -2137,7 +2137,7 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
       scalarVar_new.copyData(scalarVar); // copy old into new
     }
 
-    cout << "DOING DUMMY SOLVE " << endl;
+    cout << "PicardNonlinearSolver.cc: DOING DUMMY SOLVE " << endl;
     double uvwout       = 0.0;
     double flowIN       = 0.0;
     double flowOUT      = 0.0;
