@@ -570,7 +570,6 @@ Arches::paramInit(const ProcessorGroup* pg,
     PerPatch<CellInformationP> cellInfoP;
     cellInfoP.setData(scinew CellInformation(patch));
     new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     //cout << "cellInfo original INIT" << endl;
 

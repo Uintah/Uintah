@@ -249,7 +249,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
     new_dw->get(constPressureVars.cellType, d_lab->d_cellTypeLabel, 
                                                                 matlIndex, patch, gac, 1);
 

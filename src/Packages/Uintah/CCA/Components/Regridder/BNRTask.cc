@@ -75,7 +75,6 @@ MPI_Request* BNRTask::getRequest()
 void BNRTask::continueTask()
 {
   int stride;
-  int msg_size;
   unsigned int p;
   unsigned int partner;
   int start;
@@ -222,7 +221,7 @@ void BNRTask::continueTask()
         if(i==flag_info_[1])  //if this is the master processor
         {
             swap(p_group_[0],p_group_[p]); //place it at the front of the p_group_
-            if((int)p_rank_==p)                //if i'm master
+            if((unsigned int)p_rank_==p)                //if i'm master
               p_rank_=0;                      //set my rank to 0
             else if(p_rank_==0)           //if i'm rank 0
               p_rank_=p;                      //set my rank to p

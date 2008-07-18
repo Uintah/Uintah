@@ -638,7 +638,6 @@ Source::calculateVelMMSSource(const ProcessorGroup* ,
         //Make sure that this is the density you want
         rho0 = constvars->new_density[currCell];
 
-        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
         if (d_mms == "gao1MMS") {
           vars->uVelNonlinearSrc[currCell] += rho0*(2.0*cu*cu+cu*cv+cu*cw)*cellinfo->xu[colX]
                         +rho0*(2.0*cu+cv+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.x();
@@ -659,7 +658,6 @@ Source::calculateVelMMSSource(const ProcessorGroup* ,
         //This density should change depending on what you are verifying...
         rho0 = constvars->new_density[currCell];
 
-        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
         if (d_mms == "gao1MMS") {
           vars->vVelNonlinearSrc[currCell] +=  rho0*(2.0*cv*cv+cu*cv+cv*cw)*cellinfo->yv[colY]
                         +rho0*(2.0*cv+cu+cw)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.y();
@@ -678,7 +676,6 @@ Source::calculateVelMMSSource(const ProcessorGroup* ,
         IntVector currCell(colX, colY, colZ);
         //This density should change depending on what you are verifying...
         rho0 = constvars->new_density[currCell];
-        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
         if (d_mms == "gao1MMS") {
           vars->wVelNonlinearSrc[currCell] +=  rho0*(2.0*cw*cw+cu*cw+cv*cw)*cellinfo->zw[colX]
                         +rho0*(2.0*cw+cu+cv)*time+rho0+cp-(rho0-d_airDensity)*d_gravity.z();
@@ -715,7 +712,6 @@ Source::calculateScalarMMSSource(const ProcessorGroup*,
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
-        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
         if (d_mms == "gao1MMS") {
           rho0 = constvars->density[currCell];
           vars->scalarNonlinearSrc[currCell] += rho0*phi0*(cu+cv+cw);
@@ -745,7 +741,6 @@ Source::calculatePressMMSSourcePred(const ProcessorGroup* ,
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
         IntVector currCell(colX, colY, colZ);
         rho0 = constvars->density[currCell];
-        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
         if (d_mms == "gao1MMS") {
                 vars->pressNonlinearSrc[currCell] += rho0*(cu+cv+cw);
         }

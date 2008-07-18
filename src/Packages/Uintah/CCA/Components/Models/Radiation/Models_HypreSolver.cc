@@ -109,9 +109,9 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
   if (d_solverType == "gmres" || d_solverType == "GMRES") {
     validSolver = true;
     if(d_precondType == "none" ||
-       d_precondType != "smg"     && d_precondType != "SMG" &&
+       (d_precondType != "smg"     && d_precondType != "SMG" &&
        d_precondType != "pfmg"    && d_precondType != "PFMG" &&
-       d_precondType != "jacobi"  && d_precondType != "JACOBI"){
+       d_precondType != "jacobi"  && d_precondType != "JACOBI")){
       warn1 << warn0.str() << " ("<<d_precondType<<") with gmres solver";
       throw ProblemSetupException(warn1.str(),__FILE__, __LINE__);
     }
@@ -119,9 +119,9 @@ Models_HypreSolver::problemSetup(const ProblemSpecP& params, bool shradiation)
   if (d_solverType == "cg" || d_solverType == "CG"){
     validSolver = true;
     if(d_precondType == "none" ||
-       d_precondType != "smg"     && d_precondType != "SMG" &&
+       (d_precondType != "smg"     && d_precondType != "SMG" &&
        d_precondType != "pfmg"    && d_precondType != "PFMG" &&
-       d_precondType != "jacobi"  && d_precondType != "JACOBI"){
+       d_precondType != "jacobi"  && d_precondType != "JACOBI")){
       warn1 << warn0.str() << " ("<<d_precondType<<") with cg solver";
       throw ProblemSetupException(warn1.str(),__FILE__, __LINE__);
     }
@@ -567,7 +567,7 @@ Models_HypreSolver::radLinearSolve()
     HYPRE_GMRESSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
     //    cerr << "GMRES Setup time = " << Time::currentSeconds()-dummy_start << endl;
-    double    dummy_start = Time::currentSeconds();
+    //double    dummy_start = Time::currentSeconds();
 
     HYPRE_GMRESSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);

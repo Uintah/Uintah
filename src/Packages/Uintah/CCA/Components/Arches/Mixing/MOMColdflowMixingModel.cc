@@ -63,9 +63,6 @@ MOMColdflowMixingModel::computeProps(const InletStream& inStream,
                                      Stream& outStream)
 {
   double local_den = 0.0;
-  double mixFracSum = 0.0;
-  double localTemp = 0.0;
-  double drhodf = 0.0;
   double volcoal = inStream.cellvolume * inStream.d_mixVars[0];
   double volair  = inStream.cellvolume * (1.0 - inStream.d_mixVars[0]);
 

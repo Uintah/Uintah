@@ -158,7 +158,7 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
 {
   //cout << d_myworld->myrank() << "   readAndSetVArs\n";
   double time = times_[timeIndex_];
-  int timestep = timesteps_[timeIndex_];
+  //int timestep = timesteps_[timeIndex_];
 
   if (timeIndex_ >= (int) (times_.size()-1)) {
     // error situation - we have run out of timesteps in the uda, but 

@@ -644,7 +644,6 @@ void Switcher::outputPS(Dir& dir)
 
   for (unsigned i = 0; i < d_numComponents; i++) {
     
-    SimulationInterface* sim = dynamic_cast<SimulationInterface*> (getPort("sim",i));	 
     ProblemSpecInterface* psi = 
       dynamic_cast<ProblemSpecInterface*>(getPort("problem spec",i));
     ProblemSpecP ups = psi->readInputFile();
