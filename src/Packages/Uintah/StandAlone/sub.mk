@@ -284,7 +284,6 @@ uintah: sus \
         partextract \
         partvarRange \
         selectpart \
-        uda2nrrd \
         async_mpi_test \
         mpi_test \
         extractV \
