@@ -564,12 +564,12 @@ Arches::paramInit(const ProcessorGroup* pg,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     // Initialize cellInformation
     PerPatch<CellInformationP> cellInfoP;
     cellInfoP.setData(scinew CellInformation(patch));
-    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
 
     //cout << "cellInfo original INIT" << endl;
 
@@ -603,12 +603,12 @@ Arches::paramInit(const ProcessorGroup* pg,
     if (d_calcExtraScalars){
       if (d_carbon_balance_es){ 
         CCVariable<double> co2Rate;
-        new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, matlIndex, patch);
+        new_dw->allocateAndPut(co2Rate, d_lab->d_co2RateLabel, indx, patch);
         co2Rate.initialize(0.0);
       }
       if (d_sulfur_balance_es){ 
         CCVariable<double> so2Rate;
-        new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, matlIndex, patch);
+        new_dw->allocateAndPut(so2Rate, d_lab->d_so2RateLabel, indx, patch);
         so2Rate.initialize(0.0);
       }
     }        
@@ -619,11 +619,11 @@ Arches::paramInit(const ProcessorGroup* pg,
     SFCYVariable<double> vmomBoundarySrc;
     SFCZVariable<double> wmomBoundarySrc;
 
-    new_dw->allocateAndPut(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,   matlIndex, patch);
-    new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
-    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,     matlIndex, patch);
-    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,     matlIndex, patch);
-    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,     matlIndex, patch);
+    new_dw->allocateAndPut(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,   indx, patch);
+    new_dw->allocateAndPut(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, indx, patch);
+    new_dw->allocateAndPut(umomBoundarySrc,     d_lab->d_umomBoundarySrcLabel,     indx, patch);
+    new_dw->allocateAndPut(vmomBoundarySrc,     d_lab->d_vmomBoundarySrcLabel,     indx, patch);
+    new_dw->allocateAndPut(wmomBoundarySrc,     d_lab->d_wmomBoundarySrcLabel,     indx, patch);
 
     scalarBoundarySrc.initialize(0.0);
     enthalpyBoundarySrc.initialize(0.0);
@@ -641,72 +641,72 @@ Arches::paramInit(const ProcessorGroup* pg,
       SFCYVariable<double> vFmms;
       SFCZVariable<double> wFmms;
 
-      new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, matlIndex, patch);
-      new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, matlIndex, patch);
-      new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, matlIndex, patch);
+      new_dw->allocateAndPut(uFmms, d_lab->d_uFmmsLabel, indx, patch);
+      new_dw->allocateAndPut(vFmms, d_lab->d_vFmmsLabel, indx, patch);
+      new_dw->allocateAndPut(wFmms, d_lab->d_wFmmsLabel, indx, patch);
 
       uFmms.initialize(0.0);
       vFmms.initialize(0.0);
       wFmms.initialize(0.0);
     }
   
-    std::cerr << "Material Index: " << matlIndex << endl;
-    new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
-    new_dw->allocateAndPut(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
+    std::cerr << "Material Index: " << indx << endl;
+    new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch);
+    new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch);
+    new_dw->allocateAndPut(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch);
     uVelocityCC.initialize(0.0);
     vVelocityCC.initialize(0.0);
     wVelocityCC.initialize(0.0);
-    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    new_dw->allocateAndPut(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
-    new_dw->allocateAndPut(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
-    new_dw->allocateAndPut(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
+    new_dw->allocateAndPut(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
+    new_dw->allocateAndPut(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
+    new_dw->allocateAndPut(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
     uVelRhoHat.initialize(0.0);
     vVelRhoHat.initialize(0.0);
     wVelRhoHat.initialize(0.0);
     
-    new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
+    new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, indx, patch);
     if ((d_extraProjection)||(d_EKTCorrection)) {
-      new_dw->allocateAndPut(pressureExtraProjection, d_lab->d_pressureExtraProjectionLabel, matlIndex, patch);
+      new_dw->allocateAndPut(pressureExtraProjection, d_lab->d_pressureExtraProjectionLabel, indx, patch);
       pressureExtraProjection.initialize(0.0);
     }
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
-      new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,matlIndex, patch);
+      new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,indx, patch);
       pressurePred.initialize(0.0);
     }
     if (d_timeIntegratorType == "RK3SSP") {
-      new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,matlIndex, patch);
+      new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,indx, patch);
       pressureInterm.initialize(0.0);
     }
 
     if (d_MAlab) {
-      new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
+      new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, indx, patch);
       pPlusHydro.initialize(0.0);
-      new_dw->allocateAndPut(mmgasVolFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+      new_dw->allocateAndPut(mmgasVolFrac, d_lab->d_mmgasVolFracLabel, indx, patch);
       mmgasVolFrac.initialize(1.0);
     }
     
-    new_dw->allocateAndPut(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->allocateAndPut(scalar, d_lab->d_scalarSPLabel, indx, patch);
     
     if (d_calcVariance) {
-      new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, indx, patch);
       scalarVar_new.initialize(0.0);
-      new_dw->allocateAndPut(normalizedScalarVar_new, d_lab->d_normalizedScalarVarLabel, matlIndex, patch);
+      new_dw->allocateAndPut(normalizedScalarVar_new, d_lab->d_normalizedScalarVarLabel, indx, patch);
       normalizedScalarVar_new.initialize(0.0);
-      new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, indx, patch);
       scalarDiss_new.initialize(0.0);  
     }
     
     CCVariable<double> reactscalar;
     if (d_calcReactingScalar) {
-      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel,matlIndex, patch);
+      new_dw->allocateAndPut(reactscalar, d_lab->d_reactscalarSPLabel,indx, patch);
       reactscalar.initialize(0.0);
     }
 
     if (d_calcEnthalpy) {
-      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
       enthalpy.initialize(0.0);
 
       CCVariable<double> qfluxe;
@@ -718,42 +718,42 @@ Arches::paramInit(const ProcessorGroup* pg,
       CCVariable<double> abskg;
       CCVariable<double> radEnthalpySrc;;
 
-      new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,matlIndex, patch);
+      new_dw->allocateAndPut(radEnthalpySrc, d_lab->d_radiationSRCINLabel,indx, patch);
       radEnthalpySrc.initialize(0.0);
 
-      new_dw->allocateAndPut(qfluxe, d_lab->d_radiationFluxEINLabel,matlIndex, patch);
+      new_dw->allocateAndPut(qfluxe, d_lab->d_radiationFluxEINLabel,indx, patch);
       qfluxe.initialize(0.0);
       
-      new_dw->allocateAndPut(qfluxw, d_lab->d_radiationFluxWINLabel,matlIndex, patch);
+      new_dw->allocateAndPut(qfluxw, d_lab->d_radiationFluxWINLabel,indx, patch);
       qfluxw.initialize(0.0);
       
-      new_dw->allocateAndPut(qfluxn, d_lab->d_radiationFluxNINLabel,matlIndex, patch);
+      new_dw->allocateAndPut(qfluxn, d_lab->d_radiationFluxNINLabel,indx, patch);
       qfluxn.initialize(0.0);
       
-      new_dw->allocateAndPut(qfluxs, d_lab->d_radiationFluxSINLabel,matlIndex, patch);
+      new_dw->allocateAndPut(qfluxs, d_lab->d_radiationFluxSINLabel,indx, patch);
       qfluxs.initialize(0.0);
       
-      new_dw->allocateAndPut(qfluxt, d_lab->d_radiationFluxTINLabel,matlIndex, patch);
+      new_dw->allocateAndPut(qfluxt, d_lab->d_radiationFluxTINLabel,indx, patch);
       qfluxt.initialize(0.0);
       
-      new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,matlIndex, patch);
+      new_dw->allocateAndPut(qfluxb, d_lab->d_radiationFluxBINLabel,indx, patch);
       qfluxb.initialize(0.0);
       
-      new_dw->allocateAndPut(abskg,   d_lab->d_abskgINLabel,        matlIndex, patch);
+      new_dw->allocateAndPut(abskg,   d_lab->d_abskgINLabel,        indx, patch);
       abskg.initialize(0.0);
 
     }
-    new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    matlIndex, patch);
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, matlIndex, patch);
+    new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
     if (d_dynScalarModel) {
       if (d_calcScalar){
-        new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     matlIndex, patch);
+        new_dw->allocateAndPut(scalarDiffusivity,     d_lab->d_scalarDiffusivityLabel,     indx, patch);
       }
       if (d_calcEnthalpy){
-        new_dw->allocateAndPut(enthalpyDiffusivity,   d_lab->d_enthalpyDiffusivityLabel,   matlIndex, patch);
+        new_dw->allocateAndPut(enthalpyDiffusivity,   d_lab->d_enthalpyDiffusivityLabel,   indx, patch);
       }
       if (d_calcReactingScalar){
-        new_dw->allocateAndPut(reactScalarDiffusivity,d_lab->d_reactScalarDiffusivityLabel,matlIndex, patch);
+        new_dw->allocateAndPut(reactScalarDiffusivity,d_lab->d_reactScalarDiffusivityLabel,indx, patch);
       }
     }  
 
@@ -783,8 +783,7 @@ Arches::paramInit(const ProcessorGroup* pg,
       for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
         CCVariable<double> extra_scalar;
         new_dw->allocateAndPut(extra_scalar,
-                               d_extraScalars[i]->getScalarLabel(),
-                               matlIndex, patch);
+                               d_extraScalars[i]->getScalarLabel(), indx, patch);
         extra_scalar.initialize(d_extraScalars[i]->getScalarInitValue());
       }
     }  
@@ -830,7 +829,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     
     constSFCXVariable<double> uVelocity;
     constSFCYVariable<double> vVelocity;
@@ -844,16 +843,16 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gn = Ghost::None;
   
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(den, d_lab->d_densityCPLabel,           matlIndex, patch, gac, 1);
-    new_dw->get(visc, d_lab->d_viscosityCTSLabel,       matlIndex, patch, gn,  0);
-    new_dw->get(cellType, d_lab->d_cellTypeLabel,       matlIndex, patch, gac, 1);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(den, d_lab->d_densityCPLabel,           indx, patch, gac, 1);
+    new_dw->get(visc, d_lab->d_viscosityCTSLabel,       indx, patch, gn,  0);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel,       indx, patch, gac, 1);
   
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -1081,15 +1080,15 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     CCVariable<double> uVelocityCC;
     CCVariable<double> vVelocityCC;
     CCVariable<double> wVelocityCC;
     CCVariable<double> pressure;
-    new_dw->getModifiable(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch);
-    new_dw->getModifiable(pressure,    d_lab->d_pressurePSLabel,     matlIndex, patch);
+    new_dw->getModifiable(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch);
+    new_dw->getModifiable(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch);
+    new_dw->getModifiable(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch);
+    new_dw->getModifiable(pressure,    d_lab->d_pressurePSLabel,     indx, patch);
 
     ifstream fd(d_init_inputfile.c_str());
     if(fd.fail()) {
@@ -1160,13 +1159,13 @@ Arches::blobInit(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     const VarLabel* extrascalarlabel;
     CCVariable<double> extrascalar;
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -1174,8 +1173,7 @@ Arches::blobInit(const ProcessorGroup* ,
 
 
     extrascalarlabel = d_extraScalars[0]->getScalarLabel();
-    new_dw->getModifiable(extrascalar, extrascalarlabel,
-                              matlIndex, patch);
+    new_dw->getModifiable(extrascalar, extrascalarlabel, indx, patch);
   
     std::cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
     std::cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
@@ -1246,22 +1244,22 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
     SFCZVariable<double> wVelocity;
     CCVariable<double> pressure;
     CCVariable<double> scalar;
     
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(pressure,  d_lab->d_pressurePSLabel,    matlIndex, patch);
-    new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      matlIndex, patch);
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(pressure,  d_lab->d_pressurePSLabel,    indx, patch);
+    new_dw->getModifiable(scalar,    d_lab->d_scalarSPLabel,      indx, patch);
    
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -1281,8 +1279,7 @@ Arches::mmsInitialCondition(const ProcessorGroup* ,
           for (int i=0; i < static_cast<int>(d_extraScalars.size()); i++) {
            CCVariable<double> extra_scalar;
            new_dw->allocateAndPut(extra_scalar,
-                                  d_extraScalars[i]->getScalarLabel(),
-                                  matlIndex, patch);
+                                  d_extraScalars[i]->getScalarLabel(),indx, patch);
            extra_scalar.initialize(d_esphi0);
          }
         }
@@ -1376,7 +1373,7 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     constCCVariable<double> uVelocityCC;
     constCCVariable<double> vVelocityCC;
     constCCVariable<double> wVelocityCC;
@@ -1385,13 +1382,13 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     SFCZVariable<double> wVelocity;
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, matlIndex, patch, gac, 1);
-    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, matlIndex, patch, gac, 1);
+    new_dw->get(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch, gac, 1);
+    new_dw->get(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch, gac, 1);
     
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
     
     IntVector idxLo, idxHi;
 
@@ -1475,7 +1472,7 @@ Arches::getCCVelocities(const ProcessorGroup* ,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
 
     constSFCXVariable<double> newUVel;
@@ -1497,23 +1494,20 @@ Arches::getCCVelocities(const ProcessorGroup* ,
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)) 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     Ghost::GhostType  gaf = Ghost::AroundFaces;
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
+    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
     
-    new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,
-                           matlIndex, patch);
-    new_dw->getModifiable(newCCVVel, d_lab->d_newCCVVelocityLabel,
-                           matlIndex, patch);
-    new_dw->getModifiable(newCCWVel, d_lab->d_newCCWVelocityLabel,
-                           matlIndex, patch);
+    new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,indx, patch);
+    new_dw->getModifiable(newCCVVel, d_lab->d_newCCVVelocityLabel,indx, patch);
+    new_dw->getModifiable(newCCWVel, d_lab->d_newCCWVelocityLabel,indx, patch);
     newCCUVel.initialize(0.0);
     newCCVVel.initialize(0.0);
     newCCWVel.initialize(0.0);

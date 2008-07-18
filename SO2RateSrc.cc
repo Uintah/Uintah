@@ -93,10 +93,10 @@ SO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     CCVariable<double> scalarNonlinSrc;
-    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label, matlIndex, patch);
+    new_dw->getModifiable(scalarNonlinSrc, d_scalar_nonlin_src_label, indx, patch);
 
     //going to estimate volume for all cells.
     //this will need to be fixed when going to stretched meshes
@@ -104,7 +104,7 @@ SO2RateSrc::addExtraScalarSrc(const ProcessorGroup* pc,
     double vol = dx.x()*dx.y()*dx.z();
 
     constCCVariable<double> SO2rate;
-    new_dw->get(SO2rate, d_lab->d_so2RateLabel, matlIndex, patch, Ghost::None, 0);
+    new_dw->get(SO2rate, d_lab->d_so2RateLabel, indx, patch, Ghost::None, 0);
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       scalarNonlinSrc[*iter] += SO2rate[*iter]*vol*64000; //64000 = conversion from mol/cm^3/s to kg/m^3/s

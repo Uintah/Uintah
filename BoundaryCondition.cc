@@ -369,9 +369,9 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     CCVariable<int> cellType;
-    new_dw->allocateAndPut(cellType, d_lab->d_cellTypeLabel, matlIndex, patch);
+    new_dw->allocateAndPut(cellType, d_lab->d_cellTypeLabel, indx, patch);
 
     IntVector domLo = cellType.getFortLowIndex();
     IntVector domHi = cellType.getFortHighIndex();
@@ -505,7 +505,7 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched,
                           &BoundaryCondition::mmWallCellTypeInit,
                           fixCellType);
   
-  int numGhostcells = 0;
+  
 
   // New DW warehouse variables to calculate cell types if we are
   // recalculating cell types and resetting void fractions
@@ -518,26 +518,22 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched,
   if (dwnumber < 2 || !fixCellType) recalculateCellType = true;
   //  cout << "recalculateCellType =" << recalculateCellType << endl;
 
-  tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,
-                Ghost::None, numGhostcells);
-  tsk->requires(Task::OldDW, d_lab->d_mmcellTypeLabel, 
-                Ghost::None, numGhostcells);
-  tsk->requires(Task::OldDW, d_MAlab->mmCellType_MPMLabel, 
-                Ghost::None, numGhostcells);
+  Ghost::GhostType  gn = Ghost::None;
+  tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,   gn, 0);
+  tsk->requires(Task::OldDW, d_lab->d_mmcellTypeLabel,     gn, 0);
+  tsk->requires(Task::OldDW, d_MAlab->mmCellType_MPMLabel, gn, 0);
   if (d_cutCells)
-    tsk->requires(Task::OldDW, d_MAlab->mmCellType_CutCellLabel,
-                  Ghost::None, numGhostcells);
+    tsk->requires(Task::OldDW, d_MAlab->mmCellType_CutCellLabel, gn, 0);
 
   if (recalculateCellType) {
 
-    tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, 
-                  Ghost::None, numGhostcells);
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-                  Ghost::None, numGhostcells);
+    tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, gn, 0);
+    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel,     gn, 0);
 
     tsk->computes(d_lab->d_mmgasVolFracLabel);
     tsk->computes(d_lab->d_mmcellTypeLabel);
     tsk->computes(d_MAlab->mmCellType_MPMLabel);
+
     if (d_cutCells){
       tsk->computes(d_MAlab->mmCellType_CutCellLabel);
     }
@@ -548,8 +544,7 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched,
   }
   else {
 
-    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, 
-                  Ghost::None, numGhostcells);
+    tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, gn, 0);
     tsk->computes(d_lab->d_mmgasVolFracLabel);
     tsk->computes(d_lab->d_mmcellTypeLabel);
     tsk->computes(d_MAlab->mmCellType_MPMLabel);
@@ -574,8 +569,8 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    int numGhostcells = 0;
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    
 
     //    double time = d_lab->d_sharedState->getElapsedTime();
     bool recalculateCellType = false;
@@ -605,57 +600,39 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     constCCVariable<int> mmCellTypeCutCellOld;
     constCCVariable<double> voidFracMPMOld;
     constCCVariable<double> voidFracCutCellOld;
-
-    old_dw->get(oldGasVolFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-                Ghost::None, numGhostcells);
-    old_dw->get(mmCellTypeOld, d_lab->d_mmcellTypeLabel, matlIndex, patch,
-                Ghost::None, numGhostcells);
-    old_dw->get(mmCellTypeMPMOld, d_MAlab->mmCellType_MPMLabel, matlIndex, patch,
-                Ghost::None, numGhostcells);
+    
+    
+    Ghost::GhostType  gn = Ghost::None;
+    old_dw->get(oldGasVolFrac,    d_lab->d_mmgasVolFracLabel,   indx, patch,gn, 0);
+    old_dw->get(mmCellTypeOld,    d_lab->d_mmcellTypeLabel,     indx, patch,gn, 0);
+    old_dw->get(mmCellTypeMPMOld, d_MAlab->mmCellType_MPMLabel, indx, patch,gn, 0);
     if (d_cutCells){
-      old_dw->get(mmCellTypeCutCellOld, d_MAlab->mmCellType_CutCellLabel, matlIndex, patch,
-                  Ghost::None, numGhostcells);
+      old_dw->get(mmCellTypeCutCellOld, d_MAlab->mmCellType_CutCellLabel, indx, patch,gn, 0);
     }
 
     if (recalculateCellType) {
+      new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, indx, patch,gn, 0);
+      old_dw->get(cellType, d_lab->d_cellTypeLabel,     indx, patch,gn, 0);
 
-      new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
-                  Ghost::None, numGhostcells);
-      old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::None, numGhostcells);
-
-      new_dw->allocateAndPut(mmGasVolFrac, d_lab->d_mmgasVolFracLabel, 
-                             matlIndex, patch);
-      new_dw->allocateAndPut(mmCellType, d_lab->d_mmcellTypeLabel, 
-                             matlIndex, patch);
-      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, 
-                             matlIndex, patch);
+      new_dw->allocateAndPut(mmGasVolFrac,  d_lab->d_mmgasVolFracLabel,   indx, patch);
+      new_dw->allocateAndPut(mmCellType,    d_lab->d_mmcellTypeLabel,     indx, patch);
+      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, indx, patch);
       if (d_cutCells){
-        new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, 
-                               matlIndex, patch);
+        new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, indx, patch);
       }
 
-      new_dw->getModifiable(voidFracMPM, d_MAlab->void_frac_MPM_CCLabel, 
-                            matlIndex, patch);
+      new_dw->getModifiable(voidFracMPM, d_MAlab->void_frac_MPM_CCLabel, indx, patch);
       if (d_cutCells){
-        new_dw->getModifiable(voidFracCutCell, d_MAlab->void_frac_CutCell_CCLabel, 
-                              matlIndex, patch);
+        new_dw->getModifiable(voidFracCutCell, d_MAlab->void_frac_CutCell_CCLabel, indx, patch);
       }
-
     }
     else {
-
-      old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                  Ghost::None, numGhostcells);
-      new_dw->allocateAndPut(mmGasVolFrac, d_lab->d_mmgasVolFracLabel, 
-                             matlIndex, patch);
-      new_dw->allocateAndPut(mmCellType, d_lab->d_mmcellTypeLabel, 
-                             matlIndex, patch);
-      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, 
-                             matlIndex, patch);
+      old_dw->get(cellType,                 d_lab->d_cellTypeLabel,       indx, patch,gn, 0);
+      new_dw->allocateAndPut(mmGasVolFrac,  d_lab->d_mmgasVolFracLabel,   indx, patch);
+      new_dw->allocateAndPut(mmCellType,    d_lab->d_mmcellTypeLabel,     indx, patch);
+      new_dw->allocateAndPut(mmCellTypeMPM, d_MAlab->mmCellType_MPMLabel, indx, patch);
       if (d_cutCells){
-        new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, 
-                               matlIndex, patch);
+        new_dw->allocateAndPut(mmCellTypeCutCell, d_MAlab->mmCellType_CutCellLabel, indx, patch);
       }
     }
 
@@ -730,11 +707,9 @@ BoundaryCondition::sched_mmWallCellTypeInit_first(SchedulerP& sched,
                           this,
                           &BoundaryCondition::mmWallCellTypeInit_first);
   
-  int numGhostcells = 0;
-  tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, 
-                Ghost::None, numGhostcells);
-  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
-                Ghost::None, numGhostcells);
+  Ghost::GhostType  gn = Ghost::None;
+  tsk->requires(Task::NewDW, d_MAlab->void_frac_CCLabel, gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,     gn, 0);
   tsk->computes(d_lab->d_mmcellTypeLabel);
   tsk->modifies(d_lab->d_mmgasVolFracLabel);
   
@@ -751,24 +726,23 @@ BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
                                             DataWarehouse* ,
                                             DataWarehouse* new_dw)        
 {
-
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    int numGhostcells = 0;
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    
     constCCVariable<int> cellType;
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-                Ghost::None, numGhostcells);
     constCCVariable<double> voidFrac;
-    new_dw->get(voidFrac, d_MAlab->void_frac_CCLabel, matlIndex, patch,
-                Ghost::None, numGhostcells);
     CCVariable<int> mmcellType;
-    new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch);
-    mmcellType.copyData(cellType);
     CCVariable<double> mmvoidFrac;
-    new_dw->getModifiable(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
+    
+    Ghost::GhostType  gn = Ghost::None;
+    new_dw->get(cellType,              d_lab->d_cellTypeLabel,      indx, patch, gn, 0);
+    new_dw->get(voidFrac,              d_MAlab->void_frac_CCLabel,  indx, patch, gn, 0);
+    new_dw->allocateAndPut(mmcellType, d_lab->d_mmcellTypeLabel,    indx, patch);
+    new_dw->getModifiable(mmvoidFrac,  d_lab->d_mmgasVolFracLabel,  indx, patch);
+    mmcellType.copyData(cellType);
     mmvoidFrac.copyData(voidFrac);
         
     IntVector domLo = mmcellType.getFortLowIndex();
@@ -783,10 +757,10 @@ BoundaryCondition::mmWallCellTypeInit_first(const ProcessorGroup*,
                         d_flowfieldCellTypeVal, MM_CUTOFF_VOID_FRAC);
 
     // allocateAndPut instead:
-    /* new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, matlIndex, patch); */;
+    /* new_dw->put(mmcellType, d_lab->d_mmcellTypeLabel, indx, patch); */;
     // save in arches label
     // allocateAndPut instead:
-    /* new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch); */;
+    /* new_dw->put(mmvoidFrac, d_lab->d_mmgasVolFracLabel, indx, patch); */;
   }  
 }
 
@@ -805,18 +779,18 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Create the cellType variable
     constCCVariable<int> cellType;
     
     // Get the cell type data from the old_dw
     // **WARNING** numGhostcells, Ghost::None may change in the future
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None, 0);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -889,7 +863,7 @@ BoundaryCondition::sched_calculateArea(SchedulerP& sched,
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None, 0);
   // ***warning checkpointing
-  //      tsk->computes(old_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //      tsk->computes(old_dw, d_lab->d_cellInfoLabel, indx, patch);
   for (int ii = 0; ii < d_numInlets; ii++){ 
     tsk->computes(d_flowInlets[ii]->d_area_label);
   }
@@ -903,11 +877,11 @@ BoundaryCondition::sched_calculateArea(SchedulerP& sched,
       Task* tsk = scinew Task("BoundaryCondition::calculateArea",
                            patch, old_dw, new_dw, this,
                            &BoundaryCondition::computeInletFlowArea);
-      int matlIndex = 0;
-      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+      int indx = 0;
+      tsk->requires(old_dw, d_lab->d_cellTypeLabel, indx, patch, Ghost::None,
                     Arches::ZEROGHOSTCELLS);
       // ***warning checkpointing
-      //      tsk->computes(old_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
+      //      tsk->computes(old_dw, d_lab->d_cellInfoLabel, indx, patch);
       for (int ii = 0; ii < d_numInlets; ii++) {
         // make it simple by adding matlindex for reduction vars
         tsk->computes(old_dw, d_flowInlets[ii].d_area_label);
@@ -982,7 +956,7 @@ BoundaryCondition::setProfile(const ProcessorGroup* /*pc*/,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     constCCVariable<int> cellType;
     CCVariable<double> density;
     SFCXVariable<double> uVelocity;
@@ -995,26 +969,26 @@ BoundaryCondition::setProfile(const ProcessorGroup* /*pc*/,
     CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
 
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
     
     // get cellType, density and velocity
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None,
                 Arches::ZEROGHOSTCELLS);
-    new_dw->getModifiable(density, d_lab->d_densityCPLabel, matlIndex, patch);
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->getModifiable(density, d_lab->d_densityCPLabel, indx, patch);
+    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
       // reactscalar will be zero at the boundaries, so no further calculation
       // is required.
     if (d_reactingScalarSolve){
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
     }
     
     if (d_enthalpySolve){ 
-      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
     }
 
     IntVector idxLo = patch->getFortranCellLowIndex__New();
@@ -1147,8 +1121,7 @@ BoundaryCondition::setProfile(const ProcessorGroup* /*pc*/,
         string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
         CCVariable<double> extra_scalar;
         new_dw->getModifiable(extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(),
-                               matlIndex, patch);
+                              d_extraScalars->at(i)->getScalarLabel(),indx, patch);
 
         if (d_inletBoundary) {
           for (int ii = 0; ii < d_numInlets; ii++) {
@@ -2626,7 +2599,7 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     Box patchInteriorBox = patch->getBox();
     
     SFCXVariable<double> umomSource;
@@ -2634,10 +2607,10 @@ BoundaryCondition::computeMomSourceTerm(const ProcessorGroup*,
     SFCZVariable<double> wmomSource;
     constCCVariable<int> cellType;
 
-    new_dw->getModifiable(umomSource, d_lab->d_umomBoundarySrcLabel, matlIndex, patch);
-    new_dw->getModifiable(vmomSource, d_lab->d_vmomBoundarySrcLabel, matlIndex, patch);
-    new_dw->getModifiable(wmomSource, d_lab->d_wmomBoundarySrcLabel, matlIndex, patch);
-    old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,  Ghost::AroundCells, 2);
+    new_dw->getModifiable(umomSource, d_lab->d_umomBoundarySrcLabel, indx, patch);
+    new_dw->getModifiable(vmomSource, d_lab->d_vmomBoundarySrcLabel, indx, patch);
+    new_dw->getModifiable(wmomSource, d_lab->d_wmomBoundarySrcLabel, indx, patch);
+    old_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,  Ghost::AroundCells, 2);
 
     umomSource.initialize(0.0);
     vmomSource.initialize(0.0);
@@ -2915,7 +2888,7 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     Box patchInteriorBox = patch->getBox();
 
     //assuming a uniform mesh!
@@ -2925,9 +2898,9 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
     CCVariable<double> enthalpyBoundarySrc;
     constCCVariable<int> cellType;
 
-    new_dw->getModifiable(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,   matlIndex, patch);
-    new_dw->getModifiable(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, matlIndex, patch);
-    old_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::AroundCells, 1);
+    new_dw->getModifiable(scalarBoundarySrc,   d_lab->d_scalarBoundarySrcLabel,   indx, patch);
+    new_dw->getModifiable(enthalpyBoundarySrc, d_lab->d_enthalpyBoundarySrcLabel, indx, patch);
+    old_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::AroundCells, 1);
 
     scalarBoundarySrc.initialize(0.0);
     enthalpyBoundarySrc.initialize(0.0);
@@ -4333,7 +4306,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     constCCVariable<int> cellType;
     constCCVariable<double> filterdrhodt;
     constCCVariable<double> density;
@@ -4344,21 +4317,21 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
   
-    new_dw->get(filterdrhodt, d_lab->d_filterdrhodtLabel, matlIndex, patch, gn, 0);
-    new_dw->get(cellType,     d_lab->d_cellTypeLabel,     matlIndex, patch, gac,1);
+    new_dw->get(filterdrhodt, d_lab->d_filterdrhodtLabel, indx, patch, gn, 0);
+    new_dw->get(cellType,     d_lab->d_cellTypeLabel,     indx, patch, gac,1);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(density, d_lab->d_densityCPLabel,       matlIndex, patch, gn, 0);
-    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gn, 0);
+    new_dw->get(density, d_lab->d_densityCPLabel,       indx, patch, gn, 0);
+    new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
 
     // Get the low and high index for the patch and the variables
     IntVector idxLo = patch->getFortranCellLowIndex__New();
@@ -4672,7 +4645,7 @@ BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     constCCVariable<int> cellType;
     constCCVariable<double> density;
     CCVariable<double> density_oldold;
@@ -4683,16 +4656,16 @@ BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
     SFCYVariable<double> vVelRhoHat;
     SFCZVariable<double> wVelRhoHat;
 
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
     
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None, 0);
-    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None, 0);
-    new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0);
+    new_dw->get(density, d_lab->d_densityCPLabel, indx, patch, Ghost::None, 0);
+    new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, indx, patch);
 
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
@@ -4725,7 +4698,7 @@ BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
 //#ifdef divergenceconstraint    
     CCVariable<double> divergence;
     new_dw->allocateAndPut(divergence,
-                             d_lab->d_divConstraintLabel, matlIndex, patch);
+                             d_lab->d_divConstraintLabel, indx, patch);
     divergence.initialize(0.0);
 //#endif
 
@@ -4794,7 +4767,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     ArchesConstVariables constVars;
 
@@ -4807,21 +4780,21 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn = Ghost::None;
-    new_dw->get(constVars.cellType, d_lab->d_cellTypeLabel, matlIndex, patch, gac,1);
+    new_dw->get(constVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac,1);
 
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    new_dw->get(constVars.density,   d_lab->d_densityCPLabel,     matlIndex, patch, gn, 0);
-    new_dw->get(constVars.uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(constVars.vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(constVars.wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gn, 0);
-    new_dw->get(scalar,              d_lab->d_scalarSPLabel,      matlIndex, patch, gn, 0);
+    new_dw->get(constVars.density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
+    new_dw->get(constVars.uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(constVars.vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(constVars.wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
+    new_dw->get(scalar,              d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
 
     double scalarIN = 0.0;
     double scalarOUT = 0.0;
@@ -4833,7 +4806,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     double co2IN = 0.0;
     double co2OUT = 0.0;
     if (d_carbon_balance) {
-      new_dw->get(co2, d_lab->d_co2INLabel, matlIndex, patch, gn, 0);
+      new_dw->get(co2, d_lab->d_co2INLabel, indx, patch, gn, 0);
       getVariableFlowRate(pc,patch, cellinfo, &constVars, co2,
                         &co2IN, &co2OUT); 
       new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
@@ -4848,7 +4821,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
         if (checkCarbonBalance){         
           const VarLabel* templabel = (*iss)->getScalarLabel();
                   
-          new_dw->get(co2_es, templabel, matlIndex, patch, gn, 0);
+          new_dw->get(co2_es, templabel, indx, patch, gn, 0);
           getVariableFlowRate(pc,patch, cellinfo, &constVars, co2_es,
                   &co2IN, &co2OUT); 
           new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateESLabel);
@@ -4860,7 +4833,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     double so2IN = 0.0;
     double so2OUT = 0.0;
     if (d_sulfur_balance) {
-      new_dw->get(so2, d_lab->d_so2INLabel, matlIndex, patch, gn, 0);
+      new_dw->get(so2, d_lab->d_so2INLabel, indx, patch, gn, 0);
       getVariableFlowRate(pc,patch, cellinfo, &constVars, so2, &so2IN, &so2OUT); 
       new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateLabel);
     } 
@@ -4876,7 +4849,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
           
           const VarLabel* templabel = (*iss)->getScalarLabel();
                   
-          new_dw->get(so2_es, templabel, matlIndex, patch, gn, 0);
+          new_dw->get(so2_es, templabel, indx, patch, gn, 0);
           getVariableFlowRate(pc,patch, cellinfo, &constVars, so2_es,
                   &so2IN, &so2OUT); 
           new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateESLabel);
@@ -4887,7 +4860,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     double enthalpyIN = 0.0;
     double enthalpyOUT = 0.0;
     if (d_enthalpySolve) {
-      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch, gn, 0);
+      new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
       getVariableFlowRate(pc,patch, cellinfo, &constVars, enthalpy,
                         &enthalpyIN, &enthalpyOUT); 
       new_dw->put(sum_vartype(enthalpyOUT-enthalpyIN), d_lab->d_enthalpyFlowRateLabel);
@@ -6324,7 +6297,7 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     CCVariable<double> density;
     SFCXVariable<double> uVelocity;
     SFCYVariable<double> vVelocity;
@@ -6337,23 +6310,23 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
     CCVariable<double> enthalpy;
         constCCVariable<int> cellType;
 
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch);
-    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, matlIndex, patch);
-    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, matlIndex, patch);
-    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
+    new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
     
-    new_dw->getModifiable(density, d_lab->d_densityCPLabel, matlIndex, patch);
-    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    new_dw->getModifiable(density, d_lab->d_densityCPLabel, indx, patch);
+    new_dw->getModifiable(scalar, d_lab->d_scalarSPLabel, indx, patch);
     if (d_reactingScalarSolve)
-      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, matlIndex, patch);
+      new_dw->getModifiable(reactscalar, d_lab->d_reactscalarSPLabel, indx, patch);
     
     if (d_enthalpySolve){ 
-      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      new_dw->getModifiable(enthalpy, d_lab->d_enthalpySPLabel, indx, patch);
     }
     
-    new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None, 0);
+    new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, Ghost::None, 0);
 
     // loop thru the flow inlets to set all the components of velocity and density
     if (d_inletBoundary) {
@@ -6420,8 +6393,7 @@ BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
       for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
         CCVariable<double> extra_scalar;
         new_dw->getModifiable(extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(), 
-                              matlIndex, patch);
+                              d_extraScalars->at(i)->getScalarLabel(), indx, patch);
         string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
         if (d_inletBoundary) {
           Box patchInteriorBox = patch->getBox();

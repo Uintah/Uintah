@@ -80,13 +80,13 @@ OdtClosure::initializeSmagCoeff( const ProcessorGroup*,
                                  const TimeIntegratorLabel* ) 
 {
   int archIndex = 0; // only one arches material
-  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     CCVariable<double> Cs; //smag coeff 
-    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, matlIndex, patch);  
+    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);  
     Cs.initialize(0.0);
   }
 }
@@ -122,13 +122,13 @@ OdtClosure::initializeOdtvariable( const ProcessorGroup*,
                                    const TimeIntegratorLabel* ) 
 {
   int archIndex = 0; // only one arches material
-  int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     CCVariable<odtData> odt_variable; //smag coeff 
-    new_dw->allocateAndPut(odt_variable, d_lab->d_odtDataLabel, matlIndex, patch);  
+    new_dw->allocateAndPut(odt_variable, d_lab->d_odtDataLabel, indx, patch);  
     odtData data;
     for (int i =0; i<d_odtPoints; i++) {
       data.x_u[i] = 0.0;
@@ -271,7 +271,7 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     delt_vartype delT;
     new_dw->get(delT, d_lab->d_sharedState->get_delt_label(), getLevel(patches));
     double deltaT_les = delT;
@@ -291,23 +291,23 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     
-    new_dw->get(uVel,         d_lab->d_uVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(vVel,         d_lab->d_vVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(wVel,         d_lab->d_wVelocitySPBCLabel, matlIndex, patch, gaf, 1);
-    new_dw->get(den,          d_lab->d_densityCPLabel,     matlIndex, patch, gac, 1);
-    new_dw->get(scalar,       d_lab->d_scalarSPLabel,      matlIndex, patch, gac, 1);
-    old_dw->get(odt_variable, d_lab->d_odtDataLabel,       matlIndex, patch, gac, 1);
-    new_dw->get(cellType,     d_lab->d_cellTypeLabel,      matlIndex, patch, gac, 1);
+    new_dw->get(uVel,         d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(vVel,         d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(wVel,         d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(den,          d_lab->d_densityCPLabel,     indx, patch, gac, 1);
+    new_dw->get(scalar,       d_lab->d_scalarSPLabel,      indx, patch, gac, 1);
+    old_dw->get(odt_variable, d_lab->d_odtDataLabel,       indx, patch, gac, 1);
+    new_dw->get(cellType,     d_lab->d_cellTypeLabel,      indx, patch, gac, 1);
     
     if (d_MAlab){
-      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch,gn, 0);
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, indx, patch,gn, 0);
     }
     
 //#ifndef PetscFilter
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else {
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -330,19 +330,19 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
 /*      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
         new_dw->allocateAndPut(stressTensorXdiv, 
-                               d_lab->d_stressTensorXdivLabel, matlIndex, patch);
+                               d_lab->d_stressTensorXdivLabel, indx, patch);
         new_dw->allocateAndPut(stressTensorYdiv, 
-                               d_lab->d_stressTensorYdivLabel, matlIndex, patch);
+                               d_lab->d_stressTensorYdivLabel, indx, patch);
         new_dw->allocateAndPut(stressTensorZdiv, 
-                               d_lab->d_stressTensorZdivLabel, matlIndex, patch);
+                               d_lab->d_stressTensorZdivLabel, indx, patch);
       }
       else {
         new_dw->getModifiable(stressTensorXdiv, 
-                              d_lab->d_stressTensorXdivLabel, matlIndex, patch);
+                              d_lab->d_stressTensorXdivLabel, indx, patch);
         new_dw->getModifiable(stressTensorYdiv, 
-                              d_lab->d_stressTensorYdivLabel, matlIndex, patch);
+                              d_lab->d_stressTensorYdivLabel, indx, patch);
         new_dw->getModifiable(stressTensorZdiv, 
-                              d_lab->d_stressTensorZdivLabel, matlIndex, patch);
+                              d_lab->d_stressTensorZdivLabel, indx, patch);
       }
       stressTensorXdiv.initialize(0.0);
       stressTensorYdiv.initialize(0.0);
@@ -359,9 +359,9 @@ OdtClosure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     CCVariable<odtData> odt_variableNew;
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      new_dw->allocateAndPut(odt_variableNew, d_lab->d_odtDataLabel, matlIndex, patch);
+      new_dw->allocateAndPut(odt_variableNew, d_lab->d_odtDataLabel, indx, patch);
     }else{
-      new_dw->getModifiable(odt_variableNew,  d_lab->d_odtDataLabel, matlIndex, patch);
+      new_dw->getModifiable(odt_variableNew,  d_lab->d_odtDataLabel, indx, patch);
     }
     // allocate stress tensor coeffs
     for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
@@ -1137,24 +1137,24 @@ OdtClosure::computeScalarVariance(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
-    new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, Ghost::AroundCells, 1);
+    new_dw->get(scalar, d_lab->d_scalarSPLabel, indx, patch, Ghost::AroundCells, 1);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-      new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, indx, patch);
     }else{
-      new_dw->getModifiable(scalarVar,  d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      new_dw->getModifiable(scalarVar,  d_lab->d_scalarVarSPLabel, indx, patch);
     }
     scalarVar.initialize(0.0);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
@@ -1213,7 +1213,7 @@ OdtClosure::computeScalarVariance(const ProcessorGroup*,
     }
     // Put the calculated viscosityvalue into the new data warehouse
 #if 0
-    new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+    new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, indx, patch);
 #endif
   }
 }
@@ -1270,7 +1270,7 @@ OdtClosure::computeScalarDissipation(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
@@ -1278,26 +1278,26 @@ OdtClosure::computeScalarDissipation(const ProcessorGroup*,
     StencilMatrix<constCCVariable<double> > scalarFlux; //3 point stencil
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(scalar,     d_lab->d_scalarSPLabel,     matlIndex, patch,gac, 1);
-    new_dw->get(viscosity,  d_lab->d_viscosityCTSLabel, matlIndex, patch,gac, 1);
+    new_dw->get(scalar,     d_lab->d_scalarSPLabel,     indx, patch,gac, 1);
+    new_dw->get(viscosity,  d_lab->d_viscosityCTSLabel, indx, patch,gac, 1);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
         old_dw->get(scalarFlux[ii],      d_lab->d_scalarFluxCompLabel, ii, patch,gac, 1);
       }
-      new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, matlIndex, patch);
+      new_dw->allocateAndPut(scalarDiss, d_lab->d_scalarDissSPLabel, indx, patch);
     }else{
       for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
         new_dw->get(scalarFlux[ii],     d_lab->d_scalarFluxCompLabel, ii, patch,gac, 1);
       }
-      new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,  matlIndex, patch);
+      new_dw->getModifiable(scalarDiss, d_lab->d_scalarDissSPLabel,  indx, patch);
     }
     scalarDiss.initialize(0.0);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)){ 
-      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+    if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
+      new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
