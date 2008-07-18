@@ -93,6 +93,10 @@ namespace Uintah {
 
   void PatchBVH::query(const IntVector& low, const IntVector& high, Level::selectType& patches)
   {
+    //verify query range is valid
+    if(high.x()<=low.x() || high.y()<=low.y() || high.z()<=low.z())
+      return;
+
     patches.resize(0);
     root_->query(low,high,patches);
   }

@@ -90,10 +90,12 @@ namespace Uintah {
 
   PatchBVHNode::~PatchBVHNode()
   {
-    if(left_!=NULL)
-      delete left_;
-    if(right_!=NULL)
-      delete right_;
+    //this class should only be made if there are more than 2 objects in the list thus both sides should exist
+    ASSERT(left_!=NULL);
+    delete left_;
+    
+    ASSERT(right_!=NULL);
+    delete right_;
   }
 
   void PatchBVHNode::query(const IntVector& low, const IntVector& high, Level::selectType& patches)
@@ -103,7 +105,9 @@ namespace Uintah {
       return;
 
     //intersect with left and right trees
+    ASSERT(left_!=NULL);
     left_->query(low,high,patches);
+    ASSERT(right_!=NULL);
     right_->query(low,high,patches);
   }
 

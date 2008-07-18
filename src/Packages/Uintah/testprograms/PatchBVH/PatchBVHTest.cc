@@ -21,6 +21,9 @@ bool compareEqual(const Patch* p1, const Patch* p2)
 
 bool compareQueries( Level::selectType &q1, Level::selectType &q2)
 {
+  if(q1.size()!=q2.size())
+    return false;
+
   for(Level::selectType::iterator iter1=q1.begin(); iter1!=q1.end(); iter1++)
   {
     bool found=false;
@@ -73,8 +76,21 @@ int main()
   if(!compareQueries(q_new,q_old))
   {
     cout << "Error queries do not match(1)\n";
+    cout << "old:\n";
+    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
+    cout << "new:\n";
+    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
   }
-
+  cout << "Query returned size:" << q_new.size() << endl;
+  q_new.resize(0);
+  q_old.resize(0);
+  
   low=IntVector(0,0,0);
   high=IntVector(12,12,1);
   bvh.query(low,high,q_new);
@@ -82,7 +98,20 @@ int main()
   if(!compareQueries(q_new,q_old))
   {
     cout << "Error queries do not match(2)\n";
+    cout << "old:\n";
+    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
+    cout << "new:\n";
+    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
   }
+  cout << "Query returned size:" << q_new.size() << endl;
+  q_new.resize(0);
+  q_old.resize(0);
       
   low=IntVector(34,22,28);
   high=IntVector(73,12,36);
@@ -91,7 +120,64 @@ int main()
   if(!compareQueries(q_new,q_old))
   {
     cout << "Error queries do not match(3)\n";
+    cout << "old:\n";
+    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
+    cout << "new:\n";
+    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
   }
+  cout << "Query returned size:" << q_new.size() << endl;
+  q_new.resize(0);
+  q_old.resize(0);
+  
+  low=IntVector(8,8,8);
+  high=IntVector(8,8,8);
+  bvh.query(low,high,q_new);
+  prt.query(low,high,q_old);
+  if(!compareQueries(q_new,q_old))
+  {
+    cout << "Error queries do not match(4)\n";
+    cout << "old:\n";
+    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
+    cout << "new:\n";
+    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
+  }
+  cout << "Query returned size:" << q_new.size() << endl;
+  q_new.resize(0);
+  q_old.resize(0);
+  
+  low=IntVector(10,10,10);
+  high=IntVector(9,9,9);
+  bvh.query(low,high,q_new);
+  prt.query(low,high,q_old);
+  if(!compareQueries(q_new,q_old))
+  {
+    cout << "Error queries do not match(5)\n";
+    cout << "old:\n";
+    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
+    cout << "new:\n";
+    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    {
+      cout << **iter << endl;
+    }
+  }
+  cout << "Query returned size:" << q_new.size() << endl;
+  q_new.resize(0);
+  q_old.resize(0);
   
   cout << "All tests successfully passed\n";
   return 0;
