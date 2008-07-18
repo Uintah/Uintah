@@ -48,7 +48,7 @@ Args::allTrailing(unsigned int minnumber)
   unsigned int nargs = args.size();
   if(nargs<minnumber)
     throw ProblemSetupException("Not enough arguments",__FILE__,__LINE__);
-  for(int iarg=nargs-1;iarg--;iarg>=0) {
+  for(int iarg=nargs-1;iarg>=0;iarg--) {
     if(!argused[iarg]) {
       res.push_back(args[iarg]);
       argused[iarg] = true;
