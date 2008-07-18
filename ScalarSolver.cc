@@ -250,13 +250,14 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
 
-  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-                  d_lab->d_vectorMatl, oams, gac, 1);
-  }else{
-    tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
-                  d_lab->d_vectorMatl, oams,gac, 1);
+  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+      tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
+          d_lab->d_vectorMatl, oams, gac, 1);
+    }else{
+      tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
+          d_lab->d_vectorMatl, oams,gac, 1);
+    }
   }
 
       // added one more argument of index to specify scalar component
