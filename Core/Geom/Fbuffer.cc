@@ -30,7 +30,8 @@
 //    Date   : Jan 17 2006
 
 
-#include "Fbuffer.h"
+#include <Core/Geom/Fbuffer.h>
+
 #include <iostream>
 
 #include <sci_glu.h>
