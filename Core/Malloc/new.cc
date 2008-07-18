@@ -46,7 +46,7 @@
 #include <Core/Malloc/Allocator.h>
 
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOff.h"
+#  include "MallocTraceOff.h"
 #endif 
 
 #include <Core/Malloc/AllocPriv.h>
@@ -295,7 +295,7 @@ void operator delete[](void* ptr, Allocator* a, const char* tag, int linenum)
 
 
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOn.h"
+#  include "MallocTraceOn.h"
 #endif 
 
 #endif // ifdef DISABLE_SCI_MALLOC

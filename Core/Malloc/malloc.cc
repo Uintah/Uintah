@@ -69,7 +69,7 @@
 #endif
 
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOff.h"
+#  include "MallocTraceOff.h"
 #endif 
 
 extern "C" {
@@ -82,7 +82,7 @@ extern "C" {
 }
 
 #ifdef MALLOC_TRACE
-  #include "MallocTraceOn.h"
+#  include "MallocTraceOn.h"
 #endif 
 
 #ifndef DISABLE_SCI_MALLOC
@@ -91,67 +91,79 @@ using namespace SCIRun;
 
 static const char* default_malloc_tag = "Unknown - malloc";
 extern int default_tag_line_number;  // defined in new.cc
+
 namespace SCIRun {
-const char* AllocatorSetDefaultTagMalloc(const char* tag)
-{
-  const char* old = default_malloc_tag;
-  default_malloc_tag=tag;
-  return old;
-}
 
-void AllocatorResetDefaultTagMalloc()
-{
-  default_malloc_tag = "Unknown - malloc";
-}
+  const char*
+  AllocatorSetDefaultTagMalloc(const char* tag)
+  {
+    const char* old = default_malloc_tag;
+    default_malloc_tag=tag;
+    return old;
+  }
+  
+  void
+  AllocatorResetDefaultTagMalloc()
+  {
+    default_malloc_tag = "Unknown - malloc";
+  }
+  
+} // end namespace SCIRun
 
-}
-
-void* malloc(size_t size) THROWCLAUSE
+void*
+malloc(size_t size) THROWCLAUSE
 {
   if(!default_allocator)
     MakeDefaultAllocator();
   void* mem=default_allocator->alloc(size, default_malloc_tag, default_tag_line_number);
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  for(unsigned int i=0;i<size;i++) {
+    static_cast<unsigned char*>(mem)[i] = MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void free(void* ptr) THROWCLAUSE
+void
+free(void* ptr) THROWCLAUSE
 {
-    default_allocator->free(ptr);
+  default_allocator->free(ptr);
 }
 
-void* calloc(size_t n, size_t s) THROWCLAUSE
+void*
+calloc(size_t n, size_t s) THROWCLAUSE
 {
-    size_t tsize=n*s;
-    void* p=malloc(tsize);
-    bzero(p, tsize);
-    return p;
+  size_t tsize=n*s;
+  void* p=malloc(tsize);
+  bzero(p, tsize);
+  return p;
 }
 
-void* realloc(void* p, size_t s) THROWCLAUSE
+void*
+realloc(void* p, size_t s) THROWCLAUSE
 {
-    if(!default_allocator)
-  MakeDefaultAllocator();
-    return default_allocator->realloc(p, s);
+  if(!default_allocator) {
+    MakeDefaultAllocator();
+  }
+  return default_allocator->realloc(p, s);
 }
 
-void* memalign(size_t alignment, size_t size) THROWCLAUSE
+void*
+memalign(size_t alignment, size_t size) THROWCLAUSE
 {
-    if(!default_allocator)
-  MakeDefaultAllocator();
-    return default_allocator->memalign(alignment, size, "Unknown - memalign");
+  if(!default_allocator) {
+    MakeDefaultAllocator();
+  }
+  return default_allocator->memalign(alignment, size, "Unknown - memalign");
 }
 
-void* valloc(size_t size) THROWCLAUSE
+void*
+valloc(size_t size) THROWCLAUSE
 {
-    if(!default_allocator)
-  MakeDefaultAllocator();
-    return default_allocator->memalign(getpagesize(), size,
-               "Unknown - valloc");
+  if(!default_allocator) {
+    MakeDefaultAllocator();
+  }
+  return default_allocator->memalign(getpagesize(), size, "Unknown - valloc");
 }
-
 
 #endif
