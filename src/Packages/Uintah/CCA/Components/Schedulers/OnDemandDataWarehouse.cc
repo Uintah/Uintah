@@ -522,7 +522,6 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
       bool whole_patch_pset = false;
       // First, get the particle set.  We should already have it
       //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
-      int from=batch->fromTask->getAssignedResourceIndex();
 
       // if we already have a subset for the entire patch, there's little point 
       // in getting another one (and if we did, it would cause synchronization problems - see
@@ -1465,10 +1464,7 @@ allocateAndPut(GridVariableBase& var, const VarLabel* label,
   // check for dead portions of a variable (variable space that isn't covered by any patch).  
   // This will happen with L-shaped patch configs and ngc > extra cells.  
   // find all dead space and mark it with a bogus value.
-  IntVector extraCells = patch->getLevel()->getExtraCells();
-
-  // use the max extra cells for now
-  int ec = Max(Max(extraCells[0], extraCells[1]), extraCells[2]);
+  
   if (1) { // numGhostCells > ec) { (numGhostCells is 0, query it from the superLowIndex...
     deque<Box> b1, b2, difference;
     b1.push_back(Box(Point(superLowIndex(0), superLowIndex(1), superLowIndex(2)), 
