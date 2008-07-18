@@ -54,6 +54,11 @@
    using std::hash_map;
    using std::hash_multimap;
    using std::hash;
+#elif defined(HAVE_GUN_BACKWARD_HASHMAP)
+#  include <tr1/hash_map>
+   using __gnu_cxx::hash_map;
+   using __gnu_cxx::hash_multimap;
+   using __gnu_cxx::hash;
 #elif defined(HAVE_GNU_HASHMAP)
 #  include <ext/hash_map>
    using __gnu_cxx::hash_map;
