@@ -55,8 +55,13 @@ BCData& BCData::operator=(const BCData& rhs)
   d_BCData.clear();
   // Copy the rhs to the lhs
   bcDataType* m = const_cast<bcDataType *>(&(rhs.d_BCData));
-  for (itr = m->begin(); itr != m->end(); itr++)
+  for (itr = m->begin(); itr != m->end(); itr++) {
+    //    cerr << "copying BoundCondBase address = " << itr->second 
+    //           << " bctype = " << itr->first << endl;
     d_BCData[itr->first] = itr->second->clone();
+    //    cerr << "cloned  BoundCondBase address = " << d_BCData[itr->first] 
+    //         << " bctype = " << itr->first << endl;
+  }
   
   return *this;
 }
@@ -85,7 +90,8 @@ bool BCData::operator<(const BCData& rhs) const
 void 
 BCData::setBCValues(BoundCondBase* bc)
 {
-  d_BCData[bc->getType()]=bc->clone();
+  if (!find(bc->getType()))
+    d_BCData[bc->getType()]=bc->clone();
 }
 
 
@@ -147,8 +153,11 @@ bool BCData::find(const string& bc_type,const string& bc_variable) const
 void BCData::combine(BCData& from)
 {
   bcDataType::const_iterator itr;
-  for (itr = from.d_BCData.begin(); itr != from.d_BCData.end(); ++itr) 
+  for (itr = from.d_BCData.begin(); itr != from.d_BCData.end(); ++itr) {
+    // cerr << "bc = " << itr->first << " address = " << itr->second << endl;
     setBCValues(itr->second);
+  }
+
 }
 
 
