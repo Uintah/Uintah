@@ -419,8 +419,9 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
                 d_HC_solver->d_DOF.insert(dof);
               }
             }
-            delete temp_bcs;
+            delete bc;
           }
+          delete temp_bcs;
         }
       } else
         continue;
