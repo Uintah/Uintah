@@ -76,7 +76,7 @@ double MakeReal(double value)
     if (c == _FPCLASS_PINF) is_inf = 1;
     if (c == _FPCLASS_NINF) is_inf = -1;
 #else
-#  if defined( REDSTORM )
+#  if defined( REDSTORM ) || defined( _AIX )
     is_inf  = isinf(value);
 #  else
     is_inf  = std::isinf(value);
