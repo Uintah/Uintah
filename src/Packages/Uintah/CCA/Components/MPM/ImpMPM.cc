@@ -2436,8 +2436,9 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                   d_solver->d_DOF.insert(l2g_node_num+2);
                 }
               }
+              delete bc;
+            } else
               delete vel_bcs;
-            }
             const SymmetryBoundCond* sbc =
               dynamic_cast<const SymmetryBoundCond*>(sym_bcs);
             if (sbc != 0) {
@@ -2494,8 +2495,9 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                 if (DOF.z())
                   d_solver->d_DOF.insert(l2g_node_num+2);
               }
+              delete sbc;
+            } else
               delete sym_bcs;
-            }
           }
         } else
           continue;
