@@ -31,7 +31,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     IntVector oneCell = patch->faceDirection(face);
-    const BoundCondBase *bcb;
+
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0),off(0,0,0);
@@ -40,21 +40,15 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
       }
       for (int child = 0; child < numChildren; child++) {
         vector<IntVector> *nbound_ptr;
-       vector<IntVector> *nu;        // not used;
+        vector<IntVector> *nu;        // not used;
         vector<IntVector>::const_iterator b;  // boundary cell iterator
-        if (type == "Acceleration"){
-          bcb = patch->getArrayBCValues(face,dwi,"Velocity",nu,
-                                        nbound_ptr,child);
-        }
-        else{
-          bcb  = patch->getArrayBCValues(face,dwi,type,nu,
-                                         nbound_ptr,child);
-        }
-
-        const VelocityBoundCond* bc =
-          dynamic_cast<const VelocityBoundCond*>(bcb);
-
+                
         if (type == "Velocity"){
+         const  BoundCondBase* bcb = 
+            patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
+
+          const VelocityBoundCond* bc = 
+            dynamic_cast<const VelocityBoundCond*>(bcb); 
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               Vector bcv = bc->getValue();
@@ -69,12 +63,17 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 }
               }
             }
+            delete bc;
+          } else
             delete bcb;
-          }
-        }
-        if (type == "Acceleration"){
-          const VelocityBoundCond* bc =
-            dynamic_cast<const VelocityBoundCond*>(bcb);
+
+        } else if (type == "Acceleration"){
+          const BoundCondBase* bcb = 
+            patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
+
+          const VelocityBoundCond* bc = 
+            dynamic_cast<const VelocityBoundCond*>(bcb); 
+
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               for (b=nbound_ptr->begin();b != nbound_ptr->end();b++){
@@ -88,12 +87,15 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 }
               }
             }
+            delete bc;
+          } else
             delete bcb;
-          }
-        }
-        if (type == "Symmetric"){
-          const SymmetryBoundCond* bc =
-            dynamic_cast<const SymmetryBoundCond*>(bcb);
+
+        } else if (type == "Symmetric"){
+          const BoundCondBase* bcb =
+            patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
+          const SymmetryBoundCond* bc = 
+            dynamic_cast<const SymmetryBoundCond*>(bcb); 
           if (bc != 0) {
             if (face == Patch::xplus || face == Patch::xminus){
               for (b=nbound_ptr->begin(); b != nbound_ptr->end();b++) {
@@ -173,8 +175,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 }
               }
             }
+            delete bc;
+          } else
             delete bcb;
-          }
+
         }
       }
     } else
@@ -202,11 +206,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         vector<IntVector> *nu;  // not used
         vector<IntVector>::const_iterator b;
         if(type=="Temperature"){
-          const BoundCondBase *bcb = patch->getArrayBCValues(face,dwi,
-                                                             type,nu,
-                                                             nbound_ptr,
-                                                             child);
-          const TemperatureBoundCond* bc =
+          const BoundCondBase *bcb = 
+            patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr,child);
+
+          const TemperatureBoundCond* bc = 
             dynamic_cast<const TemperatureBoundCond*>(bcb);
           if (bc != 0){
             if (bc->getKind() == "Dirichlet") {
@@ -222,17 +225,18 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 }
               }
             }
+            delete bc;
+          } else
             delete bcb;
-          }
         }
         
         if(type=="Pressure"){
-          const BoundCondBase *bcb = patch->getArrayBCValues(face,dwi,
-                                                             type,nu,nbound_ptr,
-                                                             child);
-          
-          const PressureBoundCond* bc =
+          const BoundCondBase *bcb = 
+            patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
+
+          const PressureBoundCond* bc = 
             dynamic_cast<const PressureBoundCond*>(bcb);
+          
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               double bcv = bc->getValue();
@@ -291,8 +295,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             
+            delete bc;
+          } else
             delete bcb;
-          }
         }
         
       }
@@ -310,7 +315,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
   Vector deltax = patch->dCell();
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    const BoundCondBase* bcb;
+
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = 
         patch->getBCDataArray(face)->getNumberChildren(dwi);
@@ -318,17 +323,17 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         vector<IntVector> *nbound_ptr;
        vector<IntVector> *nu;    // not used
         vector<IntVector>::const_iterator boundary;
-        bcb  = patch->getArrayBCValues(face,dwi,"Temperature",nu,nbound_ptr,
-                                       child);
+        const BoundCondBase* bcb  = 
+          patch->getArrayBCValues(face,dwi,"Temperature",nu,nbound_ptr,child);
+
+        const TemperatureBoundCond* bc = 
+          dynamic_cast<const TemperatureBoundCond*>(bcb);
         
         double dx = -9;
         if (face == Patch::xplus || face == Patch::xminus) dx = deltax.x();
         if (face == Patch::yplus || face == Patch::yminus) dx = deltax.y();
         if (face == Patch::zplus || face == Patch::zminus) dx = deltax.z();
 
-        const TemperatureBoundCond* bc =
-          dynamic_cast<const TemperatureBoundCond*>(bcb);
-                
         if (bc != 0) {
           if (bc->getKind() == "Neumann"){
             double value = bc->getValue();
@@ -338,8 +343,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               variable[nd] += value*2.*gvolume[nd]/dx;
             }
           }
-          delete bcb;
+          delete bc;
         }
+        else
+          delete bc;
       }
     } else
       continue;
