@@ -280,7 +280,7 @@ void operator delete(void* ptr, Allocator* a, const char* tag, int linenum)
       MakeDefaultAllocator();
       a=default_allocator;
   }
-  a->free(ptr)
+  a->free(ptr);
 }
 
 void operator delete[](void* ptr, Allocator* a, const char* tag, int linenum)
@@ -290,7 +290,7 @@ void operator delete[](void* ptr, Allocator* a, const char* tag, int linenum)
       MakeDefaultAllocator();
       a=default_allocator;
   }
-  a->free(ptr)
+  a->free(ptr);
 }
 
 
