@@ -4,6 +4,9 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Malloc/Allocator.h>
+#include <iostream>
+
+using namespace std;
 
 namespace Uintah {
    
@@ -40,7 +43,9 @@ WARNING
     AuxiliaryBoundCond():BoundCondBase("Auxiliary") {};
     AuxiliaryBoundCond(ProblemSpecP&) {d_type = "Auxiliary";};
     virtual ~AuxiliaryBoundCond() {};
-    virtual AuxiliaryBoundCond* clone() {return scinew AuxiliaryBoundCond(*this);};
+    virtual AuxiliaryBoundCond* clone() {
+      return scinew AuxiliaryBoundCond(*this);
+    };
     virtual string getKind() const {return "auxiliary";};
   private:
 #if 0
