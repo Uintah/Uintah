@@ -326,6 +326,9 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       BCR_dbg << "Getting out mat_id = " << it->first << " bc = " 
         << it->second->getType() << " bctype = " 
         << typeid(*(it->second)).name() << endl;
+      //      cout << "mat = " << it -> first << " BoundCondBase address = " 
+      //   << it->second << " bctype = " 
+      //   << typeid(*(it->second)).name() << endl;
     }
 
     // Search through the newly created boundary conditions and create
@@ -368,9 +371,11 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 
     // Delete stuff in bctype_data
     multimap<int, BoundCondBase*>::const_iterator m_itr;
-    for (m_itr = bctype_data.begin(); m_itr != bctype_data.end(); ++m_itr) 
+    for (m_itr = bctype_data.begin(); m_itr != bctype_data.end(); ++m_itr) {
+      //      cout << "deleting BoundCondBase address = " << m_itr->second 
+      //   << " bctype = " << typeid(*(m_itr->second)).name() << endl;
       delete m_itr->second;
-
+    }
     bctype_data.clear();
     bcgeom_data.clear();
   }
