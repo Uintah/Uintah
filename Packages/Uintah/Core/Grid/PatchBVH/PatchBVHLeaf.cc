@@ -32,16 +32,16 @@ namespace Uintah {
 
    ****************************************/
 
-  PatchBVHLeaf::PatchBVHLeaf(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end) : begin_(begin), end_(end)
+  PatchBVHLeaf::PatchBVHLeaf(std::vector<PatchKeyVal> &patches, unsigned int begin, unsigned int end) : patches_(patches), begin_(begin), end_(end)
   {
     //set bounding box
-    low_=begin->patch->getCellLowIndex__New();
-    high_=begin->patch->getCellHighIndex__New();
+    low_=patches[begin].patch->getCellLowIndex__New();
+    high_=patches[begin].patch->getCellHighIndex__New();
 
-    for(std::vector<PatchKeyVal>::iterator iter=begin+1; iter<end; iter++)
+    for(unsigned int i=begin+1; i<end; i++)
     {
-      low_=Min(low_,iter->patch->getCellLowIndex__New());
-      high_=Max(high_,iter->patch->getCellHighIndex__New());
+      low_=Min(low_,patches[i].patch->getCellLowIndex__New());
+      high_=Max(high_,patches[i].patch->getCellHighIndex__New());
     }
 
   }
@@ -58,11 +58,11 @@ namespace Uintah {
       return;
 
     //loop through lists individually
-    for(std::vector<PatchKeyVal>::iterator iter=begin_;iter<end_;iter++)
+    for(int i=begin_;i<end_;i++)
     {
       //if patch intersects range
-      if(intersects(low,high, iter->patch->getCellLowIndex__New(), iter->patch->getCellHighIndex__New()))
-        patches.push_back(iter->patch); //add it to the list
+      if(intersects(low,high, patches_[i].patch->getCellLowIndex__New(), patches_[i].patch->getCellHighIndex__New()))
+        patches.push_back(patches_[i].patch); //add it to the list
     }
   }
 

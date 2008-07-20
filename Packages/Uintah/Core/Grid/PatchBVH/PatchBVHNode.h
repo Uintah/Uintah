@@ -38,7 +38,7 @@ namespace Uintah {
   class PatchBVHNode : public PatchBVHBase
   {
     public:
-      PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end);
+      PatchBVHNode(std::vector<PatchKeyVal> &patches, unsigned int begin, unsigned int end);
 
       ~PatchBVHNode();
 
