@@ -33,8 +33,11 @@ namespace Uintah {
     WARNING
 
    ****************************************/
-  PatchBVH::PatchBVH(const std::vector<const Patch*>& patches)
+  PatchBVH::PatchBVH(const std::vector<const Patch*>& patches) : root_(NULL)
   {
+    if(patches.size()==0)
+      return;
+    
     for(std::vector<const Patch*>::const_iterator iter=patches.begin();iter<patches.end();iter++)
     {
       PatchBVHBase::PatchKeyVal key;
@@ -58,8 +61,11 @@ namespace Uintah {
     }
   }
   
-  PatchBVH::PatchBVH(const std::vector<Patch*>& patches)
+  PatchBVH::PatchBVH(const std::vector<Patch*>& patches) : root_(NULL)
   {
+    if(patches.size()==0)
+      return;
+    
     for(std::vector<Patch*>::const_iterator iter=patches.begin();iter<patches.end();iter++)
     {
       PatchBVHBase::PatchKeyVal key;
@@ -97,7 +103,9 @@ namespace Uintah {
     if(high.x()<=low.x() || high.y()<=low.y() || high.z()<=low.z())
       return;
 
-    patches.resize(0);
+    if(root_==NULL)
+      return;
+    
     root_->query(low,high,patches);
   }
 
