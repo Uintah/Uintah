@@ -56,7 +56,7 @@ namespace Uintah {
      
     //sort on maiximum dimension
     sortDim_=maxd;
-    sort(begin,end);
+    sort(patches.begin()+begin,patches.begin()+end);
 
     //split the list in half
 
