@@ -39,14 +39,14 @@ namespace Uintah {
   class PatchBVHLeaf : public PatchBVHBase
   {
     public:
-      PatchBVHLeaf(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end);
+      PatchBVHLeaf(std::vector<PatchKeyVal> &patches,unsigned int begin, unsigned int end);
 
       ~PatchBVHLeaf();
 
       void query(const IntVector& low, const IntVector& high, Level::selectType& patches);
     private:
-      std::vector<PatchKeyVal>::iterator begin_, end_;
-
+      unsigned int begin_, end_;
+      std::vector<PatchKeyVal> & patches_;
   };
 
 } // end namespace Uintah

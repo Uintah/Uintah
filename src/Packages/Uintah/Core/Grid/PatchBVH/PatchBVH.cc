@@ -52,12 +52,12 @@ namespace Uintah {
     if(patches_.size()>PatchBVHBase::getLeafSize())
     {
       //create a node
-      root_=new PatchBVHNode(patches_.begin(), patches_.end());
+      root_=new PatchBVHNode(patches_,0,patches_.size());
     }
     else
     {
       //create a leaf
-      root_=new PatchBVHLeaf(patches_.begin(), patches_.end());
+      root_=new PatchBVHLeaf(patches_,0,patches_.size());
     }
   }
   
@@ -80,12 +80,12 @@ namespace Uintah {
     if(patches_.size()>PatchBVHBase::getLeafSize())
     {
       //create a node
-      root_=new PatchBVHNode(patches_.begin(), patches_.end());
+      root_=new PatchBVHNode(patches_,0,patches_.size());
     }
     else
     {
       //create a leaf
-      root_=new PatchBVHLeaf(patches_.begin(), patches_.end());
+      root_=new PatchBVHLeaf(patches_,0,patches_.size());
     }
   }
 
