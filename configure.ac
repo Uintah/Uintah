@@ -3563,9 +3563,8 @@ if test "$HAVE_BLAS" != "yes"; then
                     $_sci_inc,cblas blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
        if test "$HAVE_BLAS" = "yes"; then
           HAVE_CBLAS=yes
-	  AC_SUBST(HAVE_CBLAS)
-	  DEF_CBLAS="#define HAVE_CBLAS 1"
-	  AC_SUBST(DEF_CBLAS)
+          CBLAS_H="cblas.h"
+          DEF_CBLAS="#define HAVE_CBLAS 1"
        else
           SCI_TRY_LINK(BLAS,blas and scs libraries-2,cblas.h,
             $_sci_inc,blas scs_mp,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
@@ -3577,9 +3576,8 @@ if test "$HAVE_BLAS" != "yes"; then
                $_sci_inc,blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
              if test "$HAVE_BLAS" = "yes"; then
                 HAVE_CBLAS=yes
-                AC_SUBST(HAVE_CBLAS)
+                CBLAS_H="cblas.h"
                 DEF_CBLAS="#define HAVE_CBLAS 1"
-                AC_SUBST(DEF_CBLAS)
              else
                 SCI_TRY_LINK(BLAS,blas library,,,blas,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
                 if test "$HAVE_BLAS" = "no"; then
@@ -3592,6 +3590,10 @@ if test "$HAVE_BLAS" != "yes"; then
                    fi
                 fi
              fi
+          else
+             HAVE_CBLAS=yes
+             CBLAS_H="cblas.h"
+             DEF_CBLAS="#define HAVE_CBLAS 1"
           fi
        fi
        ;;
