@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVH.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -29,12 +30,7 @@
 #include <map>
 #include <cmath>
 
-#define SELECT_RANGETREE
 #define BRYAN_SELECT_CACHE
-
-#ifdef SELECT_RANGETREE
-#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
-#endif
 
 #ifdef _WIN32
 #define rint(x) (int)((x>0) ? x+.5 : x-.5)
@@ -58,9 +54,7 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
   d_stretched = false;
   each_patch=0;
   all_patches=0;
-#ifdef SELECT_RANGETREE
-  d_rangeTree = NULL;
-#endif
+  d_bvh = NULL;
   d_finalized=false;
   d_extraCells = IntVector(0,0,0);
   
@@ -76,9 +70,8 @@ Level::~Level()
   for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++)
     delete *iter;
 
-#ifdef SELECT_RANGETREE
-  delete d_rangeTree;
-#endif
+  delete d_bvh;
+  
   if(each_patch && each_patch->removeReference())
     delete each_patch;
   if(all_patches && all_patches->removeReference())
@@ -406,55 +399,9 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
   ASSERT(neighbors.size() == 0);
 #endif
 
-#if defined( SELECT_LINEAR )
-   // This sucks - it should be made faster.  -Steve
-   for(const_patchIterator iter=d_virtualAndRealPatches.begin();
-       iter != d_virtualAndRealPatches.end(); iter++){
-      const Patch* patch = *iter;
-      IntVector l=Max(patch->getCellLowIndex(), low);
-      IntVector u=Min(patch->getCellHighIndex(), high);
-      if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
-        neighbors.push_back(*iter);
-   }
-#elif defined( SELECT_GRID )
-   IntVector start = (low-d_idxLow)*d_gridSize/d_idxSize;
-   IntVector end = (high-d_idxLow)*d_gridSize/d_idxSize;
-   start=Max(IntVector(0,0,0), start);
-   end=Min(d_gridSize-IntVector(1,1,1), end);
-   for(int iz=start.z();iz<=end.z();iz++){
-      for(int iy=start.y();iy<=end.y();iy++){
-         for(int ix=start.x();ix<=end.x();ix++){
-            int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
-            int s = d_gridStarts[gridIdx];
-            int e = d_gridStarts[gridIdx+1];
-            for(int i=s;i<e;i++){
-               Patch* patch = d_gridPatches[i];
-               IntVector l=Max(patch->getCellLowIndex(), low);
-               IntVector u=Min(patch->getCellHighIndex(), high);
-               if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z())
-                  neighbors.push_back(patch);
-            }
-         }
-      }
-   }
-   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
-   int i=0;
-   int j=0;
-   while(j<(int)neighbors.size()) {
-      neighbors[i]=neighbors[j];
-      j++;
-      while(j < (int)neighbors.size() && neighbors[i] == neighbors[j] )
-         j++;
-      i++;
-   }
-   neighbors.resize(i);
-#elif defined( SELECT_RANGETREE )
    //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
-   d_rangeTree->query(low, high, neighbors);
+   d_bvh->query(low, high, neighbors);
    sort(neighbors.begin(), neighbors.end(), Patch::Compare());
-#else
-#error "No selectPatches algorithm defined"
-#endif
 
 #ifdef CHECK_SELECT
    // Double-check the more advanced selection algorithms against the
@@ -614,64 +561,9 @@ void Level::setBCTypes()
 {
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
   TAU_PROFILE("Level::setBCTypes", " ", TAU_USER);
-#ifdef SELECT_GRID
-   if(d_patchDistribution.x() >= 0 && d_patchDistribution.y() >= 0 &&
-      d_patchDistribution.z() >= 0){
-      d_gridSize = d_patchDistribution;
-   } else {
-      int np = numPatches();
-      int neach = (int)(0.5+pow(np, 1./3.));
-      d_gridSize = IntVector(neach, neach, neach);
-   }
-   getIndexRange(d_idxLow, d_idxHigh);
-   d_idxHigh-=IntVector(1,1,1);
-   d_idxSize = d_idxHigh-d_idxLow;
-   int numCells = d_gridSize.x()*d_gridSize.y()*d_gridSize.z();
-   vector<int> counts(numCells+1, 0);
-   for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++){
-      Patch* patch = *iter;
-      IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
-      IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
-      for(int iz=start.z();iz<end.z();iz++){
-         for(int iy=start.y();iy<end.y();iy++){
-            for(int ix=start.x();ix<end.x();ix++){
-               int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
-               counts[gridIdx]++;
-            }
-         }
-      }
-   }
-   d_gridStarts.resize(numCells+1);
-   int count=0;
-   for(int i=0;i<numCells;i++){
-      d_gridStarts[i]=count;
-      count+=counts[i];
-      counts[i]=0;
-   }
-   d_gridStarts[numCells]=count;
-   d_gridPatches.resize(count);
-   for(patchIterator iter=d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++){
-      Patch* patch = *iter;
-      IntVector start = (patch->getCellLowIndex()-d_idxLow)*d_gridSize/d_idxSize;
-      IntVector end = ((patch->getCellHighIndex()-d_idxLow)*d_gridSize+d_gridSize-IntVector(1,1,1))/d_idxSize;
-      for(int iz=start.z();iz<end.z();iz++){
-         for(int iy=start.y();iy<end.y();iy++){
-            for(int ix=start.x();ix<end.x();ix++){
-               int gridIdx = (iz*d_gridSize.y()+iy)*d_gridSize.x()+ix;
-               int pidx = d_gridStarts[gridIdx]+counts[gridIdx];
-               d_gridPatches[pidx]=patch;
-               counts[gridIdx]++;
-            }
-         }
-      }
-   }
-#else
-#ifdef SELECT_RANGETREE
-  if (d_rangeTree != NULL)
-    delete d_rangeTree;
-  d_rangeTree = scinew PatchRangeTree(d_virtualAndRealPatches);
-#endif   
-#endif
+  if (d_bvh != NULL)
+    delete d_bvh;
+  d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
   patchIterator iter;
   
   ProcessorGroup *myworld=NULL;
