@@ -35,7 +35,7 @@ namespace Uintah {
   using SCIRun::BBox;
   using SCIRun::OffsetArray1;
 
-  class PatchRangeTree;
+  class PatchBVH;
   class BoundCondBase;
   class Box;
   class Patch;
@@ -276,7 +276,7 @@ private:
 
   typedef std::map<std::pair<IntVector, IntVector>, vector<const Patch*>, IntVectorCompare> selectCache;
   mutable selectCache d_selectCache; // we like const Levels in most places :) 
-  PatchRangeTree* d_rangeTree;
+  PatchBVH* d_bvh;
 };
 
   UINTAHSHARE const Level* getLevel(const PatchSubset* subset);
