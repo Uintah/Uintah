@@ -33,16 +33,16 @@ namespace Uintah {
 
    ****************************************/
 
-  PatchBVHNode::PatchBVHNode(std::vector<PatchKeyVal> &patches, unsigned int begin, unsigned int end) : left_(NULL), right_(NULL)
+  PatchBVHNode::PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end) : left_(NULL), right_(NULL)
   {
     //set bounding box
-    low_=patches[begin].patch->getCellLowIndex__New();
-    high_=patches[begin].patch->getCellHighIndex__New();
+    low_=begin->patch->getCellLowIndex__New();
+    high_=begin->patch->getCellHighIndex__New();
 
-    for(int i=begin;i<end;i++)
+    for(std::vector<PatchKeyVal>::iterator iter=begin+1; iter<end; iter++)
     {
-       low_=Min(low_,patches[i].patch->getCellLowIndex__New());
-       high_=Max(high_,patches[i].patch->getCellHighIndex__New());
+       low_=Min(low_,iter->patch->getCellLowIndex__New());
+       high_=Max(high_,iter->patch->getCellHighIndex__New());
     }
 
     //find maximum dimension
@@ -56,7 +56,7 @@ namespace Uintah {
      
     //sort on maiximum dimension
     sortDim_=maxd;
-    sort(patches.begin()+begin,patches.begin()+end);
+    sort(begin,end);
 
     //split the list in half
 
@@ -68,22 +68,23 @@ namespace Uintah {
     if(left_size>PatchBVHBase::getLeafSize())
     {
       //create new node
-      left_=new PatchBVHNode(patches,begin,begin+left_size);
+      left_=new PatchBVHNode(begin,begin+left_size);
     }
     else
     {
       //create new leaf
-      left_=new PatchBVHLeaf(patches,begin,begin+left_size);
+      left_=new PatchBVHLeaf(begin,begin+left_size);
     }
+
     if(right_size>PatchBVHBase::getLeafSize())
     {
       //create new node
-      right_=new PatchBVHNode(patches,begin+left_size,end);
+      right_=new PatchBVHNode(begin+left_size,end);
     }
     else
     {
       //create new leaf
-      right_=new PatchBVHLeaf(patches,begin+left_size,end);
+      right_=new PatchBVHLeaf(begin+left_size,end);
     }
   }
 
