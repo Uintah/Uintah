@@ -10,12 +10,11 @@
 #include <iostream>
 #include <set>
 #include <vector>
-#include <functional> // for bind2nd
 #include <sgi_stl_warnings_on.h>
 
 using namespace SCIRun;
 using namespace Uintah;
-using namespace std;
+
 
 BCGeomBase::BCGeomBase() 
 {

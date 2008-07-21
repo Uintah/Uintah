@@ -12,6 +12,7 @@
 namespace Uintah {
 
 using SCIRun::IntVector;
+ using std::ostream;
 
 /**************************************
 

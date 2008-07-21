@@ -33,7 +33,7 @@ void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
   MPI_Datatype type1d;
  MPITypeLock.lock();
   MPI_Type_hvector(d.x(), 1, strides.x(), basetype, &type1d);
-  using namespace std;
+
   MPI_Datatype type2d;
   MPI_Type_hvector(d.y(), 1, strides.y(), type1d, &type2d);
   MPI_Type_free(&type1d);

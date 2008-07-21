@@ -9,8 +9,10 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace std;
+
 using namespace SCIRun;
+using std::map;
+using std::vector;
 
 static Mutex tdLock("TypeDescription::getMPIType lock");
 

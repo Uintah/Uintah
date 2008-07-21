@@ -3,7 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <iostream>
 
-using namespace std;
+
 using namespace Uintah;
 
 namespace Uintah {

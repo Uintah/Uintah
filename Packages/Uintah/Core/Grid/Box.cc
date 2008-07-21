@@ -7,7 +7,7 @@
 #include <deque>
 
 using namespace Uintah;
-using namespace std;
+
 
 bool
 Box::overlaps(const Box& otherbox, double epsilon) const
@@ -80,8 +80,8 @@ deque<Box> Box::difference(deque<Box>& boxSet1, deque<Box>& boxSet2)
 }
 
 namespace Uintah {
-  ostream&
-  operator<<(ostream& out, const Box& b)
+  std::ostream&
+  operator<<(std::ostream& out, const Box& b)
   {
     out << b.lower() << ".." << b.upper();
     return out;

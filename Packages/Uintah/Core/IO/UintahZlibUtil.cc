@@ -4,7 +4,7 @@
 
 namespace Uintah {
 
-using namespace std;
+  using std::string;
 
 //
 // Reads a token out of a gzipped file... Tokens are separated by

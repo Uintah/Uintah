@@ -26,7 +26,7 @@
 #include <vector>
 #include <string>
 
-using namespace std;
+
 using namespace SCIRun;
 using namespace Uintah;
 
@@ -129,7 +129,7 @@ void VariableCache::cache_value(const string &key, vector< Matrix3 > &values) {
 
 // Converts the vector of data to a string seperated by spaces
 string VariableCache::vector_to_string(vector< int > &data) {
-  ostringstream ostr;
+  std::ostringstream ostr;
   for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
     }
@@ -145,7 +145,7 @@ string VariableCache::vector_to_string(vector< string > &data) {
 }
 
 string VariableCache::vector_to_string(vector< double > &data) {
-  ostringstream ostr;
+  std::ostringstream ostr;
   ostr.precision(15);
   for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
@@ -154,7 +154,7 @@ string VariableCache::vector_to_string(vector< double > &data) {
 }
 
 string VariableCache::vector_to_string(vector< float > &data) {
-  ostringstream ostr;
+  std::ostringstream ostr;
   ostr.precision(15);
   for(int i = 0; i < (int)data.size(); i++) {
       ostr << data[i]  << " ";
@@ -166,7 +166,7 @@ string VariableCache::vector_to_string(vector< float > &data) {
 // type can be: "length", "length2", "x", "y", or "z"
 string VariableCache::vector_to_string(vector< Vector > &data,
 				       const string &type) {
-  ostringstream ostr;
+  std::ostringstream ostr;
   ostr.precision(15);
   if (type == "length") {
     for(int i = 0; i < (int)data.size(); i++) {
@@ -196,7 +196,7 @@ string VariableCache::vector_to_string(vector< Vector > &data,
 // type can be: "Determinant", "Trace", "Norm"
 string VariableCache::vector_to_string(vector< Matrix3 > &data,
 				       const string &type) {
-  ostringstream ostr;
+  std::ostringstream ostr;
   ostr.precision(15);
   if (type == "Determinant") {
     for(int i = 0; i < (int)data.size(); i++) {

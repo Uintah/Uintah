@@ -8,7 +8,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
 
 
 ConvergenceFailure::ConvergenceFailure(const string& message,

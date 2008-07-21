@@ -32,7 +32,7 @@
 #include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
-using namespace std;
+
 
 static DebugStream dbg( "GeometryPieceFactory", false );
 

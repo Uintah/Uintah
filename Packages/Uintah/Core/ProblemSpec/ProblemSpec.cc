@@ -30,8 +30,9 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-
-using namespace std;
+using std::ostringstream;
+using std::istringstream;
+using std::setprecision;
 
 // Forward Declarations
 //std::ostream& operator<<(std::ostream& out, const xmlNode & toWrite);
@@ -203,9 +204,9 @@ checkForInputError(const string& stringValue,
     string validChars(" -+.0123456789eE");
     string::size_type  pos = stringValue.find_first_not_of(validChars);
     if (pos != string::npos){
-      ostringstream warn;
+      std::ostringstream warn;
       warn << "Input file error: I found ("<< stringValue[pos]
-           << ") inside of "<< stringValue<< " at position "<< pos <<endl;
+           << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     //__________________________________
@@ -213,9 +214,9 @@ checkForInputError(const string& stringValue,
     string::size_type p1 = stringValue.find_first_of(".");    
     string::size_type p2 = stringValue.find_last_of(".");     
     if (p1 != p2){
-      ostringstream warn;
+      std::ostringstream warn;
       warn << "Input file error: I found two (..) "
-           << "inside of "<< stringValue <<endl;
+           << "inside of "<< stringValue <<std::endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }  
@@ -223,9 +224,9 @@ checkForInputError(const string& stringValue,
     string validChars(" -0123456789");
     string::size_type  pos = stringValue.find_first_not_of(validChars);
     if (pos != string::npos){
-      ostringstream warn;
+      std::ostringstream warn;
       warn << "Input file error Integer Number: I found ("<< stringValue[pos]
-           << ") inside of "<< stringValue<< " at position "<< pos <<endl;
+           << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
@@ -244,7 +245,7 @@ ProblemSpec::get(const string& name, double &value)
   }
   else {
     checkForInputError(stringValue,"double"); 
-    istringstream ss(stringValue);
+    std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, double): stringstream failed...\n", name.c_str() );
@@ -267,7 +268,7 @@ ProblemSpec::get(const string& name, unsigned int &value)
   }
   else {
     checkForInputError(stringValue,"int"); 
-    istringstream ss(stringValue);
+    std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, uint): stringstream failed...\n", name.c_str() );
@@ -291,7 +292,7 @@ ProblemSpec::get(const string& name, int &value)
   }
   else {
     checkForInputError(stringValue,"int");
-    istringstream ss(stringValue);
+    std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, int): stringstream failed...\n", name.c_str() );
@@ -315,7 +316,7 @@ ProblemSpec::get(const string& name, long &value)
   }
   else {
     checkForInputError(stringValue,"int");
-    istringstream ss(stringValue);
+    std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, long): stringstream failed...\n", name.c_str() );
@@ -338,7 +339,7 @@ ProblemSpec::get(const string& name, bool &value)
   }
   else {
     // Slurp up any spaces that were put in before or after the cmp string.
-    istringstream result_stream(stringValue);
+    std::istringstream result_stream(stringValue);
     string nospace_cmp;
     result_stream >> nospace_cmp;
 
@@ -376,10 +377,10 @@ ProblemSpec::get(const string& name, string &value)
    
     // elminate spaces from string
 
-    stringstream in_stream(value);
+    std::stringstream in_stream(value);
     vector<string> vs;
-    copy(istream_iterator<string>(in_stream),istream_iterator<string>(),
-         back_inserter(vs));
+    copy(std::istream_iterator<string>(in_stream),
+         std::istream_iterator<string>(),back_inserter(vs));
     string out_string;
     for (vector<string>::const_iterator it = vs.begin(); it != vs.end();
          ++it) {
@@ -501,7 +502,7 @@ ProblemSpec::get(const string& name, vector<string>& value)
     return ps;
   }
   else {
-    istringstream in(stringValue);
+    std::istringstream in(stringValue);
     char c,next;
     string result;
     while (!in.eof()) {
@@ -550,7 +551,7 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
     return ps;
   }
   else {
-    istringstream in(stringValue);
+    std::istringstream in(stringValue);
     char c;
     bool first_bracket = false;
     bool inner_bracket = false;
@@ -658,7 +659,7 @@ ProblemSpec::get(string &value)
   string tmp = getNodeValue();
   if (tmp == "")
     return false;
-  istringstream tmp_str(tmp);
+  std::istringstream tmp_str(tmp);
   string w;
   while(tmp_str>>w) value += w;
   return true;
@@ -891,15 +892,15 @@ ProblemSpec::appendElement(const char* name, const char* value)
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, int value)
 {
-   ostringstream val;
-   val << value;
-   return appendElement(name, val.str());
+  std::ostringstream val;
+  val << value;
+  return appendElement(name, val.str());
 }
 
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, long value)
 {
-   ostringstream val;
+  std::ostringstream val;
    val << value;
    return appendElement(name, val.str());
 }
@@ -907,7 +908,7 @@ ProblemSpec::appendElement(const char* name, long value)
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, const IntVector& value)
 {
-   ostringstream val;
+  std::ostringstream val;
    val << '[' << value.x() << ", " << value.y() << ", " << value.z() << ']';
    return appendElement(name, val.str());
 }
@@ -915,6 +916,7 @@ ProblemSpec::appendElement(const char* name, const IntVector& value)
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, const Point& value)
 {
+
   ostringstream val;
   val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " 
       << setprecision(17) << value.z() << ']';

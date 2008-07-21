@@ -2,7 +2,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
 
 string Ghost::names[numGhostTypes] =
 { "None", "nodes", "cells", "x faces", "y faces", "z faces", "all faces" };

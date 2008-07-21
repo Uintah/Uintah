@@ -5,7 +5,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
 
 PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
   :  d_maxPatchDimensions(0, 0, 0),

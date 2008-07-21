@@ -7,7 +7,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using namespace std;
+
 
 AnnulusBCData::AnnulusBCData() 
 {

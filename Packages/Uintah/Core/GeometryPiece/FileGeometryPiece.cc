@@ -11,14 +11,15 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+using std::cerr;
+using std::endl;
 
 const string FileGeometryPiece::TYPE_NAME = "file";
 
 static string
 numbered_str(const string & s, int is)
 {
-  ostringstream b;
+  std::ostringstream b;
   b << s << is;
   return b.str();
 }
@@ -76,7 +77,7 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
     // We must first read in the min and max from file.0 so
     // that we can determine the BoundingBox for the geometry
     string file_name = numbered_str(d_file_name+".", 0);
-    ifstream source(file_name.c_str());
+    std::ifstream source(file_name.c_str());
     if (!source ){
       throw ProblemSetupException("ERROR: opening MPM geometry file '"+file_name+"'\nFailed to find point file",
                                   __FILE__, __LINE__);
@@ -142,7 +143,8 @@ FileGeometryPiece::getBoundingBox() const
 
 
 void
-FileGeometryPiece::read_bbox(istream & source, Point & min, Point & max) const
+FileGeometryPiece::read_bbox(std::istream & source, Point & min, 
+                             Point & max) const
 {
   if(d_file_format=="text") {
     source >> min(0) >> min(1) >> min(2) >> max(0) >> max(1) >> max(2);
@@ -161,7 +163,7 @@ FileGeometryPiece::read_bbox(istream & source, Point & min, Point & max) const
 }
 
 bool
-FileGeometryPiece::read_line(istream & is, Point & xmin, Point & xmax)
+FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 {
   double x1,x2,x3;
   if(d_file_format=="text") {
@@ -277,7 +279,7 @@ FileGeometryPiece::readPoints(int pid)
   // use pid of -1 to indicate reading all points
   if(!d_presplit && pid!=-1) return; // already read points
   
-  ifstream source;
+  std::ifstream source;
   
   Point minpt( 1e30, 1e30, 1e30);
   Point maxpt(-1e30,-1e30,-1e30);

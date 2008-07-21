@@ -6,7 +6,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using namespace std;
+
 
 const string IntersectionGeometryPiece::TYPE_NAME = "intersection";
 

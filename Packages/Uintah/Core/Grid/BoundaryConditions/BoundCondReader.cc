@@ -28,7 +28,7 @@
 #include   <set>
 #include <sgi_stl_warnings_on.h>
 
-using namespace std;
+
 using namespace Uintah;
 
 // export SCI_DEBUG="BCR_DBG:+,OLD_BC_DBG:+"
