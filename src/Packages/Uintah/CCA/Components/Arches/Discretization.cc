@@ -16,7 +16,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 
 #include <Core/Exceptions/InternalError.h>
