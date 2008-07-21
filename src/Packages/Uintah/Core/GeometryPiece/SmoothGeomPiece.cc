@@ -8,7 +8,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
 
 const string SmoothGeomPiece::TYPE_NAME = "smooth_geom";
 
@@ -104,8 +104,8 @@ SmoothGeomPiece::deleteTemperature()
 void 
 SmoothGeomPiece::writePoints(const string& f_name, const string& var)
 {
-  cout << "Not implemented : " << f_name << "." << var 
-            << " output " << endl;
+  std::cout << "Not implemented : " << f_name << "." << var 
+            << " output " << std::endl;
 }
 
 int 

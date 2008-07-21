@@ -13,7 +13,7 @@
 #include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
-using namespace std;
+
 
 #define INSIDE_NEW
 //#undef INSIDE_NEW
@@ -210,9 +210,9 @@ void
 TriGeometryPiece::readPoints(const string& file)
 {
   string f = file + ".pts";
-  ifstream source(f.c_str());
+  std::ifstream source(f.c_str());
   if (!source) {
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR: opening geometry pts points file ("<< f 
          << ").\n  The file must be in the same directory as sus \n"
          << "  Do not enclose the filename in quotation marks\n";
@@ -244,9 +244,9 @@ void
 TriGeometryPiece::readTri(const string& file)
 {
   string f = file + ".tri";
-  ifstream source(f.c_str());
+  std::ifstream source(f.c_str());
   if (!source) {
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "\n ERROR: opening geometry tri points file ("<< f 
          << ").\n   The file must be in the same directory as sus"
          << "   Do not enclose the filename in quotation marks\n";
@@ -332,8 +332,8 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
   }
 
   if (dominant_coord == -1){
-   cout << " dominant coordinate not found " << endl;
-   throw InternalError("Dominant coordinate not found", __FILE__, __LINE__);
+    std::cout << " dominant coordinate not found " << endl;
+    throw InternalError("Dominant coordinate not found", __FILE__, __LINE__);
   }
   Point p[3];
   p[0] = d_points[d_tri[num].x()];

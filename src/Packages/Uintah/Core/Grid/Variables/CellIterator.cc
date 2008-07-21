@@ -5,7 +5,7 @@
 #include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
-using namespace std;
+
 
 namespace Uintah
 {

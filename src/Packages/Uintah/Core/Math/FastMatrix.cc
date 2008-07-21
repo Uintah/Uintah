@@ -42,7 +42,7 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
-using namespace std;
+
 using namespace Uintah;
 using namespace SCIRun;
 

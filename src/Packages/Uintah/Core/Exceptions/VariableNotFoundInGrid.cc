@@ -7,7 +7,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
 
 VariableNotFoundInGrid::VariableNotFoundInGrid(const std::string& varname,
 					       long particleID, int matlIndex,

@@ -16,8 +16,7 @@ static Mutex initlock("RefCounted initialization lock");
 
 static AtomicCounter* nextIndex;
 static AtomicCounter* freeIndex;
-#include <iostream>
-using namespace std;
+
 
 RefCounted::RefCounted()
     : d_refCount(0)

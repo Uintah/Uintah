@@ -8,7 +8,7 @@
 using namespace Uintah;
 
 #include <iostream>
-using namespace std;
+
 PackBufferInfo::PackBufferInfo()
   : BufferInfo()
 {

@@ -4,7 +4,7 @@
 #include <map>
 
 using namespace Uintah;
-using namespace std;
+
 
 Tri::Tri(Point& p1, Point& p2, Point& p3)
 {
@@ -142,7 +142,7 @@ UniformGrid& UniformGrid::operator=(const UniformGrid& rhs)
   if (this == &rhs)
     return *this;
 
-  cout << "d_grid size = " << d_grid.size() << endl;
+  std::cout << "d_grid size = " << d_grid.size() << endl;
   if (d_grid.size() != IntVector(0,0,0) ) {
     // Delete the lhs stuff grid and copy the rhs to it
     for (Array3<list<Tri> >::iterator gridIter = d_grid.begin();

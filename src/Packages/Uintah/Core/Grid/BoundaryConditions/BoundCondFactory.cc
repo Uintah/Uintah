@@ -15,7 +15,6 @@
 #include <map>
 #include <cstdlib>
 
-using namespace std;
 using namespace Uintah;
 
 void BoundCondFactory::create(ProblemSpecP& child,
@@ -106,9 +105,9 @@ void BoundCondFactory::create(ProblemSpecP& child,
     bc = scinew MassFractionBoundCond(child,bc_attr["var"],bc_attr["label"]);
   }
   else {
-    ostringstream warn;
+    std::ostringstream warn;
     warn << "BoundCondFactory: Unknown Boundary Condition: "<< bc_attr["label"]
-         << " Type " << "(" << bc_attr["var"] << ")  " <<endl;
+         << " Type " << "(" << bc_attr["var"] << ")  " << std::endl;
     SCI_THROW(ProblemSetupException(warn.str(), __FILE__, __LINE__));
   }
 }

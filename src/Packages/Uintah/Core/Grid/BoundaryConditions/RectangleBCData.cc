@@ -6,7 +6,8 @@
 #include <iostream>
 using namespace SCIRun;
 using namespace Uintah;
-using namespace std;
+using std::cout;
+using std::endl;
 
 RectangleBCData::RectangleBCData() 
 {

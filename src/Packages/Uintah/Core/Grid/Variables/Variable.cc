@@ -22,7 +22,7 @@
 #include <cerrno>
 #include <cstring>
 
-using namespace std;
+
 using namespace Uintah;
 
 #ifdef _WIN32

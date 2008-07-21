@@ -7,7 +7,7 @@
 #include <deque>
 
 using namespace Uintah;
-using namespace std;
+
 
 //This code was pulled from Box.cc
 

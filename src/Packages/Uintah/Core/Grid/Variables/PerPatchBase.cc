@@ -4,7 +4,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
 
 PerPatchBase::~PerPatchBase()
 {
@@ -36,7 +36,7 @@ void PerPatchBase::emitNormal(ostream&, const IntVector&,
   SCI_THROW(InternalError("emitNormal not implemented for PerPatch", __FILE__, __LINE__));
 
 }
-void PerPatchBase::readNormal(istream&, bool)
+void PerPatchBase::readNormal(std::istream&, bool)
 {
   SCI_THROW(InternalError("readNormal not implemented for PerPatch", __FILE__, __LINE__));
 

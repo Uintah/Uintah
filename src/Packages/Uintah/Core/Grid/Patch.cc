@@ -22,7 +22,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using namespace std;
+
 
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");

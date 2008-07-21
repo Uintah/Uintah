@@ -4,7 +4,8 @@
 #include <algorithm>
 
 using namespace Uintah;
-using namespace std;
+using std::map;
+using std::string;
 
 UintahParallelComponent::UintahParallelComponent(const ProcessorGroup* myworld)
    : d_myworld(myworld)

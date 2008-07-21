@@ -8,7 +8,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
-using namespace std;
+
 
 const string CylinderGeometryPiece::TYPE_NAME = "cylinder";
 
@@ -107,6 +107,8 @@ CylinderGeometryPiece::inside(const Point &p) const
 Box
 CylinderGeometryPiece::getBoundingBox() const
 {
+  using std::min;
+  using std::max;
   Point lo(min(d_bottom.x(),d_top.x()) - d_radius,
            min(d_bottom.y(),d_top.y()) - d_radius,
            min(d_bottom.z(),d_top.z()) - d_radius);

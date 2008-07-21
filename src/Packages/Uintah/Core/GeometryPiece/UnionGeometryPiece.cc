@@ -7,7 +7,7 @@
 
 using namespace SCIRun;
 using namespace Uintah;
-using namespace std;
+
 
 const string UnionGeometryPiece::TYPE_NAME = "union";
 

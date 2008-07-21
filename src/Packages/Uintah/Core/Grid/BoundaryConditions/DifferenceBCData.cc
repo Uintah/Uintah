@@ -10,7 +10,7 @@
 #include <algorithm>
 using namespace SCIRun;
 using namespace Uintah;
-using namespace std;
+
 
 DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
   : left(p1->clone()), right(p2->clone())

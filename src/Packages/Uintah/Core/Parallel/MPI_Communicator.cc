@@ -20,7 +20,7 @@
 #define debug_main_thread
 #define debug_mpi_thread
 
-using namespace std;
+
 using namespace SCIRun;
 
 #ifdef MALLOC_TRACE

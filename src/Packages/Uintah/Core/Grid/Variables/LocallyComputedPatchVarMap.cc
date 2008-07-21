@@ -3,9 +3,8 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
-
 #include <iostream>
-using namespace std;
+
 using namespace SCIRun;
 using namespace Uintah;
 

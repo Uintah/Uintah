@@ -9,7 +9,6 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace std;
 
 SimulationTime::SimulationTime(const ProblemSpecP& params)
 {
@@ -36,9 +35,9 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     // max_iterations is deprecated now... verify that it isn't used....
     int max_iterations = 0;
     if( time_ps->get( "max_iterations", max_iterations ).get_rep() != NULL ) {
-      cerr << "\n";
-      cerr << "The 'max_iterations' flag (in the .ups file) is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
-      cerr << "\n";
+      std::cerr << "\n";
+      std::cerr << "The 'max_iterations' flag (in the .ups file) is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
+      std::cerr << "\n";
       SCIRun::Thread::exitAll(1);      
     }
   }
@@ -57,8 +56,8 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
 
   if( maxTimestep < 1 )
     {
-      cerr << "Negative maxTimesteps is not allowed.\n";
-      cerr << "resetting to INT_MAX time steps\n";
+      std::cerr << "Negative maxTimesteps is not allowed.\n";
+      std::cerr << "resetting to INT_MAX time steps\n";
       maxTimestep = INT_MAX-1;
     }
 }
