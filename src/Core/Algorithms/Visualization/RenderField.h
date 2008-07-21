@@ -58,6 +58,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Containers/StringUtil.h>
 #include <sci_hash_map.h>
+#include <sci_hash_set.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Basis/QuadBilinearLgn.h>
 #include <Core/Datatypes/ImageMesh.h>
