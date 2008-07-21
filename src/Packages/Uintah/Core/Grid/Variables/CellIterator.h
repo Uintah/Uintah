@@ -5,7 +5,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 #include <iterator>
-
+#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
 #include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
 
@@ -144,7 +144,7 @@ WARNING
 
      CellIterator* clone() const
      {
-       return new CellIterator(*this);
+       return scinew CellIterator(*this);
      }
 
      ostream& put(ostream& out) const
