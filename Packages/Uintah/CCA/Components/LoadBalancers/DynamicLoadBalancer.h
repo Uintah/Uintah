@@ -205,6 +205,7 @@ namespace Uintah {
     // Zoltan global vars
     Zoltan * zz;
     string d_zoltanAlgorithm;  //This will be the algorithm that zoltan will use (HSFC, RCB, etc)
+    string d_zoltanIMBTol;     //This will be the amount of imalance should be acceptable
 #endif
   };
 } // End namespace Uintah

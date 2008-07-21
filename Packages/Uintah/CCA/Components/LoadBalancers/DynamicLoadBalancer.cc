@@ -501,8 +501,8 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
     
     /* General Zoltan parameters */
     zz->Set_Param("DEBUG_LEVEL", "0");     // amount of debug messages desired
-    //  zz->Set_Param("LB_METHOD", "RCB");     // recursive coordinate bisection
-    zz->Set_Param("LB_METHOD", d_zoltanAlgorithm.c_str());     // recursive coordinate bisection
+    zz->Set_Param("LB_METHOD", d_zoltanAlgorithm.c_str());     // zoltan load balance algorithm
+    zz->Set_Param("IMBALANCE_TOL", d_zoltanIMBTol.c_str());    // imbalance result toleration
     zz->Set_Param("NUM_GID_ENTRIES", "1"); // number of integers in a global ID
     zz->Set_Param("NUM_LID_ENTRIES", "1"); // number of integers in a local ID
     zz->Set_Param("OBJ_WEIGHT_DIM", "1");  // dimension of a vertex weight
@@ -1514,6 +1514,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   {
     d_dynamicAlgorithm=zoltan_sfc_lb;
     p->getWithDefault("zoltanAlgorithm",d_zoltanAlgorithm,"HSFC");
+    p->getWithDefault("zoltanIMBTol",d_zoltanIMBTol,"1.1");
     d_collectParticles = false;
   }
 #endif
