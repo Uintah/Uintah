@@ -97,11 +97,12 @@ GeomViewerItem::io(Piostream& stream)
   if(stream.writing())
     have_lock=crowd_lock_?1:0;
   Pio(stream, have_lock);
-  if(stream.reading())
+  if(stream.reading()) {
     if(have_lock)
       crowd_lock_ = scinew CrowdMonitor("GeomViewerItem crowd monitor");
     else
       crowd_lock_ = 0;
+  }
   Pio(stream, name_);
   Pio(stream, child_);
   stream.end_class();
