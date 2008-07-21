@@ -76,6 +76,7 @@ namespace Uintah {
      */
     virtual IntVector operator*() const=0;
 
+
     /**
      * Return the first element of the iterator
      */
@@ -85,6 +86,12 @@ namespace Uintah {
      * Return the last element of the iterator
      */
     virtual IntVector end() const=0;
+
+/**
+     * Returns a pointer to a deep copy of the virtual class
+     * this should be used only by the Iterator class
+     */
+    virtual BaseIterator* clone() const = 0;
 
     protected:
     /**
@@ -111,12 +118,10 @@ namespace Uintah {
      */
     BaseIterator() {};
 
+    
+
     private:
-    /**
-     * Returns a pointer to a deep copy of the virtual class
-     * this should be used only by the Iterator class
-     */
-    virtual BaseIterator* clone() const = 0;
+    
 
     /**
      * send iterator information to the ostream 
