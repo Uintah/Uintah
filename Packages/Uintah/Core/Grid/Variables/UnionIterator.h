@@ -47,7 +47,7 @@ namespace Uintah {
     public:
 
     UnionIterator(Iterator iter1, Iterator iter2);
-
+    UnionIterator() : ListOfCellsIterator() {}
 
     ostream& put(std::ostream& out) const
     {
@@ -56,7 +56,7 @@ namespace Uintah {
     }
 
     private:
-    UnionIterator() : ListOfCellsIterator() {}
+
 
     }; // end class UnionIterator
 
