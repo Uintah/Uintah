@@ -136,7 +136,9 @@ SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
 
 prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
-	@echo "Dummy file to keep Makefile 'prereqs' from continually firing..." >  prereqs
+	@if test ! -f prereqs; then \
+	  echo "Dummy file to keep Makefile 'prereqs' from continually firing..." >  prereqs; \
+	fi;
 
 $(MAKEFILEDIRSTAG) :
 	@echo creating directory `dirname $@`
