@@ -112,6 +112,11 @@ namespace Uintah {
         ASSERT(!d_done);
         return d_cur;
       }
+
+      inline GridIterator()
+      {
+      }
+
       inline GridIterator(const IntVector& s, const IntVector& e)
         : d_s(s), d_e(e), d_cur(s){
           if(d_s.x() >= d_e.x() || d_s.y() >= d_e.y() || d_s.z() >= d_e.z())
@@ -140,6 +145,9 @@ namespace Uintah {
       }
 
       inline GridIterator& operator=( const GridIterator& copy ) {
+        if (this == &copy)
+          return *this;
+
         d_s    = copy.d_s;
         d_e    = copy.d_e;
         d_cur  = copy.d_cur;
@@ -159,10 +167,10 @@ namespace Uintah {
        * this should be used only by the Iterator class
        */
       GridIterator* clone() const {
-        return new GridIterator(*this);
+        return scinew GridIterator(*this);
       }
 
-      GridIterator();
+      
 
       IntVector d_s,d_e;
       IntVector d_cur;
