@@ -35,6 +35,10 @@
 
 // Additionally we include sci_hash_map here as it is needed by the algorithm
 #include <sci_hash_map.h>
+#include <map>
+#include <algorithm>
+
+using std::multimap;
 
 namespace SCIRunAlgo {
 
