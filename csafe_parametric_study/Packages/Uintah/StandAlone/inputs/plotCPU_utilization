@@ -15,7 +15,7 @@ touch .procs .date .elapsedTime
 
 foreach X ($f[*]:q)
  grep Date $X -m 1| cut -d":" -f2-4 >> .date
- grep processors $X | cut -d" " -f 2 >> .procs
+ grep "Parallel:.*processors" $X | cut -d" " -f 2 >> .procs
  grep Time= $X |tail -n 1  | cut -d"=" -f4 | cut -d"," -f1 >> .elapsedTime
 end
 
@@ -37,7 +37,7 @@ awk -F, 'NR==1 {sum=$4; printf( "%s %g %g %g %g \n",$1, $2, $3, $4, sum )} ; NR>
 echo "Extracted data"
 echo "date #procs  #elapsed Time  cpu hrs  cum cpu hrs"
 more .data
-/bin/rm .procs .date .date2 .elapsedTime .data.tmp
+#/bin/rm .procs .date .date2 .elapsedTime .data.tmp
 
 /bin/rm -f gp
 #__________________________________
@@ -89,6 +89,6 @@ if($hardcopy == "y" || $hardcopy == "Y") then
   mogrify -rotate 90 plotCPU_utilization.jpg
 endif
 
-/bin/rm .data gp
+#/bin/rm .data gp
 
 exit
