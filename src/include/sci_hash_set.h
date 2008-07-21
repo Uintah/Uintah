@@ -48,6 +48,10 @@
 #  include <ext/hash_set>
    using std::hash_set;
    using std::hash_multiset;
+#elif defined(HAVE_GNU_BACKWARD_HASHMAP)
+#  include <backward/hash_set>
+   using __gnu_cxx::hash_set;
+   using __gnu_cxx::hash_multiset;
 #elif defined(HAVE_GNU_HASHMAP)
 #  include <ext/hash_set>
    using __gnu_cxx::hash_set;
