@@ -32,6 +32,7 @@
 
 #include <Core/Algorithms/Util/DynamicAlgo.h>
 #include <sci_hash_map.h>
+#include <algorithm>
 
 namespace SCIRunAlgo {
 
