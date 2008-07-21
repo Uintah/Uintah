@@ -10,7 +10,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
