@@ -54,8 +54,11 @@ DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
 
   if( zz == NULL ){
     throw InternalError("Zoltan creation failed!", __FILE__, __LINE__);
-   }
-  zz->Set_Param("TFLOPS_SPECIAL", "1");
+  }
+  //This parameter is to avoid using MPI_Comm_dup, MPI_Comm_split and MPI_Comm_free functions
+  //These functions may not work well in some mpi implementations (mvapich 1.0 on TACC Ranger) 
+  //and cause memory leek in Zoltan library. Maybe we can remove this line in the future.
+  zz->Set_Param("TFLOPS_SPECIAL", "1"); 
 #endif
 }
 
