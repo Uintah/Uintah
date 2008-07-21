@@ -6,7 +6,7 @@
 using namespace std;
 
 #include <Core/Geometry/IntVector.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
 #include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
 namespace Uintah {
@@ -50,7 +50,7 @@ namespace Uintah {
 
     ListOfCellsIterator() : index_(0) {}
 
-    ListOfCellsIterator(const ListOfCellsIterator &copy) : listOfCells_(copy.listOfCells_) { }
+  ListOfCellsIterator(const ListOfCellsIterator &copy) : listOfCells_(copy.listOfCells_) {reset(); }
 
     /**
      * prefix operator to move the iterator forward
@@ -103,7 +103,7 @@ namespace Uintah {
      */
     ListOfCellsIterator* clone() const
     {
-      return new ListOfCellsIterator(*this);
+      return scinew ListOfCellsIterator(*this);
 
     };
     
