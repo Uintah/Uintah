@@ -44,10 +44,10 @@ Uintah::jim3( DataArchive * da, CommandLineFlags & clf )
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
     double time = times[t];
     cout << "time = " << time << endl;
+
+    outfile.precision(14);
     outfile << time << " "; 
     GridP grid = da->queryGrid(t);
-
-//    vector<double> PV(grid->numLevels());
 
     for(int l=0;l<grid->numLevels();l++){
       LevelP level = grid->getLevel(l);
@@ -81,8 +81,6 @@ Uintah::jim3( DataArchive * da, CommandLineFlags & clf )
       outfile << PV << " " << rhoT << " " << PV+rhoT << " ";
     }  // for levels
     outfile << endl;
-
-   //outfile.precision(8);
 
   }
 } // end jim3()
