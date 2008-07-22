@@ -13,7 +13,6 @@ namespace Uintah {
     bool do_varsummary;
     bool do_jim1;
     bool do_jim2;
-    bool do_jim3;
     bool do_partvar;
     bool do_asci;
     bool do_cell_stresses;
@@ -58,7 +57,6 @@ namespace Uintah {
       do_varsummary = false;
       do_jim1 = false;
       do_jim2 = false;
-      do_jim3 = false;
       do_partvar = false;
       do_asci = false;
       do_cell_stresses = false;

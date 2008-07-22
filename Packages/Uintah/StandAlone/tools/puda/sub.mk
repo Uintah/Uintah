@@ -5,7 +5,6 @@ SRCS := \
 	$(SRCDIR)/asci.cc        \
 	$(SRCDIR)/jim1.cc        \
 	$(SRCDIR)/jim2.cc        \
-	$(SRCDIR)/jim3.cc        \
 	$(SRCDIR)/rtdata.cc      \
 	$(SRCDIR)/tecplot.cc     \
 	$(SRCDIR)/util.cc        \
