@@ -43,7 +43,7 @@ namespace Uintah {
       PatchBVHBase::PatchKeyVal key;
 
       key.patch=*iter;
-      key.center= ((*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New())*IntVector(.5,.5,.5);
+      key.center2=(*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New();
 
       patches_.push_back(key);
     }
@@ -71,7 +71,7 @@ namespace Uintah {
       PatchBVHBase::PatchKeyVal key;
 
       key.patch=*iter;
-      key.center= ((*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New())*IntVector(.5,.5,.5);
+      key.center2=(*iter)->getCellLowIndex__New()+(*iter)->getCellHighIndex__New();
 
       patches_.push_back(key);
     }

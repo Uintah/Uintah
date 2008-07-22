@@ -7,7 +7,6 @@
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-
 #include <Packages/Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
@@ -61,10 +60,10 @@ namespace Uintah {
     {
       bool operator<(const PatchKeyVal& p) const
       {
-        return center[PatchBVHBase::sortDim_]<p.center[PatchBVHBase::sortDim_];
+        return center2[PatchBVHBase::sortDim_]<p.center2[PatchBVHBase::sortDim_];
       }
       const Patch* patch;
-      IntVector center;
+      IntVector center2; //twice the center of the patch be be used by sorting
     };
     /**
      * Returns true if the given range intersects my volume
