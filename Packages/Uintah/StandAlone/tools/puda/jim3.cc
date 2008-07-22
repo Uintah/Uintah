@@ -57,7 +57,6 @@ Uintah::jim3( DataArchive * da, CommandLineFlags & clf )
       double cell_vol = dx.x()*dx.y()*dx.z();
       double PV=0;
       double rhoT=0;
-      double KE=0;
 
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
@@ -71,18 +70,15 @@ Uintah::jim3( DataArchive * da, CommandLineFlags & clf )
         da->query(val_vol_frac, "vol_frac_CC",    matl, patch, t);
         da->query(val_rho,      "rho_CC",         matl, patch, t);
         da->query(val_temp,     "temp_CC",        matl, patch, t);
-        da->query(val_vel,      "vel_CC",         matl, patch, t);
 
         for (CellIterator iter = patch->getCellIterator__New();
                                                         !iter.done();iter++){
            IntVector c = *iter;
            PV += val_press[c] * val_vol_frac[c]*cell_vol;
            rhoT += 716*val_rho[c] * val_temp[c]*cell_vol;
-           KE+=.5*(val_rho[c]*cell_vol)*val_vel[c].length()*val_vel[c].length();
         }
       }  // for patches
-      outfile << PV << " " << rhoT << " " << KE << " " << PV+rhoT+KE << " ";
-//      outfile << PV+rhoT+KE << " ";
+      outfile << PV << " " << rhoT << " " << PV+rhoT << " ";
     }  // for levels
     outfile << endl;
 
@@ -90,4 +86,3 @@ Uintah::jim3( DataArchive * da, CommandLineFlags & clf )
 
   }
 } // end jim3()
-
