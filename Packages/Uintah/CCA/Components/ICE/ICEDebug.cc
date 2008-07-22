@@ -534,7 +534,7 @@ void    ICE::symmetryTest_driver( int matl,
  
   if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
      (nCells.y() % 2 !=0 && d_dbgSymPlanes.y()) ||
-      nCells.z() % 2 !=0 && d_dbgSymPlanes.z()){
+     (nCells.z() % 2 !=0 && d_dbgSymPlanes.z())){
       cout << " number of interior cells " << nCells << endl;
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
              "Only works if the number of interior cells is even ", __FILE__, __LINE__);
@@ -663,7 +663,7 @@ void    ICE::symmetryTest_Vector( int matl,
   // bulletproofing -- only works on 1 patch
   const Level* level = patch->getLevel();
   int levelIndx = level->getIndex();
-  int numPatches = level->numPatches();
+  int numPatches =level->numPatches();
   if(numPatches !=1 ){
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
                                   "this only works with one patch",
@@ -678,7 +678,7 @@ void    ICE::symmetryTest_Vector( int matl,
   
   if((nCells.x() % 2 !=0 && d_dbgSymPlanes.x()) ||
      (nCells.y() % 2 !=0 && d_dbgSymPlanes.y()) ||
-      nCells.z() % 2 !=0 && d_dbgSymPlanes.z()){
+     (nCells.z() % 2 !=0 && d_dbgSymPlanes.z())){
       cout << " number of interior cells " << nCells << endl;
       throw ProblemSetupException("PRINT_DATA: symmetryTest_driver:  "
              "Only works if the number of interior cells is even ",
