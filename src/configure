@@ -1698,6 +1698,7 @@ host_os=`echo $ac_cv_host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
   sci_required_gmake=no
   sci_required_gzopen=no
   sci_required_hypre=no
+  sci_required_insight=no
   sci_required_java=no
   sci_required_jpeg=no
   sci_required_lapack=no
@@ -2875,8 +2876,15 @@ if test "${enable_scijump+set}" = set; then
 eval pkg_SCIJump=yes
 
 case SCIJump in
+  BioPSE)
+  ;;
   Teem)
     sci_required_teem=yes
+  ;;
+  VDT)
+    sci_required_vdt=yes
+  ;;
+  MatlabInterface)
   ;;
   Uintah)
     sci_required_fortran=yes
@@ -2884,12 +2892,58 @@ case SCIJump in
     sci_required_perl=yes
     sci_required_tools=yes
   ;;
+  Fusion)
+  ;;
+  PCS)
+  ;;
+  DataIO)
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
+  ;;
+  SCIJump)
+    sci_required_babel=yes
+    sci_required_ncurses=yes
+  ;;
+  Plume)
+    if test "$plume_checked" = "no"; then
+      plume_checked=yes
+      sci_required_loki=yes
+      sci_required_boost=yes
+      sci_required_tena=yes
+      #sci_required_qt=no
+      enable_scijump=yes
+
+      if test "$package" != "all"; then
+        package="$package Plume"
+      fi
+   fi
+  ;;
+  Remote)
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
+  ;;
+  NetSolve)
+    sci_required_netsolve=yes
+  ;;
   rtrt)
     sci_required_glut=yes
     sci_required_glui=yes
     sci_required_oogl=yes
     sci_required_audio=yes
     sci_required_teem=yes
+  ;;
+  Insight)
+    sci_required_insight=yes
+    sci_required_xalan=yes
+  ;;
+  Volume)
+    case $host in
+     *-darwin*)
+	sci_required_glew=yes
+	;;
+     *)
+        ;;
+    esac
   ;;
   Ptolemy)
   ;;
@@ -2936,8 +2990,15 @@ if test "${enable_plume+set}" = set; then
 eval pkg_Plume=yes
 
 case Plume in
+  BioPSE)
+  ;;
   Teem)
     sci_required_teem=yes
+  ;;
+  VDT)
+    sci_required_vdt=yes
+  ;;
+  MatlabInterface)
   ;;
   Uintah)
     sci_required_fortran=yes
@@ -2945,12 +3006,58 @@ case Plume in
     sci_required_perl=yes
     sci_required_tools=yes
   ;;
+  Fusion)
+  ;;
+  PCS)
+  ;;
+  DataIO)
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
+  ;;
+  SCIJump)
+    sci_required_babel=yes
+    sci_required_ncurses=yes
+  ;;
+  Plume)
+    if test "$plume_checked" = "no"; then
+      plume_checked=yes
+      sci_required_loki=yes
+      sci_required_boost=yes
+      sci_required_tena=yes
+      #sci_required_qt=no
+      enable_scijump=yes
+
+      if test "$package" != "all"; then
+        package="$package Plume"
+      fi
+   fi
+  ;;
+  Remote)
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
+  ;;
+  NetSolve)
+    sci_required_netsolve=yes
+  ;;
   rtrt)
     sci_required_glut=yes
     sci_required_glui=yes
     sci_required_oogl=yes
     sci_required_audio=yes
     sci_required_teem=yes
+  ;;
+  Insight)
+    sci_required_insight=yes
+    sci_required_xalan=yes
+  ;;
+  Volume)
+    case $host in
+     *-darwin*)
+	sci_required_glew=yes
+	;;
+     *)
+        ;;
+    esac
   ;;
   Ptolemy)
   ;;
@@ -3149,8 +3256,15 @@ for i in $package; do
 eval pkg_$i=yes
 
 case $i in
+  BioPSE)
+  ;;
   Teem)
     sci_required_teem=yes
+  ;;
+  VDT)
+    sci_required_vdt=yes
+  ;;
+  MatlabInterface)
   ;;
   Uintah)
     sci_required_fortran=yes
@@ -3158,12 +3272,58 @@ case $i in
     sci_required_perl=yes
     sci_required_tools=yes
   ;;
+  Fusion)
+  ;;
+  PCS)
+  ;;
+  DataIO)
+    sci_required_mdsplus=yes
+    sci_required_hdf5=yes
+  ;;
+  SCIJump)
+    sci_required_babel=yes
+    sci_required_ncurses=yes
+  ;;
+  Plume)
+    if test "$plume_checked" = "no"; then
+      plume_checked=yes
+      sci_required_loki=yes
+      sci_required_boost=yes
+      sci_required_tena=yes
+      #sci_required_qt=no
+      enable_scijump=yes
+
+      if test "$package" != "all"; then
+        package="$package Plume"
+      fi
+   fi
+  ;;
+  Remote)
+    sci_required_jpeg=yes
+    sci_required_tiff=yes
+  ;;
+  NetSolve)
+    sci_required_netsolve=yes
+  ;;
   rtrt)
     sci_required_glut=yes
     sci_required_glui=yes
     sci_required_oogl=yes
     sci_required_audio=yes
     sci_required_teem=yes
+  ;;
+  Insight)
+    sci_required_insight=yes
+    sci_required_xalan=yes
+  ;;
+  Volume)
+    case $host in
+     *-darwin*)
+	sci_required_glew=yes
+	;;
+     *)
+        ;;
+    esac
   ;;
   Ptolemy)
   ;;
@@ -6569,7 +6729,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6572:" \
+echo "$as_me:6732:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -19689,8 +19849,8 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <backward/hash_map>
-                 __gnu_cxx::hash_map<int, int> xx;
+#include <tr1/unordered_map>
+                 std::tr1::unordered_map<int, int> xx;
 int
 main ()
 {
@@ -19721,7 +19881,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  DEF_HASHMAP=HAVE_GNU_BACKWARD_HASHMAP
+  DEF_HASHMAP=HAVE_TR1_HASHSET
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
