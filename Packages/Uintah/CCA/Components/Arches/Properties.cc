@@ -1875,10 +1875,10 @@ Properties::averageRKProps(const ProcessorGroup*,
         constCCVariable<double> old_extra_scalar;
         CCVariable<double> new_extra_scalar;
         old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), 
-        matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+        indx, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
         new_dw->getModifiable(new_extra_scalar,
                               d_extraScalars->at(i)->getScalarLabel(), 
-                  matlIndex, patch);
+                  indx, patch);
         bool scalar_density_weighted =
                 d_extraScalars->at(i)->isDensityWeighted();
         for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
