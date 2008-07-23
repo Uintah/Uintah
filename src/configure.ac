@@ -2495,7 +2495,7 @@ if test "$DEF_HASHMAP" = "None"; then
 		 [DEF_HASHMAP=HAVE_STDEXT_HASHMAP])
 fi
 # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-if test "$DEF_HASHMAP" = "None"; then
+if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
   AC_TRY_COMPILE([#include <tr1/unordered_map>
                  std::tr1::unordered_map<int, int> xx;], ,
 		 [DEF_HASHMAP=HAVE_TR1_HASHMAP])
