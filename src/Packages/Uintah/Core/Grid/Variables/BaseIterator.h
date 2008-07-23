@@ -87,11 +87,6 @@ namespace Uintah {
      */
     virtual IntVector end() const=0;
 
-/**
-     * Returns a pointer to a deep copy of the virtual class
-     * this should be used only by the Iterator class
-     */
-    virtual BaseIterator* clone() const = 0;
 
     protected:
     /**
@@ -118,6 +113,11 @@ namespace Uintah {
      */
     BaseIterator() {};
 
+    /**
+     * Returns a pointer to a deep copy of the virtual class
+     * this should be used only by the Iterator class
+     */
+    virtual BaseIterator* clone() const = 0;
     
 
     private:
