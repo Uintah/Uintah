@@ -19682,7 +19682,7 @@ fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 # gcc-4.3 has depricated <ext/hash_map> so check for <backward/hash_map> first
-if test "$DEF_HASHMAP" = "None"; then
+if test "$DEF_HASHMAP" = "None" && test "$IS_OSX" != "yes"; then
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
