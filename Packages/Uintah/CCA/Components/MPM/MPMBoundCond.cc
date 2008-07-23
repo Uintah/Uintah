@@ -190,7 +190,6 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                                         const string& type, 
                                         NCVariable<double>& variable,
                                         string interp_type)
-
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
@@ -300,53 +299,6 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             delete bcb;
         }
         
-      }
-    } else
-      continue;
-  }
-}
-
-void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
-                                        const string& type, 
-                                        NCVariable<double>& variable,
-                                        constNCVariable<double>& gvolume,
-                                        string interp_type)
-{
-  Vector deltax = patch->dCell();
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-
-    if (patch->getBCType(face) == Patch::None) {
-      int numChildren = 
-        patch->getBCDataArray(face)->getNumberChildren(dwi);
-      for (int child = 0; child < numChildren; child++) {
-        vector<IntVector> *nbound_ptr;
-       vector<IntVector> *nu;    // not used
-        vector<IntVector>::const_iterator boundary;
-        const BoundCondBase* bcb  = 
-          patch->getArrayBCValues(face,dwi,"Temperature",nu,nbound_ptr,child);
-
-        const TemperatureBoundCond* bc = 
-          dynamic_cast<const TemperatureBoundCond*>(bcb);
-        
-        double dx = -9;
-        if (face == Patch::xplus || face == Patch::xminus) dx = deltax.x();
-        if (face == Patch::yplus || face == Patch::yminus) dx = deltax.y();
-        if (face == Patch::zplus || face == Patch::zminus) dx = deltax.z();
-
-        if (bc != 0) {
-          if (bc->getKind() == "Neumann"){
-            double value = bc->getValue();
-            for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end(); 
-                 boundary++){
-              IntVector nd = *boundary;
-              variable[nd] += value*2.*gvolume[nd]/dx;
-            }
-          }
-          delete bc;
-        }
-        else
-          delete bc;
       }
     } else
       continue;
