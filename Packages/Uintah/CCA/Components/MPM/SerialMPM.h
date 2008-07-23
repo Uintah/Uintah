@@ -420,32 +420,6 @@ protected:
                                     const MaterialSet*);
 
 
-  virtual void scheduleParticleVelocityField(SchedulerP&, const PatchSet*,
-                                             const MaterialSet*) {};
-
-  virtual void scheduleAdjustCrackContactInterpolated(SchedulerP&, 
-                                                      const PatchSet*,
-                                                      const MaterialSet*){};
-
-  virtual void scheduleAdjustCrackContactIntegrated(SchedulerP&, 
-                                                    const PatchSet*,
-                                                    const MaterialSet*){};
-
-  virtual void scheduleCalculateFractureParameters(SchedulerP&,const PatchSet*,
-                                                   const MaterialSet*){};
-
-  virtual void scheduleDoCrackPropagation(SchedulerP& sched, 
-                                          const PatchSet* patches,
-                                          const MaterialSet* matls){};
-
-  virtual void scheduleMoveCracks(SchedulerP& sched,const PatchSet* patches,
-                                  const MaterialSet* matls){};
-
-  virtual void scheduleUpdateCrackFront(SchedulerP& sched,
-                                        const PatchSet* patches,
-                                        const MaterialSet* matls){};
-
-
   void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
                                        const PatchSet* patches,
                                        const MaterialSet*);
