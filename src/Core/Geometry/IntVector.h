@@ -99,15 +99,15 @@ public:
 
   // can test for equality - if this < a and a < this, they are equal
      inline bool operator<(const IntVector& a) const {
-       if (value_[0] < a.value_[0])
+       if (value_[2] < a.value_[2])
          return true;
-       if (value_[0] > a.value_[0])
+       if (value_[2] > a.value_[2])
          return false;
        if (value_[1] < a.value_[1])
          return true;
        if (value_[1] > a.value_[1])
          return false;
-       return value_[2] < a.value_[2];
+       return value_[0] < a.value_[0];
      }
 
   inline bool operator!=(const IntVector& a) const {
