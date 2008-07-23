@@ -59,11 +59,6 @@
 #  define hash_map std::tr1::unordered_map
 #  define hash_multimap std::tr1::unordered_multimap
    using std::tr1::hash;
-#elif defined(HAVE_GNU_BACKWARD_HASHMAP)
-#  include <backward/hash_map>
-   using __gnu_cxx::hash_map;
-   using __gnu_cxx::hash_multimap;
-   using __gnu_cxx::hash;
 #elif defined(HAVE_GNU_HASHMAP)
 #  include <ext/hash_map>
    using __gnu_cxx::hash_map;

@@ -51,7 +51,7 @@
 #elif defined(HAVE_TR1_HASHMAP)
 #  include <tr1/unordered_set>
 #  define hash_set std::tr1::unordered_set
-#  define hash_multiset std:tr1::unordered_multiset
+#  define hash_multiset std::tr1::unordered_multiset
 #elif defined(HAVE_GNU_HASHMAP)
 #  include <ext/hash_set>
    using __gnu_cxx::hash_set;
