@@ -1759,11 +1759,11 @@ TriSurfMesh<Basis>::compute_edges()
     edge_map[nodes].push_front(i);
   }
 
-  typename EdgeMapType2::iterator itr;
   edges_.clear();
   edges_.reserve(edge_map.size());
   halfedge_to_edge_.resize(faces_.size());
-  for (itr = edge_map.begin(); itr != edge_map.end(); ++itr)
+  
+  for( typename EdgeMapType2::iterator itr( edge_map.begin() ); itr != edge_map.end(); ++itr )
   {
     edges_.push_back((*itr).second.front());
 
@@ -2076,10 +2076,9 @@ TriSurfMesh<Basis>::compute_edge_neighbors(double /*err*/)
 
     pair<int, int> nodes(n0, n1);
 
-    typename EdgeMapType::iterator maploc;
+    typename EdgeMapType::iterator maploc( edge_map.find(nodes) );
 
-    maploc = edge_map.find(nodes);
-    if (maploc != edge_map.end())
+    if( maploc != edge_map.end() )
     {
       edge_neighbors_[(*maploc).second] = i;
       edge_neighbors_[i] = (*maploc).second;
