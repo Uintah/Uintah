@@ -10,7 +10,7 @@
 // End in-order templates.
 //////
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/wrap_nrrd.h>
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>

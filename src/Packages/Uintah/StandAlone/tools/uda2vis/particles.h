@@ -1,10 +1,10 @@
 #ifndef UDA2NRRD_PARTICLES_H
 #define UDA2NRRD_PARTICLES_H
 
-#include "particleData.h"
+#include <Packages/Uintah/StandAlone/tools/uda2vis/particleData.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/QueryInfo.h>
 
 #include <cstdlib>
 
