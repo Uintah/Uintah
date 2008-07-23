@@ -376,10 +376,6 @@ protected:
   virtual void scheduleUpdateCrackFront(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls);
-   
-
-
-
 
 private:
 

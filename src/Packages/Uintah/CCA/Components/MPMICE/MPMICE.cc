@@ -5,7 +5,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
@@ -64,9 +63,6 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
     break;
   case SHELL_MPMICE:
     d_mpm = scinew ShellMPM(myworld);
-    break;
-  case FRACTURE_MPMICE:
-    d_mpm = scinew FractureMPM(myworld);
     break;
   default:
     d_mpm = scinew SerialMPM(myworld);
@@ -337,14 +333,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   }
    
   d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
-  // Fracture
-  d_mpm->scheduleParticleVelocityField(       sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(  sched, mpm_patches, mpm_matls);
-
   d_mpm->scheduleComputeHeatExchange(         sched, mpm_patches, mpm_matls);
-
-  // Fracture
-  d_mpm->scheduleAdjustCrackContactInterpolated(sched,mpm_patches,  mpm_matls);
 
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
@@ -352,7 +342,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
                                                                   mpm_matls);
-
   // do coarsens in reverse order, and before the other tasks
   if(do_mlmpmice){
     for (int l = inlevel->getGrid()->numLevels() - 2; l >= 0; l--) {
@@ -473,7 +462,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleSolveHeatEquations(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleIntegrateAcceleration(       sched, mpm_patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(    sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleAdjustCrackContactIntegrated(sched, mpm_patches, mpm_matls);
   
   scheduleComputeLagrangianValuesMPM(         sched, mpm_patches, one_matl,
                                                                   mpm_matls); 
@@ -526,12 +514,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleConvertLocalizedParticles(   sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);
   //d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
-
-  d_mpm->scheduleCalculateFractureParameters(sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleDoCrackPropagation(         sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleMoveCracks(                 sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleUpdateCrackFront(           sched, mpm_patches, mpm_matls);
-
 
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
