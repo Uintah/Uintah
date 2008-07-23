@@ -13,6 +13,7 @@ void GhostOffsetVarMap::includeOffsets(const VarLabel* var,
 				       Ghost::GhostType gtype,
 				       int numGhostCells)
 {
+  MALLOC_TRACE_TAG_SCOPE("GhostOffsetVarMap::includeOffsets");
   IntVector lowOffset, highOffset;
   TypeDescription::Type varType = var->typeDescription()->getType();
   Patch::getGhostOffsets(varType, gtype, numGhostCells,
@@ -33,6 +34,7 @@ getExtents(const VarLabelMatl<Patch>& vmp,
 	   IntVector& requiredLow, IntVector& requiredHigh,	   
 	   IntVector& requestedLow, IntVector& requestedHigh) const
 {
+  MALLOC_TRACE_TAG_SCOPE("GhostOffsetVarMap::getExtents");
   IntVector lowOffset, highOffset;
   const VarLabel* var = vmp.label_;
   const Patch* patch = vmp.domain_;  
