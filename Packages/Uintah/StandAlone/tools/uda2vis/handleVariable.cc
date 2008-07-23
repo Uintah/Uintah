@@ -38,7 +38,10 @@ handleData( QueryInfo &    qinfo,
             LVMeshHandle   mesh_handle,
             int            basis_order,
             const string & filename,
-            const Args   & args )
+            const Args   & args,
+			cellVals& cellValColln,
+			bool dataReq, 
+			int patchNo )
 {
   typedef GenericField<LVMesh, ConstantBasis<T>,
                        FData3d<T, LVMesh> > LVFieldCB;
@@ -56,9 +59,9 @@ handleData( QueryInfo &    qinfo,
   if( !args.quiet ) cout << "Bounding box: min("<<bbox.min()<<"), max("<<bbox.max()<<")\n";
 
   // Get the nrrd data, and print it out.
-  char *err;
+  // char *err;
 
-  Nrrd * nrrd;
+  // Nrrd * nrrd;
   if( basis_order == 0 ){
     LVFieldCB* sf = scinew LVFieldCB(mesh_handle);
     typedef typename LVFieldCB::mesh_type::Cell FLOC;
@@ -67,12 +70,13 @@ handleData( QueryInfo &    qinfo,
       return;
     }
     if(qinfo.combine_levels){
+	  // this will only be called for all levels, combined
       build_combined_level_field<T, VarT, LVFieldCB, FLOC>( qinfo, low, sf, args );
     } else {
-      build_field( qinfo, low, data_T, gridVar, sf, args );
+      build_field( qinfo, low, data_T, gridVar, sf, args, patchNo );
     }
     // Convert the field to a nrrd
-    nrrd = wrap_nrrd( sf, args.matrix_op, args.verbose );
+    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
     // Clean up our memory
     delete sf;
   } else {
@@ -83,13 +87,14 @@ handleData( QueryInfo &    qinfo,
       return;
     }
     if(qinfo.combine_levels){
+	  // this will only be called for all levels, combined
       build_combined_level_field<T, VarT, LVFieldLB, FLOC>( qinfo, low, sf, args );
     } else {
-      build_field( qinfo, low, data_T, gridVar, sf, args );
+      build_field( qinfo, low, data_T, gridVar, sf, args, patchNo );
     }
     // Convert the field to a nrrd
-    nrrd = wrap_nrrd( sf, args.matrix_op, args.verbose );
-    // Clean up our memory
+    wrap_nrrd( sf, args.matrix_op, args.verbose, cellValColln, dataReq );
+	// Clean up our memory
     delete sf;
   }
 
@@ -106,8 +111,9 @@ handleData( QueryInfo &    qinfo,
   }
 #endif
 
-  if( nrrd ) { // Save the NRRD to a file.
-    string filetype = args.attached_header ? ".nrrd": ".nhdr";
+  // if( nrrd ) { // Save the NRRD to a file.
+    // No more needed 
+    /*string filetype = args.attached_header ? ".nrrd": ".nhdr";
 
     if( !args.quiet ) cout << "Writing nrrd file: " << filename + filetype << "\n";
 
@@ -128,14 +134,100 @@ handleData( QueryInfo &    qinfo,
       } else {
         if( !args.quiet ) cout << "Done writing nrrd file\n";
       }
-    }
+    }*/
+
+    // Coying the values from the nrrd directly. This at some time should be changed
+	// to avoid the double doing and data should be copied directy from the source.
+
+	/*unsigned int dim = cellValColln.dim = nrrd->dim;
+	
+	cout << "Nrrd has " << dim << " dimensions\n";
+	
+	vector<int> dimension;
+	unsigned int numComponents = 1;
+	
+	for (unsigned int i = 0; i < dim; i++) {
+	  numComponents *= nrrd->axis[i].size;
+	}  
+	
+	if (dim == 5) { // Tensors (rank 2): max dimension
+	  cellValColln.x = nrrd->axis[2].size;
+	  cellValColln.y = nrrd->axis[3].size;
+	  cellValColln.z = nrrd->axis[4].size;
+	}
+	else if (dim == 4) { // Vectors
+	  cellValColln.x = nrrd->axis[1].size;
+	  cellValColln.y = nrrd->axis[2].size;
+	  cellValColln.z = nrrd->axis[3].size;
+	}
+	else if (dim == 3) { // Scalars + Tensors (rank 0)
+	  cellValColln.x = nrrd->axis[0].size;
+	  cellValColln.y = nrrd->axis[1].size;
+	  cellValColln.z = nrrd->axis[2].size;
+	}*/
+
+	// unsigned int x = cellValColln.x = nrrd->axis[0].size;
+	// unsigned int y = cellValColln.y = nrrd->axis[1].size;
+	// unsigned int z = cellValColln.z = nrrd->axis[2].size;
+	// unsigned int w = nrrd->axis[3].size; // may be present in the case of vectors
+
+	// cout << cellValColln.x << "|" << cellValColln.y << "|" << cellValColln.z << "\n";
+	
+	// unsigned int numComponents;
+	
+	/*if (w == 0)
+	  numComponents = x * y * z;
+	else { 
+	  cellValColln.x = y;
+	  cellValColln.y = z;
+	  cellValColln.z = w;
+	  numComponents = x * y * z * w;
+	}*/  
+	  
+	/*if (dataReq) {
+	  typeDouble* cellValVecPtr = new typeDouble();
+	  double* data = (double*)nrrd->data;   
+	  double* testPtr = NULL;
+	  for( unsigned int cnt = 0; cnt < numComponents; cnt++ ) {
+	    if ((testPtr = (data + cnt)) == NULL ) {
+		  cout << "NULL encountered, pushed zero\n";
+		  cellValVecPtr->push_back(0);
+		}  
+		else  
+		  cellValVecPtr->push_back(data[cnt]);
+	  }*/
+	  
+	  /*for (unsigned int i = 0; i < x; ++i) {
+	    double* rowData = (double*)(nrrd->data) + i * y * z;
+		// if (rowData == NULL) { cout << "rowData: NULL"; exit(1); }
+	    for (unsigned int j = 0; j < y; ++j) {
+	      double* cellData = rowData + j * z;
+		  // cout << "cellData: " << cellData << "\n";
+	      // if (cellData == NULL) { cout << "cellData: NULL"; exit(1); } 
+		  for (unsigned int k = 0 ; k < z; ++k) {
+		    // if( i > 150 && j > 160 && k > 10 ) {
+		    // cout << &cellData[k] << ": " << i << " " << j << " " << k << " ";
+			// cout.flush(); 
+			// cout << "cellData[k]: " << cellData[k] << "\n";
+			// }
+		    cellValVecPtr->push_back(cellData[k]);
+		  }
+	    }
+	  }*/
+	  
+	  /*cout << "Data in cellValVecPtr pushed\n";
+	  cout << "Assigning cellValVecPtr ptr\n";
+	  cellValColln.cellValVec = cellValVecPtr;
+	  cout << "Assignment successful\n";		          
+	}*/
+		
     // nrrdNuke deletes the nrrd and the data inside the nrrd
-    nrrdNuke( nrrd );
-  } else {
+    // nrrdNuke( nrrd );
+  // } else {
     // There was a problem
-    err = biffGetDone(NRRD);
-    cerr << "Error wrapping nrrd: "<<err<<"\n";
-  }  
+    // err = biffGetDone(NRRD);
+    // cerr << "Error wrapping nrrd: "<<err<<"\n";
+  // }  
   return;
 } // end getData
 
@@ -146,7 +238,10 @@ void
 handleVariable( QueryInfo &qinfo, IntVector &low, IntVector& hi,
                 IntVector &range, BBox &box,
                 const string &filename,
-                const Args & args )
+                const Args & args,
+				cellVals& cellVallColln,
+				bool dataReq,
+				int patchNo )
 {
   LVMeshHandle mesh_handle;
   switch( qinfo.type->getType() ) {
@@ -154,31 +249,31 @@ handleVariable( QueryInfo &qinfo, IntVector &low, IntVector& hi,
     mesh_handle = scinew LVMesh(range.x(), range.y(),
                                  range.z(), box.min(),
                                  box.max());
-    handleData<CCVariable<T>, T>( qinfo, low, mesh_handle, 0, filename, args );
+    handleData<CCVariable<T>, T>( qinfo, low, mesh_handle, 0, filename, args, cellVallColln, dataReq, patchNo );
     break;
   case Uintah::TypeDescription::NCVariable:
     mesh_handle = scinew LVMesh(range.x(), range.y(),
                                  range.z(), box.min(),
                                  box.max());
-    handleData<NCVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<NCVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq, patchNo );
     break;
   case Uintah::TypeDescription::SFCXVariable:
     mesh_handle = scinew LVMesh(range.x(), range.y()-1,
                                  range.z()-1, box.min(),
                                  box.max());
-    handleData<SFCXVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<SFCXVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq, patchNo );
     break;
   case Uintah::TypeDescription::SFCYVariable:
     mesh_handle = scinew LVMesh(range.x()-1, range.y(),
                                  range.z()-1, box.min(),
                                  box.max());
-    handleData<SFCYVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<SFCYVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq, patchNo );
     break;
   case Uintah::TypeDescription::SFCZVariable:
     mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
                                  range.z(), box.min(),
                                  box.max());
-    handleData<SFCZVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args );
+    handleData<SFCZVariable<T>, T>( qinfo, low, mesh_handle, 1, filename, args, cellVallColln, dataReq, patchNo );
     break;
   default:
     cerr << "Type is unknown.\n";
@@ -321,12 +416,15 @@ templateInstantiationForGetCC()
   const Args * args = NULL;
   LVMeshHandle mesh_handle;
   string       filename;
+  cellVals     cellVallColln;
+  bool		   dataReq = false;
+  int patchNo = 0;	
 
-  handleVariable<Vector> ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<double> ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<int>    ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<float>  ( *qinfo, low, hi, range, box, "", *args );
-  handleVariable<Matrix3>( *qinfo, low, hi, range, box, "", *args );
+  handleVariable<Vector> ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq, patchNo );
+  handleVariable<double> ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq, patchNo );
+  handleVariable<int>    ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq, patchNo );
+  handleVariable<float>  ( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq, patchNo );
+  handleVariable<Matrix3>( *qinfo, low, hi, range, box, "", *args, cellVallColln, dataReq, patchNo );
 
   templateInstantiationForGetCCHelper<Vector>();
   templateInstantiationForGetCCHelper<int>();
@@ -334,4 +432,3 @@ templateInstantiationForGetCC()
   templateInstantiationForGetCCHelper<double>();
   templateInstantiationForGetCCHelper<Matrix3>();
 }
-

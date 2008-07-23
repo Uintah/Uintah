@@ -11,6 +11,7 @@ SUBDIRS := \
 	$(SRCDIR)/pfs         \
 	$(SRCDIR)/puda        \
 	$(SRCDIR)/radiusMaker \
-        $(SRCDIR)/uda2nrrd
+        $(SRCDIR)/uda2nrrd    \
+        $(SRCDIR)/uda2vis
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

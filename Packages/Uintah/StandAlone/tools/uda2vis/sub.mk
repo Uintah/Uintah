@@ -1,5 +1,6 @@
-SRCDIR  := Packages/Uintah/StandAlone/tools/uda2nrrd
-PROGRAM := $(SRCDIR)/uda2nrrd
+include $(SCIRUN_SCRIPTS)/so_prologue.mk
+
+SRCDIR  := Packages/Uintah/StandAlone/tools/uda2vis
 
 #ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
   ifeq ($(LARGESOS),yes)
@@ -40,9 +41,7 @@ PROGRAM := $(SRCDIR)/uda2nrrd
 
   LIBS := $(XML2_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 
-  include $(SCIRUN_SCRIPTS)/program.mk
-
 #endif
 
-uda2nrrd: prereqs Packages/Uintah/StandAlone/tools/uda2nrrd/uda2nrrd
+include $(SCIRUN_SCRIPTS)/so_epilogue.mk
 
