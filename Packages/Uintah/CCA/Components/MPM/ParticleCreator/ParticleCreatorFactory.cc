@@ -1,6 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/DefaultParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
@@ -42,7 +41,7 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
     return scinew ShellParticleCreator(mat,flags);
   
   else
-    return scinew DefaultParticleCreator(mat,flags);
+    return scinew ParticleCreator(mat,flags);
 
 }
 

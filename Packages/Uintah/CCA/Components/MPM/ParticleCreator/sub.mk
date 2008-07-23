@@ -5,7 +5,6 @@ SRCDIR   := Packages/Uintah/CCA/Components/MPM/ParticleCreator
 SRCS     += \
 	$(SRCDIR)/ParticleCreator.cc	\
 	$(SRCDIR)/ParticleCreatorFactory.cc	\
-	$(SRCDIR)/DefaultParticleCreator.cc	\
 	$(SRCDIR)/ImplicitParticleCreator.cc	\
 	$(SRCDIR)/FractureParticleCreator.cc	\
 	$(SRCDIR)/MembraneParticleCreator.cc	\
