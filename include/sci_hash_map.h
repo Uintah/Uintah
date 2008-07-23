@@ -54,11 +54,9 @@
    using std::hash_map;
    using std::hash_multimap;
    using std::hash;
-#elif defined(HAVE_TR1_HASHSET)
+#elif defined(HAVE_TR1_HASHMAP)
 #  include <tr1/unordered_map>
-#  include <tr1/unordered_set>
 #  define hash_map std::tr1::unordered_map
-#  define hash_set std::tr1::unordered_set
 #  define hash_multimap std::tr1::unordered_multimap
    using std::tr1::hash;
 #elif defined(HAVE_GNU_BACKWARD_HASHMAP)
