@@ -2498,7 +2498,7 @@ fi
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <tr1/unordered_map>
                  std::tr1::unordered_map<int, int> xx;], ,
-		 [DEF_HASHMAP=HAVE_TR1_HASHSET])
+		 [DEF_HASHMAP=HAVE_TR1_HASHMAP])
 fi
 if test "$DEF_HASHMAP" = "None"; then
   AC_TRY_COMPILE([#include <ext/hash_map>
