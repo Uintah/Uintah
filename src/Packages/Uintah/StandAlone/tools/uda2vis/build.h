@@ -10,10 +10,14 @@
 using namespace SCIRun;
 using namespace Uintah;
 
+#ifdef __GNUC__
 // Force build_field() to NOT be inlined... so that the symbols will
 // actually be created so that they can be used during linking
 
-#define NO_INLINE __attribute__((noinline))
+#  define NO_INLINE __attribute__((noinline))
+#else
+#  define NO_INLINE
+#endif
 
 template <class T, class VarT, class FIELD>
 NO_INLINE
@@ -23,7 +27,8 @@ build_field( QueryInfo &qinfo,
              T& /* data_type */,
              VarT& /*var*/,
              FIELD *sfield,
-             const Args & args );
+             const Args & args,
+			 int patchNo );
 
 GridP
 build_minimal_patch_grid( GridP oldGrid );

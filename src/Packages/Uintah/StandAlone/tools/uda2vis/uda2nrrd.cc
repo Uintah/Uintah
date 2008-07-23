@@ -10,6 +10,8 @@
  *  Copyright (C) 2003-2007 U of U
  */
 
+#include "particleData.h"
+
 #include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
 
 #include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
@@ -39,6 +41,7 @@
 
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
@@ -109,9 +112,435 @@ usage( const string& badarg, const string& progname )
 }
 
 /////////////////////////////////////////////////////////////////////
+extern "C"
+levelPatchVec*
+getTotalNumPatches(const string& input_uda_name, int timeStepNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  
+  vector<int> index;
+  vector<double> times;
+  
+  // int* numPatches = new int();
+  // *numPatches = 0;
+  
+  levelPatchVec* levelPatchVecPtr = new levelPatchVec();
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
 
-int
-main(int argc, char** argv)
+  GridP grid = archive->queryGrid(timeStepNo);
+  int numLevels = grid->numLevels();
+  
+  LevelP level;
+  for (int i = 0; i < numLevels; i++) {
+    level = grid->getLevel(i);
+	IntVector rr = level->getRefinementRatio();
+	// cout << "Refinement ratio, Level " << i << ": " << level->getRefinementRatio() << endl;
+	levelPatch levelPatchObj(i, level->numPatches(), rr.x(), rr.y(), rr.z());
+	levelPatchVecPtr->push_back(levelPatchObj);
+	// *numPatches += level->numPatches();
+  }	
+
+  // return numPatches;
+  return levelPatchVecPtr;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+int*
+getNumPatches(const string& input_uda_name, int timeStepNo, int levelNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  
+  vector<int> index;
+  vector<double> times;
+  
+  int* numPatches = new int();
+  // *numPatches = 0;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  
+  LevelP level;
+  level = grid->getLevel(levelNo);
+  *numPatches = level->numPatches();
+
+  return numPatches;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+int*
+getNumLevels(const string& input_uda_name, int timeStepNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  
+  vector<int> index;
+  vector<double> times;
+  
+  int* numLevels = new int();
+  // *numLevels = 0;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  *numLevels = grid->numLevels();
+  
+  return numLevels;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+varMatls*
+getMaterials(const string& input_uda_name, const string& variable_name, int timeStepNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  varMatls* varMatlList = new varMatls();
+
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  int numLevels = grid->numLevels();
+  
+  LevelP level;
+  for (int i = 0; i < numLevels; i++) {
+    level = grid->getLevel(i);
+	const Patch* patch = *(level->patchesBegin());
+    ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
+	if (matls.size() > 0) { // Found particles, volume data should also be present there
+	  for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		     matlIter != matls.end(); matlIter++) {
+        varMatlList->push_back(*matlIter);
+      }
+	  break;
+    }
+	// break;
+  }		
+  
+  // LevelP level;
+  // level = grid->getLevel(0); // this may have to be modified as for particle data + AMR, its only on one level
+
+  // const Patch* patch = *(level->patchesBegin());
+  // ConsecutiveRangeSet matls = archive->queryMaterials(variable_name, patch, timeStepNo);
+
+  /*for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+		   matlIter != matls.end(); matlIter++) {
+      varMatlList->push_back(*matlIter);
+  }*/	
+  
+  return varMatlList;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+double*
+getBBox(const string& input_uda_name, int timeStepNo, int levelNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  
+  LevelP level;
+  BBox box;
+  
+  level = grid->getLevel(levelNo);
+  level->getSpatialRange(box);
+
+  Point min = box.min();
+  Point max = box.max();
+  
+  double *minMaxArr = new double[6];
+  
+  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
+  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
+  
+  return minMaxArr;
+} 
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+int*
+getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int patchNo, 
+			  const string& varType) { 
+// Modify this to include basis order, as implemented in handlePatchData
+// NC - 0, CC, SFCX, SFCY, SFCZ - 1
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  
+  LevelP level;
+  
+  level = grid->getLevel(levelNo);
+  const Patch* patch = level->getPatch(patchNo);
+  
+  IntVector patch_lo, patch_hi, low, hi;
+  
+  if(varType.find("CC") != string::npos) {
+    patch_lo = patch->getExtraCellLowIndex__New();
+	patch_hi = patch->getExtraCellHighIndex__New();
+  } 
+  else {
+    patch_lo = patch->getExtraNodeLowIndex__New();
+	// switch (qinfo.type->getType()) {
+	  // case Uintah::TypeDescription::SFCXVariable:
+	if(varType.find("SFCX") != string::npos)
+	  patch_hi = patch->getSFCXHighIndex__New();
+        // break;
+      // case Uintah::TypeDescription::SFCYVariable:
+	else if(varType.find("SFCY") != string::npos)
+	  patch_hi = patch->getSFCYHighIndex__New();
+        // break;
+      // case Uintah::TypeDescription::SFCZVariable:
+	else if(varType.find("SFCZ") != string::npos)
+	  patch_hi = patch->getSFCZHighIndex__New();
+        // break;
+      // case Uintah::TypeDescription::NCVariable:
+	else if(varType.find("NC") != string::npos)
+	  patch_hi = patch->getNodeHighIndex__New();
+        // break;
+      // default:
+        // cerr << "build_field::unknown variable.\n";
+        // exit(1);
+  }
+  
+  // IntVector range = patch_hi - patch_lo;
+  // cout << range << endl;
+  
+  level->findIndexRange(low, hi);
+  
+  // patch_lo = patch_lo - low;
+  // patch_hi = patch_hi - low;
+  
+  // cout << patch_lo << " " << patch_hi << endl;
+  
+  patch_lo = patch->getExtraCellLowIndex__New() - low;
+  patch_hi = patch->getExtraCellHighIndex__New() - low;
+  
+  int *indexArr = new int[6];
+  
+  indexArr[0] = patch_lo.x(); 
+  indexArr[1] = patch_lo.y(); 
+  indexArr[2] = patch_lo.z();
+  indexArr[3] = patch_hi.x(); 
+  indexArr[4] = patch_hi.y(); 
+  indexArr[5] = patch_hi.z();
+  
+  cout << indexArr[3] - indexArr[0] << " " << indexArr[4] - indexArr[1] << " " << indexArr[5] - indexArr[2] << "\n";
+  
+  return indexArr;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+patchInfoVec*
+getPatchInfo(const string& input_uda_name, int timeStepNo, const string& varType) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  int numLevels = grid->numLevels();
+  
+  patchInfoVec* patchInfoVecPtr = new patchInfoVec();
+  
+  IntVector patch_lo, patch_hi, low, hi;
+  Point min, max;
+  int *indexArr = new int[6];
+  double *minMaxArr = new double[6];
+  
+  LevelP level;
+  for (int i = 0; i < numLevels; i++) {
+    level = grid->getLevel(i);
+	level->findIndexRange(low, hi);
+	int numPatches = level->numPatches();
+	for (int j = 0; j < numPatches; j++) {
+	  const Patch* patch = level->getPatch(j);
+      // patch_lo = patch->getLowIndex() - low;
+	  // patch_hi = patch->getHighIndex() - low;
+	  
+	  if(varType.find("CC") != string::npos) {
+	    patch_lo = patch->getExtraCellLowIndex__New();
+		patch_hi = patch->getExtraCellHighIndex__New();
+	  } 
+	  else {
+        patch_lo = patch->getExtraNodeLowIndex__New();
+	    if(varType.find("SFCX") != string::npos)
+	      patch_hi = patch->getSFCXHighIndex__New();
+		else if(varType.find("SFCY") != string::npos)
+		  patch_hi = patch->getSFCYHighIndex__New();
+		else if(varType.find("SFCZ") != string::npos)
+		  patch_hi = patch->getSFCZHighIndex__New();
+		else if(varType.find("NC") != string::npos)
+		  patch_hi = patch->getNodeHighIndex__New();
+	  }
+  
+	  level->findIndexRange(low, hi);
+  
+	  patch_lo = patch_lo - low;
+	  patch_hi = patch_hi - low;
+	  
+	  indexArr[0] = patch_lo.x(); 
+	  indexArr[1] = patch_lo.y(); 
+      indexArr[2] = patch_lo.z();
+      indexArr[3] = patch_hi.x(); 
+      indexArr[4] = patch_hi.y(); 
+      indexArr[5] = patch_hi.z();
+	  
+	  min = patch->getExtraBox().lower();
+	  max = patch->getExtraBox().upper();
+	  
+	  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
+	  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
+	  
+	  patchInfo patchInfoObj(indexArr, minMaxArr);
+	  patchInfoVecPtr->push_back(patchInfoObj);
+    }
+  }		
+  
+  return patchInfoVecPtr;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+double*
+getPatchBBox(const string& input_uda_name, int timeStepNo, int levelNo, int patchNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  
+  LevelP level;
+  
+  level = grid->getLevel(levelNo);
+  const Patch* patch = level->getPatch(patchNo);
+  
+  // BBox bbox;
+  // level->getSpatialRange(bbox);
+
+  // Point min = bbox.min();
+  // Point max = bbox.max();
+  
+  // Vector length = max - min;
+  
+  // IntVector hi, lo, patch_hi, patch_lo, range;
+  
+  // patch_lo = patch->getCellLowIndex();
+  // patch_hi = patch->getCellHighIndex();
+
+  // level->findIndexRange(lo, hi);
+  
+  // range = hi - lo;
+  
+  // cout << "patch_lo: " << patch_lo << endl;
+  // cout << "patch_hi: " << patch_hi << endl;
+  // cout << "lo: " << lo << endl;
+  // cout << "hi: " << hi << endl;
+  
+  // double lowerx((double)(patch_lo.x() - lo.x()) / range.x());
+  // double upperx((double)(patch_hi.x() - lo.x()) / range.x());
+  
+  // double lowery((double)(patch_lo.y() - lo.y()) / range.y());
+  // double uppery((double)(patch_hi.y() - lo.y()) / range.y());
+  
+  // double lowerz((double)(patch_lo.z() - lo.z()) / range.z());
+  // double upperz((double)(patch_hi.z() - lo.z()) / range.z());
+  
+  Point min = patch->getExtraBox().lower();
+  Point max = patch->getExtraBox().upper();
+
+  // cout << "Min: " << lower << " Max: " << upper << endl; 
+  
+  double *minMaxArr = new double[6];
+  
+  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
+  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
+  
+  // minMaxArr[0] = min.x() + lowerx * length.x(); 
+  // minMaxArr[1] = min.y() + lowery * length.y(); 
+  // minMaxArr[2] = min.z() + lowerz * length.z();
+  
+  // minMaxArr[3] = min.x() + upperx * length.x(); 
+  // minMaxArr[4] = min.y() + uppery * length.y(); 
+  // minMaxArr[5] = min.z() + upperz * length.z();
+  
+  return minMaxArr;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+int*
+getTimeSteps(const string& input_uda_name) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  
+  // Get the times and indices.
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  archive->queryTimesteps(index, times);
+  
+  int* noTimeSteps = new int(index.size());
+  return noTimeSteps;
+} 
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+udaVars*
+getVarList(const string& input_uda_name) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  udaVars* udaVarList = new udaVars();
+
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
+  
+  archive->queryVariables(vars, types);
+  
+  for (unsigned int i = 0; i < vars.size(); i++) {
+    string nameType = vars[i] + "/" + types[i]->getName(); 
+    udaVarList->push_back(nameType);
+    cout << vars[i] << " " << types[i]->getName() << endl;
+  }
+  
+  return udaVarList;
+} 
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+timeStep*
+processData(int argc, char argv[][128], int timeStepNo, bool dataReq, int matlNo, 
+            bool matlClassfication, int patchNo) // patchNo not required anymore, should remove it
 {
   /*
    * Default values
@@ -134,6 +563,8 @@ main(int argc, char** argv)
   int level_index = 0;
 
   bool do_particles = false;
+  
+  // cout << argc << " " << *(argv[5]) << endl;
   
   /*
    * Parse arguments
@@ -340,10 +771,15 @@ main(int argc, char** argv)
       }
     }
 
+	// Create a vector of clas timeStep. This is where we store all time step data.
+	// udaData *dataBank = new udaData(); // No longer needed
+
     ////////////////////////////////////////////////////////
     // Loop over each timestep
-    for( unsigned long time = time_step_lower; time <= time_step_upper; time += tinc ) {
-        
+    // for( unsigned long time = time_step_lower; time <= time_step_upper; time += tinc ) {
+
+      unsigned long time = time_step_lower + timeStepNo * tinc;
+
       /////////////////////////////
       // Figure out the filename
 
@@ -358,10 +794,18 @@ main(int argc, char** argv)
       if (level_index >= grid->numLevels() || level_index < 0) {
         cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
         cerr << "Trying next timestep.\n";
-        continue;
+        exit(1); 
+		// continue;
       }
     
       vector<ParticleDataContainer> particleDataArray;
+	  
+	  // Create a timeStep object, corresponding to every time step.
+	  timeStep* timeStepObjPtr = new timeStep();
+
+	  // Storing the time step name/ no.
+	  timeStepObjPtr->name.assign(filename_num + 1);
+	  timeStepObjPtr->no = index[time];
 
       LevelP level;
 
@@ -378,7 +822,7 @@ main(int argc, char** argv)
         variable_name = vars[var_index];
         
         if( !args.quiet ) {
-          cout << "Extracting data for " << vars[var_index] << ": " << types[var_index]->getName() << "\n";
+          // cout << "Extracting data for " << vars[var_index] << ": " << types[var_index]->getName() << "\n";
         }
 
         //////////////////////////////////////////////////
@@ -404,7 +848,7 @@ main(int argc, char** argv)
                 // The particles are on this level...
                 found_particle_level = true;
                 level = particleLevel;
-                cout << "Found the PARTICLES on level " << lev << ".\n";
+                // cout << "Found the PARTICLES on level " << lev << ".\n";
               }
             }
           }
@@ -481,10 +925,25 @@ main(int argc, char** argv)
         } else {
           level->findIndexRange(low, hi);
           level->getSpatialRange(box);
+		  
+		  // const Patch* patch = level->getPatch(patchNo);
+		  
+		  // Point min = patch->getExtraBox().lower();
+		  // Point max = patch->getExtraBox().upper();
+  
+		  // box = BBox(min, max);
+		  
+		  // patch_low = patch->getLowIndex();
+		  // patch_hi = patch->getHighIndex();
+		  
+		  // patch_low = patch->getExtraCellLowIndex__New();
+		  // patch_hi = patch->getExtraCellHighIndex__New();
         }
-        range = hi - low;
+		
+		// this is a hack to make things work, substantiated in build_multi_level_field()
+        range = hi - low /*+ IntVector(1, 1, 1)*/;
 
-        if (qinfo.type->getType() == Uintah::TypeDescription::CCVariable) {
+	    if (qinfo.type->getType() == Uintah::TypeDescription::CCVariable) {
           IntVector cellLo, cellHi;
           if( args.remove_boundary ) {
             level->findInteriorCellIndexRange(cellLo, cellHi);
@@ -492,8 +951,9 @@ main(int argc, char** argv)
             level->findCellIndexRange(cellLo, cellHi);
           }
           if (is_periodic_bcs(cellHi, hi)) {
+			// cout << "is_periodic_bcs test\n";
             IntVector newrange(0,0,0);
-            get_periodic_bcs_range( cellHi, hi, range, newrange);
+            get_periodic_bcs_range(cellHi, hi, range, newrange);
             range = newrange;
           }
         }
@@ -501,20 +961,20 @@ main(int argc, char** argv)
         // Adjust the range for using all levels
         if( args.use_all_levels && grid->numLevels() > 0 ){
           double exponent = grid->numLevels() - 1;
-          range.x( range.x() * int(pow(2, exponent)));
-          range.y( range.y() * int(pow(2, exponent)));
-          range.z( range.z() * int(pow(2, exponent)));
-          low.x( low.x() * int(pow(2, exponent)));
-          low.y( low.y() * int(pow(2, exponent)));
-          low.z( low.z() * int(pow(2, exponent)));
-          hi.x( hi.x() * int(pow(2, exponent)));
-          hi.y( hi.y() * int(pow(2, exponent)));
-          hi.z( hi.z() * int(pow(2, exponent)));
+          range.x( range.x() * int(pow(2.0, exponent)));
+          range.y( range.y() * int(pow(2.0, exponent)));
+          range.z( range.z() * int(pow(2.0, exponent)));
+          low.x( low.x() * int(pow(2.0, exponent)));
+          low.y( low.y() * int(pow(2.0, exponent)));
+          low.z( low.z() * int(pow(2.0, exponent)));
+          hi.x( hi.x() * int(pow(2.0, exponent)));
+          hi.y( hi.y() * int(pow(2.0, exponent)));
+          hi.z( hi.z() * int(pow(2.0, exponent)));
             
           if( args.verbose ){
-            cout<<"The entire domain for all levels will have an index range of "
-                <<low<<" to "<<hi
-                <<" and a spatial range from "<<box.min()<<" to "
+            cout<< "The entire domain for all levels will have an index range of "
+                << low <<" to "<< hi
+                << " and a spatial range from "<< box.min()<< " to "
                 << box.max()<<".\n";
           }
         }
@@ -528,25 +988,25 @@ main(int argc, char** argv)
 
           switch (subtype->getType()) {
           case Uintah::TypeDescription::double_type:
-            data = handleParticleData<double>( qinfo );
+            data = handleParticleData<double>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::float_type:
-            data = handleParticleData<float>( qinfo );
+            data = handleParticleData<float>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::int_type:
-            data = handleParticleData<int>( qinfo );
+            data = handleParticleData<int>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::long64_type:
-            data = handleParticleData<long64>( qinfo );
+            data = handleParticleData<long64>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::Point:
-            data = handleParticleData<Point>( qinfo );
+            data = handleParticleData<Point>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::Vector:
-            data = handleParticleData<Vector>( qinfo );
+            data = handleParticleData<Vector>( qinfo, matlNo, matlClassfication );
             break;
           case Uintah::TypeDescription::Matrix3:
-            data = handleParticleData<Matrix3>( qinfo );
+            data = handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication );
             break;
           default:
             cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";
@@ -559,19 +1019,24 @@ main(int argc, char** argv)
             
           switch (subtype->getType()) {
           case Uintah::TypeDescription::double_type:
-            handleVariable<double>( qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<double>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
             break;
           case Uintah::TypeDescription::float_type:
-            handleVariable<float>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<float>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
             break;
           case Uintah::TypeDescription::int_type:
-            handleVariable<int>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<int>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
             break;
           case Uintah::TypeDescription::Vector:
-            handleVariable<Vector>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<Vector>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
             break;
           case Uintah::TypeDescription::Matrix3:
-            handleVariable<Matrix3>(qinfo, low, hi, range, box, filename, args );
+		    timeStepObjPtr->cellValColln = new cellVals();
+            handleVariable<Matrix3>( qinfo, low, hi, range, box, filename, args, *(timeStepObjPtr->cellValColln), dataReq, patchNo );
             break;
           case Uintah::TypeDescription::bool_type:
           case Uintah::TypeDescription::short_int_type:
@@ -587,11 +1052,20 @@ main(int argc, char** argv)
         }
       } // end variables loop
 
-      if( do_particles ) {
-        saveParticleData( particleDataArray, filename );
-      }
+	  // Passing the 'variables', a vector member variable to the function. This is where all the particles, along with the variables, 
+	  // get stored. 
 
-    } // end time step loop
+      if( do_particles ) {
+        timeStepObjPtr->varColln = new variables();
+        saveParticleData( particleDataArray, filename, *(timeStepObjPtr->varColln) );
+      }
+	  
+	  // Adding time step object to the data bank 
+	  // dataBank->push_back(timeStepObj);
+
+	  return timeStepObjPtr;
+
+    // } // end time step loop
     
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << "\n";
@@ -601,3 +1075,4 @@ main(int argc, char** argv)
     exit(1);
   }
 }
+

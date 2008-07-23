@@ -30,7 +30,8 @@ build_field( QueryInfo &qinfo,
              T& /* data_type */,
              VarT& /*var*/,
              FIELD *sfield,
-             const Args & args )
+             const Args & args,
+			 int patchNo )
 {
   // TODO: Bigler
   // Not sure I need this yet
@@ -39,7 +40,10 @@ build_field( QueryInfo &qinfo,
   // Loop over each patch and get the data from the data archive.
   for( Level::const_patchIterator patch_it = qinfo.level->patchesBegin();
        patch_it != qinfo.level->patchesEnd(); ++patch_it){
-    const Patch* patch = *patch_it;
+	   
+	const Patch* patch = *patch_it;
+	// const Patch* patch = qinfo.level->getPatch(patchNo);
+	
     // This gets the data
     handlePatchData<T, VarT, FIELD>(qinfo, offset, sfield, patch, args);
   }
@@ -326,6 +330,7 @@ instHelper()
   CCVariable<T>   * ccv = NULL;
   NCVariable<T>   * ncv = NULL;
   T * aT = NULL;
+  int patchNo = 0;
 
   build_combined_level_field<T, SFCXVariable<T>, LVFieldCB, FLOC>( *qinfo, low, sf, *args );
   build_combined_level_field<T, SFCYVariable<T>, LVFieldCB, FLOC>( *qinfo, low, sf, *args );
@@ -351,17 +356,17 @@ instHelper()
   build_combined_level_field<T, CCVariable<T>,   LVFieldLB, FLON>( *qinfo, low, flb, *args );
   build_combined_level_field<T, NCVariable<T>,   LVFieldLB, FLON>( *qinfo, low, flb, *args );
 
-  build_field( *qinfo, low, *aT, *sfcxv, sf, *args );
-  build_field( *qinfo, low, *aT, *sfcyv, sf, *args );
-  build_field( *qinfo, low, *aT, *sfczv, sf, *args );
-  build_field( *qinfo, low, *aT, *ccv,   sf, *args );
-  build_field( *qinfo, low, *aT, *ncv,   sf, *args );
+  build_field( *qinfo, low, *aT, *sfcxv, sf, *args, patchNo );
+  build_field( *qinfo, low, *aT, *sfcyv, sf, *args, patchNo );
+  build_field( *qinfo, low, *aT, *sfczv, sf, *args, patchNo );
+  build_field( *qinfo, low, *aT, *ccv,   sf, *args, patchNo );
+  build_field( *qinfo, low, *aT, *ncv,   sf, *args, patchNo );
 
-  build_field( *qinfo, low, *aT, *sfcxv, flb, *args );
-  build_field( *qinfo, low, *aT, *sfcyv, flb, *args );
-  build_field( *qinfo, low, *aT, *sfczv, flb, *args );
-  build_field( *qinfo, low, *aT, *ccv,   flb, *args );
-  build_field( *qinfo, low, *aT, *ncv,   flb, *args );
+  build_field( *qinfo, low, *aT, *sfcxv, flb, *args, patchNo );
+  build_field( *qinfo, low, *aT, *sfcyv, flb, *args, patchNo );
+  build_field( *qinfo, low, *aT, *sfczv, flb, *args, patchNo );
+  build_field( *qinfo, low, *aT, *ccv,   flb, *args, patchNo );
+  build_field( *qinfo, low, *aT, *ncv,   flb, *args, patchNo );
 }
 
 void
