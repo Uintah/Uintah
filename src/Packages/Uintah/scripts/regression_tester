@@ -288,11 +288,14 @@ run_test () {
     input_file=../$n.ups.rt
 
     num_proc
+    opts=""
   
     if test $numproc -gt 1; then
         MPI="mpirun -np $numproc"
+        opts="$opts -mpi"
     elif test $MPI_RUN == "yes"; then
         MPI="mpirun -np $numproc"
+        opts="$opts -mpi"
     else
         MPI=""
     fi
