@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/particles.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/particles.h>
 
 #include <Core/Geometry/Point.h>
 

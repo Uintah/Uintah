@@ -1,9 +1,9 @@
 #ifndef UDA2NRRD_BUILD_FUNCTIONS_H
 #define UDA2NRRD_BUILD_FUNCTIONS_H
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/QueryInfo.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
 
 #include <Core/Datatypes/Field.h>
 

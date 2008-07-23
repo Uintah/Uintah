@@ -8,7 +8,7 @@
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
 
 class SCIRun::BBox;
 class SCIRun::IntVector;

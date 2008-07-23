@@ -5,10 +5,10 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/MultiLevelField.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/build.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/build.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/update_mesh_handle.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/handleVariable.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/update_mesh_handle.h>
 
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>

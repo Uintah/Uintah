@@ -6,11 +6,11 @@
 // End template needed .h files
 /////////////////
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/handleVariable.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/build.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/build.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/wrap_nrrd.h>
 
 #include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 

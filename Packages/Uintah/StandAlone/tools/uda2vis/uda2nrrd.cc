@@ -10,15 +10,15 @@
  *  Copyright (C) 2003-2007 U of U
  */
 
-#include "particleData.h"
+#include <Packages/Uintah/StandAlone/tools/uda2vis/particleData.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/wrap_nrrd.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/bc.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/particles.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/bc.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/handleVariable.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/particles.h>
+#include <Packages/Uintah/StandAlone/tools/uda2vis/QueryInfo.h>
 
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Basis/Constant.h>
