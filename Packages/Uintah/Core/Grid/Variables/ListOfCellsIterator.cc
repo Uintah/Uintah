@@ -6,7 +6,7 @@ namespace Uintah
 
   std::ostream& operator<<(std::ostream& out, const Uintah::ListOfCellsIterator& b)
   {
-    out << "[ListOfCellsIterator at index" << b.index_ << " of " << b.listOfCells_.size() << "]" ;
+    out << "[ListOfCellsIterator at index" << b.index_ << " of " << b.listOfCells_.size()-1 << "]" ;
 
     return out;
 

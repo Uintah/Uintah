@@ -83,7 +83,7 @@ namespace Uintah {
     virtual IntVector begin() const=0;
 
     /**
-     * Return the last element of the iterator
+     * Return one past the last element of the iterator
      */
     virtual IntVector end() const=0;
 

@@ -2,6 +2,7 @@
 #ifndef UINTAH_HOMEBREW_ListOfCellsIterator_H
 #define UINTAH_HOMEBREW_ListOfCellsIterator_H
 
+#include <climits>
 #include <vector>
 using namespace std;
 
@@ -48,7 +49,7 @@ namespace Uintah {
 
     public:
 
-    ListOfCellsIterator() : index_(0) {}
+    ListOfCellsIterator() : index_(0) { listOfCells_.push_back(IntVector(INT_MAX,INT_MAX,INT_MAX)); }
 
   ListOfCellsIterator(const ListOfCellsIterator &copy) : listOfCells_(copy.listOfCells_) {reset(); }
 
@@ -66,7 +67,7 @@ namespace Uintah {
     /**
      * returns true if the iterator is done
      */    
-    bool done() const { return index_==listOfCells_.size(); }
+    bool done() const { return index_==listOfCells_.size()-1; }
 
     /**
      * returns the IntVector that the current iterator is pointing at
@@ -79,14 +80,21 @@ namespace Uintah {
     inline IntVector begin() const { return listOfCells_.front(); }
 
     /**
-     * Return the last element of the iterator
+     * Return one past the last element of the iterator
      */
     inline IntVector end() const { return listOfCells_.back(); }
 
     /**
      * adds a cell to the list of cells
      */
-    inline void add(const IntVector& c) { listOfCells_.push_back(c); }
+    inline void add(const IntVector& c) 
+    {
+      //place at back of list
+      listOfCells_.back()=c;
+      //readd sentinal to list
+      listOfCells_.push_back(IntVector(INT_MAX,INT_MAX,INT_MAX));
+    }
+
 
     /**
      * resets the iterator
