@@ -82,9 +82,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
     return scinew MPMICE(world,RIGID_MPMICE, doAMR);
   } 
-  if (sim_comp == "fmpmice" || sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
-    return scinew MPMICE(world,FRACTURE_MPMICE, doAMR);
-  } 
 #endif
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
@@ -134,6 +131,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   } 
 
   throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
-                              "-impm, -fmpmice, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3"
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3"
                               "\nMake sure that component is supported in this build", __FILE__, __LINE__);
 }
