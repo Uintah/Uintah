@@ -1386,6 +1386,7 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
 			    int numGhostCells,
 			    IntVector& lowOffset, IntVector& highOffset)
 {
+  MALLOC_TRACE_TAG_SCOPE("Patch::getGhostOffsets");
   // This stuff works by assuming there are no neighbors.  If there are
   // neighbors, it can simply cut back appropriately later (no neighbor
   // essentially means no ghost cell on that side).
