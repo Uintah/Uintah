@@ -137,7 +137,6 @@ usage( const std::string & message,
       cerr << "-smpm                : option for shell MPM\n";
       cerr << "-smpmice             : option for shell MPM with ICE\n";
       cerr << "-rmpmice             : option for rigid MPM with ICE\n";
-      cerr << "-fmpmice             : option for Fracture MPM with ICE\n";
       cerr << "-ice                 : \n";
       cerr << "-arches              : \n";
       cerr << "-AMR                 : use AMR simulation controller\n";
