@@ -25,6 +25,7 @@ void
 PackBufferInfo::get_type(void*& out_buf, int& out_count,
 			 MPI_Datatype& out_datatype, MPI_Comm comm)
 {
+  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::get_type");
   ASSERT(count() > 0);
   if(!have_datatype){
     int packed_size;
@@ -56,6 +57,7 @@ void PackBufferInfo::get_type(void*&, int&, MPI_Datatype&)
 void
 PackBufferInfo::pack(MPI_Comm comm, int& out_count)
 {
+  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::pack");
   ASSERT(have_datatype);
 
   int position = 0;
@@ -77,6 +79,7 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
 void
 PackBufferInfo::unpack(MPI_Comm comm)
 {
+  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::unpack");
   ASSERT(have_datatype);
 
   int position = 0;
