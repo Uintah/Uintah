@@ -2,7 +2,7 @@
 // File:          scijump_BabelPortInfo_Impl.hxx
 // Symbol:        scijump.BabelPortInfo-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for scijump.BabelPortInfo
 // 
 // WARNING: Automatically generated; only changes within splicers preserved

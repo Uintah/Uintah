@@ -2,7 +2,7 @@
 // File:          scijump_BuilderService_Impl.cxx
 // Symbol:        scijump.BuilderService-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for scijump.BuilderService
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -777,6 +777,7 @@ scijump::BuilderService_impl::processEvent_impl (
   // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.BuilderService.processEvent)
   // DO-NOT-DELETE splicer.end(scijump.BuilderService.processEvent)
 }
+
 
 // DO-NOT-DELETE splicer.begin(scijump.BuilderService._misc)
 // Insert-Code-Here {scijump.BuilderService._misc} (miscellaneous code)

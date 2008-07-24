@@ -2,7 +2,7 @@
 // File:          scijump_BabelServices_Impl.hxx
 // Symbol:        scijump.BabelServices-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for scijump.BabelServices
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -278,7 +278,7 @@ namespace scijump {
      * associated with this port.
      * In these properties, all frameworks recognize at least the
      * following keys and values in implementing registerUsesPort:
-     * <pre xml:space="preserve">
+     * <pre>
      * key:              standard values (in string form)     default
      * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
      * "MIN_CONNECTIONS" any integer > 0.                        0
@@ -349,7 +349,7 @@ namespace scijump {
      * associated with this port.
      * In these properties, all frameworks recognize at least the
      * following keys and values in implementing registerUsesPort:
-     * <pre xml:space="preserve">
+     * <pre>
      * key:              standard values (in string form)     default
      * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
      * "MIN_CONNECTIONS" any integer > 0.                        0
