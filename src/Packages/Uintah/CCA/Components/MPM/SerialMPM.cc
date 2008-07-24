@@ -126,15 +126,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   else
     restart_mat_ps = prob_spec;
 
-#if 0
-  if (restart_prob_spec){
-    restart_mat_ps = restart_prob_spec;
-  }
-  else{
-    restart_mat_ps = prob_spec;
-  }
-#endif
-
   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
   if (!mpm_soln_ps){
     ostringstream warn;
@@ -2640,13 +2631,7 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
         continue;
 
       ParticleVariable<int> damage;
-#if 0
-      cout << "Current MPM Old_DW Labels in Add New Particles" << endl;
-      vector<const VarLabel*> mpm_label = 
-        mpm_matl->getParticleCreator()->returnParticleState();
-      printParticleLabels(mpm_label,old_dw,dwi,patch);
-#endif
-      
+
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       new_dw->allocateTemporary(damage,pset);
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
@@ -2668,12 +2653,11 @@ void SerialMPM::addNewParticles(const ProcessorGroup*,
           delset->addParticle(*iter);
         }
       }
-      
+
       // Find the mpm material that corresponds to the void particles.
       // Will probably be the same type as the deleted ones, but have
       // different parameters.
-      
-      
+
       int numparticles = delset->numParticles();
 
       if (cout_dbg.active())
