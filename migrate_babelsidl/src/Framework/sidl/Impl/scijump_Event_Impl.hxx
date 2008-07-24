@@ -2,7 +2,7 @@
 // File:          scijump_Event_Impl.hxx
 // Symbol:        scijump.Event-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for scijump.Event
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -67,7 +67,8 @@ namespace scijump {
     bool _wrapped;
 
     // DO-NOT-DELETE splicer.begin(scijump.Event._implementation)
-    // Insert-Code-Here {scijump.Event._implementation} (additional details)
+    gov::cca::TypeMap header;
+    gov::cca::TypeMap body; 
     // DO-NOT-DELETE splicer.end(scijump.Event._implementation)
 
   public:

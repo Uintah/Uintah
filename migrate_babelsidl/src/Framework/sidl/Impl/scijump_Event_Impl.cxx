@@ -2,7 +2,7 @@
 // File:          scijump_Event_Impl.cxx
 // Symbol:        scijump.Event-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.2.0
 // Description:   Server-side implementation for scijump.Event
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -76,16 +76,7 @@ scijump::Event_impl::setHeader_impl (
   /* in */::gov::cca::TypeMap& h ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.Event.setHeader)
-  // Insert-Code-Here {scijump.Event.setHeader} (setHeader method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Event.setHeader)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "setHeader");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Event.setHeader)
+  header = h;
   // DO-NOT-DELETE splicer.end(scijump.Event.setHeader)
 }
 
@@ -97,16 +88,7 @@ scijump::Event_impl::setBody_impl (
   /* in */::gov::cca::TypeMap& b ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.Event.setBody)
-  // Insert-Code-Here {scijump.Event.setBody} (setBody method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Event.setBody)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "setBody");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Event.setBody)
+  body = b;
   // DO-NOT-DELETE splicer.end(scijump.Event.setBody)
 }
 
@@ -119,16 +101,7 @@ scijump::Event_impl::getHeader_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.Event.getHeader)
-  // Insert-Code-Here {scijump.Event.getHeader} (getHeader method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Event.getHeader)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getHeader");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Event.getHeader)
+  return header;
   // DO-NOT-DELETE splicer.end(scijump.Event.getHeader)
 }
 
@@ -141,16 +114,7 @@ scijump::Event_impl::getBody_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.Event.getBody)
-  // Insert-Code-Here {scijump.Event.getBody} (getBody method)
-  // 
-  // This method has not been implemented
-  // 
-  // DO-DELETE-WHEN-IMPLEMENTING exception.begin(scijump.Event.getBody)
-  ::sidl::NotImplementedException ex = ::sidl::NotImplementedException::_create();
-  ex.setNote("This method has not been implemented");
-  ex.add(__FILE__, __LINE__, "getBody");
-  throw ex;
-  // DO-DELETE-WHEN-IMPLEMENTING exception.end(scijump.Event.getBody)
+  return body;
   // DO-NOT-DELETE splicer.end(scijump.Event.getBody)
 }
 
