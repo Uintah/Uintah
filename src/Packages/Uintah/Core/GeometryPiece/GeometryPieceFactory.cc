@@ -17,7 +17,6 @@
 #include <Packages/Uintah/Core/GeometryPiece/IntersectionGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/NullGeometryPiece.h>
-
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
@@ -73,24 +72,27 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       bool goHasInfo = childBlock || data != "";
 
       if( referencedPiece.get_rep() != NULL && goHasInfo ) {
-        cout << "Error: GeometryPiece (" << go_type << ")" << " labeled: '" << go_label 
-             << "' has already been specified...  You can't change its values.\n"
-             << "Please just reference the original by only using the label (no values)\n";
-        throw ProblemSetupException("Duplicate GeomPiece definition not allowed",
+       cout << "Error: GeometryPiece (" << go_type << ")"
+            << " labeled: '" << go_label 
+            << "' has already been specified...  You can't change its values.\n"
+            << "Please just reference the original by only "
+            << "using the label (no values)\n";
+       throw ProblemSetupException("Duplicate GeomPiece definition not allowed",
                                     __FILE__, __LINE__);
       }
 
       if( goHasInfo ) {
-
-        dbg << "Creating new GeometryPiece: " << go_label <<  " (of type: " << go_type << ")\n";
-
+        dbg << "Creating new GeometryPiece: " << go_label 
+            <<  " (of type: " << go_type << ")\n";
       } else {
 
         if( referencedPiece.get_rep() != NULL ) {
-          dbg << "Referencing GeometryPiece: " << go_label << " (of type: " << go_type << ")\n";
+          dbg << "Referencing GeometryPiece: " << go_label 
+              << " (of type: " << go_type << ")\n";
           objs.push_back( referencedPiece );
         } else {
-          cout << "Error... couldn't find the referenced GeomPiece: " << go_label << " (" << go_type << ")\n";
+          cout << "Error... couldn't find the referenced GeomPiece: " 
+               << go_label << " (" << go_type << ")\n";
           throw ProblemSetupException("Referenced GeomPiece does not exist",
                                       __FILE__, __LINE__);
         }
@@ -98,10 +100,11 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
         // Verify that the referenced piece is of the same type as
         // the originally created piece.
         if( referencedPiece->getType() != go_type ) {
-          cout << "Error... the referenced GeomPiece: " << go_label << " (" << referencedPiece->getType() << "), "
-               << "is not of the same type as this new object: '" << go_type << "'!\n";
-          throw ProblemSetupException("Referenced GeomPiece is not of the same type as original",
-                                      __FILE__, __LINE__);
+          cout << "Error... the referenced GeomPiece: " << go_label 
+               << " (" << referencedPiece->getType() << "), "
+               << "is not of the same type as this new object: '" 
+               << go_type << "'!\n";
+          throw ProblemSetupException("Referenced GeomPiece is not of the same type as original",__FILE__, __LINE__);
         }
         continue;
       }
