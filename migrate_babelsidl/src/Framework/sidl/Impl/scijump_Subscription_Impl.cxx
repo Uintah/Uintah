@@ -39,6 +39,7 @@
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.Subscription._includes)
 #include <scijump_EventServiceException.hxx>
+#include <iostream>
 // DO-NOT-DELETE splicer.end(scijump.Subscription._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!

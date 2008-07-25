@@ -39,6 +39,7 @@
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.Topic._includes)
 #include <scijump_EventServiceException.hxx>
+#include <iostream>
 // DO-NOT-DELETE splicer.end(scijump.Topic._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
@@ -159,7 +160,6 @@ scijump::Topic_impl::processEvents_impl ()
 
   for (SubscriptionMap::iterator subscriptionIter = subscriptionMap.begin();
        subscriptionIter != subscriptionMap.end(); subscriptionIter++) {
-
     Subscription subscriptionPtr = subscriptionIter->second;
     if (subscriptionPtr._is_nil()) {
       EventServiceException ex = EventServiceException::_create();
