@@ -264,7 +264,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
                               const Patch::FaceType face,
                               CCVariable<Vector>& vel_CC,
                               const string& var_desc,
-                              const vector<IntVector>* bound_ptr,
+                              Iterator& bound_ptr,
                               const string& bc_kind,
                               const Vector wall_vel,
                               Slip_vars* sv)                     
@@ -304,8 +304,8 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
       cout_dbg << " SLIP"<< endl;
       
       vector<IntVector>::const_iterator iter;
-      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-        IntVector c = *iter;
+      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+        IntVector c = *bound_ptr;
         IntVector in = c - offset;
         // normal direction velocity
         vel_CC[c] = wall_vel; 
@@ -322,9 +322,8 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     if(bc_kind == "creep") {
       cout_dbg << " CREEP"<< endl;
       
-      vector<IntVector>::const_iterator iter;
-      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-        IntVector c = *iter;
+      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+        IntVector c = *bound_ptr;
         IntVector in = c - offset;
         // normal direction velocity
         vel_CC[c] = wall_vel; 
@@ -348,7 +347,7 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
                                  const Patch::FaceType face,
                                  CCVariable<double>& temp_CC,
                                  const string& var_desc,
-                                 const vector<IntVector>* bound_ptr,
+                                 Iterator& bound_ptr,
                                  const string& bc_kind,
                                  const double wall_temp,
                                  Slip_vars* sv)  
@@ -380,9 +379,8 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
     //    S I D E     
     //double A =( 2.0 - alpha_temperature) /alpha_temperature;
     
-    vector<IntVector>::const_iterator iter;
-    for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-      IntVector c = *iter;
+    for (bound_ptr.begin(); bound_ptr.done(); bound_ptr++) {
+      IntVector c = *bound_ptr;
       IntVector in = c - offset;
       
       //double B = 2.0*(gamma[in] -1) / (gamma[in] + 1);

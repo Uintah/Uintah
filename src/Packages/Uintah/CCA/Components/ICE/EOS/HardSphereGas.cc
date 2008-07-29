@@ -83,7 +83,7 @@ double HardSphereGas::getAlpha(double Temp, double sp_vol, double , double )
 // call this after set Dirchlet and Neuman BC
 void HardSphereGas::hydrostaticTempAdjustment(Patch::FaceType face, 
                                          const Patch* patch,
-                                         const vector<IntVector>* bound_ptr,
+                                         Iterator& bound_ptr,
                                          Vector& gravity,
                                          const CCVariable<double>& gamma,
                                          const CCVariable<double>& cv,
@@ -97,9 +97,8 @@ void HardSphereGas::hydrostaticTempAdjustment(Patch::FaceType face,
   // on xminus yminus zminus you subtract the increment
   double dx_grav = gravity[P_dir] * cell_dx[P_dir];
   
-   vector<IntVector>::const_iterator iter;  
-   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     IntVector c = *iter;
-     Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] ); 
+  for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+    IntVector c = *bound_ptr;
+    Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] ); 
   }
 }

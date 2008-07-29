@@ -205,13 +205,13 @@ void Tillotson::computePressEOS(double rho, double, double, double,
 // Update temperature boundary conditions due to hydrostatic pressure gradient
 // call this after set Dirchlet and Neuman BC
 void Tillotson::hydrostaticTempAdjustment(Patch::FaceType, 
-                                    const Patch*,
-                                    const vector<IntVector>*,
-                                    Vector&,
-                                    const CCVariable<double>&,
-                                    const CCVariable<double>&,
-                                    const Vector&,
-                                    CCVariable<double>&)
+                                          const Patch*,
+                                          Iterator&,
+                                          Vector&,
+                                          const CCVariable<double>&,
+                                          const CCVariable<double>&,
+                                          const Vector&,
+                                          CCVariable<double>&)
 { 
 //  IntVector axes = patch->faceAxes(face);
 //  int P_dir = axes[0];  // principal direction

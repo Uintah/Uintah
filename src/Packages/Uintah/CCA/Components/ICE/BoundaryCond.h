@@ -127,18 +127,18 @@ template<class T>
  bool setNeumanDirichletBC( const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<T>& var,
-                            const vector<IntVector>* bound_ptr,
+                            Iterator& bound_ptr,
                             const string& bc_kind,
                             const T& value,
                             const Vector& cell_dx,
-			       const int mat_id,
-			       const int child);
+                            const int mat_id,
+                            const int child);
                             
  template<class T>
  bool setNeumanDirichletBC_FC( const Patch* patch,
                                const Patch::FaceType face,
                                T& vel_FC,
-                               const vector<IntVector>* bound_ptr,
+                               Iterator& bound_ptr,
                                string& bc_kind,
                                double& value,
                                const Vector& cell_dx,
@@ -158,12 +158,13 @@ bool getIteratorBCValueBCKind( const Patch* patch,
                                const string& desc,
                                const int mat_id,
                                T& bc_value,
-                               vector<IntVector>*& bound_ptr,
+                               Iterator& bound_ptr,
                                string& bc_kind)
 { 
   //__________________________________
   //  find the iterator, BC value and BC kind
-  vector<IntVector> *nu;  // not used
+  Iterator nu;  // not used
+
   const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 						    desc, bound_ptr,
                                                     nu, child);
@@ -193,7 +194,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   delete sym_bc;
 
   // Did I find an iterator
-  if( bc_kind == "NotSet" || bound_ptr->size() == 0){
+  if( bc_kind == "NotSet" ){
     return false;
   }else{
     return true;
@@ -207,14 +208,13 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  bool setNeumanDirichletBC( const Patch* patch,
                             const Patch::FaceType face,
                             CCVariable<T>& var,
-                            const vector<IntVector>* bound_ptr,
+                            Iterator& bound_ptr,
                             string& bc_kind,
                             T& value,
                             const Vector& cell_dx,
-			       const int mat_id,
-			       const int child)
+                            const int mat_id,
+                            const int child)
 {
- vector<IntVector>::const_iterator iter;
  IntVector oneCell = patch->faceDirection(face);
  IntVector dir= patch->faceAxes(face);
  double dx = cell_dx[dir[0]];
@@ -226,18 +226,18 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  }
  //__________________________________        
  if (bc_kind == "Dirichlet") {    //   D I R I C H L E T 
-   for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     var[*iter] = value;
+   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+     var[*bound_ptr] = value;
    }
    IveSetBC = true;
  }
  //__________________________________
  // Random variations for density
  if (bc_kind == "Dirichlet_perturbed") {
-   vector<IntVector> *nu;  // not used
+   Iterator nu1,nu2;  // not used
    const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
 						     "Density", 
-                                                     nu,nu,child);
+                                                     nu1,nu2,child);
 
    const BoundCond<double> *new_bcs = 
      dynamic_cast<const BoundCond<double> *>(bc);
@@ -253,24 +253,24 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    time_t seconds = time(NULL);
    srand(seconds);
 
-   for (iter = bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     var[*iter] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
+   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+     var[*bound_ptr] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
    }
    IveSetBC = true;
    delete bc;
  }
 
  if (bc_kind == "Neumann") {       //    N E U M A N N
-   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     IntVector adjCell = *iter - oneCell;
-     var[*iter] = var[adjCell] - value * dx;
+   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+     IntVector adjCell = *bound_ptr - oneCell;
+     var[*bound_ptr] = var[adjCell] - value * dx;
    }
    IveSetBC = true;
  }
  if (bc_kind == "zeroNeumann") {   //    Z E R O  N E U M A N N
-   for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-     IntVector adjCell = *iter - oneCell;
-     var[*iter] = var[adjCell];
+   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+     IntVector adjCell = *bound_ptr - oneCell;
+     var[*bound_ptr] = var[adjCell];
    }
    IveSetBC = true;
    value = T(0.0);   // so the debugging output is accurate
@@ -289,7 +289,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  bool setNeumanDirichletBC_FC( const Patch* patch,
                                const Patch::FaceType face,
                                T& vel_FC,
-                               const vector<IntVector>* bound_ptr,
+                               Iterator& bound_ptr,
                                string& bc_kind,
                                double& value,
                                const Vector& cell_dx,
@@ -303,7 +303,6 @@ bool getIteratorBCValueBCKind( const Patch* patch,
 
   bool IveSetBC = false;
   IntVector oneCell = patch->faceDirection(face);
-  vector<IntVector>::const_iterator iter;
   bool onMinusFace = false;
   //__________________________________
   // Dirichlet  -- can be set on any face
@@ -316,13 +315,13 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     }
     // on (x,y,z)minus faces move in one cell
     if( onMinusFace ) {
-      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-        IntVector c = *iter - oneCell;
+      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+        IntVector c = *bound_ptr - oneCell;
         vel_FC[c] = value;
       }
     }else {    // (xplus, yplus, zplus) faces
-      for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-        IntVector c = *iter;
+      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+        IntVector c = *bound_ptr;
         vel_FC[c] = value;
  
       }
@@ -404,7 +403,7 @@ void setBC(T& vel_FC,
 
       Vector bc_value(-9,-9,-9);;
       string bc_kind = "NotSet";
-      vector<IntVector>* bound_ptr;
+      Iterator bound_ptr;
       bool foundIterator = 
         getIteratorBCValueBCKind<Vector>( patch, face, child, desc, mat_id,
 					       bc_value, bound_ptr,bc_kind); 
@@ -485,7 +484,9 @@ void setBC(T& vel_FC,
           BC_dbg <<whichVel<< " Face: "<< face <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< value
-               <<"\t bound limits = " <<*bound_ptr->begin()<<" "<< *(bound_ptr->end()-1)
+               <<"\t bound limits = " << bound_ptr.begin()<<" "<< (bound_ptr.end())
+
+
 	        << endl;
         }              
       }  // Children loop

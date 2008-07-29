@@ -104,7 +104,7 @@ void Murnahan::computePressEOS(double rhoM, double, double, double,
 // call this after set Dirchlet and Neuman BC
 void Murnahan::hydrostaticTempAdjustment(Patch::FaceType, 
                                          const Patch*,
-                                         const vector<IntVector>*,
+                                         Iterator& ,
                                          Vector&,
                                          const CCVariable<double>&,
                                          const CCVariable<double>&,

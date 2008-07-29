@@ -54,7 +54,7 @@ namespace Uintah {
                             const Patch::FaceType face,
                             CCVariable<Vector>& vel_CC,
                             const string& var_desc,
-                            const vector<IntVector>* bound_ptr,
+                            Iterator& bound_ptr,
                             const string& bc_kind,
                             SimulationStateP& sharedState,
                             sine_variable_basket* sine_var_basket,
@@ -64,7 +64,7 @@ namespace Uintah {
                                const Patch::FaceType face,
                                CCVariable<double>& temp_CC,
                                const string& var_desc,
-                               const vector<IntVector>* bound_ptr,
+                               Iterator& bound_ptr,
                                const string& bc_kind,
                                sine_variable_basket* sine_var_basket,
                                sine_vars* sine_v);
@@ -72,7 +72,7 @@ namespace Uintah {
   void set_Sine_press_BC(const Patch* patch,
                          const Patch::FaceType face,
                          CCVariable<double>& press_CC,
-                         const vector<IntVector>* bound_ptr,
+                         Iterator& bound_ptr,
                          const string& bc_kind,
                          SimulationStateP& sharedState,
                          sine_variable_basket* sine_var_basket,
@@ -88,7 +88,7 @@ namespace Uintah {
  bool set_Sine_BCs_FC( const Patch* patch,
                        const Patch::FaceType face,
                        T& vel_FC,
-                       const vector<IntVector>* bound_ptr,
+                       Iterator& bound_ptr,
                        string& bc_kind,
                        const Vector& dx,
                        const IntVector& /*P_dir*/,
@@ -132,8 +132,8 @@ namespace Uintah {
 //  double t     = sharedState->getElapsedTime();                         
 //  t += sine_v->delT;                                                 
                                                                      
-  for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {  
-    IntVector c = *iter - one_or_zero;                  
+  for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {  
+    IntVector c = *bound_ptr - one_or_zero;                  
       
     Vector vel(0.0,0.0,0.0);                                         
     vel.x( 0.0 );  
