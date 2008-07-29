@@ -207,7 +207,7 @@ void JWL::computePressEOS(double rhoM, double,
 // call this after set Dirchlet and Neuman BC
 void JWL::hydrostaticTempAdjustment(Patch::FaceType, 
                                     const Patch*,
-                                    const vector<IntVector>*,
+                                    Iterator& ,
                                     Vector&,
                                     const CCVariable<double>&,
                                     const CCVariable<double>&,

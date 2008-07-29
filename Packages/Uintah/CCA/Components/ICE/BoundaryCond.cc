@@ -61,7 +61,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind  = "NotSet";
-      vector<IntVector> *bound_ptr;  
+      Iterator bound_ptr;  
       
       bool foundIterator =       
         getIteratorBCValueBCKind<double>( patch, face, child, "Pressure", 
@@ -86,43 +86,43 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 
         switch (face) {
         case Patch::xplus:
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter - IntVector(1,0,0));
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+            IntVector c(*bound_ptr - IntVector(1,0,0));
             A[c].p = A[c].p + one_or_zero * A[c].e;
             A[c].e = 0.0;
           }
           break;
         case Patch::xminus:
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
-            IntVector c(*iter + IntVector(1,0,0));
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) { 
+            IntVector c(*bound_ptr + IntVector(1,0,0));
             A[c].p = A[c].p + one_or_zero * A[c].w;
             A[c].w = 0.0;
           }
           break;
         case Patch::yplus:
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
-            IntVector c(*iter - IntVector(0,1,0));
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) { 
+            IntVector c(*bound_ptr - IntVector(0,1,0));
             A[c].p = A[c].p + one_or_zero * A[c].n;
             A[c].n = 0.0;
           }
           break;
         case Patch::yminus:
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter + IntVector(0,1,0)); 
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+            IntVector c(*bound_ptr + IntVector(0,1,0)); 
             A[c].p = A[c].p + one_or_zero * A[c].s;
             A[c].s = 0.0;
           }
           break;
         case Patch::zplus:
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter - IntVector(0,0,1));
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+            IntVector c(*bound_ptr - IntVector(0,0,1));
             A[c].p = A[c].p + one_or_zero * A[c].t;
             A[c].t = 0.0;
           }
           break;
         case Patch::zminus:
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c(*iter + IntVector(0,0,1));
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+            IntVector c(*bound_ptr + IntVector(0,0,1));
             A[c].p = A[c].p + one_or_zero * A[c].b;
             A[c].b = 0.0;
           }
@@ -138,7 +138,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         cout <<"Face: "<< patch->getFaceName(face) << " one_or_zero " << one_or_zero
              <<"\t child " << child  <<" NumChildren "<<numChildren 
              <<"\t BC kind "<< bc_kind
-             <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
+             <<"\t bound limits = "<< *bound_ptr.begin()<< " "<< *(bound_ptr.end()-1)
 	      << endl;
         #endif
       } // if (bc_kind !=notSet)
@@ -229,7 +229,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind  = "NotSet";
-      vector<IntVector> *bound_ptr;  
+      Iterator bound_ptr;  
       
       bool foundIterator =       
         getIteratorBCValueBCKind<double>( patch, face, child, "Pressure", 
@@ -250,8 +250,8 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //__________________________________
         //  Set the BC  
         vector<IntVector>::const_iterator iter;
-        for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-          IntVector c = *iter;
+        for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+          IntVector c = *bound_ptr;
           IntVector adj = c - oneCell;
           imp_delP[c] = one_or_zero * imp_delP[adj];
         }
@@ -261,7 +261,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
           BC_dbg <<"Face: "<< patch->getFaceName(face)
                <<"\t child " << child  <<" NumChildren "<<numChildren
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
+               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
 	        << endl;
         }
       } // if(foundIterator)
@@ -482,7 +482,7 @@ void setBC(CCVariable<double>& press_CC,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind = "NotSet";
-      vector<IntVector> *bound_ptr;
+      Iterator bound_ptr;
       
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
@@ -551,9 +551,9 @@ void setBC(CCVariable<double>& press_CC,
             IntVector oneCell = patch->faceDirection(face);
             vector<IntVector>::const_iterator iter;
 
-            for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) { 
-              IntVector L = *iter - oneCell;
-              IntVector R = *iter;
+            for (bound_ptr.begin();!bound_ptr.done(); bound_ptr++) { 
+              IntVector L = *bound_ptr - oneCell;
+              IntVector R = *bound_ptr;
               double rho_R = rho_micro[surroundingMatl_indx][R];
               double rho_L = rho_micro[surroundingMatl_indx][L];
               double rho_micro_brack = (rho_L + rho_R)/2.0;
@@ -566,8 +566,8 @@ void setBC(CCVariable<double>& press_CC,
           if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
           
             vector<IntVector>::const_iterator iter;
-            for (iter=bound_ptr->begin();iter != bound_ptr->end(); iter++) {
-              IntVector R = *iter;
+            for (bound_ptr.begin();!bound_ptr.done(); bound_ptr++) {
+              IntVector R = *bound_ptr;
               Point here_R = level->getCellPosition(R);
               Vector dist_R = (here_R.asVector() - press_ref_pt);
               double rho_R = rho_micro[surroundingMatl_indx][R];
@@ -586,7 +586,7 @@ void setBC(CCVariable<double>& press_CC,
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
+               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
 	        << endl;
         }
       }  // if bcKind != notSet
@@ -651,7 +651,9 @@ void setBC(CCVariable<double>& var_CC,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind = "NotSet";
-      vector<IntVector> *bound_ptr = 0;
+
+      Iterator bound_ptr;
+
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, desc, mat_id,
 					       bc_value, bound_ptr,bc_kind); 
@@ -710,7 +712,7 @@ void setBC(CCVariable<double>& var_CC,
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
+               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
 	        << endl;
         }
       }  // if bc_kind != notSet  
@@ -769,7 +771,7 @@ void setBC(CCVariable<Vector>& var_CC,
     for (int child = 0;  child < numChildren; child++) {
       Vector bc_value = Vector(-9,-9,-9);
       string bc_kind = "NotSet";
-      vector<IntVector> *bound_ptr;
+      Iterator bound_ptr;
       
       bool foundIterator = 
           getIteratorBCValueBCKind<Vector>(patch, face, child, desc, mat_id,
@@ -813,9 +815,9 @@ void setBC(CCVariable<Vector>& var_CC,
           sign[P_dir] = -1;
           vector<IntVector>::const_iterator iter;
 
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector adjCell = *iter - oneCell;
-            var_CC[*iter] = sign.asVector() * var_CC[adjCell];
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+            IntVector adjCell = *bound_ptr - oneCell;
+            var_CC[*bound_ptr] = sign.asVector() * var_CC[adjCell];
           }
           IveSetBC = true;
           bc_value = Vector(0,0,0); // so the debugging output is accurate
@@ -826,7 +828,7 @@ void setBC(CCVariable<Vector>& var_CC,
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = " <<*bound_ptr->begin()<<" "<< *(bound_ptr->end()-1)
+                 <<"\t bound limits = " <<bound_ptr.begin()<<" "<< bound_ptr.end()
 	        << endl;
         }
       }  // if (bcKind != "notSet") 
@@ -868,7 +870,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
     for (int child = 0;  child < numChildren; child++) {
       double bc_value = -9;
       string bc_kind = "NotSet";
-      vector<IntVector> *bound_ptr;
+      Iterator bound_ptr;
       
       bool foundIterator = 
         getIteratorBCValueBCKind<double>( patch, face, child, kind, mat_id,
@@ -886,14 +888,14 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         if(bc_kind == "computeFromDensity"){
         
           vector<IntVector>::const_iterator iter;
-          for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {
-            IntVector c = *iter;
+          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+            IntVector c = *bound_ptr;
             sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
           }
           
           if(isMassSp_vol){  // convert to mass * sp_vol
-            for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) { 
-              IntVector c = *iter;
+            for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+              IntVector c = *bound_ptr;
               sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
             }
           }
@@ -906,7 +908,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
           BC_dbg <<"Face: "<< patch->getFaceName(face) <<" I've set BC " << IveSetBC
                <<"\t child " << child  <<" NumChildren "<<numChildren 
                <<"\t BC kind "<< bc_kind <<" \tBC value "<< bc_value
-               <<"\t bound limits = "<< *bound_ptr->begin()<< " "<< *(bound_ptr->end()-1)
+               <<"\t bound limits = "<< bound_ptr.begin()<< " "<< bound_ptr.end()
 	        << endl;
         }
       }  // if iterator found

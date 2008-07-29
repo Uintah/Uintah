@@ -87,7 +87,7 @@ void Gruneisen::computePressEOS(double rhoM, double,
 // call this after set Dirchlet and Neuman BC
 void Gruneisen::hydrostaticTempAdjustment(Patch::FaceType, 
                                           const Patch*,
-                                          const vector<IntVector>*,
+                                          Iterator&,
                                           Vector&,
                                           const CCVariable<double>&,
                                           const CCVariable<double>&,

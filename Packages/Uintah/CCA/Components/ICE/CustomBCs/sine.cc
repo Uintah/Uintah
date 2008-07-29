@@ -154,7 +154,7 @@ void set_Sine_Velocity_BC(const Patch* patch,
                           const Patch::FaceType face,
                           CCVariable<Vector>& vel_CC,
                           const string& var_desc,
-                          const vector<IntVector>* bound_ptr,
+                          Iterator& bound_ptr,
                           const string& bc_kind,
                           SimulationStateP& sharedState,
                           sine_variable_basket* sine_var_basket,
@@ -174,9 +174,8 @@ void set_Sine_Velocity_BC(const Patch* patch,
 //    double t     = sharedState->getElapsedTime();                        
 //    t += sine_v->delT;                                                
                                                                       
-    vector<IntVector>::const_iterator iter;                           
-    for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++)   {
-      IntVector c = *iter;                                             
+    for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++)   {
+      IntVector c = *bound_ptr;                                             
                                                                       
       vel_CC[c].x(0.0);   // this need to be changed  
       vel_CC[c].y(0.0);  
@@ -193,7 +192,7 @@ void set_Sine_Temperature_BC(const Patch* /*patch*/,
                             const Patch::FaceType face,
                             CCVariable<double>& temp_CC,
                             const string& var_desc,
-                            const vector<IntVector>* bound_ptr,
+                            Iterator& bound_ptr,
                             const string& bc_kind,
                             sine_variable_basket* sine_var_basket,
                             sine_vars* sine_v)  
@@ -210,9 +209,8 @@ void set_Sine_Temperature_BC(const Patch* /*patch*/,
     constCCVariable<double> press_CC = sine_v->press_CC;
     constCCVariable<double> rho_CC   = sine_v->rho_CC;
                                                                             
-    vector<IntVector>::const_iterator iter;                            
-    for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {  
-      IntVector c = *iter;                                             
+    for (bound_ptr.begin(); bound_ptr.done(); bound_ptr++) {  
+      IntVector c = *bound_ptr;                                             
       temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
     }                                                                  
   }
@@ -225,7 +223,7 @@ ___________________________________________________________________*/
 void set_Sine_press_BC(const Patch* patch,
                       const Patch::FaceType face,
                       CCVariable<double>& press_CC,
-                      const vector<IntVector>* bound_ptr,
+                      Iterator& bound_ptr,
                       const string& bc_kind,
                       SimulationStateP& sharedState,
                       sine_variable_basket* sine_var_basket,
@@ -244,9 +242,8 @@ void set_Sine_press_BC(const Patch* patch,
   double p_ref = 101325;                                             
   t += sine_v->delT;  // delT is either 0 or delT                                          
 
-  vector<IntVector>::const_iterator iter;                            
-  for (iter=bound_ptr->begin(); iter != bound_ptr->end(); iter++) {  
-    IntVector c = *iter;                                    
+  for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {  
+    IntVector c = *bound_ptr;                                    
     press_CC[c] = p_ref + A * sin(omega*t);                 
   }                                                                  
 }

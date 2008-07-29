@@ -141,7 +141,7 @@ double Thomsen_Hartka_water::getAlpha(double Temp, double , double P, double )
 // call this after set Dirchlet and Neuman BC
 void Thomsen_Hartka_water::hydrostaticTempAdjustment(Patch::FaceType face, 
                                                      const Patch* patch,
-                                                     const vector<IntVector>* bound_ptr,
+                                                     Iterator& bound_ptr,
                                                      Vector& gravity,
                                                      const CCVariable<double>& gamma,
                                                      const CCVariable<double>& cv,
