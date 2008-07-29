@@ -23,7 +23,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -101,9 +101,9 @@ CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
    d_turbPrNo = 1.0; 
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 #ifndef PetscFilter
-  cout << "ERROR: Filtering without Petsc is not supported in variable\n";
-  cout << "density dynamic Smagorinsky model\n";
-  exit(1);
+  throw ProblemSetupException("ERROR Arches::CompDynamicProcedure::ProblemSetup \n"
+                               "Filtering without Petsc is not supported in variable \n"
+                               "density dynamic Smagorinsky model\n", __FILE__, __LINE__);
 #endif
 
 }

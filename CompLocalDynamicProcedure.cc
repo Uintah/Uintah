@@ -111,9 +111,9 @@ CompLocalDynamicProcedure::problemSetup(const ProblemSpecP& params)
   }
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 #ifndef PetscFilter
-  cout << "Filtering without Petsc is not supported in variable" << endl;
-  cout << "density dynamic Smagorinsky model" << endl;
-  exit(1);
+  throw ProblemSetupException("ERROR Arches::CompDynamicProcedure::ProblemSetup \n"
+                             "Filtering without Petsc is not supported in variable \n"
+                             "density dynamic Smagorinsky model\n", __FILE__, __LINE__);
 #endif
 
 }

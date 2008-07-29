@@ -14,7 +14,9 @@
 //#include <Packages/Uintah/CCA/Components/Arches/Mixing/Common.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Core/Containers/OffsetArray1.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Time.h>
+
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -87,8 +89,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   }
   //  lshradmodel = false;
   if (d_SHRadiationCalc) {
-    cout << "this model (spherical harmonics) does not run in parallel and has been disabled" << endl;
-    exit(1);
+    throw InternalError("Spherical harmonics radiation model does not run in parallel and has been disabled", __FILE__, __LINE__);
   }
 
   lprobone   = false;
@@ -113,8 +114,7 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   }
 
   if (prop_model == "wsggm"){ 
-    cout << "this model (wsgg) does not run in parallel and has been disabled" << endl;
-    exit(1);
+    throw InternalError("WSGG radiation model does not run in parallel and has been disabled", __FILE__, __LINE__);
     lradcal       = false;
     lwsgg         = true;
     lambda        = 4;
@@ -401,10 +401,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
         if (converged) {
           d_linearSolver->copyRadSoln(patch, vars);
         }else {
-          if (pg->myrank() == 0) {
-            cerr << "radiation solver not converged" << endl;
-          }
-          exit(1);
+          throw InternalError("Radiation solver not converged", __FILE__, __LINE__);
         }
         d_linearSolver->destroyMatrix();
 
@@ -477,10 +474,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       if (converged) {
         d_linearSolver->copyRadSoln(patch, vars);
       }else {
-        if (pg->myrank() == 0) {
-          cerr << "radiation solver not converged" << endl;
-        }
-        exit(1);
+        throw InternalError("Radiation solver not converged", __FILE__, __LINE__);
       }
       d_linearSolver->destroyMatrix();
 
