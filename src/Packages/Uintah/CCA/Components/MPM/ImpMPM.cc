@@ -2408,9 +2408,8 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
           int numChildren = 
             patch->getBCDataArray(face)->getNumberChildren(matl);
           for (int child = 0; child < numChildren; child++) {
-            vector<IntVector> *nbound_ptr;
-            vector<IntVector> *nu;     // not used;
-            vector<IntVector>::const_iterator boundary;
+            Iterator nbound_ptr;
+            Iterator nu;     // not used;
             
             vel_bcs = patch->getArrayBCValues(face,matl,"Velocity",nu,
                                               nbound_ptr,child);
@@ -2420,11 +2419,9 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               dynamic_cast<const VelocityBoundCond*>(vel_bcs);
             if (bc != 0) {
               if (bc->getKind() == "Dirichlet") {
-                for (boundary=nbound_ptr->begin(); 
-                     boundary != nbound_ptr->end(); boundary++) {
-                  gvelocity_old[*boundary] = bc->getValue();
-                  gacceleration[*boundary] = bc->getValue();
-                  
+                for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+                  gvelocity_old[*nbound_ptr] = bc->getValue();
+                  gacceleration[*nbound_ptr] = bc->getValue();
                 }
                 IntVector l,h;
                 patch->getFaceNodes(face,0,l,h);
@@ -2443,34 +2440,31 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               dynamic_cast<const SymmetryBoundCond*>(sym_bcs);
             if (sbc != 0) {
               if (face == Patch::xplus || face == Patch::xminus)
-                for (boundary=nbound_ptr->begin(); 
-                     boundary != nbound_ptr->end(); boundary++) {
-                  gvelocity_old[*boundary] = 
-                    Vector(0.,gvelocity_old[*boundary].y(),
-                           gvelocity_old[*boundary].z());
-                  gacceleration[*boundary] = 
-                    Vector(0.,gacceleration[*boundary].y(),
-                           gacceleration[*boundary].z());
+                for (nbound_ptr.begin(); !nbound_ptr.done();nbound_ptr++) {
+                  gvelocity_old[*nbound_ptr] = 
+                    Vector(0.,gvelocity_old[*nbound_ptr].y(),
+                           gvelocity_old[*nbound_ptr].z());
+                  gacceleration[*nbound_ptr] = 
+                    Vector(0.,gacceleration[*nbound_ptr].y(),
+                           gacceleration[*nbound_ptr].z());
                 }
               if (face == Patch::yplus || face == Patch::yminus)
-                for (boundary=nbound_ptr->begin(); 
-                     boundary != nbound_ptr->end(); boundary++) {
-                  gvelocity_old[*boundary] = 
-                    Vector(gvelocity_old[*boundary].x(),0.,
-                           gvelocity_old[*boundary].z());
-                  gacceleration[*boundary] = 
-                    Vector(gacceleration[*boundary].x(),0.,
-                           gacceleration[*boundary].z());
+                for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+                  gvelocity_old[*nbound_ptr] = 
+                    Vector(gvelocity_old[*nbound_ptr].x(),0.,
+                           gvelocity_old[*nbound_ptr].z());
+                  gacceleration[*nbound_ptr] = 
+                    Vector(gacceleration[*nbound_ptr].x(),0.,
+                           gacceleration[*nbound_ptr].z());
                 }
               if (face == Patch::zplus || face == Patch::zminus)
-                for (boundary=nbound_ptr->begin(); 
-                     boundary != nbound_ptr->end(); boundary++) {
-                  gvelocity_old[*boundary] = 
-                    Vector(gvelocity_old[*boundary].x(),
-                           gvelocity_old[*boundary].y(),0.);
-                  gacceleration[*boundary] = 
-                    Vector(gacceleration[*boundary].x(),
-                           gacceleration[*boundary].y(),0.);
+                for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+                  gvelocity_old[*nbound_ptr] = 
+                    Vector(gvelocity_old[*nbound_ptr].x(),
+                           gvelocity_old[*nbound_ptr].y(),0.);
+                  gacceleration[*nbound_ptr] = 
+                    Vector(gacceleration[*nbound_ptr].x(),
+                           gacceleration[*nbound_ptr].y(),0.);
                 }
               IntVector l,h;
               patch->getFaceNodes(face,0,l,h);
