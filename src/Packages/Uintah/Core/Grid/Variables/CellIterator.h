@@ -140,6 +140,12 @@ WARNING
        d_cur=d_s;
        d_done=false;
      }
+
+     ostream& limits(ostream& out) const
+     {
+       out << begin() << " " << end() - IntVector(1,1,1);
+       return out;
+     }
    private:
      CellIterator();
 

@@ -107,6 +107,7 @@ namespace Uintah {
       inline IntVector begin() const 
       { 
         ASSERT(iter_!=NULL);  
+        iter_->reset();
         return iter_->begin(); 
       }
 
@@ -166,8 +167,14 @@ namespace Uintah {
         return !operator==(b);
       }
 
+      ostream& limits(std::ostream& out) const 
+        {
+          return iter_->limits(out);
+        }
+
     private:
-      friend std::ostream& operator<<(std::ostream& out, const Uintah::Iterator& b);
+      friend std::ostream& operator<<(std::ostream& out, 
+                                      const Uintah::Iterator& b);
       
       inline ostream& put(ostream& out) const { iter_->put(out); return out;}
       

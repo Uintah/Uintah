@@ -115,6 +115,7 @@ namespace Uintah {
 
       inline GridIterator()
       {
+        reset();
       }
 
       inline GridIterator(const IntVector& s, const IntVector& e)
@@ -160,6 +161,12 @@ namespace Uintah {
         out << *this;
         return out;
       }
+
+      ostream& limits(std::ostream& out) const
+        {
+
+
+        }
 
     private:
       /**
