@@ -7,7 +7,7 @@
 //  that exists on a given system.
 //
 //
-//  On TACC Ranger: 
+//  On TACC Ranger:  (using mkl)
 //
 //        icc -I/scratch/projects/tg/uintah/SystemLibLinks/mkl/include test_lapack.c \
 //            -L/scratch/projects/tg/uintah/SystemLibLinks/mkl/lib \
@@ -17,6 +17,12 @@
 //        /scratch/projects/tg/uintah/SystemLibLinks/mkl/ =>
 //            include -> /opt/apps/intel/mkl/10.0.1.014/include
 //            lib -> /opt/apps/intel/mkl/10.0.1.014/lib/em64t
+//
+//  On CHPC delicatearch: (using acml)
+//
+//        g++ -I/uufs/arches/sys/pkg/acml/3.5.0/gnu64/include test_lapack.c \
+//            -L/uufs/arches/sys/pkg/acml/3.5.0/gnu64/lib -lacml -lacml_mv -lg2c \
+//            -Wl,-rpath -Wl,/uufs/arches/sys/pkg/acml/3.5.0/gnu64/lib
 
 /*
 Results from Ranger:
@@ -37,7 +43,16 @@ info 0
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <mkl_lapack.h>
+#define DELICATEARCH
+
+#if defined( RANGER )
+#  include <mkl_lapack.h>
+#elif defined( DELICATEARCH )
+#  include <acml.h>
+#else
+// Not sure what the correct default lapack.h is...
+#  include <lapack.h>
+#endif
 
 #include <math.h>
 
@@ -87,7 +102,7 @@ main ()
   B[2] = -2.0;
   B[3] = 4.0;
 
-  dgesv_(&N, &NRHS, A, &LDA, &IPIV, B, &LDB, &INFO);
+  dgesv_(&N, &NRHS, A, &LDA, (int*)&IPIV, B, &LDB, &INFO);
 
   printf("info %d \n",INFO);
 
