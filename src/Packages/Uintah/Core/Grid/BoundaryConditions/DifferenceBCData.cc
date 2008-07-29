@@ -2,7 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/DifferenceIterator.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <set>
@@ -13,26 +13,23 @@ using namespace Uintah;
 
 
 DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
-  : left(p1->clone()), right(p2->clone())
+  : BCGeomBase(), left(p1->clone()), right(p2->clone())
 {
 }
 
-DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs)
+#ifdef OLD
+DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs): BCGeomBase(rhs)
 {
   left=rhs.left->clone();
   right=rhs.right->clone();
-
-  boundary=rhs.boundary;
-  nboundary=rhs.nboundary;
-#if 0
-  sfcx=rhs.sfcx;
-  sfcy=rhs.sfcy;
-  sfcz=rhs.sfcz;
-#endif
 }
+
+
 
 DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
 {
+  BCGeomBase::operator=(rhs);
+
   if (this == &rhs)
     return *this;
 
@@ -45,13 +42,6 @@ DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
   left = rhs.left->clone();
   right = rhs.right->clone();
 
-  boundary = rhs.boundary;
-  nboundary = rhs.nboundary;
-#if 0
-  sfcx=rhs.sfcx;
-  sfcy=rhs.sfcy;
-  sfcz=rhs.sfcz;
-#endif
   return *this;
 }
 
@@ -60,6 +50,12 @@ DifferenceBCData::~DifferenceBCData()
   delete left;
   delete right;
 }
+#else
+DifferenceBCData::~DifferenceBCData()
+{
+}
+#endif
+
 
 bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
 {
@@ -116,6 +112,31 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
 					       const Patch* patch,
 					       vector<Point>& test_pts)
 {
+
+#if 0
+  cout << "DifferenceBC determineIteratorLimits()" << endl;
+#endif
+
+
+  left->determineIteratorLimits(face,patch,test_pts);
+  right->determineIteratorLimits(face,patch,test_pts);
+
+  Iterator left_cell,left_node,right_cell,right_node;
+  left->getCellFaceIterator(left_cell);
+  left->getNodeFaceIterator(left_node);
+  right->getCellFaceIterator(right_cell);
+  right->getNodeFaceIterator(right_node);
+
+#ifdef OLD
+  d_cells = scinew DifferenceIterator(left_cell,right_cell);
+  d_nodes = scinew DifferenceIterator(left_node,right_node);
+#else
+  d_cells = DifferenceIterator(left_cell,right_cell);
+  d_nodes = DifferenceIterator(left_node,right_node);
+#endif
+
+
+#if 0
 #if 0
   cout << "DifferenceBC determineIteratorLimits()" << endl;
   cout << "Doing left determineIteratorLimits()" << endl;
@@ -174,6 +195,7 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
   cout << "Size of nboundary = " << nboundary->size() << endl;
 #endif
   
+#endif
 }
 
 

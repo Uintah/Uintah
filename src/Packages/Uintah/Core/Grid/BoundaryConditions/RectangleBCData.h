@@ -32,9 +32,6 @@ namespace Uintah {
     /// Constructor
     RectangleBCData();
 
-    /// Constructor with boundary condition data.
-    RectangleBCData(BCData& bc);
-
     /// Constructor used with a point defining the lower and upper corners 
     /// of the rectangle.
     RectangleBCData(Point& low, Point& up);

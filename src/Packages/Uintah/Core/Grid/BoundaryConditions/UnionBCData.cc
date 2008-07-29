@@ -2,8 +2,7 @@
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/UnionIterator.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
@@ -12,13 +11,11 @@
 using namespace SCIRun;
 using namespace Uintah;
 
-
+#ifdef OLD
 UnionBCData::UnionBCData() : BCGeomBase()
-{
-}
-
-
-UnionBCData::UnionBCData(BCData& bc)
+#else
+UnionBCData::UnionBCData()
+#endif
 {
 }
 
@@ -31,24 +28,23 @@ UnionBCData::~UnionBCData()
   child.clear();
 }
 
+#ifdef OLD
+UnionBCData::UnionBCData(const UnionBCData& mybc): BCGeomBase(mybc)
+#else
 UnionBCData::UnionBCData(const UnionBCData& mybc)
+#endif
 {
+
   vector<BCGeomBase*>::const_iterator itr;
   for (itr=mybc.child.begin(); itr != mybc.child.end(); ++itr)
     child.push_back((*itr)->clone());
-
- 
-  boundary=mybc.boundary;
-  nboundary=mybc.nboundary;
-#if 0
-  sfcx=mybc.sfcx;
-  sfcy=mybc.sfcy;
-  sfcz=mybc.sfcz;
-#endif
+  
 }
 
 UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
 {
+  BCGeomBase::operator=(rhs);
+
   if (this == &rhs)
     return *this;
 
@@ -63,16 +59,9 @@ UnionBCData& UnionBCData::operator=(const UnionBCData& rhs)
   for (itr=rhs.child.begin(); itr != rhs.child.end();++itr)
     child.push_back((*itr)->clone());
   
-  boundary = rhs.boundary;
-  nboundary = rhs.nboundary;
-#if 0
-  sfcx=rhs.sfcx;
-  sfcy=rhs.sfcy;
-  sfcz=rhs.sfcz;
-#endif
-
   return *this;
 }
+
 
 bool UnionBCData::operator==(const BCGeomBase& rhs) const
 {
@@ -134,6 +123,7 @@ void UnionBCData::print()
 
 }
 
+
 void UnionBCData::determineIteratorLimits(Patch::FaceType face, 
 					  const Patch* patch, 
 					  vector<Point>& test_pts)
@@ -141,6 +131,35 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
 #if 0
   cout << "UnionBC determineIteratorLimits()" << endl;
 #endif
+
+  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
+       bc != child.end(); ++bc) {
+    (*bc)->determineIteratorLimits(face,patch,test_pts);
+  }
+  
+  UnionIterator cells,nodes;
+
+  for (vector<BCGeomBase*>::const_iterator bc = child.begin();
+       bc != child.end(); ++bc) {
+    Iterator cell_itr,node_itr;
+    (*bc)->getCellFaceIterator(cell_itr);
+    (*bc)->getNodeFaceIterator(node_itr);
+    Iterator base_ci(cells),base_ni(nodes);
+    cells = UnionIterator(base_ci,cell_itr);
+    nodes = UnionIterator(base_ni,node_itr);
+  }
+
+#ifdef OLD
+  d_cells = scinew UnionIterator(cells);   
+  d_nodes = scinew UnionIterator(nodes); 
+#else
+  d_cells = UnionIterator(cells);   
+  d_nodes = UnionIterator(nodes); 
+#endif
+
+
+
+#if 0
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
 
@@ -167,9 +186,6 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
     cout << "Size of boundary_itr = " << boundary_itr.size() << endl;
 #endif
     (*bc)->setBoundaryIterator(boundary_itr);
-#if 0
-    (*bc)->determineSFLimits(face,patch);
-#endif
   }
     
   IntVector ln,hn;
@@ -181,6 +197,8 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
   }
   
   setNBoundaryIterator(nb);
+
+#endif
 
 }
 

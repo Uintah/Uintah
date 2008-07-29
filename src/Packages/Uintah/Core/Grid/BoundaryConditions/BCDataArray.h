@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/Grid/Variables/Iterator.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
@@ -69,17 +70,11 @@ namespace Uintah {
      void combineBCGeometryTypes(int mat_id);
      void combineBCGeometryTypes_NEW(int mat_id);
 
-     /// Set the cell centered boundary iterators. 
-     void setBoundaryIterator(int mat_id,vector<IntVector>& b, int i);
+     /// Get the cell centered face iterator.
+     void getCellFaceIterator(int mat_id,Iterator& b_ptr, int i) const;
 
-     /// Set the node centered boundary iterators.
-     void setNBoundaryIterator(int mat_id,vector<IntVector>& b, int i);
-
-     /// Get the cell centered boundary iterator.
-     void getBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr, int i) const;
-
-     /// Get the node centered boundary iterator.
-     void getNBoundaryIterator(int mat_id,vector<IntVector>*& b_ptr, int i) const;
+     /// Get the node centered face iterator.
+     void getNodeFaceIterator(int mat_id,Iterator& b_ptr, int i) const;
 
      /// Return the number of children in the vector<BCGeomBase*>.
      int getNumberChildren(int mat_id) const;

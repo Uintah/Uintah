@@ -8,19 +8,13 @@
 using namespace SCIRun;
 using namespace Uintah;
 
-
-AnnulusBCData::AnnulusBCData() 
+AnnulusBCData::AnnulusBCData() : BCGeomBase()
 {
   
 }
 
-AnnulusBCData::AnnulusBCData(BCData& bc)
-  : d_bc(bc)
-{
-}
-
 AnnulusBCData::AnnulusBCData(Point& p, double inRadius,double outRadius)
-  : d_innerRadius(inRadius), d_outerRadius(outRadius), d_origin(p)
+  : BCGeomBase(), d_innerRadius(inRadius), d_outerRadius(outRadius), d_origin(p)
 {
 }
 
@@ -98,6 +92,7 @@ void AnnulusBCData::determineIteratorLimits(Patch::FaceType face,
 #if 0
   cout << "Annulus determineIteratorLimits()" << endl;
 #endif
+
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
 }
 

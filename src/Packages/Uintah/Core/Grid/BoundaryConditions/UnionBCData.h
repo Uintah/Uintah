@@ -29,9 +29,6 @@ namespace Uintah {
      /// Constructor
      UnionBCData();
 
-     /// Constructor with the actual boundary condition
-     UnionBCData(BCData& bc);
-
      /// Copy constructor
      UnionBCData(const UnionBCData& bc);
 

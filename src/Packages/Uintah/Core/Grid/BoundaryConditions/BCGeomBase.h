@@ -5,13 +5,14 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
-
-#include <sgi_stl_warnings_off.h>
+#include <Packages/Uintah/Core/Grid/Variables/Iterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
 #include <vector>
 #include <typeinfo>
 #include <iterator>
-#include <sgi_stl_warnings_on.h>
 
+#define OLD
+#undef OLD
 
 namespace Uintah {
 
@@ -39,9 +40,18 @@ namespace Uintah {
     /// Constructor
     BCGeomBase();
 
+#ifdef OLD
+    /// Copy constructor
+    BCGeomBase(const BCGeomBase& rhs);
+
+    /// Assignment operator
+    BCGeomBase& operator=(const BCGeomBase& rhs);
+#endif
+
     /// Destructor
     virtual ~BCGeomBase();    
 
+    /// Equality test
     virtual bool operator==(const BCGeomBase&) const = 0;
 
     /// Make a clone
@@ -56,52 +66,10 @@ namespace Uintah {
     /// For old boundary conditions
     virtual void addBC(BoundCondBase* bc)  = 0;
 
-    /// Set the cell centered boundary iterators
-    void setBoundaryIterator(std::vector<IntVector>& b);
+    void getCellFaceIterator(Iterator& b_ptr);
 
-    void setBoundaryIterator(std::vector<IntVector>::iterator b, 
-                             std::vector<IntVector>::iterator e);
+    void getNodeFaceIterator(Iterator& b_ptr);
 
-    /// Set the node centered boundary iterators
-    void setNBoundaryIterator(std::vector<IntVector>& b);
-
-    void setNBoundaryIterator(std::vector<IntVector>::iterator b, 
-                              std::vector<IntVector>::iterator e);
-
-#if 0
-    /// Set the face centered iterators for the x component
-    void setSFCXIterator(std::vector<IntVector>& i);
-
-
-    /// Set the face centered iterators for the y component
-    void setSFCYIterator(std::vector<IntVector>& i);
-
-    /// Set the face centered iterators for the z component
-    void setSFCZIterator(std::vector<IntVector>& i);
-#endif
-
-    /// Return the cell centered boundary iterators
-    void getBoundaryIterator(std::vector<IntVector>*& b_ptr);
-
-    void getBoundaryIterator(std::vector<IntVector>::iterator b_ptr, 
-                             std::vector<IntVector>::iterator e_ptr);
-
-    /// Return the node centered boundary iterators
-    void getNBoundaryIterator(std::vector<IntVector>*& b_ptr);
-
-    void getNBoundaryIterator(std::vector<IntVector>::iterator b_ptr,
-                              std::vector<IntVector>::iterator e_ptr);
-
-#if 0
-    ///  Return the face centered iterators for the x component
-    void getSFCXIterator(std::vector<IntVector>*& i_ptr);
-
-    ///  Return the face centered iterators for the y component
-    void getSFCYIterator(std::vector<IntVector>*& i_ptr);
-
-    ///  Return the face centered iterators for the z component
-    void getSFCZIterator(std::vector<IntVector>*& i_ptr);
-#endif
 
     /// Determine if a point is inside the geometry where the boundary
     /// condition is applied.
@@ -120,8 +88,14 @@ namespace Uintah {
     void printLimits() const;
 
   protected:
-    std::vector<IntVector> boundary,nboundary,sfcx,sfcy,sfcz;
-    std::vector<IntVector>::iterator b_b,b_e,nb_b,nb_e;
+#ifdef OLD
+    BaseIterator* d_cells;
+    BaseIterator* d_nodes;
+#else
+    Iterator d_cells;
+    Iterator d_nodes;
+#endif
+
 
   };
 

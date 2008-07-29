@@ -13,14 +13,10 @@ using namespace Uintah;
 
 SideBCData::SideBCData() 
 {
-  
+  d_cells=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
+  d_nodes=GridIterator(IntVector(0,0,0),IntVector(0,0,0));
 }
 
-
-SideBCData::SideBCData(BCData& bc) 
-  : d_bc(bc)
-{
-}
 
 SideBCData::~SideBCData()
 {
@@ -69,6 +65,7 @@ void SideBCData::print()
   d_bc.print();
 }
 
+
 void SideBCData::determineIteratorLimits(Patch::FaceType face, 
 					 const Patch* patch, 
 					 vector<Point>& test_pts)
@@ -77,48 +74,44 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
   cout << "SideBC determineIteratorLimits()" << endl;
 #endif
 
-#if 0
-  BCGeomBase::determineIteratorLimits(face,patch,test_pts);
-#else
+
   IntVector l,h;
   patch->getFaceCells(face,0,l,h);
-  vector<IntVector> b,nb;
+#ifdef OLD
+  d_cells = scinew GridIterator(l,h);
+#else
+  d_cells = GridIterator(l,h);
+#endif
+
+#if 0
+  cout << "d_cells->begin() = " << d_cells->begin() << " d_cells->end() = " 
+       << d_cells->end() << endl;
+#endif
 
 
-  for (CellIterator bound(l,h); !bound.done(); bound++) 
-    b.push_back(*bound);
-  
   IntVector ln,hn;
   patch->getFaceNodes(face,0,ln,hn);
-  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
-    nb.push_back(*bound);
-  }
-
-
-#if 1
-  setBoundaryIterator(b);
-  setNBoundaryIterator(nb);
+#ifdef OLD
+  d_nodes = scinew GridIterator(ln,hn);
+#else
+  d_nodes = GridIterator(ln,hn);
 #endif
-  setBoundaryIterator(b.begin(),b.end());
-  setNBoundaryIterator(nb.begin(),nb.end());
 
 
 #if 0
-  determineSFLimits(face,patch);
+  cout << "d_nodes->begin() = " << d_nodes->begin() << " d_nodes->end() = " 
+       << d_nodes->end() << endl;
 #endif
 
-#endif  
+  //  Iterator iii(d_cells);
 
+#if 0
+  cout << "Iterator output . . . " << endl;
+  for (Iterator ii(d_cells); !ii.done(); ii++) {
+    cout << ii << endl;
+  }
+#endif
   
 }
 
-#if 0
-void SideBCData::determineSFLimits(Patch::FaceType face, const Patch* patch)
-{
-#if 0
-  cout << "SideBC determineSFLimits()" << endl;
-  BCGeomBase::determineSFLimits(face,patch);
-#endif
-  return;
-}
-#endif
+
