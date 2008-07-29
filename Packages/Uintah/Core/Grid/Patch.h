@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/fixedvector.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/Iterator.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
@@ -1741,20 +1742,11 @@ WARNING
       const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
       const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-          const string& type,
-          vector<IntVector>*& b_ptr,
-          vector<IntVector>*& nb_ptr,
-          int child) const ;
-
-#if 0
-      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
                                             const string& type,
-                                            BCIterator* b_ptr,
-                                            BCIterator* e_ptr,
-                                            NBCIterator* nb_ptr,
-                                            NBCIterator* ne_ptr,
+                                            Iterator& b_ptr,
+                                            Iterator& e_ptr,
                                             int child) const ;
-#endif
+
 
       bool haveBC(FaceType face,int mat_id,const string& bc_type,
           const string& bc_variable) const;

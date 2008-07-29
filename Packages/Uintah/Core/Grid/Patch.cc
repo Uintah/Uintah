@@ -334,23 +334,23 @@ const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
   return (*d_arrayBCS)[face];
 }
 
+
 const BoundCondBase*
 Patch::getArrayBCValues(Patch::FaceType face,
                         int mat_id,
                         const string& type,
-			vector<IntVector>*& bound_ptr, 
-			vector<IntVector>*& nbound_ptr,
+			Iterator& cell_ptr, 
+			Iterator& node_ptr,
 			int child) const
 {
   BCDataArray* bcd = (*d_arrayBCS)[face];
   if (bcd) {
     const BoundCondBase* bc = bcd->getBoundCondData(mat_id,type,child);
     if (bc) {
-      bcd->getBoundaryIterator(mat_id,bound_ptr,child);
-      bcd->getNBoundaryIterator(mat_id,nbound_ptr,child);
-      return bc;
-    } else
-      return 0;
+      bcd->getCellFaceIterator(mat_id,cell_ptr,child);
+      bcd->getNodeFaceIterator(mat_id,node_ptr,child);
+    }
+    return bc;
   } else
     return 0;
 }
