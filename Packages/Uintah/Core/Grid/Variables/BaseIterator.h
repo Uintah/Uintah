@@ -87,6 +87,8 @@ namespace Uintah {
      */
     virtual IntVector end() const=0;
 
+    virtual ostream& limits(ostream&) const = 0;
+
 
     protected:
     /**

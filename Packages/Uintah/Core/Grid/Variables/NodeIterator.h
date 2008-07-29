@@ -134,6 +134,13 @@ namespace Uintah {
           d_iy=d_s.y();
           d_iz=d_s.z();
         }
+
+        ostream& limits(ostream& out) const
+          {
+            out << begin() << " " << end() - IntVector(1,1,1);
+            return out;
+          }
+
       private:
         NodeIterator();
         NodeIterator& operator=(const NodeIterator& copy);

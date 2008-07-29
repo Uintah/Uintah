@@ -121,7 +121,11 @@ namespace Uintah {
       return out;
     }
 
-
+    virtual ostream& limits(std::ostream& out) const
+    {
+      out << begin() << " " << end();
+      return out;
+    }
 
     //vector to store cells
     vector<IntVector> listOfCells_;
