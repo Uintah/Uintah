@@ -478,7 +478,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
   map<DependencyBatch*, DependencyBatch*>::const_iterator iter = 
     task->getRequires().begin();
   for( ; iter != task->getRequires().end(); iter++) {
-     sorted_reqs.push_back(iter->first);
+    sorted_reqs.push_back(iter->first);
   }
   CompareDep comparator;;
   sort(sorted_reqs.begin(), sorted_reqs.end(), comparator);
@@ -496,8 +496,8 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       //externalRecvs.push_back( batch ); // no longer necessary
 
       if( mixedDebug.active() ) {
-	cerrLock.lock();mixedDebug << "Someone else already receiving it\n";
-	cerrLock.unlock();
+        cerrLock.lock();mixedDebug << "Someone else already receiving it\n";
+        cerrLock.unlock();
       }
 
       continue;
@@ -505,15 +505,15 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
 
     if(only_old_recvs){
       if(dbg.active()){
-	dbg << "abort analysis: " << batch->fromTask->getTask()->getName()
-		   << ", so=" << batch->fromTask->getTask()->getSortedOrder()
-		   << ", abort_point=" << abort_point << '\n';
-	if(batch->fromTask->getTask()->getSortedOrder() <= abort_point)
-	  dbg << "posting MPI recv for pre-abort message " 
-		     << batch->messageTag << '\n';
+        dbg << "abort analysis: " << batch->fromTask->getTask()->getName()
+          << ", so=" << batch->fromTask->getTask()->getSortedOrder()
+          << ", abort_point=" << abort_point << '\n';
+        if(batch->fromTask->getTask()->getSortedOrder() <= abort_point)
+          dbg << "posting MPI recv for pre-abort message " 
+            << batch->messageTag << '\n';
       }
       if(!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
-	continue;
+        continue;
       }
     }
 
@@ -550,7 +550,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
         ostr << *req << ' ';
         dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
       }
-      
+
       OnDemandDataWarehouse* posDW;
       const VarLabel* posLabel;
 
@@ -558,8 +558,8 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
       if(!reloc_new_posLabel_ && parentScheduler){
-	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-	posLabel = parentScheduler->reloc_new_posLabel_;
+        posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posLabel = parentScheduler->reloc_new_posLabel_;
       } else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output)
@@ -568,7 +568,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
           posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
-	posLabel = reloc_new_posLabel_;
+        posLabel = reloc_new_posLabel_;
       }
 
       MPIScheduler* top = this;
@@ -577,7 +577,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       dw->recvMPI(batch, mpibuff, posDW, req, lb);
 
       if (!req->isNonDataDependency()) {
-	graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
+        graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
       }
 
     }
@@ -600,24 +600,24 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       MPI_Request requestid;
 
       if( dbg.active()) {
-	cerrLock.lock();
+        cerrLock.lock();
         //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43)
         dbg << d_myworld->myrank() << " Recving message number " << batch->messageTag 
-            << " from " << from << ": " << ostr.str() << "\n"; cerrLock.unlock();
-          //dbg.setActive(false);
+          << " from " << from << ": " << ostr.str() << "\n"; cerrLock.unlock();
+        //dbg.setActive(false);
       }
 
       //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43) 
       mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
-		d_myworld->getComm(), &requestid);
+          d_myworld->getComm(), &requestid);
       int bytes = count;
 #ifdef USE_PACKING
       MPI_Pack_size(count, datatype, d_myworld->getComm(), &bytes);
 #endif
       recvs_.add(requestid, bytes,
-		scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
-                ostr.str(), batch->messageTag);
+          scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
+          ostr.str(), batch->messageTag);
       mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
 
     }
