@@ -554,8 +554,12 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
         
         // set the foreign before the allocate (allocate CAN take multiple P Subsets, but only if it's foreign)
         if (whole_patch_pset)
+        {
+          MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI(whole patch pset):" + label->getName());
           var->allocate(recvset);
+        }
         else {
+          MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI:" + label->getName());
           // don't give this a pset as it could be a conatiner for several
           int allocated_particles = old_dw->d_foreignParticleQuantities[make_pair(matlIndex, patch)];
           var->allocate(allocated_particles);
@@ -592,6 +596,7 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
     if (var == 0 || var->getBasePointer() == 0 ||
         Min(var->getLow(), dep->patchLow) != var->getLow() ||
         Max(var->getHigh(), dep->patchHigh) != var->getHigh()) {
+      MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI(cell variable):" + label->getName());
       // There was no place reserved to recv the data yet,
       // so it must create the space now.
       GridVariableBase* v = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
