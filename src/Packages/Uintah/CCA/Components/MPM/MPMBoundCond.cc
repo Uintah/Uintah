@@ -222,9 +222,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 variable[nd] = bcv;
               }
             }
-            delete bc;
-          } else
-            delete bcb;
+          }
+          delete bc;
+        } else
+          delete bcb;
         }
         
         if(type=="Pressure"){
@@ -241,61 +242,64 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){
                 variable[*nodeFaceItr] = bcv;
               }
-            }
-          }
-            
-          if (bc->getKind() == "Neumann" && (interp_type=="gimp" 
-                                             ||  interp_type=="3rdorderBS")) {
-            Vector deltax = patch->dCell();
-            double dx = -9;
-            IntVector off(-9,-9,-9);
-            if (face == Patch::xplus){
-              dx = deltax.x();
-              off=IntVector(1,0,0);
-            }
-            else if (face == Patch::xminus){
-              dx = deltax.x();
-              off=IntVector(-1,0,0);
-            }
-            else if (face == Patch::yplus){
-              dx = deltax.y();
-              off=IntVector(0,1,0);
-            }
-            else if (face == Patch::yminus){
-              dx = deltax.y();
-              off=IntVector(0,-1,0);
-            }
-            else if (face == Patch::zplus){
-              dx = deltax.z();
-              off=IntVector(0,0,1);
-            }
-            else if (face == Patch::zminus){
-              dx = deltax.z();
-              off=IntVector(0,0,-1);
-            }
-            
-            double gradv = bc->getValue();
-            for(NodeIterator it(l,h); !it.done(); it++) {
-              IntVector nd = *it;
-              variable[nd] = variable[nd-off] + gradv*dx;
-#if 0
-              if(face==Patch::xminus){
-                cout << "node = " << nd << " variable = " << variable[nd]
-                     << " variable-off = " << variable[nd-off] << endl;
+              if(interp_type=="gimp" || interp_type=="3rdorderBS"){
+                for(NodeIterator it(l,h); !it.done(); it++) {
+                  IntVector nd = *it;
+                  variable[nd] = bcv;
+                }
               }
+            }
+            
+            if (bc->getKind() == "Neumann" && (interp_type=="gimp" 
+                                               ||  interp_type=="3rdorderBS")) {
+              Vector deltax = patch->dCell();
+              double dx = -9;
+              IntVector off(-9,-9,-9);
+              if (face == Patch::xplus){
+                dx = deltax.x();
+                off=IntVector(1,0,0);
+              }
+              else if (face == Patch::xminus){
+                dx = deltax.x();
+                off=IntVector(-1,0,0);
+              }
+              else if (face == Patch::yplus){
+                dx = deltax.y();
+                off=IntVector(0,1,0);
+              }
+              else if (face == Patch::yminus){
+                dx = deltax.y();
+                off=IntVector(0,-1,0);
+              }
+              else if (face == Patch::zplus){
+                dx = deltax.z();
+                off=IntVector(0,0,1);
+              }
+              else if (face == Patch::zminus){
+                dx = deltax.z();
+                off=IntVector(0,0,-1);
+              }
+              
+              double gradv = bc->getValue();
+              for(NodeIterator it(l,h); !it.done(); it++) {
+                IntVector nd = *it;
+                variable[nd] = variable[nd-off] + gradv*dx;
+#if 0
+                if(face==Patch::xminus){
+                  cout << "node = " << nd << " variable = " << variable[nd]
+                       << " variable-off = " << variable[nd-off] << endl;
+                }
 #endif
+              }
             }
             
             delete bc;
           } else
             delete bcb;
         }
-       }
-       
+        
       }
     } else
       continue;
   }
 }
-
-
