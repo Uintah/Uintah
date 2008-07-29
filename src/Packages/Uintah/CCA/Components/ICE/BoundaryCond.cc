@@ -86,42 +86,42 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 
         switch (face) {
         case Patch::xplus:
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector c(*bound_ptr - IntVector(1,0,0));
             A[c].p = A[c].p + one_or_zero * A[c].e;
             A[c].e = 0.0;
           }
           break;
         case Patch::xminus:
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) { 
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) { 
             IntVector c(*bound_ptr + IntVector(1,0,0));
             A[c].p = A[c].p + one_or_zero * A[c].w;
             A[c].w = 0.0;
           }
           break;
         case Patch::yplus:
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) { 
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) { 
             IntVector c(*bound_ptr - IntVector(0,1,0));
             A[c].p = A[c].p + one_or_zero * A[c].n;
             A[c].n = 0.0;
           }
           break;
         case Patch::yminus:
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector c(*bound_ptr + IntVector(0,1,0)); 
             A[c].p = A[c].p + one_or_zero * A[c].s;
             A[c].s = 0.0;
           }
           break;
         case Patch::zplus:
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector c(*bound_ptr - IntVector(0,0,1));
             A[c].p = A[c].p + one_or_zero * A[c].t;
             A[c].t = 0.0;
           }
           break;
         case Patch::zminus:
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector c(*bound_ptr + IntVector(0,0,1));
             A[c].p = A[c].p + one_or_zero * A[c].b;
             A[c].b = 0.0;
@@ -250,7 +250,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         //__________________________________
         //  Set the BC  
         vector<IntVector>::const_iterator iter;
-        for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
           IntVector c = *bound_ptr;
           IntVector adj = c - oneCell;
           imp_delP[c] = one_or_zero * imp_delP[adj];
@@ -551,7 +551,7 @@ void setBC(CCVariable<double>& press_CC,
             IntVector oneCell = patch->faceDirection(face);
             vector<IntVector>::const_iterator iter;
 
-            for (bound_ptr.begin();!bound_ptr.done(); bound_ptr++) { 
+            for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) { 
               IntVector L = *bound_ptr - oneCell;
               IntVector R = *bound_ptr;
               double rho_R = rho_micro[surroundingMatl_indx][R];
@@ -566,7 +566,7 @@ void setBC(CCVariable<double>& press_CC,
           if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
           
             vector<IntVector>::const_iterator iter;
-            for (bound_ptr.begin();!bound_ptr.done(); bound_ptr++) {
+            for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) {
               IntVector R = *bound_ptr;
               Point here_R = level->getCellPosition(R);
               Vector dist_R = (here_R.asVector() - press_ref_pt);
@@ -815,7 +815,7 @@ void setBC(CCVariable<Vector>& var_CC,
           sign[P_dir] = -1;
           vector<IntVector>::const_iterator iter;
 
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector adjCell = *bound_ptr - oneCell;
             var_CC[*bound_ptr] = sign.asVector() * var_CC[adjCell];
           }
@@ -888,13 +888,13 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
         if(bc_kind == "computeFromDensity"){
         
           vector<IntVector>::const_iterator iter;
-          for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+          for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector c = *bound_ptr;
             sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
           }
           
           if(isMassSp_vol){  // convert to mass * sp_vol
-            for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
               IntVector c = *bound_ptr;
               sp_vol_CC[c] = sp_vol_CC[c]*(rho_CC[c]*cellVol);
             }

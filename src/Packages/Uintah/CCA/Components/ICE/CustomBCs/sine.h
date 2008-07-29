@@ -132,7 +132,7 @@ namespace Uintah {
 //  double t     = sharedState->getElapsedTime();                         
 //  t += sine_v->delT;                                                 
                                                                      
-  for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {  
+  for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr - one_or_zero;                  
       
     Vector vel(0.0,0.0,0.0);                                         

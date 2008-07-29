@@ -304,7 +304,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
       cout_dbg << " SLIP"<< endl;
       
       vector<IntVector>::const_iterator iter;
-      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
         IntVector in = c - offset;
         // normal direction velocity
@@ -322,7 +322,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     if(bc_kind == "creep") {
       cout_dbg << " CREEP"<< endl;
       
-      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
         IntVector in = c - offset;
         // normal direction velocity
@@ -379,7 +379,7 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
     //    S I D E     
     //double A =( 2.0 - alpha_temperature) /alpha_temperature;
     
-    for (bound_ptr.begin(); bound_ptr.done(); bound_ptr++) {
+    for (bound_ptr.reset(); bound_ptr.done(); bound_ptr++) {
       IntVector c = *bound_ptr;
       IntVector in = c - offset;
       

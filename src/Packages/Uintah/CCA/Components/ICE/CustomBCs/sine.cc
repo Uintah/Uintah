@@ -174,7 +174,7 @@ void set_Sine_Velocity_BC(const Patch* patch,
 //    double t     = sharedState->getElapsedTime();                        
 //    t += sine_v->delT;                                                
                                                                       
-    for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++)   {
+    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++)   {
       IntVector c = *bound_ptr;                                             
                                                                       
       vel_CC[c].x(0.0);   // this need to be changed  
@@ -209,7 +209,7 @@ void set_Sine_Temperature_BC(const Patch* /*patch*/,
     constCCVariable<double> press_CC = sine_v->press_CC;
     constCCVariable<double> rho_CC   = sine_v->rho_CC;
                                                                             
-    for (bound_ptr.begin(); bound_ptr.done(); bound_ptr++) {  
+    for (bound_ptr.reset(); bound_ptr.done(); bound_ptr++) {  
       IntVector c = *bound_ptr;                                             
       temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
     }                                                                  
@@ -242,7 +242,7 @@ void set_Sine_press_BC(const Patch* patch,
   double p_ref = 101325;                                             
   t += sine_v->delT;  // delT is either 0 or delT                                          
 
-  for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {  
+  for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {  
     IntVector c = *bound_ptr;                                    
     press_CC[c] = p_ref + A * sin(omega*t);                 
   }                                                                  

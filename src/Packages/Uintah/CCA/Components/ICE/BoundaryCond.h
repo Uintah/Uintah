@@ -226,7 +226,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  }
  //__________________________________        
  if (bc_kind == "Dirichlet") {    //   D I R I C H L E T 
-   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
      var[*bound_ptr] = value;
    }
    IveSetBC = true;
@@ -253,7 +253,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
    time_t seconds = time(NULL);
    srand(seconds);
 
-   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
      var[*bound_ptr] = value + K*((double(rand())/RAND_MAX)*2.- 1.)*value;
    }
    IveSetBC = true;
@@ -261,14 +261,14 @@ bool getIteratorBCValueBCKind( const Patch* patch,
  }
 
  if (bc_kind == "Neumann") {       //    N E U M A N N
-   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
      IntVector adjCell = *bound_ptr - oneCell;
      var[*bound_ptr] = var[adjCell] - value * dx;
    }
    IveSetBC = true;
  }
  if (bc_kind == "zeroNeumann") {   //    Z E R O  N E U M A N N
-   for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
      IntVector adjCell = *bound_ptr - oneCell;
      var[*bound_ptr] = var[adjCell];
    }
@@ -315,12 +315,12 @@ bool getIteratorBCValueBCKind( const Patch* patch,
     }
     // on (x,y,z)minus faces move in one cell
     if( onMinusFace ) {
-      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr - oneCell;
         vel_FC[c] = value;
       }
     }else {    // (xplus, yplus, zplus) faces
-      for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+      for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
         vel_FC[c] = value;
  

@@ -107,7 +107,6 @@ namespace Uintah {
       inline IntVector begin() const 
       { 
         ASSERT(iter_!=NULL);  
-        iter_->reset();
         return iter_->begin(); 
       }
 
