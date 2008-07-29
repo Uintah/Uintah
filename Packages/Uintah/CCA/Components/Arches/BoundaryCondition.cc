@@ -29,8 +29,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
+
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -41,12 +40,17 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Containers/StaticArray.h>
-#include <iostream>
-#include <sstream>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
+
+#include <iostream>
+#include <sstream>
+
 
 using namespace std;
 using namespace Uintah;
@@ -4578,8 +4582,7 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
       uvwcorr = (totalFlowIN - denAccum - totalFlowOUT - netFlowOUT_outbc)/
                  totalAreaOUT;
     }else {
-      cout << "Zero area for specified outlet" << endl;
-      exit(1);
+       throw ProblemSetupException("ERROR: The specified outlet has zero area", __FILE__, __LINE__);
     }
   }else{
     uvwcorr = 0.0;

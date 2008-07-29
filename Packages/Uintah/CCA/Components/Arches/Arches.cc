@@ -1092,8 +1092,9 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
 
     ifstream fd(d_init_inputfile.c_str());
     if(fd.fail()) {
-      cout << " Unable to open the given input file " << d_init_inputfile << endl;
-      exit(1);
+      ostringstream warn;
+      warn << "ERROR Arches::readCCInitialCondition: \nUnable to open the given input file " << d_init_inputfile;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     int nx,ny,nz;
     fd >> nx >> ny >> nz;
@@ -1102,8 +1103,9 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     level->findCellIndexRange(low, high);
     IntVector range = high-low;//-IntVector(2,2,2);
     if (!(range == IntVector(nx,ny,nz))) {
-      cout << "Wrong grid size in input file" << endl;
-      exit(1);
+      ostringstream warn;
+      warn << "ERROR Arches::readCCInitialCondition: \nWrong grid size in input file " << range;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     double tmp;
     fd >> tmp >> tmp >> tmp;

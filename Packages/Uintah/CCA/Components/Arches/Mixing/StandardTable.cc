@@ -5,8 +5,8 @@
 #include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Math/MiscMath.h>
 #include <cmath>
 #include <cstdio>
@@ -100,8 +100,8 @@ StandardTable::problemSetup(const ProblemSpecP& params)
     if (!(Enthalpy_index == -1))
       d_H_air=table->interpolate(Enthalpy_index, ind_vars);  
     else {
-      cout << "No way provided to compute adiabatic enthalpy" << endl;
-      exit (1);
+      throw ProblemSetupException("ERROR Arches::StandardTable::ProblemSetup \n"
+                               "No way provided to compute adiabatic enthalpy", __FILE__, __LINE__);
     }
   }
 }
@@ -178,8 +178,8 @@ StandardTable::computeProps(const InletStream& inStream,
     else if (d_adiab_enth_inputs)
       adiab_enthalpy=interp_adiab_enthalpy;
     else {
-      cout << "No way provided to compute adiabatic enthalpy" << endl;
-      exit (1);
+      throw ProblemSetupException("ERROR Arches::StandardTable::computeProps \n"
+                               "No way provided to compute adiabatic enthalpy", __FILE__, __LINE__);
     }
 
     if ((inStream.d_initEnthalpy)||
