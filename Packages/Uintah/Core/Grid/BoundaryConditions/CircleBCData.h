@@ -32,9 +32,6 @@ namespace Uintah {
     /// Constructor
     CircleBCData();
 
-    /// Constructor with boundary condition data.
-    CircleBCData(BCData& bc);
-
     /// Constructor used with a point defining the origin and the radius.
     CircleBCData(Point& p, double radius);
 

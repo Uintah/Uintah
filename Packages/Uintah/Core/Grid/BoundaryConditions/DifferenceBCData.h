@@ -30,11 +30,14 @@ namespace Uintah {
     /// Default constructor
     DifferenceBCData();
 
+
+#ifdef OLD
     /// Copy constructor
      DifferenceBCData(const DifferenceBCData& rhs);
 
      /// Assignment operator
      DifferenceBCData& operator=(const DifferenceBCData& bc);
+#endif
 
      /// Constructor with two boundary condition geometries.  The second 
      /// argument is subtracted from the first argument.
@@ -62,6 +65,7 @@ namespace Uintah {
 
      /// Print out the boundary condition geometry types.
      virtual void print();
+
 
      /// Determine the cell and node boundary iterators.
      virtual void determineIteratorLimits(Patch::FaceType face,

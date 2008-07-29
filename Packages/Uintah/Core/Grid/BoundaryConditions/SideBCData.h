@@ -6,9 +6,8 @@
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <sgi_stl_warnings_off.h>
+#include <Packages/Uintah/Core/Grid/Variables/GridIterator.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
@@ -35,8 +34,9 @@ namespace Uintah {
     /// Constructor
     SideBCData();
 
-    /// Constructor with boundary condition data.
-    SideBCData(BCData& d_bc);
+
+    /// Assignment Operator
+    SideBCData& operator=(const SideBCData& bc);
 
     /// Destructor
     virtual ~SideBCData();
@@ -65,13 +65,12 @@ namespace Uintah {
     virtual void determineIteratorLimits(Patch::FaceType face,
 					 const Patch* patch, 
 					 vector<Point>& test_pts);
-#if 0
-    /// Determine the face centered iterators
-    virtual void determineSFLimits(Patch::FaceType face, const Patch* patch);
-#endif
+
+    
     
   private:
     BCData d_bc;
+
   };
   
 } // End namespace Uintah

@@ -9,17 +9,12 @@ using namespace Uintah;
 using std::cout;
 using std::endl;
 
-RectangleBCData::RectangleBCData() 
+RectangleBCData::RectangleBCData() : BCGeomBase()
 {
   
 }
 
-RectangleBCData::RectangleBCData(BCData& bc)
-  : d_bc(bc)
-{
-}
-
-RectangleBCData::RectangleBCData(Point& low, Point& up)
+RectangleBCData::RectangleBCData(Point& low, Point& up) : BCGeomBase()
 {
   cout << "low = " << low << " up = " << up << endl;
   Point n_low, n_up;
@@ -93,6 +88,8 @@ void RectangleBCData::print()
   d_bc.print();
 }
 
+
+
 void RectangleBCData::determineIteratorLimits(Patch::FaceType face, 
 					      const Patch* patch, 
 					      vector<Point>& test_pts)
@@ -100,7 +97,9 @@ void RectangleBCData::determineIteratorLimits(Patch::FaceType face,
 #if 0
   cout << "RectangleBC determineIteratorLimits()" << endl;
 #endif
+
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+
 }
 
 

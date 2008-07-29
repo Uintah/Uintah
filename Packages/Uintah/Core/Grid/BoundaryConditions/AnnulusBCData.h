@@ -32,9 +32,6 @@ namespace Uintah {
     /// Constructor
     AnnulusBCData();
 
-    /// Constructor with boundary condition data.
-    AnnulusBCData(BCData& bc);
-
     /// Constructor used with a point defining the origin and the radius.
     AnnulusBCData(Point& p, double inRadius, double outRadius);
 

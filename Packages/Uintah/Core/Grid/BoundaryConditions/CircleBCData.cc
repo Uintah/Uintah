@@ -8,19 +8,14 @@
 using namespace SCIRun;
 using namespace Uintah;
 
-
-CircleBCData::CircleBCData() 
+CircleBCData::CircleBCData() : BCGeomBase()
 {
   
 }
 
-CircleBCData::CircleBCData(BCData& bc)
-  : d_bc(bc)
-{
-}
 
 CircleBCData::CircleBCData(Point& p, double radius)
-  : d_radius(radius), d_origin(p)
+  : BCGeomBase(), d_radius(radius), d_origin(p)
 {
 }
 
@@ -78,6 +73,7 @@ void CircleBCData::print()
   d_bc.print();
 }
 
+
 void CircleBCData::determineIteratorLimits(Patch::FaceType face, 
 					   const Patch* patch, 
 					   vector<Point>& test_pts)
@@ -85,6 +81,8 @@ void CircleBCData::determineIteratorLimits(Patch::FaceType face,
 #if 0
   cout << "Circle determineIteratorLimits()" << endl;
 #endif
+
   BCGeomBase::determineIteratorLimits(face,patch,test_pts);
+
 }
 
