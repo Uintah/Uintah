@@ -135,7 +135,7 @@ namespace Uintah {
     double t  = sharedState->getElapsedTime();
     t += mms_v->delT;
     
-    for (bound_ptr.begin(); !bound_ptr.done(); bound_ptr++) {
+    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
       IntVector c = *bound_ptr - one_or_zero;
       Point pt = patch->cellPosition(c);
       double x_CC = pt.x(); 

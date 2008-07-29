@@ -402,7 +402,7 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
             dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
-              for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+              for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                 gtemp[*nbound_ptr] = bc->getValue();
               }
               IntVector l,h;

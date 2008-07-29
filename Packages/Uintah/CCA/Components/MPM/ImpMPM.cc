@@ -2419,7 +2419,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               dynamic_cast<const VelocityBoundCond*>(vel_bcs);
             if (bc != 0) {
               if (bc->getKind() == "Dirichlet") {
-                for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+                for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                   gvelocity_old[*nbound_ptr] = bc->getValue();
                   gacceleration[*nbound_ptr] = bc->getValue();
                 }
@@ -2440,7 +2440,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               dynamic_cast<const SymmetryBoundCond*>(sym_bcs);
             if (sbc != 0) {
               if (face == Patch::xplus || face == Patch::xminus)
-                for (nbound_ptr.begin(); !nbound_ptr.done();nbound_ptr++) {
+                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
                   gvelocity_old[*nbound_ptr] = 
                     Vector(0.,gvelocity_old[*nbound_ptr].y(),
                            gvelocity_old[*nbound_ptr].z());
@@ -2449,7 +2449,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                            gacceleration[*nbound_ptr].z());
                 }
               if (face == Patch::yplus || face == Patch::yminus)
-                for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+                for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                   gvelocity_old[*nbound_ptr] = 
                     Vector(gvelocity_old[*nbound_ptr].x(),0.,
                            gvelocity_old[*nbound_ptr].z());
@@ -2458,7 +2458,7 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                            gacceleration[*nbound_ptr].z());
                 }
               if (face == Patch::zplus || face == Patch::zminus)
-                for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+                for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                   gvelocity_old[*nbound_ptr] = 
                     Vector(gvelocity_old[*nbound_ptr].x(),
                            gvelocity_old[*nbound_ptr].y(),0.);

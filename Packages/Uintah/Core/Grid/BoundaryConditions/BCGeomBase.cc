@@ -145,7 +145,7 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
 #endif
   vector<IntVector> vec_cells;
 
-  for (cell_itr.begin(); !cell_itr.done();cell_itr++,pts++) {
+  for (cell_itr.reset(); !cell_itr.done();cell_itr++,pts++) {
     if (inside(*pts)) {
       //        list_cells->add(*cell_itr);
       vec_cells.push_back(*cell_itr);
@@ -159,7 +159,7 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
 #endif
   vector<IntVector> vec_nodes;
 
-  for (node_itr.begin(); !node_itr.done();node_itr++) {
+  for (node_itr.reset(); !node_itr.done();node_itr++) {
     Point p = patch->getLevel()->getNodePosition(*node_itr);
     if (inside(p)) {
       //      list_nodes->add(*node_itr);

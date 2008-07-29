@@ -51,11 +51,39 @@ namespace Uintah {
   class UINTAHSHARE GridIterator : public BaseIterator {
     friend ostream& operator<<( ostream& out,  const GridIterator& c );
     public:
-      inline ~GridIterator() {}
+    inline ~GridIterator() {}
 
-      inline void operator++(int) {
-        // This does not return the old iterator due to performance problems
-        // on some compilers...
+    inline void operator++(int) {
+      // This does not return the old iterator due to performance problems
+      // on some compilers...
+      if(++d_cur.modifiable_x() >= d_e.x()){
+        d_cur.modifiable_x() = d_s.x();
+        if(++d_cur.modifiable_y() >= d_e.y()){
+          d_cur.modifiable_y() = d_s.y();
+          ++d_cur.modifiable_z();
+          if(d_cur.modifiable_z() >= d_e.z())
+            d_done=true;
+        }
+      }
+    }
+
+    inline GridIterator& operator++() {
+      if(++d_cur.modifiable_x() >= d_e.x()){
+        d_cur.modifiable_x() = d_s.x();
+        if(++d_cur.modifiable_y() >= d_e.y()){
+          d_cur.modifiable_y() = d_s.y();
+          ++d_cur.modifiable_z();
+          if(d_cur.modifiable_z() >= d_e.z())
+            d_done=true;
+        }
+      }
+      return *this;
+    }
+
+    inline GridIterator operator+=(int step) {
+      GridIterator old(*this);
+
+      for (int i = 0; i < step; i++) {
         if(++d_cur.modifiable_x() >= d_e.x()){
           d_cur.modifiable_x() = d_s.x();
           if(++d_cur.modifiable_y() >= d_e.y()){
@@ -65,123 +93,95 @@ namespace Uintah {
               d_done=true;
           }
         }
+        if (done())
+          break;
       }
+      return old;
+    }
 
-      inline GridIterator& operator++() {
-        if(++d_cur.modifiable_x() >= d_e.x()){
-          d_cur.modifiable_x() = d_s.x();
-          if(++d_cur.modifiable_y() >= d_e.y()){
-            d_cur.modifiable_y() = d_s.y();
-            ++d_cur.modifiable_z();
-            if(d_cur.modifiable_z() >= d_e.z())
-              d_done=true;
-          }
-        }
+    inline bool done() const {
+      return d_done;
+    }
+
+    inline void reset() {
+      d_done=false;
+      d_cur=d_s;
+    }
+
+    IntVector operator*() const {
+      ASSERT(!d_done);
+      return d_cur;
+    }
+
+    inline GridIterator()
+    {
+      reset();
+    }
+
+    inline GridIterator(const IntVector& s, const IntVector& e)
+      : d_s(s), d_e(e), d_cur(s){
+        if(d_s.x() >= d_e.x() || d_s.y() >= d_e.y() || d_s.z() >= d_e.z())
+          d_done = true;
+        else
+          d_done = false;
+      }
+    inline IntVector begin() const {
+      return d_s;
+    }
+    inline IntVector end() const {
+      return d_e;
+    }
+
+    inline GridIterator( const GridIterator & copy ) :
+      d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done)
+    {
+    }
+    inline GridIterator( const CellIterator & copy ) :
+      d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done)
+    {
+    }
+    inline GridIterator( const NodeIterator & copy ) :
+      d_s(copy.d_s), d_e(copy.d_e), d_cur( copy.d_ix, copy.d_iy, copy.d_iz ), d_done( copy.done() )
+    {
+    }
+
+    inline GridIterator& operator=( const GridIterator& copy ) {
+      if (this == &copy)
         return *this;
-      }
 
-      inline GridIterator operator+=(int step) {
-        GridIterator old(*this);
+      d_s    = copy.d_s;
+      d_e    = copy.d_e;
+      d_cur  = copy.d_cur;
+      d_done = copy.d_done;
+      return *this;
+    }
 
-        for (int i = 0; i < step; i++) {
-          if(++d_cur.modifiable_x() >= d_e.x()){
-            d_cur.modifiable_x() = d_s.x();
-            if(++d_cur.modifiable_y() >= d_e.y()){
-              d_cur.modifiable_y() = d_s.y();
-              ++d_cur.modifiable_z();
-              if(d_cur.modifiable_z() >= d_e.z())
-                d_done=true;
-            }
-          }
-          if (done())
-            break;
-        }
-        return old;
-      }
+    ostream& put(std::ostream& out) const
+    {
+      out << *this;
+      return out;
+    }
 
-      inline bool done() const {
-        return d_done;
-      }
-
-      inline void reset() {
-        d_done=false;
-        d_cur=d_s;
-      }
-
-      IntVector operator*() const {
-        ASSERT(!d_done);
-        return d_cur;
-      }
-
-      inline GridIterator()
-      {
-        reset();
-      }
-
-      inline GridIterator(const IntVector& s, const IntVector& e)
-        : d_s(s), d_e(e), d_cur(s){
-          if(d_s.x() >= d_e.x() || d_s.y() >= d_e.y() || d_s.z() >= d_e.z())
-            d_done = true;
-          else
-            d_done = false;
-        }
-      inline IntVector begin() const {
-        return d_s;
-      }
-      inline IntVector end() const {
-        return d_e;
-      }
-
-      inline GridIterator( const GridIterator & copy ) :
-        d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done)
-      {
-      }
-      inline GridIterator( const CellIterator & copy ) :
-        d_s(copy.d_s), d_e(copy.d_e), d_cur(copy.d_cur), d_done(copy.d_done)
-      {
-      }
-      inline GridIterator( const NodeIterator & copy ) :
-        d_s(copy.d_s), d_e(copy.d_e), d_cur( copy.d_ix, copy.d_iy, copy.d_iz ), d_done( copy.done() )
-      {
-      }
-
-      inline GridIterator& operator=( const GridIterator& copy ) {
-        if (this == &copy)
-          return *this;
-
-        d_s    = copy.d_s;
-        d_e    = copy.d_e;
-        d_cur  = copy.d_cur;
-        d_done = copy.d_done;
-        return *this;
-      }
-
-      ostream& put(std::ostream& out) const
-      {
-        out << *this;
-        return out;
-      }
-
-      ostream& limits(std::ostream& out) const
-        {
-
-
-        }
+    ostream& limits(std::ostream& out) const
+    {
+      out << begin() << " " << end() - IntVector(1,1,1);
+      return out;
+    }
 
     private:
-      /**
-       * Returns a pointer to a deep copy of the virtual class
-       * this should be used only by the Iterator class
-       */
-      GridIterator* clone() const {
-        return scinew GridIterator(*this);
-      }
+    /**
+     * Returns a pointer to a deep copy of the virtual class
+     * this should be used only by the Iterator class
+     */
+    GridIterator* clone() const {
+      return scinew GridIterator(*this);
+    }
 
-      
 
-      IntVector d_s,d_e;
-      IntVector d_cur;
-      bool d_done;
+
+    IntVector d_s,d_e;
+    IntVector d_cur;
+    bool d_done;
 
   }; // end class GridIterator
 

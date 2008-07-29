@@ -52,7 +52,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               Vector bcv = bc->getValue();
-              for (nodeFaceItr.begin(); !nodeFaceItr.done();nodeFaceItr++){ 
+              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
                 variable[*nodeFaceItr] = bcv;
               }
               if(interp_type=="gimp" || interp_type=="3rdorderBS"){
@@ -76,7 +76,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
-              for (nodeFaceItr.begin(); !nodeFaceItr.done();nodeFaceItr++){ 
+              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
                 variable[*nodeFaceItr] = Vector(0,0,0);
               }
               if(interp_type=="gimp" || interp_type=="3rdorderBS"){
@@ -98,7 +98,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             dynamic_cast<const SymmetryBoundCond*>(bcb); 
           if (bc != 0) {
             if (face == Patch::xplus || face == Patch::xminus){
-              for (nodeFaceItr.begin(); !nodeFaceItr.done();nodeFaceItr++){ 
+              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
                 variable[*nodeFaceItr] = Vector(0.,variable[*nodeFaceItr].y(), 
                                                 variable[*nodeFaceItr].z());
               }
@@ -124,7 +124,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::yplus || face == Patch::yminus){
-              for (nodeFaceItr.begin(); !nodeFaceItr.done();nodeFaceItr++){ 
+              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
                 variable[*nodeFaceItr] = Vector(variable[*nodeFaceItr].x(),0.,
                                                 variable[*nodeFaceItr].z());
               }
@@ -150,7 +150,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::zplus || face == Patch::zminus){
-              for (nodeFaceItr.begin(); !nodeFaceItr.done();nodeFaceItr++){ 
+              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
                 variable[*nodeFaceItr] = Vector(variable[*nodeFaceItr].x(), 
                                                 variable[*nodeFaceItr].y(),0.);
               }
@@ -213,7 +213,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         if (bc != 0){
           if (bc->getKind() == "Dirichlet") {
             double bcv = bc->getValue();
-            for (nodeFaceItr.begin(); !nodeFaceItr.done();nodeFaceItr++){ 
+            for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
               variable[*nodeFaceItr] = bcv;
             }
             if(interp_type=="gimp" || interp_type=="3rdorderBS"){
@@ -238,7 +238,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               double bcv = bc->getValue();
-              for (nodeFaceItr.begin(); !nodeFaceItr.done();nodeFaceItr++){
+              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){
                 variable[*nodeFaceItr] = bcv;
               }
             }
