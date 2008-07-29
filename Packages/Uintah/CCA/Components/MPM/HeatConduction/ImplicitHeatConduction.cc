@@ -393,19 +393,17 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
         int numChildren =
           patch->getBCDataArray(face)->getNumberChildren(matl);
         for (int child = 0; child < numChildren; child++) {
-          vector<IntVector> *nbound_ptr;
-          vector<IntVector> *nu;   // not used
-          vector<IntVector>::const_iterator boundary;
-          
+          Iterator nbound_ptr;
+          Iterator nu;   // not used
+
           temp_bcs = patch->getArrayBCValues(face,matl,"Temperature",nu,
                                              nbound_ptr,child);
           const TemperatureBoundCond* bc =
             dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
-              for (boundary=nbound_ptr->begin(); boundary != nbound_ptr->end();
-                   boundary++) {
-                gtemp[*boundary] = bc->getValue();
+              for (nbound_ptr.begin(); !nbound_ptr.done(); nbound_ptr++) {
+                gtemp[*nbound_ptr] = bc->getValue();
               }
               IntVector l,h;
               patch->getFaceNodes(face,0,l,h);
