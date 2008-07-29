@@ -2449,10 +2449,11 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
               IntVector currCell(colX, colY, colZ);
 
               if (Abs(densityGuess[currCell]-densityEKT[currCell])>1.0e-10) {
-                cout << "EKT denisty is wrong at " << currCell << endl;
-                cout << "Values are " << densityGuess[currCell] << " " <<
-                     densityEKT[currCell] << endl;
-                exit(0);
+                ostringstream warn;
+                warn << "ERROR:  EKT density is wrong at " << currCell << " Values are " << densityGuess[currCell] 
+                     << " " <<densityEKT[currCell];
+                throw InvalidValue(warn.str(), __FILE__, __LINE__);
+
               }
             }
           }
