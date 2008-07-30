@@ -17,9 +17,40 @@ DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
 {
 }
 
+
+DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs): BCGeomBase(rhs)
+{
+  left=rhs.left->clone();
+  right=rhs.right->clone();
+}
+
+
+
+DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
+{
+  BCGeomBase::operator=(rhs);
+
+  if (this == &rhs)
+    return *this;
+
+  // Delete the lhs
+  delete right;
+  delete left;
+
+  // Copy the rhs to the lhs
+
+  left = rhs.left->clone();
+  right = rhs.right->clone();
+
+  return *this;
+}
+
 DifferenceBCData::~DifferenceBCData()
 {
+  delete left;
+  delete right;
 }
+
 
 bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
 {

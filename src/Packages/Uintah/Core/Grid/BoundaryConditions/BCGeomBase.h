@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include <iterator>
 
+
 namespace Uintah {
 
   /*!
@@ -36,6 +37,12 @@ namespace Uintah {
 
     /// Constructor
     BCGeomBase();
+
+    /// Copy constructor
+    BCGeomBase(const BCGeomBase& rhs);
+
+    /// Assignment operator
+    BCGeomBase& operator=(const BCGeomBase& rhs);
 
     /// Destructor
     virtual ~BCGeomBase();    
@@ -79,6 +86,7 @@ namespace Uintah {
   protected:
     Iterator d_cells;
     Iterator d_nodes;
+
 
   };
 
