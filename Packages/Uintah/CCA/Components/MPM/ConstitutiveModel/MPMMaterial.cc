@@ -44,7 +44,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
   // Check to see which ParticleCreator object we need
 
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
-
 }
 
 void

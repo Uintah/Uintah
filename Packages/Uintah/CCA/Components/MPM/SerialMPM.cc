@@ -162,8 +162,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
     mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
   }
-   
-
 
   if(flags->d_canAddMPMMaterial){
     cout << "Addition of new material for particle failure is possible"<< endl; 
@@ -194,7 +192,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP p = prob_spec->findBlock("DataArchiver");
   if(!p->get("outputInterval", d_outputInterval))
     d_outputInterval = 1.0;
-
 
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 }
