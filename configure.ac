@@ -224,6 +224,12 @@ SCI_ARG_WITH(mkl,
   [with_mkl="$withval"
    sci_required_mkl=yes],
   [with_mkl=""])
+SCI_ARG_WITH(acml,
+  AC_HELP_STRING(--with-acml=DIR,
+                 Use the acml (for lapack/blas) installation in DIR),
+  [with_acml="$withval"
+   sci_required_acml=yes],
+  [with_acml=""])
 SCI_ARG_WITH(blas,
   AC_HELP_STRING(--with-blas=DIR,
                  Use the blas installation in DIR),
@@ -3443,14 +3449,56 @@ AC_SUBST(TETGEN_LIB_DIR_FLAG)
 AC_SUBST(DEF_TETGEN)
 AC_SUBST(HAVE_TETGEN)
 
+##  --  search for acml (optimized blas/lapack) stuff  -------------------------------------
+
+if test "$with_acml"; then
+
+  if test "$with_blas"; then
+    AC_MSG_ERROR(You cannot use both --with-blas and --with-acml.)
+  fi
+  if test "$with_atlas"; then
+    AC_MSG_ERROR(You cannot use both --with-atlas and --with-acml.)
+  fi
+  if test "$with_mkl"; then
+    AC_MSG_ERROR(You cannot use both --with-mkl and --with-acml.)
+  fi
+
+  if test "$with_acml" = "yes"; then
+    _sci_lib=
+    _sci_inc=
+    _sci_optional=required
+  elif test "$with_acml"; then
+    _sci_lib="$with_acml/lib"
+    _sci_inc="$with_acml/include"
+    _sci_optional=specific
+  fi
+
+  case $host in
+    *-darwin*)
+       AC_MSG_ERROR(We recommend that you don't use ACML on a Mac... use the default vecLib instead.)
+       ;;
+     *)
+       SCI_TRY_LINK(BLAS,acml version of (blas/lapack) libraries and headers,acml.h,
+                    $_sci_inc,acml,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+       ;;
+  esac
+
+  HAVE_LAPACK=$HAVE_BLAS
+
+  DEF_LAPACK="#define HAVE_LAPACK 1"
+  DEF_BLAS="#define HAVE_BLAS 1"
+
+  sci_required_blas=no
+fi
+
 ##  --  search for mkl (optimized blas/lapack) stuff  -------------------------------------
 
 if test "$with_mkl"; then
 
-  if test "$with_blas" && test "$with_mkl"; then
+  if test "$with_blas"; then
     AC_MSG_ERROR(You cannot use both --with-blas and --with-mkl.)
   fi
-  if test "$with_atlas" && test "$with_mkl"; then
+  if test "$with_atlas"; then
     AC_MSG_ERROR(You cannot use both --with-atlas and --with-mkl.)
   fi
 
@@ -3480,6 +3528,7 @@ if test "$with_mkl"; then
   HAVE_CBLAS=$HAVE_BLAS
   DEF_CBLAS="#define HAVE_CBLAS 1"
   DEF_BLAS="#define HAVE_BLAS 1"
+  DEF_LAPACK="#define HAVE_LAPACK 1"
   sci_required_blas=no
 fi
 
@@ -5257,7 +5306,7 @@ fi
 AC_LANG([C++])
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                          HYPRE,
-                         $_sci_lib,$MPI_LIB_DIR_FLAG $MPI_LIB_FLAG -lm -ldl,,$_sci_optional)
+                         $_sci_lib,$MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -lm -ldl,,$_sci_optional)
 AC_LANG([C])
 
 if test "$HAVE_HYPRE" = "yes" ; then
