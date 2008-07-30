@@ -39,21 +39,22 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         patch->getFaceExtraNodes(face,0,l,h);
       }
       for (int child = 0; child < numChildren; child++) {
-        Iterator cellFaceItr,nodeFaceItr;
-
+        Iterator nbound_ptr;
+        Iterator nu;        // not used;
+   
                 
         if (type == "Velocity"){
          const  BoundCondBase* bcb = 
-           patch->getArrayBCValues(face,dwi,"Velocity",cellFaceItr,nodeFaceItr,
-                                   child);
+            patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
 
           const VelocityBoundCond* bc = 
             dynamic_cast<const VelocityBoundCond*>(bcb); 
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               Vector bcv = bc->getValue();
-              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
-                variable[*nodeFaceItr] = bcv;
+              for (nbound_ptr.reset();!nbound_ptr.done();nbound_ptr++){ 
+                IntVector nd = *nbound_ptr;
+                variable[nd] = bcv;
               }
               if(interp_type=="gimp" || interp_type=="3rdorderBS"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
@@ -68,16 +69,16 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 
         } else if (type == "Acceleration"){
           const BoundCondBase* bcb = 
-            patch->getArrayBCValues(face,dwi,"Velocity",cellFaceItr,nodeFaceItr,
-                                    child);
+            patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
 
           const VelocityBoundCond* bc = 
             dynamic_cast<const VelocityBoundCond*>(bcb); 
 
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
-              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
-                variable[*nodeFaceItr] = Vector(0,0,0);
+              for (nbound_ptr.reset();!nbound_ptr.done();nbound_ptr++){
+                IntVector nd = *nbound_ptr;
+                variable[nd] = Vector(0,0,0);
               }
               if(interp_type=="gimp" || interp_type=="3rdorderBS"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
@@ -92,15 +93,14 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 
         } else if (type == "Symmetric"){
           const BoundCondBase* bcb =
-            patch->getArrayBCValues(face,dwi,"Symmetric",cellFaceItr,
-                                    nodeFaceItr,child);
+            patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
           const SymmetryBoundCond* bc = 
             dynamic_cast<const SymmetryBoundCond*>(bcb); 
           if (bc != 0) {
             if (face == Patch::xplus || face == Patch::xminus){
-              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
-                variable[*nodeFaceItr] = Vector(0.,variable[*nodeFaceItr].y(), 
-                                                variable[*nodeFaceItr].z());
+              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
+                IntVector nd = *nbound_ptr;
+                variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
               }
               if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
@@ -124,9 +124,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::yplus || face == Patch::yminus){
-              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
-                variable[*nodeFaceItr] = Vector(variable[*nodeFaceItr].x(),0.,
-                                                variable[*nodeFaceItr].z());
+              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+                IntVector nd = *nbound_ptr;
+                variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
               }
               if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
@@ -150,9 +150,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::zplus || face == Patch::zminus){
-              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
-                variable[*nodeFaceItr] = Vector(variable[*nodeFaceItr].x(), 
-                                                variable[*nodeFaceItr].y(),0.);
+              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+                IntVector nd = *nbound_ptr;
+                variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
               }
               if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
@@ -201,37 +201,37 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         patch->getFaceExtraNodes(face,0,l,h);
       }
       for (int child = 0; child < numChildren; child++) {
-        Iterator cellFaceItr,nodeFaceItr;
-       
+        Iterator nbound_ptr;
+        Iterator nu;  // not used
+
         if(type=="Temperature"){
           const BoundCondBase *bcb = 
-            patch->getArrayBCValues(face,dwi,type,cellFaceItr,nodeFaceItr,
-                                    child);
+            patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr,child);
 
           const TemperatureBoundCond* bc = 
             dynamic_cast<const TemperatureBoundCond*>(bcb);
-        if (bc != 0){
-          if (bc->getKind() == "Dirichlet") {
-            double bcv = bc->getValue();
-            for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){ 
-              variable[*nodeFaceItr] = bcv;
-            }
-            if(interp_type=="gimp" || interp_type=="3rdorderBS"){
-              for(NodeIterator it(l,h); !it.done(); it++) {
-                IntVector nd = *it;
+          if (bc != 0){
+            if (bc->getKind() == "Dirichlet") {
+              double bcv = bc->getValue();
+              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+                IntVector nd = *nbound_ptr;
                 variable[nd] = bcv;
               }
+              if(interp_type=="gimp" || interp_type=="3rdorderBS"){
+                for(NodeIterator it(l,h); !it.done(); it++) {
+                  IntVector nd = *it;
+                  variable[nd] = bcv;
+                }
+              }
             }
-          }
-          delete bc;
-        } else
-          delete bcb;
+            delete bc;
+          } else
+            delete bcb;
         }
         
         if(type=="Pressure"){
           const BoundCondBase *bcb = 
-            patch->getArrayBCValues(face,dwi,type,cellFaceItr,nodeFaceItr,
-                                    child);
+            patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
 
           const PressureBoundCond* bc = 
             dynamic_cast<const PressureBoundCond*>(bcb);
@@ -239,8 +239,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           if (bc != 0) {
             if (bc->getKind() == "Dirichlet") {
               double bcv = bc->getValue();
-              for (nodeFaceItr.reset(); !nodeFaceItr.done();nodeFaceItr++){
-                variable[*nodeFaceItr] = bcv;
+              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+                IntVector nd = *nbound_ptr;
+                variable[nd] = bcv;
               }
               if(interp_type=="gimp" || interp_type=="3rdorderBS"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
