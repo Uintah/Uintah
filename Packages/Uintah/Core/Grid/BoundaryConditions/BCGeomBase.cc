@@ -20,9 +20,30 @@ BCGeomBase::BCGeomBase()
   d_nodes = GridIterator(IntVector(0,0,0),IntVector(0,0,0));
 }
 
+
+BCGeomBase::BCGeomBase(const BCGeomBase& rhs)
+{
+  d_cells=rhs.d_cells;
+  d_nodes=rhs.d_nodes;
+}
+
+
+BCGeomBase& BCGeomBase::operator=(const BCGeomBase& rhs)
+{
+  if (this == &rhs)
+    return *this;
+
+  d_cells = rhs.d_cells;
+  d_nodes = rhs.d_nodes;
+
+  return *this;
+}
+
+
 BCGeomBase::~BCGeomBase()
 {
 }
+
 
 void BCGeomBase::getCellFaceIterator(Iterator& b_ptr)
 {
@@ -48,11 +69,14 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
   patch->getFaceCells(face,0,l,h);
   GridIterator cells(l,h);
 
+
   IntVector ln,hn;
   patch->getFaceNodes(face,0,ln,hn);
   GridIterator nodes(ln,hn);
 
+
   Iterator cell_itr(cells), node_itr(nodes);
+
   vector<Point>::const_iterator pts = test_pts.begin();
 
   ListOfCellsIterator list_cells;
@@ -60,7 +84,6 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
 
   for (cell_itr.reset(); !cell_itr.done();cell_itr++,pts++) {
     if (inside(*pts)) {
-      //        list_cells->add(*cell_itr);
       vec_cells.push_back(*cell_itr);
     }
   }
@@ -71,7 +94,6 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
   for (node_itr.reset(); !node_itr.done();node_itr++) {
     Point p = patch->getLevel()->getNodePosition(*node_itr);
     if (inside(p)) {
-      //      list_nodes->add(*node_itr);
       vec_nodes.push_back(*node_itr);
     }
   }
@@ -96,7 +118,6 @@ void BCGeomBase::determineIteratorLimits(Patch::FaceType face,
     }
     d_nodes = list_nodes;
   }
-
 }
 
 

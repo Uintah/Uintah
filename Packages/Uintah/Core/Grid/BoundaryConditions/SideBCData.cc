@@ -79,11 +79,31 @@ void SideBCData::determineIteratorLimits(Patch::FaceType face,
   patch->getFaceCells(face,0,l,h);
   d_cells = GridIterator(l,h);
 
+#if 0
+  cout << "d_cells->begin() = " << d_cells->begin() << " d_cells->end() = " 
+       << d_cells->end() << endl;
+#endif
+
 
   IntVector ln,hn;
   patch->getFaceNodes(face,0,ln,hn);
   d_nodes = GridIterator(ln,hn);
 
+
+#if 0
+  cout << "d_nodes->begin() = " << d_nodes->begin() << " d_nodes->end() = " 
+       << d_nodes->end() << endl;
+#endif
+
+  //  Iterator iii(d_cells);
+
+#if 0
+  cout << "Iterator output . . . " << endl;
+  for (Iterator ii(d_cells); !ii.done(); ii++) {
+    cout << ii << endl;
+  }
+#endif
+  
 }
 
 

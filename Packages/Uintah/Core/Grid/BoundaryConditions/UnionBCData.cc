@@ -11,7 +11,7 @@
 using namespace SCIRun;
 using namespace Uintah;
 
-UnionBCData::UnionBCData()
+UnionBCData::UnionBCData() : BCGeomBase()
 {
 }
 
@@ -24,7 +24,8 @@ UnionBCData::~UnionBCData()
   child.clear();
 }
 
-UnionBCData::UnionBCData(const UnionBCData& mybc)
+
+UnionBCData::UnionBCData(const UnionBCData& mybc): BCGeomBase(mybc)
 {
 
   vector<BCGeomBase*>::const_iterator itr;
@@ -143,6 +144,49 @@ void UnionBCData::determineIteratorLimits(Patch::FaceType face,
 
   d_cells = UnionIterator(cells);   
   d_nodes = UnionIterator(nodes); 
+
+
+
+#if 0
+  IntVector l,h;
+  patch->getFaceCells(face,0,l,h);
+
+  vector<IntVector> b,nb;
+  vector<Point>::iterator pts;
+  pts = test_pts.begin();
+  for (CellIterator bound(l,h); !bound.done(); bound++,pts++) 
+    if (inside(*pts))
+      b.push_back(*bound);
+
+  setBoundaryIterator(b);
+#if 0
+  cout << "Size of boundary = " << boundary.size() << endl;
+#endif
+  // Need to determine the boundary iterators for each separate bc.
+  for (vector<BCGeomBase*>::const_iterator bc = child.begin();  
+       bc != child.end(); ++bc) {
+    pts = test_pts.begin();
+    vector<IntVector> boundary_itr;
+    for (CellIterator bound(l,h); !bound.done(); bound++, pts++) 
+      if ( (*bc)->inside(*pts))
+	boundary_itr.push_back(*bound);
+#if 0
+    cout << "Size of boundary_itr = " << boundary_itr.size() << endl;
+#endif
+    (*bc)->setBoundaryIterator(boundary_itr);
+  }
+    
+  IntVector ln,hn;
+  patch->getFaceNodes(face,0,ln,hn);
+  for (NodeIterator bound(ln,hn);!bound.done();bound++) {
+    Point p = patch->getLevel()->getNodePosition(*bound);
+    if (inside(p)) 
+      nb.push_back(*bound);
+  }
+  
+  setNBoundaryIterator(nb);
+
+#endif
 
 }
 
