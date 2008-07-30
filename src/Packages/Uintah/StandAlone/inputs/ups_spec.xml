@@ -102,6 +102,7 @@
   <Time                   spec="REQUIRED NO_DATA">
     <maxTime              spec="REQUIRED DOUBLE  'positive'" />
     <max_Timesteps        spec="OPTIONAL INTEGER 'positive'" />
+    <end_on_max_time_exactly spec="OPTIONAL BOOLEAN" />
     <initTime             spec="REQUIRED DOUBLE  'positive'" />
     <delt_min             spec="REQUIRED DOUBLE  'positive'" />
     <delt_max             spec="REQUIRED DOUBLE  'positive'" />
