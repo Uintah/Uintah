@@ -267,6 +267,12 @@ SCI_ARG_WITH(ofed,
   [with_ofed="$withval"
    sci_required_ofed=no],
   [with_ofed=""])
+SCI_ARG_WITH(mx,
+  AC_HELP_STRING(--with-mx=DIR,
+                 Specify that mx - Myrinet - is needed for the mpi installation),
+  [with_mx="$withval"
+   sci_required_mx=no],
+  [with_mx=""])
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
@@ -2289,6 +2295,24 @@ if test "$with_ofed"; then
 
       SCI_TRY_LINK( OFED,Infiniband stuff (for MPI),,,
                     ibverbs ibumad rdmacm pthread,$dir,,,required)
+      MPI_EXTRA_LIB_FLAG=$OFED_LIB_FLAG
+      MPI_EXTRA_LIB_DIR=$OFED_LIB_DIR
+   fi
+fi
+
+##  --  search for MX (myrinet drivers) -----------------------------
+
+if test "$with_mx"; then
+
+   if test "$with_mx" == "yes"; then
+      AC_MSG_ERROR( You must specify a directory with the '--with-mx=DIR' option! )
+   else
+      dir="$with_mx"
+      BASE_LIB_PATH(dir,$dir)
+
+      SCI_TRY_LINK( MX,Myrinet stuff (for MPI),,,myriexpress,$dir,,,required)
+      MPI_EXTRA_LIB_FLAG=$MX_LIB_FLAG
+      MPI_EXTRA_LIB_DIR=$MX_LIB_DIR
    fi
 fi
 
@@ -3479,7 +3503,7 @@ if test "$with_acml"; then
        ;;
      *)
        SCI_TRY_LINK(BLAS,acml version of (blas/lapack) libraries and headers,acml.h,
-                    $_sci_inc,acml,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+                    $_sci_inc,acml acml_mv,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
        ;;
   esac
 
@@ -3788,7 +3812,7 @@ if test "$sci_required_mpi" = "yes"; then
 	
         # /usr/include/mpi is the standard location of mpi on some linux dists.
         SCI_TRY_LINK(MPI,mpi library and header-1,mpi.h,
-                     $_sci_inc /usr/include/mpi,mpi lam util pmpi $OFED_LIB_FLAG,$_sci_lib $OFED_LIB_DIR,,,optional)
+                     $_sci_inc /usr/include/mpi,mpi lam util pmpi $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
 
         if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
            test ! -e $_sci_lib/$the_file.so &&
@@ -3804,7 +3828,7 @@ if test "$sci_required_mpi" = "yes"; then
           # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-                       $_sci_inc /usr/include/mpi,mpi lam util pthread $OFED_LIB_FLAG,$_sci_lib $OFED_LIB_DIR,-DMPIPP_H,,optional)
+                       $_sci_inc /usr/include/mpi,mpi lam util pthread $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
 
           # verify that it was found in the location requested.
           if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
@@ -3818,7 +3842,7 @@ if test "$sci_required_mpi" = "yes"; then
           if test "$HAVE_MPI" != "yes"; then
              # If building with newer LAM on OSX, pthreads and util not needed.
              SCI_TRY_LINK(MPI,mpi library and header-3,mpi.h,
-                          $_sci_inc /usr/include/mpi,lam mpi $OFED_LIB_FLAG,$_sci_lib $OFED_LIB_DIR,-DMPIPP_H,,optional)
+                          $_sci_inc /usr/include/mpi,lam mpi $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
 
              # verify that it was found in the location requested
              if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
@@ -3831,7 +3855,7 @@ if test "$sci_required_mpi" = "yes"; then
 
              if test "$HAVE_MPI" != "yes"; then
                 SCI_TRY_LINK(MPI,mpi library and header-4,mpi.h,
-                             $_sci_inc /usr/include/mpi,mpi $OFED_LIB_FLAG,$_sci_lib $OFED_LIB_DIR,-DMPIPP_H,,optional)
+                             $_sci_inc /usr/include/mpi,mpi $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
 
                 # verify that it was found in the location requested.
                 if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
@@ -3844,12 +3868,12 @@ if test "$sci_required_mpi" = "yes"; then
 
                 if test "$HAVE_MPI" != "yes"; then
                    SCI_TRY_LINK(MPI,mpich library and header-2,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich $OFED_LIB_FLAG,$_sci_lib $OFED_LIB_DIR,,,optional)
+                                  $_sci_inc /usr/include/mpi,mpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
 
                    # try mpich again with pmpich
                    if test "$HAVE_MPI" != "yes"; then
                       SCI_TRY_LINK(MPI,mpich library and header,mpi.h,
-                                  $_sci_inc /usr/include/mpi,mpich pmpich $OFED_LIB_FLAG,$_sci_lib $OFED_LIB_DIR,,,optional)
+                                  $_sci_inc /usr/include/mpi,mpich pmpich $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,,,optional)
                    fi
                    if test "$HAVE_MPI" = "yes"; then
                       HAVE_MPICH="yes"
