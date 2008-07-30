@@ -408,8 +408,8 @@ of the form (\cite{Wilkins99,Zocher00})
 \begin{equation} \label{eq:EOSMG_upd}
   \boxed{
   p_{n+1} =  - \frac{\rho_0~C_0^2~(1 - J^e_{n+1})
-           [1 - \Gamma_0 (1 - J^e_{n+1})]}
-           {[1 - S_{\alpha}(1 - J^e_{n+1})]^2} - 2~\Gamma_0~e_{n+1} 
+           [1 - \Gamma_0 (1 - J^e_{n+1})/2]}
+           {[1 - S_{\alpha}(1 - J^e_{n+1})]^2} - \Gamma_0~e_{n+1} 
   ~;~~~ J^e := \det{\BF^e} 
   }
 \end{equation}
@@ -433,8 +433,8 @@ Also,
 \Beq
   \boxed{
   \Partial{p}{J^e} = 
-  \cfrac{\rho_0~C_0^2~[1 + (S_{\alpha}-2~\Gamma_0)~(1-J^e)]}
-        {[1-S_{\alpha}~(1-J^e)]^3} - 2~\Gamma_0~\Partial{e}{J^e}.
+  \cfrac{\rho_0~C_0^2~[1 + (S_{\alpha}-\Gamma_0)~(1-J^e)]}
+        {[1-S_{\alpha}~(1-J^e)]^3} - \Gamma_0~\Partial{e}{J^e}.
   }
 \Eeq
 We neglect the $\Partial{e}{J^e}$ term in our calculations.
