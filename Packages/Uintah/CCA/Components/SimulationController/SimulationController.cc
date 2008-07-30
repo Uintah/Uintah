@@ -268,7 +268,6 @@ namespace Uintah {
     // available, then we will pull the properties from the d_ups instead.
     // Needs to be done before DataArchive::restartInitialize
     d_sim->problemSetup(d_ups, restart_prob_spec, grid, d_sharedState);
-    
 
     if (d_restarting) {
       simdbg << "Restarting... loading data\n";    

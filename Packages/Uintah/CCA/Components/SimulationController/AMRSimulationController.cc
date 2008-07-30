@@ -130,10 +130,8 @@ AMRSimulationController::run()
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
-     if(dbg_barrier.active())
-     {
-       for(int i=0;i<4;i++)
-       {
+     if(dbg_barrier.active()) {
+       for(int i=0;i<4;i++) {
          time[i]=0;
        }
      }
@@ -148,8 +146,7 @@ AMRSimulationController::run()
        doRegridding(currentGrid, false);
      }
     
-     if(dbg_barrier.active())
-     {
+     if(dbg_barrier.active()) {
        start=Time::currentSeconds();
        MPI_Barrier(d_myworld->getComm());
        time[0]+=Time::currentSeconds()-start;
@@ -218,8 +215,7 @@ AMRSimulationController::run()
        d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
        d_scheduler->execute();
      }
-     if(dbg_barrier.active())
-     {
+     if(dbg_barrier.active()) {
        start=Time::currentSeconds();
        MPI_Barrier(d_myworld->getComm());
        time[1]+=Time::currentSeconds()-start;
@@ -292,7 +288,8 @@ AMRSimulationController::run()
      }
      
      // override for the global level as well (which only matters on dw 0)
-     d_scheduler->get_dw(0)->override(delt_vartype(delt), d_sharedState->get_delt_label());
+     d_scheduler->get_dw(0)->override(delt_vartype(delt),
+                                      d_sharedState->get_delt_label());
 
      calcWallTime();
 
@@ -303,15 +300,13 @@ AMRSimulationController::run()
      // Update the profiler weights
      d_lb->finalizeContributions(currentGrid);
      
-     if(dbg_barrier.active())
-     {
+     if(dbg_barrier.active()) {
        start=Time::currentSeconds();
        MPI_Barrier(d_myworld->getComm());
        time[3]+=Time::currentSeconds()-start;
        double avg[4];
        MPI_Reduce(&time,&avg,4,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-       if(d_myworld->myrank()==0)
-       {
+       if(d_myworld->myrank()==0) {
           cout << "Barrier Time: "; 
           for(int i=0;i<4;i++)
           {
@@ -595,7 +590,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       // Initialize the CFD and/or MPM data
       for(int i=grid->numLevels()-1; i >= 0; i--) {
         d_sim->scheduleInitialize(grid->getLevel(i), d_scheduler);
-        
+
         if (d_regridder) {
           // so we can initially regrid
           d_regridder->scheduleInitializeErrorEstimate(grid->getLevel(i));
@@ -616,7 +611,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       // No scrubbing for initial step
       d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
       d_scheduler->execute();
-     
+
       needNewLevel = d_regridder && d_regridder->isAdaptive() && grid->numLevels()<d_regridder->maxLevels() && doRegridding(grid, true);
     } while (needNewLevel);
 
