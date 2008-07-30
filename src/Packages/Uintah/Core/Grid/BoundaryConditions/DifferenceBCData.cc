@@ -17,45 +17,9 @@ DifferenceBCData::DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2)
 {
 }
 
-#ifdef OLD
-DifferenceBCData::DifferenceBCData(const DifferenceBCData& rhs): BCGeomBase(rhs)
-{
-  left=rhs.left->clone();
-  right=rhs.right->clone();
-}
-
-
-
-DifferenceBCData& DifferenceBCData::operator=(const DifferenceBCData& rhs)
-{
-  BCGeomBase::operator=(rhs);
-
-  if (this == &rhs)
-    return *this;
-
-  // Delete the lhs
-  delete right;
-  delete left;
-
-  // Copy the rhs to the lhs
-
-  left = rhs.left->clone();
-  right = rhs.right->clone();
-
-  return *this;
-}
-
-DifferenceBCData::~DifferenceBCData()
-{
-  delete left;
-  delete right;
-}
-#else
 DifferenceBCData::~DifferenceBCData()
 {
 }
-#endif
-
 
 bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
 {
@@ -127,13 +91,8 @@ void DifferenceBCData::determineIteratorLimits(Patch::FaceType face,
   right->getCellFaceIterator(right_cell);
   right->getNodeFaceIterator(right_node);
 
-#ifdef OLD
-  d_cells = scinew DifferenceIterator(left_cell,right_cell);
-  d_nodes = scinew DifferenceIterator(left_node,right_node);
-#else
   d_cells = DifferenceIterator(left_cell,right_cell);
   d_nodes = DifferenceIterator(left_node,right_node);
-#endif
 
 
 #if 0

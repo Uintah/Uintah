@@ -31,14 +31,6 @@ namespace Uintah {
     DifferenceBCData();
 
 
-#ifdef OLD
-    /// Copy constructor
-     DifferenceBCData(const DifferenceBCData& rhs);
-
-     /// Assignment operator
-     DifferenceBCData& operator=(const DifferenceBCData& bc);
-#endif
-
      /// Constructor with two boundary condition geometries.  The second 
      /// argument is subtracted from the first argument.
      DifferenceBCData(BCGeomBase* p1,BCGeomBase* p2);

@@ -11,9 +11,6 @@
 #include <typeinfo>
 #include <iterator>
 
-#define OLD
-#undef OLD
-
 namespace Uintah {
 
   /*!
@@ -39,14 +36,6 @@ namespace Uintah {
 
     /// Constructor
     BCGeomBase();
-
-#ifdef OLD
-    /// Copy constructor
-    BCGeomBase(const BCGeomBase& rhs);
-
-    /// Assignment operator
-    BCGeomBase& operator=(const BCGeomBase& rhs);
-#endif
 
     /// Destructor
     virtual ~BCGeomBase();    
@@ -88,14 +77,8 @@ namespace Uintah {
     void printLimits() const;
 
   protected:
-#ifdef OLD
-    BaseIterator* d_cells;
-    BaseIterator* d_nodes;
-#else
     Iterator d_cells;
     Iterator d_nodes;
-#endif
-
 
   };
 
