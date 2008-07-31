@@ -274,13 +274,46 @@
     <ARCHES                             spec="OPTIONAL NO_DATA" >
       <grow_dt                          spec="REQUIRED DOUBLE 'positive'" />
       <variable_dt                      spec="REQUIRED BOOLEAN" />
-      <nonlinear_solver                 spec="REQUIRED STRING 'explicit'" />
-      <turbulence_model                 spec="REQUIRED STRING 'compdynamicprocedure'" />
+      <nonlinear_solver                 spec="REQUIRED STRING 'explicit,
+                                                               picard'" />
+      <turbulence_model                 spec="REQUIRED STRING 'compdynamicprocedure,
+                                                               smagorinsky'" />
       <transport_mixture_fraction       spec="REQUIRED BOOLEAN" />
       <transport_enthalpy               spec="REQUIRED BOOLEAN" />
+      <transport_reacting_scalar        spec="OPTIONAL BOOLEAN" />
+      <transport_extra_scalars           spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires an extra scalar block-->
       <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
+      <set_initial_condition            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires init_cond_input_file-->
+      <init_cond_input_file             spec="OPTIONAL STRING" /> <!-- Should be required if set_intial_condition is true-->
+      <turnonMixedModel                 spec="OPTIONAL BOOLEAN" />
+      <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
+      <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
+      <EKTCorrection                    spec="OPTIONAL BOOLEAN" />
+      <doMMS                            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires MMS block-->
+      <MMS                              spec="OPTIONAL NO_DATA" > <!--Should change requirements on this MMS block if doMMS is true -->
+        <whichMMS                       spec="REQUIRED STRING" /> 
+        <constantMMS                    spec="OPTIONAL NO_DATA"/> <!--REQUIRED if whichMMS == constantMMS-->
+          <cu                           spec="REQUIRED DOUBLE"/>
+          <cv                           spec="REQUIRED DOUBLE"/>
+          <cw                           spec="REQUIRED DOUBLE"/>
+          <cp                           spec="REQUIRED DOUBLE"/>
+          <phi0                         spec="REQUIRED DOUBLE"/>
+          <esphi0                       spec="REQUIRED DOUBLE"/>
+        </constantMMS>
+        <almgrenMMS                     spec="OPTIONAL NO_DATA"/> <!--REQUIRED if whichMMS == almgrenMMS-->
+          <amplitude                    spec="REQUIRED DOUBLE"/>
+        </almgrenMMS>
+      </MMS>
       <Turbulence                       spec="REQUIRED NO_DATA" >
-        <turbulentPrandtlNumber         spec="REQUIRED DOUBLE 'positive'" />
+        <!--smagorinsky -->
+        <cf                             spec="OPTIONAL DOUBLE 'positive'" />  
+        <fac_mesh                       spec="OPTIONAL DOUBLE 'positive'" />
+        <filterl                        spec="OPTIONAL DOUBLE 'positive'" />
+        <!--dyn. smagorinsky -->
+        <dynamicScalarModel             spec="OPTIONAL BOOLEAN" />
+        <filter_cs_squared              spec="OPTIONAL BOOLEAN" />
+        <!-- going to leave complocal out based on the 'this model is a mess' comment-->
+        <turbulentPrandtlNumber         spec="REQUIRED DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
       </Turbulence>
       <Properties                       spec="REQUIRED NO_DATA" >
         <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel'" />
