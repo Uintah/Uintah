@@ -2963,10 +2963,6 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
             smmsLnError[currCell] = pow(( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue )/
                                         (mmsvalue*mmsvalue),1.0/2.0);
           }
-          else if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
           }
 
@@ -3022,10 +3018,6 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
             mmsvalue = cu;
 
-          }
-          else if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
 
@@ -3095,10 +3087,6 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
             mmsvalue = cv;
 
           }
-          else if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
 
             mmsvalue = 1 + amp * sin(2.0*pi*cellinfo->xx[colX] - time)
@@ -3156,10 +3144,6 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
             mmsvalue = cw;
 
-          }
-          else if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
 
