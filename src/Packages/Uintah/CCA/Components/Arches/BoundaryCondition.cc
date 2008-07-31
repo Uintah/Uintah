@@ -315,24 +315,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       db_whichmms->getWithDefault("cp",cp,1.0);
       db_whichmms->getWithDefault("phi0",phi0,0.5);
     }
-    else if (d_mms == "gao1MMS") {
-      ProblemSpecP db_whichmms = db_mmsblock->findBlock("gao1MMS");
-      db_whichmms->require("rhoair", d_airDensity);
-      db_whichmms->require("rhohe", d_heDensity);
-      db_whichmms->require("gravity", d_gravity);//Vector
-      db_whichmms->require("viscosity",d_viscosity); 
-      db_whichmms->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
-      db_whichmms->getWithDefault("cu",cu,1.0);
-      db_whichmms->getWithDefault("cv",cv,1.0);
-      db_whichmms->getWithDefault("cw",cw,1.0);
-      db_whichmms->getWithDefault("cp",cp,1.0);
-      db_whichmms->getWithDefault("phi0",phi0,0.5);
-    }
-    else if (d_mms == "thornock1MMS") {
-      ProblemSpecP db_whichmms = db_mmsblock->findBlock("thornock1MMS");
-      db_whichmms->require("cu",cu);
-    }
-    else if (d_mms == "almgrenMMS") {
+   else if (d_mms == "almgrenMMS") {
       ProblemSpecP db_whichmms = db_mmsblock->findBlock("almgrenMMS");
       db_whichmms->getWithDefault("amplitude",amp,0.0);
       db_whichmms->require("viscosity",d_viscosity);
@@ -5258,14 +5241,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
             vars->uVelRhoHat[currCell] = cu;
             vars->uVelRhoHat[xminusCell] = cu;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->uVelRhoHat[currCell] = 
-              cu * cellinfo->xu[colX] + current_time;
-            vars->uVelRhoHat[xminusCell] = 
-              cu * cellinfo->xu[colX-1] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->uVelRhoHat[currCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX] - current_time))
                                                  * sin(2.0*pi*( cellinfo->yy[colY] - current_time))
@@ -5299,14 +5274,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->uVelRhoHat[xplusCell] = cu;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->uVelRhoHat[xplusCell] = 
-              cu * cellinfo->xu[colX+1] + current_time;
-            //vars->uVelRhoHat[xplusplusCell] = 
-            //  cu * cellinfo->xu[colX+2] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->uVelRhoHat[xplusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX+1] - current_time))
                                                   * sin(2.0*pi*( cellinfo->yy[colY] - current_time))
@@ -5332,12 +5299,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->uVelRhoHat[yminusCell] = cu;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->uVelRhoHat[yminusCell] =
-              cu * cellinfo->xu[colX] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->uVelRhoHat[yminusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX] - current_time ))
                                                    * sin(2.0*pi*( cellinfo->yy[colY-1] - current_time ))
@@ -5362,12 +5323,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->uVelRhoHat[yplusCell] = cu;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->uVelRhoHat[yplusCell] = 
-              cu * cellinfo->xu[colX] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
             
@@ -5396,12 +5351,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->uVelRhoHat[zminusCell] = cu;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->uVelRhoHat[zminusCell] = 
-              cu * cellinfo->xu[colX] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             
             vars->uVelRhoHat[zminusCell] = 1 - amp * cos(2.0*pi*( cellinfo->xu[colX] - current_time ))
@@ -5426,12 +5375,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->uVelRhoHat[zplusCell] = cu;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->uVelRhoHat[zplusCell] = 
-              cu * cellinfo->xu[colX] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
             double pi = acos(-1.0);
@@ -5490,13 +5433,6 @@ BoundaryCondition::mmsvVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->vVelRhoHat[xminusCell] = cv;
           }
-          else if (d_mms == "gao1MMS"){
-            //add real function once I have the parameters...
-            vars->vVelRhoHat[xminusCell] = 
-              cv * cellinfo->yv[colY] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->vVelRhoHat[xminusCell] = 1 + amp * sin(2.0*pi* ( cellinfo->xx[colX-1] - current_time ))
                                                    * cos(2.0*pi* ( cellinfo->yv[colY] - current_time ))
@@ -5522,12 +5458,6 @@ BoundaryCondition::mmsvVelocityBC(const Patch* patch,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->vVelRhoHat[xplusCell] = cv;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->vVelRhoHat[xplusCell] = 
-              cv * cellinfo->yv[colY] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
             vars->vVelRhoHat[xplusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX+1] - current_time ))
@@ -5555,14 +5485,6 @@ BoundaryCondition::mmsvVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->vVelRhoHat[yminusCell] = cv;
             vars->vVelRhoHat[currCell]   = cv;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->vVelRhoHat[yminusCell] = 
-              cv * cellinfo->yv[colY-1] + current_time;
-            vars->vVelRhoHat[currCell]   = 
-              cv * cellinfo->yv[colY] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
             vars->vVelRhoHat[yminusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
@@ -5595,14 +5517,6 @@ BoundaryCondition::mmsvVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->vVelRhoHat[yplusCell] = cv;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->vVelRhoHat[yplusCell] = 
-              cv * cellinfo->yv[colY+1] + current_time;
-            //vars->vVelRhoHat[yplusplusCell] = 
-            // cv * cellinfo->yv[colY+2] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->vVelRhoHat[yplusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
                                                  * cos(2.0*pi*( cellinfo->yv[colY+1] - current_time ))
@@ -5628,12 +5542,6 @@ BoundaryCondition::mmsvVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->vVelRhoHat[zminusCell] = cv;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->vVelRhoHat[zminusCell] = 
-              cv * cellinfo->yv[colY] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->vVelRhoHat[zminusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
                                                   * cos(2.0*pi*( cellinfo->yv[colY] - current_time ))
@@ -5657,12 +5565,6 @@ BoundaryCondition::mmsvVelocityBC(const Patch* patch,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->vVelRhoHat[zplusCell] = cv;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->vVelRhoHat[zplusCell] = 
-              cv * cellinfo->yv[colY] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
             vars->vVelRhoHat[zplusCell] = 1 + amp * sin(2.0*pi*( cellinfo->xx[colX] - current_time ))
@@ -5720,13 +5622,6 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->wVelRhoHat[xminusCell] = cw;
           }
-          else if (d_mms == "gao1MMS"){
-            //add real function once I have the parameters...
-            vars->wVelRhoHat[xminusCell] = 
-              cw * cellinfo->zw[colZ] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->wVelRhoHat[xminusCell] = 0.0;
           }
@@ -5749,12 +5644,6 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->wVelRhoHat[xplusCell] = cw;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->wVelRhoHat[xplusCell] = 
-              cw * cellinfo->zw[colZ] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
             vars->wVelRhoHat[xplusCell] = 0.0;
@@ -5779,12 +5668,6 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->wVelRhoHat[yminusCell] = cw;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->wVelRhoHat[yminusCell] = 
-              cw * cellinfo->zw[colZ] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->wVelRhoHat[yminusCell] = 0.0;
           }
@@ -5807,12 +5690,6 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->wVelRhoHat[yplusCell] = cw;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->wVelRhoHat[yplusCell] =
-              cw * cellinfo->zw[colZ] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
             vars->wVelRhoHat[yplusCell] = 0.0;
@@ -5838,14 +5715,6 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
             vars->wVelRhoHat[currCell]   = cw;
             vars->wVelRhoHat[zminusCell] = cw;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->wVelRhoHat[currCell]   = 
-              cw * cellinfo->zw[colZ] + current_time;
-            vars->wVelRhoHat[zminusCell] = 
-              cw * cellinfo->zw[colZ-1] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->wVelRhoHat[currCell]   = 0.0;
             vars->wVelRhoHat[zminusCell] = 0.0;
@@ -5870,14 +5739,6 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
           if (d_mms == "constantMMS"){
             vars->wVelRhoHat[zplusCell] = cw;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->wVelRhoHat[zplusCell] = 
-              cw * cellinfo->zw[colZ+1] + current_time;
-            //vars->wVelRhoHat[zplusplusCell] = 
-            // cw * cellinfo->zw[colZ+2] + current_time;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
             vars->wVelRhoHat[zplusCell] = 0.0;
           }            
@@ -5901,147 +5762,6 @@ BoundaryCondition::mmspressureBC(const ProcessorGroup*,
 {
   //this routine is not used since Wall boundary conditions should set the 
   // pressure coefs accordingly for MMS
-
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = wallCellType();
-
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        
-        if (constvars->cellType[xminusCell] == wall_celltypeval){
-
-          if (d_mms == "gao1MMS"){
-            //add real function once I have the parameters...
-            //vars->pressCoeff[Arches::AP] = 0.0;
-            //vars->pressNonlinearSrc[xminusCell] = 1.0;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-        }
-      }
-    }
-  }
-  
-  if (xplus) {
-    int colX = idxHi.x()+1;
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        
-        if (constvars->cellType[xplusCell] == wall_celltypeval){
-          // Directly set the hat velocity
-          if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-          
-        }
-      }
-    }
-  }
-  
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        
-        if (constvars->cellType[yminusCell] == wall_celltypeval){
-          // Directly set the hat velocity
-          if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-        }
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        
-        if (constvars->cellType[yplusCell] == wall_celltypeval){
-          // Directly set the hat velocity
-          if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-          }
-        }
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        
-        if (constvars->cellType[zminusCell] == wall_celltypeval){
-          // Directly set the hat velocity
-          if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-          }            
-        }
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        
-        if (constvars->cellType[zplusCell] == wall_celltypeval){
-          // Directly set the hat velocity
-          if (d_mms == "gao1MMS"){
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
-          else if (d_mms == "almgrenMMS"){
-          }            
-        }
-      }
-    }
-  }
 
 }
 
@@ -6088,12 +5808,6 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
           if (d_mms == "constantMMS"){
             vars->scalar[xminusCell] = phi0;
           }
-          else if (d_mms == "gao1MMS"){
-            //add real function once I have the parameters...
-            vars->scalar[xminusCell] = phi0;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
           }
           
@@ -6116,11 +5830,6 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
           // Directly set the hat velocity
            if (d_mms == "constantMMS"){
             vars->scalar[xplusCell] = phi0;
-          }
-           else if (d_mms == "gao1MMS"){
-            vars->scalar[xplusCell] = phi0;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
           }
@@ -6145,11 +5854,6 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
           if (d_mms == "constantMMS"){
             vars->scalar[yminusCell] = phi0;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->scalar[yminusCell] = phi0;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
           }
           
@@ -6172,11 +5876,6 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->scalar[yplusCell] = phi0;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->scalar[yplusCell] = phi0;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
           }
@@ -6202,11 +5901,6 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
           if (d_mms == "constantMMS"){
             vars->scalar[zminusCell] = phi0;
           }
-          else if (d_mms == "gao1MMS"){
-            vars->scalar[zminusCell] = phi0;
-          }
-          else if (d_mms == "thornock1MMS"){
-          }
           else if (d_mms == "almgrenMMS"){
           }            
         }
@@ -6228,11 +5922,6 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
           // Directly set the hat velocity
           if (d_mms == "constantMMS"){
             vars->scalar[zplusCell] = phi0;
-          }
-          else if (d_mms == "gao1MMS"){
-            vars->scalar[zplusCell] = phi0;
-          }
-          else if (d_mms == "thornock1MMS"){
           }
           else if (d_mms == "almgrenMMS"){
           }            
