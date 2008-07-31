@@ -123,7 +123,7 @@ endif
 
 $FIND . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
 $FIND . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>$PSCP_FILES
-$FIND -path './checkpoints/*' -maxdepth 2 >>$PSCP_FILES
+$FIND -maxdepth 2 -path './checkpoints/*' >>$PSCP_FILES
 
 echo "Now starting an editor in a separate xterm:  Remove the files you don't want transfered"
 
