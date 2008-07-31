@@ -1796,7 +1796,7 @@ Properties::averageRKProps(const ProcessorGroup*,
 //The following if statement is to eliminate Kumar's zero block density problem
     if (new_density[currCell] > 0.0) {
           double predicted_density;
-    if (old_density[currCell] > 0.0)
+    if (old_density[currCell] > 0.0) {
 //            predicted_density = rho1_density[currCell];
       if (d_inverse_density_average)
               predicted_density = 1.0/((factor_old/old_density[currCell] +
@@ -1804,6 +1804,7 @@ Properties::averageRKProps(const ProcessorGroup*,
       else
               predicted_density = (factor_old*old_density[currCell] +
                factor_new*new_density[currCell])/factor_divide;
+    }
     else
       predicted_density = new_density[currCell];
 
