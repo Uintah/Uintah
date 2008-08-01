@@ -23,7 +23,9 @@ SRCS    := $(SRCDIR)/mpi_test.cc
 
 LIBS    := $(MPI_LIBRARY) $(M_LIBRARY) 
 PSELIBS := \
-	Core/Util   \
+	Core/Containers \
+	Core/Exceptions \
+	Core/Util       \
 	Core/Thread
 
 include $(SCIRUN_SCRIPTS)/program.mk

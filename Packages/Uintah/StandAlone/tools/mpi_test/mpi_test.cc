@@ -35,6 +35,8 @@
 
 #include <sci_defs/mpi_defs.h>
 
+#include <unistd.h> // for gethostname()
+
 #include <algorithm>
 #include <vector>
 #include <iostream>
