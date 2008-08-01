@@ -23,6 +23,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
