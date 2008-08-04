@@ -256,9 +256,9 @@ shutdown()
     fprintf(a->stats_out, "munmap:\t\t\t"UCONV" calls\n", (SIZET)a->nmunmap);
     fprintf(a->stats_out, "munmap:\t\t\t"UCONV" bytes\n", (SIZET)a->sizemunmap);
     fprintf(a->stats_out, "highwater alloc:\t"UCONV" bytes\n",
-            a->highwater_alloc);
+            (SIZET)a->highwater_alloc);
     fprintf(a->stats_out, "highwater mmap:\t\t"UCONV" bytes\n",
-            a->highwater_mmap);
+            (SIZET)a->highwater_mmap);
     fprintf(a->stats_out, "\n");
     fprintf(a->stats_out, "breakdown of total bytes:\n");
     fprintf(a->stats_out, "in use:\t\t\t"UCONV" bytes\n", (SIZET)bytes_inuse);
