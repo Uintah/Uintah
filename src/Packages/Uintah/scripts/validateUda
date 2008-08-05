@@ -116,9 +116,18 @@ foreach U ($udas[*]:q)
       
       foreach D ($pxxx_xml[*]:q)
         set here = "$T/$D"
+        
         if( ! -e $here ) then
           echo "           Missing $here"
           set passed4 = false
+        endif
+        
+        if ( -e $here ) then 
+          set bytes = `stat --format %s $here`
+          if ( $bytes == "0" ) then
+            echo "            $here has 0 bytes"
+            set passed4 = false
+          endif
         endif
       end   
       
@@ -142,7 +151,7 @@ foreach U ($udas[*]:q)
       end
     endif
   end
-  echo "Test 4:  Do all of the pxxxx.xml files exist:                         $passed4"  
+  echo "Test 4:  Do all of the pxxxx.xml files exist and have size >0:        $passed4"  
   echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0:      $passed5"
   
 bottom:  
