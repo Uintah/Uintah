@@ -39,7 +39,6 @@ SRCS     += $(SRCDIR)/ConverterAlgo.cc\
 PSELIBS := \
 	Core/Algorithms/Util \
 	Core/Basis           \
-	Core/Bundle          \
 	Core/Containers      \
 	Core/Datatypes       \
         Core/Exceptions      \
@@ -49,7 +48,7 @@ PSELIBS := \
 	Core/Util
 
 ifeq ($(BUILD_DATAFLOW),yes)
-  PSELIBS += Core/Geom Core/GuiInterface
+  PSELIBS += Core/Bundle Core/Geom Core/GuiInterface
 endif
 
 LIBS := $(M_LIBRARY) $(TEEM_LIBRARY)

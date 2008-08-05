@@ -34,9 +34,7 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Core
 
 SUBDIRS := \
-	$(SRCDIR)/Algorithms \
 	$(SRCDIR)/Basis \
-	$(SRCDIR)/Bundle \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
@@ -44,7 +42,6 @@ SUBDIRS := \
 	$(SRCDIR)/Comm \
 	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
-	$(SRCDIR)/ImportExport \
 	$(SRCDIR)/Init \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \
@@ -64,8 +61,11 @@ SUBDIRS := \
 
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += \
-	$(SRCDIR)/Geom \
+	$(SRCDIR)/Algorithms   \
+	$(SRCDIR)/Bundle       \
+	$(SRCDIR)/Geom         \
 	$(SRCDIR)/GuiInterface \
+	$(SRCDIR)/ImportExport \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Volume
 endif

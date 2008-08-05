@@ -49,19 +49,17 @@ ifeq ($(HAVE_INSIGHT),yes)
 endif
 
 PSELIBS := \
-        Core/Bundle       \
 	Core/Containers   \
 	Core/Datatypes    \
         Core/Exceptions   \
 	Core/Geometry     \
-	Core/ImportExport \
 	Core/Math         \
 	Core/Persistent   \
 	Core/Thread       \
 	Core/Util
 
 ifeq ($(BUILD_DATAFLOW),yes)
-  PSELIBS += Core/Geom Core/Volume
+  PSELIBS += Core/Bundle Core/Geom Core/ImportExport Core/Volume
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
