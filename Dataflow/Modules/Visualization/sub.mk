@@ -38,50 +38,50 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Dataflow/Modules/Visualization
+SRCDIR := Dataflow/Modules/Visualization
 
-SRCS     += \
-	$(SRCDIR)/AddLight.cc\
-	$(SRCDIR)/ChooseColorMap.cc\
-	$(SRCDIR)/EditColorMap.cc\
-	$(SRCDIR)/EditColorMap2D.cc\
-	$(SRCDIR)/GenAxes.cc\
-	$(SRCDIR)/GenClock.cc\
-	$(SRCDIR)/GenStandardColorMaps.cc\
-	$(SRCDIR)/GenTitle.cc\
-	$(SRCDIR)/Isosurface.cc\
-	$(SRCDIR)/NrrdTextureBuilder.cc\
-	$(SRCDIR)/RescaleColorMap.cc\
-	$(SRCDIR)/ShowColorMap.cc\
-	$(SRCDIR)/ShowField.cc\
-	$(SRCDIR)/ShowMatrix.cc\
-	$(SRCDIR)/StreamLines.cc\
-	$(SRCDIR)/HeuristicStreamLines.cc\
-	$(SRCDIR)/TextureBuilder.cc\
-	$(SRCDIR)/VolumeSlicer.cc\
-	$(SRCDIR)/VolumeVisualizer.cc\
-	$(SRCDIR)/ShowString.cc\
+SRCS += \
+        $(SRCDIR)/AddLight.cc       \
+        $(SRCDIR)/ChooseColorMap.cc \
+        $(SRCDIR)/EditColorMap.cc   \
+        $(SRCDIR)/EditColorMap2D.cc \
+        $(SRCDIR)/GenAxes.cc        \
+        $(SRCDIR)/GenClock.cc       \
+        $(SRCDIR)/GenStandardColorMaps.cc \
+        $(SRCDIR)/GenTitle.cc             \
+        $(SRCDIR)/Isosurface.cc           \
+        $(SRCDIR)/NrrdTextureBuilder.cc   \
+        $(SRCDIR)/RescaleColorMap.cc      \
+        $(SRCDIR)/ShowColorMap.cc         \
+        $(SRCDIR)/ShowField.cc            \
+        $(SRCDIR)/ShowMatrix.cc           \
+        $(SRCDIR)/StreamLines.cc          \
+        $(SRCDIR)/HeuristicStreamLines.cc \
+        $(SRCDIR)/TextureBuilder.cc       \
+        $(SRCDIR)/VolumeSlicer.cc         \
+        $(SRCDIR)/VolumeVisualizer.cc     \
+        $(SRCDIR)/ShowString.cc           \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Core/Algorithms/Visualization \
-	Core/Algorithms/Fields        \
-	Core/Algorithms/Math          \
-	Core/Basis         \
-	Core/Containers    \
-	Core/Datatypes     \
-	Core/Exceptions    \
-	Core/Geom          \
-	Core/GeomInterface \
-	Core/Geometry      \
-	Core/GuiInterface  \
-	Core/Persistent    \
-	Core/Thread        \
-	Core/TkExtensions  \
-	Core/Util          \
-	Core/Volume        \
-	Dataflow/Network   \
-	Dataflow/Widgets   
+        Core/Algorithms/Visualization \
+        Core/Algorithms/Fields        \
+        Core/Algorithms/Math          \
+        Core/Basis         \
+        Core/Containers    \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Geom          \
+        Core/GeomInterface \
+        Core/Geometry      \
+        Core/GuiInterface  \
+        Core/Persistent    \
+        Core/Thread        \
+        Core/TkExtensions  \
+        Core/Util          \
+        Core/Volume        \
+        Dataflow/Network   \
+        Dataflow/Widgets   
 
 LIBS := $(TEEM_LIBRARY) $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
@@ -90,5 +90,5 @@ INCLUDES += $(FTGL_INCLUDE)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 ifeq ($(LARGESOS),no)
-SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+  SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
 endif

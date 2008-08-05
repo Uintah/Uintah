@@ -36,17 +36,16 @@ SRCDIR   := Core/Init
 SRCS     += $(SRCDIR)/init.cc
 
 PSELIBS := \
-	Core/Containers   \
-	Core/Datatypes    \
-	Core/Exceptions   \
-	Core/Geometry     \
-	Core/ImportExport \
-	Core/Persistent   \
-	Core/Thread       \
-	Core/Util 
+        Core/Containers   \
+        Core/Datatypes    \
+        Core/Exceptions   \
+        Core/Geometry     \
+        Core/Persistent   \
+        Core/Thread       \
+        Core/Util 
 
 ifeq ($(BUILD_DATAFLOW),yes)
-  PSELIBS += Core/GuiInterface
+  PSELIBS += Core/GuiInterface Core/ImportExport
 endif
 
 LIBS :=
