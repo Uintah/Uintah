@@ -40,11 +40,15 @@ PSELIBS := \
 	Core/Datatypes    \
 	Core/Exceptions   \
 	Core/Geometry     \
-	Core/GuiInterface \
 	Core/ImportExport \
 	Core/Persistent   \
 	Core/Thread       \
 	Core/Util 
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/GuiInterface
+endif
+
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

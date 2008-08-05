@@ -26,7 +26,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
@@ -37,11 +36,22 @@ SRCS     += \
             $(SRCDIR)/RegressionAlgo.cc \
             $(SRCDIR)/CompareFields.cc \
             
+PSELIBS := \
+        Core/Algorithms/DataIO \
+        Core/Algorithms/Util   \
+	Core/Basis      \
+	Core/Bundle     \
+	Core/Containers \
+	Core/Datatypes  \
+	Core/Exceptions \
+	Core/Geometry   \
+	Core/Thread     \
+	Core/Util       \
+	Core/OS
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread \
-	   Core/Datatypes Core/Basis Core/Geom Core/Util \
-     Core/Algorithms/Util Core/Bundle Core/Geometry \
-     Core/Algorithms/DataIO Core/OS
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/Geom 
+endif
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(INSIGHT_LIBRARY)
 

@@ -4,10 +4,13 @@ SRCDIR := Packages/Uintah
 
 SUBDIRS := \
 	$(SRCDIR)/Core         \
-	$(SRCDIR)/Dataflow     \
 	$(SRCDIR)/CCA          \
 	$(SRCDIR)/StandAlone   \
 	$(SRCDIR)/tools        \
 	$(SRCDIR)/testprograms
+
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += Dataflow
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

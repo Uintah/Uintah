@@ -36,10 +36,21 @@ SRCS     += $(SRCDIR)/ConverterAlgo.cc\
             $(SRCDIR)/MatricesToDipoleField.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS :=  Core/Datatypes Core/Util Core/Containers \
-            Core/Exceptions Core/Thread Core/GuiInterface \
-            Core/Geom Core/Geometry Core/Algorithms/Util \
-            Core/Persistent Core/Basis Core/Bundle
+PSELIBS := \
+	Core/Algorithms/Util \
+	Core/Basis           \
+	Core/Bundle          \
+	Core/Containers      \
+	Core/Datatypes       \
+        Core/Exceptions      \
+        Core/Geometry        \
+        Core/Persistent      \
+	Core/Thread          \
+	Core/Util
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/Geom Core/GuiInterface
+endif
             
 LIBS := $(M_LIBRARY) $(TEEM_LIBRARY)
 

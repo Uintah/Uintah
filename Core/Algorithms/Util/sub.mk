@@ -36,8 +36,17 @@ SRCDIR   := Core/Algorithms/Util
 SRCS     += \
             $(SRCDIR)/FieldInformation.cc        
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread \
-	   Core/Datatypes Core/Basis Core/Geom Core/Util
+PSELIBS := \
+	Core/Basis      \
+	Core/Containers \
+	Core/Datatypes  \
+	Core/Exceptions \
+	Core/Thread     \
+	Core/Util
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/Geom
+endif
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
 

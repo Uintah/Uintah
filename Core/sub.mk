@@ -42,10 +42,8 @@ SUBDIRS := \
 	$(SRCDIR)/Exceptions \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Comm \
-	$(SRCDIR)/Geom \
 	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/ImportExport \
 	$(SRCDIR)/Init \
 	$(SRCDIR)/Malloc \
@@ -55,9 +53,7 @@ SUBDIRS := \
 	$(SRCDIR)/Services \
 	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
-	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
-	$(SRCDIR)/Volume \
 	$(SRCDIR)/ICom \
 	$(SRCDIR)/XMLUtil \
 #	$(SRCDIR)/2d \
@@ -66,16 +62,22 @@ SUBDIRS := \
 #	$(SRCDIR)/PartsGui \
 #[INSERT NEW CATEGORY DIR HERE]
 
+ifeq ($(BUILD_DATAFLOW),yes)
+  SUBDIRS += \
+	$(SRCDIR)/Geom \
+	$(SRCDIR)/GuiInterface \
+	$(SRCDIR)/TkExtensions \
+	$(SRCDIR)/Volume
+endif
 
 ifeq ($(BUILD_SCIJUMP),yes)
-SUBDIRS := \
-	$(SUBDIRS) \
+  SUBDIRS += \
 	$(SRCDIR)/CCA \
 	$(SRCDIR)/Babel 
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-SUBDIRS+=$(SRCDIR)/globus_threads
+  SUBDIRS += $(SRCDIR)/globus_threads
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

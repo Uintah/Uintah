@@ -34,10 +34,21 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Bundle
 
 SRCS += $(SRCDIR)/Bundle.cc		    	
-	
-PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/GuiInterface \
-	Core/Math Core/Util Core/Geom Core/Datatypes Core/Volume
+
+PSELIBS := \
+	Core/Containers \
+	Core/Datatypes  \
+	Core/Exceptions \
+	Core/Geometry   \
+	Core/Math       \
+	Core/Persistent \
+	Core/Thread     \
+	Core/Util
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/Geom Core/GuiInterface Core/Volume
+endif
+
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 

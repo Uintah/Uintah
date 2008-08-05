@@ -108,11 +108,20 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc
 
-PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
-	Core/Datatypes Core/Math Core/Containers Core/Thread \
-	Core/GuiInterface Core/Util Core/TkExtensions
+PSELIBS := \
+	Core/Containers   \
+	Core/Datatypes    \
+	Core/Exceptions   \
+	Core/Geometry     \
+	Core/GuiInterface \
+	Core/Math         \
+	Core/Persistent   \
+	Core/Thread       \
+	Core/TkExtensions \
+	Core/Util
 
-LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
+LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) \
+	$(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 INCLUDES += $(FTGL_INCLUDE) $(FREETYPE_INCLUDE) $(TEEM_INCLUDE)
 
