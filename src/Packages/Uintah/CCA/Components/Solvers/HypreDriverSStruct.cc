@@ -738,8 +738,8 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
   int fineIndex, coarseIndex;
   Level::selectType finePatches;
   Level::selectType coarsePatches;
-  const Level* fineLevel;
-  const Level* coarseLevel;
+  const Level* fineLevel = NULL;
+  const Level* coarseLevel = NULL;
   const double ZERO = 0.0;
   //__________________________________
   // looking down
