@@ -637,6 +637,10 @@ void* Allocator::alloc(size_t size, const char* tag, int linenum)
   nalloc++;
   sizealloc+=size;
   size_t bytes_inuse=sizealloc-sizefree;
+  
+  if(sizealloc<sizefree)
+    bytes_inuse=0;
+  
   if(bytes_inuse > highwater_alloc)
     highwater_alloc=bytes_inuse;
   obj_bin->nalloc++;
