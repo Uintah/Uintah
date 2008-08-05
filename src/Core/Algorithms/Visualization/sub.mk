@@ -54,12 +54,14 @@ PSELIBS := \
 	Core/Containers \
 	Core/Datatypes  \
 	Core/Exceptions \
-	Core/Geom       \
 	Core/Geometry   \
 	Core/Persistent \
 	Core/Thread     \
-	Core/Util       \
-	Core/Volume
+	Core/Util       
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/Geom Core/Volume
+endif
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

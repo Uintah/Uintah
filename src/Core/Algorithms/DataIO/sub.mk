@@ -48,9 +48,21 @@ ifeq ($(HAVE_INSIGHT),yes)
   LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) 
 endif
 
-PSELIBS := Core/Datatypes Core/Containers Core/Thread \
-	Core/Exceptions Core/Geometry Core/Util Core/Math Core/Persistent \
-	Core/Geom Core/Bundle Core/ImportExport Core/Volume
+PSELIBS := \
+        Core/Bundle       \
+	Core/Containers   \
+	Core/Datatypes    \
+        Core/Exceptions   \
+	Core/Geometry     \
+	Core/ImportExport \
+	Core/Math         \
+	Core/Persistent   \
+	Core/Thread       \
+	Core/Util
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/Geom Core/Volume
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
   

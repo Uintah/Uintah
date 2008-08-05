@@ -571,12 +571,12 @@ SCI_ARG_ENABLE(package,
   [package=""])
 SCI_ARG_ENABLE(dataflow,
   AC_HELP_STRING(--disable-dataflow,
-                 Do not build Dataflow component model),
+                 Do not build Dataflow component model (same as --disable-scirun) ),
   [sci_required_dataflow=no],
   [sci_required_dataflow=yes])
 SCI_ARG_ENABLE(scirun,
   AC_HELP_STRING(--disable-scirun,
-                 Do not require SCIRun components),
+                 Do not require SCIRun components (same as --disable-dataflow) ),
   [sci_required_scirun=no],
   [sci_required_scirun=yes])
 SCI_ARG_ENABLE(exename,
@@ -734,6 +734,16 @@ myargs=`echo $args | sed 's%\^% %g'`
 ## Cut off the /configure from the configure command (eg: ../src/configure)
 path_to_src=`echo $0 | sed 's/\/configure//'`
 
+if test "${enable_dataflow}" = "yes" -a "$enable_scirun" = "no"; then
+    AC_MSG_ERROR( You cannot disable scirun and enable dataflow. )
+fi
+if test "${enable_dataflow}" = "no" -a "$enable_scirun" = "yes"; then
+    AC_MSG_ERROR( You cannot enable scirun and disable dataflow. )
+fi
+
+if test "$sci_required_scirun" = "no"; then
+  sci_required_dataflow=no
+fi
  
 BUILD_DATAFLOW="$sci_required_dataflow"
 if test "$sci_required_dataflow" = "yes"; then

@@ -14,10 +14,15 @@ SRCS     += \
 	$(SRCDIR)/VariableCache.cc \
 #	$(SRCDIR)/cd_templates.cc \
 
+
+DATAFLOW_LIBS :=
+ifeq ($BUILD_DATAFLOW,yes)
+  DATAFLOW_LIBS := Dataflow/Network Core/Geom
+endif
+
 PSELIBS := \
-	Dataflow/Network \
+	$(DATAFLOW_LIBS) \
 	Core/Exceptions  \
-	Core/Geom        \
 	Core/Geometry    \
 	Core/Persistent  \
 	Core/Datatypes   \

@@ -66,11 +66,14 @@ PSELIBS := \
 	Core/Containers   \
 	Core/Exceptions   \
 	Core/Geometry     \
-	Core/GuiInterface \
 	Core/Math         \
 	Core/Persistent   \
 	Core/Thread       \
 	Core/Util         
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/GuiInterface
+endif
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)

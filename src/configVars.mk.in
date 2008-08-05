@@ -96,10 +96,10 @@ TIME_IMPL = $(SRCDIR)/@TIME_IMPL@
 # Subdirectories
 SUBDIRS := Core 
 ifeq ($(BUILD_DATAFLOW),yes)
-  SUBDIRS += Dataflow
+  SUBDIRS += Dataflow StandAlone
 endif
 
-SUBDIRS += StandAlone $(COMPONENT_DIRS)
+SUBDIRS += $(COMPONENT_DIRS)
 
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += main 

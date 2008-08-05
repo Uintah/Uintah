@@ -42,9 +42,19 @@ SUBDIRS := \
 	$(SRCDIR)/Matrix \
 	$(SRCDIR)/Nrrd
 
-PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
-	Core/Math Core/Util Core/Datatypes
+PSELIBS := \
+	Core/Containers \
+	Core/Datatypes  \
+	Core/Exceptions \
+	Core/Geometry   \
+        Core/Math       \
+	Core/Persistent \
+        Core/Thread     \
+	Core/Util
+
+ifeq ($BUILD_DATAFLOW,yes)
+  PSELIBS += Core/Geom Core/GuiInterface
+endif
 
 LIBS := $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
 	$(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
