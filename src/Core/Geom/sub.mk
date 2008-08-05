@@ -58,7 +58,6 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomLine.cc		                \
 	$(SRCDIR)/GeomObj.cc                            \
 	$(SRCDIR)/GeomOpenGL.cc		                \
-	$(SRCDIR)/Path.cc		    	        \
 	$(SRCDIR)/GeomPick.cc		                \
 	$(SRCDIR)/GeomPoint.cc		    		\
 	$(SRCDIR)/GeomPolyline.cc	                \
