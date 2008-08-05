@@ -102,10 +102,18 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename)
 
 	cout << folder << endl;
 	
-	libHandle = dlopen("/home/collab/sshankar/svn_new/SCIRun/hex64opt/lib/libPackages_Uintah_StandAlone_tools_uda2nrrd.so", RTLD_NOW); // The dylib locn should be changed
-	if (!libHandle) {
-	    cerr << "The library libuda2nrrd could not be located!!!"; 
-		EXCEPTION1(InvalidDBTypeException, "The library libuda2nrrd could not be located!!!");
+	char * lib = getenv("UINTAH_UDA_TO_VIS_LIB");
+	if(lib == NULL) {
+	  cerr << "The environment variable UINTAH_UDA_TO_VIS_LIB isn't set!!!\n";
+	  EXCEPTION1(InvalidDBTypeException, "The environment variable UINTAH_UDA_TO_VIS_LIB isn't set!!!");
+	}
+	else {
+	  // libHandle = dlopen("/home/collab/sshankar/svn_new/SCIRun/hex64opt/lib/libPackages_Uintah_StandAlone_tools_uda2nrrd.so", RTLD_NOW); // The dylib locn should be changed
+	  libHandle = dlopen(lib, RTLD_NOW); // The dylib locn should be changed
+	  if (!libHandle) {
+	      cerr << "The library libuda2vis could not be located!!!\n"; 
+		  EXCEPTION1(InvalidDBTypeException, "The library libuda2vis could not be located!!!");
+	  }
 	}
 
 	// All possible function calls - check here

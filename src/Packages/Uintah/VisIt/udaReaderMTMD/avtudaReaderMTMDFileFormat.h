@@ -43,7 +43,8 @@
 #ifndef AVT_udaReaderMTMD_FILE_FORMAT_H
 #define AVT_udaReaderMTMD_FILE_FORMAT_H
 
-#include "/home/collab/sshankar/svn_new/SCIRun/src/Packages/Uintah/StandAlone/tools/uda2nrrd/particleData.h"
+#include "../../StandAlone/tools/uda2vis/particleData.h"
+//#include "/home/collab/sshankar/svn_new/SCIRun/src/Packages/Uintah/StandAlone/tools/uda2nrrd/particleData.h"
 
 #include <avtMTMDFileFormat.h>
 
