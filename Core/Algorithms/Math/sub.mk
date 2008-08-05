@@ -28,7 +28,7 @@ PSELIBS := Core/Algorithms/Util \
 	   Core/Thread          \
 	   Core/Util
 
-ifeq ($BUILD_DATAFLOW,yes)
+ifeq ($(BUILD_DATAFLOW),yes)
   PSELIBS += Core/Geom Core/GuiInterface
 endif
 

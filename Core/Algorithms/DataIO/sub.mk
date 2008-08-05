@@ -43,7 +43,7 @@ ifeq ($(HAVE_INSIGHT),yes)
   SRCS     += \
           $(SRCDIR)/AnalyzeImage.cc      \
           $(SRCDIR)/AnalyzeReader.cc     \
-          $(SRCDIR)/AnalyzeSliceImageIO.cc \
+          $(SRCDIR)/AnalyzeSliceImageIO.cc
 
   LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) 
 endif
@@ -60,7 +60,7 @@ PSELIBS := \
 	Core/Thread       \
 	Core/Util
 
-ifeq ($BUILD_DATAFLOW,yes)
+ifeq ($(BUILD_DATAFLOW),yes)
   PSELIBS += Core/Geom Core/Volume
 endif
 

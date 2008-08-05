@@ -16,7 +16,7 @@ SRCS     += \
 
 
 DATAFLOW_LIBS :=
-ifeq ($BUILD_DATAFLOW,yes)
+ifeq ($(BUILD_DATAFLOW),yes)
   DATAFLOW_LIBS := Dataflow/Network Core/Geom
 endif
 

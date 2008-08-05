@@ -48,10 +48,10 @@ PSELIBS := \
 	Core/Thread          \
 	Core/Util
 
-ifeq ($BUILD_DATAFLOW,yes)
+ifeq ($(BUILD_DATAFLOW),yes)
   PSELIBS += Core/Geom Core/GuiInterface
 endif
-            
+
 LIBS := $(M_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

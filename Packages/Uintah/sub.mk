@@ -10,7 +10,7 @@ SUBDIRS := \
 	$(SRCDIR)/testprograms
 
 ifeq ($(BUILD_DATAFLOW),yes)
-  SUBDIRS += Dataflow
+  SUBDIRS += $(SRCDIR)/Dataflow
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
