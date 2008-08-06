@@ -292,7 +292,7 @@
       <doMMS                            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires MMS block-->
       <MMS                              spec="OPTIONAL NO_DATA" > <!--Should change requirements on this MMS block if doMMS is true -->
         <whichMMS                       spec="REQUIRED STRING" /> 
-        <constantMMS                    spec="OPTIONAL NO_DATA"/> <!--REQUIRED if whichMMS == constantMMS-->
+        <constantMMS                    spec="OPTIONAL NO_DATA"> <!--REQUIRED if whichMMS == constantMMS-->
           <cu                           spec="REQUIRED DOUBLE"/>
           <cv                           spec="REQUIRED DOUBLE"/>
           <cw                           spec="REQUIRED DOUBLE"/>
@@ -300,7 +300,7 @@
           <phi0                         spec="REQUIRED DOUBLE"/>
           <esphi0                       spec="REQUIRED DOUBLE"/>
         </constantMMS>
-        <almgrenMMS                     spec="OPTIONAL NO_DATA"/> <!--REQUIRED if whichMMS == almgrenMMS-->
+        <almgrenMMS                     spec="OPTIONAL NO_DATA"> <!--REQUIRED if whichMMS == almgrenMMS-->
           <amplitude                    spec="REQUIRED DOUBLE"/>
         </almgrenMMS>
       </MMS>
