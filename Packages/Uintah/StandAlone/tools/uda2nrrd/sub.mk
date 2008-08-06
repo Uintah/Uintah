@@ -6,21 +6,20 @@ PROGRAM := $(SRCDIR)/uda2nrrd
     PSELIBS := Datflow Packages/Uintah
   else
     PSELIBS := \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/Core/DataArchive   \
+        Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
         Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Util          \
         Core/Basis        \
-        Core/Exceptions   \
         Core/Containers   \
         Core/Datatypes    \
+        Core/Exceptions   \
         Core/Geometry     \
         Core/Math         \
         Core/Persistent   \
