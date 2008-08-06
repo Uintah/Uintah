@@ -2155,8 +2155,8 @@ AC_SUBST(M_LIB_DIR_FLAG)
 
 ##  --  search for X  ----------------------------------------------------
 
-if test "$IS_WIN" = "yes"; then
-  echo "skipping X test"
+if test "$IS_WIN" = "yes" -o "$sci_required_scirun" = "no"; then
+  AC_MSG_WARN( Skipping test for X11 )
 else
   _sci_optional=required
   if test "$with_X11_lib"; then
@@ -2328,7 +2328,12 @@ fi
 
 ##  --  search for OpenGL  -----------------------------------------------
 
-_sci_optional=required
+if test "$sci_required_scirun" = "no"; then
+  _sci_optional=optional
+else
+  _sci_optional=required
+fi
+
 if test "$with_opengl"; then
   _sci_lib="$with_opengl/lib"
   _sci_inc="$with_opengl/include"
