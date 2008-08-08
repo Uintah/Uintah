@@ -416,11 +416,11 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
       //cerr << "DataArchive::queryGrid:WARNING: Unknown grid data: " << n->getNodeName() << '\n';
     }
   }
+  Patch::incrementGrid();
   
   d_lock.unlock();
   grid->performConsistencyCheck();
 
-  Patch::incrementGrid();
 
   timedata.d_grid = grid;
 
