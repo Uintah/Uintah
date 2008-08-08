@@ -103,7 +103,7 @@ void printData(DataArchive* archive, string& variable_name,
   
   //__________________________________
   // bullet proofing 
-  if (timestep >= times.size() || timestep < 0) {
+  if (timestep >= times.size() ) {
     cerr << "timestep must be between 0 and " << times.size()-1 << endl;
     exit(1);
   }
