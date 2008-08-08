@@ -131,10 +131,12 @@ Level::const_patchIterator Level::allPatchesEnd() const
 Patch* Level::addPatch(const IntVector& lowIndex, 
                        const IntVector& highIndex,
                        const IntVector& inLowIndex, 
-                       const IntVector& inHighIndex)
+                       const IntVector& inHighIndex,
+                       Grid* grid)
 {
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
                             inHighIndex,getIndex());
+    r->setGrid(grid);
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
     return r;
@@ -144,10 +146,12 @@ Patch* Level::addPatch(const IntVector& lowIndex,
                        const IntVector& highIndex,
                        const IntVector& inLowIndex, 
                        const IntVector& inHighIndex,
+                       Grid* grid,
                        int ID)
 {
     Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
                             inHighIndex,getIndex(),ID);
+    r->setGrid(grid);
     d_realPatches.push_back(r);
     d_virtualAndRealPatches.push_back(r);
     return r;

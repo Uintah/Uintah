@@ -607,7 +607,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
     // if we do the two passes, then we need to have one processor do the work and broadcast it, as 
     // the superpatch functionality does not produce consistent results across processors
 
-    Grid bogusGrid(false);
+    Grid bogusGrid;
     Level* addToLevel = newLevel.get_rep();
 #if 1
     if (d_maxPatchSize[levelIdx] == d_patchSize[levelIdx] || d_myworld->myrank() == 0) {
@@ -655,7 +655,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
         /// pass in our own id to not increment the global id
         int patchID = (d_maxPatchSize[levelIdx] != d_patchSize[levelIdx]) ? id++ : -1;
         addToLevel->addPatch(startCell, endCell + IntVector(1,1,1), 
-			     inStartCell, inEndCell + IntVector(1,1,1), patchID);
+			     inStartCell, inEndCell + IntVector(1,1,1), newGrid, patchID);
       }
 #if 1
     }
@@ -732,7 +732,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid)
               // finally add the superpatch to the real level
               if (d_myworld->myrank() == 0)
                 rdbg << "   Using superpatch " << sub_low << " " << sub_high << " " << sub_in_low << " " << sub_in_high << endl;
-              newLevel->addPatch(sub_low, sub_high, sub_in_low, sub_in_high);
+              newLevel->addPatch(sub_low, sub_high, sub_in_low, sub_in_high,newGrid);
             }
           }
         }

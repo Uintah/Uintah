@@ -54,7 +54,7 @@ WARNING
 
   class UINTAHSHARE Grid : public RefCounted {
   public:
-    Grid(bool addToPatch=true);
+    Grid();
     virtual ~Grid();
     
     //////////

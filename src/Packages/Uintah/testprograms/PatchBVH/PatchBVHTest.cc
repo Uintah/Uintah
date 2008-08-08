@@ -57,7 +57,7 @@ int main()
     IntVector low=*iter*PatchSize;
     IntVector high=(*iter+IntVector(1,1,1))*PatchSize;
 
-    level->addPatch(low,high,low,high);
+    level->addPatch(low,high,low,high,&grid);
 
     patches.push_back(level->getPatch(i));
   }

@@ -97,12 +97,14 @@ public:
   Patch* addPatch(const IntVector& extraLowIndex,
                   const IntVector& extraHighIndex,
                   const IntVector& lowIndex,
-                  const IntVector& highIndex);
+                  const IntVector& highIndex,
+                  Grid* grid);
       
   Patch* addPatch(const IntVector& extraLowIndex,
                   const IntVector& extraHighIndex,
                   const IntVector& lowIndex,
                   const IntVector& highIndex,
+                  Grid* grid,
                   int ID);
 
   // Move up and down the hierarchy

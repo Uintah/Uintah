@@ -109,7 +109,7 @@ void StretchSpec::fillCells(int& start, int lowExtra, int highExtra, OffsetArray
   }
 }
 
-Grid::Grid(bool addToPatch)
+Grid::Grid()
 {
   // Initialize values that may be uses for the autoPatching calculations
   af_ = 0;
@@ -119,12 +119,6 @@ Grid::Grid(bool addToPatch)
   ares_ = 0;
   bres_ = 0;
   cres_ = 0;
-
-  if(addToPatch)
-  {
-    //set the patch pointer so that all new patches point to this grid
-    Patch::setGrid(this);
-  }
 }
 
 Grid::~Grid()
@@ -821,7 +815,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
                      << "\n(i.e., they are not divisible by te refinement ratio " << refineRatio << ')';
                 throw InvalidGrid(desc.str(),__FILE__,__LINE__);
               }
-              level->addPatch(startcell, endcell, inStartCell, inEndCell);
+              level->addPatch(startcell, endcell, inStartCell, inEndCell,this);
             }
           }
         } // end for(int i=0;i<patches.x();i++){

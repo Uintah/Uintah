@@ -84,7 +84,7 @@ void PatchCombiner::problemSetup(const ProblemSpecP& /*params*/,
       }
       
       Patch* newPatch =
-	newLevel->addPatch(low, high, inLow, inHigh);
+	newLevel->addPatch(low, high, inLow, inHigh, newGrid.get_rep());
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
 	const Patch* patch = (*superIter)->getBoxes()[p];
 	new2OldPatchMap_[newPatch].push_back(patch);
