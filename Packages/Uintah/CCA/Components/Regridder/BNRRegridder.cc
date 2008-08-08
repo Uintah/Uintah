@@ -316,7 +316,7 @@ Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_set
       IntVector low = patch_sets[l][p].getLow();
       IntVector high = patch_sets[l][p].getHigh();
       //create patch
-      level->addPatch(low, high, low, high);
+      level->addPatch(low, high, low, high,newGrid);
     }
     // parameters based on next-fine level.
     spacing = spacing / d_cellRefinementRatio[l];

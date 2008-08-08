@@ -380,7 +380,7 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
           IntVector inHighIndex = highIndex;
           r->get("interiorLowIndex", inLowIndex);
           r->get("interiorHighIndex", inHighIndex);
-          level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
+          level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,grid.get_rep(),id);
           PatchData pi;
           r->get("proc", pi.proc); // defaults to -1 if not available
           timedata.d_patchInfo[levelIndex].push_back(pi);
@@ -416,7 +416,6 @@ DataArchive::queryGrid( int index, const ProblemSpec* ups)
       //cerr << "DataArchive::queryGrid:WARNING: Unknown grid data: " << n->getNodeName() << '\n';
     }
   }
-  Patch::incrementGrid();
   
   d_lock.unlock();
   grid->performConsistencyCheck();

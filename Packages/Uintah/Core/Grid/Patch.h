@@ -1190,25 +1190,12 @@ WARNING
       /**
        * Sets the static pointer to the new grid
        */
-      static inline void setGrid(Grid* grid)
+      inline void setGrid(Grid* grid)
       {
         //set the grid pointer 
-        //all patches that are created after this point
-        //before incrementGrid is called will point to this
-        //grid
-        d_grid[d_newGridIndex]=grid;
+        d_grid=grid;
       }
 
-      /**
-       * Increments the grid index.
-       * This should be called after a new grid is 
-       * created and is going to be kept
-       */
-      static inline void incrementGrid()
-      {
-        //update the index
-        d_newGridIndex=(d_newGridIndex+1)%2;
-      }
       /*
          void setBCType(FaceType face, BCType newbc)
          {
@@ -1252,7 +1239,7 @@ WARNING
        */
       inline const Level* getLevel() const 
       {
-        return d_grid[d_patchState.gridIndex]->getLevel(d_patchState.levelIndex).get_rep();
+        return d_grid->getLevel(d_patchState.levelIndex).get_rep();
       }
 
       /**
@@ -2085,7 +2072,6 @@ WARNING
         unsigned int yplus : 2;
         unsigned int zminus : 2;
         unsigned int zplus : 2;
-        unsigned int gridIndex : 1; //The grid index for this patch
         unsigned int levelIndex : 3; //The level index for this patch (max of 8 levels)
       };
 
@@ -2117,17 +2103,9 @@ WARNING
 
 
       /**
-       * This array will store pointers to grids.
-       * Patches store an index into this array to specify
-       * their grid. 
+       * This stores a pointer to the grid grids.
        */
-      static Grid* d_grid[2];
-
-      /**
-       *  The index of the new grid.  All new patches
-       *  will point to this grid until setNextGrid is called
-       */
-      static int d_newGridIndex;
+      Grid* d_grid;
 
       /**
        * A unique patch id.

@@ -407,7 +407,7 @@ FieldExtractorAlgo::build_minimal_patch_grid( GridP oldGrid )
       }
       
       Patch* newPatch =
-        newLevel->addPatch(low, high, inLow, inHigh);
+        newLevel->addPatch(low, high, inLow, inHigh,newGrid.get_rep());
       newLevel->setExtraCells( level->getExtraCells() );
       list<const Patch*> oldPatches; 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {

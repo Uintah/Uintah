@@ -27,8 +27,6 @@ using namespace Uintah;
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
 IntVector Patch::d_extraCells;
-Grid* Patch::d_grid[2]={0,0};
-int Patch::d_newGridIndex=0;
 
 
 Patch::Patch(const Level* level,
@@ -61,8 +59,6 @@ Patch::Patch(const Level* level,
   d_patchState.zplus=None;
 
   
-  //set the grid index
-  d_patchState.gridIndex=d_newGridIndex;
   //set the level index
   d_patchState.levelIndex=levelIndex;
 
@@ -94,8 +90,6 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   int index = 1;
   int numVirtualPatches = 0;
   
-  //set the level index
-  d_patchState.gridIndex=realPatch->d_patchState.gridIndex;
   //set the level index
   d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 
