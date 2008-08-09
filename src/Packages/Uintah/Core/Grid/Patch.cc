@@ -82,7 +82,8 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
 #endif
-      d_arrayBCS(realPatch->d_arrayBCS)
+      d_arrayBCS(realPatch->d_arrayBCS),
+      d_grid(realPatch->d_grid)
 {
   //if(!ids){
   // make the id be -1000 * realPatch id - some first come, first serve index
