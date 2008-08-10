@@ -58,9 +58,7 @@ namespace Uintah {
     friend class PatchBVH;
     struct PatchKeyVal
     {
-      //do not inline this function.  icc wants to inline this function at higher optimization levels. 
-      //Inlining can cause problems because this function depends on the static variable sortDim_.
-      __declspec(noinline) bool operator<(const PatchKeyVal& p) const
+      bool operator<(const PatchKeyVal& p) const
       {
         return center2[PatchBVHBase::sortDim_]<p.center2[PatchBVHBase::sortDim_];
       }
