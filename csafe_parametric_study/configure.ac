@@ -206,6 +206,12 @@ SCI_ARG_WITH(thirdparty,
                 Use the Thirdparty_install installation in DIR. This is output from the Thirdparty_install install script. The default is /usr/local/SCIRun/Thirdparty/ followed by: <version>/<OS>/<compiler>-<32 or 64>bit),
   [thirdparty="$withval"],
   [thirdparty=""])
+SCI_ARG_WITH(mkl,
+  AC_HELP_STRING(--with-mkl=DIR,
+                 Use the mkl (for lapack/blas) installation in DIR),
+  [with_mkl="$withval"
+   sci_required_mkl=yes],
+  [with_mkl=""])
 SCI_ARG_WITH(blas,
   AC_HELP_STRING(--with-blas=DIR,
                  Use the blas installation in DIR),
@@ -3282,6 +3288,46 @@ AC_SUBST(TETGEN_LIB_DIR_FLAG)
 AC_SUBST(DEF_TETGEN)
 AC_SUBST(HAVE_TETGEN)
 
+##  --  search for mkl (optimized blas/lapack) stuff  -------------------------------------
+
+if test "$with_mkl"; then
+
+  if test "$with_blas" && test "$with_mkl"; then
+    AC_MSG_ERROR(You cannot use both --with-blas and --with-mkl.)
+  fi
+  if test "$with_atlas" && test "$with_mkl"; then
+    AC_MSG_ERROR(You cannot use both --with-atlas and --with-mkl.)
+  fi
+
+  if test "$with_mkl" = "yes"; then
+    _sci_lib=
+    _sci_inc=
+    _sci_optional=required
+  elif test "$with_mkl"; then
+    _sci_lib="$with_mkl/lib"
+    _sci_inc="$with_mkl/include"
+    _sci_optional=specific
+  fi
+
+  case $host in
+    *-darwin*)
+       AC_MSG_ERROR(We recommend that you don't use MKL on a Mac... use the default vecLib instead.)
+       ;;
+     *)
+       SCI_TRY_LINK(BLAS,mkl version of (blas) libraries and headers,mkl_cblas.h,
+                    $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,-lpthread,,$_sci_optional)
+       SCI_TRY_LINK(LAPACK,mkl version of (lapack) libraries and headers,mkl_lapack.h,
+                    $_sci_inc,mkl mkl_def guide,$_sci_lib,-lpthread,,$_sci_optional)
+       ;;
+  esac
+
+  CBLAS_H="mkl_cblas.h"
+  HAVE_CBLAS=$HAVE_BLAS
+  DEF_CBLAS="#define HAVE_CBLAS 1"
+  DEF_BLAS="#define HAVE_BLAS 1"
+  sci_required_blas=no
+fi
+
 ##  --  search for atlas stuff  -------------------------------------------
 
 if test "$with_blas" && test "$with_atlas"; then
@@ -3413,55 +3459,58 @@ sci_defs_files="$sci_defs_files include/sci_defs/blas_testdefs.h"
 
 ##  --  search for lapack stuff  -----------------------------------------
 
-if test "$with_lapack"; then
-   _sci_lib="$with_lapack/lib"
-else
-   _sci_lib="$LIB_DIR_BLAS"
-fi
+if test "$HAVE_LAPACK" != "yes"; then
+  if test "$with_lapack"; then
+     _sci_lib="$with_lapack/lib"
+  else
+     _sci_lib="$LIB_DIR_BLAS"
+  fi
 
-case $host in
-  *-darwin*)
-     SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,
-        vecLib/clapack.h,,,,-faltivec -framework vecLib,,optional)
-     if test "$HAVE_LAPACK" = yes ; then
-        LAPACK_LIB_FLAG="-faltivec -framework vecLib"
-     fi
-     ;;
-   *)
-     SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
-     ;;
+  case $host in
+    *-darwin*)
+      SCI_TRY_LINK(LAPACK,lapack version oflibraries and headers,
+         vecLib/clapack.h,,,,-faltivec -framework vecLib,,optional)
+      if test "$HAVE_LAPACK" = yes ; then
+         LAPACK_LIB_FLAG="-faltivec -framework vecLib"
+      fi
+      ;;
+    *)
+      SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+      ;;
 esac
 
-if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
-fi
-
-# In some cases, some files need complib.sgimath_mp for the lapack
-# library.  I have created this new var LAPACKMP to keep track of this
-# information.  If the configure script finds complib.sgimath_mp, then
-# the LAPACKMP vars will be updated.  If it does not, then the LAPACK
-# vars will be used.
-HAVE_LAPACKMP=$HAVE_LAPACK
-LAPACKMP_LIB_FLAG=$LAPACK_LIB_FLAG
-LAPACKMP_LIB_DIR_FLAG=$LAPACK_LIB_DIR_FLAG
-
-if test "$HAVE_LAPACK" != "yes"; then
-  SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
-  if test "$HAVE_LAPACK" = "yes"; then
-       AC_MSG_WARN(Using complib for lapack)
-       SCI_TRY_LINK(LAPACKMP,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
+  if test "$HAVE_LAPACK" != "yes"; then
+    SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
   fi
-fi
 
-if test "$HAVE_LAPACK" = "yes"; then
-  DEF_LAPACK="#define HAVE_LAPACK 1"
-fi
+  # In some cases, some files need complib.sgimath_mp for the lapack
+  # library.  I have created this new var LAPACKMP to keep track of this
+  # information.  If the configure script finds complib.sgimath_mp, then
+  # the LAPACKMP vars will be updated.  If it does not, then the LAPACK
+  # vars will be used.
+  HAVE_LAPACKMP=$HAVE_LAPACK
+  LAPACKMP_LIB_FLAG=$LAPACK_LIB_FLAG
+  LAPACKMP_LIB_DIR_FLAG=$LAPACK_LIB_DIR_FLAG
 
-if test "$sci_required_lapack" = "yes" -o "$with_lapack" && test ! "$DEF_LAPACK"; then
-  echo
-  AC_MSG_WARN(Could not find LAPACK in $_sci_lib)
-  AC_MSG_ERROR(The required LAPACK component is missing.)
-  echo
+  if test "$HAVE_LAPACK" != "yes"; then
+    SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
+    if test "$HAVE_LAPACK" = "yes"; then
+         AC_MSG_WARN(Using complib for lapack)
+         SCI_TRY_LINK(LAPACKMP,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
+    fi
+  fi
+
+  if test "$HAVE_LAPACK" = "yes"; then
+    DEF_LAPACK="#define HAVE_LAPACK 1"
+  fi
+
+  if test "$sci_required_lapack" = "yes" -o "$with_lapack" && test ! "$DEF_LAPACK"; then
+    echo
+    AC_MSG_WARN(Could not find LAPACK in $_sci_lib)
+    AC_MSG_ERROR(The required LAPACK component is missing.)
+    echo
+  fi
+
 fi
 
 AC_SUBST(HAVE_LAPACK)
@@ -3473,6 +3522,8 @@ AC_SUBST(HAVE_LAPACKMP)
 AC_SUBST(LAPACKMP_LIB_FLAG)
 AC_SUBST(LAPACKMP_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/lapack_testdefs.h"
+
+
 
 ##  --  search for mpi  --------------------------------------------------
 
