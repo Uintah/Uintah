@@ -655,7 +655,7 @@ Split BNRTask::FindSplit()
 {
   Split split;
   split.d=-1;
-  split.index=-1;
+  split.index=0;
 
   IntVector size=patch_.getHigh()-patch_.getLow();
   //search for zero split in each dimension
