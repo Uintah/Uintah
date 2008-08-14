@@ -85,13 +85,14 @@ usage( const string& badarg, const string& progname )
   cerr << "             of the finest level. Fills the entire domain by \n";
   cerr << "             interpolating data from lower resolution levels\n";
   cerr << "             when necessary.  May not be used with -p.\n";
+  cerr << "             (-p attempts to find the one level that particles exist on and uses just that level.)\n";
   cerr << "  -mo <operator> type of operator to apply to matricies.\n";
   cerr << "                 Options are none, det, norm, and trace\n";
   cerr << "                 [defaults to none]\n";
   cerr << "  -nbc,--noboundarycells - remove boundary cells from output\n";
   
   cerr << "\nOutput Options\n";
-  cerr << "  -o,--out <outputfilename> [defaults to data]\n";
+  cerr << "  -o,--out <outputfilename> [defaults to 'particles_t#######' or '<varName>_t######']\n";
   cerr << "  -oi <index> [default to 0] - Output index to use in naming file.\n";
   cerr << "  -dh,--detatched-header - writes the data with detached headers.  The default is to not do this.\n";
   //    cerr << "  -binary (prints out the data in binary)\n";
@@ -228,6 +229,22 @@ main(int argc, char** argv)
     cerr << "No archive file specified\n";
     usage("", argv[0]);
   }
+
+  // Verify that we can create a file in this directory
+
+  string tmp_filename = output_file_name;
+  if( tmp_filename == "" ) {
+    tmp_filename = "temporary_uda2nrrd_testfile";
+  }
+  FILE * fp = fopen( tmp_filename.c_str(), "w" );
+  if( fp == NULL ) {
+    cout << "\n\n";
+    cout << "Error: Couldn't create output file ('" << tmp_filename << "')... please check permissions.\n";
+    cout << "\n\n";
+    exit( 1 );
+  }
+  remove( tmp_filename.c_str() );
+  fclose( fp );
 
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
@@ -512,10 +529,10 @@ main(int argc, char** argv)
           hi.z( hi.z() * int(pow(2, exponent)));
             
           if( args.verbose ){
-            cout<<"The entire domain for all levels will have an index range of "
-                <<low<<" to "<<hi
-                <<" and a spatial range from "<<box.min()<<" to "
-                << box.max()<<".\n";
+            cout << "The entire domain for all levels will have an index range of "
+                 << low << " to " << hi
+                 << " and a spatial range from " << box.min() << " to "
+                 << box.max() << ".\n";
           }
         }
 
@@ -523,6 +540,14 @@ main(int argc, char** argv)
         // Get the data...
     
         if( td->getType() == Uintah::TypeDescription::ParticleVariable ) {  // Handle Particles
+
+          if( !do_particles ) {
+            cout << "\n\n";
+            cout << "ERROR: extracting particle information, but you didn't specify particles\n"
+                 << "       with '-p' on the command line... please start over and use -p.\n";
+            cout << "\n\n";
+            exit( 1 );
+          }
 
           ParticleDataContainer data;
 
