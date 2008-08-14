@@ -208,7 +208,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo )
   ParticleDataContainer result( qinfo.varname + " Trace/3", floatArray, data.size() );
 
   return result;
-}
+} // end handleParticleData<Matrix3>
 
 template<class PartT>
 ParticleDataContainer
@@ -287,7 +287,7 @@ handleParticleData( QueryInfo & qinfo )
 
   return result;
 
-} // end handleParticleData()
+} // end handleParticleData<generic>()
 
 
 void
