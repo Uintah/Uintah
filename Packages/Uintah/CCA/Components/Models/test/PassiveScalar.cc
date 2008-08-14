@@ -248,7 +248,6 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   }
 
   if (d_usingProbePts) {
-    throw ProblemSetupException("Can't output tag",__FILE__,__LINE__);
     ProblemSpecP probe_ps = scalar_ps->appendChild("probePoints");
     probe_ps->appendElement("probeSamplingFreq",d_probeFreq);
     
