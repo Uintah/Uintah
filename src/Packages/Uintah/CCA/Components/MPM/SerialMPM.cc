@@ -440,9 +440,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
-  if(flags->d_doExplicitHeatConduction){
-    scheduleComputeHeatExchange(          sched, patches, matls);
-  }
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleSetBCsInterpolated(             sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
@@ -454,6 +451,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   if(flags->d_doExplicitHeatConduction){
+    scheduleComputeHeatExchange(          sched, patches, matls);
     scheduleComputeInternalHeatRate(      sched, patches, matls);
     scheduleComputeNodalHeatFlux(         sched, patches, matls);
     scheduleSolveHeatEquations(           sched, patches, matls);
@@ -2205,7 +2203,6 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
                             lb->BndyContactAreaLabel[iface]);
   }
 }
-
 
 void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
                                      const PatchSubset* patches,
