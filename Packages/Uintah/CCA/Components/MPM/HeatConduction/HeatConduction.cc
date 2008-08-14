@@ -234,23 +234,13 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       constNCVariable<double> GTemperature;
       constNCVariable<double> GMass;
       NCVariable<double> GdTdt;
-      NCVariable<double> GpdTdt;
       if(d_flag->d_fracture) { 
         new_dw->get(pgCode,       d_lb->pgCodeLabel, pset);
         new_dw->get(GTemperature, d_lb->GTemperatureLabel, dwi,patch,gac,2*NGN);
         new_dw->get(GMass,        d_lb->GMassLabel,        dwi,patch,gnone, 0);
         new_dw->allocateAndPut(GdTdt, d_lb->GdTdtLabel,    dwi,patch);     
         GdTdt.initialize(0.);
-        new_dw->allocateTemporary(GpdTdt, patch, gnone, 0);
-        GpdTdt.initialize(0.);
       }
-
-      // Create a temporary variable to store the mass weighted grid node
-      // internal heat rate that has been projected from the particles
-      // to the grid
-      NCVariable<double> gpdTdt;
-      new_dw->allocateTemporary(gpdTdt, patch, gnone, 0);
-      gpdTdt.initialize(0.);
 
       // Compute the temperature gradient at each particle and project
       // the particle plastic work temperature rate to the grid
@@ -294,11 +284,11 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 #ifdef EROSION              
             S[k] *= pErosion[idx];
 #endif
-            gpdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
+            gdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
      
             if (cout_heat.active()) {
               cout_heat << "   k = " << k << " node = " << ni[k] 
-                        << " gpdTdt = " << gpdTdt[ni[k]] << endl;
+                        << " gdTdt = " << gdTdt[ni[k]] << endl;
             }
 
           } // if patch contains node
@@ -306,13 +296,12 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       } // Loop over particles
 
       // Get the plastic work temperature rate due to particle deformation
-      // at the grid nodes by dividing gpdTdt by the grid mass
+      // at the grid nodes by dividing gdTdt by the grid mass
       for(NodeIterator iter = patch->getNodeIterator__New();
                       !iter.done(); iter++) {
         IntVector c = *iter;
 
-        gpdTdt[c] /= gMass[c];
-        gdTdt[c] = gpdTdt[c];
+        gdTdt[c] /= gMass[c];
       }
 
       if(d_flag->d_fracture) { // for FractureMPM
@@ -351,15 +340,15 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
               S[k] *= pErosion[idx];
 #endif
               if(pgCode[idx][k]==1) { // above crack
-                gpdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
+                gdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
               }
               else if(pgCode[idx][k]==2) { // below crack
-                GpdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
+                GdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
               }
        
               if (cout_heat.active()) {
                 cout_heat << "   k = " << k << " node = " << ni[k] 
-                          << " gpdTdt = " << gpdTdt[ni[k]] << endl;
+                          << " gdTdt = " << gdTdt[ni[k]] << endl;
               }
   
             } // if patch contains node
@@ -367,15 +356,12 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         } // Loop over particles
 
         // Get the plastic work temperature rate due to particle deformation
-        // at the grid nodes by dividing gpdTdt by the grid mass
+        // at the grid nodes by dividing gdTdt by the grid mass
         for(NodeIterator iter = patch->getNodeIterator__New();
                         !iter.done(); iter++) {
           IntVector c = *iter;
-          if(d_flag->d_fracture) { // for FractureMPM
             // below crack
-            GpdTdt[c] /= GMass[c];
-            GdTdt[c] = GpdTdt[c];
-          }
+            GdTdt[c] /= GMass[c];
         }
       }  // if fracture
 
