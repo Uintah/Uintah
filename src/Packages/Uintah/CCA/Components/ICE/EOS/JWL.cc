@@ -85,11 +85,13 @@ double JWL::computeRhoMicro(double press, double,
       }
       
       if(iter>=100){
-	cout<<setprecision(15);
-	cout<<"Not converging after 100 iterations in JWL.cc."<<endl;
-	cout<<"P="<<press<<" T="<<Temp<<" f="<<func(rhoM)<<" delta="<<delta_new
-	    <<" rhoM="<<rhoM<<" rho_start="<<rhoM_start<<" "<<rho_max<<endl;
-	exit(1);
+        ostringstream warn;
+        warn << setprecision(15);
+        warn << "ERROR:ICE:JWL::computeRhoMicro not converging. \n";
+        warn << "press= " << press << " temp=" << Temp << "\n";
+        warn << "delta= " << delta_new << " rhoM= " << rhoM << " f = " << f 
+             <<" df_drho =" << df_drho << "\n";
+        throw InternalError("warn.str()", __FILE__, __LINE__);
       }
       
       if(rhoM<IL || rhoM>IR || fabs(delta_new)>fabs(delta_old*0.7)){
