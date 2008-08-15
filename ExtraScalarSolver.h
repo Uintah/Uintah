@@ -126,7 +126,7 @@ public:
   inline const VarLabel* getScalarLabel() {
     return d_scalar_label;
   }
-  inline const double getScalarInitValue() {
+  inline double getScalarInitValue() {
     return d_scalar_init_value;
   }
   inline const string getScalarName() {
@@ -138,10 +138,10 @@ public:
   inline void setBoundaryCondition(BoundaryCondition* boundaryCondition) {
     d_boundaryCondition = boundaryCondition;
   }
-  inline const bool isDensityWeighted() {
+  inline bool isDensityWeighted() {
     return d_scalar_density_weighted;
   }
-  inline const bool useforDen(){
+  inline bool useforDen(){
     //if true, will use this scalar to compute rho
     return d_scalar_useforden;
     //warning!  This assumes (for now) that only one scalar
@@ -158,11 +158,11 @@ public:
     return d_extraScalarSources;
   }
 
-  inline const bool doCarbonBalance(){
+  inline bool doCarbonBalance(){
     return d_carbon_balance;
   }
 
-  inline const bool doSulfurBalance(){
+  inline bool doSulfurBalance(){
     return d_sulfur_balance;
   }
 
