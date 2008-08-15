@@ -3,8 +3,6 @@
 
 SRCDIR := Packages/Uintah/testprograms/IteratorTest
 
-LIBS :=
-
 PROGRAM := $(SRCDIR)/IteratorTest
 SRCS := $(SRCDIR)/IteratorTest.cc
 
@@ -18,7 +16,7 @@ PSELIBS := \
         Packages/Uintah/Core/Grid                \
         Packages/Uintah/Core/Util                
 
-LIBS := 
+LIBS := $(BLAS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

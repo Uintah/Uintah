@@ -38,9 +38,7 @@
 #include <vector>
 #include <cstdlib>
 
-#if defined(_WIN32) || defined(REDSTORM)
-#  include <time.h>
-#endif
+#include <time.h>
 
 using namespace Uintah;
 using namespace SCIRun;

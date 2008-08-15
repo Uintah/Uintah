@@ -3,8 +3,6 @@
 
 SRCDIR := Packages/Uintah/testprograms/PatchBVH
 
-LIBS :=
-
 PROGRAM := $(SRCDIR)/PatchBVHTest
 SRCS := $(SRCDIR)/PatchBVHTest.cc
 
@@ -14,7 +12,7 @@ PSELIBS := \
         Packages/Uintah/Core/Grid                \
         Packages/Uintah/Core/Util                
 
-LIBS := 
+LIBS := $(BLAS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

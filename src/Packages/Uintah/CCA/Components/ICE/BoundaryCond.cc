@@ -49,10 +49,9 @@ namespace Uintah {
 void ImplicitMatrixBC( CCVariable<Stencil7>& A, 
                    const Patch* patch)        
 { 
-  vector<Patch::FaceType>::const_iterator itr;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  for (itr  = bf.begin(); itr != bf.end(); ++itr){
+  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
     Patch::FaceType face = *itr;
     
     int mat_id = 0; // hard coded for pressure
@@ -82,7 +81,6 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
         }                                 
         //__________________________________
         //  Set the BC  
-        vector<IntVector>::const_iterator iter;
 
         switch (face) {
         case Patch::xplus:
@@ -161,8 +159,8 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
     // Iterate over coarsefine interface faces
     vector<Patch::FaceType> cf;
     patch->getCoarseFaces(cf);
-    vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  = cf.begin(); iter != cf.end(); ++iter){
+    
+    for( vector<Patch::FaceType>::const_iterator iter = cf.begin(); iter != cf.end(); ++iter ){
       Patch::FaceType face = *iter;
 
       const Level* fineLevel = patch->getLevel();
@@ -185,8 +183,8 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
       IntVector offset = patch->faceDirection(face);
       
       
-      for(CellIterator iter(fl,fh); !iter.done(); iter++){
-        IntVector f_cell = *iter;
+      for(CellIterator cIter(fl,fh); !cIter.done(); cIter++){
+        IntVector f_cell = *cIter;
         f_cell =  f_cell - offset;
         A[f_cell].p += A[f_cell][face];
         
@@ -216,10 +214,9 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
                       DataWarehouse* new_dw)        
 { 
   BC_doing << "set_imp_DelP_BC "<< endl;
-  vector<Patch::FaceType>::const_iterator itr;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  for (itr  = bf.begin(); itr != bf.end(); ++itr){
+  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
     Patch::FaceType face = *itr;
     
     int mat_id = 0; // hard coded for pressure
@@ -249,7 +246,6 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
         }                                 
         //__________________________________
         //  Set the BC  
-        vector<IntVector>::const_iterator iter;
         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
           IntVector c = *bound_ptr;
           IntVector adj = c - oneCell;
@@ -281,8 +277,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
     // Iterate over coarsefine interface faces
     vector<Patch::FaceType> cf;
     patch->getCoarseFaces(cf);
-    vector<Patch::FaceType>::const_iterator iter;  
-    for (iter  =cf.begin(); iter != cf.end(); ++iter){
+    for( vector<Patch::FaceType>::const_iterator iter = cf.begin(); iter != cf.end(); ++iter ){
       Patch::FaceType face = *iter;
 
       const Level* fineLevel = patch->getLevel();
@@ -295,8 +290,8 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
       new_dw->getRegion(imp_delP_coarse, label, 0, coarseLevel,cl, ch);
 #ifndef TEST
       // piece wise constant 
-      for(CellIterator iter(fl,fh); !iter.done(); iter++){
-        IntVector f_cell = *iter;
+      for(CellIterator cIter(fl,fh); !cIter.done(); cIter++){
+        IntVector f_cell = *cIter;
         IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
         imp_delP[f_cell] =  imp_delP_coarse[c_cell];
       }
@@ -313,8 +308,8 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
       
       cout << " using linear Interpolation for impDelP " << endl;;
      
-      for(CellIterator iter(fl,fh); !iter.done(); iter++){
-        IntVector f_cell = *iter;
+      for(CellIterator cIter(fl,fh); !cIter.done(); cIter++){
+        IntVector f_cell = *cIter;
         IntVector f_adj  = f_cell - offset;
         IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
         imp_delP[f_cell] =  C2[P_dir] * imp_delP_coarse[c_cell] +
@@ -364,11 +359,10 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
       
   //__________________________________
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     
     if(is_LODI_face(patch, face, sharedState) || gravity.length() > 0) {
@@ -397,14 +391,14 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
         int matl= ice_matl->getDWIndex();
                 
         if (which_Var == "rho_micro") { 
-          for (CellIterator iter=iterLimits; !iter.done();iter++) {
-            IntVector c = *iter;
+          for (CellIterator cIter = iterLimits; !cIter.done(); cIter++) {
+            IntVector c = *cIter;
             rho_micro[matl][c] =  rho_micro_tmp[matl][c];
           }
         }
         if (which_Var == "sp_vol") { 
-          for (CellIterator iter=iterLimits; !iter.done();iter++) {
-            IntVector c = *iter;
+          for (CellIterator cIter = iterLimits; !cIter.done(); cIter++) {
+            IntVector c = *cIter;
             rho_micro[matl][c] =  1.0/sp_vol_CC[matl][c];
           }
         }  // sp_vol
@@ -450,11 +444,10 @@ void setBC(CCVariable<double>& press_CC,
   //   lv->setLodiBcs = false              
   //__________________________________
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ) {
     Patch::FaceType face = *iter;
     
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
@@ -471,7 +464,7 @@ void setBC(CCVariable<double>& press_CC,
   //  N O N  -  L O D I
   //__________________________________
   // Iterate over the faces encompassing the domain
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
    
@@ -549,7 +542,6 @@ void setBC(CCVariable<double>& press_CC,
             Vector faceDir = patch->faceDirection(face).asVector();
             double grav = gravity[p_dir] * (double)faceDir[p_dir]; 
             IntVector oneCell = patch->faceDirection(face);
-            vector<IntVector>::const_iterator iter;
 
             for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) { 
               IntVector L = *bound_ptr - oneCell;
@@ -565,7 +557,6 @@ void setBC(CCVariable<double>& press_CC,
           //  Dirichlet
           if(gravity.length() != 0 && bc_kind =="Dirichlet"){  
           
-            vector<IntVector>::const_iterator iter;
             for (bound_ptr.reset();!bound_ptr.done(); bound_ptr++) {
               IntVector R = *bound_ptr;
               Point here_R = level->getCellPosition(R);
@@ -618,10 +609,9 @@ void setBC(CCVariable<double>& var_CC,
   //   lv->setLodiBcs = false
   //__________________________________
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
 
     bool is_tempBC_lodi=  patch->haveBC(face,mat_id,"LODI","Temperature");  
@@ -641,7 +631,7 @@ void setBC(CCVariable<double>& var_CC,
   //  N O N  -  L O D I
   //__________________________________
   // Iterate over the faces encompassing the domain
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
           
     bool IveSetBC = false;
@@ -741,10 +731,9 @@ void setBC(CCVariable<Vector>& var_CC,
   //   lv->setLodiBcs = false
   //__________________________________
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter  = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     bool is_velBC_lodi   =  patch->haveBC(face,mat_id,"LODI","Velocity");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
@@ -760,7 +749,7 @@ void setBC(CCVariable<Vector>& var_CC,
   //  N O N  -  L O D I
   //__________________________________
   // Iterate over the faces encompassing the domain
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
     
@@ -813,7 +802,6 @@ void setBC(CCVariable<Vector>& var_CC,
           int P_dir = patch->faceAxes(face)[0];  // principal direction
           IntVector sign = IntVector(1,1,1);
           sign[P_dir] = -1;
-          vector<IntVector>::const_iterator iter;
 
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector adjCell = *bound_ptr - oneCell;
@@ -854,11 +842,10 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
   double cellVol = dx.x() * dx.y() * dx.z();
                 
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
        
@@ -887,7 +874,6 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
 
         if(bc_kind == "computeFromDensity"){
         
-          vector<IntVector>::const_iterator iter;
           for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
             IntVector c = *bound_ptr;
             sp_vol_CC[c] = vol_frac[c]/rho_CC[c];
@@ -1061,8 +1047,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     
     //__________________________________
     //Now check if all the variables on this face were set
-    map<string,bool>::iterator iter;
-    for( iter  = isBC_set.begin();iter !=  isBC_set.end(); iter++){
+    for( map<string,bool>::iterator iter = isBC_set.begin();iter !=  isBC_set.end(); iter++ ){
       string var = (*iter).first;
       bool isSet = (*iter).second;
       bool isSymmetric = isBC_set["Symmetric"];
@@ -1080,8 +1065,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //Has the pressure BC been set on faces that are not periodic
-  map<string,bool>::iterator iter;
-  for( iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++){
+  for( map<string,bool>::iterator iter  = is_press_BC_set.begin();iter !=  is_press_BC_set.end(); iter++ ){
     string face = (*iter).first;
     bool isSet  = (*iter).second;
     

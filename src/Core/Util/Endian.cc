@@ -30,6 +30,8 @@
 
 namespace SCIRun {
 
+void swapbytes(long long& i) { LONG_LONG_SWAP(i); }
+
 void swapbytes(bool&) { }
 void swapbytes(int8_t&) { }
 void swapbytes(uint8_t&) { }

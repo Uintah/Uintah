@@ -171,7 +171,7 @@ Socket::write(const void *buf, size_t bytes) const
 int 
 Socket::read(std::string& s) const
 {
-  char c;
+  char c = 0;
   s = "";
   int total = 0;
   int read = 1;

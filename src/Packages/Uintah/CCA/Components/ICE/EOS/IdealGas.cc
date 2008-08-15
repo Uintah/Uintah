@@ -94,7 +94,6 @@ void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face,
   // on xminus yminus zminus you subtract the increment
   double dx_grav = gravity[P_dir] * cell_dx[P_dir];
   
-   vector<IntVector>::const_iterator iter;  
    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
      IntVector c = *bound_ptr;
      Temp_CC[c] += plusMinusOne * dx_grav/( (gamma[c] - 1.0) * cv[c] ); 

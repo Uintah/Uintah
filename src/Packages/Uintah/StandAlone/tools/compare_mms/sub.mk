@@ -26,7 +26,7 @@ else
         Packages/Uintah/CCA/Components/PatchCombiner
 endif
 
-LIBS := 
+LIBS := $(BLAS_LIBRARY)
 
 ########################################################
 # compare_mms

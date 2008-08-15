@@ -232,23 +232,18 @@ protected:
 
 template<class T>
 FieldHandle
-FieldExtractorAlgoT<T>::execute(QueryInfo& qinfo,
-                                IntVector& offset,
-                                LVMeshHandle mh,
-                                int remove_boundary)
+FieldExtractorAlgoT<T>::execute( QueryInfo    & qinfo,
+                                 IntVector    & offset,
+                                 LVMeshHandle   mh,
+                                 int            remove_boundary)
 {
-  FieldHandle f = 0;
-
+  new2OldPatchMap_.clear();
   if( qinfo.type->getType() == Uintah::TypeDescription::CCVariable ){
-    new2OldPatchMap_.clear();
     return getData(qinfo, offset, mh, remove_boundary, 0);
   } else {
-    new2OldPatchMap_.clear();
     return getData(qinfo, offset, mh, remove_boundary, 1);
   }
-  return f;
 }
-
 
 // This does the actuall work of getting the data from the
 // DataArchive for a single patch and filling the field.  This is

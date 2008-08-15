@@ -495,9 +495,12 @@ namespace Uintah {
 
 } // end namespace Uintah
 
-#if defined( __PGI ) && !defined( REDSTORM )
-#  include <Packages/Uintah/Core/Grid/Variables/ComputeSet_special.cc>
-#endif
+// The following #include doesn't seem to be necessary anymore... (It
+// isn't needed on Ranger with pgCC version 7.1-2.)
+//
+//#if defined( __PGI ) && !defined( REDSTORM )
+//#  include <Packages/Uintah/Core/Grid/Variables/ComputeSet_special.cc>
+//#endif
 
 
 #endif

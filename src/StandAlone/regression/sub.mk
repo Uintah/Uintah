@@ -31,28 +31,27 @@
 
 SRCDIR := StandAlone/regression
 
-LIBS := 
+LIBS := $(BLAS_LIBRARY)
 
 ifeq ($(HAVE_INSIGHT),yes)
   INCLUDES += $(INSIGHT_INCLUDE)
   LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) 
 endif
 
-
 ifeq ($(LARGESOS),yes)
-PSELIBS := Core
+  PSELIBS := Core
 else
-PSELIBS := \
+  PSELIBS := \
 	Core/Datatypes Core/Util Core/Containers Core/Persistent \
 	Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom \
 	Core/Init Core/Basis Core/Algorithms/Util \
 	Core/Algorithms/DataIO Core/Algorithms/Fields \
 	Core/Algorithms/Regression Core/Algorithms/Math
-
 endif
 
 PROGRAM := $(SRCDIR)/TEST_FieldsAlgo
 SRCS := $(SRCDIR)/TEST_FieldsAlgo.cc
+
 include $(SCIRUN_SCRIPTS)/program.mk
 
 

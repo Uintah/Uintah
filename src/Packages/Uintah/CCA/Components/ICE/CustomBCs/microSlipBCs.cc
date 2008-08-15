@@ -143,11 +143,10 @@ void meanFreePath(DataWarehouse* new_dw,
   double R = 1.0;    // gas constant Need to do something with it
   //__________________________________
   // Iterate over the faces encompassing the domain
-  vector<Patch::FaceType>::const_iterator iter;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
 
-  for (iter  = bf.begin(); iter != bf.end(); ++iter){
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
     Patch::FaceType face = *iter;
     
     if (is_MicroSlip_face(patch,face, sharedState) ) {
@@ -155,9 +154,8 @@ void meanFreePath(DataWarehouse* new_dw,
       IntVector offset = patch->faceDirection(face);
       Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
        
-      for(CellIterator iter=patch->getFaceIterator__New(face, PEC); 
-          !iter.done();iter++) {
-        IntVector c = *iter - offset;
+      for(CellIterator cIter=patch->getFaceIterator__New(face, PEC); !cIter.done(); cIter++) {
+        IntVector c = *cIter - offset;
         double A = sqrt(0.636620 * R * sv->Temp_CC[c]);
         sv->lamda[c] = sv->viscosity[c]/(sv->rho_CC[c] * A);
      
@@ -303,7 +301,6 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     if(bc_kind == "slip") {
       cout_dbg << " SLIP"<< endl;
       
-      vector<IntVector>::const_iterator iter;
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
         IntVector in = c - offset;

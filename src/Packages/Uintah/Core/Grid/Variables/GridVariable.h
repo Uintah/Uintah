@@ -80,8 +80,8 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    virtual void allocate(const IntVector& lowIndex,
-			  const IntVector& highIndex);
+    using GridVariableBase::allocate; // Quiets PGI compiler warning about hidden virtual function...
+    virtual void allocate(const IntVector& lowIndex, const IntVector& highIndex);
       
     //////////
     // Insert Documentation Here:

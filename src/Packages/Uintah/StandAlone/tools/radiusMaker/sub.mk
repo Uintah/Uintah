@@ -13,7 +13,7 @@ PROGRAM := $(SRCDIR)/radius_maker
   SRCS := \
 	$(SRCDIR)/radius_maker.cc
 
-  LIBS := $(TEEM_LIBRARY)
+  LIBS := $(TEEM_LIBRARY) $(BLAS_LIBRARY)
 
   include $(SCIRUN_SCRIPTS)/program.mk
 
