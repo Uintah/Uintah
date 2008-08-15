@@ -103,13 +103,14 @@ double JWLC::computeRhoMicro(double press, double,
        rhoM+=delta;
        rhoM=fabs(rhoM);
        if(count>=150){
-         cout << setprecision(15);
-         cout << "JWLC::computeRhoMicro not converging." << endl;
-         cout << "press= " << press << " temp=" << Temp << " cv=" << cv << endl;
-         cout << "delta= " << delta << " rhoM= " << rhoM << " f = " << f <<
-                 " df_drho =" << df_drho << " rho_guess =" << rho_guess << endl;
-
-         exit(1);
+         ostringstream warn;
+         warn << setprecision(15);
+         warn << "ERROR:ICE:JWLC::computeRhoMicro not converging. \n";
+         warn << "press= " << press << " temp=" << Temp << " cv=" << cv << "\n";
+         warn << "delta= " << delta << " rhoM= " << rhoM << " f = " << f 
+              <<" df_drho =" << df_drho << " rho_guess =" << rho_guess << "\n";
+         throw InternalError("warn.str()", __FILE__, __LINE__);
+         
        }
        count++;
       }
