@@ -104,6 +104,11 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////
     vector<Vector>* getFiberDirs();
 
+    /////////////////////////////////////////////////////////////  // gcd adds
+    /*! Returns the vector containing the set of particle velocity */
+    //////////////////////////////////////////////////////////////////////
+    vector<Vector>* getVelocity();                          // gcd add end
+
     //////////////////////////////////////////////////////////////////////
     /*! Deletes the vector containing the set of particle locations */
     //////////////////////////////////////////////////////////////////////
@@ -143,6 +148,7 @@ namespace Uintah {
     vector<double> d_color;
     vector<Vector> d_forces;
     vector<Vector> d_fiberdirs;
+    vector<Vector> d_velocity;    // gcd adds
     double d_dx;
   };
 } // End namespace Uintah

@@ -127,7 +127,8 @@ namespace Uintah {
     geomvols d_object_colors;
     typedef map<pair<const Patch*,GeometryObject*>,vector<Vector> > geomvecs;
     geomvecs d_object_forces;
-    geomvecs d_object_fibers;
+    geomvecs d_object_fibers;  
+    geomvecs d_object_velocity; // gcd add
   };
 
 
