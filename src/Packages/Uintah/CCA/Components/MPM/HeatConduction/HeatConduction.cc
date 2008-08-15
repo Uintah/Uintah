@@ -42,8 +42,8 @@ HeatConduction::~HeatConduction()
 }
 
 void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
-                                                const PatchSet* patches,
-                                                const MaterialSet* matls)
+                                                     const PatchSet* patches,
+                                                     const MaterialSet* matls)
 {  
   Task* t = scinew Task("MPM::computeInternalHeatRate",
                         this, &HeatConduction::computeInternalHeatRate);
@@ -80,6 +80,9 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
 { 
   if(d_flag->d_computeNodalHeatFlux == false)
     return;
+
+  // This task only exists to compute the diagnostic gHeatFluxLabel
+  // which is not used in any of the subsequent calculations
     
   Task* t = scinew Task("MPM::computeNodalHeatFlux",
                         this, &HeatConduction::computeNodalHeatFlux);
@@ -131,8 +134,8 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
 }
 
 void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
-                                                 const PatchSet* patches,
-                                                 const MaterialSet* matls)
+                                                      const PatchSet* patches,
+                                                      const MaterialSet* matls)
 {
   /* integrateTemperatureRate
    *   in(G.TEMPERATURE, G.TEMPERATURERATE)
@@ -149,13 +152,11 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
   t->requires(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
   t->modifies(             d_lb->gTemperatureRateLabel, mss);
-  t->computes(d_lb->gTemperatureStarLabel);
 
   if(d_flag->d_fracture) { // for FractureMPM
     t->requires(Task::NewDW, d_lb->GTemperatureLabel,     Ghost::None);
     t->requires(Task::NewDW, d_lb->GTemperatureNoBCLabel, Ghost::None);
     t->modifies(             d_lb->GTemperatureRateLabel, mss);
-    t->computes(d_lb->GTemperatureStarLabel);
   }
                      
   sched->addTask(t, patches, matls);
@@ -164,10 +165,10 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
 
 
 void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* ,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* ,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -433,6 +434,9 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    // This task only exists to compute the diagnostic gHeatFluxLabel
+    // which is not used in any of the subsequent calculations
+
     if (cout_doing.active())
       cout_doing <<"Doing computeNodalHeatFlux on patch " << patch->getID()<<"\t\t MPM"<< endl;
     if (cout_heat.active())
@@ -498,8 +502,6 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         
         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                             psize[idx]);
-
-        // Weight the particle plastic work temperature rate with the mass
         for (int k = 0; k < d_flag->d_8or27; k++){
           for (int j = 0; j<3; j++) {
             pdTdx[idx][j] += gTemperature[ni[k]] * d_S[k][j] * oodx[j];
@@ -537,10 +539,10 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
 
 
 void HeatConduction::solveHeatEquations(const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset* ,
-                                   DataWarehouse* /*old_dw*/,
-                                   DataWarehouse* new_dw)
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* /*old_dw*/,
+                                        DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -567,13 +569,13 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       new_dw->getModifiable(gdTdt, d_lb->gdTdtLabel, dwi, patch);
       new_dw->get(thermalContactTemperatureRate,
                   d_lb->gThermalContactTemperatureRateLabel,
-                  dwi, patch, Ghost::None, 0);
+                                                  dwi, patch, Ghost::None, 0);
 
       // for FractureMPM
       constNCVariable<double> Gmass,GexternalHeatRate,Gvolume;
       constNCVariable<double> GthermalContactTemperatureRate;
       NCVariable<double> GdTdt;
-      if(d_flag->d_fracture) {  
+      if(d_flag->d_fracture) {
         new_dw->get(Gmass,   d_lb->GMassLabel,      dwi, patch, Ghost::None, 0);
         new_dw->get(Gvolume, d_lb->GVolumeLabel,    dwi, patch, Ghost::None, 0);
         new_dw->get(GexternalHeatRate, d_lb->GExternalHeatRateLabel,
@@ -587,10 +589,6 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       // Create variables for the results
       NCVariable<double> tempRate, GtempRate;
       new_dw->getModifiable(tempRate, d_lb->gTemperatureRateLabel,dwi,patch);
-      if(d_flag->d_fracture) { // for FractureMPM
-        new_dw->allocateAndPut(GtempRate,d_lb->GTemperatureRateLabel,dwi,patch);
-        GtempRate.initialize(0.0);
-      }
 
       for(NodeIterator iter=patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
@@ -600,6 +598,8 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
       } // End of loop over iter
 
       if(d_flag->d_fracture) { // for FractureMPM
+        new_dw->allocateAndPut(GtempRate,d_lb->GTemperatureRateLabel,dwi,patch);
+        GtempRate.initialize(0.0);
         for(NodeIterator iter=patch->getExtraNodeIterator__New();
                        !iter.done();iter++){
         IntVector c = *iter;
@@ -614,10 +614,10 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
 
 
 void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset*,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+                                              const PatchSubset* patches,
+                                              const MaterialSubset*,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -635,14 +635,12 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
       constNCVariable<double> temp_old,temp_oldNoBC;
       NCVariable<double> temp_rate,tempStar;
       delt_vartype delT;
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
  
       new_dw->get(temp_old,    d_lb->gTemperatureLabel,     dwi,patch,gnone,0);
       new_dw->get(temp_oldNoBC,d_lb->gTemperatureNoBCLabel, dwi,patch,gnone,0);
       new_dw->getModifiable(temp_rate, d_lb->gTemperatureRateLabel,dwi,patch);
-
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-
-      new_dw->allocateAndPut(tempStar, d_lb->gTemperatureStarLabel, dwi,patch);
+      new_dw->allocateTemporary(tempStar,patch, gnone, 0);
       tempStar.initialize(0.0);
 
       // for FractureMPM
@@ -652,7 +650,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
        new_dw->get(Gtemp_old,    d_lb->GTemperatureLabel,    dwi,patch,gnone,0);
        new_dw->get(Gtemp_oldNoBC,d_lb->GTemperatureNoBCLabel,dwi,patch,gnone,0);
        new_dw->getModifiable(Gtemp_rate,d_lb->GTemperatureRateLabel,dwi,patch);
-       new_dw->allocateAndPut(GtempStar,d_lb->GTemperatureStarLabel,dwi,patch);
+       new_dw->allocateTemporary(GtempStar,patch, gnone, 0);
        GtempStar.initialize(0.0);
       }
       
