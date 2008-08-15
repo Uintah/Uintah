@@ -91,7 +91,7 @@ double JWL::computeRhoMicro(double press, double,
         warn << "press= " << press << " temp=" << Temp << "\n";
         warn << "delta= " << delta_new << " rhoM= " << rhoM << " f = " << f 
              <<" df_drho =" << df_drho << "\n";
-        throw InternalError("warn.str()", __FILE__, __LINE__);
+        throw InternalError(warn.str(), __FILE__, __LINE__);
       }
       
       if(rhoM<IL || rhoM>IR || fabs(delta_new)>fabs(delta_old*0.7)){

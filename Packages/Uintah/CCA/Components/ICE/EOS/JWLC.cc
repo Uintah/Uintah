@@ -109,7 +109,7 @@ double JWLC::computeRhoMicro(double press, double,
          warn << "press= " << press << " temp=" << Temp << " cv=" << cv << "\n";
          warn << "delta= " << delta << " rhoM= " << rhoM << " f = " << f 
               <<" df_drho =" << df_drho << " rho_guess =" << rho_guess << "\n";
-         throw InternalError("warn.str()", __FILE__, __LINE__);
+         throw InternalError(warn.str(), __FILE__, __LINE__);
          
        }
        count++;
