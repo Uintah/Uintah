@@ -152,11 +152,13 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
   t->requires(Task::NewDW, d_lb->gTemperatureLabel,     Ghost::None);
   t->requires(Task::NewDW, d_lb->gTemperatureNoBCLabel, Ghost::None);
   t->modifies(             d_lb->gTemperatureRateLabel, mss);
+  t->computes(d_lb->gTemperatureStarLabel);
 
   if(d_flag->d_fracture) { // for FractureMPM
     t->requires(Task::NewDW, d_lb->GTemperatureLabel,     Ghost::None);
     t->requires(Task::NewDW, d_lb->GTemperatureNoBCLabel, Ghost::None);
     t->modifies(             d_lb->GTemperatureRateLabel, mss);
+    t->computes(d_lb->GTemperatureStarLabel);
   }
                      
   sched->addTask(t, patches, matls);
@@ -639,8 +641,8 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
  
       new_dw->get(temp_old,    d_lb->gTemperatureLabel,     dwi,patch,gnone,0);
       new_dw->get(temp_oldNoBC,d_lb->gTemperatureNoBCLabel, dwi,patch,gnone,0);
-      new_dw->getModifiable(temp_rate, d_lb->gTemperatureRateLabel,dwi,patch);
-      new_dw->allocateTemporary(tempStar,patch, gnone, 0);
+      new_dw->getModifiable(temp_rate, d_lb->gTemperatureRateLabel, dwi,patch);
+      new_dw->allocateAndPut(tempStar, d_lb->gTemperatureStarLabel, dwi,patch);
       tempStar.initialize(0.0);
 
       // for FractureMPM
@@ -650,7 +652,7 @@ void HeatConduction::integrateTemperatureRate(const ProcessorGroup*,
        new_dw->get(Gtemp_old,    d_lb->GTemperatureLabel,    dwi,patch,gnone,0);
        new_dw->get(Gtemp_oldNoBC,d_lb->GTemperatureNoBCLabel,dwi,patch,gnone,0);
        new_dw->getModifiable(Gtemp_rate,d_lb->GTemperatureRateLabel,dwi,patch);
-       new_dw->allocateTemporary(GtempStar,patch, gnone, 0);
+       new_dw->allocateAndPut(GtempStar,d_lb->GTemperatureStarLabel,dwi,patch);
        GtempStar.initialize(0.0);
       }
       
