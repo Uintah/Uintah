@@ -937,7 +937,7 @@ case $ac_cv_sizeof_voidp in
   ;;
  *)
   SCI_MSG_ERROR([
-  This machine has some strange sizeof(void*): $ac_cv_sizeof_void_p.
+  This machine has some strange sizeof(void*): $ac_cv_sizeof_voidp.
   Usually this means that your LD_LIBRARY_PATH is set incorrectly for the 
   compiler you are using.  To verify that this is the problem you will need 
   to copy the C++  program from the end of the config.log file and run the 
@@ -947,6 +947,30 @@ case $ac_cv_sizeof_voidp in
   Exiting due to size of void* problem! Read above warnings!])
   ;;
 esac
+
+AC_CHECK_SIZEOF(long long)
+case $ac_cv_sizeof_long_long in
+ 8)
+  LONG_LONG_SWAP=SWAP_8
+  ;;
+ 4)
+  LONG_LONG_SWAP=SWAP_4
+  ;;
+ *)
+  SCI_MSG_ERROR([
+  This machine has some strange sizeof(long long): $ac_cv_sizeof_long_long.
+  Usually this means that your LD_LIBRARY_PATH is set incorrectly for the 
+  compiler you are using.  To verify that this is the problem you will need 
+  to copy the C++  program from the end of the config.log file and run the 
+  compile command which is just before it in config.log.  Run the executable 
+  and see what error message you get. You can also just fix your 
+  LD_LIBRARY_PATH if you know what is wrong with it.
+  Exiting due to size of long long problem! Read above warnings!])
+  ;;
+esac
+
+AC_SUBST(LONG_LONG_SWAP)
+sci_defs_files="$sci_defs_files Core/Util/testEndian.h"
 
 ## --------------
 
@@ -1616,6 +1640,10 @@ case $host in
     if test "$CC" = "icc"; then
       CFLAGS=" -w1"
       CXXFLAGS=" -w1"
+    elif test "$CC" = "pgcc"; then
+      # pgcc doesn't support -Wall (at least not on ranger.tacc.utexas.edu under pgcc v7.1-2)
+      CFLAGS=
+      CXXFLAGS=
     else
       CFLAGS=" -Wall"
       CXXFLAGS=" -Wall"
@@ -1727,7 +1755,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/bits_testdefs.h"
 AC_SUBST(WIN_DLLFLAGS)
 AC_SUBST(WIN_OTFFLAGS)
 
-AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
 rm -rf configure-test-dir
 mkdir configure-test-dir
@@ -1744,6 +1771,7 @@ CC_DEPEND_EXT=unknown
 # Try -MDupdate
 for flag in -MDupdate; do
   if test $CC_DEPEND_MODE = unknown; then
+    AC_MSG_CHECKING( if depend mode flag '$flag' works)
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
@@ -1751,6 +1779,8 @@ for flag in -MDupdate; do
       CC_DEPEND_MODE=normal
       CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
       CC_DEPEND_EXT=depend.mk
+    else
+      AC_MSG_RESULT( no )
     fi
   fi
 done
@@ -1764,16 +1794,17 @@ rm -f configure-test-dir/configure-test.u
 if test $CC_DEPEND_MODE = unknown; then
   for flag in -MD -M; do
     for ext in d u o.d; do
+      AC_MSG_CHECKING( if depend mode flag '$flag' works)
       rm -f configure-test.o configure-test-dir/configure-test.o
       ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc -o configure-test-dir/configure-test.o >/dev/null 2>conftest.out"
       (eval $ac_try) 2>&5
       if test -f configure-test-dir/configure-test.$ext ; then
 	CC_DEPEND_REGEN=$flag
 	CC_DEPEND_EXT=$ext
-        if grep "^configure-test-dir/configure-test.o:" configure-test-dir/configure-test.$ext > /dev/null; then
+        if grep "^configure-test-dir/configure-test.o" configure-test-dir/configure-test.$ext > /dev/null; then
           CC_DEPEND_MODE=normal
           break 2
-        elif grep "^configure-test.o:" configure-test-dir/configure-test.$ext > /dev/null; then
+        elif grep "^configure-test.o" configure-test-dir/configure-test.$ext > /dev/null; then
           CC_DEPEND_MODE=modify
           break 2
         fi
@@ -1781,13 +1812,14 @@ if test $CC_DEPEND_MODE = unknown; then
       if test -f configure-test.$ext; then
 	CC_DEPEND_REGEN=$flag
 	CC_DEPEND_EXT=$ext
-        if grep "^configure-test-dir/configure-test.o:" configure-test.$ext > /dev/null; then
+        if grep "^configure-test-dir/configure-test.o" configure-test.$ext > /dev/null; then
           CC_DEPEND_MODE=move
-        elif grep "^configure-test.o:" configure-test-dir/configure-test.$ext > /dev/null; then
-          CC_DEPEND_MODE=modify2
+        elif grep "^configure-test.o" configure-test.$ext > /dev/null; then
+          CC_DEPEND_MODE=modify_and_move
         fi
         break 2
       fi
+      AC_MSG_RESULT( no )
     done
   done
 fi
@@ -1795,15 +1827,18 @@ fi
 # Last resort, try one that spits out to stdout
 if test $CC_DEPEND_MODE = unknown; then
   for flag in -M; do
+    AC_MSG_CHECKING( if depend mode flag '$flag' works)
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc >configure-test-dir/configure-test.d 2>conftest.out"
     (eval $ac_try) 2>&5
     if test -s configure-test-dir/configure-test.d ; then
+      AC_MSG_RESULT( stdout )
       CC_DEPEND_MODE=stdout
       CC_DEPEND_REGEN=$flag
       CC_DEPEND_EXT=d
       break
     fi
+    AC_MSG_RESULT( no )
   done
 fi
 
@@ -1818,7 +1853,7 @@ if test $CC_DEPEND_MODE = unknown; then
   AC_MSG_ERROR(Cannot determine dependency generation flag. You might have specified bad '--enable-optimize=' flags on your configure line)
 fi
 
-AC_MSG_RESULT([$CC_DEPEND_REGEN (mode: $CC_DEPEND_MODE, ext: $CC_DEPEND_EXT)])
+AC_MSG_RESULT(yes.  Mode: $CC_DEPEND_MODE.  Ext: $CC_DEPEND_EXT)
 rm -f configure-test.*
 rm -rf configure-test-dir
 
@@ -3170,7 +3205,7 @@ case $host in
     # Linux Library Check
     case $F77 in
       *pgf77*)
-        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,,,$_sci_optional)
+        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,-lrt,,$_sci_optional)
         ;;
       *gfortran*)
         SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)

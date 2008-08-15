@@ -101,7 +101,7 @@ WARNING
     bool isSimilar(const Grid& othergrid) const;
 
     //Assigns the boundary conditions to the grid
-    void assignBCS(const ProblemSpecP &grid_ps,LoadBalancer *lb);
+    void assignBCS( const ProblemSpecP &grid_ps, Uintah::LoadBalancer *lb );
            
     UINTAHSHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 

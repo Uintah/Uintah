@@ -27,30 +27,41 @@ AUTHOR
 LOG
     Created January 5, 1999
 ****************************************/
-#include "ParticleFieldExtractor.h"
 
-#include <Core/Util/Timer.h>
+#if defined( __PGI )
+   // pgCC version 7.1-2 does not define atoll (in stdlib.h or
+   // anywhere)... However, this seems to fake the compiler into
+   // not complaining.
+#  define _ISOC99_SOURCE
+#endif
+
+#include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
+
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Thread/Mutex.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
+#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
+
+#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+
+#include <Core/Containers/StringUtil.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Util/Timer.h>
+
 #include <iostream> 
 #include <sstream>
 #include <string>
@@ -643,7 +654,7 @@ ParticleFieldExtractor::update_progress( const string * location /* = NULL */ )
   //if( location != NULL ) cout << *location << " - ";
   //cout << "progress: " << percent << "\n";
   current_progress_step++;
-  Module::update_progress( percent );
+  update_progress( percent );
   progress_lock.unlock();
 }
 

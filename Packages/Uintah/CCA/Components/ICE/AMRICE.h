@@ -58,6 +58,7 @@ namespace Uintah {
                                     int matl, 
                                     double factor);
                                   
+    using ICE::addRefineDependencies;
     void addRefineDependencies(Task* task, 
                                const VarLabel* var,
                                Task::DomainSpec DS,

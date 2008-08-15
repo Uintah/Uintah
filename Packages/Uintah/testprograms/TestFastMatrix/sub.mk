@@ -2,22 +2,24 @@
 
 SRCDIR := Packages/Uintah/testprograms/TestFastMatrix
 
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY) $(BLAS_LIBRARY)
+
+##############################################3
+# test fast matrix
+
 SRCS := $(SRCDIR)/testfastmatrix.cc
 
-PSELIBS := \
-	Packages/Uintah/Core/Math
+PSELIBS := Packages/Uintah/Core/Math
 PROGRAM := $(SRCDIR)/testfastmatrix
-
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+##############################################3
+# perf fast matrix
+
 SRCS := $(SRCDIR)/perffastmatrix.cc
 
-PSELIBS := \
-	Packages/Uintah/Core/Math Core/Thread
+PSELIBS := Packages/Uintah/Core/Math Core/Thread
 PROGRAM := $(SRCDIR)/perffastmatrix
-
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk

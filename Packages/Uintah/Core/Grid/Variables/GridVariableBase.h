@@ -47,9 +47,9 @@ WARNING
 
     virtual GridVariableBase* cloneType() const = 0;
 
+    using Variable::allocate; // Quiets PGI compiler warning about hidden virtual function...
     virtual void allocate(const IntVector& lowIndex, const IntVector& highIndex) = 0;
-    virtual void allocate(const GridVariableBase* src) 
-    { allocate(src->getLow(), src->getHigh()); }
+    virtual void allocate(const GridVariableBase* src) { allocate(src->getLow(), src->getHigh()); }
     
     virtual void getMPIBuffer(BufferInfo& buffer,
                               const IntVector& low, const IntVector& high);

@@ -3,8 +3,6 @@
 
 SRCDIR := Packages/Uintah/testprograms/BNRRegridder
 
-LIBS := $(MPI_LIBRARY) 
-
 PROGRAM := $(SRCDIR)/bnrtest
 SRCS := $(SRCDIR)/bnrtest.cc
 
@@ -21,7 +19,7 @@ PSELIBS := \
         Packages/Uintah/CCA/Ports                \
         Packages/Uintah/CCA/Components/Regridder
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

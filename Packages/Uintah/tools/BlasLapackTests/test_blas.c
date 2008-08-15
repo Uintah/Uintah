@@ -29,10 +29,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define DELICATEARCH
+#define RANGER
 
 #if defined( RANGER )
-#  include <mkl_cblas.h>
+#  include <mkl_blas.h>
 #elif defined( DELICATEARCH )
 #  include <acml.h>
 #else
@@ -58,7 +58,7 @@ main()
 {
   int i, j;
   
-  dgemv('N', 3, 3, 1.0, m, 3, x, 1, 0.0, y, 1);
+  DGEMV('N', 3, 3, 1.0, m, 3, x, 1, 0.0, y, 1);
   
   for (i=0; i<3; ++i) {
     printf( "%5.1f\n", y[i] );

@@ -607,7 +607,9 @@ template<class T>
   default:
     throw InternalError("ERROR:AMR: You're trying to use an interpolator"
                         " that doesn't exist.  <orderOfInterpolation> must be 0,1,2",__FILE__,__LINE__);
+#if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
   break;
+#endif
   }
 }
 

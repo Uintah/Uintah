@@ -44,19 +44,16 @@
 #include   <cstring>
 #include <sgi_stl_warnings_on.h>
 
+#include <time.h>
+
 #ifdef _WIN32
 #  define MAXHOSTNAMELEN 256
 #  include <winsock2.h>
 #  include <process.h>
-#  include <time.h>
 #else
 #  include <sys/param.h>
 #  include <strings.h>
 #  include <unistd.h>
-#endif
-
-#if defined(REDSTORM)
-#  include <time.h>
 #endif
 
 //TODO - BJW - if multilevel reduction doesn't work, fix all

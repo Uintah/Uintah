@@ -189,6 +189,7 @@ private:
                     vector<string> type_list, string particleID);
   void graph(string, string);
 
+  using Module::update_progress; // Un-hide parent function update_progress( double percent );
   void update_progress( const string * location = NULL );
   void update_progress_max( int size );
  

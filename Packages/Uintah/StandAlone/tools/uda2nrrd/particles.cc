@@ -370,6 +370,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
     for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
 
+      // Size_t is unsigned so this is invalid:
       size_t wrote = -1;
 
       if( particleVars[cnt].data != NULL ) {

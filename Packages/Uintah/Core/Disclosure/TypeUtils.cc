@@ -108,6 +108,16 @@ const TypeDescription* fun_getTypeDescription(long64*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(long long*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::long64_type,
+				  "long64", true, MPI_LONG_LONG_INT);
+   }
+   return td;
+}
+
 const TypeDescription* fun_getTypeDescription(bool*)
 {
    static TypeDescription* td;
@@ -166,21 +176,6 @@ const TypeDescription* fun_getTypeDescription(Vector*)
    return td;
 }
 
-void fun_getLargeValue(double* val)
-{
-  *val = DBL_MAX;
-}
-
-void fun_getSmallValue(double* val)
-{
-  *val = -DBL_MAX;
-}
-
-void fun_getZeroValue(double* val)
-{
-  *val = 0;
-}
-
 void fun_getLargeValue(bool* val)
 {
   // this should never get called.  It doesn't make sense for a bool
@@ -194,41 +189,18 @@ void fun_getSmallValue(bool* val)
   // to get used in a min or max op
   *val = false;
 }
+void fun_getZeroValue(  double  * val ) { *val = 0; }
+void fun_getZeroValue(  long long * val ) { *val = 0; }
+void fun_getZeroValue(  bool    * val ) { *val = false; }
+void fun_getZeroValue(  long64  * val ) { *val = 0; }
+void fun_getZeroValue(  Vector  * val ) { *val = Vector(0,0,0); }
 
-void fun_getZeroValue(bool* val)
-{
-  *val = false;
-}
+void fun_getLargeValue( long64  * val ) { *val = LONG_MAX; }
+void fun_getLargeValue( Vector  * val ) { *val = Vector(DBL_MAX,DBL_MAX,DBL_MAX); }
+void fun_getLargeValue( double  * val ) { *val = DBL_MAX; }
 
-void fun_getLargeValue(long64* val)
-{
-  *val = LONG_MAX;
-}
-
-void fun_getSmallValue(long64* val)
-{
-  *val = LONG_MIN;
-}
-
-void fun_getZeroValue(long64* val)
-{
-  *val = 0;
-}
-
-void fun_getLargeValue(Vector* val)
-{
-  *val = Vector(DBL_MAX,DBL_MAX,DBL_MAX);
-}
-
-void fun_getSmallValue(Vector* val)
-{
-  *val = Vector(-DBL_MAX,-DBL_MAX,-DBL_MAX);
-}
-
-void fun_getZeroValue(Vector* val)
-{
-  *val = Vector(0,0,0);
-}
-
+void fun_getSmallValue( long64  * val ) { *val = LONG_MIN; }
+void fun_getSmallValue( Vector  * val ) { *val = Vector(-DBL_MAX,-DBL_MAX,-DBL_MAX); }
+void fun_getSmallValue( double  * val ) { *val = -DBL_MAX; }
 
 } // End namespace Uintah

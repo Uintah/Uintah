@@ -894,10 +894,11 @@ DataArchive::setTimestepCacheSize(int new_size) {
   // Now we need to reduce the size
   int current_size = (int)d_lastNtimesteps.size();
   dbg << "current_size = "<<current_size<<"\n";
-  if (timestep_cache_size >= current_size)
+  if (timestep_cache_size >= current_size) {
     // everything's fine
     d_lock.unlock();
     return;
+  }
 
   int kill_count = current_size - timestep_cache_size;
   dbg << "kill_count = "<<kill_count<<"\n";

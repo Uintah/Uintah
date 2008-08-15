@@ -101,8 +101,6 @@ namespace Uintah {
   
   bool IveSetBC = false;
  
-  vector<IntVector>::const_iterator iter;
-  
   //__________________________________
   // on (x,y,z)minus faces move in one cell
   IntVector one_or_zero(0,0,0);

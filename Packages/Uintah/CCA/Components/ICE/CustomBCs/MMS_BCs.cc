@@ -211,7 +211,6 @@ void set_MMS_Temperature_BC(const Patch* /*patch*/,
       constCCVariable<double> press_CC = mms_v->press_CC;
       constCCVariable<double> rho_CC   = mms_v->rho_CC;
         
-      vector<IntVector>::const_iterator iter;
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
         IntVector c = *bound_ptr;
         temp_CC[c]= press_CC[c]/((gamma - 1.0) * cv * rho_CC[c]);
@@ -248,7 +247,6 @@ void set_MMS_press_BC(const Patch* patch,
     double p_ref = 101325;
     t += mms_v->delT;
 
-    vector<IntVector>::const_iterator iter;
     for (bound_ptr.reset(); !bound_ptr.done();bound_ptr++) {
       IntVector c = *bound_ptr;
       Point pt = patch->cellPosition(c);

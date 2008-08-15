@@ -1,15 +1,15 @@
 SRCDIR := Packages/Uintah/testprograms
 
 SUBDIRS := \
-        $(SRCDIR)/TestSuite \
-        $(SRCDIR)/TestFastMatrix \
-        $(SRCDIR)/TestMatrix3 \
+        $(SRCDIR)/TestSuite               \
+        $(SRCDIR)/TestFastMatrix          \
+        $(SRCDIR)/TestMatrix3             \
         $(SRCDIR)/TestConsecutiveRangeSet \
-        $(SRCDIR)/TestRangeTree \
-        $(SRCDIR)/TestBoxGrouper \
-        $(SRCDIR)/BNRRegridder \
-				$(SRCDIR)/IteratorTest \
-				$(SRCDIR)/PatchBVH
+        $(SRCDIR)/TestRangeTree           \
+        $(SRCDIR)/TestBoxGrouper          \
+        $(SRCDIR)/BNRRegridder            \
+	$(SRCDIR)/IteratorTest            \
+	$(SRCDIR)/PatchBVH
 
 #       $(SRCDIR)/SFCTest \
 
@@ -27,6 +27,6 @@ PSELIBS := \
         Packages/Uintah/testprograms/TestRangeTree           \
         Packages/Uintah/testprograms/TestBoxGrouper
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk

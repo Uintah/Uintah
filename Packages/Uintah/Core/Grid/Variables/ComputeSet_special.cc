@@ -15,15 +15,16 @@
 namespace Uintah {
   
 template<>
-void ComputeSubset<const Patch*>::sort() {
+void ComputeSubset<const Patch*>::sort()
+{
   std::sort(items.begin(), items.end(), Patch::Compare());
 }
 
 template<>  
-bool ComputeSubset<const Patch*>::compareElems(const Patch* e1,
-					       const Patch* e2)
-{ return Patch::Compare()(e1, e2); }
-  
+bool ComputeSubset<const Patch*>::compareElems( const Patch* e1,
+                                                const Patch* e2 )
+{
+  return Patch::Compare()(e1, e2); }
 }
 
 #endif // #ifdef Uintah_Core_Grid_ComputeSet_special_cc

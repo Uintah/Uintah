@@ -33,29 +33,29 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Util
 
-SRCS     += \
-	$(SRCDIR)/DebugStream.cc        \
-	$(SRCDIR)/Endian.cc             \
-	$(SRCDIR)/Environment.cc        \
-	$(SRCDIR)/FileUtils.cc          \
-	$(SRCDIR)/LogFile.cc            \
-	$(SRCDIR)/ProgressReporter.cc   \
-	$(SRCDIR)/RegressionReporter.cc \
-	$(SRCDIR)/SimpleProfiler.cc     \
-	$(SRCDIR)/SizeTypeConvert.cc    \
-	$(SRCDIR)/RWS.cc                \
-	$(SRCDIR)/sci_system.cc         \
-	$(SRCDIR)/Signals.cc            \
-	$(SRCDIR)/Timer.cc              \
-	$(SRCDIR)/TypeDescription.cc    \
-	$(SRCDIR)/ProgressiveWarning.cc
+SRCS += \
+        $(SRCDIR)/DebugStream.cc        \
+        $(SRCDIR)/Endian.cc             \
+        $(SRCDIR)/Environment.cc        \
+        $(SRCDIR)/FileUtils.cc          \
+        $(SRCDIR)/LogFile.cc            \
+        $(SRCDIR)/ProgressReporter.cc   \
+        $(SRCDIR)/RegressionReporter.cc \
+        $(SRCDIR)/SimpleProfiler.cc     \
+        $(SRCDIR)/SizeTypeConvert.cc    \
+        $(SRCDIR)/RWS.cc                \
+        $(SRCDIR)/sci_system.cc         \
+        $(SRCDIR)/Signals.cc            \
+        $(SRCDIR)/Timer.cc              \
+        $(SRCDIR)/TypeDescription.cc    \
+        $(SRCDIR)/ProgressiveWarning.cc
 
 ifneq ($(IS_REDSTORM),yes)
   SRCS += \
-	$(SRCDIR)/DynamicLoader.cc      \
-	$(SRCDIR)/DynamicCompilation.cc \
-	$(SRCDIR)/soloader.cc           \
-	$(SRCDIR)/Socket.cc             
+        $(SRCDIR)/DynamicLoader.cc      \
+        $(SRCDIR)/DynamicCompilation.cc \
+        $(SRCDIR)/soloader.cc           \
+        $(SRCDIR)/Socket.cc             
 endif
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread
@@ -67,4 +67,3 @@ endif
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-

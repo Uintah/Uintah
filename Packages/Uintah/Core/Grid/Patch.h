@@ -30,6 +30,10 @@
 
 //#define DELETE_OLD_INTERFACE
 
+#if defined( __PGI )
+#  define WARNS_ABOUT_UNREACHABLE_STATEMENTS 1
+#endif
+
 namespace Uintah {
 
   using std::string;
@@ -1034,7 +1038,9 @@ WARNING
             return IntVector(0,0,1);
           default:
             throw SCIRun::InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+#if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
             return IntVector(0,0,0);
+#endif
         }
       }
 
@@ -1059,7 +1065,9 @@ WARNING
             return static_cast<BCType>(d_patchState.zplus);
           default:
             throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+#if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
             return None;
+#endif
         }
       }
 
@@ -1178,7 +1186,9 @@ WARNING
             return IntVector(2,0,1);
           default:
             throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+#if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
             return IntVector(0,0,0);
+#endif
         };
       }
 

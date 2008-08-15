@@ -7,6 +7,15 @@
  *
  */
 
+#ifdef _WIN32
+#  define strtoll _strtoi64
+#elif defined( __PGI )
+   // pgCC version 7.1-2 does not define strtoll (in stdlib.h or
+   // anywhere)... However, this seems to fake the compiler into
+   // not complaining.
+#  define _ISOC99_SOURCE
+#endif
+
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
@@ -30,9 +39,7 @@
 #include <cmath>
 #include <algorithm>
 
-#ifdef _WIN32
-#define strtoll _strtoi64
-#endif
+#include <stdlib.h> // for strtoll
 
 using namespace SCIRun;
 using namespace std;

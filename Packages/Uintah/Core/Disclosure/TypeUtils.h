@@ -65,7 +65,7 @@ UINTAHSHARE void fun_getLargeValue(double*);
 UINTAHSHARE void fun_getSmallValue(double*);
 UINTAHSHARE void fun_getZeroValue(double*);
 UINTAHSHARE void fun_getZeroValue(bool*);
-UINTAHSHARE void fun_getZeroValue(long64*);
+UINTAHSHARE void fun_getZeroValue(int64_t*);
 UINTAHSHARE void fun_getZeroValue(Vector*);
 
 // these functions should never get called - they just exist for

@@ -45,8 +45,6 @@
 #endif
 
 #define LINUX_GETENV_HACK 0
-//#define ALIGN 16
-const int ALIGN=16;
 /* TODO:
 6) Destroy allocators
 */
@@ -56,6 +54,9 @@ const int ALIGN=16;
 #include <Core/Malloc/Allocator.h>
 
 #if !defined( DISABLE_SCI_MALLOC )
+
+//#define ALIGN 16
+const int ALIGN=16;
 
 #  include <Core/Malloc/AllocPriv.h>
 #  include <Core/Malloc/AllocOS.h>

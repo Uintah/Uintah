@@ -48,27 +48,27 @@
 #if HAVE_INTTYPES_H
 #  include <inttypes.h>
 #endif
+
 #ifdef _WIN32
-typedef signed char int8_t;
-typedef unsigned char uint8_t;
-typedef signed short int16_t;
-typedef unsigned short uint16_t;
-typedef signed int int32_t;
-typedef unsigned int uint32_t;
-typedef signed long long int64_t;
-typedef unsigned long long uint64_t;
+  typedef signed char int8_t;
+  typedef unsigned char uint8_t;
+  typedef signed short int16_t;
+  typedef unsigned short uint16_t;
+  typedef signed int int32_t;
+  typedef unsigned int uint32_t;
+  typedef signed long long int64_t;
+  typedef unsigned long long uint64_t;
 #endif
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <sgi_stl_warnings_on.h>
-
 #include <Core/Util/share.h>
 
+#include <sgi_stl_warnings_off.h>
+#include   <string>
+#include <sgi_stl_warnings_on.h>
+
 namespace SCIRun{
-using std::string;
 
 #define SWAP_2(u2)/* IronDoc macro to swap two byte quantity */ \
   { unsigned char* _p = (unsigned char*)(&(u2)); \
@@ -83,6 +83,9 @@ using std::string;
                    _c = *++_p; *_p = _p[5]; _p[5] = _c; \
                    _c = *++_p; *_p = _p[3]; _p[3] = _c; \
                    _c = *++_p; *_p = _p[1]; _p[1] = _c; }
+
+// @LONG_LONG_SWAP@ is determined by configure...
+#define LONG_LONG_SWAP @LONG_LONG_SWAP@
 
 SCISHARE void swapbytes(bool& i);
 SCISHARE void swapbytes(int8_t& i);
@@ -104,7 +107,7 @@ SCISHARE bool isBigEndian();
 
 SCISHARE bool isLittleEndian();
  
-SCISHARE string endianness();
+SCISHARE std::string endianness();
 
 
 

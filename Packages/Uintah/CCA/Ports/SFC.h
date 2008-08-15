@@ -1510,7 +1510,7 @@ void SFC<LOCS>::Parallel3()
       
       recv_histories.resize(newn);
       
-      /*
+#if 0
       cout << rank << ": sendcounts: ";
       for(int p=0;p<parent_group.size;p++)
       {
@@ -1523,7 +1523,7 @@ void SFC<LOCS>::Parallel3()
         cout << recvcounts[p] << " ";
       }
       cout << endl;
-      //*/
+#endif
       //calculate displacements
       for(int p=1;p<parent_group.size;p++)
       {
@@ -2256,7 +2256,7 @@ void SFC<LOCS>::Parallel2()
       
       recv_histories.resize(newn);
       
-      /*
+#if 0
       cout << rank << ": sendcounts: ";
       for(int p=0;p<parent_group.size;p++)
       {
@@ -2269,7 +2269,7 @@ void SFC<LOCS>::Parallel2()
         cout << recvcounts[p] << " ";
       }
       cout << endl;
-      //*/
+#endif
       //calculate displacements
       for(int p=1;p<parent_group.size;p++)
       {
