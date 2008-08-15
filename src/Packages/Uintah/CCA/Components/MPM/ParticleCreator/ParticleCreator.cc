@@ -45,7 +45,6 @@ ParticleCreator::~ParticleCreator()
   delete d_lb;
 }
 
-
 ParticleSubset* 
 ParticleCreator::createParticles(MPMMaterial* matl,
                                  particleIndex numParticles,
@@ -82,16 +81,19 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<double>* colors        = 0;
     vector<Vector>* pforces       = 0;
     vector<Vector>* pfiberdirs    = 0;
+    vector<Vector>* pvelocities   = 0;    // gcd adds and new change name
     if (sgp){
       volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
       pforces      = sgp->getForces();
       pfiberdirs   = sgp->getFiberDirs();
+      pvelocities  = sgp->getVelocity();  // gcd adds and new change name
+
       if(d_with_color){
         colors      = sgp->getColors();
       }
     }
-    
+
     // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
     geomvols::key_type volkey(patch,*obj);
@@ -119,6 +121,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     if (pfiberdirs) {
       if (!pfiberdirs->empty()) fiberiter = d_object_fibers[pfiberkey].begin();
     }
+    
+    // For getting particle velocities (if they exist)   // gcd adds
+    vector<Vector>::const_iterator velocityiter;
+    geomvecs::key_type pvelocitykey(patch,*obj);
+    if (pvelocities) {                             // new change name
+      if (!pvelocities->empty()) velocityiter =
+              d_object_velocity[pvelocitykey].begin();  // new change name
+    }                                                    // end gcd adds
     
     // For getting particles colors (if they exist)
     vector<double>::const_iterator coloriter;
@@ -155,12 +165,19 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      if (pforces) {
+      if (pforces) {                           
         if (!pforces->empty()) {
           pexternalforce[pidx] = *forceiter;
           ++forceiter;
         }
       }
+
+      if (pvelocities) {                           // gcd adds and change name 
+        if (!pvelocities->empty()) {               // and change name
+          pvelocity[pidx] = *velocityiter;
+          ++velocityiter;
+        }
+      }                                         // end gcd adds
 
       if (pfiberdirs) {
         if (!pfiberdirs->empty()) {
@@ -584,6 +601,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   geomvols::key_type   volkey(patch,obj);
   geomvecs::key_type   forcekey(patch,obj);
   geomvecs::key_type   fiberkey(patch,obj);
+  geomvecs::key_type   pvelocitykey(patch,obj);
   GeometryPieceP piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getExtraBox();
@@ -612,6 +630,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<double>* colors     = sgp->getColors();
     vector<Vector>* pforces    = sgp->getForces();
     vector<Vector>* pfiberdirs = sgp->getFiberDirs();
+    vector<Vector>* pvelocities= sgp->getVelocity();
     Point p;
     IntVector cell_idx;
     
@@ -636,6 +655,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!pfiberdirs->empty()) {
             Vector pfiber = pfiberdirs->at(ii); 
             d_object_fibers[fiberkey].push_back(pfiber);
+          }
+          if (!pvelocities->empty()) {
+            Vector pvel = pvelocities->at(ii); 
+            d_object_velocity[pvelocitykey].push_back(pvel);
           }
           if (!colors->empty()) {
             double color = colors->at(ii); 

@@ -51,6 +51,8 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
       cerr << " externalforce";
     } else if(*vit=="p.fiberdir") {
       cerr << " fiberdirn";
+    } else if(*vit=="p.velocity") { // gcd add 
+      cerr << " velocity";         // end gcd add
     }
   }
   cerr << endl;
@@ -194,11 +196,17 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       } else if(*vit=="p.fiberdir") {
         if(is >> v1 >> v2 >> v3){
           d_fiberdirs.push_back(Vector(v1,v2,v3));
+	}  
+      } else if(*vit=="p.velocity") {        // add by gcd
+        if(is >> v1 >> v2 >> v3){
+          d_velocity.push_back(Vector(v1,v2,v3));
         }
       }
-      if(!is)
+                                             // end add by gcd
+      if(!is) {
         throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
-    }
+      }
+  }
     
   } else if(d_file_format=="lsb" || d_file_format=="msb") {
     // read unformatted binary numbers
@@ -258,12 +266,21 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[2]);
           }
           d_fiberdirs.push_back(Vector(v[0],v[1],v[2]));
-        }
-      }
+	}
+      } else if(*vit=="p.velocity") {       // gcd adds
+	if(is.read((char*)&v[0], sizeof(double)*3)) {
+	  if(needflip) {
+	    swapbytes(v[0]);
+	    swapbytes(v[1]);
+	    swapbytes(v[2]);
+          }
+          d_velocity.push_back(Vector(v[0],v[1],v[2]));
+	}  
+    }                                          // end gcd adds
       if(!is){
         throw ProblemSetupException("Failed while reading point text point file", __FILE__, __LINE__);
       }
-    }
+  }
   } else if(d_file_format=="gzip") {
     throw ProblemSetupException("Sorry - gzip not implemented !", __FILE__, __LINE__);
   }
@@ -313,7 +330,7 @@ FileGeometryPiece::readPoints(int pid)
     if(source)
       readpts++;
   }
-  
+
   if(!d_presplit) { // pre-split reads the bounding box from the input file
     Vector fudge(1.e-5,1.e-5,1.e-5);
     d_box = Box(minpt-fudge,maxpt+fudge);
