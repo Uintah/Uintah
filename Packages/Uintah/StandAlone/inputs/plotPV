@@ -4,16 +4,17 @@
 #__________________________________
 
 if($#argv < 2) then
-  echo "plotPV <puda KE dat file> <sus KE dat file> <PV dat file> <generate output file (y/Y), default is no>"
+  echo "plotPV <puda KE dat file> <sus KE dat file> <PV dat file> <totalBurnedMass.dat> <generate output file (y/Y), default is no>"
   exit(1)
 endif
 
-set pudaKE = $argv[1]
-set susKE  = $argv[2]
-set PV_dat = $argv[3]
+set pudaKE     = $argv[1]
+set susKE      = $argv[2]
+set PV_dat     = $argv[3]
+set burnedMass = $argv[4]
 set hardcopy = "n"
-if ($#argv == 4) then
-  set hardcopy = $argv[4]
+if ($#argv == 5) then
+  set hardcopy = $argv[5]
 endif
 
 #__________________________________
@@ -22,12 +23,18 @@ if ( (! -e $pudaKE)  ) then
   echo "plotPV:  The input files doesn't exist ($pudaKE)"
 endif
 
-
 if ( ( ! -e $PV_dat) ) then
   echo "plotPV:  The pressureVolume data file doesn not exisit ($PV_dat)"
   echo " now exiting"
   exit
 endif
+
+if ( ( ! -e $burnedMass) ) then
+  echo "plotPV:  The burnedMass data file does not exist ($burnedMass)"
+  echo " now exiting"
+  exit
+endif
+
 echo "" > gp
 
 #__________________________________
@@ -46,13 +53,8 @@ endif
 #__________________________________
 # plot script
 # Note:  if susKE doesn't exist then it will be ignored
-if( -e $susKE) then
-  awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $susKE >> gp
-endif
 
-if( -e $pudaKE  && ! -e $susKE) then
-  awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $pudaKE >> gp
-endif
+awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $burnedMass >> gp
 
 cat >> gp << fin
 set timestamp "%m/%d/%y %H:%M" 
