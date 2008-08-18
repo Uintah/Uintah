@@ -30,7 +30,7 @@
 #define BRYAN_SELECT_CACHE
 
 #ifdef SELECT_RANGETREE
-#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
+#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVH.h>
 #endif
 
 #ifdef _WIN32
@@ -630,7 +630,7 @@ void Level::setBCTypes()
 #ifdef SELECT_RANGETREE
   if (d_rangeTree != NULL)
     delete d_rangeTree;
-  d_rangeTree = scinew PatchRangeTree(d_virtualAndRealPatches);
+  d_rangeTree = scinew PatchBVH(d_virtualAndRealPatches);
 #endif   
 #endif
   patchIterator iter;
