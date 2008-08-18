@@ -12,7 +12,7 @@ PSELIBS := \
         Packages/Uintah/Core/Grid                \
         Packages/Uintah/Core/Util                
 
-LIBS := $(BLAS_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -19,7 +19,7 @@ PSELIBS := \
         Packages/Uintah/CCA/Ports                \
         Packages/Uintah/CCA/Components/Regridder
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

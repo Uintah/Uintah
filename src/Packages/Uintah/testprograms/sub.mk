@@ -27,6 +27,6 @@ PSELIBS := \
         Packages/Uintah/testprograms/TestRangeTree           \
         Packages/Uintah/testprograms/TestBoxGrouper
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk

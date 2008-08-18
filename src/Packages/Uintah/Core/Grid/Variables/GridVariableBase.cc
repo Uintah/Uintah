@@ -11,9 +11,9 @@ using namespace SCIRun;
 
 #undef UINTAHSHARE
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#define UINTAHSHARE __declspec(dllimport)
+#  define UINTAHSHARE __declspec(dllimport)
 #else
-#define UINTAHSHARE
+#  define UINTAHSHARE
 #endif
 
 extern UINTAHSHARE Mutex MPITypeLock;

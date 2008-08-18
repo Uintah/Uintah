@@ -31,7 +31,7 @@
 
 SRCDIR := StandAlone/regression
 
-LIBS := $(BLAS_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
 ifeq ($(HAVE_INSIGHT),yes)
   INCLUDES += $(INSIGHT_INCLUDE)
