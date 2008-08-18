@@ -1,7 +1,7 @@
 #include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
+#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVH.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -749,7 +749,7 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
   if (coarse_patches.size() == 0)
     return;
   //create a range tree out of my patches
-  PatchRangeTree prt(coarse_patches);
+  PatchBVH prt(coarse_patches);
   
   //for each patch
   for(unsigned p=0;p<patches.size();p++)
