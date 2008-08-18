@@ -7,6 +7,8 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <sci_defs/bits_defs.h> // for SCI_32BITS
+
 #include <cfloat>
 #include <climits>
 
@@ -108,6 +110,8 @@ const TypeDescription* fun_getTypeDescription(long64*)
    return td;
 }
 
+
+#if !defined( SCI_32BITS )
 const TypeDescription* fun_getTypeDescription(long long*)
 {
    static TypeDescription* td;
@@ -117,6 +121,7 @@ const TypeDescription* fun_getTypeDescription(long long*)
    }
    return td;
 }
+#endif
 
 const TypeDescription* fun_getTypeDescription(bool*)
 {
@@ -190,7 +195,9 @@ void fun_getSmallValue(bool* val)
   *val = false;
 }
 void fun_getZeroValue(  double  * val ) { *val = 0; }
+#if !defined( SCI_32BITS )
 void fun_getZeroValue(  long long * val ) { *val = 0; }
+#endif
 void fun_getZeroValue(  bool    * val ) { *val = false; }
 void fun_getZeroValue(  long64  * val ) { *val = 0; }
 void fun_getZeroValue(  Vector  * val ) { *val = Vector(0,0,0); }

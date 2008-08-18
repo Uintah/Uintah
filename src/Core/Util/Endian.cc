@@ -28,9 +28,13 @@
 
 #include <Core/Util/Endian.h>
 
+#include <sci_defs/bits_defs.h> // for SCI_32BITS
+
 namespace SCIRun {
 
+#if !defined( SCI_32BITS )
 void swapbytes(long long& i) { LONG_LONG_SWAP(i); }
+#endif
 
 void swapbytes(bool&) { }
 void swapbytes(int8_t&) { }
