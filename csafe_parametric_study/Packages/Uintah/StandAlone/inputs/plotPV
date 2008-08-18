@@ -1,0 +1,110 @@
+#!/bin/csh
+#__________________________________
+# Plot pressure * volumeFraction
+#__________________________________
+
+if($#argv < 2) then
+  echo "plotPV <puda KE dat file> <sus KE dat file> <PV dat file> <generate output file (y/Y), default is no>"
+  exit(1)
+endif
+
+set pudaKE = $argv[1]
+set susKE  = $argv[2]
+set PV_dat = $argv[3]
+set hardcopy = "n"
+if ($#argv == 4) then
+  set hardcopy = $argv[4]
+endif
+
+#__________________________________
+# bulletproofing
+if ( (! -e $pudaKE)  ) then
+  echo "plotPV:  The input files doesn't exist ($pudaKE)"
+endif
+
+
+if ( ( ! -e $PV_dat) ) then
+  echo "plotPV:  The pressureVolume data file doesn not exisit ($PV_dat)"
+  echo " now exiting"
+  exit
+endif
+echo "" > gp
+
+#__________________________________
+# if hardcopy
+if ($hardcopy == "y" || $hardcopy == "Y") then
+
+echo "Generating the plotPV.jpg"
+/bin/rm -f gp plotPV.jpg
+
+cat > gp << fin
+set terminal postscript color solid "Times-Roman" 12
+set output "plotPV.ps
+fin
+endif
+  
+#__________________________________
+# plot script
+# Note:  if susKE doesn't exist then it will be ignored
+if( -e $susKE) then
+  awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $susKE >> gp
+endif
+
+if( -e $pudaKE  && ! -e $susKE) then
+  awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $pudaKE >> gp
+endif
+
+cat >> gp << fin
+set timestamp "%m/%d/%y %H:%M" 
+set key left top Left 
+set grid
+#set title 'Kinetic Energy of the Steel Container vs Time'
+set xlabel 'Time (s)'   font "Times-Roman,18"
+set ylabel 'Energy (J)' font "Times-Roman,18"
+
+fin
+
+if (-e $susKE && -e $pudaKE) then
+cat >> gp << fin
+plot '$pudaKE' using (\$1-t0):(\$4)     t 'Total KE (puda)' w linespoints,\
+     '$susKE'  using (\$1-t0):(\$2)     t 'Total KE (sus)' w lines,\
+     '$PV_dat' using (\$1-t0):(\$8)     t 'Product PV' w linespoints,\
+     '$PV_dat' using (\$1-t0):(\$9)     t 'Product Thermal Energy' w linespoints,\
+     '$PV_dat' using (\$1-t0):(\$10)    t 'Product Thermal Energy + PV' w linespoints
+fin
+endif
+
+if(-e $pudaKE && ! -e $susKE) then
+cat >>gp << fin
+plot '$pudaKE' using (\$1-t0):(\$4)     t 'Total KE (puda)' w linespoints,\
+     '$PV_dat' using (\$1-t0):8         t 'Product PV' w linespoints,\
+     '$PV_dat' using (\$1-t0):9         t 'Product Thermal Energy' w linespoints,\
+     '$PV_dat' using (\$1-t0):10        t 'Product Thermal Energy + PV' w linespoints
+fin
+endif
+
+if(-e $susKE && ! -e $pudaKE)then
+cat >> gp << fin
+plot '$susKE'  using (\$1-t0):(\$2)     t 'Total KE (sus)' w lines,\
+     '$PV_dat' using (\$1-t0):8         t 'Product PV' w linespoints,\
+     '$PV_dat' using (\$1-t0):9         t 'Product Thermal Energy' w linespoints,\
+     '$PV_dat' using (\$1-t0):10        t 'Product Thermal Energy + PV' w linespoints
+fin
+endif
+
+if ($hardcopy == "n") then
+  echo "pause -1 'Hit return to exit'" >> gp
+endif
+
+#__________________________________
+# plot 
+gnuplot gp
+
+if ($hardcopy == "y" || $hardcopy == "Y") then
+  convert plotPV.ps plotPV.jpg
+  mogrify -rotate 90 plotPV.jpg
+endif
+
+#/bin/rm gp
+exit(1)
+
