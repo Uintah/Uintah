@@ -42,7 +42,7 @@ if( -e $susKE) then
 awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $susKE >> gp
 endif
 
-if( -e $pudaKE) then
+if( -e $pudaKE  && ! -e $susKE) then
 awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $pudaKE >> gp
 endif
 
@@ -65,7 +65,7 @@ plot '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linesp
 fin
 endif
 
-if(-e $pudaKE) then
+if(-e $pudaKE && ! -e $susKE) then
 cat >>gp << fin
 plot '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linespoints,\
      '$pudaKE' using (\$1-t0):(0.5*\$3*\$2*\$2)     t 'center of mass KE (puda)' w linespoints,\
@@ -73,7 +73,7 @@ plot '$pudaKE' using (\$1-t0):(\$4)                 t 'total KE (puda)' w linesp
 fin
 endif
 
-if(-e $susKE)then
+if(-e $susKE && ! -e $pudaKE)then
 cat >> gp << fin
 plot '$susKE'  using (\$1-t0):(\$2)                 t 'total KE (sus)' w lines
 fin
