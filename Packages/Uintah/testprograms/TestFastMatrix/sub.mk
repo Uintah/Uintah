@@ -2,7 +2,7 @@
 
 SRCDIR := Packages/Uintah/testprograms/TestFastMatrix
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY) $(BLAS_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 
 ##############################################3
 # test fast matrix
