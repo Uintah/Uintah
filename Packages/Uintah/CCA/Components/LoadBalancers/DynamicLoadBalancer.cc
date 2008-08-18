@@ -801,7 +801,10 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         double_int min;
         //gather the maxes
         //change to all reduce with loc
-        MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
+        if(num_procs>1)
+          MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
+        else
+          min=maxInfo;
         
         //set improvement
         improvement=hardMaxCost-min.val;
@@ -824,7 +827,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     }
 
     //minProcLoc is only equal to -1 if everyone has the same array (ie first iteration)
-    if(minProcLoc!=-1)
+    if(minProcLoc!=-1 && num_procs>1)
     {
       //broadcast load balance
       MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
