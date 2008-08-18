@@ -4,21 +4,27 @@
 #__________________________________
 
 if($#argv < 2) then
-  echo "plotKE <puda KE file> <sus KE file> <postScript File (y/Y), default is no>"
+  echo "plotKE <puda KE file> <sus KE file> <totalBurnedMass.dat> <postScript File (y/Y), default is no>"
   exit(1)
 endif
 
-set pudaKE = $argv[1]
-set susKE  = $argv[2]
+set pudaKE     = $argv[1]
+set susKE      = $argv[2]
+set burnedMass = $argv[3]
 set hardcopy = "n"
-if ($#argv == 3) then
-  set hardcopy = $argv[3]
+if ($#argv == 4) then
+  set hardcopy = $argv[4]
 endif
 
 #__________________________________
 # bulletproofing
 if ( (! -e $pudaKE)  ) then
   echo "plotKE:  The input files doesn't exist ($pudaKE)"
+endif
+
+if ( (! -e $burnedMass)  ) then
+  echo "plotKE:  totatBurnedMass input files doesn't exist ($burnedMass)"
+  exit
 endif
 
 echo "" > gp
@@ -38,13 +44,7 @@ endif
 #__________________________________
 # plot script
 # Note:  if susKE doesn't exist then it will be ignored
-if( -e $susKE) then
-awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $susKE >> gp
-endif
-
-if( -e $pudaKE  && ! -e $susKE) then
-awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $pudaKE >> gp
-endif
+awk 'NR==1 {printf("t0 = %18.14f\n",$1)}' < $burnedMass >> gp
 
 cat >> gp << fin
 set timestamp "%m/%d/%y %H:%M" 
@@ -94,6 +94,6 @@ if ($hardcopy == "y" || $hardcopy == "Y") then
   mogrify -rotate 90 plotKE.jpg
 endif
 
-/bin/rm gp
+/bin/rm gp plotKE.ps
 exit(1)
 
