@@ -94,7 +94,8 @@ gnuplot gp
 if($hardcopy == "y" || $hardcopy == "Y") then
   convert plotMassBurned.ps plotMassBurned.jpg
   mogrify -rotate 90 plotMassBurned.jpg
+  /bin/rm plotMassBurned.ps
 endif
-
-/bin/rm gp $out.tmp4
+# cleanup
+/bin/rm gp $out.tmp4 plotMassBurned.ps
 exit(1)
