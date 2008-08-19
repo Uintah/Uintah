@@ -418,8 +418,8 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
               }
             }
             delete bc;
-          }
-          delete temp_bcs;
+          } else
+            delete temp_bcs;
         }
       } else
         continue;
