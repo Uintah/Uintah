@@ -204,9 +204,15 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dnodes = phigh-plow;
       IntVector start = low-plow;
-     
+
+#if 0     
       petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
                        + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
+#endif
+
+      petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
+                        + start.y()*dnodes.x()*(DOFsPerNode) + start.x();
+
 
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
         int idx_slab = petscglobalIndex;
