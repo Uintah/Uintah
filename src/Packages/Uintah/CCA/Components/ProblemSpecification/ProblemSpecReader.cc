@@ -932,7 +932,7 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int le
 void
 ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecRader::validateProblemSpec");
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validateProblemSpec");
   // Currently, the readInputFile() (and thus this validation) is called
   // multiple times (once for the initial .ups, but then again for 
   // saving data archives and such...)  this (temporary?) hack is used
