@@ -498,14 +498,6 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
     }
-    // Store the ghost cell information of each of the requires
-    // so we can predict the total allocation needed for each variable.
-    if (dep->numGhostCells > 0 && dep->patches_dom == Task::NormalDomain) {
-      constHandle<PatchSubset> dep_patches = dep->getPatchesUnderDomain(patches->getUnion());
-      constHandle<MaterialSubset> dep_matls = dep->getMaterialsUnderDomain(matls->getUnion());
-      m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls.get_rep(), dep_patches.get_rep(),
-					 dep->gtype, dep->numGhostCells);
-    }
   }
 
   // for the treat-as-old vars, go through the computes and add them.
@@ -561,8 +553,6 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
   numTasks_ = 0;
 
   addTaskGraph(NormalTaskGraph);
-
-  m_ghostOffsetVarMap.clear();
 
 }
 
@@ -661,10 +651,27 @@ getSuperPatchExtents(const VarLabel* label, int matlIndex, const Patch* patch,
     // get the minimum extents containing both the expected ghost cells
     // to be needed and the given ghost cells.
     const Patch* memberPatch = connectedPatchGroup->getBoxes()[i];
-    VarLabelMatl<Patch> vmp(label, matlIndex, memberPatch);
-    m_ghostOffsetVarMap.getExtents(vmp, requestedGType, requestedNumGCells,
-                                   requiredLow, requiredHigh,
-                                   requestedLow, requestedHigh);
+    //VarLabelMatl<Patch> vmp(label, matlIndex, memberPatch);
+    //m_ghostOffsetVarMap.getExtents(vmp, requestedGType, requestedNumGCells,
+    //                               requiredLow, requiredHigh,
+    //                               requestedLow, requestedHigh);
+
+    Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), true);
+    
+    IntVector lowOffset=IntVector(0,0,0), highOffset=IntVector(0,0,0);
+    
+    //set requiredLow and requiredHigh as extents without ghost cells
+    memberPatch->computeExtents(basis, label->getBoundaryLayer(), lowOffset, highOffset,
+        requiredLow, requiredHigh);
+
+    //compute ghost cell offsets
+    Patch::getGhostOffsets(basis, requestedGType, requestedNumGCells,
+        lowOffset, highOffset);
+    
+    //set requestedLow and requestedHigh as extents with ghost cells
+    memberPatch->computeExtents(basis, label->getBoundaryLayer(), lowOffset, highOffset,
+        requestedLow, requestedHigh);
+
     SuperPatch::Region requiredRegion =
       SuperPatch::Region(requiredLow, requiredHigh);
     requiredExtents = requiredExtents.enclosingRegion(requiredRegion);
