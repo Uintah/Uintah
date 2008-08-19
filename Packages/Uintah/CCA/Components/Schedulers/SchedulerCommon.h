@@ -5,7 +5,6 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/GhostOffsetVarMap.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -230,7 +229,6 @@ WARNING
     ProblemSpecP m_nodes;
     ofstream* memlogfile;
     bool emit_taskgraph;
-    GhostOffsetVarMap m_ghostOffsetVarMap;
     LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
     Relocate         reloc_;
 
