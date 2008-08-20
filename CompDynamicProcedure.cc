@@ -528,37 +528,28 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       new_dw->allocateAndPut(filterRhoV, d_lab->d_filterRhoVLabel, indx, patch);
       new_dw->allocateAndPut(filterRhoW, d_lab->d_filterRhoWLabel, indx, patch);
       new_dw->allocateAndPut(filterRho,  d_lab->d_filterRhoLabel,  indx, patch);
+      
       if (d_dynScalarModel) {
         if (d_calcScalar)
-          new_dw->allocateAndPut(filterRhoF, 
-                                 d_lab->d_filterRhoFLabel, indx, patch);
+          new_dw->allocateAndPut(filterRhoF,  d_lab->d_filterRhoFLabel, indx, patch);
         if (d_calcEnthalpy)
-          new_dw->allocateAndPut(filterRhoE, 
-                                 d_lab->d_filterRhoELabel, indx, patch);
+          new_dw->allocateAndPut(filterRhoE,  d_lab->d_filterRhoELabel, indx, patch);
         if (d_calcReactingScalar)
-          new_dw->allocateAndPut(filterRhoRF, 
-                                 d_lab->d_filterRhoRFLabel, indx, patch);
+          new_dw->allocateAndPut(filterRhoRF, d_lab->d_filterRhoRFLabel, indx, patch);
       }
     }
     else {
-      new_dw->getModifiable(filterRhoU, 
-                            d_lab->d_filterRhoULabel, indx, patch);
-      new_dw->getModifiable(filterRhoV, 
-                            d_lab->d_filterRhoVLabel, indx, patch);
-      new_dw->getModifiable(filterRhoW, 
-                            d_lab->d_filterRhoWLabel, indx, patch);
-      new_dw->getModifiable(filterRho, 
-                            d_lab->d_filterRhoLabel, indx, patch);
+      new_dw->getModifiable(filterRhoU, d_lab->d_filterRhoULabel, indx, patch);
+      new_dw->getModifiable(filterRhoV, d_lab->d_filterRhoVLabel, indx, patch);
+      new_dw->getModifiable(filterRhoW, d_lab->d_filterRhoWLabel, indx, patch);
+      new_dw->getModifiable(filterRho,  d_lab->d_filterRhoLabel,  indx, patch);
       if (d_dynScalarModel) {
         if (d_calcScalar)
-          new_dw->getModifiable(filterRhoF, 
-                                d_lab->d_filterRhoFLabel, indx, patch);
+          new_dw->getModifiable(filterRhoF, d_lab->d_filterRhoFLabel, indx, patch);
         if (d_calcEnthalpy)
-          new_dw->getModifiable(filterRhoE, 
-                                d_lab->d_filterRhoELabel, indx, patch);
+          new_dw->getModifiable(filterRhoE, d_lab->d_filterRhoELabel, indx, patch);
         if (d_calcReactingScalar)
-          new_dw->getModifiable(filterRhoRF, 
-                                d_lab->d_filterRhoRFLabel, indx, patch);
+          new_dw->getModifiable(filterRhoRF,d_lab->d_filterRhoRFLabel, indx, patch);
       }
     }
     filterRhoU.initialize(0.0);
@@ -580,12 +571,14 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
     bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    
     IntVector indexLowU = patch->getSFCXFORTLowIndex();
     IntVector indexHighU = patch->getSFCXFORTHighIndex();
     IntVector indexLowV = patch->getSFCYFORTLowIndex();
     IntVector indexHighV = patch->getSFCYFORTHighIndex();
     IntVector indexLowW = patch->getSFCZFORTLowIndex();
     IntVector indexHighW = patch->getSFCZFORTHighIndex();
+    
     if (xminus) indexLowU -= IntVector(1,0,0); 
     if (yminus) indexLowV -= IntVector(0,1,0); 
     if (zminus) indexLowW -= IntVector(0,0,1); 
@@ -768,14 +761,16 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
       }
     }
 
-    IntVector idxLo = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-    IntVector idxHi = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+    int ngc = 1;
+    IntVector idxLo = patch->getExtraCellLowIndex__New(ngc);
+    IntVector idxHi = patch->getExtraCellHighIndex__New(ngc);
     Array3<double> rhoF(idxLo, idxHi);
     Array3<double> rhoE(idxLo, idxHi);
     Array3<double> rhoRF(idxLo, idxHi);
     rhoF.initialize(0.0);
     rhoE.initialize(0.0);
     rhoRF.initialize(0.0);
+    
     int startZ = idxLo.z();
     if (zminus) startZ++;
     int endZ = idxHi.z();
@@ -788,6 +783,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     if (xminus) startX++;
     int endX = idxHi.x();
     if (xplus) endX--;
+    
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
