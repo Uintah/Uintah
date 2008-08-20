@@ -69,27 +69,28 @@ HypreSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("LinearSolver");
   db->getWithDefault("ksptype", d_kspType, "cg");
-  if (d_kspType == "smg")
+  
+  if (d_kspType == "smg"){
     d_kspType = "0";
-  else
-    if (d_kspType == "pfmg")
-      d_kspType = "1";
-    else
-      if (d_kspType == "cg")
-        {
-          db->getWithDefault("pctype", d_pcType, "pfmg");
-          if (d_pcType == "smg")
-            d_kspType = "10";
-          else
-            if (d_pcType == "pfmg")
-              d_kspType = "11";
-            else
-              if (d_pcType == "jacobi")
-                d_kspType = "17";
-              else
-                if (d_pcType == "none")
-                  d_kspType = "19";
-        }
+  }
+  
+  if (d_kspType == "pfmg"){
+    d_kspType = "1";
+  }
+  
+  if (d_kspType == "cg"){
+    // preconditioners
+    db->getWithDefault("pctype", d_pcType, "pfmg");
+    if (d_pcType == "smg")
+      d_kspType = "10";
+    else if (d_pcType == "pfmg")
+      d_kspType = "11";
+    else if (d_pcType == "jacobi")
+      d_kspType = "17";
+    else if (d_pcType == "none"){
+      d_kspType = "19";
+    }
+  }
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("res_tol", d_stored_residual, 1.0e-8);
 }
@@ -112,10 +113,9 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   ny = idxHi.y() - idxLo.y() + 1;
   nz = idxHi.z() - idxLo.z() + 1;
      
-  for (int i = 0; i < 6; i++)
-    {    
-      d_A_num_ghost[i] = 0;
-    }
+  for (int i = 0; i < 6; i++){    
+    d_A_num_ghost[i] = 0;
+  }
 
   d_volume  = nx*ny*nz;    //number of nodes per processor
   bx = 1;
@@ -126,18 +126,22 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   d_nblocks = bx*by*bz;           //number of blocks per processor, now is set to 1
   d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
   d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
+  
   d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
   d_offsets[0][0] = 0;            //setting the location of each stencil.
   d_offsets[0][1] = 0;            //First index is the stencil number.
   d_offsets[0][2] = -1;           //Second index is the [0,1,2]=[i,j,k]
+  
   d_offsets[1] = hypre_CTAlloc(int, 3);
   d_offsets[1][0] = 0; 
   d_offsets[1][1] = -1; 
   d_offsets[1][2] = 0; 
+  
   d_offsets[2] = hypre_CTAlloc(int, 3);
   d_offsets[2][0] = -1; 
   d_offsets[2][1] = 0; 
   d_offsets[2][2] = 0; 
+  
   d_offsets[3] = hypre_CTAlloc(int, 3);
   d_offsets[3][0] = 0; 
   d_offsets[3][1] = 0; 
@@ -146,17 +150,15 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   d_ilower = hypre_CTAlloc(int*, d_nblocks);
   d_iupper = hypre_CTAlloc(int*, d_nblocks);
 
-  for (int i = 0; i < d_nblocks; i++)
-    {
-      d_ilower[i] = hypre_CTAlloc(int, d_dim);
-      d_iupper[i] = hypre_CTAlloc(int, d_dim);
-    }
+  for (int i = 0; i < d_nblocks; i++){
+    d_ilower[i] = hypre_CTAlloc(int, d_dim);
+    d_iupper[i] = hypre_CTAlloc(int, d_dim);
+  }
   
-  for (int i = 0; i < d_dim; i++)
-    {
-     d_A_num_ghost[2*i] = 1;
-     d_A_num_ghost[2*i + 1] = 1;
-    }
+  for (int i = 0; i < d_dim; i++){
+    d_A_num_ghost[2*i] = 1;
+    d_A_num_ghost[2*i + 1] = 1;
+  }
   
   /* compute d_ilower and d_iupper from (p,q,r), (bx,by,bz), and (nx,ny,nz) */
   int ib = 0;
@@ -189,10 +191,9 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   
   HYPRE_StructGridCreate(MPI_COMM_WORLD, d_dim, &d_grid);
 
-  for (int ib = 0; ib < d_nblocks; ib++)
-    {
-      HYPRE_StructGridSetExtents(d_grid, d_ilower[ib], d_iupper[ib]);
-    }
+  for (int ib = 0; ib < d_nblocks; ib++){
+    HYPRE_StructGridSetExtents(d_grid, d_ilower[ib], d_iupper[ib]);
+  }
  
   const Level* level = patch->getLevel();
   IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -211,11 +212,9 @@ HypreSolver::gridSetup(const ProcessorGroup*,
    *-----------------------------------------------------------*/
   HYPRE_StructStencilCreate(d_dim, d_stencilSize, &d_stencil);
    
-  for (int s = 0; s < d_stencilSize; s++)
-    {
-      HYPRE_StructStencilSetElement(d_stencil, s, d_offsets[s]);
-    }
-
+  for (int s = 0; s < d_stencilSize; s++){
+    HYPRE_StructStencilSetElement(d_stencil, s, d_offsets[s]);
+  }
 }
 
 // ****************************************************************************
@@ -228,7 +227,6 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
                             ArchesConstVariables* constvars,
                             const ArchesLabel*)
 { 
-  double start_time = Time::currentSeconds();
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
    * Set up the matrix structure
@@ -246,111 +244,71 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
    HYPRE_StructVectorInitialize(d_b);
    HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
    HYPRE_StructVectorInitialize(d_x);
-  
-  int i, s;
  
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
   d_value = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   
   /* Set the coefficients for the grid */
-  i = 0;
-  for (s = 0; s < (d_stencilSize); s++)
-    {
-      d_stencilIndices[s] = s;
-    }
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)]; //[0,0,-1]
-        d_value[i+1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)]; //[0,-1,0]
-        d_value[i+2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)]; //[-1,0,0]
-        d_value[i+3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)]; //[0,0,0]
-
-#if 0
-        cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
-        cerr << "value[AB]=" << d_value[i] << endl;
-        cerr << "value[AS]=" << d_value[i+1] << endl;
-        cerr << "value[AW]=" << d_value[i+2] << endl;
-        cerr << "value[AP]=" << d_value[i+3] << endl;
-#endif
-            i = i + d_stencilSize;
-      }
-    }
+  int i = 0;
+  int s;
+  for (s = 0; s < (d_stencilSize); s++){
+    d_stencilIndices[s] = s;
   }
   
-  for (int ib = 0; ib < d_nblocks; ib++)
-    {
-      HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
-                                     d_stencilIndices, d_value);
-    }
-
+  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    d_value[i]   = -constvars->pressCoeff[Arches::AB][c]; //[0,0,-1]
+    d_value[i+1] = -constvars->pressCoeff[Arches::AS][c]; //[0,-1,0]
+    d_value[i+2] = -constvars->pressCoeff[Arches::AW][c]; //[-1,0,0]
+    d_value[i+3] =  constvars->pressCoeff[Arches::AP][c]; //[0,0,0]
+    i = i + d_stencilSize;
+  }
+  
+  for (int ib = 0; ib < d_nblocks; ib++){
+    HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
+                                    d_stencilIndices, d_value);
+  }
 
   HYPRE_StructMatrixAssemble(d_A);
-  //cerr << "Matrix Assemble time = " << Time::currentSeconds()-start_time << endl;
-
-#if 0
-  HYPRE_StructMatrixPrint("driver.out.A", d_A, 0);
-#endif
-
   hypre_TFree(d_value);
 
   // assemble right hand side and solution vector
   d_value = hypre_CTAlloc(double, d_volume);
- 
+
   i = 0;
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)]; 
-        //cerr << "b[" << i << "] =" << d_value[i] << endl;
-        i++;
-      }
-    }
+  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    d_value[i] = constvars->pressNonlinearSrc[c];
+    i++;
   }
     
-  for (int ib = 0; ib < d_nblocks; ib++)
-    {
-      HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], d_value);
-    }
-  
+  for (int ib = 0; ib < d_nblocks; ib++){
+    HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], d_value);
+  }
+
   i = 0;
-  // Set up the initial guess
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = vars->pressure[IntVector(colX, colY, colZ)];
-        //cerr << "x0[" << i << "] =" << d_value[i] << endl;
-        i++;;
-      }
-    }
+  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    d_value[i] = vars->pressure[c];
+    i++;
   }
     
-  for (int ib = 0; ib < d_nblocks; ib++)
-    {
-      HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_value);
-    }
+  for (int ib = 0; ib < d_nblocks; ib++){
+    HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_value);
+  }
 
-  HYPRE_StructVectorAssemble(d_b);
-
-#if 0
-  HYPRE_StructVectorPrint("driver.out.b", d_b, 0);
-#endif
-  
+  HYPRE_StructVectorAssemble(d_b);  
   HYPRE_StructVectorAssemble(d_x);
 
 #if 0
+  HYPRE_StructMatrixPrint("driver.out.A", d_A, 0);
+  HYPRE_StructVectorPrint("driver.out.b", d_b, 0);
   HYPRE_StructVectorPrint("driver.out.x0", d_x, 0);  
 #endif
   
   hypre_TFree(d_value);
-
-  int me = d_myworld->myrank();
-  if(me == 0) {
-    cerr << "Time in HYPRE Assemble: " << Time::currentSeconds()-start_time << " seconds\n";
-  }
 }
-
+//______________________________________________________________________
+//
 bool
 HypreSolver::pressLinearSolve()
 {
@@ -532,39 +490,33 @@ HypreSolver::pressLinearSolve()
     return false;
 }
 
-
+//______________________________________________________________________
+// copy solution vector back into the array
 void
 HypreSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 {
-  // copy solution vector back into the array
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
   double* xvec;
   xvec = hypre_CTAlloc(double, d_volume);
  
-  for (int ib = 0; ib < d_nblocks; ib++)
-    {
-      HYPRE_StructVectorGetBoxValues(d_x, d_ilower[ib], d_iupper[ib], xvec);
-    }
+  for (int ib = 0; ib < d_nblocks; ib++){
+    HYPRE_StructVectorGetBoxValues(d_x, d_ilower[ib], d_iupper[ib], xvec);
+  }
+  
+  int i = 0;
+  for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    vars->pressure[c] = xvec[i];
+    i++;
+  }
   
 #if 0
   HYPRE_StructVectorPrint("driver.out.x", d_x, 0);
 #endif
-  
-  int i = 0;
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        vars->pressure[IntVector(colX, colY, colZ)] = xvec[i];
-        //cerr << "xvec[" << i << "] = " << xvec[i] << endl;
-        i++;
-      }
-    }
-  }
-
   hypre_TFree(xvec);
 }
-  
+ 
+//______________________________________________________________________
+//  
 void
 HypreSolver::destroyMatrix() 
 {
@@ -578,17 +530,17 @@ HypreSolver::destroyMatrix()
   HYPRE_StructVectorDestroy(d_b);
   HYPRE_StructVectorDestroy(d_x);
    
-  for (i = 0; i < d_nblocks; i++)
-    {
-      hypre_TFree(d_iupper[i]);
-      hypre_TFree(d_ilower[i]);
-     }
+  for (i = 0; i < d_nblocks; i++){
+    hypre_TFree(d_iupper[i]);
+    hypre_TFree(d_ilower[i]);
+  }
   hypre_TFree(d_ilower);
   hypre_TFree(d_iupper);
   hypre_TFree(d_stencilIndices);
   
-  for ( i = 0; i < d_stencilSize; i++)
+  for ( i = 0; i < d_stencilSize; i++){
     hypre_TFree(d_offsets[i]);
+  }
   hypre_TFree(d_offsets);
   
   hypre_FinalizeMemoryDebug();
