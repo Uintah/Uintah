@@ -89,7 +89,6 @@ private:
   
   double d_residual;
   double d_stored_residual;
-  double *d_value;
   const ProcessorGroup* d_myworld;
   
   HYPRE_StructMatrix d_A;
