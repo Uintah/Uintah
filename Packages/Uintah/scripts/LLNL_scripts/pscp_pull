@@ -31,7 +31,16 @@ if ($#argv != 3 && $#argv != 4 && $#argv != 5 ) then
   echo ""
   echo "       [Note, you can setenv SSH to use a specific 'ssh' if necessary."
   echo ""
-  exit 0
+  exit 1
+endif
+
+# Verify that /bin/ls exists
+if ( ! -f /bin/ls ) then
+  echo ""
+  echo "ERROR: /bin/ls does not exist.  Please determine where the 'ls' program"
+  echo "       lives and update the pscp_pull_driver script."
+  echo ""
+  exit 1
 endif
 
 set beVerbose = false
