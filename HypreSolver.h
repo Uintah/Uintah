@@ -5,17 +5,10 @@
 #include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-
-#include <Core/Containers/Array1.h>
 
 #include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
-#include <krylov.h>
 
 
 namespace Uintah {
@@ -57,27 +50,16 @@ class HypreSolver: public LinearSolver {
 
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Construct an instance of a HypreSolver.
   HypreSolver(const ProcessorGroup* myworld);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual Destructor
   virtual ~HypreSolver();
 
-  // GROUP: Problem Setup:
-  ////////////////////////////////////////////////////////////////////////
-  // Problem setup
+
   void problemSetup(const ProblemSpecP& params);
 
-  ////////////////////////////////////////////////////////////////////////
-  // HYPRE grid and stencil setup
   void gridSetup(const ProcessorGroup*,
                  const Patch* patch);
-
-   // to close hypre 
+                 
   void finalizeSolver();
 
   virtual void matrixCreate(const PatchSet* allpatches,
@@ -98,20 +80,18 @@ protected:
 private:
   string d_pcType;
   string d_kspType;
-  int d_overlap;
-  int d_fill;
+
   int d_maxSweeps;
   int **d_iupper, **d_ilower, **d_offsets;
   int d_volume, d_nblocks, d_dim, d_stencilSize;
   int *d_stencilIndices;
   int d_A_num_ghost[6];
-  double d_convgTol; // convergence tolerence
+  
   double d_residual;
   double d_stored_residual;
   double *d_value;
   const ProcessorGroup* d_myworld;
-  map<const Patch*, int> d_petscGlobalStart;
-  map<const Patch*, Array3<int> > d_petscLocalToGlobal;
+  
   HYPRE_StructMatrix d_A;
   HYPRE_StructVector d_x, d_b;
   HYPRE_StructGrid d_grid;
