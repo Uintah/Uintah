@@ -86,73 +86,107 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   delete argv;
 }
 
+/*______________________________________________________________________
+ Creates a mapping from cell coordinates, IntVector(x,y,z), 
+ to global matrix coordinates.  The matrix is laid out as 
+ follows:
 
+ Proc 0 patches
+    patch 0 cells
+    patch 1 cells
+    ...
+ Proc 1 patches
+    patch 0 cells
+    patch 1 cells
+    ...
+ ...
+
+ Thus the entrance at cell xyz provides the global index into the
+ matrix for that cells entry.  And each processor owns a 
+ consecutive block of those rows.  In order to translate a 
+ cell position to the processors local position (needed when using 
+ a local array) the global index
+ of the processors first patch must be subtracted from the global
+ index of the cell in question.  This will provide a zero-based index 
+ into each processors data.
+//______________________________________________________________________*/
 void 
-PetscSolver::matrixCreate(const PatchSet* allpatches,
+PetscSolver::matrixCreate(const PatchSet* perproc_patches,
                           const PatchSubset* mypatches)
 {
   // for global index get a petsc index that
   // make it a data memeber
   int numProcessors = d_myworld->size();
-  ASSERTEQ(numProcessors, allpatches->size());
+  ASSERTEQ(numProcessors, perproc_patches->size());
 
   // number of patches for each processor
   vector<int> numCells(numProcessors, 0);
   vector<int> startIndex(numProcessors);
   int totalCells = 0;
+  
   //loop through patches and compute the the d_petscGlobalStart for each patch
-  for(int s=0;s<allpatches->size();s++){
+  for(int s=0;s<perproc_patches->size();s++){
     startIndex[s]=totalCells;
     int mytotal = 0;
-    const PatchSubset* patches = allpatches->getSubset(s);
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-      IntVector plowIndex = patch->getFortranCellLowIndex__New();
+    const PatchSubset* patchsub = perproc_patches->getSubset(s);
+    
+    for(int ps=0;ps<patchsub->size();ps++){
+      const Patch* patch = patchsub->get(ps);
+      
+      IntVector plowIndex  = patch->getFortranCellLowIndex__New();
       IntVector phighIndex = patch->getFortranCellHighIndex__New()+IntVector(1,1,1);
 
       long nc = (phighIndex[0]-plowIndex[0])*
-        (phighIndex[1]-plowIndex[1])*
-        (phighIndex[2]-plowIndex[2]);
+                (phighIndex[1]-plowIndex[1])*
+                (phighIndex[2]-plowIndex[2]);
       d_petscGlobalStart[patch]=totalCells;
-      totalCells+=nc;
-      mytotal+=nc;
+      totalCells += nc;
+      mytotal    += nc;
     }
     numCells[s] = mytotal;
   }
+  
 
+  //__________________________________
   //for each patch
   for(int p=0;p<mypatches->size();p++){
     const Patch* patch=mypatches->get(p);
-    IntVector lowIndex = patch->getExtraCellLowIndex__New(Arches::ONEGHOSTCELL);
-    IntVector highIndex = patch->getExtraCellHighIndex__New(Arches::ONEGHOSTCELL);
+    
+    int ngc = 1;
+    IntVector lowIndex   = patch->getExtraCellLowIndex__New(ngc);
+    IntVector highIndex  = patch->getExtraCellHighIndex__New(ngc);
+    
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
-    long totalCells=0;
+    long totalCells = 0;
     const Level* level = patch->getLevel();
     Patch::selectType neighbors;
+    
     //get neighboring patches (which includes this patch)
     level->selectPatches(lowIndex, highIndex, neighbors);
     //for each neighboring patch and myself
+    
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
 
-      //compute the instescting range between the neighbor and this patch
-      IntVector plow = neighbor->getCellFORTLowIndex();
+      //intersect my patch with my neighbor patch
+      IntVector plow  = neighbor->getCellFORTLowIndex();
       IntVector phigh = neighbor->getCellFORTHighIndex()+IntVector(1,1,1);
-      IntVector low = Max(lowIndex, plow);
-      IntVector high= Min(highIndex, phigh);
+      IntVector low   = Max(lowIndex, plow);
+      IntVector high  = Min(highIndex, phigh);
 
-      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-          || ( high.z() < low.z() ) )
+      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) || ( high.z() < low.z() ) ){
         throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
-
+      }
       //set petscglobilIndex equal to the starting global index for the neighbor patch
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dcells = phigh-plow;
       IntVector start = low-plow;
+      
       //offset the global index by to the intersecting range
       petscglobalIndex += start.z()*dcells.x()*dcells.y()
-        +start.y()*dcells.x()+start.x();
+                        + start.y()*dcells.x() + start.x();
+                         
       //for each node in intersecting range
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
         int idx_slab = petscglobalIndex;
@@ -172,15 +206,19 @@ PetscSolver::matrixCreate(const PatchSet* allpatches,
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
   }
+  
+  //__________________________________
+  //  Now create the matrix
   int me = d_myworld->myrank();
-  int numlrows = numCells[me];
-  int numlcolumns = numlrows;
-  int globalrows = (int)totalCells;
+  int numlrows      = numCells[me];
+  int numlcolumns   = numlrows;
+  int globalrows    = (int)totalCells;
   int globalcolumns = (int)totalCells;
   int d_nz = 7;
   int o_nz = 6;
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-      globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+                             globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
+      
   if(ierr)
     throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
@@ -302,7 +340,8 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
   }
 }
 
-
+//______________________________________________________________________
+//
 bool
 PetscSolver::pressLinearSolve()
 {
@@ -461,11 +500,13 @@ PetscSolver::pressLinearSolve()
   ierr  = VecNorm(d_u,NORM_2,&norm);
   if(ierr)
     throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
+    
   if(me == 0) {
     cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << Time::currentSeconds()-solve_start << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }
+  
   ierr =  KSPDestroy(solver);
   if (ierr)
     throw PetscError(ierr, "KSPDestroy", __FILE__, __LINE__);
@@ -476,8 +517,9 @@ PetscSolver::pressLinearSolve()
     return false;
 }
 
-
-  void
+//______________________________________________________________________
+//
+void
 PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 {
   // copy solution vector back into the array
@@ -489,9 +531,11 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   //get the ownership range so we know where the local indicing on this processor begins
   VecGetOwnershipRange(d_x, &begin, &end);
   ierr = VecGetArray(d_x, &xvec);
+  
   if(ierr)
     throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   Array3<int> l2g = d_petscLocalToGlobal[patch];
+  
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -502,6 +546,7 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
       }
     }
   }
+  
 #if 0
   cerr << "Print computed pressure" << endl;
   vars->pressure.print(cerr);
@@ -510,14 +555,12 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   if(ierr)
     throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 }
-  
+
+//______________________________________________________________________
+//   Free work space.  All PETSc objects should be destroyed when they are no longer needed
 void
 PetscSolver::destroyMatrix() 
 {
-  /* 
-     Free work space.  All PETSc objects should be destroyed when they
-     are no longer needed.
-  */
   int ierr;
   ierr = VecDestroy(d_u);
   if(ierr)
@@ -533,6 +576,8 @@ PetscSolver::destroyMatrix()
     throw PetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 }
 
+//______________________________________________________________________
+//
 // Shutdown PETSc
 void PetscSolver::finalizeSolver()
 {
