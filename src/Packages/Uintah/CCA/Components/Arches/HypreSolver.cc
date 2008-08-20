@@ -3,34 +3,11 @@
 #include <fstream> // work around compiler bug with RHEL 3
 
 #include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-
-#include <cstdlib>
-#include <cstdio>
-#include <cmath>
 
 #include "_hypre_utilities.h"
 #include "HYPRE_struct_ls.h"
@@ -245,7 +222,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
    HYPRE_StructVectorCreate(MPI_COMM_WORLD, d_grid, &d_x);
    HYPRE_StructVectorInitialize(d_x);
  
-  d_value = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
+  double *A = hypre_CTAlloc(double, (d_stencilSize)*d_volume);
   
   /* Set the coefficients for the grid */
   int i = 0;
@@ -256,44 +233,47 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   
   for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
     IntVector c = *iter;
-    d_value[i]   = -constvars->pressCoeff[Arches::AB][c]; //[0,0,-1]
-    d_value[i+1] = -constvars->pressCoeff[Arches::AS][c]; //[0,-1,0]
-    d_value[i+2] = -constvars->pressCoeff[Arches::AW][c]; //[-1,0,0]
-    d_value[i+3] =  constvars->pressCoeff[Arches::AP][c]; //[0,0,0]
+    A[i]   = -constvars->pressCoeff[Arches::AB][c]; //[0,0,-1]
+    A[i+1] = -constvars->pressCoeff[Arches::AS][c]; //[0,-1,0]
+    A[i+2] = -constvars->pressCoeff[Arches::AW][c]; //[-1,0,0]
+    A[i+3] =  constvars->pressCoeff[Arches::AP][c]; //[0,0,0]
     i = i + d_stencilSize;
   }
   
   for (int ib = 0; ib < d_nblocks; ib++){
     HYPRE_StructMatrixSetBoxValues(d_A, d_ilower[ib], d_iupper[ib], d_stencilSize,
-                                    d_stencilIndices, d_value);
+                                    d_stencilIndices, A);
   }
 
   HYPRE_StructMatrixAssemble(d_A);
-  hypre_TFree(d_value);
+  hypre_TFree(A);
 
   // assemble right hand side and solution vector
-  d_value = hypre_CTAlloc(double, d_volume);
+  double * B = hypre_CTAlloc(double, d_volume);
+  double * X = hypre_CTAlloc(double, d_volume);
 
+  // X
   i = 0;
   for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
     IntVector c = *iter;
-    d_value[i] = constvars->pressNonlinearSrc[c];
+    B[i] = constvars->pressNonlinearSrc[c];
     i++;
   }
     
   for (int ib = 0; ib < d_nblocks; ib++){
-    HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], d_value);
+    HYPRE_StructVectorSetBoxValues(d_b, d_ilower[ib], d_iupper[ib], B);
   }
 
+  // B
   i = 0;
   for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
     IntVector c = *iter;
-    d_value[i] = vars->pressure[c];
+    X[i] = vars->pressure[c];
     i++;
   }
     
   for (int ib = 0; ib < d_nblocks; ib++){
-    HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], d_value);
+    HYPRE_StructVectorSetBoxValues(d_x, d_ilower[ib], d_iupper[ib], X);
   }
 
   HYPRE_StructVectorAssemble(d_b);  
@@ -305,7 +285,8 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   HYPRE_StructVectorPrint("driver.out.x0", d_x, 0);  
 #endif
   
-  hypre_TFree(d_value);
+  hypre_TFree(X);
+  hypre_TFree(B);
 }
 //______________________________________________________________________
 //
