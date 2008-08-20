@@ -22,7 +22,7 @@
 # Grab a list of files from the remote machine:
 #
 
-REMOTE_FILES_LIST = `ssh $(LOGIN) "ls $(REMOTEDIR)"`
+REMOTE_FILES_LIST = `ssh $(LOGIN) "/bin/ls $(REMOTEDIR)"`
 
 ######################################################################
 # Turn the list of files (the output from 'ls') into a single string:
