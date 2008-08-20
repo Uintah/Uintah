@@ -661,8 +661,16 @@ void* addr = 0;
 #  endif
 #endif
 char* signam = Core_Thread_signal_name(sig, addr);
-fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
-Thread::niceAbort();
+
+if(sig!=SIGINT) //don't print info on SIGINT
+{
+  fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
+  Thread::niceAbort();
+}
+else
+{
+  Thread::niceAbort(0,false);
+}
 
 action.sa_handler = (SIG_HANDLER_T)handle_abort_signals;
 action.sa_flags = 0;

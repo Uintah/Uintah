@@ -291,93 +291,100 @@ Thread::parallel(ParallelBase& helper, int nthreads,
 }
 
 void
-Thread::niceAbort(void* context /* = 0 */)
+Thread::niceAbort(void* context /* = 0 */, bool print /* = false */)
 {
-  fprintf(stderr, getStackTrace(context).c_str());
-  const char* smode = getenv("SCI_SIGNALMODE");
-  if (!smode)
-    smode = defaultAbortMode; //"e"; 
-	
-  Thread* s=Thread::self();
-  print_threads();
-  fprintf(stderr, "\n");
-  fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
-  if(s)
-    fprintf(stderr, "Occured for thread: \"%s\"\n", s->threadname_);
-  else
-    fprintf(stderr, "With NULL thread pointer.\n");
+  if(print)
+  {
+    fprintf(stderr, getStackTrace(context).c_str());
+    const char* smode = getenv("SCI_SIGNALMODE");
+    if (!smode)
+      smode = defaultAbortMode; //"e"; 
 
-  for (;;) {
-    if (strcasecmp(smode, "ask") == 0) {
-      char buf[100];
-      fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
-      fflush(stderr);
-      while(read(fileno(stdin), buf, 100) <= 0){
-	if(errno != EINTR){
-	  fprintf(stderr, "\nCould not read response, sleeping for 20 seconds.\n");
-          Time::waitFor(20.0);
-	  buf[0]='e';
-	  exitAll(1);
-	}
-      }
-      switch (buf[0]) {
-      case 'r': case 'R':
-	smode = "resume";
-	break;
-      case 'd': case 'D':
-	smode = "dbx";
-	break;
-      case 'c': case 'C':
-	smode = "cvd";
-	break;
-      case 'k': case 'K':
-	smode = "kill";
-	break;
-      case 'e': case 'E':
-	smode = "exit";
-	break;
-      default:
-	break;
-      }
-    }
+    Thread* s=Thread::self();
+    print_threads();
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Abort signalled by pid: %d\n", getpid());
+    if(s)
+      fprintf(stderr, "Occured for thread: \"%s\"\n", s->threadname_);
+    else
+      fprintf(stderr, "With NULL thread pointer.\n");
 
-    if (strcasecmp(smode, "resume") == 0) {
-      return;
-    } else if (strcasecmp(smode, "dbx") == 0) {
+    for (;;) {
+      if (strcasecmp(smode, "ask") == 0) {
+        char buf[100];
+        fprintf(stderr, "resume(r)/dbx(d)/cvd(c)/kill thread(k)/exit(e)? ");
+        fflush(stderr);
+        while(read(fileno(stdin), buf, 100) <= 0){
+          if(errno != EINTR){
+            fprintf(stderr, "\nCould not read response, sleeping for 20 seconds.\n");
+            Time::waitFor(20.0);
+            buf[0]='e';
+            exitAll(1);
+          }
+        }
+        switch (buf[0]) {
+          case 'r': case 'R':
+            smode = "resume";
+            break;
+          case 'd': case 'D':
+            smode = "dbx";
+            break;
+          case 'c': case 'C':
+            smode = "cvd";
+            break;
+          case 'k': case 'K':
+            smode = "kill";
+            break;
+          case 'e': case 'E':
+            smode = "exit";
+            break;
+          default:
+            break;
+        }
+      }
+
+      if (strcasecmp(smode, "resume") == 0) {
+        return;
+      } else if (strcasecmp(smode, "dbx") == 0) {
 
 #if defined( REDSTORM )
-      printf("Error: running debugger at exception is not supported on RedStorm\n");
+        printf("Error: running debugger at exception is not supported on RedStorm\n");
 #else
-      char command[500];
-      if(getenv("SCI_DBXCOMMAND")){
-	sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
-      } else {
+        char command[500];
+        if(getenv("SCI_DBXCOMMAND")){
+          sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
+        } else {
 #ifdef __sgi
-	sprintf(command, "winterm -c dbx -p %d &", getpid());
+          sprintf(command, "winterm -c dbx -p %d &", getpid());
 #else
-	sprintf(command, "xterm -e gdb %d &", getpid());
+          sprintf(command, "xterm -e gdb %d &", getpid());
 #endif
-      }
-      system(command);
-      smode = "ask";
+        }
+        system(command);
+        smode = "ask";
 #endif
-    } else if (strcasecmp(smode, "cvd") == 0) {
+      } else if (strcasecmp(smode, "cvd") == 0) {
 #if defined( REDSTORM )
-      printf("Error: running debugger at exception is not supported on RedStorm\n");
+        printf("Error: running debugger at exception is not supported on RedStorm\n");
 #else
-      char command[500];
-      sprintf(command, "cvd -pid %d &", getpid());
-      system(command);
-      smode = "ask";
+        char command[500];
+        sprintf(command, "cvd -pid %d &", getpid());
+        system(command);
+        smode = "ask";
 #endif
-    } else if (strcasecmp(smode, "kill") == 0) {
-      exit();
-    } else if (strcasecmp(smode, "exit") == 0) {
-      exitAll(1);
-    } else {
-      fprintf(stderr, "Unrecognized option, exiting\n");
-      smode = "exit";
+      } else if (strcasecmp(smode, "kill") == 0) {
+        exit();
+      } else if (strcasecmp(smode, "exit") == 0) {
+        exitAll(1);
+      } else {
+        fprintf(stderr, "Unrecognized option, exiting\n");
+        smode = "exit";
+      }
     }
+  }
+  else
+  {
+    exitAll(1);
   }
 }
 

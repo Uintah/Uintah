@@ -259,7 +259,7 @@ DESCRIPTION
 	    // stderr, and the user may choose one of:
 	    // <pre>continue(c)/dbx(d)/cvd(v)/kill thread(k)/exit(e)</pre>
             // context is necesary on Windows to catch a segfault
-	    static void niceAbort(void* Context = 0);
+	    static void niceAbort(void* Context = 0, bool print=true);
 	    
 	    //////////
 	    // Mark a section as one that could block for debugging purposes.
