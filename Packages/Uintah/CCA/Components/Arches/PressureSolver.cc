@@ -43,7 +43,6 @@ using namespace Uintah;
 using namespace std;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/add_hydrostatic_term_topressure_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/normpress_fort.h>
 
 // ****************************************************************************
 // Default constructor for PressureSolver
@@ -475,7 +474,6 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   if (converged) {
     for (int p = 0; p < patches->size(); p++) {
       const Patch *patch = patches->get(p);
-      //          unpack from linear solver.
       d_linearSolver->copyPressSoln(patch, &pressureVars);
     }
   } else {
@@ -503,7 +501,7 @@ PressureSolver::pressureLinearSolve_all(const ProcessorGroup* pg,
   if (d_norm_pres){ 
     for (int p = 0; p < patches->size(); p++) {
       const Patch *patch = patches->get(p);
-      normPressure(pg, patch, &pressureVars);
+      normPressure(patch, &pressureVars);
       //    updatePressure(pg, patch, &pressureVars);
       // put back the results
     }
@@ -670,34 +668,32 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
                                          cellType, mmwallid);
   }
 }
-// ****************************************************************************
-// normalize the pressure solution
-// ****************************************************************************
+
+//______________________________________________________________________
+//  
 void 
-PressureSolver::normPressure(const ProcessorGroup*,
-                             const Patch* patch,
+PressureSolver::normPressure(const Patch* patch,
                              ArchesVariables* vars)
 {
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
   double pressref = vars->press_ref;
+ 
+  for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    vars->pressure[c] = vars->pressure[c] - pressref;
+  } 
+ 
+  #if 0
   fort_normpress(idxLo, idxHi, vars->pressure, pressref);
+  #endif
 }  
 //______________________________________________________________________
+
 void 
-PressureSolver::updatePressure(const ProcessorGroup*,
-                               const Patch* patch,
+PressureSolver::updatePressure(const Patch* patch,
                                ArchesVariables* vars)
 {
-  IntVector idxLo = patch->getExtraCellLowIndex__New();
-  IntVector idxHi = patch->getExtraCellHighIndex__New();
-  for (int ii = idxLo.x(); ii < idxHi.x(); ii++) {
-    for (int jj = idxLo.y(); jj < idxHi.y(); jj++) {
-      for (int kk = idxLo.z(); kk < idxHi.z(); kk++) {
-        IntVector currCell(ii,jj,kk);
-        vars->pressureNew[currCell] = vars->pressure[currCell];
-      }
-    }
+  for(CellIterator iter=patch->getExtraCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    vars->pressureNew[c] = vars->pressure[c];
   }
 }  
-

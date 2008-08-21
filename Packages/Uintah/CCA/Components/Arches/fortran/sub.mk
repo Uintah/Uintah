@@ -42,7 +42,6 @@ SRCS += \
 	$(SRCDIR)/mmscalarwallbc.F \
 	$(SRCDIR)/mmwallbc.F \
 	$(SRCDIR)/mmwallbc_trans.F \
-	$(SRCDIR)/normpress.F \
 	$(SRCDIR)/prescoef.F \
         $(SRCDIR)/prescoef_var.F \
 	$(SRCDIR)/pressrcpred.F \
@@ -101,7 +100,6 @@ $(SRCDIR)/mmmomsrc.$(OBJEXT): $(SRCDIR)/mmmomsrc_fort.h
 $(SRCDIR)/mmscalarwallbc.$(OBJEXT): $(SRCDIR)/mmscalarwallbc_fort.h
 $(SRCDIR)/mmwallbc.$(OBJEXT): $(SRCDIR)/mmwallbc_fort.h
 $(SRCDIR)/mmwallbc_trans.$(OBJEXT): $(SRCDIR)/mmwallbc_trans_fort.h
-$(SRCDIR)/normpress.$(OBJEXT): $(SRCDIR)/normpress_fort.h
 $(SRCDIR)/prescoef.$(OBJEXT): $(SRCDIR)/prescoef_fort.h
 $(SRCDIR)/prescoef_var.$(OBJEXT): $(SRCDIR)/prescoef_var_fort.h
 $(SRCDIR)/pressrcpred.$(OBJEXT): $(SRCDIR)/pressrcpred_fort.h
