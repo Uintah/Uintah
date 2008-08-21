@@ -15,7 +15,7 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -27,8 +27,10 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
+
+// If I'm not mistaken, this #define replaces the CHKERRQ() from PETSc itself...                                           
 #undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
+#define CHKERRQ(x) if(x) throw UintahPetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace std;
 using namespace Uintah;
@@ -76,7 +78,7 @@ Filter::problemSetup(const ProblemSpecP& params)
   argv[3] = const_cast<char*>("-log_exclude_objects");
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
-    throw PetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
   delete argv;
 }
 //______________________________________________________________________
@@ -248,7 +250,7 @@ Filter::matrixCreate(const PatchSet* allpatches,
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                              globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
   if(ierr)
-    throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
@@ -256,13 +258,13 @@ Filter::matrixCreate(const PatchSet* allpatches,
   */
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
-    throw PetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
   ierr = VecSetFromOptions(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
 
   d_matrix_vectors_created = true;
 }
@@ -384,7 +386,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
 #endif           
            ierr = MatSetValues(A,1,&row,d_nz,col,value,INSERT_VALUES);
            if(ierr)
-             throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
+             throw UintahPetscError(ierr, "MatSetValues", __FILE__, __LINE__);
          }
        }
      }
@@ -444,36 +446,36 @@ Filter::applyFilter(const ProcessorGroup* ,
         ASSERT(!isnan(vecvaluex));
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
-          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+          throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
   }
 
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
 #if 0
   ierr = MatView(A, PETSC_VIEWER_STDOUT_WORLD);
 #endif
 
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = MatMult(A, d_x, d_b);
   if(ierr)
-    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
   // copy vector b in the filterVar array
 #if 0
   ierr = VecView(d_x, PETSC_VIEWER_STDOUT_WORLD);
@@ -482,7 +484,7 @@ Filter::applyFilter(const ProcessorGroup* ,
   double* xvec;
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecGetArray", __FILE__, __LINE__);
 
   PetscInt begin, end;
   //get the ownership range so we know where the local indicing on this processor begins
@@ -507,7 +509,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
   ierr = VecRestoreArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 
   return true;
 }
@@ -563,14 +565,14 @@ Filter::applyFilter(const ProcessorGroup* ,
         ASSERT(!isnan(vecvaluex));
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
-          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+          throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
   }
 
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
 #if 0
   cerr << "In the filter class for matview" << endl;
@@ -578,22 +580,22 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
 
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = MatMult(A, d_x, d_b);
   if(ierr)
-    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
   // copy vector b in the filterVar array
 #if 0
   cerr << "In the filter class" << endl;
@@ -603,7 +605,7 @@ Filter::applyFilter(const ProcessorGroup* ,
   double* xvec;
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   
   PetscInt begin, end;
   //get the ownership range so we know where the local indicing on this processor begins
@@ -628,7 +630,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 #endif
   ierr = VecRestoreArray(d_b, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 
   return true;
 }
@@ -645,14 +647,14 @@ Filter::destroyMatrix()
   int ierr;
   ierr = VecDestroy(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
 
   ierr = MatDestroy(A);
   if(ierr)
-    throw PetscError(ierr, "MatDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 }
 
 
