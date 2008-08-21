@@ -99,7 +99,7 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst 
   ifeq ($(MAKE_ARCHIVES),yes)
     ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Creating Archive:   $@"
-	@ar -v -q $@ $(filter %.$(OBJEXT),$^) 2&> /dev/null
+	@ar -q $@ $(filter %.$(OBJEXT),$^)  2> /dev/null
     else
 	ar -v -q $@ $(filter %.$(OBJEXT),$^)
     endif
