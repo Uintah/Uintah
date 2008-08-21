@@ -1,6 +1,6 @@
 
 /*
- *  PetscError.h: 
+ *  UintahPetscError.h: 
  *
  *  Written by:
  *   Steven G. Parker
@@ -21,18 +21,18 @@
 
 namespace Uintah {
   using namespace SCIRun;
-  class PetscError : public Exception {
+  class UintahPetscError : public Exception {
   public:
-    PetscError(int petsc_code, const std::string&, const char* file, int line);
-    PetscError(const PetscError&);
-    virtual ~PetscError();
+    UintahPetscError(int petsc_code, const std::string&, const char* file, int line);
+    UintahPetscError(const UintahPetscError&);
+    virtual ~UintahPetscError();
     virtual const char* message() const;
     virtual const char* type() const;
   protected:
   private:
     int petsc_code;
     std::string d_msg;
-    PetscError& operator=(const PetscError&);
+    UintahPetscError& operator=(const UintahPetscError&);
   };
 } // End namespace Uintah
 

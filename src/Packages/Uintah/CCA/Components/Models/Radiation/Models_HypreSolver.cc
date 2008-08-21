@@ -1,40 +1,37 @@
 //----- Models_HypreSolver.cc ----------------------------------------------
 
-#include <fstream> // work around compiler bug with RHEL 3
-
 #include <Packages/Uintah/CCA/Components/Models/Radiation/Models_HypreSolver.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/Models_RadiationSolver.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Thread/Time.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
+#include <Core/Containers/Array1.h>
+#include <Core/Thread/Time.h>
+
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
-
-#include "_hypre_utilities.h"
-#include "HYPRE_struct_ls.h"
-#include "krylov.h"
-#include "_hypre_struct_mv.h"
-
-#undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
+#include <fstream> // work around compiler bug with RHEL 3
 #include <vector>
+
+#include <_hypre_utilities.h>
+#include <HYPRE_struct_ls.h>
+#include <krylov.h>
+#include <_hypre_struct_mv.h>
 
 using namespace std;
 using namespace Uintah;

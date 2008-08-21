@@ -5,7 +5,7 @@
 
 #include <TauProfilerForSCIRun.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -13,6 +13,8 @@
 
 #include <vector>
 #include <iostream>
+
+// If I'm not mistaken, this #define replaces the CHKERRQ() from PETSc itself...
 #undef CHKERRQ
 #define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 
@@ -444,66 +446,78 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
   }
 }
 
-void MPMPetscSolver::flushMatrix()
+void
+MPMPetscSolver::flushMatrix()
 {
   MatAssemblyBegin(d_A,MAT_FLUSH_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FLUSH_ASSEMBLY);
 }
 
-void MPMPetscSolver::fillVector(int i,double v,bool add)
+void
+MPMPetscSolver::fillVector(int i,double v,bool add)
 {
   PetscScalar value = v;
-  if (add)
+  if (add) {
     VecSetValues(d_B,1,&i,&value,ADD_VALUES);
-  else
+  } 
+  else {
     VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
+  }
 }
 
-void MPMPetscSolver::fillTemporaryVector(int i,double v)
+void
+MPMPetscSolver::fillTemporaryVector(int i,double v)
 {
   PetscScalar value = v;
   VecSetValues(d_t,1,&i,&value,INSERT_VALUES);
 }
 
-
-void MPMPetscSolver::fillFluxVector(int i,double v)
+void
+MPMPetscSolver::fillFluxVector(int i,double v)
 {
   PetscScalar value = v;
   VecSetValues(d_flux,1,&i,&value,INSERT_VALUES);
 }
 
-void MPMPetscSolver::assembleVector()
+void
+MPMPetscSolver::assembleVector()
 {
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
 }
 
-void MPMPetscSolver::assembleTemporaryVector()
+void
+MPMPetscSolver::assembleTemporaryVector()
 {
   VecAssemblyBegin(d_t);
   VecAssemblyEnd(d_t);
 }
 
 
-void MPMPetscSolver::assembleFluxVector()
+void
+MPMPetscSolver::assembleFluxVector()
 {
   VecAssemblyBegin(d_flux);
   VecAssemblyEnd(d_flux);
 }
 
-void MPMPetscSolver::applyBCSToRHS()
+void
+MPMPetscSolver::applyBCSToRHS()
 {
   int ierr = MatMultAdd(d_A,d_t,d_B,d_B);
-  if (ierr)
-    throw PetscError(ierr, "MatMultAdd", __FILE__, __LINE__);
-
+  if (ierr) {
+    throw UintahPetscError(ierr, "MatMultAdd", __FILE__, __LINE__);
+  }
 }
 
-void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
+void
+MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 {
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
-void MPMPetscSolver::removeFixedDOF()
+
+void
+MPMPetscSolver::removeFixedDOF()
 {
   TAU_PROFILE("MPMPetscSolver::removeFixedDOF", " ", TAU_USER);
   flushMatrix();
