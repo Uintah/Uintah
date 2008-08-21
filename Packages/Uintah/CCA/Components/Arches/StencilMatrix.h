@@ -34,9 +34,8 @@ WARNING
 #include <iostream>
 
 namespace Uintah {
-using std::vector;
-template<class T>
 
+template<class T>
 class StencilMatrix {
 
 public:

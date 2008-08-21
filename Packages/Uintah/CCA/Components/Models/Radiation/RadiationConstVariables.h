@@ -1,5 +1,4 @@
 //----- RadiationConstVariables.h -----------------------------------------------
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
 
 #ifndef Uintah_Components_Models_RadiationConstVariables_h
 #define Uintah_Components_Models_RadiationConstVariables_h

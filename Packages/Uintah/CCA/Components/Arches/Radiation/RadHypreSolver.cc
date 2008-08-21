@@ -19,7 +19,6 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -34,14 +33,10 @@
 #include <cstdio>
 #include <cmath>
 
-#include "_hypre_utilities.h"
-#include "HYPRE_struct_ls.h"
-#include "krylov.h"
-#include "_hypre_struct_mv.h"
-
-#undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
-#include <vector>
+#include <_hypre_utilities.h>
+#include <HYPRE_struct_ls.h>
+#include <krylov.h>
+#include <_hypre_struct_mv.h>
 
 using namespace std;
 using namespace Uintah;

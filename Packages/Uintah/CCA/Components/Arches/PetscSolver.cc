@@ -15,7 +15,7 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/PetscError.h>
+#include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
@@ -25,8 +25,10 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
+
 #undef CHKERRQ
-#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
+#define CHKERRQ(x) if(x) throw UintahPetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace std;
 using namespace Uintah;
@@ -76,13 +78,13 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   argv[3] = const_cast<char*>("-log_exclude_objects");
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
-    throw PetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
 //  ierr = PetscOptionsSetValue("-log_exclude_actions", "");
 //  if(ierr)
-//    throw PetscError(ierr, "PetscExcludeActions");
+//    throw UintahPetscError(ierr, "PetscExcludeActions");
 //  ierr = PetscOptionsSetValue("-log_exclude_objects", "");
 //  if(ierr)
-//    throw PetscError(ierr, "PetscExcludeObjects");
+//    throw UintahPetscError(ierr, "PetscExcludeObjects");
   delete argv;
 }
 
@@ -220,7 +222,7 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
                              globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
       
   if(ierr)
-    throw PetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
 
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
@@ -228,16 +230,16 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
      */
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
-    throw PetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
   ierr = VecSetFromOptions(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
   ierr = VecDuplicate(d_x,&d_u);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
 }
 
 // ****************************************************************************
@@ -310,7 +312,7 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
         int row = col[3];
         ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
         if(ierr)
-          throw PetscError(ierr, "MatSetValues", __FILE__, __LINE__);
+          throw UintahPetscError(ierr, "MatSetValues", __FILE__, __LINE__);
       }
     }
   }
@@ -326,11 +328,11 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
         //          VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
         ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
         if(ierr)
-          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+          throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
         //          VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
-          throw PetscError(ierr, "VecSetValue", __FILE__, __LINE__);
+          throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
       }
     }
   }
@@ -352,22 +354,22 @@ PetscSolver::pressLinearSolve()
   int ierr;
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
   if(ierr)
-    throw PetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   ierr = VecAssemblyBegin(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
   ierr = VecAssemblyEnd(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
   // compute the initial error
   double neg_one = -1.0;
   double sum_b;
@@ -375,10 +377,10 @@ PetscSolver::pressLinearSolve()
   Vec u_tmp;
   ierr = VecDuplicate(d_x,&u_tmp);
   if(ierr)
-    throw PetscError(ierr, "VecDuplicate", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDuplicate", __FILE__, __LINE__);
   ierr = MatMult(A, d_x, u_tmp);
   if(ierr)
-    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
 #if (PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, u_tmp);
 #endif
@@ -386,13 +388,13 @@ PetscSolver::pressLinearSolve()
   ierr = VecAXPY(u_tmp,neg_one,d_b);
 #endif
   if(ierr)
-    throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
   if(ierr)
-    throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
   ierr = VecDestroy(u_tmp);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   /* debugging - steve */
   double norm;
 
@@ -401,58 +403,58 @@ PetscSolver::pressLinearSolve()
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   ierr = KSPCreate(PETSC_COMM_WORLD,&solver);
   if(ierr)
-    throw PetscError(ierr, "KSPCreate", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPCreate", __FILE__, __LINE__);
   ierr = KSPSetOperators(solver,A,A,DIFFERENT_NONZERO_PATTERN);
   if(ierr)
-    throw PetscError(ierr, "KSPSetOperators", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPSetOperators", __FILE__, __LINE__);
   ierr = KSPGetPC(solver, &peqnpc);
   if(ierr)
-    throw PetscError(ierr, "KSPGetPC", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPGetPC", __FILE__, __LINE__);
   if (d_pcType == "jacobi") {
     ierr = PCSetType(peqnpc, PCJACOBI);
     if(ierr)
-      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
   }
   else if (d_pcType == "asm") {
     ierr = PCSetType(peqnpc, PCASM);
     if(ierr)
-      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
     ierr = PCASMSetOverlap(peqnpc, d_overlap);
     if(ierr)
-      throw PetscError(ierr, "PCASMSetOverlap", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "PCASMSetOverlap", __FILE__, __LINE__);
   }
   else if (d_pcType == "ilu") {
     ierr = PCSetType(peqnpc, PCILU);
     if(ierr)
-      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
 #if (PETSC_VERSION_MINOR == 3 && PETSC_VERSION_SUBMINOR >= 1) // 2.3.1
     ierr = PCFactorSetFill(peqnpc, d_fill);
     if(ierr)
-      throw PetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "PCFactorSetFill", __FILE__, __LINE__);
 #else
     ierr = PCILUSetFill(peqnpc, d_fill);
     if(ierr)
-      throw PetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "PCILUSetFill", __FILE__, __LINE__);
 #endif
   }
   else {
     ierr = PCSetType(peqnpc, PCBJACOBI);
     if(ierr)
-      throw PetscError(ierr, "PCSetType", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
   }
   if (d_kspType == "cg") {
     ierr = KSPSetType(solver, KSPCG);
     if(ierr)
-      throw PetscError(ierr, "KSPSetType", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "KSPSetType", __FILE__, __LINE__);
   }
   else {
     ierr = KSPSetType(solver, KSPGMRES);
     if(ierr)
-      throw PetscError(ierr, "KSPSetType", __FILE__, __LINE__);
+      throw UintahPetscError(ierr, "KSPSetType", __FILE__, __LINE__);
   }
   ierr = KSPSetTolerances(solver, 1.0e-50, d_residual, PETSC_DEFAULT, PETSC_DEFAULT);
   if(ierr)
-    throw PetscError(ierr, "KSPSetTolerances", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPSetTolerances", __FILE__, __LINE__);
 
   // set null space for preconditioner
   // change for a newer version
@@ -465,7 +467,7 @@ PetscSolver::pressLinearSolve()
   ierr = KSPSetInitialGuessNonzero(solver, PETSC_TRUE);
   // ierr = KSPSetInitialGuessNonzero(solver);
   if(ierr)
-    throw PetscError(ierr, "KSPSetInitialGuessNonzero", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPSetInitialGuessNonzero", __FILE__, __LINE__);
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
      Solve the linear system
@@ -473,22 +475,22 @@ PetscSolver::pressLinearSolve()
   int its;
   ierr = KSPSolve(solver,d_b,d_x);
   if(ierr)
-    throw PetscError(ierr, "KSPSolve", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPSolve", __FILE__, __LINE__);
 
   ierr = KSPGetIterationNumber(solver,&its);
   if (ierr)
-    throw PetscError(ierr, "KSPGetIterationNumber", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPGetIterationNumber", __FILE__, __LINE__);
 
   int me = d_myworld->myrank();
 
   ierr = VecNorm(d_x,NORM_1,&norm);
   if(ierr)
-    throw PetscError(ierr, "VecNorm", __FILE__,  __LINE__);
+    throw UintahPetscError(ierr, "VecNorm", __FILE__,  __LINE__);
 
   // check the error
   ierr = MatMult(A, d_x, d_u);
   if(ierr)
-    throw PetscError(ierr, "MatMult", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
 #if (PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, d_u);
 #endif
@@ -496,10 +498,10 @@ PetscSolver::pressLinearSolve()
   ierr = VecAXPY(d_u,neg_one,d_b);
 #endif
   if(ierr)
-    throw PetscError(ierr, "VecAXPY", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecAXPY", __FILE__, __LINE__);
   ierr  = VecNorm(d_u,NORM_2,&norm);
   if(ierr)
-    throw PetscError(ierr, "VecNorm", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
     
   if(me == 0) {
     cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << Time::currentSeconds()-solve_start << " seconds\n";
@@ -509,7 +511,7 @@ PetscSolver::pressLinearSolve()
   
   ierr =  KSPDestroy(solver);
   if (ierr)
-    throw PetscError(ierr, "KSPDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "KSPDestroy", __FILE__, __LINE__);
 
   if ((norm/(init_norm+1.0e-20) < 1.0)&& (norm < 2.0))
     return true;
@@ -533,7 +535,7 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
   ierr = VecGetArray(d_x, &xvec);
   
   if(ierr)
-    throw PetscError(ierr, "VecGetArray", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecGetArray", __FILE__, __LINE__);
   Array3<int> l2g = d_petscLocalToGlobal[patch];
   
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -553,7 +555,7 @@ PetscSolver::copyPressSoln(const Patch* patch, ArchesVariables* vars)
 #endif
   ierr = VecRestoreArray(d_x, &xvec);
   if(ierr)
-    throw PetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecRestoreArray", __FILE__, __LINE__);
 }
 
 //______________________________________________________________________
@@ -564,16 +566,16 @@ PetscSolver::destroyMatrix()
   int ierr;
   ierr = VecDestroy(d_u);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_b);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = VecDestroy(d_x);
   if(ierr)
-    throw PetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
   ierr = MatDestroy(A);
   if(ierr)
-    throw PetscError(ierr, "MatDestroy", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "MatDestroy", __FILE__, __LINE__);
 }
 
 //______________________________________________________________________
@@ -584,9 +586,9 @@ void PetscSolver::finalizeSolver()
 // The following is to enable PETSc memory logging
 //  int ierrd = PetscTrDump(NULL);
 //  if(ierrd)
-//    throw PetscError(ierrd, "PetscTrDump");
+//    throw UintahPetscError(ierrd, "PetscTrDump");
   int ierr = PetscFinalize();
   if(ierr)
-    throw PetscError(ierr, "PetscFinalize", __FILE__, __LINE__);
+    throw UintahPetscError(ierr, "PetscFinalize", __FILE__, __LINE__);
 }
 
