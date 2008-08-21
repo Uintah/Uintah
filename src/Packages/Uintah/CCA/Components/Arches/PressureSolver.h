@@ -186,12 +186,10 @@ private:
   // Actually do normPressure
   //    [in] 
   //        add documentation here
-  void normPressure(const ProcessorGroup* pc,
-                    const Patch* patch,
+  void normPressure(const Patch* patch,
                     ArchesVariables* vars);
-
-  void updatePressure(const ProcessorGroup* pc,
-                      const Patch* patch,
+                    
+  void updatePressure(const Patch* patch,
                       ArchesVariables* vars);
 
  private:

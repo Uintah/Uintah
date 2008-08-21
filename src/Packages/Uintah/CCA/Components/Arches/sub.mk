@@ -119,7 +119,6 @@ $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_fort.h
 $(SRCDIR)/PressureSolver.$(OBJEXT): $(SRCDIR)/fortran/add_hydrostatic_term_topressure_fort.h
-$(SRCDIR)/PressureSolver.$(OBJEXT): $(SRCDIR)/fortran/normpress_fort.h
 $(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_scalar_fort.h
 $(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_vel_fort.h
 $(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/computeVel_fort.h
