@@ -646,16 +646,28 @@ else
           # to a temp file.  Awk that file to replace filename.o with:
           # <path_to_file>/filename.o.  Then remove the temp file.
           #
-	  @echo "CREATING DEPENDENCY INFORMATION:"
 	  @rm -f $(basename $@).$(F77_DEPEND_EXT)
-	  $(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+          ifeq ($(SCI_MAKE_BE_QUIET),true)
+            # This just generates the .d dependency file:
+	    @$(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
 
-          # The following if/grep/sed is necessary for PGI compiler on Ranger:
-	  @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
+            # The following if/grep/sed is necessary to fix the .d file for the PGI compiler on Ranger:
+	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
 
-          # Now do the actual compile!
-	  @echo "ACTUALLY COMPILING:"
-	  $(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+            # Now do the actual compile!
+	    @echo "Fortran:   $<"
+	    @$(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+          else
+	    @echo "CREATING DEPENDENCY INFORMATION:"
+	    $(F77) $(FFLAGS) $(FINCLUDES) $(F77_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(F77_DEPEND_EXT)
+
+            # The following if/grep/sed is necessary for PGI compiler on Ranger:
+	    @if `grep -q "^../src/" $(basename $@).$(F77_DEPEND_EXT)`; then sed 's,^../src/,,' $(basename $@).$(F77_DEPEND_EXT) > $(basename $@).$(F77_DEPEND_EXT).tmp; mv $(basename $@).$(F77_DEPEND_EXT).tmp $(basename $@).$(F77_DEPEND_EXT) ; fi
+
+            # Now do the actual compile!
+	    @echo "ACTUALLY COMPILING:"
+	    $(F77) $(FFLAGS) $(INCLUDES) -c $< -o $@
+          endif
         else
 	  @echo "Unknown F77_DEPEND_MODE: $(F77_DEPEND_MODE) (for $@)"
 	  @exit 1
