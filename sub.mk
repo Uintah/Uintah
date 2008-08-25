@@ -4,7 +4,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/Arches
 
-SRCS     += $(SRCDIR)/Arches.cc \
+SRCS += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/ArchesLabel.cc \
         $(SRCDIR)/ArchesMaterial.cc \
         $(SRCDIR)/ArchesVariables.cc \
@@ -28,8 +28,8 @@ SRCS     += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/ExtraScalarSrc.cc \
         $(SRCDIR)/ExtraScalarSrcFactory.cc \
         $(SRCDIR)/ZeroExtraScalarSrc.cc \
-		$(SRCDIR)/CO2RateSrc.cc \
-		$(SRCDIR)/SO2RateSrc.cc \
+        $(SRCDIR)/CO2RateSrc.cc \
+        $(SRCDIR)/SO2RateSrc.cc \
         $(SRCDIR)/SmagorinskyModel.cc \
         $(SRCDIR)/ScaleSimilarityModel.cc \
         $(SRCDIR)/IncDynamicProcedure.cc \
@@ -80,7 +80,8 @@ ifneq ($(HAVE_HYPRE),)
   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
-LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
+        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

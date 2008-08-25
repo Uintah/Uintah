@@ -7,9 +7,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/Radiation
 
 SRCS += \
-	$(SRCDIR)/RadiationModel.cc \
-        $(SRCDIR)/RadiationSolver.cc \
-	$(SRCDIR)/DORadiationModel.cc
+        $(SRCDIR)/RadiationModel.cc   \
+        $(SRCDIR)/RadiationSolver.cc  \
+        $(SRCDIR)/DORadiationModel.cc
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/RadLinearSolver.cc
@@ -22,26 +22,27 @@ ifeq ($(HAVE_HYPRE),yes)
 endif
 
 PSELIBS := \
-	Packages/Uintah/CCA/Components/Arches/Radiation/fortran \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions    \
-	Packages/Uintah/Core/Math          \
-	Core/Exceptions \
-	Core/Util \
-	Core/Thread     \
-	Core/Geometry   
+        Packages/Uintah/CCA/Components/Arches/Radiation/fortran \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/Math          \
+        Core/Exceptions \
+        Core/Util       \
+        Core/Thread     \
+        Core/Geometry   
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(FLIBS)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) \
+        $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY)
 
 ifneq ($(HAVE_PETSC),)
-LIBS := $(LIBS) $(PETSC_LIBRARY) 
+  LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
 ifneq ($(HAVE_HYPRE),)
-LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+  LIBS := $(LIBS) $(HYPRE_LIBRARY) 
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
