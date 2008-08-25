@@ -125,7 +125,7 @@ ifeq ($(SET_AIX_LIB),yes)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)          \
-          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_MEMORY_INIT DEF_MEMORY_INIT_NUMBER DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS DEF_KEPLER HAVE_KEPLER IS_OSX DEF_OSX IS_WIN IS_AIX MAKE_ARCHIVES ac_ct_CC EXEEXT OBJEXT EGREP LONG_LONG_SWAP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO BUILD_ARCHES BUILD_ICE BUILD_MPM BUILD_RADIATION DEF_ARCHES DEF_ICE DEF_MPM DEF_RADIATION DEF_MALLOC_TRACE INC_MALLOC_TRACE_H MALLOC_TRACE_LIB_FLAG MALLOC_TRACE_LIB_DIR_FLAG DEF_ZOLTAN INC_ZOLTAN_H ZOLTAN_LIB_FLAG ZOLTAN_LIB_DIR_FLAG AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG LEOPARD_GL_HACK GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_LEOPARD DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP TCL_LIB_DIR TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_DIR TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H ITCL_LIB_DIR ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG JAVA_PROG JAVAC JAR HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN CBLAS_H HAVE_BLAS HAVE_CBLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS DEF_CBLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL BABEL_CLASSPATH INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG WX_CONFIG HAVE_WX DEF_WX WX_DIR WX_CXXFLAGS WX_LIBS HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H HAVE_CPPUNIT DEF_CPPUNIT INC_CPPUNIT_H CPPUNIT_LIB_FLAG CPPUNIT_LIB_DIR_FLAG LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR DEF_DEBUG BUILD_SCIJUMP WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_MEMORY_INIT DEF_MEMORY_INIT_NUMBER DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_COLLAB_VIS HAVE_COLLAB_VIS DEF_KEPLER HAVE_KEPLER IS_OSX DEF_OSX IS_WIN IS_AIX MAKE_ARCHIVES ac_ct_CC EXEEXT OBJEXT EGREP LONG_LONG_SWAP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO BUILD_ARCHES BUILD_ICE BUILD_MPM BUILD_RADIATION DEF_ARCHES DEF_ICE DEF_MPM DEF_RADIATION DEF_MALLOC_TRACE INC_MALLOC_TRACE_H MALLOC_TRACE_LIB_FLAG MALLOC_TRACE_LIB_DIR_FLAG DEF_ZOLTAN INC_ZOLTAN_H ZOLTAN_LIB_FLAG ZOLTAN_LIB_DIR_FLAG AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG RT_LIB_FLAG  THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG LEOPARD_GL_HACK GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_LEOPARD DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP TCL_LIB_DIR TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_DIR TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H ITCL_LIB_DIR ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG JAVA_PROG JAVAC JAR HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN CBLAS_H HAVE_BLAS HAVE_CBLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS DEF_CBLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL BABEL_CLASSPATH INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG WX_CONFIG HAVE_WX DEF_WX WX_DIR WX_CXXFLAGS WX_LIBS HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H HAVE_CPPUNIT DEF_CPPUNIT INC_CPPUNIT_H CPPUNIT_LIB_FLAG CPPUNIT_LIB_DIR_FLAG LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR DEF_DEBUG BUILD_SCIJUMP WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -11675,7 +11675,7 @@ eval M_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -12229,7 +12229,7 @@ eval X_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -12370,6 +12370,466 @@ echo "$as_me: WARNING: \"$X_LIB_DIR_FLAG\"" >&2;}
   fi
 
 fi # end "$IS_WIN" = "yes"
+
+
+
+
+##  --  check for the 'rt' library  ---------------------------
+
+
+##
+## SCI_TRY_LINK (RT):  rt library
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : RT
+## arg 2 : rt library
+## arg 3 :
+## arg 4 :
+## arg 5 : rt
+## arg 6 :
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      RT_LIB_DIR        => lib path
+##      RT_LIB_DIR_FLAG   => all the -L's
+##      RT_LIB_FLAG       => all the -l's
+##      HAVE_RT           => yes or no
+##      INC_RT_H          => all the -I's
+##      HAVE_RT_H         => yes or no
+
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for rt library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for rt library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+echo "$as_me:$LINENO: checking for rt library (optional)" >&5
+echo $ECHO_N "checking for rt library (optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
+     echo
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for rt library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for rt library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If  (the -I paths) is blank, do nothing, else do the for statement.
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "rt"; then
+
+   found_framework=no
+   for lib in "" rt; do
+
+      if test -z "$lib"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of RT check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of RT check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "^\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n ""; then
+
+   for path in "" ; do
+
+      if test -z "$path"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of RT check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of RT check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { echo "$as_me:$LINENO: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in  (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" ; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for RT only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for RT only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" ; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for RT only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for RT only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" ; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval RT_LIB_DIR='""'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in "" $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval RT_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $_sci_libs; do
+  bad_l_arg=`echo "$_lib" | grep "^\-L"`
+  bad_i_arg=`echo "$_lib" | grep "^\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval RT_LIB_FLAG="'$final_libs'"
+eval HAVE_RT="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_RT_H="'$final_incs'"
+eval HAVE_RT_H="yes"
+
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval RT_LIB_DIR=''
+eval RT_LIB_DIR_FLAG=''
+eval RT_LIB_FLAG=''
+eval HAVE_RT="no"
+eval INC_RT_H=''
+eval HAVE_RT_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required RT failed.
+    To see the failed compile information, look in config.log,
+    search for RT. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required RT failed.
+    To see the failed compile information, look in config.log,
+    search for RT. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+
+if test "optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" ; do
+    #echo looking for /$i
+    if test ! -e /$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested RT include file '/$i' was not found" >&5
+echo "$as_me: error: Specifically requested RT include file '/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" rt; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e /lib$i.so && test ! -e /lib$i.a && test ! -e /$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested RT library file '/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested RT library file '/$i' (.so or .a) was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (RT):  rt library
+##
 
 
 
@@ -12792,7 +13252,7 @@ eval FETCHOP_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -13255,7 +13715,7 @@ eval PTHREAD_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -13394,7 +13854,7 @@ _sci_includes=''
 echo $ECHO_N "checking for semaphore library... $ECHO_C" >&6
       old_LIBS="$LIBS"
       SEMAPHORE_LIB_FLAG=unknown
-      for i in "" "$THREAD_LIB_FLAG" -lrt; do
+      for i in "" "$THREAD_LIB_FLAG" $RT_LIB_FLAG; do
         LIBS="$old_LIBS $i"
         cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -13908,7 +14368,7 @@ eval OFED_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -14417,7 +14877,7 @@ eval MX_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -14615,7 +15075,7 @@ case $host in
   *linux*)
     if test "$threads" != "none"; then
       GLU_OTHERS="pthread m"
-      GLU_OTHERS_FLAG="-lpthread -lm"
+      GLU_OTHERS_FLAG="$THREAD_LIB_FLAG -lm"
     else
       GLU_OTHERS="m"
       GLU_OTHERS_FLAG="-lm"
@@ -15013,7 +15473,7 @@ eval GL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -15518,7 +15978,7 @@ eval GL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -16015,7 +16475,7 @@ eval GL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -16710,7 +17170,7 @@ eval DL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -17214,7 +17674,7 @@ eval DL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -17679,7 +18139,7 @@ eval DL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -18151,7 +18611,7 @@ eval STAT64_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -18619,7 +19079,7 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -19080,7 +19540,7 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -19539,7 +19999,7 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -20002,7 +20462,7 @@ eval STD_HDRS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -20477,7 +20937,7 @@ eval STL_HEADERS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -21274,7 +21734,7 @@ eval TCL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -21819,7 +22279,7 @@ eval TK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -22351,7 +22811,7 @@ eval ITCL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -22902,7 +23362,7 @@ eval ITK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -23419,7 +23879,7 @@ eval BLT_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -24288,7 +24748,7 @@ eval XML2_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -24799,7 +25259,7 @@ eval SSTREAM_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -25325,7 +25785,7 @@ eval EXC_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -25822,7 +26282,7 @@ eval EXC_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -26357,7 +26817,7 @@ eval Z_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -26888,7 +27348,7 @@ eval JPEG_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -27402,7 +27862,7 @@ eval TIFF_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -27965,7 +28425,7 @@ eval PNG_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -28546,7 +29006,7 @@ eval PNG_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -29080,7 +29540,7 @@ eval MPEGE_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -29651,7 +30111,7 @@ eval UNP_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -30136,7 +30596,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -30595,7 +31055,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -30768,7 +31228,7 @@ _sci_includes=''
 ## arg 4 :
 ## arg 5 : pgftnrtl
 ## arg 6 : $_sci_lib
-## arg 7 : -lrt
+## arg 7 : $RT_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -30966,7 +31426,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs -lrt $LIBS"
+LIBS="$_sci_libs $RT_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -31056,7 +31516,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -31514,7 +31974,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -31972,7 +32432,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -32430,7 +32890,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -32890,7 +33350,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -33390,7 +33850,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -33887,7 +34347,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -34384,7 +34844,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -34845,7 +35305,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -35303,7 +35763,7 @@ eval F_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -35882,7 +36342,7 @@ eval JAVA_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -36420,7 +36880,7 @@ eval JAVA_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -37404,7 +37864,7 @@ eval VERDICT_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -37948,7 +38408,7 @@ eval CAMAL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -38448,7 +38908,7 @@ eval CAMAL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -38981,7 +39441,7 @@ eval TETGEN_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -39534,7 +39994,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -39745,7 +40205,7 @@ echo "$as_me: error: We recommend that you don't use MKL on a Mac... use the def
 ## arg 4 : $_sci_inc
 ## arg 5 : mkl mkl_core mkl_intel_lp64 guide
 ## arg 6 : $_sci_lib
-## arg 7 : -lpthread
+## arg 7 : $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -39983,7 +40443,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs -lpthread $LIBS"
+LIBS="$_sci_libs $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -40073,7 +40533,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -40241,7 +40701,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : mkl mkl_def guide
 ## arg 6 : $_sci_lib
-## arg 7 : -lpthread
+## arg 7 : $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -40479,7 +40939,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs -lpthread $LIBS"
+LIBS="$_sci_libs $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -40569,7 +41029,7 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -41106,7 +41566,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -41604,7 +42064,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -42094,7 +42554,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -42552,7 +43012,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -43052,7 +43512,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -43553,7 +44013,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -44053,7 +44513,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -44514,7 +44974,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -44971,7 +45431,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -45430,7 +45890,7 @@ eval BLAS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -45936,7 +46396,7 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -46397,7 +46857,7 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -46857,7 +47317,7 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -47325,7 +47785,7 @@ eval LAPACK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -47784,7 +48244,7 @@ eval LAPACKMP_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -48394,7 +48854,7 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -48534,7 +48994,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >
         fi
 
         if test "$HAVE_MPI" != "yes"; then
-          # Try without pmpi (and with pthreads) for the newer version
+          # Try without pmpi (and with $THREAD_LIB_FLAG) for the newer version
           # of lam mpi.
           # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
@@ -48575,7 +49035,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >
 ## arg 2 : mpi library and header-2
 ## arg 3 : mpi.h
 ## arg 4 : $_sci_inc /usr/include/mpi
-## arg 5 : mpi lam util pthread $MPI_EXTRA_LIB_FLAG
+## arg 5 : mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG
 ## arg 6 : $_sci_lib $MPI_EXTRA_LIB_DIR
 ## arg 7 : -DMPIPP_H
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -48658,10 +49118,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "mpi lam util pthread $MPI_EXTRA_LIB_FLAG"; then
+if test -n "mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" mpi lam util pthread $MPI_EXTRA_LIB_FLAG; do
+   for lib in "" mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -48905,7 +49365,7 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -49003,7 +49463,7 @@ echo "$as_me: error: Specifically requested MPI include file '$_sci_inc /usr/inc
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" mpi lam util pthread $MPI_EXTRA_LIB_FLAG; do
+  for i in "" mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG; do
     if test -z "$i"; then
        continue
     fi
@@ -49414,7 +49874,7 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -49922,7 +50382,7 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -50430,7 +50890,7 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -50929,7 +51389,7 @@ eval MPI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -51661,7 +52121,7 @@ eval MPI_UNI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -52159,7 +52619,7 @@ eval MPI_UNICH_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -52378,8 +52838,8 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       done
     fi
 
-# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+    # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
 
 ##
@@ -52418,9 +52878,9 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 ## arg 2 : petsc libraries and headers (petsc_arch = $petsc_arch)
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
-## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
-## arg 6 : $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
-## arg 7 : $INC_MPI_H -DMPIPP_H
+## arg 5 : petsc petscvec petscmat petscdm petscsnes petscts petscksp
+## arg 6 : $_sci_lib_dir
+## arg 7 : $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -52501,10 +52961,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG"; then
+if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -52563,9 +53023,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"; then
+if test -n "$_sci_lib_dir"; then
 
-   for path in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+   for path in "" $_sci_lib_dir; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -52601,12 +53061,12 @@ fi
 
 if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_sci_lib_dir (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+  for value in "" $_sci_lib_dir; do
     if test "$value" = ""; then
       continue
     fi
@@ -52618,8 +53078,8 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -52658,7 +53118,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LIBS"
+LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -52727,7 +53187,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval PETSC_LIB_DIR='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
+eval PETSC_LIB_DIR='"$_sci_lib_dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -52748,7 +53208,7 @@ eval PETSC_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -52846,7 +53306,7 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+  for i in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
     if test -z "$i"; then
        continue
     fi
@@ -52854,9 +53314,9 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a && test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i.lib; then
-     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $_sci_lib_dir/lib$i.so && test ! -e $_sci_lib_dir/lib$i.a && test ! -e $_sci_lib_dir/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -52920,9 +53380,9 @@ _sci_includes=''
 ## arg 2 : petsc libraries and headers (petsc_arch = $petsc_arch) - old
 ## arg 3 : petsc.h
 ## arg 4 : $_sci_inc /usr/include/petsc
-## arg 5 : petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG
-## arg 6 : $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG
-## arg 7 : $INC_MPI_H -DMPIPP_H
+## arg 5 : petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles
+## arg 6 : $_sci_lib_dir
+## arg 7 : $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : optional
 ##
@@ -53003,10 +53463,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG"; then
+if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+   for lib in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -53065,9 +53525,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"; then
+if test -n "$_sci_lib_dir"; then
 
-   for path in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+   for path in "" $_sci_lib_dir; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -53103,12 +53563,12 @@ fi
 
 if test "optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_sci_lib_dir (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG; do
+  for value in "" $_sci_lib_dir; do
     if test "$value" = ""; then
       continue
     fi
@@ -53120,8 +53580,8 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -53160,7 +53620,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LIBS"
+LIBS="$_sci_libs $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -53229,7 +53689,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval PETSC_LIB_DIR='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
+eval PETSC_LIB_DIR='"$_sci_lib_dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -53250,7 +53710,7 @@ eval PETSC_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -53348,7 +53808,7 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
+  for i in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles; do
     if test -z "$i"; then
        continue
     fi
@@ -53356,9 +53816,9 @@ echo "$as_me: error: Specifically requested PETSC include file '$_sci_inc /usr/i
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.so && test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/lib$i.a && test ! -e $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i.lib; then
-     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $_sci_lib_dir/lib$i.so && test ! -e $_sci_lib_dir/lib$i.a && test ! -e $_sci_lib_dir/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested PETSC library file '$_sci_lib_dir/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested PETSC library file '$_sci_lib_dir/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -53407,8 +53867,8 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
 
-# For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+    # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
 ##
 ## SCI_TRY_LINK (PETSC_UNI):  petsc-uni libraries and headers
@@ -53776,7 +54236,7 @@ eval PETSC_UNI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -53909,7 +54369,7 @@ _sci_includes=''
     if test "$HAVE_PETSC_UNI" = "yes" ; then
       DEF_PETSC_UNI="#define PETSC_UNI 1"
     else
-    # Give it a shot on the old petsc-uni version
+      # Give it a shot on the old petsc-uni version
 
 ##
 ## SCI_TRY_LINK (PETSC_UNI):  petsc libraries and headers - old2
@@ -54277,7 +54737,7 @@ eval PETSC_UNI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -54410,8 +54870,6 @@ _sci_includes=''
         DEF_PETSC_UNI="#define PETSC_UNI 1"
       fi
     fi
-
-
 
     if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
       echo
@@ -55024,7 +55482,7 @@ eval SIDL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -55668,7 +56126,7 @@ eval NETSOLVE_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -56383,7 +56841,7 @@ eval GLUT_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -57161,7 +57619,7 @@ eval GLUI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -57715,7 +58173,7 @@ eval OOGL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -58352,7 +58810,7 @@ eval GLEW_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -58849,7 +59307,7 @@ eval GLEW_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -59449,7 +59907,7 @@ eval FREETYPE_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -59987,7 +60445,7 @@ eval FTGL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -60468,7 +60926,7 @@ eval AUDIO_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -61065,7 +61523,7 @@ eval TEEM_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -61641,7 +62099,7 @@ eval MDSPLUS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -62178,7 +62636,7 @@ eval HDF5_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -62655,7 +63113,7 @@ eval PERFEX_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -63131,7 +63589,7 @@ eval CRYPTO_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -63618,7 +64076,7 @@ eval SSL_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -64158,7 +64616,7 @@ eval GLOBUS_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -64958,7 +65416,7 @@ eval NCURSES_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -65668,7 +66126,7 @@ eval RUBY_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -66199,7 +66657,7 @@ eval TAO_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -66734,7 +67192,7 @@ eval VTK_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -67294,7 +67752,7 @@ eval VDT_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -67513,7 +67971,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## arg 4 : $_sci_inc
 ## arg 5 : HYPRE
 ## arg 6 : $_sci_lib
-## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -lm -ldl
+## arg 7 : $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -67751,7 +68209,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -lm -ldl $LIBS"
+LIBS="$_sci_libs $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -67841,7 +68299,7 @@ eval HYPRE_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -68399,7 +68857,7 @@ eval BOOST_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -68938,7 +69396,7 @@ eval CPPUNIT_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -69484,7 +69942,7 @@ eval LOKI_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
@@ -70586,6 +71044,7 @@ s,@M_LIB_FLAG@,$M_LIB_FLAG,;t t
 s,@M_LIB_DIR_FLAG@,$M_LIB_DIR_FLAG,;t t
 s,@X_LIB_FLAG@,$X_LIB_FLAG,;t t
 s,@X_LIB_DIR_FLAG@,$X_LIB_DIR_FLAG,;t t
+s,@RT_LIB_FLAG@,$RT_LIB_FLAG,;t t
 s,@THREAD_IMPL@,$THREAD_IMPL,;t t
 s,@THREAD_LIB_FLAG@,$THREAD_LIB_FLAG,;t t
 s,@SOCKET_LIB_FLAG@,$SOCKET_LIB_FLAG,;t t

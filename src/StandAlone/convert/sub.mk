@@ -26,20 +26,19 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # Makefile fragment for this subdirectory
 
 SRCDIR := StandAlone/convert
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := Core
+  PSELIBS := Core
 else
-PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent Core/Util \
-           Core/Exceptions Core/Init Core/Thread Core/Geometry Core/Math Core/Geom \
-	   Core/ImportExport Core/Basis
+  PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent Core/Util \
+             Core/Exceptions Core/Init Core/Thread Core/Geometry Core/Math Core/Geom \
+	     Core/ImportExport Core/Basis
 endif
-LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 
+LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 
 PROGRAM := $(SRCDIR)/CurveFieldToText
 SRCS := $(SRCDIR)/CurveFieldToText.cc
@@ -54,188 +53,176 @@ SRCS := $(SRCDIR)/HexVolFieldToExotxt.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/HexVolToVtk
-SRCS := $(SRCDIR)/HexVolToVtk.cc
+SRCS    := $(SRCDIR)/HexVolToVtk.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
 PROGRAM := $(SRCDIR)/PointCloudFieldToText
-SRCS := $(SRCDIR)/PointCloudFieldToText.cc
+SRCS    := $(SRCDIR)/PointCloudFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/QuadSurfFieldToText
-SRCS := $(SRCDIR)/QuadSurfFieldToText.cc
+SRCS    := $(SRCDIR)/QuadSurfFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/StructCurveFieldToText
-SRCS := $(SRCDIR)/StructCurveFieldToText.cc
+SRCS    := $(SRCDIR)/StructCurveFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/StructHexVolFieldToText
-SRCS := $(SRCDIR)/StructHexVolFieldToText.cc
+SRCS    := $(SRCDIR)/StructHexVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/StructQuadSurfFieldToText
-SRCS := $(SRCDIR)/StructQuadSurfFieldToText.cc
+SRCS    := $(SRCDIR)/StructQuadSurfFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TetVolFieldToText
-SRCS := $(SRCDIR)/TetVolFieldToText.cc
+SRCS    := $(SRCDIR)/TetVolFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfFieldToText
-SRCS := $(SRCDIR)/TriSurfFieldToText.cc
+SRCS    := $(SRCDIR)/TriSurfFieldToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfFieldToExotxt
-SRCS := $(SRCDIR)/TriSurfFieldToExotxt.cc
+SRCS    := $(SRCDIR)/TriSurfFieldToExotxt.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
-
 PROGRAM := $(SRCDIR)/ColumnMatrixToText
-SRCS := $(SRCDIR)/ColumnMatrixToText.cc
+SRCS    := $(SRCDIR)/ColumnMatrixToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/DenseMatrixToText
-SRCS := $(SRCDIR)/DenseMatrixToText.cc
+SRCS    := $(SRCDIR)/DenseMatrixToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/SparseRowMatrixToText
-SRCS := $(SRCDIR)/SparseRowMatrixToText.cc
+SRCS    := $(SRCDIR)/SparseRowMatrixToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
-
-
 
 PROGRAM := $(SRCDIR)/ColorMapToText
-SRCS := $(SRCDIR)/ColorMapToText.cc
+SRCS    := $(SRCDIR)/ColorMapToText.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-
-
-
-
-
 PROGRAM := $(SRCDIR)/TextToCurveField
-SRCS := $(SRCDIR)/TextToCurveField.cc
+SRCS    := $(SRCDIR)/TextToCurveField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToHexVolField
-SRCS := $(SRCDIR)/TextToHexVolField.cc
+SRCS    := $(SRCDIR)/TextToHexVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToHexTricubicHmt
-SRCS := $(SRCDIR)/TextToHexTricubicHmt.cc
+SRCS    := $(SRCDIR)/TextToHexTricubicHmt.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToPointCloudField
-SRCS := $(SRCDIR)/TextToPointCloudField.cc
+SRCS    := $(SRCDIR)/TextToPointCloudField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToPointCloudString
-SRCS := $(SRCDIR)/TextToPointCloudString.cc
+SRCS    := $(SRCDIR)/TextToPointCloudString.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToQuadSurfField
-SRCS := $(SRCDIR)/TextToQuadSurfField.cc
+SRCS    := $(SRCDIR)/TextToQuadSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToStructCurveField
-SRCS := $(SRCDIR)/TextToStructCurveField.cc
+SRCS    := $(SRCDIR)/TextToStructCurveField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToStructHexVolField
-SRCS := $(SRCDIR)/TextToStructHexVolField.cc
+SRCS    := $(SRCDIR)/TextToStructHexVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToStructQuadSurfField
-SRCS := $(SRCDIR)/TextToStructQuadSurfField.cc
+SRCS    := $(SRCDIR)/TextToStructQuadSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToTetVolField
-SRCS := $(SRCDIR)/TextToTetVolField.cc
+SRCS    := $(SRCDIR)/TextToTetVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToTriSurfField
-SRCS := $(SRCDIR)/TextToTriSurfField.cc
+SRCS    := $(SRCDIR)/TextToTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/VTKtoTriSurfField
-SRCS := $(SRCDIR)/VTKtoTriSurfField.cc
+SRCS    := $(SRCDIR)/VTKtoTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/VTKtoHexVolField
-SRCS := $(SRCDIR)/VTKtoHexVolField.cc
+SRCS    := $(SRCDIR)/VTKtoHexVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToColumnMatrix
-SRCS := $(SRCDIR)/TextToColumnMatrix.cc
+SRCS    := $(SRCDIR)/TextToColumnMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToDenseMatrix
-SRCS := $(SRCDIR)/TextToDenseMatrix.cc
+SRCS    := $(SRCDIR)/TextToDenseMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToSparseRowMatrix
-SRCS := $(SRCDIR)/TextToSparseRowMatrix.cc
+SRCS    := $(SRCDIR)/TextToSparseRowMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TextToColorMap
-SRCS := $(SRCDIR)/TextToColorMap.cc
+SRCS    := $(SRCDIR)/TextToColorMap.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfToVtk
-SRCS := $(SRCDIR)/TriSurfToVtk.cc
+SRCS    := $(SRCDIR)/TriSurfToVtk.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfToOBJ
-SRCS := $(SRCDIR)/TriSurfToOBJ.cc
+SRCS    := $(SRCDIR)/TriSurfToOBJ.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfToTetgen
-SRCS := $(SRCDIR)/TriSurfToTetgen.cc
+SRCS    := $(SRCDIR)/TriSurfToTetgen.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TetgenToTetVol
-SRCS := $(SRCDIR)/TetgenToTetVol.cc
+SRCS    := $(SRCDIR)/TetgenToTetVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/vff2nrrd
-SRCS := $(SRCDIR)/vff2nrrd.cc
+SRCS    := $(SRCDIR)/vff2nrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/PictToNrrd
-SRCS := $(SRCDIR)/PictToNrrd.cc
+SRCS    := $(SRCDIR)/PictToNrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/UCSDToHexVol
-SRCS := $(SRCDIR)/UCSDToHexVol.cc
+SRCS    := $(SRCDIR)/UCSDToHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/UCSD_HO_edge_sfToHexVol
-SRCS := $(SRCDIR)/UCSD_HO_edge_sfToHexVol.cc
+SRCS    := $(SRCDIR)/UCSD_HO_edge_sfToHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/VistaToNrrd
-SRCS := $(SRCDIR)/VistaToNrrd.cc
+SRCS    := $(SRCDIR)/VistaToNrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk
-
 
 ####################################
 # added by C.Wolters, Nov.18 2004:
 PROGRAM := $(SRCDIR)/gmvToPts
-SRCS := $(SRCDIR)/gmvToPts.cc
+SRCS    := $(SRCDIR)/gmvToPts.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/geoToPts
-SRCS := $(SRCDIR)/geoToPts.cc
+SRCS    := $(SRCDIR)/geoToPts.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 ####################################
 
-
 PROGRAM := $(SRCDIR)/SampleHexTricubicHmt
-SRCS := $(SRCDIR)/SampleHexTricubicHmt.cc
+SRCS    := $(SRCDIR)/SampleHexTricubicHmt.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/Lin2QuadMesh
-SRCS := $(SRCDIR)/Lin2QuadMesh.cc
+SRCS    := $(SRCDIR)/Lin2QuadMesh.cc
 include $(SCIRUN_SCRIPTS)/program.mk
