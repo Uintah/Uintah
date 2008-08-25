@@ -31,55 +31,55 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/Datatypes
+SRCDIR := Core/Datatypes
 
-SRCS +=	$(SRCDIR)/Clipper.cc		    	\
-	$(SRCDIR)/Color.cc		    	\
-	$(SRCDIR)/ColumnMatrix.cc	    	\
-	$(SRCDIR)/Datatype.cc		    	\
-	$(SRCDIR)/DenseColMajMatrix.cc	    	\
-	$(SRCDIR)/DenseMatrix.cc	    	\
-	$(SRCDIR)/Field.cc		    	\
-	$(SRCDIR)/FieldInterfaceAux.cc	    	\
-	$(SRCDIR)/Image.cc		    	\
-	$(SRCDIR)/Matrix.cc		    	\
-	$(SRCDIR)/MatrixOperations.cc	    	\
-	$(SRCDIR)/Mesh.cc		    	\
-	$(SRCDIR)/NrrdData.cc		    	\
-	$(SRCDIR)/PropertyManager.cc	    	\
-	$(SRCDIR)/SearchGrid.cc           	\
-	$(SRCDIR)/SparseRowMatrix.cc	    	\
+SRCS += $(SRCDIR)/Clipper.cc                    \
+        $(SRCDIR)/Color.cc                      \
+        $(SRCDIR)/ColumnMatrix.cc               \
+        $(SRCDIR)/Datatype.cc                   \
+        $(SRCDIR)/DenseColMajMatrix.cc          \
+        $(SRCDIR)/DenseMatrix.cc                \
+        $(SRCDIR)/Field.cc                      \
+        $(SRCDIR)/FieldInterfaceAux.cc          \
+        $(SRCDIR)/Image.cc                      \
+        $(SRCDIR)/Matrix.cc                     \
+        $(SRCDIR)/MatrixOperations.cc           \
+        $(SRCDIR)/Mesh.cc                       \
+        $(SRCDIR)/NrrdData.cc                   \
+        $(SRCDIR)/PropertyManager.cc            \
+        $(SRCDIR)/SearchGrid.cc                 \
+        $(SRCDIR)/SparseRowMatrix.cc            \
         $(SRCDIR)/String.cc                     \
-	$(SRCDIR)/TypeName.cc		    	\
-	$(SRCDIR)/cd_templates.cc	    	\
-	$(SRCDIR)/cd_templates_fields_0.cc    	\
-	$(SRCDIR)/cd_templates_fields_1.cc    	\
-	$(SRCDIR)/cd_templates_fields_2.cc    	\
-	$(SRCDIR)/cd_templates_fields_3.cc    	\
-	$(SRCDIR)/cd_templates_fields_4.cc    	\
-	$(SRCDIR)/cd_templates_fields_5.cc	\
-	$(SRCDIR)/cd_templates_fields_6.cc	\
+        $(SRCDIR)/TypeName.cc                   \
+        $(SRCDIR)/cd_templates.cc               \
+        $(SRCDIR)/cd_templates_fields_0.cc      \
+        $(SRCDIR)/cd_templates_fields_1.cc      \
+        $(SRCDIR)/cd_templates_fields_2.cc      \
+        $(SRCDIR)/cd_templates_fields_3.cc      \
+        $(SRCDIR)/cd_templates_fields_4.cc      \
+        $(SRCDIR)/cd_templates_fields_5.cc      \
+        $(SRCDIR)/cd_templates_fields_6.cc      \
 
 
 PSELIBS := \
-	Core/Basis        \
-	Core/Containers   \
-	Core/Exceptions   \
-	Core/Geometry     \
-	Core/Math         \
-	Core/Persistent   \
-	Core/Thread       \
-	Core/Util         
+        Core/Basis        \
+        Core/Containers   \
+        Core/Exceptions   \
+        Core/Geometry     \
+        Core/Math         \
+        Core/Persistent   \
+        Core/Thread       \
+        Core/Util         
 
 ifeq ($(BUILD_DATAFLOW),yes)
   PSELIBS += Core/GuiInterface
 endif
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
-	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
+        $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)             \
+        $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 INCLUDES += $(TEEM_INCLUDE)
 INCLUDES += $(BLAS_INCLUDE)
-
