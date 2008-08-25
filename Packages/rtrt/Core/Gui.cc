@@ -112,13 +112,14 @@ static Transform prev_trans;
 #define FOV_SPINNER_ID            61
 #define DEPTH_SPINNER_ID          62
 
-#define LIGHT_LIST_ID            100
-#define LIGHTS_BUTTON_ID         101
-#define TOGGLE_LIGHT_SWITCHES_ID 102
-#define TOGGLE_SHOW_LIGHTS_ID    103
-#define LIGHT_X_POS_ID           104
-#define LIGHT_Y_POS_ID           105
-#define LIGHT_Z_POS_ID           106
+#define LIGHT_LIST_ID             100
+#define LIGHTS_BUTTON_ID          101
+#define TOGGLE_LIGHT_SWITCHES_ID  102
+#define TOGGLE_SHOW_LIGHTS_ID     103
+#define LIGHT_X_POS_ID            104
+#define LIGHT_Y_POS_ID            105
+#define LIGHT_Z_POS_ID            106
+#define MOVE_LIGHT_TO_EYE_ID      107
 
 #define ROUTE_LIST_ID            110
 #define ROUTE_BUTTON_ID          111
@@ -1652,6 +1653,22 @@ GGT::toggleLightOnOffCB( int /*id*/ )
 }
 
 void
+GGT::moveLightToEyeCB( int /* id */ )
+{
+  Light * light = activeGGT->lights_[ activeGGT->selectedLightId_ ];
+
+  Camera * cam = activeGGT->camera_;  
+
+  Point pos( cam->eye.x(), cam->eye.y(), cam->eye.y() );
+
+  light->updatePosition( pos );
+
+  activeGGT->lightPosX_->set_float_val( pos.x() );
+  activeGGT->lightPosY_->set_float_val( pos.y() );
+  activeGGT->lightPosZ_->set_float_val( pos.z() );
+}
+
+void
 GGT::toggleLightSwitchesCB( int /*id*/ )
 {
   if( activeGGT->lightsOn_ ) {
@@ -2285,6 +2302,10 @@ GGT::createLightWindow( GLUI * window )
 			  &(activeGGT->lightZ_),
 			  LIGHT_Z_POS_ID, updateLightPositionCB );
 
+  moveLightToEyeBtn_ = 
+    window->add_button_to_panel( lightsPositionPanel_, "Move Light To Eye",
+				 MOVE_LIGHT_TO_EYE_ID,
+				 moveLightToEyeCB );
   GLUI_Rollout * moreControls = 
     window->add_rollout_to_panel( panel, "More Controls", false );  
 
