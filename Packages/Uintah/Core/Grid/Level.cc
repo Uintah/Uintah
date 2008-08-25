@@ -27,7 +27,7 @@
 #include <math.h>
 
 #define SELECT_RANGETREE
-#define BRYAN_SELECT_CACHE
+//#define BRYAN_SELECT_CACHE
 
 #ifdef SELECT_RANGETREE
 #include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVH.h>
