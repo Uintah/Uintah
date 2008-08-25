@@ -1700,7 +1700,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
 
       // Get finer level data
-      const Patch* finePatch;
+      const Patch* finePatch = NULL;
       // FIX: finePatch business
       if(getLevel(patches)->hasFinerLevel()){
          const Level* fineLevel = getLevel(patches)->getFinerLevel().get_rep();
