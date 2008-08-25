@@ -617,7 +617,7 @@ eval $1_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
-for _lib in "" $LIBS; do
+for _lib in "" $_sci_libs; do
   bad_l_arg=`echo "$_lib" | grep "^\-L"`
   bad_i_arg=`echo "$_lib" | grep "^\-I"`
   if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then

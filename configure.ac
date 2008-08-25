@@ -2227,6 +2227,11 @@ fi # end "$IS_WIN" = "yes"
 AC_SUBST(X_LIB_FLAG)
 AC_SUBST(X_LIB_DIR_FLAG)
 
+##  --  check for the 'rt' library  ---------------------------
+
+SCI_TRY_LINK(RT,rt library,,,rt,,,,optional)
+AC_SUBST( RT_LIB_FLAG )
+
 ##  --  check for the required thread library  ---------------------------
 
 SOCKET_LIBRARY=""
@@ -2277,7 +2282,7 @@ case $threads in
       AC_MSG_CHECKING(for semaphore library)
       old_LIBS="$LIBS"
       SEMAPHORE_LIB_FLAG=unknown
-      for i in "" "$THREAD_LIB_FLAG" -lrt; do
+      for i in "" "$THREAD_LIB_FLAG" $RT_LIB_FLAG; do
         LIBS="$old_LIBS $i"
         AC_TRY_LINK([
 #include <semaphore.h>
@@ -2396,7 +2401,7 @@ case $host in
   *linux*)
     if test "$threads" != "none"; then
       GLU_OTHERS="pthread m"
-      GLU_OTHERS_FLAG="-lpthread -lm"
+      GLU_OTHERS_FLAG="$THREAD_LIB_FLAG -lm"
     else
       GLU_OTHERS="m"
       GLU_OTHERS_FLAG="-lm"
@@ -3212,7 +3217,7 @@ case $host in
     # Linux Library Check
     case $F77 in
       *pgf77*)
-        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,-lrt,,$_sci_optional)
+        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,$_sci_lib,$RT_LIB_FLAG,,$_sci_optional)
         ;;
       *gfortran*)
         SCI_TRY_LINK(F,fortran libraries,,,gfortran,$_sci_lib,,,$_sci_optional)
@@ -3599,9 +3604,9 @@ if test "$with_mkl"; then
        ;;
      *)
        SCI_TRY_LINK(BLAS,mkl version of (blas) libraries and headers,mkl_cblas.h,
-                    $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,-lpthread,,$_sci_optional)
+                    $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,$THREAD_LIB_FLAG,,$_sci_optional)
        SCI_TRY_LINK(LAPACK,mkl version of (lapack) libraries and headers,mkl_lapack.h,
-                    $_sci_inc,mkl mkl_def guide,$_sci_lib,-lpthread,,$_sci_optional)
+                    $_sci_inc,mkl mkl_def guide,$_sci_lib,$THREAD_LIB_FLAG,,$_sci_optional)
        ;;
   esac
 
@@ -3880,12 +3885,12 @@ if test "$sci_required_mpi" = "yes"; then
         fi
 
         if test "$HAVE_MPI" != "yes"; then
-          # Try without pmpi (and with pthreads) for the newer version
+          # Try without pmpi (and with $THREAD_LIB_FLAG) for the newer version
           # of lam mpi.
           # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
           SCI_TRY_LINK(MPI,mpi library and header-2,mpi.h,
-                       $_sci_inc /usr/include/mpi,mpi lam util pthread $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
+                       $_sci_inc /usr/include/mpi,mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG,$_sci_lib $MPI_EXTRA_LIB_DIR,-DMPIPP_H,,optional)
 
           # verify that it was found in the location requested.
           if test "$HAVE_MPI" = "yes" && test "$_sci_optional" = "specific" &&
@@ -4181,16 +4186,16 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       done  
     fi
 
-# For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+    # For Petsc 2.2 use this line below:   petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
+    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
 
     SCI_TRY_LINK(PETSC,
                  petsc libraries and headers (petsc_arch = $petsc_arch),
                  petsc.h,
                  $_sci_inc /usr/include/petsc,
-                 petsc petscvec petscmat petscdm petscsnes petscts petscksp $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-                 $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
-                 $INC_MPI_H -DMPIPP_H,
+                 petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+                 $_sci_lib_dir,
+                 $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                  ,
                  optional)
 
@@ -4203,9 +4208,9 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
                      petsc libraries and headers (petsc_arch = $petsc_arch) - old,
                      petsc.h,
                      $_sci_inc /usr/include/petsc,
-                     petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG,
-                     $_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG,
-                     $INC_MPI_H -DMPIPP_H,
+                     petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles,
+                     $_sci_lib_dir,
+                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                      ,
                      optional)
         if test "$HAVE_PETSC" = "yes"; then
@@ -4234,8 +4239,8 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
     fi
 
-# For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
-# Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
+    # For petsc 2.2 use this line below:  petsc petscvec petscmat petscdm petscsnes petscts petscksp,
+    # Use -DMPIPP_H so we don't include mpi++.h where we don't want it.
     SCI_TRY_LINK(PETSC_UNI,
                  petsc-uni libraries and headers,
                  petsc.h,
@@ -4249,7 +4254,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
     if test "$HAVE_PETSC_UNI" = "yes" ; then
       DEF_PETSC_UNI="#define PETSC_UNI 1"
     else
-    # Give it a shot on the old petsc-uni version
+      # Give it a shot on the old petsc-uni version
       SCI_TRY_LINK(PETSC_UNI,
                    petsc libraries and headers - old2,
                    petsc.h,
@@ -4264,8 +4269,6 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       fi  
     fi
 
-
-   
     if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
       echo
       AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
@@ -5387,7 +5390,10 @@ fi
 AC_LANG([C++])
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                          HYPRE,
-                         $_sci_lib,$MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG -lm -ldl,,$_sci_optional)
+                         $_sci_lib,
+                         $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                         ,
+                         $_sci_optional)
 AC_LANG([C])
 
 if test "$HAVE_HYPRE" = "yes" ; then

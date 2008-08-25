@@ -4,7 +4,7 @@
 SRCDIR := Packages/Uintah/testprograms/BNRRegridder
 
 PROGRAM := $(SRCDIR)/bnrtest
-SRCS := $(SRCDIR)/bnrtest.cc
+SRCS    := $(SRCDIR)/bnrtest.cc
 
 PSELIBS := \
         Core/Exceptions                          \
@@ -19,7 +19,7 @@ PSELIBS := \
         Packages/Uintah/CCA/Ports                \
         Packages/Uintah/CCA/Components/Regridder
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

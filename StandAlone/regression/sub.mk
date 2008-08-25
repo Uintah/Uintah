@@ -31,7 +31,7 @@
 
 SRCDIR := StandAlone/regression
 
-LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 
 ifeq ($(HAVE_INSIGHT),yes)
   INCLUDES += $(INSIGHT_INCLUDE)
@@ -50,7 +50,7 @@ else
 endif
 
 PROGRAM := $(SRCDIR)/TEST_FieldsAlgo
-SRCS := $(SRCDIR)/TEST_FieldsAlgo.cc
+SRCS    := $(SRCDIR)/TEST_FieldsAlgo.cc
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
