@@ -21,16 +21,16 @@ ifeq ($(BUILD_ARCHES),yes)
   ifeq ($(BUILD_MPM),yes)
     MPMARCHES_LIB    = $(COMPONENTS)/MPMArches
   endif
-  ARCHES_LIBS     = $(COMPONENTS)/Arches
+  ARCHES_LIBS        = $(COMPONENTS)/Arches
 endif
 ifeq ($(BUILD_MPM),yes)
-  MPM_LIB         = Packages/Uintah/CCA/Components/MPM
+  MPM_LIB            = Packages/Uintah/CCA/Components/MPM
   ifeq ($(BUILD_ICE),yes)
-    MPMICE_LIB      = Packages/Uintah/CCA/Components/MPMICE
+    MPMICE_LIB       = Packages/Uintah/CCA/Components/MPMICE
   endif
 endif
 ifeq ($(BUILD_ICE),yes)
-  ICE_LIB         = Packages/Uintah/CCA/Components/ICE
+  ICE_LIB            = Packages/Uintah/CCA/Components/ICE
 endif
 
 
@@ -58,7 +58,7 @@ ifeq ($(SET_AIX_LIB),yes)
         Packages/Uintah/Core/GeometryPiece               \
         Packages/Uintah/CCA/Components/Parent            \
         Packages/Uintah/CCA/Components/SwitchingCriteria \
-	Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
+        Packages/Uintah/CCA/Components/OnTheFlyAnalysis  \
         Packages/Uintah/CCA/Components/Schedulers           \
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Solvers              \
@@ -77,13 +77,12 @@ PROGRAM := Packages/Uintah/StandAlone/sus
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
 else
-
   PSELIBS := \
         Core/Containers   \
         Core/Exceptions   \
         Core/Geometry     \
         Core/Math         \
-	Core/Persistent   \
+        Core/Persistent   \
         Core/Thread       \
         Core/Util         \
         Packages/Uintah/Core/DataArchive \
@@ -123,9 +122,10 @@ ifeq ($(SET_AIX_LIB),yes)
         $(X_LIBRARY) \
         $(M_LIBRARY)
 else
-  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
-          $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)          \
-          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
+          $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)               \
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
+          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -159,24 +159,25 @@ else
         Packages/Uintah/Core/DataArchive   \
         Packages/Uintah/CCA/Ports          \
         Packages/Uintah/CCA/Components/ProblemSpecification \
-        Core/XMLUtil \
+        Core/Containers  \
         Core/Exceptions  \
-        Core/Persistent  \
         Core/Geometry    \
+        Core/OS          \
+        Core/Persistent  \
         Core/Thread      \
         Core/Util        \
-        Core/OS          \
-        Core/Containers
+        Core/XMLUtil     
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) \
+	$(TEEM_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
 # compare_uda
 
-SRCS := $(SRCDIR)/compare_uda.cc
+SRCS    := $(SRCDIR)/compare_uda.cc
 PROGRAM := Packages/Uintah/StandAlone/compare_uda
 
 ifeq ($(LARGESOS),yes)
@@ -203,7 +204,7 @@ else
         Core/Util
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

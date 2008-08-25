@@ -5,7 +5,6 @@ SRCDIR := Packages/Uintah/StandAlone/tools/extractors
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
 else
-
   PSELIBS := \
         Core/Containers   \
         Core/Exceptions   \
@@ -45,29 +44,30 @@ ifeq ($(IS_AIX),yes)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
-          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+          $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
+          $(MPI_LIBRARY) $(M_LIBRARY)
 endif
 
 ##############################################
 # timeextract
 
-SRCS := $(SRCDIR)/timeextract.cc
-PROGRAM :=  $(SRCDIR)/timeextract
+SRCS    := $(SRCDIR)/timeextract.cc
+PROGRAM := $(SRCDIR)/timeextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
 # faceextract
 
-SRCS := $(SRCDIR)/faceextract.cc
-PROGRAM :=  $(SRCDIR)/faceextract
+SRCS    := $(SRCDIR)/faceextract.cc
+PROGRAM := $(SRCDIR)/faceextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
 # extractV
 
-SRCS := $(SRCDIR)/extractV.cc
+SRCS    := $(SRCDIR)/extractV.cc
 PROGRAM := $(SRCDIR)/extractV
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -75,7 +75,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # extractF
 
-SRCS := $(SRCDIR)/extractF.cc
+SRCS    := $(SRCDIR)/extractF.cc
 PROGRAM := $(SRCDIR)/extractF
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -83,7 +83,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # extractS
 
-SRCS := $(SRCDIR)/extractS.cc
+SRCS    := $(SRCDIR)/extractS.cc
 PROGRAM := $(SRCDIR)/extractS
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -91,7 +91,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # partextract
 
-SRCS := $(SRCDIR)/partextract.cc
+SRCS    := $(SRCDIR)/partextract.cc
 PROGRAM := $(SRCDIR)/partextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -99,9 +99,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # lineextract
 
-SRCS := $(SRCDIR)/lineextract.cc
+SRCS    := $(SRCDIR)/lineextract.cc
 PROGRAM := $(SRCDIR)/lineextract
 
 include $(SCIRUN_SCRIPTS)/program.mk
-
-
