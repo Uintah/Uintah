@@ -373,7 +373,8 @@ main(int argc, char** argv)
       double current_time = times[time];
       GridP grid = archive->queryGrid(time);
       if (level_index >= grid->numLevels() || level_index < 0) {
-        cerr << "level index is bad ("<<level_index<<").  Should be between 0 and "<<grid->numLevels()<<".\n";
+        cerr << "level index (" << level_index << ") is bad.  Should be from 0 to " 
+	     << grid->numLevels()-1 << ".\n";
         cerr << "Trying next timestep.\n";
         continue;
       }
