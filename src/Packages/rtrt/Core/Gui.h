@@ -282,6 +282,8 @@ private:
   GLUI_Spinner * lightIntensity_;
   GLUI_Spinner * ambientIntensity_;
 
+  GLUI_Button  * moveLightToEyeBtn_;
+
   GLUI_Button  * toggleLightsOnOffBtn_;
   GLUI_Button  * toggleShowLightsBtn_;
 
@@ -387,6 +389,7 @@ private:
   static void updateLightPanelCB( int id );
   static void updateLightPositionCB( int id );
   static void updateLightRadiusCB( int id );
+  static void moveLightToEyeCB( int id );
 
   // Object Window Callbacks
   void createObjectWindow( GLUI * window );
