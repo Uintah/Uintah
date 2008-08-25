@@ -208,7 +208,10 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
 
     int material = *qinfo.materials.begin();
 
-    if( !args.quiet ) { cout << "  Extracting data for material " << material << ".\n"; }
+    if( !args.quiet ) { 
+      cout << "  Extracting data for material " << material
+	   << ". (Patch: " << patch->getID() << "/" << patch->getLevel()->numPatches()<< "\n"; 
+    }
 
     qinfo.archive->query(patch_data, qinfo.varname, material, patch,
                          qinfo.timestep);
