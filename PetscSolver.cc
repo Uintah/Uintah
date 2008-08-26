@@ -1,29 +1,10 @@
 //----- PetscSolver.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
@@ -264,9 +245,10 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                              globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
       
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "MatCreateMPIAIJ", __FILE__, __LINE__);
-
+  }
+  
   /* 
      Create vectors.  Note that we form 1 vector from scratch and
      then duplicate as needed.
@@ -274,12 +256,15 @@ PetscSolver::matrixCreate(const PatchSet* perproc_patches,
   ierr = VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecCreateMPI", __FILE__, __LINE__);
+  
   ierr = VecSetFromOptions(d_x);
   if(ierr)
     throw UintahPetscError(ierr, "VecSetFromOptions", __FILE__, __LINE__);
+  
   ierr = VecDuplicate(d_x,&d_b);
   if(ierr)
     throw UintahPetscError(ierr, "VecDuplicate(d_b)", __FILE__, __LINE__);
+  
   ierr = VecDuplicate(d_x,&d_u);
   if(ierr)
     throw UintahPetscError(ierr, "VecDuplicate(d_u)", __FILE__, __LINE__);
@@ -368,11 +353,10 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
         vecvalueb = constvars->pressNonlinearSrc[IntVector(colX,colY,colZ)];
         vecvaluex = vars->pressure[IntVector(colX, colY, colZ)];
         int row = l2g[IntVector(colX, colY, colZ)];   
-        //          VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
         ierr = VecSetValue(d_b, row, vecvalueb, INSERT_VALUES);
         if(ierr)
           throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
-        //          VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
+
         ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
         if(ierr)
           throw UintahPetscError(ierr, "VecSetValue", __FILE__, __LINE__);
@@ -395,49 +379,75 @@ PetscSolver::pressLinearSolve()
   PC peqnpc; // pressure eqn pc
 
   int ierr;
+  //__________________________________
+  //             A
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "MatAssemblyBegin", __FILE__, __LINE__);
+  }
+  
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "MatAssemblyEnd", __FILE__, __LINE__);
+  }
+  //__________________________________
+  //            B
   ierr = VecAssemblyBegin(d_b);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+  }
+  
   ierr = VecAssemblyEnd(d_b);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+  }
+  //__________________________________
+  //            X
   ierr = VecAssemblyBegin(d_x);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "VecAssemblyBegin", __FILE__, __LINE__);
+  }
+  
   ierr = VecAssemblyEnd(d_x);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "VecAssemblyEnd", __FILE__, __LINE__);
+  }
+  
   // compute the initial error
   double neg_one = -1.0;
   double sum_b;
   ierr = VecSum(d_b, &sum_b);
   Vec u_tmp;
+  
   ierr = VecDuplicate(d_x,&u_tmp);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "VecDuplicate", __FILE__, __LINE__);
+  }
+  
   ierr = MatMult(A, d_x, u_tmp);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "MatMult", __FILE__, __LINE__);
+  }
+  
 #if (PETSC_VERSION_MINOR == 2)
   ierr = VecAXPY(&neg_one, d_b, u_tmp);
 #endif
 #if (PETSC_VERSION_MINOR == 3)
   ierr = VecAXPY(u_tmp,neg_one,d_b);
 #endif
-  if(ierr)
+  if(ierr){ 
     throw UintahPetscError(ierr, "VecAXPY", __FILE__, __LINE__);
+  }
+  
   ierr  = VecNorm(u_tmp,NORM_2,&init_norm);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
+  }
+  
   ierr = VecDestroy(u_tmp);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "VecDestroy", __FILE__, __LINE__);
+  }
   /* debugging - steve */
   double norm;
 
@@ -447,12 +457,17 @@ PetscSolver::pressLinearSolve()
   ierr = KSPCreate(PETSC_COMM_WORLD,&solver);
   if(ierr)
     throw UintahPetscError(ierr, "KSPCreate", __FILE__, __LINE__);
+    
+    
   ierr = KSPSetOperators(solver,A,A,DIFFERENT_NONZERO_PATTERN);
   if(ierr)
     throw UintahPetscError(ierr, "KSPSetOperators", __FILE__, __LINE__);
+  
+  
   ierr = KSPGetPC(solver, &peqnpc);
   if(ierr)
     throw UintahPetscError(ierr, "KSPGetPC", __FILE__, __LINE__);
+  
   if (d_pcType == "jacobi") {
     ierr = PCSetType(peqnpc, PCJACOBI);
     if(ierr)
@@ -462,6 +477,7 @@ PetscSolver::pressLinearSolve()
     ierr = PCSetType(peqnpc, PCASM);
     if(ierr)
       throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
+    
     ierr = PCASMSetOverlap(peqnpc, d_overlap);
     if(ierr)
       throw UintahPetscError(ierr, "PCASMSetOverlap", __FILE__, __LINE__);
@@ -631,7 +647,8 @@ void PetscSolver::finalizeSolver()
 //  if(ierrd)
 //    throw UintahPetscError(ierrd, "PetscTrDump");
   int ierr = PetscFinalize();
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "PetscFinalize", __FILE__, __LINE__);
+  }
 }
 
