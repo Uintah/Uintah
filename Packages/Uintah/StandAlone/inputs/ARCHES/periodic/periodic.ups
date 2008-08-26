@@ -98,12 +98,12 @@
       <PressureSolver>
         <normalize_pressure>true    </normalize_pressure>
         <linear_solver>     hypre   </linear_solver>
-        <LinearSolver>
-          <res_tol>   1.0e-10</res_tol>
-          <ksptype>   cg     </ksptype>
-          <pctype>    pfmg   </pctype>
-          <max_iter>  750    </max_iter>
-        </LinearSolver>
+        <parameters>
+          <res_tol>         1.0e-10</res_tol>
+          <solver>          cg     </solver>
+          <preconditioner>  pfmg   </preconditioner>
+          <max_iter>        750    </max_iter>
+        </parameters>
       </PressureSolver>
 
       <MomentumSolver>

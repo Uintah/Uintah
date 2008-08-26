@@ -139,12 +139,12 @@
 
         <PressureSolver>
           <linear_solver>hypre</linear_solver>
-          <LinearSolver>
-            <ksptype>rbgs</ksptype>
-            <pctype>pfmg</pctype>
+          <parameters>
+            <solver>cg</solver>
+            <preconditioner>pfmg</preconditioner>
             <res_tol>1.0e-10</res_tol>
             <max_iter>75</max_iter>
-          </LinearSolver>
+          </parameters>
         </PressureSolver>
 
         <MomentumSolver>

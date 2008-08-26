@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
@@ -57,17 +58,58 @@ PetscSolver::~PetscSolver()
 void 
 PetscSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("LinearSolver");
-  db->require("max_iter", d_maxSweeps);
-  //db->require("res_tol", d_residual);
+  ProblemSpecP db = params->findBlock("parameters");
+  
+  if(!db) {
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES:PressureSolver: missing <parameters> tag \n";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__); 
+  }
+  
+  //__________________________________
+  //bulletproofing
+  string test = "none";
+  string test2 = "none";
+  db->get("ksptype",test);
+  db->get("pctype", test2);
+  
+  if (test != "none" || test2 != "none"){
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES: using a depreciated linear solver option \n"
+         << "change  <ksptype>   to    <solver> \n"
+         << "change  <pctype>    to    <preconditioner> \n"<< endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
+  }
+  
+  db->require("preconditioner",d_pcType);
+  db->require("solver",        d_solverType);
+  db->require("max_iter",      d_maxSweeps);
   db->getWithDefault("res_tol", d_residual, 1.0e-7);
-  db->require("pctype", d_pcType);
-  if (d_pcType == "asm")
+  
+  if (d_pcType == "asm"){
     db->require("overlap",d_overlap);
-  if (d_pcType == "ilu")
+  }
+  
+  if (d_pcType == "ilu"){
     db->require("fill",d_fill);
-  db->require("ksptype",d_kspType);
-//  int argc = 2;
+  }
+   
+  //__________________________________
+  //bulletproofing
+  if(d_solverType != "cg" ){
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES: unknown linear solve type ("<<d_solverType<<") \n"
+         << "Valid PETSC Option:  cg"<< endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
+  if(d_pcType != "asm"   && d_pcType != "ilu" && d_pcType != "jacobi"){
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES: unknown PETSC preconditioner type ("<<d_pcType<<") \n"
+         << "Valid Options:  smg, pfmg, jacobi, none"<< endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
   int argc = 4;
   char** argv;
   argv = scinew char*[argc];
@@ -77,8 +119,9 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
   argv[2] = const_cast<char*>("-log_exclude_actions");
   argv[3] = const_cast<char*>("-log_exclude_objects");
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
-  if(ierr)
+  if(ierr){
     throw UintahPetscError(ierr, "PetscInitialize", __FILE__, __LINE__);
+  }
 //  ierr = PetscOptionsSetValue("-log_exclude_actions", "");
 //  if(ierr)
 //    throw UintahPetscError(ierr, "PetscExcludeActions");
@@ -442,7 +485,7 @@ PetscSolver::pressLinearSolve()
     if(ierr)
       throw UintahPetscError(ierr, "PCSetType", __FILE__, __LINE__);
   }
-  if (d_kspType == "cg") {
+  if (d_solverType == "cg") {
     ierr = KSPSetType(solver, KSPCG);
     if(ierr)
       throw UintahPetscError(ierr, "KSPSetType", __FILE__, __LINE__);

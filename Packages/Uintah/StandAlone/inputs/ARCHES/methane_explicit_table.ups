@@ -160,12 +160,12 @@
 
                 <PressureSolver>
                     <linear_solver>petsc</linear_solver>
-                    <LinearSolver>
-                        <res_tol>1.0e-9</res_tol>
-                        <ksptype>cg</ksptype>
-                        <pctype>jacobi</pctype>
-                        <max_iter>75</max_iter>
-                    </LinearSolver>
+                    <parameters>
+                      <res_tol>       1.0e-9</res_tol>
+                      <solver>        cg    </solver>
+                      <preconditioner>jacobi</preconditioner>
+                      <max_iter>      75    </max_iter>
+                    </parameters>
                 </PressureSolver>
 
                 <MomentumSolver>
@@ -186,14 +186,14 @@
                     <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
                     <discrete_ordinates>true</discrete_ordinates>
                     <DORadiationModel>
-                    <opl>3.0</opl>
-                    <linear_solver>hypre</linear_solver>
-                    <LinearSolver>
-                        <res_tol>1.0e-10</res_tol>
-                        <ksptype>gmres</ksptype>
-                        <pctype>jacobi</pctype>
-                        <max_iter>75</max_iter>
-                    </LinearSolver>
+                      <opl>3.0</opl>
+                      <linear_solver>hypre</linear_solver>
+                      <LinearSolver>
+                          <res_tol>1.0e-10</res_tol>
+                          <ksptype>gmres</ksptype>
+                          <pctype>jacobi</pctype>
+                          <max_iter>75</max_iter>
+                      </LinearSolver>
                     </DORadiationModel>
                 </EnthalpySolver>
 

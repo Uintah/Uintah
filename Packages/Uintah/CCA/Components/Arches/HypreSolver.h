@@ -78,8 +78,7 @@ public:
 protected:
 
 private:
-  string d_pcType;
-  string d_kspType;
+  string d_solverType;
 
   int d_maxSweeps;
   int **d_iupper, **d_ilower, **d_offsets;
