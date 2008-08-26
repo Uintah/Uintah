@@ -50,7 +50,7 @@ namespace Uintah {
     private:
 
       PatchBVHBase *root_; //the root of the BVH tree
-      std::vector<PatchBVHBase::PatchKeyVal>  patches_; //a copy of the patches passed in that can be reordered
+      std::vector<PatchKeyVal>  patches_; //a copy of the patches passed in that can be reordered
   };
 
 } // end namespace Uintah
