@@ -206,12 +206,12 @@
 
                 <PressureSolver>
                     <linear_solver>petsc</linear_solver>
-                    <LinearSolver>
+                    <parameters>
                         <res_tol>1.0e-9</res_tol>
-                        <ksptype>cg</ksptype>
-                        <pctype>jacobi</pctype>
+                        <solver>cg</solver>
+                        <preconditioner>jacobi</preconditioner>
                         <max_iter>75</max_iter>
-                    </LinearSolver>
+                    </parameters>
                 </PressureSolver>
 
                 <MomentumSolver>

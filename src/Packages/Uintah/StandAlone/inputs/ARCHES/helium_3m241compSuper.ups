@@ -211,13 +211,13 @@
                     <ref_point>[3,3,3]</ref_point>
                     <finite_difference>second</finite_difference>
                     <linear_solver>hypre</linear_solver>
-                    <LinearSolver>
+                    <parameters>
                         <res_tol>1.0e-10</res_tol>
-                        <ksptype>cg</ksptype>
-                        <pctype>pfmg</pctype>
+                        <solver>cg</solver>
+                        <preconditioner>pfmg</preconditioner>
                         <max_iter>75</max_iter>
                         <underrelax>1.00</underrelax>
-                    </LinearSolver>
+                    </parameters>
                 </PressureSolver>
 
                 <cal_momentum>true</cal_momentum>
