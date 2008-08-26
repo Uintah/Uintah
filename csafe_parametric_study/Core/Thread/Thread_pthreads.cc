@@ -735,8 +735,15 @@ handle_quit(int sig, struct sigcontext /*ctx*/)
   // Kill all of the threads...
   char* signam = Core_Thread_signal_name(sig, 0);
   int pid = getpid();
-  fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
-  Thread::niceAbort(); // Enter the monitor
+  if(sig!=SIGINT)
+  {
+    fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
+    Thread::niceAbort(); // Enter the monitor
+  }
+  else
+  {
+    Thread::niceAbort(0,false);
+  }
   control_c_sema.up();
 }
 
