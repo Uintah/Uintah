@@ -6,6 +6,7 @@
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
@@ -44,30 +45,82 @@ HypreSolver::~HypreSolver()
 void 
 HypreSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("LinearSolver");
-  db->getWithDefault("ksptype", d_kspType, "cg");
+  ProblemSpecP db = params->findBlock("parameters");
+
+  if(!db) {
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES:PressureSolver: missing <parameters> tag \n";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__); 
+  } 
   
-  if (d_kspType == "smg"){
-    d_kspType = "0";
+  string solver;
+  string preconditioner = "-9";
+  
+  db->getWithDefault("solver", solver, "cg");
+  
+  if (solver == "smg"){
+    d_solverType = "0";
   }
   
-  if (d_kspType == "pfmg"){
-    d_kspType = "1";
+  if (solver == "pfmg"){
+    d_solverType = "1";
   }
-  
-  if (d_kspType == "cg"){
-    // preconditioners
-    db->getWithDefault("pctype", d_pcType, "pfmg");
-    if (d_pcType == "smg")
-      d_kspType = "10";
-    else if (d_pcType == "pfmg")
-      d_kspType = "11";
-    else if (d_pcType == "jacobi")
-      d_kspType = "17";
-    else if (d_pcType == "none"){
-      d_kspType = "19";
+
+  db->getWithDefault("preconditioner", preconditioner, "pfmg");
+ 
+  if (solver == "cg"){
+    // preconditioners  
+    if (preconditioner == "smg")
+      d_solverType = "10";
+    else if (preconditioner == "pfmg")
+      d_solverType = "11";
+    else if (preconditioner == "jacobi")
+      d_solverType = "17";
+    else if (preconditioner == "none"){
+      d_solverType = "19";
     }
   }
+  
+  //__________________________________
+  //bulletproofing
+  
+  string test = "bad";
+  string test2 = "bad";
+  db->get("ksptype",test);
+  db->get("pctype", test2);
+  
+  if (test != "bad" || test2 != "bad"){
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES: using a depreciated linear solver option \n"
+         << "change  <ksptype>   to    <solver> \n"
+         << "change  <pctype>    to    <preconditioner> \n"<< endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);    
+  }
+  
+  if(solver != "cg" && preconditioner != "-9" && d_myworld->myrank() == 0 ){
+    cout << "-----------------------------------------------\n";
+    cout << " WARNING: Linear solver options \n";
+    cout << " The preconditioner ("<<preconditioner<< ") only works with the cg solver\n";
+    cout << "-----------------------------------------------\n";
+  }
+  
+  if(solver != "cg" && solver != "smg" && solver != "pfmg"){
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES: unknown linear solve type ("<<solver<<") \n"
+         << "Valid Options:  cg, smg, or pfmg"<< endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
+  if(solver == "cg" && 
+    preconditioner != "pfmg"   && preconditioner != "smg" &&
+    preconditioner != "jacobi" && preconditioner != "none"){
+     
+    ostringstream warn;
+    warn << "INPUT FILE ERROR: ARCHES: unknown preconditioner type ("<<preconditioner<<") \n"
+         << "Valid Options:  smg, pfmg, jacobi, none"<< endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
   db->getWithDefault("max_iter", d_maxSweeps, 75);
   db->getWithDefault("res_tol", d_stored_residual, 1.0e-8);
 }
@@ -327,17 +380,15 @@ HypreSolver::pressLinearSolve()
   d_residual = d_stored_residual / sum_b;
   double zero_residual = 0.0;
 
-  
   n_pre = 1;
   n_post = 1;
   skip = 1;
   HYPRE_StructSolver solver, precond;
 
-  
   int me = d_myworld->myrank();
   double start_time = Time::currentSeconds();
   
-  if (d_kspType == "0") {
+  if (d_solverType == "0") {
     /*Solve the system using SMG*/
     HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
@@ -353,9 +404,8 @@ HypreSolver::pressLinearSolve()
     HYPRE_StructSMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructSMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructSMGDestroy(solver);
-    //    cerr << "SMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
-  else if (d_kspType == "1") {
+  else if (d_solverType == "1") {
     /*Solve the system using PFMG*/
     HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
@@ -374,7 +424,6 @@ HypreSolver::pressLinearSolve()
     HYPRE_StructPFMGGetNumIterations(solver, &num_iterations);
     HYPRE_StructPFMGGetFinalRelativeResidualNorm(solver, &final_res_norm);
     HYPRE_StructPFMGDestroy(solver);
-    //    cerr << "PFMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
   else {
     HYPRE_StructPCGCreate(MPI_COMM_WORLD, &solver);
@@ -385,7 +434,7 @@ HypreSolver::pressLinearSolve()
     HYPRE_PCGSetLogging( (HYPRE_Solver)solver, 1 );
  
     
-    if (d_kspType == "10") {
+    if (d_solverType == "10") {
       /* use symmetric SMG as preconditioner */
       HYPRE_StructSMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructSMGSetMemoryUse(precond, 0);
@@ -399,10 +448,9 @@ HypreSolver::pressLinearSolve()
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructSMGSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "SMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
   
-    else if (d_kspType == "11") {  
+    else if (d_solverType == "11") {  
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
@@ -419,9 +467,8 @@ HypreSolver::pressLinearSolve()
                            (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructPFMGSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "PFMG Precond time = " << Time::currentSeconds()-start_time << endl;
     }
-    else if (d_kspType == "17") {
+    else if (d_solverType == "17") {
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
@@ -431,30 +478,25 @@ HypreSolver::pressLinearSolve()
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSolve,
                            (HYPRE_PtrToSolverFcn) HYPRE_StructJacobiSetup,
                            (HYPRE_Solver) precond);
-      //      cerr << "Jacobi Precond time = " << Time::currentSeconds()-start_time << endl;
     }
     
-    //double dummy_start = Time::currentSeconds();
     HYPRE_PCGSetup
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x );
-    //cerr << "PCG Setup time = " << Time::currentSeconds()-dummy_start << endl;
 
-    //dummy_start = Time::currentSeconds();
     HYPRE_PCGSolve
       ( (HYPRE_Solver)solver, (HYPRE_Matrix)d_A, (HYPRE_Vector)d_b, (HYPRE_Vector)d_x);
-    //cerr << "PCG Solve time = " << Time::currentSeconds()-dummy_start << endl;
     
     HYPRE_PCGGetNumIterations( (HYPRE_Solver)solver, &num_iterations );
     HYPRE_PCGGetFinalRelativeResidualNorm( (HYPRE_Solver)solver, &final_res_norm );
     HYPRE_StructPCGDestroy(solver);
 
-    if (d_kspType == "10") {
+    if (d_solverType == "10") {
       HYPRE_StructSMGDestroy(precond);
     }
-    else if (d_kspType == "11") {
+    else if (d_solverType == "11") {
       HYPRE_StructPFMGDestroy(precond);
     }
-    else if (d_kspType == "17") {
+    else if (d_solverType == "17") {
       HYPRE_StructJacobiDestroy(precond);
     }
   }
