@@ -8,12 +8,8 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-
-#include <Core/Containers/Array1.h>
 
 #ifdef HAVE_PETSC
 extern "C" {
@@ -62,23 +58,12 @@ WARNING
 class PetscSolver: public LinearSolver {
 
 public:
-
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Construct an instance of a PetscSolver.
   PetscSolver(const ProcessorGroup* myworld);
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual Destructor
   virtual ~PetscSolver();
 
-  // GROUP: Problem Setup:
-  ////////////////////////////////////////////////////////////////////////
-  // Problem setup
   void problemSetup(const ProblemSpecP& params);
 
-   // to close petsc 
   void finalizeSolver();
 
   virtual void matrixCreate(const PatchSet* allpatches,
@@ -91,10 +76,10 @@ public:
                               const ArchesLabel* lab);
 
 
-   virtual bool pressLinearSolve();
-   
-   virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
-   
+  virtual bool pressLinearSolve();
+  
+  virtual void copyPressSoln(const Patch* patch, ArchesVariables* vars);
+  
    virtual void destroyMatrix();
 protected:
 
