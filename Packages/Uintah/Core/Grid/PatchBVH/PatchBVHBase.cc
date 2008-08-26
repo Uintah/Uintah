@@ -32,6 +32,5 @@ namespace Uintah {
 
    ****************************************/
   unsigned int PatchBVHBase::leafSize_=4;
-  int PatchBVHBase::sortDim_=0;
 
 } // end namespace Uintah

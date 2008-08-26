@@ -55,9 +55,21 @@ namespace Uintah {
       maxd=2;
      
     //sort on maiximum dimension
-    sortDim_=maxd;
-    sort(begin,end);
-
+    switch(maxd)
+    {
+      case 0:
+        sort(begin,end,PatchKeyCompare0);
+        break;
+      case 1:
+        sort(begin,end,PatchKeyCompare1);
+        break;
+      case 2: 
+        sort(begin,end,PatchKeyCompare2);
+        break;
+      default:
+        //should not be possible
+        break;
+    }
     //split the list in half
 
     //create left and right nodes/leafs

@@ -41,6 +41,25 @@ namespace Uintah {
 
    ****************************************/
 
+  struct PatchKeyVal
+  {
+    const Patch* patch;
+    IntVector center2; //twice the center of the patch be be used by sorting
+  };
+  
+  inline bool PatchKeyCompare0(const PatchKeyVal& p1, const PatchKeyVal &p2)
+  {
+      return p1.center2[0]<p2.center2[0];
+  }
+  inline bool PatchKeyCompare1(const PatchKeyVal& p1, const PatchKeyVal &p2)
+  {
+      return p1.center2[1]<p2.center2[1];
+  }
+  inline bool PatchKeyCompare2(const PatchKeyVal& p1, const PatchKeyVal &p2)
+  {
+      return p1.center2[2]<p2.center2[2];
+  }
+  
   class PatchBVHBase 
   {
   public:
@@ -56,15 +75,6 @@ namespace Uintah {
   protected:
 
     friend class PatchBVH;
-    struct PatchKeyVal
-    {
-      bool operator<(const PatchKeyVal& p) const
-      {
-        return center2[PatchBVHBase::sortDim_]<p.center2[PatchBVHBase::sortDim_];
-      }
-      const Patch* patch;
-      IntVector center2; //twice the center of the patch be be used by sorting
-    };
     /**
      * Returns true if the given range intersects my volume
      */
@@ -84,7 +94,6 @@ namespace Uintah {
     IntVector low_, high_;  //the bounding box for this node/leaf
 
     static unsigned int leafSize_;      //the number of patches in a leaf
-    static int sortDim_;               //the current sorting dimension
   };
 } // end namespace Uintah
 
