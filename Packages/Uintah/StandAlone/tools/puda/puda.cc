@@ -48,6 +48,7 @@
 #include <Packages/Uintah/StandAlone/tools/puda/jim1.h>
 #include <Packages/Uintah/StandAlone/tools/puda/jim2.h>
 #include <Packages/Uintah/StandAlone/tools/puda/jim3.h>
+#include <Packages/Uintah/StandAlone/tools/puda/jim4.h>
 #include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
 #include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
 #include <Packages/Uintah/StandAlone/tools/puda/util.h>
@@ -97,6 +98,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
   cerr << "  -jim3\n";
+  cerr << "  -jim4\n";
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
   cerr << "  -tecplot <variable name>\n";
@@ -229,6 +231,8 @@ main(int argc, char** argv)
       clf.do_jim2=true;
     } else if(s == "-jim3"){
       clf.do_jim3=true;
+    } else if(s == "-jim4"){
+      clf.do_jim4=true;
     } else if(s == "-partvar"){
       clf.do_partvar=true;
       clf.particleVariable = argv[++i]; 
@@ -408,6 +412,10 @@ main(int argc, char** argv)
 
     if( clf.do_jim3 ){
       jim3( da, clf );
+    }
+    
+    if( clf.do_jim4 ){
+      jim4( da, clf );
     }
 
     if (clf.do_asci){
