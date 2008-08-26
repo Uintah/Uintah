@@ -40,6 +40,25 @@ namespace Uintah {
 
    ****************************************/
 
+  struct PatchKeyVal
+  {
+    const Patch* patch;
+    IntVector center2; //twice the center of the patch be be used by sorting
+  };
+  
+  inline bool PatchKeyCompare0(const PatchKeyVal& p1, const PatchKeyVal &p2)
+  {
+      return p1.center2[0]<p2.center2[0];
+  }
+  inline bool PatchKeyCompare1(const PatchKeyVal& p1, const PatchKeyVal &p2)
+  {
+      return p1.center2[1]<p2.center2[1];
+  }
+  inline bool PatchKeyCompare2(const PatchKeyVal& p1, const PatchKeyVal &p2)
+  {
+      return p1.center2[2]<p2.center2[2];
+  }
+  
   class PatchBVHBase 
   {
   public:
@@ -55,19 +74,10 @@ namespace Uintah {
   protected:
 
     friend class PatchBVH;
-    struct PatchKeyVal
-    {
-      bool operator<(const PatchKeyVal& p) const
-      {
-        return center2[PatchBVHBase::sortDim_]<p.center2[PatchBVHBase::sortDim_];
-      }
-      const Patch* patch;
-      IntVector center2; //twice the center of the patch be be used by sorting
-    };
     /**
      * Returns true if the given range intersects my volume
      */
-    bool intersects(const IntVector& low, const IntVector &high)
+    inline bool intersects(const IntVector& low, const IntVector &high)
     {
       return intersects(low,high,low_,high_);
     }
@@ -75,7 +85,7 @@ namespace Uintah {
     /**
      * Returns true if the given ranges intersect
      */
-    static bool intersects(const IntVector& low1, const IntVector &high1, const IntVector& low2, const IntVector high2)
+    static inline bool intersects(const IntVector& low1, const IntVector &high1, const IntVector& low2, const IntVector high2)
     {
       return low1.x()<high2.x() && low1.y()<high2.y() && low1.z()<high2.z()    // intersect if low1 is less than high2 
         && high1.x()>low2.x() && high1.y()>low2.y() && high1.z()>low2.z();  // and high1 is greater than their low2
@@ -83,7 +93,6 @@ namespace Uintah {
     IntVector low_, high_;  //the bounding box for this node/leaf
 
     static unsigned int leafSize_;      //the number of patches in a leaf
-    static int sortDim_;               //the current sorting dimension
   };
 } // end namespace Uintah
 

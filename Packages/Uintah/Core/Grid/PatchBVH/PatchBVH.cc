@@ -40,7 +40,7 @@ namespace Uintah {
     
     for(std::vector<const Patch*>::const_iterator iter=patches.begin();iter<patches.end();iter++)
     {
-      PatchBVHBase::PatchKeyVal key;
+      PatchKeyVal key;
 
       key.patch=*iter;
       key.center2=(*iter)->getInteriorCellLowIndex()+(*iter)->getInteriorCellHighIndex();
@@ -68,7 +68,7 @@ namespace Uintah {
     
     for(std::vector<Patch*>::const_iterator iter=patches.begin();iter<patches.end();iter++)
     {
-      PatchBVHBase::PatchKeyVal key;
+      PatchKeyVal key;
 
       key.patch=*iter;
       key.center2=(*iter)->getInteriorCellLowIndex()+(*iter)->getInteriorCellHighIndex();
