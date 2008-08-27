@@ -138,7 +138,7 @@
         <PressureSolver>
           <linear_solver>hypre</linear_solver>
           <parameters>
-            <solver>rbgs</solver>
+            <solver>cg</solver>
             <preconditioner>pfmg</preconditioner>
             <res_tol>1.0e-10</res_tol>
             <max_iter>75</max_iter>
