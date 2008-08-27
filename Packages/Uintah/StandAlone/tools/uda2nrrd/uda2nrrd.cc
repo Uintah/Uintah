@@ -69,14 +69,20 @@ Args args;
 void
 usage( const string& badarg, const string& progname )
 {
-  if(badarg != "")
+  if(badarg != "") {
     cerr << "Error parsing argument: " << badarg << "\n";
-  cerr << "Usage: " << progname << " [options] "
-       << "-uda <archive file>\n\n";
+  }
+  cerr << "Usage: " << progname << " [options] " << "-uda <archive file>\n";
+  cerr << "\n";
+  cerr << "  This program reads in an UDA data directory and produces a NRRD containing\n";
+  cerr << "  the specified variable for each timestep in the UDA (unless -tlow, -thigh, \n";
+  cerr << "  -tinc, or -tstep are used).\n";
+  cerr << "\n";
   cerr << "Valid options are:\n";
   cerr << "  -h,--help  Prints this message out\n";
-  
-  cerr << "\nField Specifier Options\n";
+  cerr << "  -uda <archive file>\n";
+  cerr << "\n";
+  cerr << "Field Specifier Options\n";
   cerr << "  -v,--variable <variable name> - may not be used with -p\n";
   cerr << "  -p,--particledata - Pull out all the particle data into a single NRRD.  May not be used with -v\n";
   cerr << "  -m,--material <material number> [defaults to first material found]\n";
@@ -90,8 +96,8 @@ usage( const string& badarg, const string& progname )
   cerr << "                 Options are none, det, norm, and trace\n";
   cerr << "                 [defaults to none]\n";
   cerr << "  -nbc,--noboundarycells - remove boundary cells from output\n";
-  
-  cerr << "\nOutput Options\n";
+  cerr << "\n";
+  cerr << "Output Options\n";
   cerr << "  -o,--out <outputfilename> [defaults to 'particles_t#######' or '<varName>_t######']\n";
   cerr << "  -oi <index> [default to 0] - Output index to use in naming file.\n";
   cerr << "  -dh,--detatched-header - writes the data with detached headers.  The default is to not do this.\n";
@@ -102,8 +108,8 @@ usage( const string& badarg, const string& progname )
   cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
   cerr << "  -tinc [int] (output every n timesteps) [defaults to 1]\n";
   cerr << "  -tstep,--timestep [int] (only outputs timestep int)\n";
-  
-  cerr << "\nChatty Options\n";
+  cerr << "\n";
+  cerr << "Chatty Options\n";
   cerr << "  -vv,--verbose (prints status of output)\n";
   cerr << "  -q,--quiet (very little output)\n";
   exit(1);
@@ -289,10 +295,18 @@ main(int argc, char** argv)
           cout << "vars[" << vi << "] = " << vars[vi] << "\n";
         }
         cout << "\nGoodbye!!\n\n";
-        exit(-1);
+        exit( -1 );
       }
     } 
     else { // Not particles...
+
+      if( variable_name == "" ) {
+        cerr << "\n";
+        cerr << "A variable name must be specified!  Use '-v [name]'.  (Or -p for particles.)\n";
+        cerr << "\n";
+        exit( -1 );
+      }
+
       unsigned int vi = 0;
       for( ; vi < vars.size(); vi++ ) {
         if( variable_name == vars[vi] ) {
@@ -301,9 +315,10 @@ main(int argc, char** argv)
         }
       }
       if (!var_found) {
-        cerr << "Variable \"" << variable_name << "\" was not found.\n";
-        cerr << "If a variable name was not specified try -v [name].\n";
+        cerr << "Variable '" << variable_name << "' was not found.\n";
+        cerr << "\n";
         cerr << "Possible variable names are:\n";
+        cerr << "\n";
         vi = 0;
         for( ; vi < vars.size(); vi++) {
           cout << "vars[" << vi << "] = " << vars[vi] << "\n";

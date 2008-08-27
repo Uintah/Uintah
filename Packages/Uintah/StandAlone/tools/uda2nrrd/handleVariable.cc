@@ -209,8 +209,17 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
     int material = *qinfo.materials.begin();
 
     if( !args.quiet ) { 
-      cout << "  Extracting data for material " << material
-	   << ". (Patch: " << patch->getID() << "/" << patch->getLevel()->numPatches()<< "\n"; 
+      int patchNum = patch->getLevelIndex();
+      int modLevel = 1;
+      int numPatches = patch->getLevel()->numPatches();
+
+      if( numPatches > 100 )  { modLevel *= 10; } 
+      if( numPatches > 1000 ) { modLevel *= 10; } 
+
+      if( patchNum % modLevel == 0 ) {
+        cout << "  Extracting data for material " << material
+             << ". (Patch: " << patchNum+1 << "/" << patch->getLevel()->numPatches() << ")\n"; 
+      }
     }
 
     qinfo.archive->query(patch_data, qinfo.varname, material, patch,
