@@ -397,15 +397,15 @@
 		    <ref_point>[3,3,3]</ref_point>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
-		    <LinearSolver>
-			<ksptype>cg</ksptype>
-			<pctype>jacobi</pctype>
+		    <parameters>
+			<solver>cg</solver>
+			<preconditioner>jacobi</preconditioner>
 			<fill>1</fill>		!---for ilu preconditioner
 			<overlap>1</overlap>	!---for asm preconditioner
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
 		        <underrelax>0.97</underrelax>
-		    </LinearSolver>
+		    </parameters>
 		</PressureSolver>
 
 		<cal_momentum>true</cal_momentum>
@@ -477,12 +477,12 @@
 		    <ref_point>[3,3,3]</ref_point>
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
-		    <LinearSolver>
-			<pctype>jacobi</pctype>
+		    <parameters>
+			<preconditioner>jacobi</preconditioner>
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
 		        <underrelax>0.97</underrelax>
-		    </LinearSolver>
+		    </parameters>
 		</PressureSolver>
 
 		<cal_momentum>true</cal_momentum>

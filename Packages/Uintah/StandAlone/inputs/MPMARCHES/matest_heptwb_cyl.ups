@@ -395,14 +395,14 @@
 		    <finite_difference>second</finite_difference>
 		    <central>false</central>
 		    <linear_solver>petsc</linear_solver>
-		    <LinearSolver>
-			<ksptype>cg</ksptype>
-			<pctype>jacobi</pctype>
+		    <parameters>
+			<solver>cg</solver>
+			<preconditioner>jacobi</preconditioner>
 			<fill>1</fill>		!---for ilu preconditioner
 			<overlap>1</overlap>	!---for asm preconditioner
 			<max_iter>75</max_iter>
 		        <underrelax>1.0</underrelax>
-		    </LinearSolver>
+		    </parameters>
 		</PressureSolver>
 
 		<cal_momentum>true</cal_momentum>
