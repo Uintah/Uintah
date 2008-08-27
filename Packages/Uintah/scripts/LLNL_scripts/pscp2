@@ -16,11 +16,22 @@ unalias cd
 #------------------
 # error checking
 if ($#argv != 4) then
-  echo " pscp2 < number of Processors> < remove remote directory (y/n) > < local dir to be copied> <login@Remote Machine>:<remote dir>"
-  exit(0)
+  echo ""
+  echo "Usage: pscp2 < number of Processors> < remove remote directory (y/n) > < local dir to be copied> <login@Remote Machine>:<remote dir>"
+  echo ""
+  exit 1
 endif
 
-set pscp2dir      = `dirname $0`
+# Need /usr/bin/which as the shell which doesn't give us the full path...
+if ( ! -x /usr/bin/which ) then
+  echo ""
+  echo "Error:  Can't find /usr/bin/which...  Goodbye."
+  echo ""
+  exit 1
+endif
+
+set pscp2fulldir  = `/usr/bin/which $0`
+set pscp2dir      = `dirname $pscp2fulldir`
 set nproc         = $argv[1]
 set rmDir         = $argv[2]
 set localDir      = `basename $argv[3]`
