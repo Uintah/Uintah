@@ -111,21 +111,19 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
   Task* t = scinew Task("MPM::solveHeatEquations",
                         this, &HeatConduction::solveHeatEquations);
 
-  const MaterialSubset* mss = matls->getUnion();
-
   Ghost::GhostType  gnone = Ghost::None;
   t->requires(Task::NewDW, d_lb->gMassLabel,                           gnone);
   t->requires(Task::NewDW, d_lb->gVolumeLabel,                         gnone);
   t->requires(Task::NewDW, d_lb->gExternalHeatRateLabel,               gnone);
-  t->modifies(             d_lb->gdTdtLabel,                           mss);
-  t->requires(Task::NewDW, d_lb->gThermalContactTemperatureRateLabel, gnone);
+  t->requires(Task::NewDW, d_lb->gdTdtLabel,                           gnone);
+  t->requires(Task::NewDW, d_lb->gThermalContactTemperatureRateLabel,  gnone);
   t->modifies(d_lb->gTemperatureRateLabel);
 
   if(d_flag->d_fracture) { // for FractureMPM
     t->requires(Task::NewDW, d_lb->GMassLabel,                         gnone);
     t->requires(Task::NewDW, d_lb->GVolumeLabel,                       gnone);
     t->requires(Task::NewDW, d_lb->GExternalHeatRateLabel,             gnone);
-    t->modifies(             d_lb->GdTdtLabel,                         mss);
+    t->requires(Task::NewDW, d_lb->GdTdtLabel,                         gnone);
     t->requires(Task::NewDW, d_lb->GThermalContactTemperatureRateLabel,gnone);
     t->computes(d_lb->GTemperatureRateLabel);
   }
@@ -561,28 +559,26 @@ void HeatConduction::solveHeatEquations(const ProcessorGroup*,
      
       // Get required variables for this patch
       constNCVariable<double> mass,externalHeatRate,gvolume;
-      constNCVariable<double> thermalContactTemperatureRate;
-      NCVariable<double> gdTdt;
+      constNCVariable<double> thermalContactTemperatureRate,gdTdt;
             
       new_dw->get(mass,    d_lb->gMassLabel,      dwi, patch, Ghost::None, 0);
       new_dw->get(gvolume, d_lb->gVolumeLabel,    dwi, patch, Ghost::None, 0);
       new_dw->get(externalHeatRate, d_lb->gExternalHeatRateLabel,
                   dwi, patch, Ghost::None, 0);
-      new_dw->getModifiable(gdTdt, d_lb->gdTdtLabel, dwi, patch);
+      new_dw->get(gdTdt,   d_lb->gdTdtLabel,      dwi, patch, Ghost::None, 0);
       new_dw->get(thermalContactTemperatureRate,
                   d_lb->gThermalContactTemperatureRateLabel,
                                                   dwi, patch, Ghost::None, 0);
 
       // for FractureMPM
       constNCVariable<double> Gmass,GexternalHeatRate,Gvolume;
-      constNCVariable<double> GthermalContactTemperatureRate;
-      NCVariable<double> GdTdt;
+      constNCVariable<double> GthermalContactTemperatureRate,GdTdt;
       if(d_flag->d_fracture) {
         new_dw->get(Gmass,   d_lb->GMassLabel,      dwi, patch, Ghost::None, 0);
         new_dw->get(Gvolume, d_lb->GVolumeLabel,    dwi, patch, Ghost::None, 0);
         new_dw->get(GexternalHeatRate, d_lb->GExternalHeatRateLabel,
                     dwi, patch, Ghost::None, 0);
-        new_dw->getModifiable(GdTdt, d_lb->GdTdtLabel, dwi, patch);
+        new_dw->get(GdTdt,   d_lb->GdTdtLabel,      dwi, patch, Ghost::None, 0);
         new_dw->get(GthermalContactTemperatureRate,
                     d_lb->GThermalContactTemperatureRateLabel,
                     dwi, patch, Ghost::None, 0);      
