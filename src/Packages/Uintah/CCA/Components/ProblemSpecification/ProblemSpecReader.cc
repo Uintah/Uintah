@@ -38,6 +38,8 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FileUtils.h>
 
+#include <Core/Util/Environment.h> // for SCIRUN_SRCDIR
+
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -624,7 +626,7 @@ ProblemSpecReader::parseValidationFile()
 
   xmlDocPtr doc; /* the resulting document tree */
   
-  const string valFile = "inputs/ups_spec.xml";
+  const string valFile = string(sci_getenv("SCIRUN_SRCDIR")) +  "/Packages/Uintah/StandAlone/inputs/ups_spec.xml";
 
   doc = xmlReadFile( valFile.c_str(), 0, XML_PARSE_PEDANTIC );
   

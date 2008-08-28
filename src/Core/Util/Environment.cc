@@ -35,25 +35,24 @@
 
 // STL Includes
 #include <sgi_stl_warnings_off.h>
-#include <Core/Util/Environment.h> // includes <string>
-#include <iostream>
-#include <map>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
+#include   <Core/Util/Environment.h> // includes <string>
+#include   <iostream>
+#include   <map>
+#include   <cstring>
+#include   <cstdlib>
+#include   <cstdio>
 #include <sgi_stl_warnings_on.h>
 
 #define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
 #include <sci_defs/environment_defs.h>
 
-
 #ifndef _WIN32
-#include <unistd.h>
-#include <sys/param.h>
+#  include <unistd.h>
+#  include <sys/param.h>
 #else
-#define MAXPATHLEN 256
-#include <direct.h>
-#include <windows.h>
+#  define MAXPATHLEN 256
+#  include <direct.h>
+#  include <windows.h>
 #endif
 
 
@@ -67,6 +66,8 @@
 
 using namespace SCIRun;
 using namespace std;
+
+static bool sci_environment_created = false;
 
 // This set stores all of the environemnt keys that were set when scirun was
 // started. Its checked by sci_putenv to ensure we don't overwrite variables
@@ -134,6 +135,10 @@ MacroSubstitute( const char * var_value )
 const char *
 SCIRun::sci_getenv( const string & key )
 {
+  if( !sci_environment_created ) {
+    cout << "\n!!!WARNING!!! Core/Util/Environment.cc::sci_getenv() called before create_sci_environment()!\n";
+    cout << "                Segfault probably coming soon...\n\n";
+  }
   if (scirun_env.find(key) == scirun_env.end()) return 0;
   return scirun_env[key].c_str();
 }
@@ -162,7 +167,7 @@ void getWin32RegistryValues(string& obj, string& src, string& thirdparty, string
           obj = string(data)+"\bin";
           src = string(data)+"\src";
           thirdparty = data;
-          cout << "Data: " << data << endl;
+          cout << "Data: " << data << "\n";
         }
 
         if (RegOpenKeyEx(scirun, "Packages", 0, KEY_READ, &pack) == ERROR_SUCCESS) {
@@ -180,7 +185,7 @@ void getWin32RegistryValues(string& obj, string& src, string& thirdparty, string
           // lose trailing comma
           if (index > 0 && packages[packages.length()-1] == ',')
             packages[packages.length()-1] = 0;
-          cout << "Packages: " << packages << endl;
+          cout << "Packages: " << packages << "\n";
           RegCloseKey(pack);
         }
         RegCloseKey(scirun);
@@ -197,6 +202,12 @@ void getWin32RegistryValues(string& obj, string& src, string& thirdparty, string
 void
 SCIRun::create_sci_environment(char **env, char *execname)
 {
+  if( sci_environment_created ) {
+    cout << "\n!!!WARNING!!! Core/Util/Environment.cc::create_sci_environment() called twice!  Skipping 2nd+ call.\n\n";
+    return;
+  }
+  sci_environment_created = true;
+
   if (env) {
     char **environment = env;
     scirun_env.clear();
@@ -322,7 +333,7 @@ SCIRun::parse_scirunrc( const string &rcfile )
     } else { // Couldn't find a string of the format var=var_val
       // Print out the offending line
       cerr << "Error parsing " << rcfile << " file on line: " 
-	   << linenum << std::endl << "--> " << line << std::endl;
+	   << linenum << "\n" << "--> " << line << "\n";
     }
   }
   fclose(filein);
@@ -336,7 +347,7 @@ void
 SCIRun::find_and_parse_scirunrc()
 {
   // Tell the user that we are searching for the .scirunrc file...
-  std::cout << "Parsing .scirunrc... ";
+  cout << "Parsing .scirunrc... ";
   bool foundrc=false;
 
   // 1. check the local directory
@@ -366,7 +377,7 @@ SCIRun::find_and_parse_scirunrc()
   if(!foundrc) filename = string("not found.");
   
   // print location of .scirunrc
-  cout << filename << std::endl;
+  cout << filename << "\n";
 }
 
 
@@ -391,19 +402,19 @@ SCIRun::copy_and_parse_scirunrc()
     string backup_extension =(env_rcfile_version ? env_rcfile_version:"bak");
     string backuprc = homerc + "." + backup_extension;
     cmd = "cp -f "+homerc+" "+backuprc;
-    std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
+    cout << "Backing up " << homerc << " to " << backuprc << "\n";
     if (sci_system(cmd.c_str()))
     {
-      std::cerr << "Error executing: " << cmd << std::endl;
+      cerr << "Error executing: " << cmd << "\n";
     }
   }
   
   cmd = string("cp -f ")+srcdir+"/scirunrc "+homerc;
-  std::cout << "Copying " << srcdir << "/scirunrc to " <<
+  cout << "Copying " << srcdir << "/scirunrc to " <<
     homerc << "...\n";
   if (sci_system(cmd.c_str()))
   {
-    std::cerr << "Error executing: " << cmd << std::endl;
+    cerr << "Error executing: " << cmd << "\n";
   }
   else
   { 

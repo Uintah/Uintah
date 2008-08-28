@@ -328,6 +328,7 @@ main( int argc, char** argv )
     }
   }
  
+  create_sci_environment( NULL, 0 );
   
   if(filename == ""){
     usage("No input file specified", "", argv[0]);
@@ -397,7 +398,6 @@ main( int argc, char** argv )
       cerr << "WARNING:  SVN DIFF is disabled.\n";
 #else
       cerr << "____SVN_____________________________________________________________\n";
-      create_sci_environment( NULL, 0 );
       string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Packages/Uintah";
       if(do_svnDiff){
         string cmd = "svn diff " + sdir;
