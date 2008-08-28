@@ -55,7 +55,6 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
-  t->requires(Task::OldDW, d_lb->pdTdtLabel,                      gan, NGP);
 #ifdef EROSION  
   t->requires(Task::NewDW, d_lb->pErosionLabel_preReloc,          gan, NGP);
 #endif  
@@ -162,8 +161,6 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-
-
 void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* ,
@@ -180,7 +177,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
     ParticleInterpolator* interpolator = d_flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
-    vector<double> S(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
     Vector dx = patch->dCell();
@@ -202,7 +198,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       double Cv = mpm_matl->getSpecificHeat();
       
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pvol,pdTdt,pMass;
+      constParticleVariable<double> pvol,pMass;
       constParticleVariable<Vector> psize;
 #ifdef EROSION      
       constParticleVariable<double> pErosion;
@@ -217,7 +213,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
       old_dw->get(px,           d_lb->pXLabel,                         pset);
       old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
-      old_dw->get(pdTdt,        d_lb->pdTdtLabel,                      pset);
       old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
       old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
 #ifdef EROSION      
@@ -250,17 +245,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
-
-        // Weight the particle plastic work temperature rate with the mass
-        double pdTdt_massWt = pdTdt[idx]*pMass[idx];
-
-        if (cout_heat.active()) {
-          cout_heat << " Particle = " << idx << endl;
-          cout_heat << " pdTdt = " << pdTdt[idx]
-                    << " pMass = " << pMass[idx] << endl;
-        }
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
         pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
         for (int k = 0; k < d_flag->d_8or27; k++){
@@ -281,29 +266,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           }
           // Project the mass weighted particle plastic work temperature
           // rate to the grid
-          if(patch->containsNode(ni[k])){
-#ifdef EROSION              
-            S[k] *= pErosion[idx];
-#endif
-            gdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
-     
-            if (cout_heat.active()) {
-              cout_heat << "   k = " << k << " node = " << ni[k] 
-                        << " gdTdt = " << gdTdt[ni[k]] << endl;
-            }
-
-          } // if patch contains node
         } // Loop over local nodes
       } // Loop over particles
-
-      // Get the plastic work temperature rate due to particle deformation
-      // at the grid nodes by dividing gdTdt by the grid mass
-      for(NodeIterator iter = patch->getNodeIterator__New();
-                      !iter.done(); iter++) {
-        IntVector c = *iter;
-
-        gdTdt[c] /= gMass[c];
-      }
 
       if(d_flag->d_fracture) { // for FractureMPM
       // Compute the temperature gradient at each particle and project
@@ -313,11 +277,7 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
           particleIndex idx = *iter;
 
           // Get the node indices that surround the cell
-          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                              psize[idx]);
-
-          // Weight the particle plastic work temperature rate with the mass
-          double pdTdt_massWt = pdTdt[idx]*pMass[idx];
+          interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
           pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
           for (int k = 0; k < d_flag->d_8or27; k++){
@@ -334,36 +294,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
                     GTemperature[ni[k]] * d_S[k][j] * oodx[j];
               }
             }
-            // Project the mass weighted particle plastic work temperature
-            // rate to the grid
-            if(patch->containsNode(ni[k])){
-#ifdef EROSION              
-              S[k] *= pErosion[idx];
-#endif
-              if(pgCode[idx][k]==1) { // above crack
-                gdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
-              }
-              else if(pgCode[idx][k]==2) { // below crack
-                GdTdt[ni[k]] +=  (pdTdt_massWt*S[k]);
-              }
-       
-              if (cout_heat.active()) {
-                cout_heat << "   k = " << k << " node = " << ni[k] 
-                          << " gdTdt = " << gdTdt[ni[k]] << endl;
-              }
-  
-            } // if patch contains node
           } // Loop over local nodes
         } // Loop over particles
-
-        // Get the plastic work temperature rate due to particle deformation
-        // at the grid nodes by dividing gdTdt by the grid mass
-        for(NodeIterator iter = patch->getNodeIterator__New();
-                        !iter.done(); iter++) {
-          IntVector c = *iter;
-            // below crack
-            GdTdt[c] /= GMass[c];
-        }
       }  // if fracture
 
       // Compute rate of temperature change at the grid due to conduction
@@ -373,21 +305,19 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
         Vector dT_dx = pTemperatureGradient[idx];
         double Tdot_cond = 0.0;
-        double d_f_aH=d_flag->d_adiabaticHeating;
         IntVector node(0,0,0);
 
         for (int k = 0; k < d_flag->d_8or27; k++){
           node = ni[k];
           if(patch->containsNode(node)){
            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-           Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node])*d_f_aH;
+           Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
            gdTdt[node] -= Tdot_cond;
 
            if (cout_heat.active()) {
@@ -407,11 +337,11 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
               Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                                             d_S[k].z()*oodx[2]);
               if(pgCode[idx][k]==1) { // above crack    
-                Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node])*d_f_aH;
+                Tdot_cond = Dot(div, dT_dx)*(alpha/gMass[node]);
                 gdTdt[node] -= Tdot_cond;
               }
               else if(pgCode[idx][k]==2) { // below crack
-                Tdot_cond = Dot(div, dT_dx)*(alpha/GMass[node])*d_f_aH;
+                Tdot_cond = Dot(div, dT_dx)*(alpha/GMass[node]);
                 GdTdt[node] -= Tdot_cond;
               }
             } // if patch contains node
@@ -500,8 +430,8 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
         pdTdx[idx] = Vector(0,0,0);
         
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
         for (int k = 0; k < d_flag->d_8or27; k++){
           for (int j = 0; j<3; j++) {
             pdTdx[idx][j] += gTemperature[ni[k]] * d_S[k][j] * oodx[j];
