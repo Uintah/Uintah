@@ -284,7 +284,7 @@ for tstep = 1:P.maxTimeSteps
 
         term2b      = (press_eq_CC(right) - press_eq_CC(left))/delX;
         
-        delUStar    = 0.5*delX/speedSound_FC(j);                   % Godunov sonic approxmation
+        %delUStar    = 0.5*delX/speedSound_FC(j);                   % Godunov sonic approxmation
         xvel_FC(j)  = term1 - delUStar*term2a*term2b;               % Computed [limited] u^*
     end
 
