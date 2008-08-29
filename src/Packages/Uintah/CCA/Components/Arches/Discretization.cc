@@ -32,8 +32,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
 #ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
-#else
-#include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_fort.h>
 #endif
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoef_fort.h>
@@ -270,11 +268,35 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
                                        ArchesVariables* coeff_vars,
                                        ArchesConstVariables* constcoeff_vars)
 {
-  // Get the domain size and the patch indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+    IntVector c = *iter;
+    int i = c.x();
+    int j = c.y();
+    int k = c.z();
+
+    IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
+    IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
+    IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
+  
+    //__________________________________
+    //compute areas
+    double area_N  = cellinfo->sew[i] * cellinfo->stb[k];
+    double area_S  = area_N;
+    double area_EW = cellinfo->sns[j] * cellinfo->stb[k];
+    double area_TB = cellinfo->sns[j] * cellinfo->sew[i];
+  
+    coeff_vars->pressCoeff[Arches::AE][c] = area_EW/(cellinfo->dxep[i]);
+    coeff_vars->pressCoeff[Arches::AW][c] = area_EW/(cellinfo->dxpw[i]);
+    coeff_vars->pressCoeff[Arches::AN][c] = area_N /(cellinfo->dynp[j]);
+    coeff_vars->pressCoeff[Arches::AS][c] = area_S /(cellinfo->dyps[j]);
+    coeff_vars->pressCoeff[Arches::AT][c] = area_TB/(cellinfo->dztp[k]);
+    coeff_vars->pressCoeff[Arches::AB][c] = area_TB/(cellinfo->dzpb[k]);
+  }
 
 #ifdef divergenceconstraint
+  IntVector idxLo = patch->getFortranCellLowIndex__New();
+  IntVector idxHi = patch->getFortranCellHighIndex__New();
+  
   fort_prescoef_var(idxLo, idxHi, constcoeff_vars->density,
                     coeff_vars->pressCoeff[Arches::AE],
                     coeff_vars->pressCoeff[Arches::AW],
@@ -286,18 +308,6 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
                     cellinfo->sewu, cellinfo->dxep, cellinfo->dxpw, 
                     cellinfo->snsv, cellinfo->dynp, cellinfo->dyps, 
                     cellinfo->stbw, cellinfo->dztp, cellinfo->dzpb);
-#else
-  fort_prescoef(idxLo, idxHi, 
-                coeff_vars->pressCoeff[Arches::AE],
-                coeff_vars->pressCoeff[Arches::AW],
-                coeff_vars->pressCoeff[Arches::AN],
-                coeff_vars->pressCoeff[Arches::AS],
-                coeff_vars->pressCoeff[Arches::AT],
-                coeff_vars->pressCoeff[Arches::AB],
-                cellinfo->sew, cellinfo->sns, cellinfo->stb,
-                cellinfo->sewu, cellinfo->dxep, cellinfo->dxpw, 
-                cellinfo->snsv, cellinfo->dynp, cellinfo->dyps, 
-                cellinfo->stbw, cellinfo->dztp, cellinfo->dzpb);
 #endif
 }
 
