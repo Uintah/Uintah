@@ -159,6 +159,12 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
   if (amr_ps) {
     ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
+    if(!mpm_amr_ps){
+      ostringstream warn;
+      warn<<"ERROR:MPM:\n missing MPM section in the AMR section of the input file\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
     mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
     mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
   }
