@@ -84,7 +84,7 @@ ssh -x $LOGIN "cd $REMOTEDIR_TMP; /bin/rm -rf $localDir; mkdir $localDir"
 
 cd $localDir
 
-/usr/bin/time -p gmake TAR=tar -f /usr/gapps/uintah/linux_itanium/bin/pscp_driver_$OS -j $nproc
+/usr/bin/time -p gmake TAR=tar -f /usr/gapps/uintah/scripts/pscp_driver_$OS -j $nproc
 
 cd ..
 exit(1)
