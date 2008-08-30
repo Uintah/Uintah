@@ -572,8 +572,8 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     // for dynamic lb's, set up initial patch config
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::init); 
-    grid->assignBCS(d_grid_ps,d_lb);
-    grid->performConsistencyCheck();
+//    grid->assignBCS(d_grid_ps,d_lb);
+//    grid->performConsistencyCheck();
     t = d_timeinfo->initTime;
 
     bool needNewLevel = false;
@@ -637,8 +637,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
  
   if (currentGrid != oldGrid) {
     d_lb->possiblyDynamicallyReallocate(currentGrid, lbstate); 
-    currentGrid->assignBCS(d_grid_ps,d_lb);
-    currentGrid->performConsistencyCheck();
+//    currentGrid->assignBCS(d_grid_ps,d_lb);
+//    currentGrid->performConsistencyCheck();
     
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
