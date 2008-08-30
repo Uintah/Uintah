@@ -834,6 +834,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       }
       else {
        level->finalizeLevel();
+       level->assignBCS(grid_ps,0);
       }
       levelIndex++;
    }
