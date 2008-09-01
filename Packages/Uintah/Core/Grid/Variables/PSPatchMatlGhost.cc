@@ -20,4 +20,16 @@ bool PSPatchMatlGhost::operator<(const PSPatchMatlGhost& other) const
   else
     return matl_ < other.matl_;
 }
+namespace Uintah
+{
+  ostream& operator<<(ostream &out, const PSPatchMatlGhost &pmg)
+  {
+    out << "Patch: " << *pmg.patch_ << " ";
+    out << "Matl: " << pmg.matl_ << " ";
+    out << "low: " << pmg.low_ << " ";
+    out << "high: " << pmg.high_ << " ";
+    out << "dwid: " << pmg.dwid_ << " ";
 
+    return out;
+  }
+}
