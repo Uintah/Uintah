@@ -53,13 +53,23 @@ struct UINTAHSHARE PSPatchMatlGhost {
   {}
   
   bool operator<(const PSPatchMatlGhost& other) const;
+  bool operator==(const PSPatchMatlGhost& other) const
+  {
+    return patch_==other.patch_ && matl_ == other.matl_ && low_ == other.low_ && high_ == other.high_ && dwid_ == other.dwid_;
+  }
+  bool operator!=(const PSPatchMatlGhost& other) const
+  {
+    return !operator==(other);
+  }
   const Patch* patch_;
   int matl_;
   IntVector low_;
   IntVector high_;
   int dwid_;
+
 };  
 
+  ostream& operator<<(ostream &out, const PSPatchMatlGhost &pmg);
 } // End namespace Uintah
 
 #endif
