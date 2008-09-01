@@ -738,24 +738,27 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
       PSPatchMatlGhost pmg(fromPatch, matl, dep->low, dep->high, (int) cond);
       PSPatchMatlGhost pmg_new(fromPatch, matl, l, h, (int) cond);
-      if (req->var->getName() == "p.x")
-        dbg << d_myworld->myrank() << " extending particles from " << fromresource << " to " << toresource 
+      if(pmg!=pmg_new)
+      {
+        if (req->var->getName() == "p.x")
+          dbg << d_myworld->myrank() << " extending particles from " << fromresource << " to " << toresource 
             << " var " << *req->var << " on patch " << fromPatch->getID() << " matl " << matl 
             << " range " << dep->low << " " << dep->high << " cond " << cond 
             << " dw " << req->mapDataWarehouse() << " extended to " << l << " " << h << endl;
-      if (fromresource == d_myworld->myrank()) {
-        set<PSPatchMatlGhost>::iterator iter= particleSends_[toresource].find(pmg);
-        // if it is not there, assume it already got extended
-        if (iter != particleSends_[toresource].end()) {
-          particleSends_[toresource].erase(pmg);
-          particleSends_[toresource].insert(pmg_new);
+        if (fromresource == d_myworld->myrank()) {
+          set<PSPatchMatlGhost>::iterator iter= particleSends_[toresource].find(pmg);
+          // if it is not there, assume it already got extended
+          if (iter != particleSends_[toresource].end()) {
+            particleSends_[toresource].erase(pmg);
+            particleSends_[toresource].insert(pmg_new);
+          }
         }
-      }
-      else if (toresource == d_myworld->myrank()) {
-        set<PSPatchMatlGhost>::iterator iter= particleRecvs_[fromresource].find(pmg);
-        if (iter != particleRecvs_[toresource].end()) {
-          particleRecvs_[fromresource].erase(pmg);
-          particleRecvs_[fromresource].insert(pmg_new);
+        else if (toresource == d_myworld->myrank()) {
+          set<PSPatchMatlGhost>::iterator iter= particleRecvs_[fromresource].find(pmg);
+          if (iter != particleRecvs_[toresource].end()) {
+            particleRecvs_[fromresource].erase(pmg);
+            particleRecvs_[fromresource].insert(pmg_new);
+          }
         }
       }
     }
