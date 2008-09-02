@@ -730,7 +730,6 @@ void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-
 void SerialMPM::scheduleComputeContactArea(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
@@ -1917,7 +1916,6 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
     }
     delete interpolator;
   }
-
 }
 
 void SerialMPM::computeContactArea(const ProcessorGroup*,
@@ -3043,7 +3041,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
-        pTempNew[idx]        = pTemperature[idx] + tempRate*delT + pdTdt[idx];
+        pTempNew[idx]        = pTemperature[idx] + (tempRate+pdTdt[idx])*delT;
         pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
 
         if (cout_heat.active()) {
