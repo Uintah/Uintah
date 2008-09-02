@@ -620,7 +620,201 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
   }
   return dep;
 }
+#if 1
+/*************************
+ * This function will create the detailed dependency for the
+ * parameters passed in.  If a similar detailed dependency
+ * already exists it will combine those depedencies into a single
+ * dependency.  
+ */
+void
+DetailedTasks::possiblyCreateDependency(DetailedTask* from,
+          Task::Dependency* comp,
+          const Patch* fromPatch,
+          DetailedTask* to,
+          Task::Dependency* req,
+          const Patch *toPatch,
+          int matl,
+          const IntVector& low,
+          const IntVector& high,
+                                        DetailedDep::CommCondition cond)
+{ 
+  ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
+  ASSERTRANGE(to->getAssignedResourceIndex(), 0, d_myworld->size());
+  
+  if(dbg.active()) {
+    dbg << d_myworld->myrank() << "          " << *to << " depends on " << *from << "\n";
+    if(comp)
+      dbg << d_myworld->myrank() << "            From comp " << *comp;
+    else
+      dbg << d_myworld->myrank() << "            From OldDW ";
+    dbg << " to req " << *req << '\n';
+  }
 
+  int toresource = to->getAssignedResourceIndex();
+  int fromresource = from->getAssignedResourceIndex();
+  
+  if ((toresource == d_myworld->myrank() || 
+       (req->patches_dom != Task::NormalDomain && fromresource == d_myworld->myrank())) && 
+       fromPatch && !req->var->typeDescription()->isReductionVariable()) {
+    // add scrub counts for local tasks, and not for non-data deps
+    addScrubCount(req->var, matl, fromPatch, req->whichdw);
+  }
+
+  if(fromresource == d_myworld->myrank() && (fromresource == toresource || 
+     req->var->typeDescription()->isReductionVariable())) {
+    to->addInternalDependency(from, req->var);
+    return;
+  }
+  
+  // if neither task talks to this processor, return
+  if (fromresource != d_myworld->myrank() && toresource != d_myworld->myrank()) {
+    return;
+  }
+  
+  //get dependancy batch
+  DependencyBatch* batch = from->getComputes();
+
+  //find dependancy batch that is to the same processor as this dependency
+  for(;batch != 0; batch = batch->comp_next){
+    if(batch->to == toresource)
+      break;
+  }
+
+  //if batch doesn't exist then create it
+  if(!batch){
+    batch = scinew DependencyBatch(toresource, from, to);
+    batches_.push_back(batch);
+    from->addComputes(batch);
+#if SCI_ASSERTION_LEVEL >= 2
+    bool newRequireBatch = to->addRequires(batch);
+#else
+    to->addRequires(batch);
+#endif
+    ASSERTL2(newRequireBatch);
+    if(dbg.active())
+      dbg << d_myworld->myrank() << "          NEW BATCH!\n";
+  } else if (mustConsiderInternalDependencies_) { // i.e. threaded mode
+    if (to->addRequires(batch)) {
+      // this is a new requires batch for this task, so add
+      // to the batch's toTasks.
+      batch->toTasks.push_back(to);
+    }
+    if(dbg.active())
+      dbg << d_myworld->myrank() << "          USING PREVIOUSLY CREATED BATCH!\n";
+  }
+
+  IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
+  
+  //create the new dependency
+  DetailedDep* new_dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, 
+           low, high, cond);
+  
+  //search for a dependency that can be combined with this dependency
+  DetailedDep* matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh);
+
+  //if we have matching dependencies we will extend the new dependency to include the old one and delete the old one
+  while(matching_dep!=0)
+  {
+    //debugging output
+    if(dbg.active()){
+      dbg << d_myworld->myrank() << "            EXTENDED from " << new_dep->low << " " << new_dep->high << " to " << Min(new_dep->low, matching_dep->low) << " " <<  Max(new_dep->high, matching_dep->high) << "\n";
+      dbg << *req->var << '\n';
+      dbg << *new_dep->req->var << '\n';
+      if(comp)
+        dbg << *comp->var << '\n';
+      if(new_dep->comp)
+        dbg << *new_dep->comp->var << '\n';
+    }
+
+    //extend the dependency range
+    new_dep->low = Min(new_dep->low, matching_dep->low);
+    new_dep->high = Max(new_dep->high, matching_dep->high);
+
+    //copy matching dependencies toTasks to the new dependency
+    new_dep->toTasks.splice(new_dep->toTasks.begin(),matching_dep->toTasks); 
+
+    //erase particle sends/recvs
+    if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
+      PSPatchMatlGhost pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int) cond);
+
+      if (req->var->getName() == "p.x")
+        dbg << d_myworld->myrank() << " erasing particles from " << fromresource << " to " << toresource 
+          << " var " << *req->var << " on patch " << fromPatch->getID() << " matl " << matl 
+          << " range " << matching_dep->low << " " << matching_dep->high << " cond " << cond 
+          << " dw " << req->mapDataWarehouse() << endl;
+
+      if (fromresource == d_myworld->myrank()) {
+        particleSends_[toresource].erase(pmg);
+      }
+      else if (toresource == d_myworld->myrank()) {
+        particleRecvs_[fromresource].erase(pmg);
+      }
+    }
+
+    //remove the matching_dep from the batch list
+
+    //check if head is the matching dep
+    if(batch->head==matching_dep)
+    {
+      //point head to next dep
+      batch->head=matching_dep->next;
+    }
+    else //head is not the matching dep so it must be in the list
+    {
+      DetailedDep *parent_dep=batch->head;
+   
+      //search list for matching dep
+      while(parent_dep->next!=matching_dep)
+      {
+        parent_dep=parent_dep->next;
+        ASSERT(parent_dep->next!=NULL);
+      }
+      //remove matching dep from list
+      parent_dep->next=matching_dep->next;
+    }
+
+    //delete matching dep
+    delete matching_dep;
+
+    //search for another matching detailed deps
+    matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh);
+  }
+  
+  // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
+  // (to set the next one, which will be the head of the list, you only need to see the following one)
+  new_dep->patchLow = varRangeLow;
+  new_dep->patchHigh = varRangeHigh;
+
+  //add the new dep to the front of the batch
+  new_dep->next=batch->head;
+  batch->head = new_dep;
+  
+  //add communication for particle data
+  // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
+  if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) 
+  {
+    if (fromresource == d_myworld->myrank())
+      particleSends_[toresource].insert(PSPatchMatlGhost(fromPatch, matl, new_dep->low, new_dep->high, (int) cond));
+    else if (toresource == d_myworld->myrank())
+      particleRecvs_[fromresource].insert(PSPatchMatlGhost(fromPatch, matl, new_dep->low, new_dep->high, (int) cond));
+    
+    if (req->var->getName() == "p.x") 
+      dbg << d_myworld->myrank() << " scheduling particles from " << fromresource << " to " << toresource 
+          << " on patch " << fromPatch->getID() << " matl " << matl << " range " << low << " " << high 
+          << " cond " << cond << " dw " << req->mapDataWarehouse() << endl;
+  }
+  
+  if(dbg.active()) {
+    dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
+    if (fromPatch)
+      dbg << fromPatch->getID() << '\n';
+    else
+      dbg << "NULL\n";  
+  }
+}
+#else
+//OLD METHOD KEPT TEMPERARLY FOR DEBUGGING
 void
 DetailedTasks::possiblyCreateDependency(DetailedTask* from,
           Task::Dependency* comp,
@@ -770,7 +964,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   dep->patchLow = varRangeLow;
   dep->patchHigh = varRangeHigh;
 }
-
+#endif
 DetailedTask*
 DetailedTasks::getOldDWSendTask(int proc)
 {
