@@ -225,8 +225,9 @@ void Water::computeStressTensor(const PatchSubset* patches,
 
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
-      computeGrad(velGrad, ni, d_S, oodx, gvelocity);
-                                                                                
+      velGrad.set(0.0);
+      computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+
       double J = deformationGradient_new[idx].Determinant();
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
@@ -241,7 +242,6 @@ void Water::computeStressTensor(const PatchSubset* patches,
       Shear = DPrime*(2.*viscosity);
 
       // get the hydrostatic part of the stress
-      //p = bulk*(pow(vol_orig/pvolume_deformed[idx],gamma) - 1.0);
       double jtotheminusgamma = pow(J,-gamma);
       p = bulk*(jtotheminusgamma - 1.0);
 
@@ -263,7 +263,6 @@ void Water::computeStressTensor(const PatchSubset* patches,
     delete interpolator;
   }
 }
-
 
 void Water::carryForward(const PatchSubset* patches,
                                const MPMMaterial* matl,

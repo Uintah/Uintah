@@ -367,19 +367,14 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);      
-       Vector gvel;
-       velGrad.set(0.0);
-       for(int k = 0; k < flag->d_8or27; k++) {
-         if (flag->d_fracture) {
-           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
-           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-         } else
-           gvel = gvelocity[ni[k]];
-         for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-              velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
-            }
-         }
+      velGrad.set(0.0);
+      short pgFld[27];
+      if (flag->d_fracture) {
+        for(int k=0; k<27; k++)
+          pgFld[k]=pgCode[idx][k];
+        computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
+      } else {
+        computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
       }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime

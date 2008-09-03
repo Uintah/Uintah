@@ -28,9 +28,6 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-// Material Constants are C1, C2 and PR (poisson's ratio).  
-// The shear modulus = 2(C1 + C2).
-
 SoilFoam::SoilFoam(ProblemSpecP& ps, MPMFlags* Mflag) 
   : ConstitutiveModel(Mflag)
 {
@@ -294,13 +291,6 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-    if(flag->d_with_ice){
-      // do this
-    }
-    else{
-      // do that
-    }
-
     int dwi = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -313,15 +303,16 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+
     // for thermal stress
     constParticleVariable<double> pTempPrevious; 
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
-    old_dw->get(psize,             lb->pSizeLabel,               pset);
-    
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
@@ -330,8 +321,6 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
     new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     constNCVariable<Vector> Gvelocity;
     constParticleVariable<Short27> pgCode;
@@ -366,16 +355,8 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
-       Vector gvel;
-       velGrad.set(0.0);
-       for(int k = 0; k < flag->d_8or27; k++) {
-           gvel = gvelocity[ni[k]];
-         for (int j = 0; j<3; j++){
-           for (int i = 0; i<3; i++) {
-             velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
-            }
-          }
-      }
+      velGrad.set(0.0);
+      computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain

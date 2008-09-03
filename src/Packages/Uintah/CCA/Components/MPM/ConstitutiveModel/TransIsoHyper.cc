@@ -294,8 +294,11 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     Vector deformed_fiber_vector;
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -347,11 +350,16 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
       new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-      computeDeformationGradientFromVelocity(gvelocity,
-                                             pset, px, psize,
-                                             deformationGradient,
-                                             deformationGradient_new,
-                                             dx, interpolator, delT);
+      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){        particleIndex idx = *iter;
+                                                                                
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+                                                                                
+        Matrix3 tensorL(0.0);
+        computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
+                                                                                
+        deformationGradient_new[idx]=(tensorL*delT+Identity)
+                                    *deformationGradient[idx];
+      }
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;

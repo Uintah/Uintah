@@ -301,8 +301,6 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
-
-
     // Initialize patch variables
     double se = 0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -320,7 +318,6 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,                lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
-
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);

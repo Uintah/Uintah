@@ -237,7 +237,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
 
-
     Matrix3 Rotation;
 
     Vector dx = patch->dCell();
@@ -257,10 +256,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Vector> T1,T2,T3;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
-    // BB : 11/09/02 Unused Vars
-    //Vector I(1,0,0);
-    //Vector J(0,1,0);
-    //Vector K(0,0,1);
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
@@ -287,13 +282,6 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac,NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    constParticleVariable<Short27> pgCode;
-    constNCVariable<Vector> Gvelocity;
-    if (flag->d_fracture) {
-      new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
-    }
-
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
     new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
@@ -314,21 +302,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
        // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
 
-      Vector gvel;
       velGrad.set(0.0);
-      for(int k = 0; k < flag->d_8or27; k++) {
-        if (flag->d_fracture) {
-          if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
-          if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-        } else 
-          gvel = gvelocity[ni[k]];
-        for (int j = 0; j<3; j++){
-          double d_SXoodx = d_S[k][j] * oodx[j];
-          for (int i = 0; i<3; i++) {
-            velGrad(i,j) += gvel[i] * d_SXoodx;
-          }
-        }
-      }
+      computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
 
       T1[idx] = ptang1[idx];
       T2[idx] = ptang2[idx];
