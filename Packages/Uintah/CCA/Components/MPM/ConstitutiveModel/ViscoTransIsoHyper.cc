@@ -407,8 +407,11 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -421,11 +424,12 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Vector> pfiberdir_carry;
     
     ParticleVariable<Matrix3> pstress,ElasticStress;//visco
-    constParticleVariable<Matrix3> ElasticStress_old;
     ParticleVariable<Matrix3> history1,history2,history3;
     ParticleVariable<Matrix3> history4,history5,history6;
+    ParticleVariable<double> pdTdt;
     constParticleVariable<Matrix3> history1_old,history2_old,history3_old;
     constParticleVariable<Matrix3> history4_old,history5_old,history6_old;
+    constParticleVariable<Matrix3> ElasticStress_old;
     constParticleVariable<Vector> psize;
 
     delt_vartype delT;
@@ -462,10 +466,8 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(history4,        pHistory4Label_preReloc,      pset);
     new_dw->allocateAndPut(history5,        pHistory5Label_preReloc,      pset);
     new_dw->allocateAndPut(history6,        pHistory6Label_preReloc,      pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,      pset);
 
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,pset);
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
@@ -496,11 +498,16 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
       new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-      computeDeformationGradientFromVelocity(gvelocity,
-                                             pset, px, psize,
-                                             deformationGradient,
-                                             deformationGradient_new,
-                                             dx, interpolator, delT);
+      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){        particleIndex idx = *iter;
+                                                                                
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+                                                                                
+        Matrix3 tensorL(0.0);
+        computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
+                                                                                
+        deformationGradient_new[idx]=(tensorL*delT+Identity)
+                                    *deformationGradient[idx];
+      }
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;

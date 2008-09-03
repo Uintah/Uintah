@@ -209,13 +209,6 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    constParticleVariable<Short27> pgCode;
-    constNCVariable<Vector> Gvelocity;
-    if (flag->d_fracture) {
-      new_dw->get(pgCode, lb->pgCodeLabel, pset);
-      new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
-    }
-    
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt;
     new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
@@ -232,21 +225,9 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
        // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
 
-      Vector gvel;
       velGrad.set(0.0);
-      for(int k = 0; k < flag->d_8or27; k++) {
-        if (flag->d_fracture) {
-          if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-          if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-        } else
-          gvel = gvelocity[ni[k]];
-        for (int j = 0; j<3; j++){
-          for (int i = 0; i<3; i++) {
-            velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
-          }
-        }
-      }
-      
+      computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity

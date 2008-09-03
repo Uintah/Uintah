@@ -298,13 +298,13 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
-
-    old_dw->get(psize,             lb->pSizeLabel,               pset);
     
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
@@ -315,22 +315,18 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
     new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
 
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
     constNCVariable<Vector> Gvelocity;
     constParticleVariable<Short27> pgCode;
     constParticleVariable<Matrix3> pdispGrads;
     constParticleVariable<double>  pstrainEnergyDensity;
-    ParticleVariable<Matrix3> pvelGrads;
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
+    ParticleVariable<double> pdTdt;
     if (flag->d_fracture) {
       new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
       new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
       old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
       old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
-      new_dw->allocateAndPut(pvelGrads,  lb->pVelGradsLabel,  pset);
-          
       new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc,pset);
       new_dw->allocateAndPut(pstrainEnergyDensity_new,
                              lb->pStrainEnergyDensityLabel_preReloc, pset);
@@ -338,12 +334,9 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_new,     lb->pVolumeLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
- 
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
@@ -359,21 +352,14 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
 
-       Vector gvel;
-       velGrad.set(0.0);
-       for(int k = 0; k < flag->d_8or27; k++) {
-         if (flag->d_fracture) {
-           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-         } else
-           gvel = gvelocity[ni[k]];
-         for (int j = 0; j<3; j++){
-           for (int i = 0; i<3; i++) {
-             velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
-             if (flag->d_fracture)
-               pvelGrads[idx](i,j)  = velGrad(i,j);
-            }
-          }
+      velGrad.set(0.0);
+      short pgFld[27];
+      if (flag->d_fracture) {
+        for(int k=0; k<27; k++)
+          pgFld[k]=pgCode[idx][k];
+        computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
+      } else {
+        computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
       }
 
       // Rate of particle temperature change for thermal stress
@@ -412,9 +398,9 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       double e = (D(0,0)*AvgStress(0,0) +
                   D(1,1)*AvgStress(1,1) +
                   D(2,2)*AvgStress(2,2) +
-               2.*(D(0,1)*AvgStress(0,1) +
-                   D(0,2)*AvgStress(0,2) +
-                   D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
+              2.*(D(0,1)*AvgStress(0,1) +
+                  D(0,2)*AvgStress(0,2) +
+                  D(1,2)*AvgStress(1,2))) * pvolume_new[idx]*delT;
 
       se += e;
 
