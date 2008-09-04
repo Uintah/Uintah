@@ -319,7 +319,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Short27> pgCode;
     constParticleVariable<Matrix3> pdispGrads;
     constParticleVariable<double>  pstrainEnergyDensity;
-    ParticleVariable<Matrix3> pdispGrads_new;
+    ParticleVariable<Matrix3> pdispGrads_new,pvelGrads;
     ParticleVariable<double> pstrainEnergyDensity_new;
     ParticleVariable<double> pdTdt;
     if (flag->d_fracture) {
@@ -327,6 +327,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
       old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
       old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
+      new_dw->allocateAndPut(pvelGrads,lb->pVelGradsLabel,           pset);
       new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc,pset);
       new_dw->allocateAndPut(pstrainEnergyDensity_new,
                              lb->pStrainEnergyDensityLabel_preReloc, pset);
@@ -361,6 +362,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       } else {
         computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
       }
+      pvelGrads[idx]=velGrad;
 
       // Rate of particle temperature change for thermal stress
       double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT; 
