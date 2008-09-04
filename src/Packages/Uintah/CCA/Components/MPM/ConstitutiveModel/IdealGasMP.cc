@@ -190,29 +190,26 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
+    ParticleVariable<double> pdTdt,p_q;
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
+
+    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
 
     old_dw->get(px,                          lb->pXLabel,                 pset);
     old_dw->get(pmass,                       lb->pMassLabel,              pset);
     old_dw->get(ptemp,                       lb->pTemperatureLabel,       pset);
+    old_dw->get(psize,                       lb->pSizeLabel,              pset);
     old_dw->get(pvelocity,                   lb->pVelocityLabel,          pset);
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,   pset);
-    old_dw->get(psize,                       lb->pSizeLabel,              pset);
-    
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
-
-    new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
 
     double gamma = d_initialData.gamma;
     double cv    = d_initialData.cv;
@@ -249,12 +246,24 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       // try artificial viscosity
       double AV=0.;
       if(d_initialData.UseArtificialViscosity){
+        cerr << "Use the MPM Flag for artificial viscosity" << endl;
         if(velGrad(0,0)<=0.){
           AV = 2.5*2.5*dx.x()*dx.x()*rhoM*velGrad(0,0)*velGrad(0,0);
         }
       }
 
-      p=p+AV;
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        //double c_bulk = sqrt(bulk/rho_cur);
+        double c_bulk = dp_drho;
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rhoM, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+
+      //p=p+AV;
 
       double P = p - 101325.;
 

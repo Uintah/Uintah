@@ -646,6 +646,9 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
+    if(flags->d_artificial_viscosity){
+      t->computes(lb->p_qLabel_preReloc);
+    }
   }
 
   t->computes(d_sharedState->get_delt_label());
@@ -659,9 +662,6 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
   if (flags->d_accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 
-  if(flags->d_artificial_viscosity){
-    scheduleComputeArtificialViscosity(   sched, patches, matls);
-  }
 }
 
 // Compute the accumulated strain energy
@@ -703,30 +703,6 @@ void SerialMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
   t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
   t->requires(Task::NewDW, lb->StrainEnergyLabel);
   t->computes(lb->AccStrainEnergyLabel);
-  sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
-                                                   const PatchSet* patches,
-                                                   const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  printSchedule(patches,cout_doing,"MPM::scheduleComputeArtificialViscosity\t\t");
-  
-  Task* t = scinew Task("MPM::computeArtificialViscosity",
-                        this, &SerialMPM::computeArtificialViscosity);
-
-  Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
-  t->requires(Task::NewDW, lb->pVolumeLabel_preReloc,   Ghost::None);
-  t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityStarLabel,      gac, NGN);
-  t->computes(lb->p_qLabel_preReloc);
-
   sched->addTask(t, patches, matls);
 }
 
@@ -1830,91 +1806,6 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
     if (cout_dbg.active())
       cout_dbg <<"Done updateErosionParamter on patch "  << patch->getID() << "\t MPM"<< endl;
 
-  }
-}
-
-void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
-                                           const PatchSubset* patches,
-                                           const MaterialSubset* ,
-                                           DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw)
-{
-  double C0 = flags->d_artificialViscCoeff1;
-  double C1 = flags->d_artificialViscCoeff2;
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,
-              "Doing computeArtificialViscosity\t\t\t");
-
-
-    // The following scheme for removing ringing behind a shock comes from:
-    // VonNeumann, J.; Richtmyer, R. D. (1950): A method for the numerical
-    // calculation of hydrodynamic shocks. J. Appl. Phys., vol. 21, pp. 232.
-
-    Ghost::GhostType  gac   = Ghost::AroundCells;
-
-    int numMatls = d_sharedState->getNumMPMMatls();
-    ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni(interpolator->size());
-    vector<Vector> d_S(interpolator->size());
-
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      constNCVariable<Vector> gvelocity;
-      ParticleVariable<double> p_q;
-      constParticleVariable<Vector> psize;
-      constParticleVariable<Point> px;
-      constParticleVariable<double> pmass,pvol;
-      new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-      old_dw->get(px,        lb->pXLabel,                      pset);
-      old_dw->get(pmass,     lb->pMassLabel,                   pset);
-      new_dw->get(pvol,      lb->pVolumeLabel_preReloc,        pset);
-      old_dw->get(psize,     lb->pSizeLabel,                   pset);
-      new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,    pset);
-
-      Matrix3 velGrad;
-      Vector dx = patch->dCell();
-      double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-      double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
-
-      double K = 1./mpm_matl->getConstitutiveModel()->getCompressibility();
-      double c_dil;
-
-      for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
-        velGrad.set(0.0);
-        for(int k = 0; k < flags->d_8or27; k++) {
-          const Vector& gvel = gvelocity[ni[k]];
-          for(int j = 0; j<3; j++){
-            double d_SXoodx = d_S[k][j] * oodx[j];
-            for(int i = 0; i<3; i++) {
-              velGrad(i,j) += gvel[i] * d_SXoodx;
-            }
-          }
-        }
-
-        Matrix3 D = (velGrad + velGrad.Transpose())*.5;
-
-        double DTrace = D.Trace();
-        p_q[idx] = 0.0;
-        if(DTrace<0.){
-          c_dil = sqrt(K*pvol[idx]/pmass[idx]);
-          p_q[idx] = (C0*fabs(c_dil*DTrace*dx_ave) +
-                      C1*(DTrace*DTrace*dx_ave*dx_ave))*
-                      (pmass[idx]/pvol[idx]);
-        }
-      }
-    }
-    delete interpolator;
   }
 }
 
@@ -3051,7 +2942,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                     << " dT = " << (tempRate*delT)
                     << " T_new = " << pTempNew[idx] << endl;
         }
-
 
         double rho;
         if(pvolume[idx] > 0.){

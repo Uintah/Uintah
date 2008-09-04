@@ -304,8 +304,10 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pstress_ve_v, pstress_e_v;
     ParticleVariable<double> pvolume_new, pstress_ve_v_new,pstress_e_v_new;
     constParticleVariable<Vector> pvelocity, psize;
+    ParticleVariable<double> pdTdt,p_q;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
@@ -319,22 +321,22 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pvolume_new,      lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
-    
-    old_dw->get(psize,               lb->pSizeLabel,           pset);
-    old_dw->get(pstress_e,           pStress_eLabel,           pset);
-    old_dw->get(pstress_ve_v,        pStress_ve_vLabel,        pset);
-    old_dw->get(pstress_ve_d,        pStress_ve_dLabel,        pset);
-    old_dw->get(pstress_e_v,         pStress_e_vLabel,         pset);
-    old_dw->get(pstress_e_d,         pStress_e_dLabel,         pset);
-    old_dw->get(px,                  lb->pXLabel,              pset);
-    old_dw->get(pmass,               lb->pMassLabel,           pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,       pset);
-    old_dw->get(ptemperature,        lb->pTemperatureLabel,    pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,                pset);
+    new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,                 pset);
+
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
+    old_dw->get(pstress_e,           pStress_eLabel,               pset);
+    old_dw->get(pstress_ve_v,        pStress_ve_vLabel,            pset);
+    old_dw->get(pstress_ve_d,        pStress_ve_dLabel,            pset);
+    old_dw->get(pstress_e_v,         pStress_e_vLabel,             pset);
+    old_dw->get(pstress_e_d,         pStress_e_dLabel,             pset);
+    old_dw->get(px,                  lb->pXLabel,                  pset);
+    old_dw->get(pmass,               lb->pMassLabel,               pset);
+    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
+    old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac, NGN);
-
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     constParticleVariable<Short27> pgCode;
     constNCVariable<Vector> Gvelocity;
@@ -342,11 +344,6 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       new_dw->get(pgCode, lb->pgCodeLabel, pset);
       new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
 
     double e_shear = d_initialData.E_Shear;
     double e_bulk = d_initialData.E_Bulk;
@@ -433,7 +430,17 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double rho_cur = rho_orig/J;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

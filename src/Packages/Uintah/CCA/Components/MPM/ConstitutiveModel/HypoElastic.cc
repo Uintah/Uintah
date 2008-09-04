@@ -321,7 +321,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double>  pstrainEnergyDensity;
     ParticleVariable<Matrix3> pdispGrads_new,pvelGrads;
     ParticleVariable<double> pstrainEnergyDensity_new;
-    ParticleVariable<double> pdTdt;
+    ParticleVariable<double> pdTdt,p_q;
     if (flag->d_fracture) {
       new_dw->get(Gvelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
       new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
@@ -336,6 +336,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume_new,     lb->pVolumeLabel_preReloc,   pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
 
@@ -419,7 +420,17 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

@@ -501,6 +501,9 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
+    if(flags->d_artificial_viscosity){
+      t->computes(lb->p_qLabel_preReloc);
+    }
   }
 
   t->computes(d_sharedState->get_delt_label());
@@ -514,9 +517,11 @@ void AMRMPM::scheduleComputeStressTensor(SchedulerP& sched,
   if (flags->d_accStrainEnergy) 
     scheduleComputeAccStrainEnergy(sched, patches, matls);
 
+#if 0
   if(flags->d_artificial_viscosity){
     scheduleComputeArtificialViscosity(   sched, patches, matls);
   }
+#endif
 }
 
 void AMRMPM::scheduleUpdateErosionParameter(SchedulerP& sched,

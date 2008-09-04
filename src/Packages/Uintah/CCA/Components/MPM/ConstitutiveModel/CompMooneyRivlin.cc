@@ -188,9 +188,12 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume;
+    ParticleVariable<double> pvolume,p_q;
     constParticleVariable<Vector> pvelocity,psize;
+    ParticleVariable<double> pdTdt;
+
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(psize,               lb->pSizeLabel,                     pset);
@@ -198,18 +201,15 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pmass,               lb->pMassLabel,                     pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,       pset);
-    new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,          pset);
     new_dw->allocateAndPut(pvolume,  lb->pVolumeLabel_preReloc,          pset);
+    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,            pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,              pset);
 
-    constParticleVariable<double>  pstrainEnergyDensity;
-
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
+    ParticleVariable<Matrix3> velGrad;
+    new_dw->allocateTemporary(velGrad, pset);
 
     double C1 = d_initialData.C1;
     double C2 = d_initialData.C2;
@@ -231,6 +231,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
 
         Matrix3 tensorL(0.0);
         computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
+        velGrad[idx]=tensorL;
 
         deformationGradient_new[idx]=(tensorL*delT+Identity)
                                     *deformationGradient[idx];
@@ -282,13 +283,25 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
                        Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double bulk = (4.*(C1+C2*invar2)/J);  // I'm a little fuzzy here - JG
+        double rho_cur = rho_orig/J;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+
       // Compute the strain energy for all the particles
       double e = (C1*(invar1-3.0) + C2*(invar2-3.0) +
             C3*(1.0/(invar3*invar3) - 1.0) +
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
 
       se += e;
-    }
+    }  // end loop over particles
         
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

@@ -329,6 +329,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pvelGrads;
     ParticleVariable<Matrix3> pdispGrads_new;
     ParticleVariable<double> pstrainEnergyDensity_new;
+    ParticleVariable<double> pdTdt,p_q;
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(pvolume,         lb->pVolumeLabel_preReloc,   pset);
@@ -336,11 +337,8 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_sv_min_new, p_sv_minLabel_preReloc,         pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
- 
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
 
     double G    = d_initialData.G;
     double bulk = d_initialData.bulk;
@@ -445,7 +443,17 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

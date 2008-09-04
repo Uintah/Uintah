@@ -686,7 +686,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // Get grid size
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+    double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     // Get the set of particles
     int dwi = matl->getDWIndex();
@@ -771,6 +771,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>  pPlasticStrain_new, pDamage_new, pPorosity_new, 
       pStrainRate_new, pPlasticStrainRate_new;
     ParticleVariable<int>     pLocalized_new;
+    ParticleVariable<double> pdTdt, p_q;
     new_dw->allocateAndPut(pRotation_new,    
                            pRotationLabel_preReloc,               pset);
     new_dw->allocateAndPut(pStrainRate_new,      
@@ -778,17 +779,15 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pPlasticStrain_new,      
                            pPlasticStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pPlasticStrainRate_new,      
-                           pPlasticStrainRateLabel_preReloc,          pset);
+                           pPlasticStrainRateLabel_preReloc,      pset);
     new_dw->allocateAndPut(pDamage_new,      
                            pDamageLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pPorosity_new,      
                            pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
                            pLocalizedLabel_preReloc,              pset);
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
+    new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
     // Get the plastic strain
     d_plastic->getInternalVars(pset, old_dw);
@@ -1165,14 +1164,13 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
                                         delT);
 
-      /*
       if (flag->d_artificial_viscosity) {
         double Dkk = tensorD.Trace();
         double c_bulk = sqrt(bulk/rho_cur);
-        double q = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
-        p -= q;
+        p_q[idx] = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
       }
-      */
 
       Matrix3 tensorHy = one*p;
    

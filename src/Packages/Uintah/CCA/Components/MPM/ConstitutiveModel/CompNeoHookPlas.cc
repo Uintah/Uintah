@@ -252,13 +252,15 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     Matrix3 bElBarTrial,deformationGradientInc,Identity;
-    Matrix3 shearTrial,Shear,normal,fbar,velGrad;
+    Matrix3 shearTrial,Shear,normal,fbar;
     double J,p,fTrial,IEl,muBar,delgamma,sTnorm,Jinc,U,W;
     double onethird = (1.0/3.0),sqtwthds = sqrt(2.0/3.0), c_dil = 0.0,se = 0.;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Identity.Identity();
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     Vector dx = patch->dCell();
 
@@ -273,9 +275,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity,psize;
-    ParticleVariable<double> pdTdt;
+    ParticleVariable<double> pdTdt,p_q;
     constNCVariable<Vector> gvelocity;
+
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel,getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
@@ -293,9 +297,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pdTdt,      lb->pdTdtLabel_preReloc,          pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
-    statedata.copyData(statedata_old);
+    new_dw->allocateAndPut(p_q,        lb->p_qLabel_preReloc,            pset);
+    ParticleVariable<Matrix3> velGrad;
+    new_dw->allocateTemporary(velGrad, pset);
 
-    old_dw->get(delT, lb->delTLabel,getLevel(patches));
+    statedata.copyData(statedata_old);
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -307,11 +313,18 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
       new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-      computeDeformationGradientFromVelocity(gvelocity,
-                                             pset, px, psize,
-                                             deformationGradient,
-                                             deformationGradient_new,
-                                             dx, interpolator, delT);
+      double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){        particleIndex idx = *iter;
+                                                                                
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+                                                                                
+        Matrix3 tensorL(0.0);
+        computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
+        velGrad[idx]=tensorL;
+                                                                                
+        deformationGradient_new[idx]=(tensorL*delT+Identity)
+                                    *deformationGradient[idx];
+      }
     }
     else if(!flag->d_doGridReset){
       constNCVariable<Vector> gdisplacement;
@@ -406,7 +419,16 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
 
-    }
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.0;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

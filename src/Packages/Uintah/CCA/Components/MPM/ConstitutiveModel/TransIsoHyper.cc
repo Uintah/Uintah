@@ -307,15 +307,18 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> deformationGradient;
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass;
-    ParticleVariable<double> fail,pdTdt,stretch,pvolume_new;
+    ParticleVariable<double> fail,pdTdt,stretch,pvolume_new,p_q;
     constParticleVariable<double> fail_old;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> pfiberdir;
     ParticleVariable<Vector> pfiberdir_carry;
     constParticleVariable<Vector> psize;
+
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
+
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
@@ -323,7 +326,6 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(fail_old,            pFailureLabel,                pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_new,      lb->pVolumeLabel_preReloc,  pset);
@@ -333,6 +335,10 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
     new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,      pset);
+    ParticleVariable<Matrix3> velGrad;
+    new_dw->allocateTemporary(velGrad, pset);
+
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
     double c1 = d_initialData.c1;
@@ -356,6 +362,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
                                                                                 
         Matrix3 tensorL(0.0);
         computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
+        velGrad[idx]=tensorL;
                                                                                 
         deformationGradient_new[idx]=(tensorL*delT+Identity)
                                     *deformationGradient[idx];
@@ -539,11 +546,20 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
 
       Vector pvelocity_idx = pvelocity[idx];
 
-
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(Bulk/rho_cur);
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
