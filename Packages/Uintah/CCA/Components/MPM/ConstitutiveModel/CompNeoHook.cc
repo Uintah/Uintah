@@ -163,12 +163,11 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     Matrix3 Identity;
     Identity.Identity();
 
+    Vector dx = patch->dCell();
+
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
-
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -180,8 +179,10 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume_new;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> psize;
-    ParticleVariable<double> pdTdt;
+    ParticleVariable<double> pdTdt,p_q;
+
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(px,                  lb->pXLabel,                  pset);
@@ -193,14 +194,15 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress,     lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_new, lb->pVolumeLabel_preReloc, pset);
     new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                                  lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,          pset);
+    ParticleVariable<Matrix3> velGrad;
+    new_dw->allocateTemporary(velGrad, pset);
+
     if(flag->d_with_color) {
       old_dw->get(pcolor,      lb->pColorLabel,  pset);
     }
-
-    new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
-
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -210,13 +212,16 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
       new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
+
+      double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
       for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){        particleIndex idx = *iter;
                                                                                 
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
                                                                                 
         Matrix3 tensorL(0.0);
         computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
-                                                                                
+        velGrad[idx]=tensorL;
+
         deformationGradient_new[idx]=(tensorL*delT+Identity)
                                     *deformationGradient[idx];
       }
@@ -273,7 +278,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
       W = .5*shear*(bElBar_new.Trace() - 3.0);
 
-      
       double e = (U + W)*pvolume_new[idx]/J;
 
       se += e;
@@ -282,7 +286,17 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

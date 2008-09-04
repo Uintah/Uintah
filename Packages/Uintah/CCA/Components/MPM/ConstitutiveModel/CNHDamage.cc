@@ -283,7 +283,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
   constNCVariable<Vector>        gVelocity;
   constNCVariable<Vector>        GVelocity; 
   ParticleVariable<int>          pFailed_new;
-  ParticleVariable<double>       pVol_new, pdTdt, pFailureStrain_new;
+  ParticleVariable<double>       pVol_new, pdTdt, pFailureStrain_new,p_q;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
   ParticleVariable<Matrix3>      pDeformRate;
 
@@ -340,13 +340,13 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
                            bElBarLabel_preReloc,                  pset);
     new_dw->allocateAndPut(pStress_new,        
                            lb->pStressLabel_preReloc,             pset);
-
     new_dw->allocateAndPut(pFailed_new, 
                            pFailedLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pFailureStrain_new, 
                            pFailureStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pDeformRate, 
                            pDeformRateLabel_preReloc,             pset);
+    new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,         pset);
 
     // Copy failure strains to new dw
     pFailureStrain_new.copyData(pFailureStrain);
@@ -427,7 +427,16 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
                        Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
 
-    }
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        p_q[idx] = artificialBulkViscosity(pDeformRate[idx].Trace(), c_bulk,
+                                           rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

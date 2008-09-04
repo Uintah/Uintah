@@ -426,7 +426,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress,ElasticStress;//visco
     ParticleVariable<Matrix3> history1,history2,history3;
     ParticleVariable<Matrix3> history4,history5,history6;
-    ParticleVariable<double> pdTdt;
+    ParticleVariable<double> pdTdt,p_q;
     constParticleVariable<Matrix3> history1_old,history2_old,history3_old;
     constParticleVariable<Matrix3> history4_old,history5_old,history6_old;
     constParticleVariable<Matrix3> ElasticStress_old;
@@ -442,7 +442,6 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(fail_old,            pFailureLabel,                pset);
     old_dw->get(psize,               lb->pSizeLabel,               pset);
-
     old_dw->get(ElasticStress_old,   pElasticStressLabel,          pset);
     old_dw->get(history1_old,        pHistory1Label,               pset);
     old_dw->get(history2_old,        pHistory2Label,               pset);
@@ -451,14 +450,13 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(history5_old,        pHistory5Label,               pset);
     old_dw->get(history6_old,        pHistory6Label,               pset);
 
-    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
+    new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc, pset);
     new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
-    new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);
-
+                                  lb->pDeformationMeasureLabel_preReloc,  pset);
+    new_dw->allocateAndPut(stretch,         pStretchLabel_preReloc,       pset);
+    new_dw->allocateAndPut(fail,            pFailureLabel_preReloc,       pset);
     new_dw->allocateAndPut(ElasticStress,   pElasticStressLabel_preReloc, pset);
     new_dw->allocateAndPut(history1,        pHistory1Label_preReloc,      pset);
     new_dw->allocateAndPut(history2,        pHistory2Label_preReloc,      pset);
@@ -467,6 +465,9 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(history5,        pHistory5Label_preReloc,      pset);
     new_dw->allocateAndPut(history6,        pHistory6Label_preReloc,      pset);
     new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,        pset);
+    ParticleVariable<Matrix3> velGrad;
+    new_dw->allocateTemporary(velGrad, pset);
 
     //_____________________________________________material parameters
     double Bulk  = d_initialData.Bulk;
@@ -498,12 +499,14 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
       new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
-      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){        particleIndex idx = *iter;
+      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
+        particleIndex idx = *iter;
                                                                                 
         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
                                                                                 
         Matrix3 tensorL(0.0);
         computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
+        velGrad[idx]=tensorL;
                                                                                 
         deformationGradient_new[idx]=(tensorL*delT+Identity)
                                     *deformationGradient[idx];
@@ -759,7 +762,17 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(Bulk/rho_cur);
+        Matrix3 D=(velGrad[idx] + velGrad[idx].Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

@@ -253,39 +253,38 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity,psize;
     constParticleVariable<Vector> ptang1,ptang2,pnorm;
+    ParticleVariable<double> pdTdt,p_q;
     ParticleVariable<Vector> T1,T2,T3;
     constNCVariable<Vector> gvelocity;
+
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
-    old_dw->get(psize,                    lb->pSizeLabel,               pset);
-    
     old_dw->get(px,                         lb->pXLabel,                  pset);
     old_dw->get(pmass,                      lb->pMassLabel,               pset);
+    old_dw->get(psize,                      lb->pSizeLabel,               pset);
     old_dw->get(pstress,                    lb->pStressLabel,             pset);
     old_dw->get(pvelocity,                  lb->pVelocityLabel,           pset);
     old_dw->get(defGradIPOld,               defGradInPlaneLabel,          pset);
-    old_dw->get(ptang1,                     pTang1Label,              pset);
-    old_dw->get(ptang2,                     pTang2Label,              pset);
-    old_dw->get(pnorm,                      pNormLabel,               pset);
+    old_dw->get(ptang1,                     pTang1Label,                  pset);
+    old_dw->get(ptang2,                     pTang2Label,                  pset);
+    old_dw->get(pnorm,                      pNormLabel,                   pset);
     old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,    pset);
     new_dw->allocateAndPut(pvolume,         lb->pVolumeLabel_preReloc,    pset);
-    new_dw->allocateAndPut(T1,              pTang1Label_preReloc,     pset);
-    new_dw->allocateAndPut(T2,              pTang2Label_preReloc,     pset);
-    new_dw->allocateAndPut(T3,              pNormLabel_preReloc,      pset);
+    new_dw->allocateAndPut(T1,              pTang1Label_preReloc,         pset);
+    new_dw->allocateAndPut(T2,              pTang2Label_preReloc,         pset);
+    new_dw->allocateAndPut(T3,              pNormLabel_preReloc,          pset);
     new_dw->allocateAndPut(defGradIP,       defGradInPlaneLabel_preReloc, pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,        pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);
 
     new_dw->get(gvelocity, lb->gVelocityStarLabel, dwi,patch, gac,NGN);
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -298,6 +297,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+      p_q[idx] = 0.0;
 
        // Get the node indices that surround the cell
       interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);

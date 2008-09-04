@@ -177,8 +177,10 @@ void Water::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Vector> psize;
-    ParticleVariable<double> pdTdt;
+    ParticleVariable<double> pdTdt,p_q;
+
     delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(px,                  lb->pXLabel,                  pset);
@@ -190,11 +192,9 @@ void Water::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume,          lb->pVolumeLabel_preReloc,  pset);
     new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
-
+    new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,      pset);
     new_dw->allocateAndPut(deformationGradient_new,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
-
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     double viscosity = d_initialData.d_Viscosity;
     double bulk  = d_initialData.d_Bulk;
@@ -205,14 +205,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
     constNCVariable<Vector> gvelocity;
     new_dw->get(gvelocity, lb->gVelocityStarLabel,dwi,patch,gac,NGN);
 
-    if(flag->d_doGridReset){
-      computeDeformationGradientFromVelocity(gvelocity,
-                                             pset, px, psize,
-                                             deformationGradient,
-                                             deformationGradient_new,
-                                             dx, interpolator, delT);
-    }
-    else{
+    if(!flag->d_doGridReset){
       cerr << "The water model doesn't work without resetting the grid" << endl;
     }
 
@@ -227,6 +220,9 @@ void Water::computeStressTensor(const PatchSubset* patches,
 
       velGrad.set(0.0);
       computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+
+      deformationGradient_new[idx]=(velGrad*delT+Identity)
+                                    *deformationGradient[idx];
 
       double J = deformationGradient_new[idx].Determinant();
 
@@ -253,7 +249,17 @@ void Water::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
-    }
+                                                                                
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

@@ -589,7 +589,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     // Get grid size
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+    double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
 
     // Get the set of particles
     int dwi = matl->getDWIndex();
@@ -677,6 +677,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pStrainRate_new;
     ParticleVariable<double>  pPlasticTemperature_new, pPlasticTempInc_new;
     ParticleVariable<int>     pLocalized_new;
+    ParticleVariable<double> pdTdt,p_q;
     new_dw->allocateAndPut(pLeftStretch_new, 
                            pLeftStretchLabel_preReloc,            pset);
     new_dw->allocateAndPut(pRotation_new,    
@@ -695,10 +696,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                            pPlasticTempLabel_preReloc,            pset);
     new_dw->allocateAndPut(pPlasticTempInc_new,      
                            pPlasticTempIncLabel_preReloc,         pset);
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
+    new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
     // Get the plastic strain
     d_plastic->getInternalVars(pset, old_dw);
@@ -889,14 +888,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                porosity, sig);
       
       // Compute bulk viscosity
-      /*
-      double qVisco = 0.0;
       if (flag->d_artificial_viscosity) {
         double Dkk = tensorD.Trace();
         double c_bulk = sqrt(bulk/rho_cur);
-        qVisco = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+        p_q[idx] = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
       }
-      */
 
       // Compute the deviatoric stress
       if (Phi <= 0.0 || flowStress <= 0.0) {

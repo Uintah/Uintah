@@ -687,11 +687,10 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     // Get the particle stress and temperature
     constParticleVariable<Matrix3> pStress_old;
     constParticleVariable<double>  pTempPrev, pTemp_old;
+    constParticleVariable<double> pErosion;
     old_dw->get(pStress_old, lb->pStressLabel,       pset);
     old_dw->get(pTempPrev,   lb->pTempPreviousLabel, pset); 
     old_dw->get(pTemp_old,   lb->pTemperatureLabel,  pset);
-
-    constParticleVariable<double> pErosion;
     old_dw->get(pErosion, lb->pErosionLabel, pset);
 
     // Get the time increment (delT)
@@ -714,12 +713,16 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     // GLOBAL
     ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
     ParticleVariable<double>  pVol_new;
+    ParticleVariable<double> pdTdt, p_q;
+
     new_dw->allocateAndPut(pDefGrad_new,  
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVol_new, 
                            lb->pVolumeLabel_preReloc,             pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
+    new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
     // LOCAL
     ParticleVariable<double>  pPlasticStrain_new, pDamage_new, pPorosity_new, 
@@ -737,10 +740,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
                            pPorosityLabel_preReloc,               pset);
     new_dw->allocateAndPut(pLocalized_new,      
                            pLocalizedLabel_preReloc,              pset);
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, pset);
 
     // Get the plastic strain and back stress and allocate
     // space for the updated internal variables and back stress
@@ -1276,7 +1275,17 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
                        Max(c_dil+fabs(pVel.z()),waveSpeed.z()));
 
       delete state;
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     waveSpeed = dx/waveSpeed;
     double delT_new = waveSpeed.minComponent();

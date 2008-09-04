@@ -648,14 +648,12 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>  pRotMass;
     ParticleVariable<Vector>  pNDotAvSig;
     ParticleVariable<Matrix3> pAvMoment;
+    ParticleVariable<double> pdTdt,p_q;
     new_dw->allocateAndPut(pAvMoment,  pAverageMomentLabel,     pset);
     new_dw->allocateAndPut(pNDotAvSig, pNormalDotAvStressLabel, pset);
     new_dw->allocateAndPut(pRotMass,   pRotMassLabel,           pset);
-
-    // Allocate variable to store internal heating rate
-    ParticleVariable<double> pdTdt;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
-                           pset);
+    new_dw->allocateAndPut(pdTdt,      lb->pdTdtLabel_preReloc, pset);
+    new_dw->allocateAndPut(p_q,        lb->p_qLabel_preReloc,   pset);
 
     // Initialize contants
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
@@ -845,7 +843,18 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double rho_cur = rho_orig/Je;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

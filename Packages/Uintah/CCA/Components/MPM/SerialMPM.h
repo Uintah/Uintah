@@ -257,6 +257,7 @@ protected:
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
 
+#if 0
   //////////
   // Insert Documentation Here:
   void computeArtificialViscosity(const ProcessorGroup*,
@@ -264,7 +265,7 @@ protected:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
-
+#endif
 
   //////////
   // Insert Documentation Here:
@@ -377,8 +378,10 @@ protected:
   virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
                                             const MaterialSet*);
 
+#if 0
   void scheduleComputeArtificialViscosity(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
+#endif
 
   virtual void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
                                                const MaterialSet*);

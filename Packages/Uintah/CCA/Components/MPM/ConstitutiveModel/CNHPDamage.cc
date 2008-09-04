@@ -176,7 +176,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   constNCVariable<Vector>        GVelocity; 
   ParticleVariable<int>          pFailed_new;
   ParticleVariable<double>       pFailureStrain_new;
-  ParticleVariable<double>       pVol_new, pdTdt, pPlasticStrain_new;
+  ParticleVariable<double>       pVol_new, pdTdt, pPlasticStrain_new, p_q;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
   ParticleVariable<Matrix3>      pDeformRate;
 
@@ -214,7 +214,6 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVelocity,                lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
-
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);
@@ -245,6 +244,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
                            pFailureStrainLabel_preReloc,          pset);
     new_dw->allocateAndPut(pDeformRate, 
                            pDeformRateLabel_preReloc,             pset);
+    new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,         pset);
 
     // Copy failure strains to new dw
     pFailureStrain_new.copyData(pFailureStrain);
@@ -348,7 +348,17 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvel.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvel.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        p_q[idx] = artificialBulkViscosity(pDeformRate[idx].Trace(), c_bulk,
+                                           rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    } // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();

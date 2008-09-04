@@ -448,13 +448,12 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   constNCVariable<Vector>          gvelocity, Gvelocity;
   constParticleVariable<double>    pTempPrev;
 
-  ParticleVariable<double>    pVol_new, pIntHeatRate_new;
+  ParticleVariable<double>    pVol_new, pdTdt, p_q;
   ParticleVariable<Matrix3>   pDefGrad_new, pStress_new, pStrainRate_new;
   ParticleVariable<double>    pVolHeatRate_new, pVeHeatRate_new;
   ParticleVariable<double>    pCrHeatRate_new, pCrackRadius_new;
   ParticleVariable<double>    pRand;
   ParticleVariable<StateData> pStatedata;
-
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
@@ -469,7 +468,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
     // Get patch information
-
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
@@ -482,7 +480,6 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pVol,                lb->pVolumeLabel,             pset);
     old_dw->get(pTemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(pSize,               lb->pSizeLabel,               pset);
-
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pStress,             lb->pStressLabel,             pset);
@@ -497,7 +494,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pVol_new,         
                            lb->pVolumeLabel_preReloc,             pset);
-    new_dw->allocateAndPut(pIntHeatRate_new, 
+    new_dw->allocateAndPut(pdTdt, 
                            lb->pdTdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pDefGrad_new,     
                            lb->pDeformationMeasureLabel_preReloc, pset);
@@ -517,6 +514,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
                            pRandLabel_preReloc,                   pset);
     new_dw->allocateAndPut(pStatedata,   
                            pStatedataLabel_preReloc,              pset);
+    new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
+
     old_dw->copyOut(pRand,           pRandLabel,                  pset);
     old_dw->copyOut(pStatedata,      pStatedataLabel,             pset);
     ASSERTEQ(pset, pStatedata.getParticleSubset());
@@ -527,7 +526,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       particleIndex idx = *iter;
 
       // Assign zero internal heating by default - modify if necessary.
-      pIntHeatRate_new[idx] = 0.0;
+      pdTdt[idx] = 0.0;
 
       // Randomize the shear moduli of the elements of each particle
       Gmw[0]=d_initialData.G[0]*(1.+.4*(pRand[idx]-.5));
@@ -949,7 +948,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
       // Update the total internal heat rate  (this is from Hackett and Bennett,
       // IJNME, 2000, 49:1191-1209)
-      pIntHeatRate_new[idx] = -pVolHeatRate_new[idx] + pVeHeatRate_new[idx] +
+      pdTdt[idx] = -pVolHeatRate_new[idx] + pVeHeatRate_new[idx] +
                                pCrHeatRate_new[idx];
       /*
       if (pTemperature[idx] > 450.0) {
@@ -957,7 +956,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 	               << " T = " << pTemperature[idx] << " Tr(edot) = " << ekkdot
                        << "\n\t\t qdot_ve = " << pVeHeatRate_new[idx]
                        << "\n\t\t qdot_cr = " << pCrHeatRate_new[idx]
-                       << "\n\t\t qdot = " << pIntHeatRate_new[idx] << endl;
+                       << "\n\t\t qdot = " << pdTdt[idx] << endl;
       }
       */
 
@@ -971,7 +970,17 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
-    }
+
+      // Compute artificial viscosity term
+      if (flag->d_artificial_viscosity) {
+        double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+        double c_bulk = sqrt(bulk/rho_cur);
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+      } else {
+        p_q[idx] = 0.;
+      }
+    }  // end loop over particles
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
