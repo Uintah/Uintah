@@ -678,13 +678,13 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     }
 
     //hard maximum cost for assigning a patch to a processor
-    double hardMaxCost = DBL_MAX;    
-    double myMaxCost = DBL_MAX;
+    double avgCost = (total_cost+previous_total_cost) / num_procs;
+    double hardMaxCost = total_cost;    
+    double myMaxCost =hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*d_myworld->myrank();
     int minProcLoc = -1;
     
     if(!force)  //use initial load balance to start the iteration
     {
-      double avgCost = (total_cost+previous_total_cost) / num_procs;
       //compute costs of current load balance
       vector<double> currentProcCosts(num_procs);
 
@@ -722,7 +722,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       int currentProc = 0;
       vector<double> currentProcCosts(num_procs,0);
       double currentMaxCost = 0;
-    
+
       for (int p = 0; p < num_patches; p++) {
         int index;
         if (d_doSpaceCurve) {
@@ -732,13 +732,13 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
           // not attempting space-filling curve
           index = p;
         }
-      
+
         // assign the patch to a processor.  When we advance procs,
         // re-update the cost, so we use all procs (and don't go over)
         double patchCost = patch_costs[l][index];
         double notakeimb=fabs(previousProcCosts[currentProc]+currentProcCosts[currentProc]-avgCostPerProc);
         double takeimb=fabs(previousProcCosts[currentProc]+currentProcCosts[currentProc]+patchCost-avgCostPerProc);
-        
+
         if ( previousProcCosts[currentProc]+currentProcCosts[currentProc]+patchCost<myMaxCost && takeimb<=notakeimb) {
           // add patch to currentProc
           temp_assignment[level_offset+index] = currentProc;
@@ -751,7 +751,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
           }
           // move to next proc and add this patch
           currentProc++;
-          
+
           if(currentProc>=num_procs)
             break;
 
@@ -766,13 +766,13 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //check if last proc is the max
       if(currentProc<num_procs && previousProcCosts[currentProc]+currentProcCosts[currentProc]>currentMaxCost)
         currentMaxCost=previousProcCosts[currentProc]+currentProcCosts[currentProc];
-     
+
       //if the max was lowered and the assignments are valid
       if(currentMaxCost<myMaxCost && currentProc<num_procs)
       {
         //take this assignment
         d_tempAssignment.swap(temp_assignment);
-     
+
         //update myMaxCost
         myMaxCost=currentMaxCost;
       }
@@ -781,43 +781,35 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         //my assignment is not valid so set myMaxCost high
         myMaxCost=DBL_MAX;
       }
-        
 
-      //update my max
-      if(hardMaxCost==DBL_MAX) //on first iteration everyone performed the same work
+
+      //if currentProc is not in range
+      if(currentProc>=num_procs)
       {
-        hardMaxCost=currentMaxCost;
+        //my max is not valid
+        myMaxCost=DBL_MAX;
       }
+
+      double_int maxInfo(myMaxCost,d_myworld->myrank());
+      double_int min;
+      //gather the maxes
+      //change to all reduce with loc
+      if(num_procs>1)
+        MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
       else
+        min=maxInfo;
+
+      //set improvement
+      improvement=hardMaxCost-min.val;
+
+      if(min.val<hardMaxCost)
       {
-        //if currentProc is not in range
-        if(currentProc>=num_procs)
-        {
-          //my max is not valid
-          myMaxCost=DBL_MAX;
-        }
-              
-        double_int maxInfo(myMaxCost,d_myworld->myrank());
-        double_int min;
-        //gather the maxes
-        //change to all reduce with loc
-        if(num_procs>1)
-          MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
-        else
-          min=maxInfo;
-        
-        //set improvement
-        improvement=hardMaxCost-min.val;
-        
-        if(min.val<hardMaxCost)
-        {
-          //set hardMax
-          hardMaxCost=min.val;
-          //set minloc
-          minProcLoc=min.loc;
-        }
+        //set hardMax
+        hardMaxCost=min.val;
+        //set minloc
+        minProcLoc=min.loc;
       }
-     
+
       //compute average cost per proc
       double average=(total_cost+previous_total_cost)/num_procs;
       //set new myMax by having each processor search at even intervals in the range
@@ -826,12 +818,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       iter++;
     }
 
-    //minProcLoc is only equal to -1 if everyone has the same array (ie first iteration)
-    if(minProcLoc!=-1 && num_procs>1)
-    {
-      //broadcast load balance
-      MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
-    }
+    //broadcast load balance
+    MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
     
     if(!d_levelIndependent)
     {
