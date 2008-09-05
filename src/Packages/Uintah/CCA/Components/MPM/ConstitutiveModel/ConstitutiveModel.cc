@@ -191,13 +191,14 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
   old_dw->get(pMass,            lb->pMassLabel,               pset);
   old_dw->get(pDefGrad_old,     lb->pDeformationMeasureLabel, pset);
 
-  ParticleVariable<double>  pVol_new, pIntHeatRate_new;
+  ParticleVariable<double>  pVol_new, pIntHeatRate_new,p_q;
   ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
   new_dw->allocateAndPut(pVol_new,         lb->pVolumeLabel_preReloc,  pset);
   new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel_preReloc,    pset);
   new_dw->allocateAndPut(pDefGrad_new,  lb->pDeformationMeasureLabel_preReloc, 
-                         pset);
-  new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc, pset);
+                                                                       pset);
+  new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
+  new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
 
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++){
@@ -207,9 +208,9 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
     pDefGrad_new[idx] = pDefGrad_old[idx];
     //pDefGrad_new[idx] = Id;
     pStress_new[idx] = Zero;
+    p_q[idx]=0.;
   }
 }
-
 
 void 
 ConstitutiveModel::allocateCMDataAddRequires(Task*, const MPMMaterial*,
