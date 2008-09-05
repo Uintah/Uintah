@@ -1,7 +1,5 @@
 #include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
 #include <Packages/Uintah/CCA/Components/Parent/Switcher.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/AMRMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
@@ -23,6 +21,12 @@
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
+
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+
+
 #include <iosfwd>
 
 #include <sci_defs/uintah_defs.h>
@@ -85,6 +89,9 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
 #endif
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
+    if( !Uintah::Parallel::usingMPI() ) {
+      throw ProblemSetupException("You must be using MPI when running an arches problem!", __FILE__, __LINE__);
+    }
     return scinew Arches(world);
   } 
 #endif
