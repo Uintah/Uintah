@@ -647,7 +647,8 @@ void SerialMPM::scheduleComputeStressTensor(SchedulerP& sched,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addComputesAndRequires(t, mpm_matl, patches);
     if(flags->d_artificial_viscosity){
-      t->computes(lb->p_qLabel_preReloc);
+      const MaterialSubset* matlset = mpm_matl->thisMaterial();
+      t->computes(lb->p_qLabel_preReloc, matlset);
     }
   }
 
