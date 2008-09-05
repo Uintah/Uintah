@@ -14,7 +14,7 @@ using std::set;
 namespace Uintah {
   class Switcher : public UintahParallelComponent, public SimulationInterface {
   public:
-    Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR);
+    Switcher( const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR, const string & uda );
     virtual ~Switcher();
 
     virtual void problemSetup(const ProblemSpecP& params, 
