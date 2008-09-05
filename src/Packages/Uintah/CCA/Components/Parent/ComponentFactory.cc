@@ -128,7 +128,7 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
     return scinew SolverTest1(world);
   } 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
-    return scinew Switcher(world, ps, doAMR);
+    return scinew Switcher(world, ps, doAMR, uda);
   } 
   if (sim_comp == "combine_patches") {
     return scinew PatchCombiner(world, uda);

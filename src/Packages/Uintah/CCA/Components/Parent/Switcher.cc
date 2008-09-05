@@ -36,8 +36,11 @@
 using namespace Uintah;
 #define ALL_LEVELS  99
 
-Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups, 
-                   bool doAMR) : UintahParallelComponent(myworld)
+Switcher::Switcher( const ProcessorGroup* myworld, 
+                    ProblemSpecP& ups, 
+                    bool doAMR,
+                    const string & uda ) : 
+  UintahParallelComponent(myworld)
 {
   int num_components = 0;
   d_componentIndex = 0;
@@ -45,22 +48,42 @@ Switcher::Switcher(const ProcessorGroup* myworld, ProblemSpecP& ups,
   d_restarting = false;
 
   ProblemSpecP sim_block = ups->findBlock("SimulationComponent");
-  for (ProblemSpecP child = sim_block->findBlock("subcomponent"); child != 0; 
-       child = child->findNextBlock("subcomponent")) {
+  ProblemSpecP child = sim_block->findBlock("subcomponent");
+
+  for(; child != 0; child = child->findNextBlock("subcomponent")) {
 
     vector<string> init_vars;
     vector<string> init_matls;
     vector<int> init_levels;
     
-    string in("");
-    if (!child->get("input_file",in))
-      throw ProblemSetupException("Need input file for subcomponent", __FILE__, __LINE__);
+    string input_file("");
+    if (!child->get("input_file",input_file)) {
+      throw ProblemSetupException("Need 'input_file' for subcomponent", __FILE__, __LINE__);
+    }
+
+    size_t pos = input_file.find( ".uda.");
+    if( pos != string::npos ) {
+      // This is an old UDA...
+      cout << "WARNING, read in old uda information...\n";
+
+      pos = input_file.rfind( "/");
+      if( pos == string::npos ) {
+        throw  ProblemSetupException( "Can't decipher switching component input.xml file name (" + input_file + ")",
+                                      __FILE__, __LINE__ );
+      }
+      input_file = input_file.substr( pos+1 );
+      input_file = uda + "/" + input_file;
+    } 
+    else {
+      input_file = uda + "/" + input_file;
+    }
+    // cout << "full input file name is... " << input_file << "\n";
 
     // it will get the component name from the input file, and the uda arg is not needed for normal sims
     UintahParallelComponent* comp = ComponentFactory::create(child, myworld, doAMR, "", "");
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
     attachPort("sim", sim);
-    attachPort("problem spec", scinew ProblemSpecReader(in));
+    attachPort("problem spec", scinew ProblemSpecReader(input_file));
 
     string no_solver_specified("");
     SolverInterface* solver = SolverFactory::create(child,myworld,
@@ -634,12 +657,14 @@ bool Switcher::needRecompile(double time, double delt, const GridP& grid)
   return retval;
 }
 
-void Switcher::outputProblemSpec(ProblemSpecP& ps)
+void
+Switcher::outputProblemSpec(ProblemSpecP& ps)
 {
   d_sim->outputProblemSpec(ps);
 }
 
-void Switcher::outputPS(Dir& dir)
+void
+Switcher::outputPS(Dir& dir)
 {
 
   for (unsigned i = 0; i < d_numComponents; i++) {
@@ -669,27 +694,28 @@ void Switcher::outputPS(Dir& dir)
     if (nodeName == "input_file") {
       std::stringstream stream;
       stream << count++;
-      string inputname =  dir.getName() + "/input.xml." + stream.str();
+//    string inputname = dir.getName() + "/input.xml." + stream.str();
+      string inputname = "input.xml." + stream.str();
       cout << "inputname = " << inputname << endl;
       child->appendElement("input_file",inputname);
     }
     child->removeChild(in_file);
     
   }
-  inputDoc->output(inputname.c_str());
-  //inputDoc->releaseDocument();
-
-    
-
+  inputDoc->output( inputname.c_str() );
+//inputDoc->releaseDocument();
 }
-void Switcher::addToTimestepXML(ProblemSpecP& spec)
+
+void
+Switcher::addToTimestepXML(ProblemSpecP& spec)
 {
   spec->appendElement( "switcherComponentIndex", (int) d_componentIndex );
   spec->appendElement( "switcherState", (int) d_switchState );
   spec->appendElement( "switcherCarryOverMatls", d_sharedState->originalAllMaterials()->getUnion()->size());
 }
 
-void Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& state)
+void
+Switcher::readFromTimestepXML(const ProblemSpecP& spec,SimulationStateP& state)
 {
   // problemSpec doesn't handle unsigned
   ProblemSpecP ps = (ProblemSpecP) spec;

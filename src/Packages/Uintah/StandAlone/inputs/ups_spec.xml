@@ -113,7 +113,7 @@
   </Time>
 
   <SimulationComponent  spec="OPTIONAL NO_DATA"> <!-- FIXME: is this really optional? -->
-    <type               spec="REQUIRED STRING 'mpm, arches, ice, mpmice, mpmarches, impm'" />
+    <type               spec="REQUIRED STRING 'mpm, arches, ice, mpmice, mpmarches, impm, switcher'" />
   </SimulationComponent>
 
   <DataArchiver         spec="REQUIRED NO_DATA"
