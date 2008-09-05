@@ -195,8 +195,8 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pvolume_new, lb->pVolumeLabel_preReloc, pset);
     new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel_preReloc,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
-                                  lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(p_q,    lb->p_qLabel_preReloc,          pset);
+                            lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,           pset);
     ParticleVariable<Matrix3> velGrad;
     new_dw->allocateTemporary(velGrad, pset);
 
