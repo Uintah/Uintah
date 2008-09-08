@@ -642,7 +642,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
             << " ElasticPlastic:ComputeStressTensor:Explicit"
             << " Matl = " << matl 
             << " DWI = " << matl->getDWIndex() 
-            <<  " patch = " << (patches->get(0))->getID();
+            << " patch = " << (patches->get(0))->getID();
   }
 
   // General stuff
@@ -1161,15 +1161,17 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       } // end of temperature if
 
       // Calculate the updated hydrostatic stress
-      double p = d_eos->computePressure(matl, state, tensorF_new, tensorD, 
-                                        delT);
+      double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
+      double de_s=0.;
       if (flag->d_artificial_viscosity) {
-        double Dkk = tensorD.Trace();
+        double Dkk = 0.5*(tensorL+tensorL.Transpose()).Trace();
         double c_bulk = sqrt(bulk/rho_cur);
         p_q[idx] = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+        de_s = -p_q[idx]*Dkk/rho_cur;
       } else {
         p_q[idx] = 0.;
+        de_s = 0.;
       }
 
       Matrix3 tensorHy = one*p;
@@ -1235,8 +1237,12 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         double fac = taylorQuinney/(rho_cur*state->specificHeat);
 
         // Calculate Tdot (internal plastic heating rate)
-        double Tdot = state->yieldStress*state->plasticStrainRate*fac;
-        pdTdt[idx] = Tdot*d_isothermal;
+        double Tdot_PW = state->yieldStress*state->plasticStrainRate*fac;
+
+        // Calculate Tdot due to artificial viscosity
+        double Tdot_AV = de_s/state->specificHeat;
+
+        pdTdt[idx] = (Tdot_PW /*+ Tdot_AV*/)*d_isothermal;
       }
 
       //-----------------------------------------------------------------------

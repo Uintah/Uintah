@@ -553,7 +553,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
   Matrix3 tensorL(0.0); // Velocity gradient
   Matrix3 tensorD(0.0); // Rate of deformation
-  Matrix3 tensorW(0.0); // Spin 
+//  Matrix3 tensorW(0.0); // Spin 
   Matrix3 tensorF; tensorF.Identity(); // Deformation gradient
   Matrix3 tensorV; tensorV.Identity(); // Left Cauchy-Green stretch
   Matrix3 tensorR; tensorR.Identity(); // Rotation 
@@ -751,11 +751,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
-      tensorW = (tensorL - tensorL.Transpose())*0.5;
+//      tensorW = (tensorL - tensorL.Transpose())*0.5;
       for (int ii = 0; ii < 3; ++ii) {
         for (int jj = 0; jj < 3; ++jj) {
           tensorD(ii,jj)=(fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
-          tensorW(ii,jj)=(fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
+//        tensorW(ii,jj)=(fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
         }
       }
 
@@ -888,12 +888,15 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                porosity, sig);
       
       // Compute bulk viscosity
+      double de_s=0.;
       if (flag->d_artificial_viscosity) {
-        double Dkk = tensorD.Trace();
+        double Dkk = 0.5*(tensorL+tensorL.Transpose()).Trace();
         double c_bulk = sqrt(bulk/rho_cur);
         p_q[idx] = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+        de_s = -p_q[idx]*Dkk/rho_cur;
       } else {
         p_q[idx] = 0.;
+        de_s = 0.;
       }
 
       // Compute the deviatoric stress
@@ -1101,9 +1104,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         //C_p = 1.0e3*(0.09278 + 7.454e-4*T + 12404.0/(T*T));
 
         // Alternative approach
-        double Tdot = flowStress*epdot*taylorQuinney/(rho_cur*C_p);
-        pdTdt[idx] = Tdot;
-        double dT = Tdot*delT;
+        double Tdot_PW = flowStress*epdot*taylorQuinney/(rho_cur*C_p);
+
+        // Calculate Tdot due to artificial viscosity
+        double Tdot_AV = de_s/C_p;
+
+        pdTdt[idx] = Tdot_PW;/* + Tdot_AV;*/
+        double dT = Tdot_PW*delT;
         pPlasticTempInc_new[idx] = dT;
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + dT; 
         double temp_new = temperature + dT;
