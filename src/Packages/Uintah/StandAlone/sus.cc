@@ -328,7 +328,7 @@ main( int argc, char** argv )
     }
   }
  
-  create_sci_environment( NULL, 0 );
+  create_sci_environment( NULL, 0, true );
   
   if(filename == ""){
     usage("No input file specified", "", argv[0]);
