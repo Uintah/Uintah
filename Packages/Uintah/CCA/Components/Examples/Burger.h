@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 
 #include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
@@ -68,7 +69,8 @@ WARNING
 		     const PatchSubset* patches,
 		     const MaterialSubset* matls,
 		     DataWarehouse* old_dw, DataWarehouse* new_dw);
-    ExamplesLabel* lb_;
+
+    const VarLabel* u_label;
     SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;

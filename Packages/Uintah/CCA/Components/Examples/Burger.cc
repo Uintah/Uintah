@@ -19,12 +19,12 @@ using namespace Uintah;
 Burger::Burger(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  lb_ = scinew ExamplesLabel();
+  u_label = VarLabel::create("u", NCVariable<double>::getTypeDescription());
 }
 
 Burger::~Burger()
 {
-  delete lb_;
+  VarLabel::destroy(u_label);
 }
 //______________________________________________________________________
 //
@@ -47,7 +47,7 @@ void Burger::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("Burger::initialize",
                      this, &Burger::initialize);
-  task->computes(lb_->u);
+  task->computes(u_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
@@ -69,10 +69,10 @@ void  Burger::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Burger::timeAdvance",
                      this, &Burger::timeAdvance);
                      
-  task->requires(Task::OldDW, lb_->u, Ghost::AroundNodes, 1);
+  task->requires(Task::OldDW, u_label, Ghost::AroundNodes, 1);
   task->requires(Task::OldDW, sharedState_->get_delt_label());
   
-  task->computes(lb_->u);
+  task->computes(u_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
@@ -100,7 +100,7 @@ void Burger::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     NCVariable<double> u;
-    new_dw->allocateAndPut(u, lb_->u, matl, patch);
+    new_dw->allocateAndPut(u, u_label, matl, patch);
     
     //Initialize
     // u = sin( pi*x ) + sin( pi*2*y ) + sin(pi*3z )
@@ -131,7 +131,7 @@ void Burger::timeAdvance(const ProcessorGroup*,
     //  Get data from the data warehouse including 1 layer of
     // "ghost" nodes from surrounding patches
     constNCVariable<double> u;
-    old_dw->get(u, lb_->u, matl, patch, Ghost::AroundNodes, 1);
+    old_dw->get(u, u_label, matl, patch, Ghost::AroundNodes, 1);
 
     // dt, dx
     Vector dx = patch->getLevel()->dCell();
@@ -140,7 +140,7 @@ void Burger::timeAdvance(const ProcessorGroup*,
     
     // allocate memory
     NCVariable<double> new_u;
-    new_dw->allocateAndPut(new_u, lb_->u, matl, patch);
+    new_dw->allocateAndPut(new_u, u_label, matl, patch);
     
     // define iterator range
     IntVector l = patch->getNodeLowIndex__New();

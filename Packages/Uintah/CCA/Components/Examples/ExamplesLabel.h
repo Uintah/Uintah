@@ -10,9 +10,6 @@ namespace Uintah {
   class VarLabel;
   class ExamplesLabel {
   public:
-    // For Poisson1
-    const VarLabel* phi;
-    const VarLabel* residual;
 
     // For SimpleCFD
     const VarLabel* bctype;
@@ -51,8 +48,6 @@ namespace Uintah {
     const VarLabel* temperature_gradient_mag;
     const VarLabel* density_gradient_mag;
 
-    // For Burger
-    const VarLabel* u;
 
     // For ParticleTest1
     const VarLabel* pXLabel;
