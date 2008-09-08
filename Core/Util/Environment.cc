@@ -69,6 +69,11 @@ using namespace std;
 
 static bool sci_environment_created = false;
 
+namespace SCIRun {
+  void find_and_parse_scirunrc( bool beSilent = false );
+  bool parse_scirunrc(const std::string &);
+}
+
 // This set stores all of the environemnt keys that were set when scirun was
 // started. Its checked by sci_putenv to ensure we don't overwrite variables
 static map<string,string> scirun_env;
@@ -151,7 +156,8 @@ SCIRun::sci_putenv( const string &key, const string &val )
 
 
 #ifdef _WIN32
-void getWin32RegistryValues(string& obj, string& src, string& thirdparty, string& packages)
+void
+getWin32RegistryValues(string& obj, string& src, string& thirdparty, string& packages)
 {
   // on an installed version of SCIRun, query these values from the registry, overwriting the compiled version
   // if not an installed version, return the compiled values unchanged
@@ -197,10 +203,11 @@ void getWin32RegistryValues(string& obj, string& src, string& thirdparty, string
 
 }
 #endif
+
 // get_existing_env() will fill up the SCIRun::existing_env string set
 // with all the currently set environment variable keys, but not their values
 void
-SCIRun::create_sci_environment(char **env, char *execname)
+SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = false */ )
 {
   if( sci_environment_created ) {
     cout << "\n!!!WARNING!!! Core/Util/Environment.cc::create_sci_environment() called twice!  Skipping 2nd+ call.\n\n";
@@ -258,8 +265,9 @@ SCIRun::create_sci_environment(char **env, char *execname)
   sci_putenv("SCIRUN_ITCL_WIDGETS", 
 	     MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
 
-  find_and_parse_scirunrc();
-}
+  find_and_parse_scirunrc( beSilent );
+
+} // end create_sci_environment()
 
 // emptryOrComment returns true if the 'line' passed in is a comment
 // ie: the first non-whitespace character is a '#'
@@ -344,10 +352,13 @@ SCIRun::parse_scirunrc( const string &rcfile )
 // find_and_parse_scirunrc will search for the users .scirunrc file in 
 // default locations and read it into the environemnt if possible.
 void
-SCIRun::find_and_parse_scirunrc()
+SCIRun::find_and_parse_scirunrc( bool beSilent /* = false */ )
 {
   // Tell the user that we are searching for the .scirunrc file...
-  cout << "Parsing .scirunrc... ";
+  if( !beSilent ) {
+    cout << "Parsing .scirunrc... ";
+  }
+
   bool foundrc=false;
 
   // 1. check the local directory
@@ -373,11 +384,13 @@ SCIRun::find_and_parse_scirunrc()
     foundrc = parse_scirunrc(filename);
   }
 
-  // The .scirunrc file wasn't found.
-  if(!foundrc) filename = string("not found.");
-  
-  // print location of .scirunrc
-  cout << filename << "\n";
+  if( !beSilent ) {
+    // The .scirunrc file wasn't found.
+    if(!foundrc) filename = string("not found.");
+    
+    // print location of .scirunrc
+    cout << filename << "\n";
+  }
 }
 
 
@@ -410,14 +423,11 @@ SCIRun::copy_and_parse_scirunrc()
   }
   
   cmd = string("cp -f ")+srcdir+"/scirunrc "+homerc;
-  cout << "Copying " << srcdir << "/scirunrc to " <<
-    homerc << "...\n";
-  if (sci_system(cmd.c_str()))
-  {
+  cout << "Copying " << srcdir << "/scirunrc to " << homerc << "...\n";
+  if (sci_system(cmd.c_str())) {
     cerr << "Error executing: " << cmd << "\n";
   }
-  else
-  { 
+  else { 
     // If the scirunrc file was copied, then parse it.
     parse_scirunrc(homerc);
   }
