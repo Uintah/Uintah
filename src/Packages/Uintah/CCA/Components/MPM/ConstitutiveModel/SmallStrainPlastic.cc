@@ -1277,14 +1277,22 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       delete state;
 
       // Compute artificial viscosity term
+      double de_s=0.;
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
         Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+        double Dkk=D.Trace();
+        p_q[idx] = artificialBulkViscosity(Dkk, c_bulk, rho_cur, dx_ave);
+        de_s = -p_q[idx]*Dkk/rho_cur;
       } else {
         p_q[idx] = 0.;
+        de_s = 0.;
       }
+//      if(fabs(de_s)>0.){
+//        cout << de_s/state->specificHeat << " " << pdTdt[idx] << endl;
+//      }
+//      pdTdt[idx] += de_s/state->specificHeat;
     }  // end loop over particles
 
     waveSpeed = dx/waveSpeed;
