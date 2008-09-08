@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 
 #include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
@@ -77,10 +78,11 @@ WARNING
 		       DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
                      
-    ExamplesLabel* lb_;
     SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;
+    const VarLabel* phi_label;
+    const VarLabel* residual_label;
 
     Poisson1(const Poisson1&);
     Poisson1& operator=(const Poisson1&);
