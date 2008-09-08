@@ -16,12 +16,6 @@ namespace Uintah {
 
 ExamplesLabel::ExamplesLabel()
 {
-  phi = VarLabel::create("phi", NCVariable<double>::getTypeDescription());
-  residual = VarLabel::create("residual", sum_vartype::getTypeDescription());
-
-  //For Burger's
-  u = VarLabel::create("u", NCVariable<double>::getTypeDescription());
-
   // For SimpleCFD
   bctype = VarLabel::create("bctype",
 			    NCVariable<int>::getTypeDescription(),
@@ -121,9 +115,6 @@ ExamplesLabel::ExamplesLabel()
 
 ExamplesLabel::~ExamplesLabel()
 {
-  VarLabel::destroy(phi);
-  VarLabel::destroy(residual);
-  VarLabel::destroy(u);
   VarLabel::destroy(bctype);
   VarLabel::destroy(xvelocity);
   VarLabel::destroy(yvelocity);

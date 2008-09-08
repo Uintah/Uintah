@@ -10,7 +10,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
-  class ExamplesLabel;
+
 
 /**************************************
 

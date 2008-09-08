@@ -7,11 +7,12 @@
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 
 #include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
-  class ExamplesLabel;
+
 
 /**************************************
 
@@ -97,7 +98,9 @@ WARNING
 		     const MaterialSubset* matls,
 		     DataWarehouse* old_dw, DataWarehouse* new_dw,
 		     bool modify);
-    ExamplesLabel* lb_;
+
+    const VarLabel* phi_label;
+    const VarLabel* residual_label;
     SimulationStateP sharedState_;
     double delt_;
     SimpleMaterial* mymat_;

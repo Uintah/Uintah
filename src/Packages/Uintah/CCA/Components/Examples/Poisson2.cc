@@ -20,12 +20,16 @@ using namespace Uintah;
 Poisson2::Poisson2(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  lb_ = scinew ExamplesLabel();
+  phi_label = VarLabel::create("phi", 
+                               NCVariable<double>::getTypeDescription());
+  residual_label = VarLabel::create("residual", 
+                                    sum_vartype::getTypeDescription());
 }
 
 Poisson2::~Poisson2()
 {
-  delete lb_;
+  VarLabel::destroy(phi_label);
+  VarLabel::destroy(residual_label);
 }
 
 void Poisson2::problemSetup(const ProblemSpecP& params,
@@ -45,7 +49,7 @@ void Poisson2::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("initialize",
 			   this, &Poisson2::initialize);
-  task->computes(lb_->phi);
+  task->computes(phi_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
  
@@ -65,8 +69,8 @@ Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 			   this, &Poisson2::timeAdvance,
 			   level, sched.get_rep());
   task->hasSubScheduler();
-  task->requires(Task::OldDW, lb_->phi, Ghost::AroundNodes, 1);
-  task->computes(lb_->phi);
+  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computes(phi_label);
   LoadBalancer* lb = sched->getLoadBalancer();
   const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
   sched->addTask(task, perproc_patches, sharedState_->allMaterials());
@@ -90,7 +94,7 @@ void Poisson2::initialize(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       NCVariable<double> phi;
-      new_dw->allocateAndPut(phi, lb_->phi, matl, patch);
+      new_dw->allocateAndPut(phi, phi_label, matl, patch);
       phi.initialize(0);
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
 	IntVector l,h;
@@ -115,9 +119,9 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
   // Create the tasks
   Task* task = scinew Task("iterate",
 			   this, &Poisson2::iterate);
-  task->requires(Task::OldDW, lb_->phi, Ghost::AroundNodes, 1);
-  task->computes(lb_->phi);
-  task->computes(lb_->residual);
+  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computes(phi_label);
+  task->computes(residual_label);
   subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   // Compile the scheduler
@@ -126,7 +130,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
 
   int count = 0;
   double residual;
-  subsched->get_dw(1)->transferFrom(old_dw, lb_->phi, patches, matls);
+  subsched->get_dw(1)->transferFrom(old_dw, phi_label, patches, matls);
   // Iterate
   do {
     subsched->advanceDataWarehouse(grid);
@@ -135,14 +139,14 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
     subsched->execute();    
 
     sum_vartype residual_var;
-    subsched->get_dw(1)->get(residual_var, lb_->residual);
+    subsched->get_dw(1)->get(residual_var, residual_label);
     residual = residual_var;
 
     if(pg->myrank() == 0)
       cerr << "Iteration " << count++ << ", residual=" << residual << '\n';
   } while(residual > maxresidual_);
 
-  new_dw->transferFrom(subsched->get_dw(1), lb_->phi, patches, matls);
+  new_dw->transferFrom(subsched->get_dw(1), phi_label, patches, matls);
 }
 
 
@@ -156,9 +160,9 @@ void Poisson2::iterate(const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       constNCVariable<double> phi;
-      old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
+      old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
-      new_dw->allocateAndPut(newphi, lb_->phi, matl, patch);
+      new_dw->allocateAndPut(newphi, phi_label, matl, patch);
       newphi.copyPatch(phi, newphi.getLow(), newphi.getHigh());
       double residual=0;
       IntVector l = patch->getNodeLowIndex__New();
@@ -191,7 +195,7 @@ void Poisson2::iterate(const ProcessorGroup*,
       }
       ASSERT(numFaceBoundaries == patch->getNumBoundaryFaces());
 #endif
-      new_dw->put(sum_vartype(residual), lb_->residual);
+      new_dw->put(sum_vartype(residual), residual_label);
     }
   }
 }
