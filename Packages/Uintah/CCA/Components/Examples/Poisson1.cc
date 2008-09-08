@@ -18,12 +18,17 @@ using namespace Uintah;
 Poisson1::Poisson1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  lb_ = scinew ExamplesLabel();
+
+  phi_label = VarLabel::create("phi", 
+                               NCVariable<double>::getTypeDescription());
+  residual_label = VarLabel::create("residual", 
+                                    sum_vartype::getTypeDescription());
 }
 
 Poisson1::~Poisson1()
 {
-  delete lb_;
+  VarLabel::destroy(phi_label);
+  VarLabel::destroy(residual_label);
 }
 //______________________________________________________________________
 //
@@ -49,8 +54,8 @@ void Poisson1::scheduleInitialize(const LevelP& level,
   Task* task = scinew Task("Poisson1::initialize",
                      this, &Poisson1::initialize);
                      
-  task->computes(lb_->phi);
-  task->computes(lb_->residual);
+  task->computes(phi_label);
+  task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
@@ -61,7 +66,7 @@ void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("Poisson1::computeStableTimestep",
                      this, &Poisson1::computeStableTimestep);
                      
-  task->requires(Task::NewDW, lb_->residual);
+  task->requires(Task::NewDW, residual_label);
   task->computes(sharedState_->get_delt_label());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -74,9 +79,9 @@ Poisson1::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Poisson1::timeAdvance",
                      this, &Poisson1::timeAdvance);
                      
-  task->requires(Task::OldDW, lb_->phi, Ghost::AroundNodes, 1);
-  task->computes(lb_->phi);
-  task->computes(lb_->residual);
+  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computes(phi_label);
+  task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
@@ -89,7 +94,7 @@ void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
 {
   if(pg->myrank() == 0){
     sum_vartype residual;
-    new_dw->get(residual, lb_->residual);
+    new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
   }
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
@@ -107,8 +112,8 @@ void Poisson1::initialize(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     NCVariable<double> phi;
-    new_dw->allocateAndPut(phi, lb_->phi, matl, patch);
-    phi.initialize(0);
+    new_dw->allocateAndPut(phi, phi_label, matl, patch);
+    phi.initialize(0.);
  
     if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
        IntVector l,h;
@@ -118,7 +123,8 @@ void Poisson1::initialize(const ProcessorGroup*,
          phi[*iter]=1;
       }
     }
-    new_dw->put(sum_vartype(-1), lb_->residual);
+
+    new_dw->put(sum_vartype(-1), residual_label);
   }
 }
 //______________________________________________________________________
@@ -134,10 +140,10 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
  
-    old_dw->get(phi, lb_->phi, matl, patch, Ghost::AroundNodes, 1);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     NCVariable<double> newphi;
  
-    new_dw->allocateAndPut(newphi, lb_->phi, matl, patch);
+    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
  
     double residual=0;
@@ -164,6 +170,6 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
       double diff = newphi[n] - phi[n];
       residual += diff * diff;
     }
-    new_dw->put(sum_vartype(residual), lb_->residual);
+    new_dw->put(sum_vartype(residual), residual_label);
   }
 }
