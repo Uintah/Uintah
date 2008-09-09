@@ -141,14 +141,29 @@ gridstats( DataArchive* da,
     GridP grid = da->queryGrid(t);
     grid->performConsistencyCheck();
     grid->printStatistics();
+
     Vector domainLength;
     grid->getLength(domainLength, "minusExtraCells");
     cout << "Domain Length:        " << domainLength << "\n";
+
+    BBox box;
+    grid->getInteriorSpatialRange( box );
+    cout << "\nInterior Spatial Range: " << box << "\n";
+
+    grid->getSpatialRange( box );
+    cout << "Spatial Range:          " << box << "\n\n";
   
     for(int l=0;l<grid->numLevels();l++){
       LevelP level = grid->getLevel(l);
       cout << "Level: index " << level->getIndex() << ", id " << level->getID() << "\n";
       
+      BBox lbox;
+      level->getInteriorSpatialRange( lbox );
+      cout << "\n       Interior Spatial Range: " << lbox << "\n";
+      
+      level->getSpatialRange( lbox );
+      cout << "       Spatial Range         : " << lbox << "\n\n";
+
       IntVector lo, hi;
       level->findInteriorCellIndexRange(lo,hi);
       cout << "Total Number of Cells:" << hi-lo << "\n";
