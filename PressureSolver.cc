@@ -112,7 +112,7 @@ PressureSolver::problemSetup(const ProblemSpecP& params)
 // ****************************************************************************
 // Schedule solve of linearized pressure equation
 // ****************************************************************************
-void PressureSolver::solve(const LevelP& level,
+void PressureSolver::sched_solve(const LevelP& level,
                            SchedulerP& sched,
                            const TimeIntegratorLabel* timelabels,
                            bool extraProjection,
