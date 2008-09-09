@@ -539,7 +539,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
                                              d_timeIntegratorLabels[curr_level],
                                                                     false, false);
 
-  d_pressSolver->solve(               level, subsched, 
+  d_pressSolver->sched_solve(                level, subsched, 
                                              d_timeIntegratorLabels[curr_level],
                                                              false, false, false);
   

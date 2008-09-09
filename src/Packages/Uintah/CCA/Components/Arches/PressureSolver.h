@@ -91,11 +91,11 @@ public:
   // GROUP: Schedule Action :
   ///////////////////////////////////////////////////////////////////////
   // Schedule Solve of linearized pressure equation
-  void solve(const LevelP& level, SchedulerP&,
-             const TimeIntegratorLabel* timelabels,
-             bool extraProjection,
-             bool d_EKTCorrection,
-             bool doing_EKT_now);
+  void sched_solve(const LevelP& level, SchedulerP&,
+                   const TimeIntegratorLabel* timelabels,
+                   bool extraProjection,
+                   bool d_EKTCorrection,
+                   bool doing_EKT_now);
 
   ///////////////////////////////////////////////////////////////////////
   // Schedule the build of the linearized eqn
