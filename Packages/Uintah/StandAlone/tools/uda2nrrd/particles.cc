@@ -338,24 +338,27 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
                 "sizes: %d %d\n"
                 "endian: %s\n"
                 "encoding: raw\n"
-                "# Num Particles: %d\n"
-                "# Variables (%d):\n", numVars, numParticles*4, endianness.c_str(), numParticles, numVars );
+                "Num Particles:=%d\n"
+                "Num Variables:=%d\n", numVars, numParticles*4, endianness.c_str(), numParticles, numVars );
 
   int pos = 0;
   for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
     
     if( particleVars[cnt].name == "p.x" ) {
-      fprintf( out, "#   %d - p.x (x)\n", pos++ );
-      fprintf( out, "#   %d - p.x (y)\n", pos++ );
-      fprintf( out, "#   %d - p.x (z)\n", pos++ );
+      fprintf( out, "p.x (x) index:=%d\n", pos++ );
+      fprintf( out, "p.x (y) index:=%d\n", pos++ );
+      fprintf( out, "p.x (z) index:=%d\n", pos++ );
     } 
     else {
-      fprintf( out, "#   %d - %s\n", pos++, particleVars[cnt].name.c_str() );
+      fprintf( out, "%s index:=%d\n", particleVars[cnt].name.c_str(), pos++ );
     }
   }
-  fclose( out );
 
   string rawfile = filename + ".raw";
+
+  fprintf( out, "data file: ./%s\n", rawfile.c_str() );
+  fclose( out );
+ 
   out = fopen( rawfile.c_str(), "wb" );
 
   if( !out ) {

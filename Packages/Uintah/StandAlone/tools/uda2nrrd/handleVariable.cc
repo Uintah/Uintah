@@ -121,6 +121,15 @@ handleData( QueryInfo &    qinfo,
         cout << "Aborting save...\n";
     }
     else {
+
+      BBox lbox;
+      qinfo.level->getSpatialRange( lbox );
+
+      ostringstream extentsString;
+      extentsString << lbox;
+
+      nrrdKeyValueAdd( nrrd, "extents", extentsString.str().c_str() );
+
       if( nrrdSave(string(filename + filetype).c_str(), nrrd, 0) ) {
         // There was a problem
         err = biffGetDone(NRRD);
