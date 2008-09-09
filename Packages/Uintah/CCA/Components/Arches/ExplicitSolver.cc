@@ -338,8 +338,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
                                       set_BC);
-      d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
-                           false, d_EKTCorrection, doing_EKT_now);
+      d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
+                                 false, d_EKTCorrection, doing_EKT_now);
+                                 
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
                          d_timeIntegratorLabels[curr_level], index,
@@ -457,8 +458,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                  d_timeIntegratorLabels[curr_level],
                                  d_EKTCorrection, doing_EKT_now);
 
-    d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
-                         false, d_EKTCorrection, doing_EKT_now);
+    d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
+                               false, d_EKTCorrection, doing_EKT_now);
   
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
@@ -471,8 +472,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
                                           d_timeIntegratorLabels[curr_level],
                                           false);
-      d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
-                           d_extraProjection, false, false);
+      d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
+                                 d_extraProjection, false, false);
                            
       for (int index = 1; index <= Arches::NDIM; ++index) {
         d_momSolver->solve(sched, patches, matls,
