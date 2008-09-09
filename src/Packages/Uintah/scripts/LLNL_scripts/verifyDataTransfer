@@ -116,7 +116,7 @@ endif
 
 $FIND . -maxdepth 1 -type f             -exec basename {} \; > $PSCP_FILES
 $FIND . -maxdepth 1 -name "t*" -type d  -exec basename {} \; | sort -r >> $PSCP_FILES
-$FIND -path './checkpoints/*' -maxdepth 2 >> $PSCP_FILES
+$FIND -maxdepth 2 -path './checkpoints/*'  >> $PSCP_FILES
 # remove ./ in front of ./checkpoints/....
 cp $PSCP_FILES $PSCP_FILES.2
 sed s/"\.\/"/""/g < $PSCP_FILES.2 >& $PSCP_FILES
