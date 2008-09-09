@@ -85,6 +85,9 @@ usage( const string& badarg, const string& progname )
   cerr << "Field Specifier Options\n";
   cerr << "  -v,--variable <variable name> - may not be used with -p\n";
   cerr << "  -p,--particledata - Pull out all the particle data into a single NRRD.  May not be used with -v\n";
+  cerr << "             Particles only exist on a single level (but it can be any of the levels).  When -p\n";
+  cerr << "             is specified, the code will automatically determine which level the particles live on,\n";
+  cerr << "             therefore you should not specify -l or -a when you use -p.\n";
   cerr << "  -m,--material <material number> [defaults to first material found]\n";
   cerr << "  -l,--level <level index> [defaults to 0]\n";
   cerr << "  -a,--all - Use all levels.  Overrides -l.  Uses the resolution\n";
@@ -141,6 +144,8 @@ main(int argc, char** argv)
   int level_index = 0;
 
   bool do_particles = false;
+
+  bool minus_l_specified = false;
   
   /*
    * Parse arguments
@@ -156,9 +161,9 @@ main(int argc, char** argv)
       }
       variable_name = string(argv[++i]);
     } else if (s == "-p" || s == "--particledata") {
-      if( args.use_all_levels ) {
+      if( args.use_all_levels || minus_l_specified ) {
         cout << "\n";
-        cout << "Error: you may not use -a and -p at the same time!\n";
+        cout << "Error: you may not use " << (args.use_all_levels ? "-a" : "-l") << " and -p at the same time!\n";
         cout << "\n";
         usage( "", argv[0] );
       }
@@ -172,6 +177,16 @@ main(int argc, char** argv)
     } else if (s == "-m" || s == "--material") {
       material = atoi(argv[++i]);
     } else if (s == "-l" || s == "--level") {
+
+      if( args.use_all_levels || do_particles ) {
+        cout << "\n";
+        cout << "Error: you may not use both '";
+        cout << (args.use_all_levels ? "-a" : "-p");
+        cout << "' and '-l'!\n";
+        cout << "\n";
+        usage( "", argv[0] );
+      }
+      minus_l_specified = true;
       level_index = atoi(argv[++i]);
     } else if (s == "-a" || s == "--all"){
       args.use_all_levels = true;
