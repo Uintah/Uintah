@@ -162,7 +162,7 @@ gridstats( DataArchive* da,
       cout << "\n       Interior Spatial Range: " << lbox << "\n";
       
       level->getSpatialRange( lbox );
-      cout << "       Spatial Range         : " << lbox << "\n\n";
+      cout << "       Spatial Range:          " << lbox << "\n\n";
 
       IntVector lo, hi;
       level->findInteriorCellIndexRange(lo,hi);
