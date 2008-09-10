@@ -192,45 +192,35 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 void 
 Discretization::computeDivergence(const ProcessorGroup* pc,
                                   const Patch* patch,
+                                  DataWarehouse* new_dw,
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars,
                                   const bool filter_divergence,
                                   const bool periodic) 
 {
-
-  // Get the patch and variable indices
-  IntVector indexLow = patch->getFortranCellLowIndex__New();
-  IntVector indexHigh = patch->getFortranCellHighIndex__New();
-
   CCVariable<double> unfiltered_divergence;
-  unfiltered_divergence.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
-  unfiltered_divergence.initialize(0.0);
-
-  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        if (constvars->new_density[currCell] > 0.0)
-        unfiltered_divergence[currCell] = -constvars->drhodf[currCell]*
-          ((constvars->scalarDiffusionCoeff[Arches::AE])[currCell]*
-           constvars->scalar[IntVector(colX+1,colY,colZ)]+
-           (constvars->scalarDiffusionCoeff[Arches::AW])[currCell]*
-           constvars->scalar[IntVector(colX-1,colY,colZ)]+
-           (constvars->scalarDiffusionCoeff[Arches::AS])[currCell]*
-           constvars->scalar[IntVector(colX,colY-1,colZ)]+
-           (constvars->scalarDiffusionCoeff[Arches::AN])[currCell]*
-           constvars->scalar[IntVector(colX,colY+1,colZ)]+
-           (constvars->scalarDiffusionCoeff[Arches::AB])[currCell]*
-           constvars->scalar[IntVector(colX,colY,colZ-1)]+
-           (constvars->scalarDiffusionCoeff[Arches::AT])[currCell]*
-           constvars->scalar[IntVector(colX,colY,colZ+1)]+
-           constvars->scalarDiffNonlinearSrc[currCell] -
-           (constvars->scalarDiffusionCoeff[Arches::AP])[currCell]*
-           constvars->scalar[currCell])/(constvars->new_density[currCell]*
-                                    constvars->new_density[currCell]);
-        else
-        unfiltered_divergence[currCell] = 0.0;
-      }
+  new_dw->allocateTemporary(unfiltered_divergence, patch);
+  constCCVariable<double>& scalar = constvars->scalar;
+  
+  for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+    IntVector c = *iter;
+    
+    IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
+    IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
+    IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1);
+    const double density = constvars->new_density[c];
+    
+    if (density > 0.0){
+      unfiltered_divergence[c] = -constvars->drhodf[c]*
+      ((constvars->scalarDiffusionCoeff[Arches::AE])[c] * scalar[E] +
+       (constvars->scalarDiffusionCoeff[Arches::AW])[c] * scalar[W] +
+       (constvars->scalarDiffusionCoeff[Arches::AS])[c] * scalar[S] +
+       (constvars->scalarDiffusionCoeff[Arches::AN])[c] * scalar[N] +
+       (constvars->scalarDiffusionCoeff[Arches::AB])[c] * scalar[B] +
+       (constvars->scalarDiffusionCoeff[Arches::AT])[c] * scalar[T] +
+       constvars->scalarDiffNonlinearSrc[c] - (constvars->scalarDiffusionCoeff[Arches::AP])[c]* scalar[c])/(density * density);
+    }else{
+      unfiltered_divergence[c] = 0.0;
     }
   }
 
@@ -258,11 +248,7 @@ Discretization::computeDivergence(const ProcessorGroup* pc,
 // Pressure stencil weights
 //****************************************************************************
 void 
-Discretization::calculatePressureCoeff(const ProcessorGroup*,
-                                       const Patch* patch,
-                                       DataWarehouse*,
-                                       DataWarehouse*,
-                                       double, 
+Discretization::calculatePressureCoeff(const Patch* patch,
                                        CellInformation* cellinfo,
                                        ArchesVariables* coeff_vars,
                                        ArchesConstVariables* constcoeff_vars)
