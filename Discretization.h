@@ -82,8 +82,7 @@ public:
   // Set stencil weights. (Velocity)
   // It uses second order hybrid differencing for computing
   // coefficients
-  void calculateVelocityCoeff(const ProcessorGroup*,
-                              const Patch* patch,
+  void calculateVelocityCoeff(const Patch* patch,
                               double delta_t,
                               int index, 
                               bool lcentral,
@@ -103,18 +102,15 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Modify stencil weights (Pressure) to account for voidage due
   // to multiple materials
-  void mmModifyPressureCoeffs(const ProcessorGroup*,
-                                  const Patch* patch,
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars);
+  void mmModifyPressureCoeffs(const Patch* patch,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars);
 
   ////////////////////////////////////////////////////////////////////////
   // Set stencil weights. (Scalars)
   // It uses second order hybrid differencing for computing
   // coefficients
-  void calculateScalarCoeff(const ProcessorGroup*,
-                            const Patch* patch,
-                            double delta_t,
+  void calculateScalarCoeff(const Patch* patch,
                             CellInformation* cellinfo,
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars,
@@ -122,28 +118,22 @@ public:
 
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
-  void calculateVelDiagonal(const ProcessorGroup*,
-                            const Patch* patch,
+  void calculateVelDiagonal(const Patch* patch,
                             int index,
                             ArchesVariables* vars);
 
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
-  void calculatePressDiagonal(const ProcessorGroup*,
-                              const Patch* patch,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw, 
+  void calculatePressDiagonal(const Patch* patch, 
                               ArchesVariables* vars);
 
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
-  void calculateScalarDiagonal(const ProcessorGroup*,
-                               const Patch* patch,
+  void calculateScalarDiagonal(const Patch* patch,
                                ArchesVariables* vars);
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
-  void calculateScalarFluxLimitedConvection(const ProcessorGroup*,
-                                            const Patch* patch,
+  void calculateScalarFluxLimitedConvection(const Patch* patch,
                                             CellInformation* cellinfo,
                                             ArchesVariables* vars,
                                             ArchesConstVariables* constvars,

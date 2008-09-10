@@ -298,7 +298,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                   d_lab->d_mmgasVolFracLabel, indx, patch,
                   gac, 1);
 
-      d_discretize->mmModifyPressureCoeffs(pc, patch, &pressureVars,
+      d_discretize->mmModifyPressureCoeffs(patch, &pressureVars,
                                            &constPressureVars);
 
     }
@@ -353,8 +353,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                         &pressureVars, &constPressureVars);
     }
     // Calculate Pressure Diagonal
-    d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw, 
-                                         &pressureVars);
+    d_discretize->calculatePressDiagonal(patch,&pressureVars);
 
     if (d_boundaryCondition->anyArchesPhysicalBC()){
       d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 

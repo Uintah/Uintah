@@ -419,8 +419,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
-  d_discretize->calculateScalarCoeff(pc, patch,
-                                     delta_t, cellinfo, 
+  d_discretize->calculateScalarCoeff(patch,
+                                     cellinfo, 
                                      &scalarVars, &constScalarVars,
                                      d_conv_scheme);
 
@@ -438,7 +438,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
       d_discretize->calculateScalarFluxLimitedConvection
-                                                  (pc, patch,  cellinfo,
+                                                  (patch,  cellinfo,
                                                     &scalarVars, &constScalarVars,
                                                   wall_celltypeval, 
                                                   d_limiter_type,
@@ -527,7 +527,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
-    d_discretize->calculateScalarDiagonal(pc, patch, &scalarVars);
+    d_discretize->calculateScalarDiagonal(patch, &scalarVars);
 
     CCVariable<double> scalar;
     if (doing_EKT_now) {
