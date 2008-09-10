@@ -95,11 +95,7 @@ public:
   // Set stencil weights. (Pressure)
   // It uses second order hybrid differencing for computing
   // coefficients
-  void calculatePressureCoeff(const ProcessorGroup*,
-                              const Patch* patch,
-                              DataWarehouse* old_dw,
-                              DataWarehouse* new_dw,
-                              double delta_t, 
+  void calculatePressureCoeff(const Patch* patch,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars); 
@@ -159,6 +155,7 @@ public:
 
   void computeDivergence(const ProcessorGroup*,
                          const Patch* patch,
+                         DataWarehouse* new_dw,
                          ArchesVariables* vars,
                          ArchesConstVariables* constvars,
                          const bool filter_divergence,

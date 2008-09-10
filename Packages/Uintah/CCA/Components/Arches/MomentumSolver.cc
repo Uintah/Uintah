@@ -1178,7 +1178,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 //#ifdef divergenceconstraint    
     // compute divergence constraint to use in pressure equation
-    d_discretize->computeDivergence(pc, patch,&velocityVars,&constVelocityVars,
+    d_discretize->computeDivergence(pc, patch, new_dw, &velocityVars, &constVelocityVars,
                     d_filter_divergence_constraint,d_3d_periodic);
 
     double factor_old, factor_new, factor_divide;
