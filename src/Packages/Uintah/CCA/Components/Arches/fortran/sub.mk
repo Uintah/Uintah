@@ -32,7 +32,6 @@ SRCS += \
 	$(SRCDIR)/mm_explicit.F\
 	$(SRCDIR)/mm_explicit_oldvalue.F\
 	$(SRCDIR)/mm_explicit_vel.F\
-	$(SRCDIR)/mm_modify_prescoef.F \
 	$(SRCDIR)/mmbcvelocity.F \
 	$(SRCDIR)/mmbcvelocity_momex.F \
 	$(SRCDIR)/mmbcenthalpy_energyex.F \
@@ -91,7 +90,6 @@ $(SRCDIR)/mm_computevel.$(OBJEXT): $(SRCDIR)/mm_computevel_fort.h
 $(SRCDIR)/mm_explicit.$(OBJEXT): $(SRCDIR)/mm_explicit_fort.h
 $(SRCDIR)/mm_explicit_oldvalue.$(OBJEXT): $(SRCDIR)/mm_explicit_oldvalue_fort.h
 $(SRCDIR)/mm_explicit_vel.$(OBJEXT): $(SRCDIR)/mm_explicit_vel_fort.h
-$(SRCDIR)/mm_modify_prescoef.$(OBJEXT): $(SRCDIR)/mm_modify_prescoef_fort.h
 $(SRCDIR)/mmbcvelocity.$(OBJEXT): $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/mmcelltypeinit.$(OBJEXT): $(SRCDIR)/mmcelltypeinit_fort.h
 $(SRCDIR)/mmenthalpywallbc.$(OBJEXT): $(SRCDIR)/mmenthalpywallbc_fort.h
