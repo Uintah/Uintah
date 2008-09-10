@@ -29,7 +29,6 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_all_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
 #ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
 #endif
@@ -314,7 +313,6 @@ Discretization::calculatePressureCoeff(const ProcessorGroup*,
 //****************************************************************************
 // Modify Pressure Stencil for Multimaterial
 //****************************************************************************
-
 void
 Discretization::mmModifyPressureCoeffs(const ProcessorGroup*,
                                       const Patch* patch,
@@ -322,18 +320,22 @@ Discretization::mmModifyPressureCoeffs(const ProcessorGroup*,
                                       ArchesConstVariables* constcoeff_vars)
 
 {
-  // Get the domain size and the patch indices
+  constCCVariable<double>& voidFrac = constcoeff_vars->voidFraction;
 
-  IntVector valid_lo = patch->getFortranCellLowIndex__New();
-  IntVector valid_hi = patch->getFortranCellHighIndex__New();
+  for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+    IntVector c = *iter;
 
-  fort_mm_modify_prescoef(coeff_vars->pressCoeff[Arches::AE],
-                          coeff_vars->pressCoeff[Arches::AW],
-                          coeff_vars->pressCoeff[Arches::AN],
-                          coeff_vars->pressCoeff[Arches::AS],
-                          coeff_vars->pressCoeff[Arches::AT],
-                          coeff_vars->pressCoeff[Arches::AB],
-                          constcoeff_vars->voidFraction, valid_lo, valid_hi);
+    IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
+    IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
+    IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
+  
+    coeff_vars->pressCoeff[Arches::AE][c] *= 0.5 * (voidFrac[c] + voidFrac[E]);
+    coeff_vars->pressCoeff[Arches::AW][c] *= 0.5 * (voidFrac[c] + voidFrac[W]);
+    coeff_vars->pressCoeff[Arches::AN][c] *= 0.5 * (voidFrac[c] + voidFrac[N]);
+    coeff_vars->pressCoeff[Arches::AS][c] *= 0.5 * (voidFrac[c] + voidFrac[S]);
+    coeff_vars->pressCoeff[Arches::AT][c] *= 0.5 * (voidFrac[c] + voidFrac[T]);
+    coeff_vars->pressCoeff[Arches::AB][c] *= 0.5 * (voidFrac[c] + voidFrac[B]);
+  }
 }
   
 //****************************************************************************
