@@ -58,8 +58,7 @@ Discretization::~Discretization()
 // Velocity stencil weights
 //****************************************************************************
 void 
-Discretization::calculateVelocityCoeff(const ProcessorGroup*,
-                                       const Patch* patch,
+Discretization::calculateVelocityCoeff(const Patch* patch,
                                        double delta_t,
                                        int index, bool lcentral,
                                        CellInformation* cellinfo,
@@ -300,10 +299,9 @@ Discretization::calculatePressureCoeff(const Patch* patch,
 // Modify Pressure Stencil for Multimaterial
 //****************************************************************************
 void
-Discretization::mmModifyPressureCoeffs(const ProcessorGroup*,
-                                      const Patch* patch,
-                                      ArchesVariables* coeff_vars,
-                                      ArchesConstVariables* constcoeff_vars)
+Discretization::mmModifyPressureCoeffs(const Patch* patch,
+                                       ArchesVariables* coeff_vars,
+                                       ArchesConstVariables* constcoeff_vars)
 
 {
   constCCVariable<double>& voidFrac = constcoeff_vars->voidFraction;
@@ -328,9 +326,7 @@ Discretization::mmModifyPressureCoeffs(const ProcessorGroup*,
 // Scalar stencil weights
 //****************************************************************************
 void 
-Discretization::calculateScalarCoeff(const ProcessorGroup*,
-                                     const Patch* patch,
-                                     double,
+Discretization::calculateScalarCoeff(const Patch* patch,
                                      CellInformation* cellinfo,
                                      ArchesVariables* coeff_vars,
                                      ArchesConstVariables* constcoeff_vars,
@@ -383,8 +379,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 // Calculate the diagonal terms (velocity)
 //****************************************************************************
 void 
-Discretization::calculateVelDiagonal(const ProcessorGroup*,
-                                     const Patch* patch,
+Discretization::calculateVelDiagonal(const Patch* patch,
                                      int index,
                                      ArchesVariables* coeff_vars)
 {
@@ -445,11 +440,8 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 // Pressure diagonal
 //****************************************************************************
 void 
-Discretization::calculatePressDiagonal(const ProcessorGroup*,
-                                       const Patch* patch,
-                                       DataWarehouse*,
-                                       DataWarehouse*,
-                                       ArchesVariables* coeff_vars) 
+Discretization::calculatePressDiagonal(const Patch* patch,
+                                        ArchesVariables* coeff_vars) 
 {
   
   // Get the domain size and the patch indices
@@ -471,8 +463,7 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 // Scalar diagonal
 //****************************************************************************
 void 
-Discretization::calculateScalarDiagonal(const ProcessorGroup*,
-                                        const Patch* patch,
+Discretization::calculateScalarDiagonal(const Patch* patch,
                                         ArchesVariables* coeff_vars)
 {
   
@@ -505,7 +496,7 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 // (for convection part only)
 //****************************************************************************
 void 
-Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
+Discretization::calculateScalarFluxLimitedConvection(
                                         const Patch* patch,
                                         CellInformation* cellinfo,
                                         ArchesVariables*  scal_vars,

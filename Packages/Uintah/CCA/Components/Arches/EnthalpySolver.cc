@@ -671,8 +671,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // compute ith component of enthalpy stencil coefficients
     // inputs : enthalpySP, [u,v,w]VelocityMS, densityCP, viscosityCTS
     // outputs: scalCoefSBLM
-    d_discretize->calculateScalarCoeff(pc, patch,
-                                       delta_t, cellinfo, 
+    d_discretize->calculateScalarCoeff(patch,
+                                       cellinfo, 
                                        &enthalpyVars, &constEnthalpyVars,
                                        d_conv_scheme);
 
@@ -693,7 +693,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
       d_discretize->calculateScalarFluxLimitedConvection
-                                                  (pc, patch, cellinfo,
+                                                  (patch, cellinfo,
                                                   &enthalpyVars,
                                                   &constEnthalpyVars,
                                                   wall_celltypeval, 
@@ -845,7 +845,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate the enthalpy diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
-    d_discretize->calculateScalarDiagonal(pc, patch, &enthalpyVars);
+    d_discretize->calculateScalarDiagonal(patch, &enthalpyVars);
 
     CCVariable<double> enthalpy;
     if (doing_EKT_now) {

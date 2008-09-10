@@ -389,8 +389,8 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // compute ith component of reactscalar stencil coefficients
   // inputs : reactscalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: reactscalCoefSBLM
-    d_discretize->calculateScalarCoeff(pc, patch,
-                                       delta_t, cellinfo, 
+    d_discretize->calculateScalarCoeff(patch,
+                                       cellinfo, 
                                        &reactscalarVars, &constReactscalarVars,
                                        d_conv_scheme);
 
@@ -406,7 +406,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
       d_discretize->calculateScalarFluxLimitedConvection
-                                                  (pc, patch,  cellinfo,
+                                                  (patch,  cellinfo,
                                                     &reactscalarVars,
                                                   &constReactscalarVars,
                                                   wall_celltypeval, 
@@ -437,7 +437,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate the reactscalar diagonal terms
     // inputs : reactscalCoefSBLM, scalLinSrcSBLM
     // outputs: reactscalCoefSBLM
-    d_discretize->calculateScalarDiagonal(pc, patch, &reactscalarVars);
+    d_discretize->calculateScalarDiagonal(patch, &reactscalarVars);
 
     CCVariable<double> reactscalar;
     if (doing_EKT_now) {
