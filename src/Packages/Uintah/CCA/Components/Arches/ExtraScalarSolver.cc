@@ -527,8 +527,8 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
-  d_discretize->calculateScalarCoeff(pc, patch,
-                                     delta_t, cellinfo, 
+  d_discretize->calculateScalarCoeff(patch,
+                                     cellinfo, 
                                      &scalarVars, &constScalarVars,
                                      d_conv_scheme);
 
@@ -636,7 +636,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
-    d_discretize->calculateScalarDiagonal(pc, patch, &scalarVars);
+    d_discretize->calculateScalarDiagonal(patch, &scalarVars);
 
     /*CCVariable<double> scalar;
     if (doing_EKT_now) {

@@ -683,7 +683,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
       //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM 
 
-      d_discretize->calculateVelocityCoeff(pc, patch, 
+      d_discretize->calculateVelocityCoeff(patch, 
                                            delta_t, index, d_central, 
                                            cellinfo, &velocityVars,
                                            &constVelocityVars);
@@ -956,7 +956,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
       //  outputs: [u,v,w]VelCoefPBLM
 
-      d_discretize->calculateVelDiagonal(pc, patch,
+      d_discretize->calculateVelDiagonal(patch,
                                          index,
                                          &velocityVars);
 
