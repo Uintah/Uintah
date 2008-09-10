@@ -289,9 +289,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
       pressureVars.pressCoeff[ii].initialize(0.0);
     }
 
-    d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
-                                         delta_t, cellinfo,
-                                         &pressureVars, &constPressureVars);
+    d_discretize->calculatePressureCoeff(patch, cellinfo, &pressureVars, &constPressureVars);
 
     // Modify pressure coefficients for multimaterial formulation
 
