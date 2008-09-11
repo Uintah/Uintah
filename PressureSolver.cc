@@ -158,7 +158,6 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,       gac, 1);
@@ -185,10 +184,10 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&(((!(extraProjection))&&(!(d_EKTCorrection)))
          ||((d_EKTCorrection)&&(doing_EKT_now)))) {
-    tsk->computes(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->computes(d_lab->d_presCoefPBLMLabel);
     tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
   } else {
-    tsk->modifies(d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl, oams);
+    tsk->modifies(d_lab->d_presCoefPBLMLabel);
     tsk->modifies(d_lab->d_presNonLinSrcPBLMLabel);
   }
   
@@ -230,8 +229,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                     getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables pressureVars;
     ArchesConstVariables constPressureVars;
-    int nofStencils = 7;
-
 
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -264,23 +261,20 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   
     // Calculate Pressure Coeffs
-    for (int ii = 0; ii < nofStencils; ii++) {
-      if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-          &&(((!(extraProjection))&&(!(d_EKTCorrection)))
-             ||((d_EKTCorrection)&&(doing_EKT_now)))){
-        new_dw->allocateAndPut(pressureVars.pressCoeff[ii],
-                               d_lab->d_presCoefPBLMLabel, ii, patch);
-      }else{
-        new_dw->getModifiable(pressureVars.pressCoeff[ii],
-                              d_lab->d_presCoefPBLMLabel, ii, patch);
-      }
-      pressureVars.pressCoeff[ii].initialize(0.0);
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+        &&(((!(extraProjection))&&(!(d_EKTCorrection)))
+           ||((d_EKTCorrection)&&(doing_EKT_now)))){
+      new_dw->allocateAndPut(pressureVars.pressCoeff,
+                             d_lab->d_presCoefPBLMLabel, indx, patch);
+    }else{
+      new_dw->getModifiable(pressureVars.pressCoeff,
+                            d_lab->d_presCoefPBLMLabel, indx, patch);
     }
 
     d_discretize->calculatePressureCoeff(patch, cellinfo, &pressureVars, &constPressureVars);
 
-    // Modify pressure coefficients for multimaterial formulation
 
+    // Modify pressure coefficients for multimaterial formulation
     if (d_MAlab) {
       new_dw->get(constPressureVars.voidFraction,
                   d_lab->d_mmgasVolFracLabel, indx, patch,
@@ -337,7 +331,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                  &pressureVars,&constPressureVars);*/
     
     if (d_MAlab){
-      d_boundaryCondition->mmpressureBC(pc, patch, cellinfo,
+      d_boundaryCondition->mmpressureBC(new_dw, patch,
                                         &pressureVars, &constPressureVars);
     }
     // Calculate Pressure Diagonal
@@ -381,9 +375,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
 
   // Requires
   // coefficient for the variable for which solve is invoked
-
   Ghost::GhostType  gn = Ghost::None;
-  Task::DomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
   if (!((d_pressure_correction)||(extraProjection)
         ||((d_EKTCorrection)&&(doing_EKT_now)))){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -392,7 +384,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
       tsk->requires(Task::NewDW, timelabels->pressure_guess, gn, 0);
     }
   }
-  tsk->requires(Task::NewDW, d_lab->d_presCoefPBLMLabel, d_lab->d_stencilMatl,oams, gn, 0);
+  tsk->requires(Task::NewDW, d_lab->d_presCoefPBLMLabel,     gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_presNonLinSrcPBLMLabel,gn, 0);
 
 
@@ -548,11 +540,7 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
     pressureVars.pressure.initialize(0.0);
   }
   
-  for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++){
-    new_dw->get(constPressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
-                   ii, patch, gn, 0);
-  }
-
+  new_dw->get(constPressureVars.pressCoeff,       d_lab->d_presCoefPBLMLabel,      indx, patch, gn, 0);
   new_dw->get(constPressureVars.pressNonlinearSrc,d_lab->d_presNonLinSrcPBLMLabel, indx, patch, gn, 0);
 
   // for parallel code lisolve will become a recursive task and 

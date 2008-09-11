@@ -296,10 +296,10 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
   
   for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
     IntVector c = *iter;
-    A[i]   = -constvars->pressCoeff[Arches::AB][c]; //[0,0,-1]
-    A[i+1] = -constvars->pressCoeff[Arches::AS][c]; //[0,-1,0]
-    A[i+2] = -constvars->pressCoeff[Arches::AW][c]; //[-1,0,0]
-    A[i+3] =  constvars->pressCoeff[Arches::AP][c]; //[0,0,0]
+    A[i]   = -constvars->pressCoeff[c].b; //[0,0,-1]
+    A[i+1] = -constvars->pressCoeff[c].s; //[0,-1,0]
+    A[i+2] = -constvars->pressCoeff[c].w; //[-1,0,0]
+    A[i+3] =  constvars->pressCoeff[c].p; //[0,0,0]
     i = i + d_stencilSize;
   }
   

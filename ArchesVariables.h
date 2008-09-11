@@ -75,7 +75,7 @@ namespace Uintah {
       SFCYVariable<double> vVelNonlinearSrc;    // SU in Arches 
       SFCZVariable<double> wVelLinearSrc;       //SP term in Arches 
       SFCZVariable<double> wVelNonlinearSrc;    // SU in Arches 
-      StencilMatrix<CCVariable<double> > pressCoeff; //7 point stencil
+      CCVariable<Stencil7> pressCoeff; //7 point stencil
       CCVariable<double> pressLinearSrc;
       CCVariable<double> pressNonlinearSrc;
       CCVariable<double> drhodt;        //add to the RHS of the pressure eqn
