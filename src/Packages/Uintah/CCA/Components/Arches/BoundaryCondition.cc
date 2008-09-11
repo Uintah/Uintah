@@ -1400,12 +1400,9 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   IntVector idxHi = patch->getFortranCellHighIndex__New();
   IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
   IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
-  for(int i=0;i<7;i++){
-    ASSERTEQ(domLong,
-             vars->pressCoeff[i].getWindow()->getLowIndex());
-    ASSERTEQ(domHing+IntVector(1,1,1),
-             vars->pressCoeff[i].getWindow()->getHighIndex());
-  }
+  ASSERTEQ(domLong,                  vars->pressCoeff.getWindow()->getLowIndex());
+  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressCoeff.getWindow()->getHighIndex());
+
   ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
   ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
 
@@ -1831,12 +1828,8 @@ BoundaryCondition::intrusionPressureBC(DataWarehouse* new_dw,
   IntVector idxHi = patch->getFortranCellHighIndex__New();
   IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
   IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
-  for(int i=0;i<7;i++){
-     ASSERTEQ(domLong,
-              vars->pressCoeff[i].getWindow()->getLowIndex());
-     ASSERTEQ(domHing+IntVector(1,1,1),
-              vars->pressCoeff[i].getWindow()->getHighIndex());
-  }
+  ASSERTEQ(domLong,                   vars->pressCoeff.getWindow()->getLowIndex());
+  ASSERTEQ(domHing+IntVector(1,1,1),  vars->pressCoeff.getWindow()->getHighIndex());
   ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
   ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
 
@@ -2030,12 +2023,10 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
   IntVector idxHi = patch->getFortranCellHighIndex__New();
   IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
   IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
-  for(int i=0;i<7;i++){
-     ASSERTEQ(domLong,
-              vars->pressCoeff[i].getWindow()->getLowIndex());
-     ASSERTEQ(domHing+IntVector(1,1,1),
-              vars->pressCoeff[i].getWindow()->getHighIndex());
-  }
+  ASSERTEQ(domLong,
+           vars->pressCoeff.getWindow()->getLowIndex());
+  ASSERTEQ(domHing+IntVector(1,1,1),
+           vars->pressCoeff.getWindow()->getHighIndex());
   ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
   ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
 
