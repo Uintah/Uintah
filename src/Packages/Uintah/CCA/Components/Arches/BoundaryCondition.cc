@@ -475,6 +475,61 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
   }
 }  
 
+
+//****************************************************************************
+// copy_stencil7:
+//   Copies data into and out of the stencil7 arrays so the fortran BC routines can 
+//   handle it.
+//****************************************************************************
+template<class V, class T> void
+BoundaryCondition::copy_stencil7(DataWarehouse* new_dw,
+                                const Patch* patch,
+                                const string& whichWay,
+                                CellIterator iter,
+                                V& A,
+                                T& AP,
+                                T& AE,
+                                T& AW,
+                                T& AN,
+                                T& AS,
+                                T& AT,
+                                T& AB)
+{
+  if (whichWay == "copyInto"){
+  
+    new_dw->allocateTemporary(AP,patch);
+    new_dw->allocateTemporary(AE,patch);
+    new_dw->allocateTemporary(AW,patch);
+    new_dw->allocateTemporary(AN,patch);
+    new_dw->allocateTemporary(AS,patch);
+    new_dw->allocateTemporary(AT,patch);
+    new_dw->allocateTemporary(AB,patch);
+    
+    for(; !iter.done();iter++) {
+      IntVector c = *iter;
+      AP[c] = A[c].p;
+      AE[c] = A[c].e;
+      AW[c] = A[c].w;
+      AN[c] = A[c].n;
+      AS[c] = A[c].s;
+      AT[c] = A[c].t;
+      AB[c] = A[c].b;
+    }
+  }else{
+    for(; !iter.done();iter++) { 
+      IntVector c = *iter;
+      A[c].p = AP[c];
+      A[c].e = AE[c];
+      A[c].w = AW[c];
+      A[c].n = AN[c];
+      A[c].s = AS[c];
+      A[c].t = AT[c];
+      A[c].b = AB[c];
+    }
+  }
+}
+
+
 // for multimaterial
 //****************************************************************************
 // schedule the initialization of mm wall cell types
@@ -1333,7 +1388,7 @@ void
 BoundaryCondition::pressureBC(const ProcessorGroup*,
                               const Patch* patch,
                               DataWarehouse* /*old_dw*/,
-                              DataWarehouse* /*new_dw*/,
+                              DataWarehouse* new_dw,
                               CellInformation* /*cellinfo*/,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
@@ -1370,32 +1425,35 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 
   int neumann_bc = -1;
   int dirichlet_bc = 1;
+  
+  //__________________________________
+  // Move stencil7 data into CCVariable<double> arrays
+  // so fortran code can deal with it.  This sucks --Todd
+  CCVariable<double>AP, AE, AW, AN, AS, AT, AB;
+  
+  string direction = "copyInto";
+  CellIterator iter = patch->getExtraCellIterator__New();
+  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
+                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
+  
+  
   //fortran call
   fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-               vars->pressCoeff[Arches::AP],
-               vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-               vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-               vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+               AP,AE, AW, AN, AS, AT, AB,
                vars->pressNonlinearSrc, vars->pressLinearSrc,
                constvars->cellType, wall_celltypeval, wall_celltypeval,
                neumann_bc,
                xminus, xplus, yminus, yplus, zminus, zplus);
 
   fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-               vars->pressCoeff[Arches::AP],
-               vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-               vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-               vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+               AP, AE, AW, AN, AS, AT, AB,
                vars->pressNonlinearSrc, vars->pressLinearSrc,
                constvars->cellType, wall_celltypeval, outlet_celltypeval,
                dirichlet_bc,
                xminus, xplus, yminus, yplus, zminus, zplus);
 
   fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-               vars->pressCoeff[Arches::AP],
-               vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-               vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-               vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+               AP, AE, AW, AN, AS, AT, AB,
                vars->pressNonlinearSrc, vars->pressLinearSrc,
                constvars->cellType, wall_celltypeval, pressure_celltypeval,
                dirichlet_bc,
@@ -1403,16 +1461,18 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
   
   for (int ii = 0; ii < d_numInlets; ii++) {
     fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-                 vars->pressCoeff[Arches::AP],
-                 vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-                 vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-                 vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+                 AP, AE, AW, AN, AS, AT, AB,
                  vars->pressNonlinearSrc, vars->pressLinearSrc,
                  constvars->cellType, wall_celltypeval,
                  d_flowInlets[ii]->d_cellTypeID,
                  neumann_bc,
                  xminus, xplus, yminus, yplus, zminus, zplus);
   }
+  //__________________________________
+  //  This sucks --Todd
+  direction = "out";
+  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
+                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
 }
 
 //****************************************************************************
@@ -1760,11 +1820,10 @@ BoundaryCondition::intrusionEnergyExBC(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void 
-BoundaryCondition::intrusionPressureBC(const ProcessorGroup*,
+BoundaryCondition::intrusionPressureBC(DataWarehouse* new_dw,
                                        const Patch* patch,
-                                       CellInformation*,
                                        ArchesVariables* vars,
-                                              ArchesConstVariables* constvars)
+                                       ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
   IntVector idxLo = patch->getFortranCellLowIndex__New();
@@ -1781,13 +1840,27 @@ BoundaryCondition::intrusionPressureBC(const ProcessorGroup*,
   ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
   ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
 
+
+  //__________________________________
+  // Move stencil7 data into CCVariable<double> arrays
+  // so fortran code can deal with it.  This sucks --Todd
+  CCVariable<double>AP, AE, AW, AN, AS, AT, AB;
+  
+  string direction = "copyInto";
+  CellIterator iter = patch->getExtraCellIterator__New();
+  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
+                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
   //fortran call
   fort_mmwallbc(idxLo, idxHi,
-                vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-                vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-                vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+                AE, AW, AN, AS,AT, AB,
                 vars->pressNonlinearSrc, vars->pressLinearSrc,
                 constvars->cellType, d_intrusionBC->d_cellTypeID);
+                
+  //__________________________________
+  //  This sucks --Todd
+  direction = "out";
+  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
+                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
 }
 //______________________________________________________________________
 // applies multimaterial bc's for scalars and pressure
@@ -1947,9 +2020,8 @@ BoundaryCondition::mmwVelocityBC( const Patch* patch,
 //______________________________________________________________________
 //
 void 
-BoundaryCondition::mmpressureBC(const ProcessorGroup*,
+BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
                                 const Patch* patch,
-                                CellInformation*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
@@ -1967,13 +2039,28 @@ BoundaryCondition::mmpressureBC(const ProcessorGroup*,
   ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
   ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
 
+
+  //__________________________________
+  // Move stencil7 data into separate CCVariable<double> arrays
+  // so fortran code can deal with it.  This sucks --Todd
+  CCVariable<double>AP, AE, AW, AN, AS, AT, AB;
+  
+  string direction = "copyInto";
+  CellIterator iter = patch->getExtraCellIterator__New();
+  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
+                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
+                
   //fortran call
   fort_mmwallbc(idxLo, idxHi,
-                vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
-                vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
-                vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+                AE, AW, AN, AS, AT, AB,
                 vars->pressNonlinearSrc, vars->pressLinearSrc,
                 constvars->cellType, d_mmWallID);
+                
+  //__________________________________
+  //  This sucks --Todd
+  direction = "out";
+  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
+                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
 }
 
 //______________________________________________________________________

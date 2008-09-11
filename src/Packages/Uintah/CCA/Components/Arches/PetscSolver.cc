@@ -330,13 +330,13 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
         col[4] = l2g[IntVector(colX+1, colY, colZ)]; // ae
         col[5] = l2g[IntVector(colX, colY+1, colZ)]; // an
         col[6] = l2g[IntVector(colX, colY, colZ+1)]; // at
-        value[0] = -constvars->pressCoeff[Arches::AB][IntVector(colX,colY,colZ)];
-        value[1] = -constvars->pressCoeff[Arches::AS][IntVector(colX,colY,colZ)];
-        value[2] = -constvars->pressCoeff[Arches::AW][IntVector(colX,colY,colZ)];
-        value[3] = constvars->pressCoeff[Arches::AP][IntVector(colX,colY,colZ)];
-        value[4] = -constvars->pressCoeff[Arches::AE][IntVector(colX,colY,colZ)];
-        value[5] = -constvars->pressCoeff[Arches::AN][IntVector(colX,colY,colZ)];
-        value[6] = -constvars->pressCoeff[Arches::AT][IntVector(colX,colY,colZ)];
+        value[0] = -constvars->pressCoeff[IntVector(colX,colY,colZ)].b;
+        value[1] = -constvars->pressCoeff[IntVector(colX,colY,colZ)].s;
+        value[2] = -constvars->pressCoeff[IntVector(colX,colY,colZ)].w;
+        value[3] = constvars->pressCoeff[IntVector(colX,colY,colZ)].p;
+        value[4] = -constvars->pressCoeff[IntVector(colX,colY,colZ)].e;
+        value[5] = -constvars->pressCoeff[IntVector(colX,colY,colZ)].n;
+        value[6] = -constvars->pressCoeff[IntVector(colX,colY,colZ)].t;
         int row = col[3];
         ierr = MatSetValues(A,1,&row,7,col,value,INSERT_VALUES);
         if(ierr)

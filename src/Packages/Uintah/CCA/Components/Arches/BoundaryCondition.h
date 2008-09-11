@@ -279,7 +279,16 @@ public:
   void sched_initInletBC(SchedulerP&, 
                          const PatchSet* patches,
                          const MaterialSet* matls);
-
+                         
+                         
+  template<class V, class T> void
+  copy_stencil7(DataWarehouse* new_dw,
+                const Patch* patch,
+                const string& whichWay,
+                CellIterator iter,
+                V& A,  T& AP, T& AE, T& AW,
+                T& AN, T& AS, T& AT, T& AB);
+                                
   ////////////////////////////////////////////////////////////////////////
   // Initialize multimaterial wall cell types
   void sched_mmWallCellTypeInit( SchedulerP&, 
@@ -417,9 +426,8 @@ public:
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
-  void intrusionPressureBC(const ProcessorGroup*,
-                           const Patch* patch,
-                           CellInformation* cellinfo,
+  void intrusionPressureBC(DataWarehouse* new_dw, 
+                          const Patch* patch,
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
@@ -443,15 +451,14 @@ public:
                     ArchesVariables* vars,
                     ArchesConstVariables* constvars);
 
-  void mmpressureBC(const ProcessorGroup*,
+  void mmpressureBC(DataWarehouse* new_dw,
                     const Patch* patch,
-                    CellInformation* cellinfo,
                     ArchesVariables* vars,
                     ArchesConstVariables* constvars);
   // applies multimaterial bc's for scalars and pressure
   void mmscalarWallBC( const ProcessorGroup*,
                        const Patch* patch,
-                       CellInformation* cellinfo,
+                       CellInformation*, 
                        ArchesVariables* vars,
                        ArchesConstVariables* constvars);
 

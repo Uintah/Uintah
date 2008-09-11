@@ -89,7 +89,7 @@ namespace Uintah {
       StencilMatrix<constCCVariable<double> > reactscalarCoeff;//7 pt stencil
       constCCVariable<double> scalarNonlinearSrc;
       constCCVariable<double> reactscalarNonlinearSrc;
-      StencilMatrix<constCCVariable<double> > pressCoeff; //7 point stencil
+      constCCVariable<Stencil7>  pressCoeff; //7 point stencil
       constCCVariable<double> pressNonlinearSrc;
       constCCVariable<double> voidFraction;
       

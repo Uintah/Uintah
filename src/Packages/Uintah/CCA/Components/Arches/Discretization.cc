@@ -37,6 +37,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
 
+
 //****************************************************************************
 // Default constructor for Discretization
 //****************************************************************************
@@ -268,13 +269,13 @@ Discretization::calculatePressureCoeff(const Patch* patch,
     double area_S  = area_N;
     double area_EW = cellinfo->sns[j] * cellinfo->stb[k];
     double area_TB = cellinfo->sns[j] * cellinfo->sew[i];
-  
-    coeff_vars->pressCoeff[Arches::AE][c] = area_EW/(cellinfo->dxep[i]);
-    coeff_vars->pressCoeff[Arches::AW][c] = area_EW/(cellinfo->dxpw[i]);
-    coeff_vars->pressCoeff[Arches::AN][c] = area_N /(cellinfo->dynp[j]);
-    coeff_vars->pressCoeff[Arches::AS][c] = area_S /(cellinfo->dyps[j]);
-    coeff_vars->pressCoeff[Arches::AT][c] = area_TB/(cellinfo->dztp[k]);
-    coeff_vars->pressCoeff[Arches::AB][c] = area_TB/(cellinfo->dzpb[k]);
+    Stencil7& A = coeff_vars->pressCoeff[c];
+    A.e = area_EW/(cellinfo->dxep[i]);
+    A.w = area_EW/(cellinfo->dxpw[i]);
+    A.n = area_N /(cellinfo->dynp[j]);
+    A.s = area_S /(cellinfo->dyps[j]);
+    A.t = area_TB/(cellinfo->dztp[k]);
+    A.b = area_TB/(cellinfo->dzpb[k]);
   }
 
 #ifdef divergenceconstraint
@@ -308,17 +309,18 @@ Discretization::mmModifyPressureCoeffs(const Patch* patch,
 
   for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
     IntVector c = *iter;
-
+    Stencil7& A = coeff_vars->pressCoeff[c];
+    
     IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
     IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
     IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
   
-    coeff_vars->pressCoeff[Arches::AE][c] *= 0.5 * (voidFrac[c] + voidFrac[E]);
-    coeff_vars->pressCoeff[Arches::AW][c] *= 0.5 * (voidFrac[c] + voidFrac[W]);
-    coeff_vars->pressCoeff[Arches::AN][c] *= 0.5 * (voidFrac[c] + voidFrac[N]);
-    coeff_vars->pressCoeff[Arches::AS][c] *= 0.5 * (voidFrac[c] + voidFrac[S]);
-    coeff_vars->pressCoeff[Arches::AT][c] *= 0.5 * (voidFrac[c] + voidFrac[T]);
-    coeff_vars->pressCoeff[Arches::AB][c] *= 0.5 * (voidFrac[c] + voidFrac[B]);
+    A.e *= 0.5 * (voidFrac[c] + voidFrac[E]);
+    A.w *= 0.5 * (voidFrac[c] + voidFrac[W]);
+    A.n *= 0.5 * (voidFrac[c] + voidFrac[N]);
+    A.s *= 0.5 * (voidFrac[c] + voidFrac[S]);
+    A.t *= 0.5 * (voidFrac[c] + voidFrac[T]);
+    A.b *= 0.5 * (voidFrac[c] + voidFrac[B]);
   }
 }
   
@@ -374,6 +376,22 @@ Discretization::calculateScalarCoeff(const Patch* patch,
                 conv_scheme, d_turbPrNo);
 
 }
+//****************************************************************************
+// Calculate the diagonal term A.p in the matrix
+//****************************************************************************
+template<class T> void
+Discretization::compute_Ap(CellIterator iter,
+                           CCVariable<Stencil7>& A,
+                           T& source) 
+{
+  for(; !iter.done();iter++) { 
+    IntVector c = *iter;
+    Stencil7&  A_tmp=A[c];
+    A_tmp.p = A_tmp.e + A_tmp.w + A_tmp.n + A_tmp.s + A_tmp.t + A_tmp.b - source[c];
+  }
+}
+
+
 
 //****************************************************************************
 // Calculate the diagonal terms (velocity)
@@ -441,22 +459,11 @@ Discretization::calculateVelDiagonal(const Patch* patch,
 //****************************************************************************
 void 
 Discretization::calculatePressDiagonal(const Patch* patch,
-                                        ArchesVariables* coeff_vars) 
+                                       ArchesVariables* coeff_vars) 
 {
-  
-  // Get the domain size and the patch indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-
-  // Calculate the diagonal terms (AP)
-  fort_apcal_all(idxLo, idxHi, coeff_vars->pressCoeff[Arches::AP],
-             coeff_vars->pressCoeff[Arches::AE],
-             coeff_vars->pressCoeff[Arches::AW],
-             coeff_vars->pressCoeff[Arches::AN],
-             coeff_vars->pressCoeff[Arches::AS],
-             coeff_vars->pressCoeff[Arches::AT],
-             coeff_vars->pressCoeff[Arches::AB],
-             coeff_vars->pressLinearSrc);
+  CellIterator iter = patch->getCellIterator__New();
+  compute_Ap<CCVariable<double> >(iter,coeff_vars->pressCoeff,
+                                       coeff_vars->pressLinearSrc);
 }
 
 //****************************************************************************
@@ -506,6 +513,7 @@ Discretization::calculateScalarFluxLimitedConvection(
                                         int boundary_limiter_type,
                                         bool central_limiter)
 {
+  cout << " here " << endl;
   Array3<double> x_flux;
   Array3<double> y_flux;
   Array3<double> z_flux;

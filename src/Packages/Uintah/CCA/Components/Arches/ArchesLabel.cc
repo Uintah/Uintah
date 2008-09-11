@@ -100,7 +100,7 @@ ArchesLabel::ArchesLabel()
   
   
   // Pressure Coeff Labels
-  d_presCoefPBLMLabel      = VarLabel::create("presCoefPBLM",      CC_double);
+  d_presCoefPBLMLabel      = VarLabel::create("presCoefPBLM", CCVariable<Stencil7>::getTypeDescription());
   // Pressure Non Linear Src Labels
   d_presNonLinSrcPBLMLabel = VarLabel::create("presNonLinSrcPBLM", CC_double);
   
