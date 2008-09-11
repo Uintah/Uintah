@@ -115,7 +115,11 @@ public:
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars,
                             int conv_scheme);
-
+  template<class T>
+  void compute_Ap(CellIterator iter,
+                  CCVariable<Stencil7>& A,
+                  T& source);
+                  
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
   void calculateVelDiagonal(const Patch* patch,
