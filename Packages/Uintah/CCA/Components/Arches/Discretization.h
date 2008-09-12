@@ -91,22 +91,6 @@ public:
                               ArchesConstVariables* constvars);
 
   ////////////////////////////////////////////////////////////////////////
-  // Set stencil weights. (Pressure)
-  // It uses second order hybrid differencing for computing
-  // coefficients
-  void calculatePressureCoeff(const Patch* patch,
-                              CellInformation* cellinfo,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars); 
-
-  ////////////////////////////////////////////////////////////////////////
-  // Modify stencil weights (Pressure) to account for voidage due
-  // to multiple materials
-  void mmModifyPressureCoeffs(const Patch* patch,
-                              ArchesVariables* vars,
-                              ArchesConstVariables* constvars);
-
-  ////////////////////////////////////////////////////////////////////////
   // Set stencil weights. (Scalars)
   // It uses second order hybrid differencing for computing
   // coefficients
