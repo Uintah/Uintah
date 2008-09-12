@@ -4,12 +4,14 @@
 #define Uintah_Components_Arches_PressureSolver_h
 
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Core/Geometry/IntVector.h>
+
 
 namespace Uintah {
 
@@ -171,10 +173,25 @@ private:
                            bool extraProjection,
                            bool d_EKTCorrection,
                            bool doing_EKT_now);
+                           
+  ////////////////////////////////////////////////////////////////////////
+  // Set stencil weights. (Pressure)
+  // It uses second order hybrid differencing for computing
+  // coefficients
+  void calculatePressureCoeff(const Patch* patch,
+                              CellInformation* cellinfo,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars); 
+
+  ////////////////////////////////////////////////////////////////////////
+  // Modify stencil weights (Pressure) to account for voidage due
+  // to multiple materials
+  void mmModifyPressureCoeffs(const Patch* patch,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars);
 
   ////////////////////////////////////////////////////////////////
   // addition of hydrostatic term to relative pressure
-
   void addHydrostaticTermtoPressure(const ProcessorGroup* pc,
                                     const PatchSubset* patches,
                                     const MaterialSubset* matls,
