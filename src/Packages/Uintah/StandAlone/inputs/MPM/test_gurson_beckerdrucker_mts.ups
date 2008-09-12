@@ -20,7 +20,7 @@
     <initTime>0.0</initTime>
     <delt_min>1.0e-16</delt_min>
     <delt_max>1.0e-6</delt_max>
-    <timestep_multiplier>0.8</timestep_multiplier>
+    <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
   <DataArchiver>
