@@ -30,7 +30,6 @@
 using namespace Uintah;
 using namespace std;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/add_hydrostatic_term_topressure_fort.h>
 
 // ****************************************************************************
 // Default constructor for PressureSolver
@@ -581,6 +580,7 @@ PressureSolver::sched_addHydrostaticTermtoPressure(SchedulerP& sched,
 
 // ****************************************************************************
 // Actual addition of hydrostatic term to relative pressure
+// This routine assumes that the location of the reference pressure is at (0.0,0.0,0.0)
 // ****************************************************************************
 void 
 PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
@@ -626,18 +626,20 @@ PressureSolver::addHydrostaticTermtoPressure(const ProcessorGroup*,
       new_dw->getModifiable(pPlusHydro,  d_lab->d_pressPlusHydroLabel,indx, patch);
     }
 
-    IntVector valid_lo = patch->getFortranCellLowIndex__New();
-    IntVector valid_hi = patch->getFortranCellHighIndex__New();
-
+    //__________________________________
     int mmwallid = d_boundaryCondition->getMMWallId();
 
     pPlusHydro.initialize(0.0);
 
-    fort_add_hydrostatic_term_topressure(pPlusHydro, prel, denMicro,
-                                         gx, gy, gz, cellinfo->xx,
-                                         cellinfo->yy, cellinfo->zz,
-                                         valid_lo, valid_hi,
-                                         cellType, mmwallid);
+    for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) { 
+      IntVector c = *iter;
+      double xx = cellinfo->xx[c.x()];
+      double yy = cellinfo->yy[c.y()];
+      double zz = cellinfo->zz[c.z()];
+      if( cellType[c] != mmwallid){
+        pPlusHydro[c] = prel[c] + denMicro[c] * (gx * xx + gy * yy + gz * zz);
+      }
+    }
   }
 }
 
