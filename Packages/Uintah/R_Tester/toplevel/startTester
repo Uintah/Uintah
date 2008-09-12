@@ -21,6 +21,8 @@ NOTESTS="0"
 MONTHLYBACKUP="no"
 mallocstrict="no"
 USER=""
+DO_DBG="1"
+DO_OPT="1"
 
 BUILD_DIR=/home/csafe/csafe-tester/"$OS"
 TEST_DATA=/home/csafe/csafe-tester/"$OS"/TestData
@@ -104,6 +106,14 @@ while [ "$#" -gt 0 ]; do
     -build_only)
         NOTESTS="1"
         ;;
+    -dbg_only)
+        DO_DBG="1"
+        DO_OPT="0"
+        ;;
+    -opt_only)
+        DO_DBG="0"
+        DO_OPT="1"
+        ;;
     -monthlybackup)
         MONTHLYBACKUP="1"
         ;;
@@ -149,6 +159,8 @@ if [ $show_help != "0" ]; then
             -use_tree "tree":       Use the given tree instead of checking one out
             -use_prevtree:          Use the previous (last_ran.lock) checkout and/or build
             -build_only:            Test the compilation only.  Don\'t run the tests.
+            -dbg_only:              Only run debug tests.
+            -opt_only:              Only run optimized tests.
             -no_compile:            Run the tests only; assume the build is already done.
             -verbose:               Display verbose output
             -weekly:                Run longer regression tests (meant for once a week)
@@ -359,7 +371,7 @@ echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 
 PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
-export PATH DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
+export PATH DO_DBG DO_OPT DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
 
 if [ $VERBOSE == "yes" ]; then
    echo "Running Tests"
