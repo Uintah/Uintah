@@ -5,7 +5,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/fortran
 
 SRCS += \
-	$(SRCDIR)/add_hydrostatic_term_topressure.F \
 	$(SRCDIR)/add_mm_enth_src.F \
 	$(SRCDIR)/apcal_all.F \
 	$(SRCDIR)/areain.F \
@@ -66,7 +65,6 @@ LIBS := $(F_LIBRARY) $(M_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 
-$(SRCDIR)/add_hydrostatic_term_topressure.$(OBJEXT): $(SRCDIR)/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/add_mm_enth_src.$(OBJEXT): $(SRCDIR)/add_mm_enth_src_fort.h
 $(SRCDIR)/apcal_all.$(OBJEXT): $(SRCDIR)/apcal_all_fort.h
 $(SRCDIR)/areain.$(OBJEXT): $(SRCDIR)/areain_fort.h
