@@ -2,14 +2,7 @@
 #ifndef Uintah_Components_Arches_LinearSolver_h
 #define Uintah_Components_Arches_LinearSolver_h
 
-#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-
-#include <Core/Containers/Array1.h>
 
 namespace Uintah {
 
