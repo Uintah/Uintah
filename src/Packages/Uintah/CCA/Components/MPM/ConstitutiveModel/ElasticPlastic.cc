@@ -1174,6 +1174,10 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         de_s = 0.;
       }
 
+      // Calculate Tdot due to artificial viscosity
+      double Tdot_AV = de_s/state->specificHeat;
+      //pdTdt[idx] += Tdot_AV;
+
       Matrix3 tensorHy = one*p;
    
       // Calculate the total stress
@@ -1239,10 +1243,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Calculate Tdot (internal plastic heating rate)
         double Tdot_PW = state->yieldStress*state->plasticStrainRate*fac;
 
-        // Calculate Tdot due to artificial viscosity
-        double Tdot_AV = de_s/state->specificHeat;
-
-        pdTdt[idx] = (Tdot_PW /*+ Tdot_AV*/)*d_isothermal;
+        pdTdt[idx] += (Tdot_PW)*d_isothermal;
       }
 
       //-----------------------------------------------------------------------
