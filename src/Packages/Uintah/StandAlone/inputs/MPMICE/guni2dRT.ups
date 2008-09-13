@@ -79,7 +79,7 @@
               <lower>        [ 0.0,     0.0,     0.0      ]    </lower>
               <upper>        [ 0.08636, 0.08636, 0.0016933]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
+              <patches>      [2,2,1]    </patches>
               <resolution>   [51, 51, 1]                 </resolution>
            </Box>
        </Level>
@@ -142,7 +142,7 @@
         <minimum_particle_mass>3.e-15</minimum_particle_mass>
         <maximum_particle_velocity>3.e4</maximum_particle_velocity>
         <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
-        <artificial_viscosity>           false      </artificial_viscosity>
+        <artificial_viscosity>           true       </artificial_viscosity>
         <accumulate_strain_energy>       false      </accumulate_strain_energy>
         <use_load_curves>                false      </use_load_curves>
         <erosion algorithm = "none"/>
