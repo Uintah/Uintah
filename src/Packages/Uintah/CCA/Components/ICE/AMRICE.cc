@@ -92,7 +92,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     name  = input["name"];
     value = input["value"];
     matl  = input["matl"];
-    
+  
     stringstream n_ss(name);
     stringstream v_ss(value);
     stringstream m_ss(matl);
@@ -101,7 +101,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     v_ss >> data.value;
     m_ss >> data.matl;
     
-    if( !n_ss || !v_ss || !m_ss ) {
+    if( !n_ss || !v_ss || (!m_ss && matl!="all") ) {
       printf( "WARNING: AMRICE.cc: stringstream failed...\n" );
     }
 
