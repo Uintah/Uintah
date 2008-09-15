@@ -4669,29 +4669,20 @@ if test "$with_glew"; then
     AC_MSG_WARN(GLEW is already required - you do not need to specify --with-glew.)
   else
     _sci_lib="$with_glew"
-    _sci_lib="$with_glew/include"
+    _sci_inc="$with_glew/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
   fi 
 fi
 
-# First find the opengl headers and libraries
-if test "$with_opengl"; then
-  _sci_lib="$_sci_lib $with_opengl/lib"
-  _sci_inc="$_sci_inc $with_opengl/include"
-else
-  _sci_lib_t="/usr/X11R6"
-  BASE_LIB_PATH(_sci_lib_t,$_sci_lib_t)
-  _sci_lib="$_sci_lib $_sci_lib_t"
-  _sci_inc="$_sci_inc /usr/X11R6/include"
-fi
-
 if test "$IS_WIN" = "yes"; then
   SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/wglew.h,
-                $_sci_inc, glew32,$_sci_lib,,,optional)
+                $_sci_inc, glew32,$_sci_lib,$GL_LIB_DIR_FLAG $GL_LIB_FLAG,,
+                optional)
 else
   SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/glxew.h,
-                $_sci_inc, GLEW,$_sci_lib,,,$_sci_optional)
+               $_sci_inc, GLEW,$_sci_lib,$GL_LIB_DIR_FLAG $GL_LIB_FLAG,,
+               $_sci_optional)
 fi
 
 if test "$HAVE_GLEW" = "yes"; then
