@@ -21,7 +21,7 @@ if [ ! -f $NODESFILE ] ; then
   exit
 fi
 
-NODES=`cat $NODESFILE | uniq`
+NODES=`cat $NODESFILE | cut -f 1 -d " "| uniq`
 
 DIR=`pwd`
 
@@ -32,12 +32,17 @@ echo "quit" >> .gdbcommands
 
 
 #remove any left over files from the past.
-rm -f .stack.*.*
+for file in .stack.*.*; do
+  rm $file &> /dev/null
+done
 
 echo "Starting stack trace command on nodes"
 
+numnodes=`echo "$NODES" | wc -l`
+echo "Number of nodes: $numnodes"
 for node in $NODES
 do
+  echo "Running stack trace commands on node: $node" >&2
   #get processors matching command name
   PSOUT=`ssh $node "ps -o pid,command x | grep $PROCESS | grep -v grep | grep -v bash | grep -v ssh | grep -v ibrun"`
   #extract pids
@@ -45,6 +50,7 @@ do
   for pid in $PIDS
   do
     COMMAND="cd $DIR && echo 'y' | $DB  -gdb -pid $pid -command .gdbcommands 2> /dev/null"
+    #echo "Running command '$COMMAND'" >&2
     #execute gdb
     #ssh $node "$COMMAND" > .stack.$node.$pid &
     ssh $node "$COMMAND" 2> /dev/null 1> .stack.$node.$pid &
@@ -55,11 +61,12 @@ echo "Waiting for commands to finish"
 
 wait
 #combine results
+
 for file in .stack.*.*
 do
-  cat $file 
+  cat $file
+  rm $file
 done
 
 #remove left over files
-rm -f .stack.*.*
 rm -f .gdbcommands
