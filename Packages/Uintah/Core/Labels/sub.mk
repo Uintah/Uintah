@@ -7,7 +7,8 @@ SRCDIR   := Packages/Uintah/Core/Labels
 SRCS     += \
 	$(SRCDIR)/ICELabel.cc \
 	$(SRCDIR)/MPMLabel.cc \
-	$(SRCDIR)/MPMICELabel.cc
+	$(SRCDIR)/MPMICELabel.cc \
+	$(SRCDIR)/AngioLabel.cc
 
 PSELIBS := \
 	Core/Exceptions \

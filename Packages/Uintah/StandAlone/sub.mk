@@ -63,6 +63,7 @@ ifeq ($(SET_AIX_LIB),yes)
         Packages/Uintah/CCA/Components/SimulationController \
         Packages/Uintah/CCA/Components/Solvers              \
         Packages/Uintah/CCA/Components/Examples          \
+        Packages/Uintah/CCA/Components/Angio             \
         $(ARCHES_LIBS)                                   \
         $(MPMARCHES_LIB)                                 \
         $(MPM_LIB)                                       \
