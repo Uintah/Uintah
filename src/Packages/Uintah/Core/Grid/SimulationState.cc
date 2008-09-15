@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/Angio/AngioMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
@@ -33,7 +34,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 				       CCVariable<int>::getTypeDescription());
    refinePatchFlag_label = VarLabel::create("refinePatchFlag",
 				       PerPatch<int>::getTypeDescription());
-   switch_label = VarLabel::create("switchFlag", max_vartype::getTypeDescription());
+   switch_label = VarLabel::create("switchFlag", 
+                                   max_vartype::getTypeDescription());
    d_ref_press = 0.0;
    d_elapsed_time = 0.0;
    d_needAddMaterial = 0;
@@ -55,11 +57,12 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   if(cfd_ps){
     ProblemSpecP ice_ps=cfd_ps->findBlock("ICE");
     if(ice_ps && d_ref_press == 0.0){
-      throw ProblemSetupException("\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
-                                 " This pressure is used during the problem intialization and when\n"
-                                  " the pressure gradient is interpolated to the MPM particles \n"
-                                  " you must have it for all MPMICE and multimaterial ICE problems\n",
-                                  __FILE__, __LINE__);  
+      throw ProblemSetupException(
+       "\n Could not find <reference_pressure> inside of <PhysicalConstants> \n"
+       " This pressure is used during the problem intialization and when\n"
+       " the pressure gradient is interpolated to the MPM particles \n"
+       " you must have it for all MPMICE and multimaterial ICE problems\n",
+       __FILE__, __LINE__);  
     }
   }
 
@@ -69,6 +72,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     amr->get("useLockStep", d_lockstepAMR);
 
   all_mpm_matls = 0;
+  all_angio_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
   all_matls = 0;
@@ -140,6 +144,19 @@ void SimulationState::registerMPMMaterial(MPMMaterial* matl,unsigned int index)
   registerMaterial(matl,index);
 }
 
+void SimulationState::registerAngioMaterial(AngioMaterial* matl)
+{
+  angio_matls.push_back(matl);
+  registerMaterial(matl);
+}
+
+void SimulationState::registerAngioMaterial(AngioMaterial* matl,
+                                            unsigned int index)
+{
+  angio_matls.push_back(matl);
+  registerMaterial(matl,index);
+}
+
 void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
 {
    arches_matls.push_back(matl);
@@ -175,6 +192,16 @@ void SimulationState::finalizeMaterials()
     tmp_mpm_matls[i] = mpm_matls[i]->getDWIndex();
   }
   all_mpm_matls->addAll(tmp_mpm_matls);
+  
+  if (all_angio_matls && all_angio_matls->removeReference())
+    delete all_angio_matls;
+  all_angio_matls = scinew MaterialSet();
+  all_angio_matls->addReference();
+  vector<int> tmp_angio_matls(angio_matls.size());
+  for( int i=0; i<(int)angio_matls.size(); i++ ) {
+    tmp_angio_matls[i] = angio_matls[i]->getDWIndex();
+  }
+  all_angio_matls->addAll(tmp_angio_matls);
   
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
@@ -245,6 +272,9 @@ void SimulationState::clearMaterials()
   if(all_mpm_matls && all_mpm_matls->removeReference())
     delete all_mpm_matls;
 
+  if(all_angio_matls && all_angio_matls->removeReference())
+    delete all_angio_matls;
+
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
 
@@ -257,6 +287,7 @@ void SimulationState::clearMaterials()
 
   matls.clear();
   mpm_matls.clear();
+  angio_matls.clear();
   arches_matls.clear();
   ice_matls.clear();
   simple_matls.clear();
@@ -266,6 +297,7 @@ void SimulationState::clearMaterials()
 
   all_matls = 0;
   all_mpm_matls = 0;
+  all_angio_matls = 0;
   all_arches_matls = 0;
   all_ice_matls = 0;
   allInOneMatl = 0;
@@ -288,14 +320,18 @@ SimulationState::~SimulationState()
 
   if(orig_all_matls && orig_all_matls->removeReference())
     delete orig_all_matls;
-  
-
 }
 
 const MaterialSet* SimulationState::allMPMMaterials() const
 {
   ASSERT(all_mpm_matls != 0);
   return all_mpm_matls;
+}
+
+const MaterialSet* SimulationState::allAngioMaterials() const
+{
+  ASSERT(all_angio_matls != 0);
+  return all_angio_matls;
 }
 
 const MaterialSet* SimulationState::allArchesMaterials() const

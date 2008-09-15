@@ -39,6 +39,7 @@ SUBDIRS := \
         $(MPMICE)         \
         $(ARCHES)         \
         $(MPMARCHES)      \
+        $(SRCDIR)/Angio   \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \

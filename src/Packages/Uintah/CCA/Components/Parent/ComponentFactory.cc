@@ -18,6 +18,7 @@
 #include <Packages/Uintah/CCA/Components/Examples/ParticleTest1.h>
 #include <Packages/Uintah/CCA/Components/Examples/RegridderTest.h>
 #include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
+#include <Packages/Uintah/CCA/Components/Angio/Angio.h>
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
@@ -121,6 +122,9 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
     return scinew Poisson3(world);
   } 
+  if (sim_comp == "angio") {
+    return scinew Angio(world);
+  } 
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
@@ -138,6 +142,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   } 
 
   throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, or -poisson3"
+                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -angio"
                               "\nMake sure that component is supported in this build", __FILE__, __LINE__);
 }
