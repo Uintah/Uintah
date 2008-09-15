@@ -1289,9 +1289,6 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
         p_q[idx] = 0.;
         de_s = 0.;
       }
-//      if(fabs(de_s)>0.){
-//        cout << de_s/state->specificHeat << " " << pdTdt[idx] << endl;
-//      }
 //      pdTdt[idx] += de_s/state->specificHeat;
     }  // end loop over particles
 
