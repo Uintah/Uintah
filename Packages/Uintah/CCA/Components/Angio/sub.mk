@@ -10,9 +10,20 @@ SRCS     += \
 	$(SRCDIR)/AngioFlags.cc  \
 	$(SRCDIR)/Angio.cc	
 
-PSELIBS := Packages/Uintah/Core/Grid \
-	Core/Datatypes \
-	Core/Util
+PSELIBS := \
+	Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/Core/Grid        \
+	Packages/Uintah/Core/Util        \
+	Packages/Uintah/Core/Disclosure  \
+	Packages/Uintah/Core/Labels      \
+	Packages/Uintah/Core/ProblemSpec \
+	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/GeometryPiece  \
+	Packages/Uintah/Core/Math        \
+	Core/Exceptions Core/Thread      \
+	Core/Geometry Core/Util          \
+	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
