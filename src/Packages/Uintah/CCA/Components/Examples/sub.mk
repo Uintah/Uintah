@@ -10,6 +10,7 @@ SRCS     += \
 	$(SRCDIR)/Poisson1.cc \
 	$(SRCDIR)/Poisson2.cc \
 	$(SRCDIR)/Burger.cc \
+	$(SRCDIR)/HeatEquation.cc \
 	$(SRCDIR)/Poisson3.cc \
 	$(SRCDIR)/ParticleTest1.cc \
 	$(SRCDIR)/Interpolator.cc \
