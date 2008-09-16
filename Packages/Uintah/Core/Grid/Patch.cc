@@ -326,7 +326,20 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray* bc)
  
 const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 {
-  return (*d_arrayBCS)[face];
+  if (d_arrayBCS) {
+    if ((*d_arrayBCS)[face]) {
+      return (*d_arrayBCS)[face];
+    } else {
+      ostringstream msg;
+      msg << "face = " << face << endl;
+      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
+                              __FILE__, __LINE__));
+    }
+  } else {
+    SCI_THROW(InternalError("d_arrayBCS has not been allocated",
+                            __FILE__, __LINE__));
+  }
+
 }
 
 
