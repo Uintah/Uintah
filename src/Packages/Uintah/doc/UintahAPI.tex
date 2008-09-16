@@ -1,0 +1,195 @@
+\documentclass[12pt]{report}
+\usepackage{listings}
+
+\begin{document}
+
+
+\title{Uintah Application Development}
+
+\author{John A. Schmidt}
+
+\maketitle
+
+
+\chapter{Uintah Software Components}
+
+Three software components need to be installed in order to develop and
+customize Uintah.  These include Thirdpary, SCIRun, and Uintah.
+Thirdparty is composed of several libraries needed to build the
+visualization tool, SCIRun.  SCIRun is a dataflow visualization tool
+which understands the data output format of Uintah.  And finally,
+Uintah is a framework for performed structured Adaptive Mesh
+Refinement calculations for partial differential equations.
+
+\subsection{Downloading the Software}
+
+Uintah/SCIRun can be obtained via svn from the following website:
+
+svn co https://code.sci.utah.edu/svn/SCIRun/trunk SCIRun
+
+The above command checks out the SCIRun source tree and installs it
+into a directory called SCIRun in the users home directory.
+
+The Thirdparty library can similarly be obtained via:
+
+svn co https://code.sci.utah.edu/svn/Thirdparty/1.25.4 Thirdparty
+
+The Thirdparty library source code is downloaded into a directory
+called Thirdparty.
+
+\subsection{Installing Thirdparty, SCIRun, and Uintah}
+
+\subsubsection{Thirdparty Install}
+
+
+Please read the README.txt found in ~/Thirdparty.
+
+Thirdparty should be installed in /usr/local/Thirdparty.  As root,
+create this directory:
+
+\# mkdir /usr/local/Thirdparty
+
+Chang to the Thirdparty directory you checked out, i.e. cd ~/Thirdparty
+
+After reading the README.txt file type the follow as the root user:
+
+32bit OS:
+
+\# ./install.sh /usr/local/Thirdparty/ 32
+
+64bit OS:
+
+\# ./install.sh /usr/local/Thirdparty/ 64
+
+
+\subsubsection{Configuring Uintah}
+
+cd to ~/SCIRun and create the following directories: dbg and opt
+
+cd to dbg and type the following to configure for a debug build:
+
+\begin{verbatim}
+./src/configure --enable-debug --enable-sci-malloc --enable-package=Uintah 
+--with-thirdparty=/usr/local/Thirdparty/1.25.5/Linux/gcc-4.3.1-2-32bit/
+\end{verbatim}
+
+Then build the software by typing \texttt{make} at the command
+line. Once the debug build has finished which can take roughly an hour
+on a single processor Pentium IV computer, cd to the opt/ and type the
+following to configure for an optimized build:
+
+\begin{verbatim}
+./src/configure '--enable-optimze=-march=pentium4 -msse -msse2 
+-mfpmath=sse -03' --disable-sci-malloc --enable-assertion-level=0 
+--enable-package=Uintah 
+--with-thirdparty=/usr/local/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-32bit/
+\end{verbatim}
+
+Then build the software by typing \texttt{make} at the command line
+
+
+\chapter{Overview of the Uintah Framework}
+
+The Uintah Computational Framework, i.e. Uintah consists of a set of
+software components and libraries that facilitate the solution of
+Partial Differential Equations (PDEs) on Structured AMR (SAMR) grids
+using hundreds to thousands of processors.
+
+One of the challenges in designing a parallel, component-based
+multi-physics application is determining how to efficiently decompose
+the problem domain. Components, by definition, make local
+decisions. Yet parallel efficiency is only obtained through a globally
+optimal domain decomposition and scheduling of computational
+tasks. Typical techniques include allocating disjoint sets of
+processing resources to each component, or defining a single domain
+decomposition that is a compromise between the ideal load balance of
+multiple components. However, neither of these techniques will achieve
+maximum efficiency for complex multi-physics problems.
+
+Uintah uses a non-traditional approach to achieving parallelism,
+employing an abstract taskgraph representation to describe computation
+and communication. The taskgraph is an explicit representation of the
+computation and communication that occur in the coarse of a single
+iteration of the simulation (typically a timestep or nonlinear solver
+iteration). Uintah components delegate decisions about parallelism to
+a scheduler component, using variable dependencies to describe
+communication patterns and characterizing computational workloads to
+facilitate a global resource optimization. The taskgraph
+representation has a number of advantages, including efficient
+fine-grained coupling of multi-physics components, flexible load
+balancing mechanisms and a separation of application concerns from
+parallelism concerns. However, it creates a challenge for scalability
+which we overcome by creating an implicit definition of this graph and
+representing it in a distributed fashion.
+
+The primary advantage of a component-based approach is that it
+facilitates the separate development of simulation algorithms, models,
+and infrastructure. Components of the simulation can evolve
+independently. The component-based architecture allows pieces of the
+system to be implemented in a rudimentary form at first and then
+evolve as the technologies mature. Most importantly, Uintah allows the
+aspects of parallelism (schedulers, load-balancers, parallel
+input/output, and so forth) to evolve independently of the simulation
+components. Furthermore, components enable replacement of computation
+pieces without complex decision logic in the code itself.
+
+\section{Scheduler}
+
+The Scheduler in Uintah is responsible for determining the order of
+tasks and ensuring that the correct inter-processor data is made
+available when necessary. Each software component passes a set of
+tasks to the scheduler. Each task is responsible for computing some
+subset of variables, and may require previously computed variables,
+possibly from different processors. The scheduler will then compile
+this task information into a task graph, and the task graph will
+contain a sorted order of tasks, along with any information necessary
+to perform inter-process communication via MPI. Then, when the
+scheduler is executed, the tasks will execute in the pre-determined
+order.
+
+\section{Tasks}
+
+A task contains two essential components: a pointer to a function
+that performs the actual computations, and the data inputs and
+outputs, i.e. the data dependencies required by the function.  When a
+task requests a previously computed variable from the data warehouse,
+the number of ghost cells are also specified.  The Unitah framework
+uses the ghost cell information to excecute inter-process
+communication to retrieve the necessary ghost cell data.
+
+An example of a task description is presented showing the essential
+features that are commonly used by the application developer when
+implementing an algorithm within the Uintah framework.  The task
+component is assigned a name and in this particular example, it is
+called \texttt{taskexample} and a funtion pointer,
+\texttt{\&Example::taskexample}.  Following the instantiation of the
+task itself, the dependency information is assigned to the tasks.  In
+the following example, the task requires data from the previous
+timestep (\texttt{Task::OldDW}) associated with the name
+variable1\_label and requires one ghost node
+(\texttt{Ghost::AroundNodes,1}) level of information which will be
+retrieved from another processor via MPI.  In addition, the task will
+compute two new pieces of data each associated with different
+variables, i.e. \texttt{variable1\_label}, and
+\texttt{variable2\_label}.  Finally, the task is added to the scheduler
+component with specifications about what patches and materials are
+associated with the actual computation.
+
+\begin{verbatim}
+
+Task* task = scinew Task("Example::taskexample",this,&Example::taskexample);
+task->requires(Task::OldDW, variable1_label, Ghost::AroundNodes, 1);
+task->computes(variable1_label);
+task->computes(variable2_label);
+sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+
+
+\end{verbatim}
+
+
+
+
+\end{document}
+
+
+
