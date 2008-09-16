@@ -1,6 +1,6 @@
 
-#ifndef Packages_Uintah_CCA_Components_Examples_Burger_h
-#define Packages_Uintah_CCA_Components_Examples_Burger_h
+#ifndef Packages_Uintah_CCA_Components_Examples_HeatEquation_h
+#define Packages_Uintah_CCA_Components_Examples_HeatEquation_h
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
@@ -10,45 +10,44 @@
 #include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
+  class ExamplesLabel;
 
 /**************************************
 
 CLASS
-   Burger
+   HeatEquation
    
-   Burger simulation
+   HeatEquation simulation
 
 GENERAL INFORMATION
 
-   Burger.h
+   HeatEquation.h
 
-   Nathan Lovell and Steven Parker
+   John Schmidt
    Department of Computer Science
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
   
-   Copyright (C) 2002 SCI Group
+   Copyright (C) 2008 SCI Group
 
 KEYWORDS
-   Burger
+   HeatEquation
 
 DESCRIPTION
-   2D implementation of Burger's Algorithm using Euler's method.
-   Independent study for CS3200
+   Long description...
   
 WARNING
   
 ****************************************/
 
-
-  class UINTAHSHARE Burger : public UintahParallelComponent, public SimulationInterface {
+  class UINTAHSHARE HeatEquation : public UintahParallelComponent, public SimulationInterface {
   public:
-    Burger(const ProcessorGroup* myworld);
-    virtual ~Burger();
+    HeatEquation(const ProcessorGroup* myworld);
+    virtual ~HeatEquation();
 
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& restart_prob_spec,
+                              const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
     virtual void scheduleInitialize(const LevelP& level,
 				    SchedulerP& sched);
@@ -69,13 +68,20 @@ WARNING
 		     const MaterialSubset* matls,
 		     DataWarehouse* old_dw, DataWarehouse* new_dw);
 
-    const VarLabel* u_label;
+    void iterate(const ProcessorGroup*,
+		 const PatchSubset* patches,
+		 const MaterialSubset* matls,
+		 DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    const VarLabel* temperature_label;
+    const VarLabel* residual_label;
     SimulationStateP sharedState_;
     double delt_;
+    double maxresidual_;
     SimpleMaterial* mymat_;
 
-    Burger(const Burger&);
-    Burger& operator=(const Burger&);
+    HeatEquation(const HeatEquation&);
+    HeatEquation& operator=(const HeatEquation&);
 	 
   };
 }
