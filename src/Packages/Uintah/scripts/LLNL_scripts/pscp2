@@ -22,6 +22,14 @@ if ($#argv != 4) then
   exit 1
 endif
 
+if ( $?SSH ) then
+   echo ""
+   echo "Note: Using this ssh from environment var SSH: $SSH"
+   echo ""
+else
+   set SSH = ssh
+endif
+
 # Need /usr/bin/which as the shell which doesn't give us the full path...
 if ( ! -x /usr/bin/which ) then
   echo ""
@@ -32,6 +40,7 @@ endif
 
 set pscp2fulldir  = `/usr/bin/which $0`
 set pscp2dir      = `dirname $pscp2fulldir`
+
 set nproc         = $argv[1]
 set rmDir         = $argv[2]
 set localDir      = `basename $argv[3]`
@@ -68,42 +77,53 @@ if ( "$localDir" == "." ) then
   exit 1
 endif
 
-echo "  Test: does the local folder ($localDir) exist"
+echo -n "  Testing: does the local folder ($localDir) exist... "
 if ( ! -e $localDir ) then
   echo ""
-  echo "  ERROR: Local directory $localDir doesn't exist"
+  echo ""
+  echo "  ERROR: Local directory '$localDir' does not exist"
   echo ""
   exit 1
 endif
+echo "yes."
 
-echo "  Test: does $REMOTEDIR_TMP exists on the remote machine"
-set test = `ssh -x $LOGIN "if(-e $REMOTEDIR_TMP) echo true"`
-if ( $test != "true") then
+echo -n "  Testing: does $REMOTEDIR_TMP exists on the remote machine... "
+set test = `$SSH -x $LOGIN "if(-e $REMOTEDIR_TMP) echo true"`
+
+if ( "$test" != "true") then
+  echo ""
   echo ""
   echo "  ERROR:  The destination remote directory '$REMOTEDIR_TMP' does not exist..."
   echo "          Are you sure you typed it in correctly?"
   echo ""
+  echo "           NOTE: result of ssh test was: '$test'"
+  echo ""
   exit
 endif
+echo "yes."
 
-echo "  Test: passwordless access..."
-set test = `ssh -x $LOGIN "echo 'password_access_works'"`
+echo -n "  Testing: does passwordless access work... "
+set test = `$SSH -x $LOGIN "echo 'password_access_works'"`
 if ( $test != "password_access_works" ) then
+  echo ""
   echo ""
   echo "  ERROR: Passwordless access is not working."
   echo "         You must be able to login into the $remote_machine without a password for this script to work"
   echo ""
   exit
 endif
+echo "yes."
 
-echo "  Test: Do we know about the remote operating system?"
-set OS = `ssh -x $LOGIN uname`
-if ( $OS != "Linux" && $OS != "IRIX64" ) then
+echo -n "  Testing: Do we know about the remote operating system?... "
+set OS = `$SSH -x $LOGIN uname`
+if ( "$OS" != "Linux" && "$OS" != "IRIX64" && "$OS" != "Darwin" ) then
   echo ""
-  echo "  ERROR: There is no pscp_driver for this operating system: $OS"
+  echo ""
+  echo "  ERROR: There is no pscp_driver for this operating system: '$OS'"
   echo ""
   exit
 endif
+echo "yes."
 
 echo "_____________________________________"
 #--------------------------------------------------------------------------
@@ -114,10 +134,10 @@ echo "Now removing stamp directory"
 # remove the remote directory
 if( $rmDir == "y" || $rmDir == "Y" ) then
   echo "Now removing $localDir from $remote_machine if it exists"
-  ssh -x $LOGIN "cd $REMOTEDIR_TMP; /bin/rm -rf $localDir; mkdir $localDir"
+  $SSH -x $LOGIN "cd $REMOTEDIR_TMP; /bin/rm -rf $localDir; mkdir $localDir"
 else
-  echo "ssh -x $LOGIN 'cd $REMOTEDIR_TMP; mkdir `basename $localDir`'"
-  ssh -x $LOGIN "cd $REMOTEDIR_TMP; mkdir `basename $localDir`"
+  echo "$SSH -x $LOGIN 'cd $REMOTEDIR_TMP; mkdir `basename $localDir`'"
+  $SSH -x $LOGIN "cd $REMOTEDIR_TMP; mkdir `basename $localDir`"
 endif
 
 cd $localDir
@@ -148,4 +168,14 @@ endif
 xterm -bg "DarkSlateGray" -fg "orange" -e $EDITOR $PSCP_FILES
 chmod ug+rw $PSCP_FILES
  
+echo
+echo -n "Starting at: "
+date
+echo
+
 /usr/bin/time -p gmake TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc
+
+echo
+echo -n "Ending at: "
+date
+echo
