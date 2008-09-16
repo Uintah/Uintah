@@ -40,7 +40,6 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
         $(SRCDIR)/DenseColMajMatrix.cc          \
         $(SRCDIR)/DenseMatrix.cc                \
         $(SRCDIR)/Field.cc                      \
-        $(SRCDIR)/FieldInterfaceAux.cc          \
         $(SRCDIR)/Image.cc                      \
         $(SRCDIR)/Matrix.cc                     \
         $(SRCDIR)/MatrixOperations.cc           \
@@ -50,15 +49,7 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
         $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
         $(SRCDIR)/String.cc                     \
-        $(SRCDIR)/TypeName.cc                   \
-        $(SRCDIR)/cd_templates.cc               \
-        $(SRCDIR)/cd_templates_fields_0.cc      \
-        $(SRCDIR)/cd_templates_fields_1.cc      \
-        $(SRCDIR)/cd_templates_fields_2.cc      \
-        $(SRCDIR)/cd_templates_fields_3.cc      \
-        $(SRCDIR)/cd_templates_fields_4.cc      \
-        $(SRCDIR)/cd_templates_fields_5.cc      \
-        $(SRCDIR)/cd_templates_fields_6.cc      \
+        $(SRCDIR)/TypeName.cc                   
 
 
 PSELIBS := \
@@ -72,6 +63,16 @@ PSELIBS := \
         Core/Util         
 
 ifeq ($(BUILD_DATAFLOW),yes)
+  SRCS    += \
+	$(SRCDIR)/FieldInterfaceAux.cc          \
+        $(SRCDIR)/cd_templates.cc               \
+        $(SRCDIR)/cd_templates_fields_0.cc      \
+        $(SRCDIR)/cd_templates_fields_1.cc      \
+        $(SRCDIR)/cd_templates_fields_2.cc      \
+        $(SRCDIR)/cd_templates_fields_3.cc      \
+        $(SRCDIR)/cd_templates_fields_4.cc      \
+        $(SRCDIR)/cd_templates_fields_5.cc      \
+        $(SRCDIR)/cd_templates_fields_6.cc      \
   PSELIBS += Core/GuiInterface
 endif
 
