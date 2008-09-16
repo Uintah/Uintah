@@ -47,19 +47,32 @@ Please read the README.txt found in ~/Thirdparty.
 Thirdparty should be installed in /usr/local/Thirdparty.  As root,
 create this directory:
 
-\# mkdir /usr/local/Thirdparty
+\begin{verbatim}
+
+     \# mkdir /usr/local/Thirdparty
+
+\end{verbatim}
 
 Chang to the Thirdparty directory you checked out, i.e. cd ~/Thirdparty
 
 After reading the README.txt file type the follow as the root user:
 
-32bit OS:
+\textbf{32bit OS:}
 
-\# ./install.sh /usr/local/Thirdparty/ 32
+\begin{verbatim}
 
-64bit OS:
+      \# ./install.sh /usr/local/Thirdparty/ 32
 
-\# ./install.sh /usr/local/Thirdparty/ 64
+\end{verbatim}
+
+\textbf{64bit OS:}
+
+
+\begin{verbatim}
+
+      \# ./install.sh /usr/local/Thirdparty/ 64
+
+\end{verbatim}
 
 
 \subsubsection{Configuring Uintah}
@@ -179,10 +192,10 @@ associated with the actual computation.
 
 Task* task = scinew Task("Example::taskexample",this,
                          &Example::taskexample);
-task->requires(Task::OldDW, variable1_label, Ghost::AroundNodes, 1);
-task->computes(variable1_label);
-task->computes(variable2_label);
-sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+task->requires(Task::OldDW, variable1\_label, Ghost::AroundNodes, 1);
+task->computes(variable1\_label);
+task->computes(variable2\_label);
+sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
 
 \end{verbatim}
 
@@ -211,7 +224,7 @@ class Example : public UintahParallelComponent, public SimulationInterface {
   public:
 
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& restart_prob_spec, 
+                              const ProblemSpecP& restart\_prob\_spec, 
                               GridP& grid, SimulationStateP&);
 
     virtual void scheduleInitialize(const LevelP& level,SchedulerP& sched);
@@ -229,21 +242,21 @@ class Example : public UintahParallelComponent, public SimulationInterface {
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, 
                     const MaterialSubset* matls,
-                    DataWarehouse* old_dw, 
-                    DataWarehouse* new_dw);
+                    DataWarehouse* old\_dw, 
+                    DataWarehouse* new\_dw);
                     
                     
     void computeStableTimestep(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+                               DataWarehouse* old\_dw,
+                               DataWarehouse* new\_dw);
                                
     void timeAdvance(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                     DataWarehouse* old\_dw,
+                     DataWarehouse* new\_dw);
 
 }
 
@@ -280,13 +293,14 @@ setup the problem.
 The purpose of this method is to initialize the grid data with values
 read in from the problemSetup and to define what variables are
 actually computed in the TimeAdvance stage of the simulation.  A task
-is defined which references a function pointer called Initialize.
+is defined which references a function pointer called
+\texttt{initialize}.
 
 \subsubsection{ScheduleComputeStableTimestep}
 
 The purpose of this method is to compute the next timestep in the
 simulation.  A task is defined which references a function pointer
-called ComputeStableTimestep.
+called \texttt{computeStableTimestep}.
 
 \subsubsection{ScheduleTimeAdvance}
 
@@ -311,7 +325,17 @@ timestep in the simulation.
 \chapter{Examples}
 
 
-All examples are found in the directory SCIRun/src/Packages/Uintah/CCA/Components/Examples
+This chapter will describe a set of example problems showing various
+stages of algorithm complexity and how the Uintah framework is used to
+solve the discretized form of the solutions.  Emphasis will not be on
+the most efficient or fast algorithms, but intead will demonstrate
+straightforward implementations of well known algorithms within the
+Uintah Framework.  Several examples will be given that show an
+increasing level of complexity that will serve as a guide to others
+interested in implmenting structured AMR algorithms for PDEs.
+
+All examples described are found in the directory
+\emph{SCIRun/src/Packages/Uintah/CCA/Components/Examples}
 
 \section{Poisson1}
 
@@ -324,7 +348,8 @@ bearing on the actual computation.
 
 The following equation is discretized and solved using an iterative
 method. Each timestep is one iteration. At the end of the timestep, we
-compute the residual and determine if we should continue in time.
+the residual is computed showing the convergence of the solution and
+the next iteration is computed until.
 
 The following shows a simplified form of the Poisson1 of the .h and
 .cc files found in the Examples directory.  The argument list for some
@@ -339,7 +364,7 @@ class Poisson1 : public UintahParallelComponent, public SimulationInterface {
     virtual ~Poisson1();
 
     virtual void problemSetup(const ProblemSpecP& params,
-                              const ProblemSpecP& restart_prob_spec,
+                              const ProblemSpecP& restart\_prob\_spec,
                               GridP& grid, SimulationStateP&);
     virtual void scheduleInitialize(const LevelP& level,SchedulerP& sched);
 
@@ -349,106 +374,143 @@ class Poisson1 : public UintahParallelComponent, public SimulationInterface {
 
   private:
     void initialize(const ProcessorGroup*, const PatchSubset* patches,
-                    const MaterialSubset* matls, DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
+                    const MaterialSubset* matls, DataWarehouse* old\_dw,
+                    DataWarehouse* new\_dw);
 
     void computeStableTimestep(const ProcessorGroup*,const PatchSubset* patches,
-                               const MaterialSubset* matls,DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
+                               const MaterialSubset* matls,DataWarehouse* old\_dw,
+                               DataWarehouse* new\_dw);
 
 
     void timeAdvance(const ProcessorGroup,const PatchSubset* patches,
-                     const MaterialSubset* matls,DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                     const MaterialSubset* matls,DataWarehouse* old\_dw,
+                     DataWarehouse* new\_dw);
 
-    SimulationStateP sharedState_;
-    double delt_;
-    const VarLabel* phi_label;
-    const VarLabel* residual_label;
-    SimpleMaterial* mymat_;
+    SimulationStateP sharedState\_;
+    double delt\_;
+    const VarLabel* phi\_label;
+    const VarLabel* residual\_label;
+    SimpleMaterial* mymat\_;
 
     Poisson1(const Poisson1&);
     Poisson1& operator=(const Poisson1&);
 };
 \end{verbatim}
 
-The private methods and data shown are the functions that are function pointers referred to in the task descriptions.  The VarLabel data type stores the names of the various data that can be referenced uniquely by the data warehouse.  The SimulationStateP data type is essentially a global variable that stores information about the materials that are needed by other internal Uintah framework components.  SimpleMaterial is a data type that refers to the material properties.   
+The private methods and data shown are the functions that are function
+pointers referred to in the task descriptions.  The \texttt{VarLabel}
+data type stores the names of the various data that can be referenced
+uniquely by the data warehouse.  The \texttt{SimulationStateP} data
+type is essentially a global variable that stores information about
+the materials that are needed by other internal Uintah framework
+components.  \texttt{SimpleMaterial} is a data type that refers to the
+material properties.
 
-Within each schedule function, i.e. sheduleInitialize, scheduleComputeStableTimestep, and scheduleTimeAdvance, a task is specified that has a function pointer associated with it.  The function pointers point to the actual implementation of the specific task and have a different argument list than the associated schedule method.
+Within each schedule function, i.e. \texttt{sheduleInitialize},
+\texttt{scheduleComputeStableTimestep}, and
+\texttt{scheduleTimeAdvance}, a task is specified that has a function
+pointer associated with it.  The function pointers point to the actual
+implementation of the specific task and have a different argument list
+than the associated schedule method.
 
-The typical task implementation, i.e. timeAdvance() contains the following arguments: ProcessorGroup, PatchSubset, MaterialSubset, and two DataWarehouse objects.  The purpose of the ProcessorGroup is to hold various MPI information such as the MPI_Communicator, the rank of the process and the number of processes that are actually being used.   
+The typical task implementation, i.e. \texttt{timeAdvance()} contains
+the following arguments: \texttt{ProcessorGroup},
+\texttt{PatchSubset}, \texttt{MaterialSubset}, and two
+\texttt{DataWarehouse} objects.  The purpose of the
+\texttt{ProcessorGroup} is to hold various MPI information such as the
+\texttt{MPI\_Communicator}, the rank of the process and the number of
+processes that are actually being used.
 
-Description of Scheduling Functions
+\subsection{Description of Scheduling Functions}
 
-The actual implementation with descriptions are presented following the code snippets.
+The actual implementation with descriptions are presented following
+the code snippets.
 
-
+\begin{verbatim}
 Poisson1::Poisson1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  phi_label = VarLabel::create("phi", 
+  phi\_label = VarLabel::create("phi", 
                                NCVariable<double>::getTypeDescription());
-  residual_label = VarLabel::create("residual", 
-                                    sum_vartype::getTypeDescription());
+  residual\_label = VarLabel::create("residual", 
+                                    sum\_vartype::getTypeDescription());
 
 }
 
 Poisson1::~Poisson1()
 {
-  VarLabel::destroy(phi_label);
-  VarLabel::destroy(residual_label);
+  VarLabel::destroy(phi\_label);
+  VarLabel::destroy(residual\_label);
 }
 
-Typical constructor and destructor for simple examples where the data label names (phi and residual)  are created for data wharehouse storage and retrieval.  
+\end{verbatim}
 
+Typical constructor and destructor for simple examples where the data
+label names (\texttt{phi} and \texttt{residual}) are created for data
+wharehouse storage and retrieval.
 
+\begin{verbatim}
 void Poisson1::problemSetup(const ProblemSpecP& params,
-                            const ProblemSpecP& restart_prob_spec,
+                            const ProblemSpecP& restart\_prob\_spec,
                             GridP& /*grid*/,
                             SimulationStateP& sharedState)
 {
-  sharedState_ = sharedState;
+  sharedState\_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
 
-  poisson->require("delt", delt_);
+  poisson->require("delt", delt\_);
 
-  mymat_ = scinew SimpleMaterial();
+  mymat\_ = scinew SimpleMaterial();
 
-  sharedState->registerSimpleMaterial(mymat_);
+  sharedState->registerSimpleMaterial(mymat\_);
 }
+\end{verbatim}
 
-The problemSetup is based in a xml description of the input file.  The input file is parsed and the delt tag is set.  The sharedState is assigned and is used to register a material and store it for later use by the Uintah internals.
+The \texttt{problemSetup} is based in a xml description of the input
+file.  The input file is parsed and the delt tag is set.  The
+\texttt{sharedState} is assigned and is used to register a material
+and store it for later use by the Uintah internals.
 
-
+\begin{verbatim}
 void Poisson1::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
   Task* task = scinew Task("Poisson1::initialize",
                      this, &Poisson1::initialize);
 
-  task->computes(phi_label);
-  task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->computes(phi\_label);
+  task->computes(residual\_label);
+  sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
 }
+\end{verbatim}
 
+A task is defined which contains a name and a function pointer,
+i.e. \texttt{initialize} which is described later in Poisson1.cc The
+task defines two variables that are computed in the
+\texttt{initialize} function, \texttt{phi} and \texttt{residual}.  The
+task is then added to the scheduler.  This task is only computed once
+at the beginning of the simulation.
 
-A task is defined which contains a name and a function pointer, i.e. initialize which is described later in Poisson1.cc  The task defines two variables that are computed in the initialize function, phi and residual.  The task is then added to the scheduler.  This task is only computed once at the beginning of the simulation.
-
-
+\begin{verbatim}
 void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {
   Task* task = scinew Task("Poisson1::computeStableTimestep",
                      this, &Poisson1::computeStableTimestep);
 
-  task->requires(Task::NewDW, residual_label);
-  task->computes(sharedState_->get_delt_label());
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->requires(Task::NewDW, residual\_label);
+  task->computes(sharedState\_->get\_delt\_label());
+  sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
 }
 
+\end{verbatim}
 
-A task is defined for the computing the stable timestep and uses the function pointer, computeStableTimestep defined later in Poisson1.cc.  This requires data from the New DataWarehouse, and the next timestep size is computed and stored.  
+A task is defined for the computing the stable timestep and uses the
+function pointer, \texttt{computeStableTimestep} defined later in
+Poisson1.cc.  This requires data from the New DataWarehouse, and the
+next timestep size is computed and stored.
 
+\begin{verbatim}
 void
 Poisson1::scheduleTimeAdvance( const LevelP& level,
                                SchedulerP& sched)
@@ -456,51 +518,90 @@ Poisson1::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Poisson1::timeAdvance",
                      this, &Poisson1::timeAdvance);
 
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
-  task->computes(residual_label);
-  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->requires(Task::OldDW, phi\_label, Ghost::AroundNodes, 1);
+  task->computes(phi\_label);
+  task->computes(residual\_label);
+  sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
 }
+\end{verbatim}
 
-The timeAdvance function is the main function that describes the computational algorithm.  For simple examples, the entire algorithm is usually defined by one task with a small set of data dependencies.  However, for more complicated algorithms, it is best to break the algorithm down into a set of tasks with each task describing its own set of data dependencies.  
+The \texttt{timeAdvance} function is the main function that describes
+the computational algorithm.  For simple examples, the entire
+algorithm is usually defined by one task with a small set of data
+dependencies.  However, for more complicated algorithms, it is best to
+break the algorithm down into a set of tasks with each task describing
+its own set of data dependencies.
 
-For this example, a single task is described and the timeAdvance function pointer is specified.  Data from the previous timestep (OldDW) is required for the current timestep.  For a simple 7 point stencil, only one level of ghost cells is required.  The algorithm is set up for nodal values, the ghost cells are specified by the the AroundNodes syntax.  The task computes both the new data values for phi and a residual.
+For this example, a single task is described and the
+\texttt{timeAdvance} function pointer is specified.  Data from the
+previous timestep (\texttt{OldDW}) is required for the current
+timestep.  For a simple seven (7) point stencil, only one level of
+ghost cells is required.  The algorithm is set up for nodal values,
+the ghost cells are specified by the the \texttt{Ghost::AroundNodes}
+syntax.  The task computes both the new data values for phi and a
+residual.
 
-Description of Computational Functions
+\subsection{Description of Computational Functions}
+
+\begin{verbatim}
 
 void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
                                      const PatchSubset* /*patches*/,
                                      const MaterialSubset* /*matls*/,
                                      DataWarehouse*,
-                                     DataWarehouse* new_dw)
+                                     DataWarehouse* new\_dw)
 {
   if(pg->myrank() == 0){
-    sum_vartype residual;
-    new_dw->get(residual, residual_label);
+    sum\_vartype residual;
+    new\_dw->get(residual, residual\_label);
     cerr << "Residual=" << residual << '\n';
   }
-  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
+  new\_dw->put(delt\_vartype(delt\_), sharedState\_->get\_delt\_label());
 }
 
-In this particular example,  no timestep is actually computed, instead the original timestep specified in the input file is used and stored in the data warehouse (new_dw->put(delt_vartype(delt_), sharedState>_->get_delt_label()).  The residual computed in the main timeAdvance function is retrieved from the data warehouse and printed out to standard error for only the processor with a rank of 0.  
+\end{verbatim}
 
+In this particular example, no timestep is actually computed, instead
+the original timestep specified in the input file is used and stored
+in the data warehouse (\texttt{new\_dw->put(delt\_vartype(delt\_),
+  sharedState\_\->get\_delt\_label())}).  The residual computed in the
+main \texttt{timeAdvance} function is retrieved from the data
+warehouse and printed out to standard error for only the processor
+with a rank of 0.
+
+\begin{verbatim}
 void Poisson1::initialize(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
-                          DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
+                          DataWarehouse* /*old\_dw*/, DataWarehouse* new\_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+\end{verbatim}
 
-The node centered variable (NCVariable<double> phi) has space reserved in the DataWarehouse for the given patch and the given material (matl = 0).   The phi variable is initialized to 0 for every grid node on the patch.
+The node centered variable (\texttt{NCVariable<double> phi}) has space
+reserved in the DataWarehouse for the given patch and the given
+material (\texttt{int matl = 0;}).  The \texttt{phi} variable is
+initialized to 0 for every grid node on the patch.
 
+\begin{verbatim}
     NCVariable<double> phi;
-    new_dw->allocateAndPut(phi, phi_label, matl, patch);
+    new\_dw->allocateAndPut(phi, phi\_label, matl, patch);
     phi.initialize(0.);
-The boundary faces on the xminus face of the computational domain are specified and set to a value of 1.  All other boundary values are set to a value of 0 as well as the internal nodes via the phi.initialize(0.) construct.  Uintah provides helper functions for determining which nodes are on the boundaries.  In addition, there are convenient looping constructs such as NodeIterator that alleviate the need to specify triply nested loops for visiting each node in the domain.
+\end{verbatim}
 
+The boundary faces on the xminus face of the computational domain are
+specified and set to a value of 1.  All other boundary values are set
+to a value of 0 as well as the internal nodes via the
+\texttt{phi.initialize(0.)} construct.  Uintah provides helper
+functions for determining which nodes are on the boundaries.  In
+addition, there are convenient looping constructs such as
+\texttt{NodeIterator} that alleviate the need to specify triply nested
+loops for visiting each node in the domain.
+
+\begin{verbatim}
     if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
        IntVector l,h;
        patch->getFaceNodes(Patch::xminus, 0, l, h);
@@ -510,38 +611,62 @@ The boundary faces on the xminus face of the computational domain are specified 
       }
     }
 
-    new_dw->put(sum_vartype(-1), residual_label);
+    new\_dw->put(sum\_vartype(-1), residual\_label);
   }
 }
 
-The initial residual value of -1 is stored at the beginning of the simulation.
+\end{verbatim}
 
-The main computational algorithm is defined in the timeAdvance function.  The overall algorithm is based on a simple Jacobi iteration step.  
+The initial residual value of -1 is stored at the beginning of the
+simulation.
 
+The main computational algorithm is defined in the
+\texttt{timeAdvance} function.  The overall algorithm is based on a
+simple Jacobi iteration step.
+
+\begin{verbatim}
 void Poisson1::timeAdvance(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
+                           DataWarehouse* old\_dw,
+                           DataWarehouse* new\_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
 
-Data from the previous timestep is retrieved from the data warehouse and copied to the current timestep's phi variable (newphi).
+\end{verbatim}
 
-    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+Data from the previous timestep is retrieved from the data warehouse
+and copied to the current timestep's phi variable (\texttt{newphi}).
+
+\begin{verbatim}
+
+    old\_dw->get(phi, phi\_label, matl, patch, Ghost::AroundNodes, 1);
     NCVariable<double> newphi;
 
-    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+    new\_dw->allocateAndPut(newphi, phi\_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
-The indices for the patch are obtained and altered depending on whether or not the patch's internal boundaries are on the coincident with the grid domain.  If the patch boundaries are the same as the grid domain, the boundary values are not overwritten since the lower and upper indices are modified to only specify internal nodal grid points.
+\end{verbatim}
+
+The indices for the patch are obtained and altered depending on
+whether or not the patch's internal boundaries are on the coincident
+with the grid domain.  If the patch boundaries are the same as the
+grid domain, the boundary values are not overwritten since the lower
+and upper indices are modified to only specify internal nodal grid
+points.
+
+
+%%% The implementation of more sensible boundary condition
+%%% specifications needs to be added here.
+
+\begin{verbatim}
 
     double residual=0;
-    IntVector l = patch->getNodeLowIndex__New();
-    IntVector h = patch->getNodeHighIndex__New();
+    IntVector l = patch->getNodeLowIndex\_\_New();
+    IntVector h = patch->getNodeHighIndex\_\_New();
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
@@ -550,9 +675,13 @@ The indices for the patch are obtained and altered depending on whether or not t
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
 
-The Jacobi iteration step is applied at each internal grid node.  The residual is computed based on the old and new values and stored as a reduction variable (sum_vartype) in the data warehouse.
+\end{verbatim}
 
+The Jacobi iteration step is applied at each internal grid node.  The
+residual is computed based on the old and new values and stored as a
+reduction variable (\texttt{sum\_vartype}) in the data warehouse.
 
+\begin{verbatim}
     //__________________________________
     //  Stencil
     for(NodeIterator iter(l, h);!iter.done(); iter++){
@@ -566,14 +695,21 @@ The Jacobi iteration step is applied at each internal grid node.  The residual i
       double diff = newphi[n] - phi[n];
       residual += diff * diff;
     }
-    new_dw->put(sum_vartype(residual), residual_label);
+    new\_dw->put(sum\_vartype(residual), residual\_label);
   }
 }
 
+\end{verbatim}
 
-The input file that is used to run this example is given below and is given in SCIRun/src/Packages/Uintah/StandAlone/inputs/Examples/poisson1.ups.  Relevant sections of the input file that can be modified are found in the <Time> section, and the <Grid> section, specifically, the number of patches and the grid resolution.
+The input file that is used to run this example is given below and is
+given in
+\emph{SCIRun/src/Packages/Uintah/StandAlone/inputs/Examples/poisson1.ups}.
+Relevant sections of the input file that can be modified are found in
+the \texttt{<Time>} section, and the \texttt{<Grid>} section,
+specifically, the number of patches and the grid resolution.
 
-<Uintah_specification>
+\begin{verbatim}
+<Uintah\_specification>
 
   <Meta>
       <title>Poisson1 test</title>
@@ -582,14 +718,14 @@ The input file that is used to run this example is given below and is given in S
   <SimulationComponent>
        <type> poisson1 </type>
   </SimulationComponent>
-  <!--__________________________________-->
+  <!--\__________________________________-->
   <Time>
     <maxTime>       1.0       </maxTime>
     <initTime>      0.0       </initTime>
-    <delt_min>      0.00001   </delt_min>
-    <delt_max>      1         </delt_max>
-    <max_Timesteps> 100        </max_Timesteps>
-    <timestep_multiplier>  1  </timestep_multiplier>
+    <delt\_min>      0.00001   </delt\_min>
+    <delt\_max>      1         </delt\_max>
+    <max\_Timesteps> 100        </max\_Timesteps>
+    <timestep\_multiplier>  1  </timestep\_multiplier>
   </Time>
 
   <!--__________________________________-->
@@ -621,127 +757,197 @@ The input file that is used to run this example is given below and is given in S
     </Level>
 </Grid>
 
-</Uintah_specification>
+</Uintah\_specification>
+
+\end{verbatim}
 
 
-Running the Poisson1 Example
+\subsubsection{Running the Poisson1 Example}
 
 To run the poisson1.ups example, 
+\begin{verbatim}
 
 	cd ~/SCIRun/dbg/Packages/Uintah/StandAlone/
+\end{verbatim}
 
 create a symbolic link to the inputs directory:
-
+\begin{verbatim}
 	ln -s ~/SCIRun/src/Packages/Uintah/StandAlone/inputs
-
+\end{verbatim}
 For a single processor run type the following:
-
+\begin{verbatim}
 	sus inputs/Examples/poisson1.ups
-
+\end{verbatim}
 For a two processor run, type the following:
-
+\begin{verbatim}
 	mpirun -np 2 sus -mpi inputs/Examples/poisson1.ups
+\end{verbatim}
+Changing the number of patches in the poisson1.ups and the resolution,
+enables you to run a more refined problem on more processors.
 
-Changing the number of patches in the poisson1.ups and the resolution, enables you to run a more refined problem on more processors.  
+\textbf{ADVICE:} For non-AMR problems, it is advised to have at least
+the same number of patches as processors.  You can always have more
+patches than processors, but you cannot have fewer patches than
+processors.
 
-ADVICE: For non-AMR problems, it is advised to have at least the same number of patches as processors.  You can always have more patches than processors, but you cannot have fewer patches than processors.
 
+\section{Poisson2}
 
-Poisson2
+The next example also solves the Poisson's equation but instead of
+iterating in time, the subscheduler feature iterates within a given
+timestep, thus solving the problem in one timestep.  The use of the
+subcheduler is important for implementing algorithms which solve
+non-linear problems which require iterating on a solution for each
+timestep.
 
-The next example also solves the Poisson's equation but instead of iterating in time, the subscheduler feature iterates within a given timestep, thus solving the problem in one timestep.  The use of the subcheduler is important for implementing algorithms which solve non-linear problems which require iterating on a solution for each timestep.
+The majority of the schedule and computational functions are similar
+to the \emph{Poisson1} example and are not repeated.  Only the revised
+code is presented with explanations about the new features of Uintah.
 
-The majority of the schedule and computational functions are similar to the Poisson1 example and are not repeated.  Only the revised code is presented with explanations about the new features of Uintah.
+\begin{verbatim}
 
 void Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			this, &Poisson2::timeAdvance,
-			level, sched.get_rep());
+			level, sched.get\_rep());
   task->hasSubScheduler();
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
+  task->requires(Task::OldDW, phi\_label, Ghost::AroundNodes, 1);
+  task->computes(phi\_label);
   LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
-  sched->addTask(task, perproc_patches, sharedState_->allMaterials());
+  const PatchSet* perproc\_patches = lb->getPerProcessorPatchSet(level);
+  sched->addTask(task, perproc\_patches, sharedState\_->allMaterials());
 }
 
-Within this function, the task is specified with two additional arguments, the level and the scheduler sched.get_rep().  The task must also set the flag that a subscheduler will be used within the scheduling of the various tasks.  Similar code to the Poisson1 example is used to specify what data is required and computed during the actual task execution.  In addition, a loadbalancer component is required to query the patch distribution for each level of the grid.  The task is then added to the top level scheduler with the requisite information, i.e. patches and materials.
+\end{verbatim}
 
-The actual implementation of the timeAdvance function is also different from the Poisson1 example.  The code is specified below with text explaining the use of the subscheduler.  The new feature of the subscheduler shows the creation of a the iterate task within the subscheduler.  This task will perform the actual Jacobi iteration for a given timestep.
+Within this function, the task is specified with two additional
+arguments, the level and the scheduler \texttt{sched.get\_rep()}.  The
+task must also set the flag that a subscheduler will be used within
+the scheduling of the various tasks.  Similar code to the
+\textbf{Poisson1} example is used to specify what data is required and
+computed during the actual task execution.  In addition, a
+loadbalancer component is required to query the patch distribution for
+each level of the grid.  The task is then added to the top level
+scheduler with the requisite information, i.e. patches and materials.
 
+The actual implementation of the \texttt{timeAdvance} function is also
+different from the \textbf{Poisson1} example.  The code is specified
+below with text explaining the use of the subscheduler.  The new
+feature of the subscheduler shows the creation of a the
+\texttt{iterate} task within the subscheduler.  This task will perform
+the actual Jacobi iteration for a given timestep.
+
+\begin{verbatim}
 void Poisson2::timeAdvance(const ProcessorGroup* pg,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw,
+			DataWarehouse* old\_dw, DataWarehouse* new\_dw,
 			LevelP level, Scheduler* sched)
 {
 
+\end{verbatim}
+
 The subscheduler is instantiated and initialized. 
 
+\begin{verbatim}
   SchedulerP subsched = sched->createSubScheduler();
   subsched->initialize();
   GridP grid = level->getGrid();
+\end{verbatim}
 
-An iterate task is created and added to the subscheduler.  The typical computes and requires are specified for a 7 point stencil used in Jacobi iteration scheme with one layer of ghost cells.  The new task is added to the subscheduler.   A residual variable is only computed within the subscheduler and not passed back to the main scheduler.  This is in contrast to the phi variable which was specified in scheduleTimeAdvance in the computes, as well as being specified in the computes for the subscheduler.  Any variables that are only computed and used in an iterative step of an algorithm do not need to be added to the dependency specification for the top level task. 
+An \texttt{iterate} task is created and added to the subscheduler.
+The typical computes and requires are specified for a 7 point stencil
+used in Jacobi iteration scheme with one layer of ghost cells.  The
+new task is added to the subscheduler.  A residual variable is only
+computed within the subscheduler and not passed back to the main
+scheduler.  This is in contrast to the \texttt{phi} variable which was
+specified in \texttt{scheduleTimeAdvance} in the computes, as well as
+being specified in the computes for the subscheduler.  Any variables
+that are only computed and used in an iterative step of an algorithm
+do not need to be added to the dependency specification for the top
+level task.
 
+\begin{verbatim}
   // Create the tasks
   Task* task = scinew Task("iterate",
 			this, &Poisson2::iterate);
-  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
-  task->computes(residual_label);
-  subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
+  task->requires(Task::OldDW, phi\_label, Ghost::AroundNodes, 1);
+  task->computes(phi\_label);
+  task->computes(residual\_label);
+  subsched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
+\end{verbatim}
 
-The subscheduler has its own data wharehouse that is separate from the top level's scheduler's data warehouse.   This data warehouse must be initialized and any data from the top level's data warehouse must be passed to the subscheduler's version.  This data resides in the data warehouse position NewDW.
+The subscheduler has its own data wharehouse that is separate from the
+top level's scheduler's data warehouse.  This data warehouse must be
+initialized and any data from the top level's data warehouse must be
+passed to the subscheduler's version.  This data resides in the data
+warehouse position \texttt{NewDW}.
 
+\begin{verbatim}
   // Compile the scheduler
   subsched->advanceDataWarehouse(grid);
   subsched->compile();
 
   int count = 0;
   double residual;
-  subsched->get_dw(1)->transferFrom(old_dw, phi_label, patches, matls);
+  subsched->get\_dw(1)->transferFrom(old\_dw, phi\_label, patches, matls);
+\end{verbatim}
 
-Within each iteration, the following must occur for the subschedul­-–­er:  the data warehouse's new data must be moved to the OldDW position, since any new values will be stored in NewDW and the old values cannot be overwritten.  The OldDW is referred to in the subscheduler via the subsched->get_dw(0) and the NewDW is referred to in the subscheduler via subsched->get_dw(1).  Once the iteration is deemed to have met the tolerance, the data from the subscheduler is transferred to the scheduler's data warehouse.
+Within each iteration, the following must occur for the subscheduler:
+the data warehouse's new data must be moved to the \texttt{OldDW}
+position, since any new values will be stored in \texttt{NewDW} and
+the old values cannot be overwritten.  The \texttt{OldDW} is referred
+to in the subscheduler via the \texttt{subsched->get\_dw(0)} and the
+\texttt{NewDW} is referred to in the subscheduler via
+\texttt{subsched->get\_dw(1)}.  Once the iteration is deemed to have
+met the tolerance, the data from the subscheduler is transferred to
+the scheduler's data warehouse.
 
+\begin{verbatim}
   // Iterate
   do {
     subsched->advanceDataWarehouse(grid);
-    subsched->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-    subsched->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+    subsched->get\_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+    subsched->get\_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
     subsched->execute();    
 
-    sum_vartype residual_var;
-    subsched->get_dw(1)->get(residual_var, residual_label);
-    residual = residual_var;
+    sum\_vartype residual\_var;
+    subsched->get\_dw(1)->get(residual\_var, residual\_label);
+    residual = residual\_var;
 
     if(pg->myrank() == 0)
       cerr << "Iteration " << count++ << ", residual=" << residual << '\n';
-  } while(residual > maxresidual_);
+  } while(residual > maxresidual\_);
 
-  new_dw->transferFrom(subsched->get_dw(1), phi_label, patches, matls);
+  new\_dw->transferFrom(subsched->get\_dw(1), phi\_label, patches, matls);
 }
 
-The iteration cycle is identical to Poisson1's timeAdvance algorithm using Jacobi iteration with a 7 point stencil.  Refer to the discussion about the algorithm implementation in the Poisson1 description.
+\end{verbatim}
 
+The iteration cycle is identical to \textbf{Poisson1}'s
+\texttt{timeAdvance} algorithm using Jacobi iteration with a 7 point
+stencil.  Refer to the discussion about the algorithm implementation
+in the \textbf{Poisson1} description.
+
+\begin{verbatim}
 void Poisson2::iterate(const ProcessorGroup*,
 		    const PatchSubset* patches,
 		    const MaterialSubset* matls,
-		    DataWarehouse* old_dw, DataWarehouse* new_dw)
+		    DataWarehouse* old\_dw, DataWarehouse* new\_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       constNCVariable<double> phi;
-      old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+      old\_dw->get(phi, phi\_label, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
-      new_dw->allocateAndPut(newphi, phi_label, matl, patch);
+      new\_dw->allocateAndPut(newphi, phi\_label, matl, patch);
       newphi.copyPatch(phi, newphi.getLow(), newphi.getHigh());
       double residual=0;
-      IntVector l = patch->getNodeLowIndex__New();
-      IntVector h = patch->getNodeHighIndex__New(); 
+      IntVector l = patch->getNodeLowIndex\_\_New();
+      IntVector h = patch->getNodeHighIndex\_\_New(); 
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
 		  patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
 		  patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
@@ -756,52 +962,71 @@ void Poisson2::iterate(const ProcessorGroup*,
 	double diff = newphi[*iter]-phi[*iter];
 	residual += diff*diff;
       }
-      new_dw->put(sum_vartype(residual), residual_label);
+      new\_dw->put(sum\_vartype(residual), residual\_label);
     }
   }
 }
 
-The input file ~/SCIRun/src/Packages/Uintah/StandAlone/inputs/Examples/poisson2.ups is very similar to the poisson1.ups file shown above.  The only additional tag that is used is the <maxresidual> specifying the tolerance within the iteration performed in the subscheduler.
+\end{verbatim}
 
-To run the poisson2 input file execute the following in the ~/SCIRun/dbg/Packages/Uintah/StandAlone directory:
+The input file
+\emph{~/SCIRun/src/Packages/Uintah/StandAlone/inputs/Examples/poisson2.ups}
+is very similar to the \emph{poisson1.ups} file shown above.  The only
+additional tag that is used is the \texttt{<maxresidual>} specifying
+the tolerance within the iteration performed in the subscheduler.
 
+To run the poisson2 input file execute the following in the
+\emph{~/SCIRun/dbg/Packages/Uintah/StandAlone} directory:
+
+\begin{verbatim}
 	sus inputs/Examples/poisson2.ups
 
+\end{verbatim}
 
 
-Burger
+\section{Burger}
 
 In this example, the inviscid Burger's equation is solved in three dimensions:
-
+\begin{verbatim}
 	du/dt = -u du/dx  
+\end{verbatim}
 
- with the following initial conditions:
+with the following initial conditions:
 
+\begin{verbatim}
 	u = sin(pi x) + sin(2pi y) + sin(3pi z)
+\end{verbatim}
 
-using Euler's method to advance in time.   The majority of the code is very similar to the Poisson1 example code with the differences shown below.  
+using Euler's method to advance in time.  The majority of the code is
+very similar to the Poisson1 example code with the differences shown
+below.
 
-The initialization of the grid values for the unknown variable, u, is done at every grid node using the NodeIterator construct.  The x,y,z values for a given grid node is determined using the function, patch->getNodePosition(n), where n is the nodal index in i,j,k space.
+The initialization of the grid values for the unknown variable, u, is
+done at every grid node using the NodeIterator construct.  The x,y,z
+values for a given grid node is determined using the function,
+\texttt{patch->getNodePosition(n)}, where n is the nodal index in
+i,j,k space.
 
+\begin{verbatim}
 void Burger::initialize(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse*, 
-                        DataWarehouse* new_dw)
+                        DataWarehouse* new\_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     NCVariable<double> u;
-    new_dw->allocateAndPut(u, u_label, matl, patch);
+    new\_dw->allocateAndPut(u, u\_label, matl, patch);
 
     //Initialize
     // u = sin( pi*x ) + sin( pi*2*y ) + sin(pi*3z )
-    IntVector l = patch->getNodeLowIndex__New();
-    IntVector h = patch->getNodeHighIndex__New();
+    IntVector l = patch->getNodeLowIndex\_\_New();
+    IntVector h = patch->getNodeHighIndex\_\_New();
     
-    for( NodeIterator iter=patch->getNodeIterator__New(); !iter.done(); iter++ ){
+    for( NodeIterator iter=patch->getNodeIterator\_\_New(); !iter.done(); iter++ ){
       IntVector n = *iter;
       Point p = patch->nodePosition(n);
       u[n] = sin( p.x() * 3.14159265358 ) + sin( p.y() * 2*3.14159265358)  +  sin( p.z() * 3*3.14159265358);
@@ -809,13 +1034,18 @@ void Burger::initialize(const ProcessorGroup*,
   }
 }
 
-The timeAdvance function is quite similar to the Poisson1's timeAdvance routine.   The relavant differences are only shown.
+\end{verbatim}
 
+The \texttt{timeAdvance} function is quite similar to the Poisson1's
+\texttt{timeAdvance} routine.  The relavant differences are only
+shown.
+
+\begin{verbatim}
 void Burger::timeAdvance(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset* matls,
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw)
+                         DataWarehouse* old\_dw, 
+                         DataWarehouse* new\_dw)
 {
   int matl = 0;
   //Loop for all patches on this processor
@@ -823,19 +1053,25 @@ void Burger::timeAdvance(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
   . . . . .
+\end{verbatim}
 
 The grid spacing and timestep values are stored.
 
+\begin{verbatim}
+
     // dt, dx
     Vector dx = patch->getLevel()->dCell();
-    delt_vartype dt;
-    old_dw->get(dt, sharedState_->get_delt_label());
+    delt\_vartype dt;
+    old\_dw->get(dt, sharedState\_->get\_delt\_label());
     
   . . . . .  
+\end{verbatim}
 
-Refer to the description in Poisson1 about the specification of the NodeIterator limits.  The Euler algorithm is applied to solve the ordinary differential equation in time.
+Refer to the description in \textbf{Poisson1} about the specification
+of the \texttt{NodeIterator} limits.  The Euler algorithm is applied to solve
+the ordinary differential equation in time.
 
-                   
+\begin{verbatim}                   
     //Iterate through all the nodes
     for(NodeIterator iter(l, h);!iter.done(); iter++){    
       IntVector n = *iter;
@@ -843,83 +1079,118 @@ Refer to the description in Poisson1 about the specification of the NodeIterator
       double dudy = (u[n+IntVector(0,1,0)] - u[n-IntVector(0,1,0)]) /(2.0 * dx.y());
       double dudz = (u[n+IntVector(0,0,1)] - u[n-IntVector(0,0,1)]) /(2.0 * dx.z());
       double du = - u[n] * dt * (dudx + dudy + dudz);
-      new_u[n]= u[n] + du;
+      new\_u[n]= u[n] + du;
     }
 
-Zero flux Neumann boundary conditions are applied to the node points on each of the grid faces.  
+\end{verbatim}
 
-    //__________________________________
+Zero flux Neumann boundary conditions are applied to the node points
+on each of the grid faces.
+
+
+\begin{verbatim}
+    //\__________________________________
     // Boundary conditions: Neumann
     // Iterate over the faces encompassing the domain
-    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType>::const\_iterator iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
     for (iter  = bf.begin(); iter != bf.end(); ++iter){
       Patch::FaceType face = *iter;
 
       IntVector axes = patch->faceAxes(face);
-      int P_dir = axes[0]; // find the principal dir of that face
+      int P\_dir = axes[0]; // find the principal dir of that face
 
       IntVector offset(0,0,0);
       if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
-        offset[P_dir] += 1; 
+        offset[P\_dir] += 1; 
       }
       if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus){
-        offset[P_dir] -= 1;
+        offset[P\_dir] -= 1;
       }
 
       Patch::FaceIteratorType FN = Patch::FaceNodes;
-      for (CellIterator iter = patch->getFaceIterator__New(face,FN);!iter.done(); iter++){
+      for (CellIterator iter = patch->getFaceIterator\_\_New(face,FN);!iter.done(); iter++){
         IntVector n = *iter;
-        new_u[n] = new_u[n + offset];
+        new\_u[n] = new\_u[n + offset];
       }
     }
   }
 }
 
-The input file for the Burger (burger.ups) problem is very similar to the poisson1.ups with the addition, that the timestep increment used in the timeAdvance is quite small, 1.e-4 for stability reasons.
+\end{verbatim}
 
-To run the Burger input file execute the following in the ~/SCIRun/dbg/Packages/Uintah/StandAlone directory:
+The input file for the Burger (\emph{burger.ups}) problem is very
+similar to the \emph{poisson1.ups} with the addition, that the
+timestep increment used in the \texttt{timeAdvance} is quite small,
+1.e-4 for stability reasons.
 
+To run the Burger input file execute the following in the
+\emph{~/SCIRun/dbg/Packages/Uintah/StandAlone} directory:
+
+\begin{verbatim}
 	sus inputs/Examples/burger.ups
+\end{verbatim}
 
-HeatEquation
+\section{HeatEquation}
 
-In this example, the simple heat equation is solved in three dimensions building upon the techniques presented earlier to implement an explicit and implicit formulation.  For the implicit formulation, two solution techniques will be demonstrated, one using the subscheduler to perform Jacobi iteration and the second will be to demonstrate using the Petsc interface for the solution of the linear equations.   In addition, this example will demonstrate how material properties can be specified within the input file and used in the simulation.
+In this example, the simple heat equation is solved in three
+dimensions building upon the techniques presented earlier to implement
+an explicit and implicit formulation.  For the implicit formulation,
+two solution techniques will be demonstrated, one using the
+subscheduler to perform Jacobi iteration and the second will be to
+demonstrate using the Petsc interface for the solution of the linear
+equations.  In addition, this example will demonstrate how material
+properties can be specified within the input file and used in the
+simulation.
 
+\begin{verbatim}
 	dT/dt = k d^2 T/dx^2  
+\end{verbatim}
 
+Only the relevant sections of the HeatEquation.cc are shown that
+differ from the Poisson1/Poisson2 source files that highlight how
+timesteping with the subscheduler is achieved.
 
-Only the relevant sections of the HeatEquation.cc are shown that differ from the Poisson1/Poisson2 source files that highlight how timesteping with the subscheduler is achieved.
-
+\begin{verbatim}
 void HeatEquation::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			this, &Poisson2::timeAdvance,
-			level, sched.get_rep());
+			level, sched.get\_rep());
   task->hasSubScheduler();
-  task->requires(Task::OldDW, temperature_label, Ghost::AroundNodes, 1);
-  task->computes(temperature_label);
+  task->requires(Task::OldDW, temperature\_label, Ghost::AroundNodes, 1);
+  task->computes(temperature\_label);
   LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
-  sched->addTask(task, perproc_patches, sharedState_->allMaterials());
+  const PatchSet* perproc\_patches = lb->getPerProcessorPatchSet(level);
+  sched->addTask(task, perproc\_patches, sharedState\_->allMaterials());
 }
 
-HeatEquation Using Petsc Solver Interface
+\end{verbatim}
 
-In this example, heat equation will be solved using the Petsc solver interface to solve the tri-diagonal system of equations arising from the spatial component
+\section{HeatEquation Using Petsc Solver Interface}
 
-WaveEquation
+In this example, heat equation will be solved using the Petsc solver
+interface to solve the tri-diagonal system of equations arising from
+the spatial component
 
-AdvectionDiffusion
+\section{WaveEquation}
 
-Specifying Boundary Conditions
+\section{AdvectionDiffusion}
 
-Input File Specification
+\section{Specifying Boundary Conditions}
 
-The Uintah framework uses xml input files to specify the various parameters required in any simulation component.  The application developer is free to use any tags to specify the data needed by the simulation.  The essential tags that are required by Uintah include the following:
+\section{Input File Specification}
 
-	<Uintah_specification>
+The Uintah framework uses xml input files to specify the various
+parameters required in any simulation component.  The application
+developer is free to use any tags to specify the data needed by the
+simulation.  The essential tags that are required by Uintah include
+the following:
+
+\begin{verbatim}
+
+	<Uintah\_specification>
 
 	<Time>
 
@@ -927,16 +1198,18 @@ The Uintah framework uses xml input files to specify the various parameters requ
 
 	<Grid>
 
+\end{verbatim}
 
-Output File Format
-
-
-Using SCIRun for Visualization
+\section{Output File Format}
 
 
-Implementing a New Simulation Component
+\chapter{Using SCIRun for Visualization}
 
-A driver program must be developed that will then be compiled and linked with the Uintah framework libraries.  
+
+\chapter{Implementing a New Simulation Component}
+
+A driver program must be developed that will then be compiled and
+linked with the Uintah framework libraries.
 
 
 \end{document}
