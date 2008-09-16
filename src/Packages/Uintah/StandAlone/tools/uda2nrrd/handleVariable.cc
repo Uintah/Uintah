@@ -125,10 +125,18 @@ handleData( QueryInfo &    qinfo,
       BBox lbox;
       qinfo.level->getSpatialRange( lbox );
 
-      ostringstream extentsString;
+      ostringstream extentsString, levelString;
       extentsString << lbox;
 
+      if( qinfo.combine_levels ) {
+        levelString << "all (" << qinfo.grid->numLevels() << ")";
+      } 
+      else {
+        levelString << qinfo.level->getIndex();
+      }
+
       nrrdKeyValueAdd( nrrd, "extents", extentsString.str().c_str() );
+      nrrdKeyValueAdd( nrrd, "level",   levelString.str().c_str() );
 
       if( nrrdSave(string(filename + filetype).c_str(), nrrd, 0) ) {
         // There was a problem
