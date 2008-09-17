@@ -798,6 +798,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pLocalized_new[idx] = pLocalized[idx];
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx];
         pPlasticTempInc_new[idx] = 0.0;
+        p_q[idx] = 0.0;
         d_plastic->updateElastic(idx);
         continue;
       }
