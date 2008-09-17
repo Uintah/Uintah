@@ -296,12 +296,12 @@ void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("Mixing2::computeModelSources",this, 
                         &Mixing2::computeModelSources, mi);
-  t->modifies(mi->energy_source_CCLabel);
-  t->requires(Task::OldDW, mi->density_CCLabel, Ghost::None);
-  t->requires(Task::OldDW, mi->pressure_CCLabel, Ghost::None);
-  t->requires(Task::OldDW, mi->temperature_CCLabel, Ghost::None);
+  t->modifies(mi->modelEng_srcLabel);
+  t->requires(Task::OldDW, mi->rho_CCLabel,        Ghost::None);
+  t->requires(Task::OldDW, mi->press_CCLabel,      Ghost::None);
+  t->requires(Task::OldDW, mi->temp_CCLabel,       Ghost::None);
   t->requires(Task::NewDW, mi->specific_heatLabel, Ghost::None);
-  t->requires(Task::NewDW, mi->gammaLabel, Ghost::None);
+  t->requires(Task::NewDW, mi->gammaLabel,         Ghost::None);
     
   t->requires(Task::OldDW, mi->delT_Label);
   for(vector<Stream*>::iterator iter = streams.begin();
@@ -327,18 +327,18 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       int matl = matls->get(m);
 
       constCCVariable<double> density;
-      old_dw->get(density, mi->density_CCLabel, matl, patch, Ghost::None, 0);
+      old_dw->get(density,     mi->rho_CCLabel,        matl, patch, Ghost::None, 0);
       constCCVariable<double> pressure;
-      old_dw->get(pressure, mi->pressure_CCLabel, matl, patch, Ghost::None, 0);
+      old_dw->get(pressure,    mi->press_CCLabel,      matl, patch, Ghost::None, 0);
       constCCVariable<double> temperature;
-      old_dw->get(temperature, mi->temperature_CCLabel, matl, patch, Ghost::None, 0);
+      old_dw->get(temperature, mi->temp_CCLabel,       matl, patch, Ghost::None, 0);
       constCCVariable<double> gamma;
-      old_dw->get(gamma, mi->gammaLabel, matl, patch, Ghost::None, 0);      
+      old_dw->get(gamma,       mi->gammaLabel,         matl, patch, Ghost::None, 0);      
       constCCVariable<double> cv;
-      old_dw->get(cv, mi->specific_heatLabel, matl, patch, Ghost::None, 0);
+      old_dw->get(cv,          mi->specific_heatLabel, matl, patch, Ghost::None, 0);
         
       CCVariable<double> energySource;
-      new_dw->getModifiable(energySource,   mi->energy_source_CCLabel,
+      new_dw->getModifiable(energySource,   mi->modelEng_srcLabel,
 			    matl, patch);
 
       Vector dx = patch->dCell();

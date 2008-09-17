@@ -250,8 +250,8 @@ void Mixing::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("Mixing::computeModelSources",this, 
                         &Mixing::computeModelSources, mi);
-  t->modifies(mi->energy_source_CCLabel);
-  t->requires(Task::OldDW, mi->density_CCLabel, Ghost::None);
+  t->modifies(mi->modelEng_srcLabel);
+  t->requires(Task::OldDW, mi->rho_CCLabel, Ghost::None);
   t->requires(Task::OldDW, mi->delT_Label);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
@@ -286,7 +286,7 @@ void Mixing::computeModelSources(const ProcessorGroup*,
 	old_dw->get(to_mf, to->massFraction_CCLabel, matl, patch, Ghost::None, 0);
 
 	constCCVariable<double> density;
-	old_dw->get(density, mi->density_CCLabel, matl, patch, Ghost::None, 0);
+	old_dw->get(density, mi->rho_CCLabel, matl, patch, Ghost::None, 0);
 
 	Vector dx = patch->dCell();
 	double volume = dx.x()*dx.y()*dx.z();
@@ -296,7 +296,7 @@ void Mixing::computeModelSources(const ProcessorGroup*,
 	double dt = delT;
 
 	CCVariable<double> energySource;
-	new_dw->getModifiable(energySource,   mi->energy_source_CCLabel,
+	new_dw->getModifiable(energySource,   mi->modelEng_srcLabel,
 			      matl, patch);
 
 	CCVariable<double> mass_source_from;

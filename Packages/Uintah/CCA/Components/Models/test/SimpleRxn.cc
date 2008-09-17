@@ -431,12 +431,12 @@ void SimpleRxn::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gac = Ghost::AroundCells;
   t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
-  t->requires(Task::OldDW, mi->density_CCLabel,          gn);
-  t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
+  t->requires(Task::OldDW, mi->rho_CCLabel,    gn);
+  t->requires(Task::OldDW, mi->temp_CCLabel,   gn);
   //t->requires(Task::OldDW, mi->delT_Label);  turn off for AMR
   
-  t->modifies(mi->momentum_source_CCLabel);
-  t->modifies(mi->energy_source_CCLabel);
+  t->modifies(mi->modelMom_srcLabel);
+  t->modifies(mi->modelEng_srcLabel);
   t->modifies(d_scalar->scalar_source_CCLabel);
   //__________________________________
   //  if dumping out probePts
@@ -472,14 +472,14 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
     CCVariable<Vector> mom_src;
     
     int indx = d_matl->getDWIndex();
-    old_dw->get(rho_CC_old, mi->density_CCLabel,           indx, patch, gn, 0);
+    old_dw->get(rho_CC_old, mi->rho_CCLabel,               indx, patch, gn, 0);
     old_dw->get(f_old,      d_scalar->scalar_CCLabel,      indx, patch, gac,1);
     new_dw->get(diff_coeff, d_scalar->diffusionCoefLabel,  indx, patch, gac,1);
     new_dw->allocateAndPut(f_src, d_scalar->scalar_source_CCLabel,
                                                            indx, patch);
                                                       
-    new_dw->getModifiable(mom_src,    mi->momentum_source_CCLabel,indx,patch);
-    new_dw->getModifiable(eng_src,    mi->energy_source_CCLabel,  indx,patch);
+    new_dw->getModifiable(mom_src,  mi->modelMom_srcLabel,indx,patch);
+    new_dw->getModifiable(eng_src,  mi->modelEng_srcLabel,indx,patch);
 
     //__________________________________
     // rho=1/(f/rho_fuel+(1-f)/rho_air)
@@ -587,7 +587,7 @@ void SimpleRxn::scheduleTestConservation(SchedulerP& sched,
 
     Ghost::GhostType  gn = Ghost::None;
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, mi->density_CCLabel,      gn,0);
+    t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
     t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
     t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
@@ -623,7 +623,7 @@ void SimpleRxn::testConservation(const ProcessorGroup*,
     constSFCZVariable<double> wvel_FC;
     int indx = d_matl->getDWIndex();
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
-    new_dw->get(rho_CC,  mi->density_CCLabel,     indx,patch,gn,0); 
+    new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
     new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 

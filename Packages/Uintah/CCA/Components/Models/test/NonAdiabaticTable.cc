@@ -575,15 +575,15 @@ void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
   //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR 
  
   //t->requires(Task::NewDW, d_scalar->diffusionCoefLabel, gac,1);
-  t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
-  t->requires(Task::OldDW, mi->density_CCLabel,          gn);
-  t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
+  t->requires(Task::OldDW, d_scalar->scalar_CCLabel, gac,1); 
+  t->requires(Task::OldDW, mi->rho_CCLabel,          gn);
+  t->requires(Task::OldDW, mi->temp_CCLabel,         gn);
   t->requires(Task::OldDW, cumulativeEnergyReleased_CCLabel, gn);
 
-  t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
-  t->requires(Task::NewDW, lb->gammaLabel,               gn);
+  t->requires(Task::NewDW, lb->specific_heatLabel,   gn);
+  t->requires(Task::NewDW, lb->gammaLabel,           gn);
 
-  t->modifies(mi->energy_source_CCLabel);
+  t->modifies(mi->modelEng_srcLabel);
   t->modifies(cumulativeEnergyReleased_src_CCLabel);
   if(d_scalar->scalar_src_CCLabel){
     t->modifies(d_scalar->scalar_src_CCLabel);
@@ -628,13 +628,13 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
       CCVariable<double> eReleased_src;
 
       old_dw->get(f_old,    d_scalar->scalar_CCLabel,   matl, patch, gn, 0);
-      old_dw->get(rho_CC,   mi->density_CCLabel,        matl, patch, gn, 0);
-      old_dw->get(oldTemp,  mi->temperature_CCLabel,    matl, patch, gn, 0);
+      old_dw->get(rho_CC,   mi->rho_CCLabel,            matl, patch, gn, 0);
+      old_dw->get(oldTemp,  mi->temp_CCLabel,           matl, patch, gn, 0);
       old_dw->get(eReleased, cumulativeEnergyReleased_CCLabel,
                                                         matl, patch, gn, 0);
       new_dw->get(cv,       lb->specific_heatLabel,     matl, patch, gn, 0);
       new_dw->get(gamma,    lb->gammaLabel,             matl, patch, gn, 0);
-      new_dw->getModifiable(energySource,   mi->energy_source_CCLabel,  
+      new_dw->getModifiable(energySource,   mi->modelEng_srcLabel,  
                                                         matl, patch);
       new_dw->getModifiable(eReleased_src,  cumulativeEnergyReleased_src_CCLabel,
                             matl, patch);
@@ -821,7 +821,7 @@ void NonAdiabaticTable::scheduleTestConservation(SchedulerP& sched,
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, mi->density_CCLabel,      gn,0);
+    t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
     t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
     t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
@@ -857,7 +857,7 @@ void NonAdiabaticTable::testConservation(const ProcessorGroup*,
     constSFCZVariable<double> wvel_FC;
     int indx = d_matl->getDWIndex();
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
-    new_dw->get(rho_CC,  mi->density_CCLabel,     indx,patch,gn,0); 
+    new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
     new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 

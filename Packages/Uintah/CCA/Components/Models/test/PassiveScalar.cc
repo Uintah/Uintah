@@ -605,7 +605,7 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
     Ghost::GhostType  gn = Ghost::None;
     // compute sum(scalar_f * mass)
     t->requires(Task::NewDW, d_scalar->scalar_CCLabel, gn,0); 
-    t->requires(Task::NewDW, mi->density_CCLabel,      gn,0);
+    t->requires(Task::NewDW, mi->rho_CCLabel,          gn,0);
     t->requires(Task::NewDW, lb->uvel_FCMELabel,       gn,0); 
     t->requires(Task::NewDW, lb->vvel_FCMELabel,       gn,0); 
     t->requires(Task::NewDW, lb->wvel_FCMELabel,       gn,0); 
@@ -641,7 +641,7 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
     constSFCZVariable<double> wvel_FC;
     int indx = d_matl->getDWIndex();
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
-    new_dw->get(rho_CC,  mi->density_CCLabel,     indx,patch,gn,0); 
+    new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
     new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
