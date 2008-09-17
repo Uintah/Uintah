@@ -1157,14 +1157,14 @@ RadiationDriver::scheduleIntensitySolve(const LevelP& level,
   t->modifies(qfluxT_CCLabel,       mss_G);
   t->modifies(qfluxB_CCLabel,       mss_G);
   t->modifies(radiationSrc_CCLabel, mss_G);
-  t->modifies(mi->energy_source_CCLabel,mss_G);
+  t->modifies(mi->modelEng_srcLabel,mss_G);
   
   if(d_hasAbsorbingSolid){
     t->requires(Task::NewDW, insideSolidLabel,    mss_S, gn, 0);
     t->requires(Task::NewDW, Ilb->temp_CCLabel,   mss_S, gn, 0);
 
-    t->modifies(mi->energy_source_CCLabel,mss_S);
-    t->computes(solidEmissionLabel,       mss_S);
+    t->modifies(mi->modelEng_srcLabel, mss_S);
+    t->computes(solidEmissionLabel,    mss_S);
   }
 
   sched->addTask(t, patches, matls_set_GS);
@@ -1226,7 +1226,7 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
     new_dw->getModifiable(radVars.qfluxb, qfluxB_CCLabel, indx_G, patch);
     new_dw->getModifiable(radVars.src, radiationSrc_CCLabel, indx_G, patch);
 
-    new_dw->getModifiable(energySrc_Gas, mi->energy_source_CCLabel, indx_G, patch);
+    new_dw->getModifiable(energySrc_Gas, mi->modelEng_srcLabel, indx_G, patch);
 
     if (d_doRadCalc) {
       radVars.qfluxe.initialize(0.0);
@@ -1260,8 +1260,8 @@ RadiationDriver::intensitySolve(const ProcessorGroup* pc,
       CCVariable<double> energySrc_solid, emit_solid;
 
       new_dw->get(vol_frac_solid, Ilb->vol_frac_CCLabel,    indx_S, patch,gn,0);
-      new_dw->getModifiable(energySrc_solid, mi->energy_source_CCLabel, indx_S, patch);
-      new_dw->allocateAndPut(emit_solid,      solidEmissionLabel,       indx_S, patch);
+      new_dw->getModifiable(energySrc_solid, mi->modelEng_srcLabel, indx_S, patch);
+      new_dw->allocateAndPut(emit_solid,     solidEmissionLabel,    indx_S, patch);
        
       emit_solid.initialize(0.0); 
        

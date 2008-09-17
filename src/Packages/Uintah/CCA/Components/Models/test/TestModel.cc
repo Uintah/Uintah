@@ -86,10 +86,10 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
 {
   Task* t = scinew Task("TestModel::computeModelSources",this, 
                         &TestModel::computeModelSources, mi);
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->momentum_source_CCLabel);
-  t->modifies(mi->energy_source_CCLabel);
-  t->modifies(mi->sp_vol_source_CCLabel);
+  t->modifies(mi->modelMass_srcLabel);
+  t->modifies(mi->modelMom_srcLabel);
+  t->modifies(mi->modelEng_srcLabel);
+  t->modifies(mi->modelVol_srcLabel);
   Ghost::GhostType  gn  = Ghost::None;
   
   Task::WhichDW DW;
@@ -99,13 +99,13 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
     t->requires( DW, MIlb->cMassLabel,     matl0->thisMaterial(), gn);
   } else { 
     DW = Task::OldDW;             // ICE (pull data from old DW)
-    t->requires( DW, mi->density_CCLabel,    matl0->thisMaterial(), gn);
+    t->requires( DW, mi->rho_CCLabel,        matl0->thisMaterial(), gn);
     t->requires( NDW,mi->specific_heatLabel, matl0->thisMaterial(), gn);
   } 
                                   // All matls
-  t->requires( DW,  mi->velocity_CCLabel,   matl0->thisMaterial(), gn);
-  t->requires( DW,  mi->temperature_CCLabel,matl0->thisMaterial(), gn); 
-  t->requires( NDW, mi->sp_vol_CCLabel,     matl0->thisMaterial(), gn);
+  t->requires( DW,  mi->vel_CCLabel,    matl0->thisMaterial(), gn);
+  t->requires( DW,  mi->temp_CCLabel,   matl0->thisMaterial(), gn); 
+  t->requires( NDW, mi->sp_vol_CCLabel, matl0->thisMaterial(), gn);
   
   t->requires( Task::OldDW, mi->delT_Label);
   sched->addTask(t, level->eachPatch(), mymatls);
@@ -135,15 +135,15 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     
     new_dw->allocateTemporary(cv, patch);
-    new_dw->getModifiable(mass_src_0,   mi->mass_source_CCLabel,    m0, patch);
-    new_dw->getModifiable(mom_src_0,    mi->momentum_source_CCLabel,m0, patch);
-    new_dw->getModifiable(eng_src_0,    mi->energy_source_CCLabel,  m0, patch);
-    new_dw->getModifiable(sp_vol_src_0, mi->sp_vol_source_CCLabel,  m0, patch);
+    new_dw->getModifiable(mass_src_0,   mi->modelMass_srcLabel, m0, patch);
+    new_dw->getModifiable(mom_src_0,    mi->modelMom_srcLabel,  m0, patch);
+    new_dw->getModifiable(eng_src_0,    mi->modelEng_srcLabel,  m0, patch);
+    new_dw->getModifiable(sp_vol_src_0, mi->modelVol_srcLabel,  m0, patch);
 
-    new_dw->getModifiable(mass_src_1,   mi->mass_source_CCLabel,    m1, patch);
-    new_dw->getModifiable(mom_src_1,    mi->momentum_source_CCLabel,m1, patch);
-    new_dw->getModifiable(eng_src_1,    mi->energy_source_CCLabel,  m1, patch);
-    new_dw->getModifiable(sp_vol_src_1, mi->sp_vol_source_CCLabel,  m1, patch);
+    new_dw->getModifiable(mass_src_1,   mi->modelMass_srcLabel, m1, patch);
+    new_dw->getModifiable(mom_src_1,    mi->modelMom_srcLabel,  m1, patch);
+    new_dw->getModifiable(eng_src_1,    mi->modelEng_srcLabel,  m1, patch);
+    new_dw->getModifiable(sp_vol_src_1, mi->modelVol_srcLabel,  m1, patch);
                        
     //__________________________________
     //  Compute the mass and specific heat of matl 0
@@ -163,7 +163,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     } else {
       dw = old_dw;            // ICE   (compute it from the density)
       constCCVariable<double> rho_tmp, cv_ice;
-      old_dw->get(rho_tmp, mi->density_CCLabel,    m0, patch, gn, 0);
+      old_dw->get(rho_tmp, mi->rho_CCLabel,        m0, patch, gn, 0);
       new_dw->get(cv_ice,  mi->specific_heatLabel, m0, patch, gn, 0);
       
       cv.copyData(cv_ice);    
@@ -177,9 +177,9 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     constCCVariable<Vector> vel_0;    // MPM  pull from new_dw
     constCCVariable<double> temp_0;   // ICE  pull from old_dw
     constCCVariable<double> sp_vol_0;
-    dw  ->  get(vel_0,    mi->velocity_CCLabel,    m0, patch, gn, 0);    
-    dw  ->  get(temp_0,   mi->temperature_CCLabel, m0, patch, gn, 0);    
-    new_dw->get(sp_vol_0, mi->sp_vol_CCLabel,      m0, patch, gn, 0);
+    dw  ->  get(vel_0,    mi->vel_CCLabel,    m0, patch, gn, 0);    
+    dw  ->  get(temp_0,   mi->temp_CCLabel,   m0, patch, gn, 0);    
+    new_dw->get(sp_vol_0, mi->sp_vol_CCLabel, m0, patch, gn, 0);
         
     double tm = 0;
     double trate = rate*dt;

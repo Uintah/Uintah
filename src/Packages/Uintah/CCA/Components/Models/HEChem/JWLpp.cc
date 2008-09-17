@@ -191,10 +191,10 @@ void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
     t->computes(reactedFractionLabel, react_matl);
     t->computes(delFLabel,            react_matl);
 
-    t->modifies(mi->mass_source_CCLabel);
-    t->modifies(mi->momentum_source_CCLabel);
-    t->modifies(mi->energy_source_CCLabel);
-    t->modifies(mi->sp_vol_source_CCLabel); 
+    t->modifies(mi->modelMass_srcLabel);
+    t->modifies(mi->modelMom_srcLabel);
+    t->modifies(mi->modelEng_srcLabel);
+    t->modifies(mi->modelVol_srcLabel); 
     sched->addTask(t, level->eachPatch(), mymatls);
 
     if (one_matl->removeReference())
@@ -294,15 +294,15 @@ void JWLpp::computeModelSources(const ProcessorGroup*,
     CCVariable<double> energy_src_0, energy_src_1;
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
-    new_dw->getModifiable(mass_src_0,    mi->mass_source_CCLabel,     m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->momentum_source_CCLabel, m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->energy_source_CCLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->sp_vol_source_CCLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->mass_source_CCLabel,     m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->momentum_source_CCLabel, m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
 
     constCCVariable<double> press_CC, cv_reactant;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;

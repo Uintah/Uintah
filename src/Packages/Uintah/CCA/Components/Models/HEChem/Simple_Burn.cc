@@ -262,10 +262,10 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   }
   
   
-  t->modifies(mi->mass_source_CCLabel);
-  t->modifies(mi->momentum_source_CCLabel);
-  t->modifies(mi->energy_source_CCLabel);
-  t->modifies(mi->sp_vol_source_CCLabel); 
+  t->modifies(mi->modelMass_srcLabel);
+  t->modifies(mi->modelMom_srcLabel);
+  t->modifies(mi->modelEng_srcLabel);
+  t->modifies(mi->modelVol_srcLabel); 
   sched->addTask(t, level->eachPatch(), mymatls);
 
   if (one_matl->removeReference())
@@ -301,15 +301,15 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     CCVariable<double> onSurface, surfaceTemp;
     
-    new_dw->getModifiable(mass_src_0,    mi->mass_source_CCLabel,     m0,patch);
-    new_dw->getModifiable(momentum_src_0,mi->momentum_source_CCLabel, m0,patch);
-    new_dw->getModifiable(energy_src_0,  mi->energy_source_CCLabel,   m0,patch);
-    new_dw->getModifiable(sp_vol_src_0,  mi->sp_vol_source_CCLabel,   m0,patch);
+    new_dw->getModifiable(mass_src_0,    mi->modelMass_srcLabel,  m0,patch);
+    new_dw->getModifiable(momentum_src_0,mi->modelMom_srcLabel,   m0,patch);
+    new_dw->getModifiable(energy_src_0,  mi->modelEng_srcLabel,   m0,patch);
+    new_dw->getModifiable(sp_vol_src_0,  mi->modelVol_srcLabel,   m0,patch);
 
-    new_dw->getModifiable(mass_src_1,    mi->mass_source_CCLabel,     m1,patch);
-    new_dw->getModifiable(momentum_src_1,mi->momentum_source_CCLabel, m1,patch);
-    new_dw->getModifiable(energy_src_1,  mi->energy_source_CCLabel,   m1,patch);
-    new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,   m1,patch);
+    new_dw->getModifiable(mass_src_1,    mi->modelMass_srcLabel,  m1,patch);
+    new_dw->getModifiable(momentum_src_1,mi->modelMom_srcLabel,   m1,patch);
+    new_dw->getModifiable(energy_src_1,  mi->modelEng_srcLabel,   m1,patch);
+    new_dw->getModifiable(sp_vol_src_1,  mi->modelVol_srcLabel,   m1,patch);
  
     constCCVariable<double> press_CC,gasTemp,gasVol_frac;
     constCCVariable<double> solidTemp,solidMass,solidSp_vol;
