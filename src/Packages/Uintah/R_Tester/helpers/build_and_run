@@ -19,6 +19,9 @@ if [ "$COMPILE" = "yes" ]; then
   rm -f "$BUILDROOT"/${mode}/configure.log
 
   echo "#!/bin/tcsh" > configure_command
+  echo "setenv CC "$CC >> configure_command
+  echo "setenv CXX "$CXX >> configure_command
+  echo "setenv F77 " $F77 >> configure_command
   echo "../../src/configure $CONFIGURE_ARGS" >> configure_command
   chmod a+x configure_command
 
