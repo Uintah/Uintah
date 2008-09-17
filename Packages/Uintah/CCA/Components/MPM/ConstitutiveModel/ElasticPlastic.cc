@@ -861,22 +861,6 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Update the kinematic variables
       pRotation_new[idx] = tensorR;
 
-      // If the particle is just sitting there, do nothing
-      /*
-      double defRateSq = tensorD.NormSquared();
-      if (!(defRateSq > 0)) {
-        pStress_new[idx] = pStress[idx];
-        pStrainRate_new[idx] = 0.0;
-        pPlasticStrain_new[idx] = pPlasticStrain[idx];
-        pPlasticStrainRate_new[idx] = 0.0;
-        pDamage_new[idx] = pDamage[idx];
-        pPorosity_new[idx] = pPorosity[idx];
-        pLocalized_new[idx] = pLocalized[idx];
-        d_plastic->updateElastic(idx);
-        continue;
-      }
-      */
-
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
