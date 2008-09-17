@@ -10,6 +10,7 @@
 
 \maketitle
 
+\tableofcontents
 
 \chapter{Uintah Software Components}
 
@@ -24,15 +25,17 @@ Refinement calculations for partial differential equations.
 \subsection{Downloading the Software}
 
 Uintah/SCIRun can be obtained via svn from the following website:
-
+\begin{verbatim}
 svn co https://code.sci.utah.edu/svn/SCIRun/trunk SCIRun
+\end{verbatim}
 
 The above command checks out the SCIRun source tree and installs it
 into a directory called SCIRun in the users home directory.
 
 The Thirdparty library can similarly be obtained via:
-
+\begin{verbatim}
 svn co https://code.sci.utah.edu/svn/Thirdparty/1.25.4 Thirdparty
+\end{verbatim}
 
 The Thirdparty library source code is downloaded into a directory
 called Thirdparty.
@@ -42,10 +45,10 @@ called Thirdparty.
 \subsubsection{Thirdparty Install}
 
 
-Please read the README.txt found in ~/Thirdparty.
+Please read the README.txt found in \emph{~/Thirdparty}.
 
-Thirdparty should be installed in /usr/local/Thirdparty.  As root,
-create this directory:
+Thirdparty should be installed in \emph{/usr/local/Thirdparty}.  As
+root, create this directory:
 
 \begin{verbatim}
 
@@ -77,12 +80,13 @@ After reading the README.txt file type the follow as the root user:
 
 \subsubsection{Configuring Uintah}
 
-cd to ~/SCIRun and create the following directories: dbg and opt
+cd to \emph{~/SCIRun} and create the following directories: dbg and opt
 
 cd to dbg and type the following to configure for a debug build:
 
 \begin{verbatim}
-./src/configure --enable-debug --enable-sci-malloc --enable-package=Uintah 
+./src/configure --enable-debug --enable-sci-malloc 
+--enable-package=Uintah 
 --with-thirdparty=/usr/local/Thirdparty/1.25.5/Linux/gcc-4.3.1-2-32bit/
 \end{verbatim}
 
@@ -192,10 +196,10 @@ associated with the actual computation.
 
 Task* task = scinew Task("Example::taskexample",this,
                          &Example::taskexample);
-task->requires(Task::OldDW, variable1\_label, Ghost::AroundNodes, 1);
-task->computes(variable1\_label);
-task->computes(variable2\_label);
-sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
+task->requires(Task::OldDW, variable1_label, Ghost::AroundNodes, 1);
+task->computes(variable1_label);
+task->computes(variable2_label);
+sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
 \end{verbatim}
 
@@ -224,7 +228,7 @@ class Example : public UintahParallelComponent, public SimulationInterface {
   public:
 
     virtual void problemSetup(const ProblemSpecP& params, 
-                              const ProblemSpecP& restart\_prob\_spec, 
+                              const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
 
     virtual void scheduleInitialize(const LevelP& level,SchedulerP& sched);
@@ -242,21 +246,21 @@ class Example : public UintahParallelComponent, public SimulationInterface {
     void initialize(const ProcessorGroup*,
                     const PatchSubset* patches, 
                     const MaterialSubset* matls,
-                    DataWarehouse* old\_dw, 
-                    DataWarehouse* new\_dw);
+                    DataWarehouse* old_dw, 
+                    DataWarehouse* new_dw);
                     
                     
     void computeStableTimestep(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
-                               DataWarehouse* old\_dw,
-                               DataWarehouse* new\_dw);
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
                                
     void timeAdvance(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
-                     DataWarehouse* old\_dw,
-                     DataWarehouse* new\_dw);
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
 
 }
 
@@ -364,7 +368,7 @@ class Poisson1 : public UintahParallelComponent, public SimulationInterface {
     virtual ~Poisson1();
 
     virtual void problemSetup(const ProblemSpecP& params,
-                              const ProblemSpecP& restart\_prob\_spec,
+                              const ProblemSpecP& restart_prob_spec,
                               GridP& grid, SimulationStateP&);
     virtual void scheduleInitialize(const LevelP& level,SchedulerP& sched);
 
@@ -374,23 +378,23 @@ class Poisson1 : public UintahParallelComponent, public SimulationInterface {
 
   private:
     void initialize(const ProcessorGroup*, const PatchSubset* patches,
-                    const MaterialSubset* matls, DataWarehouse* old\_dw,
-                    DataWarehouse* new\_dw);
+                    const MaterialSubset* matls, DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
 
     void computeStableTimestep(const ProcessorGroup*,const PatchSubset* patches,
-                               const MaterialSubset* matls,DataWarehouse* old\_dw,
-                               DataWarehouse* new\_dw);
+                               const MaterialSubset* matls,DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
 
     void timeAdvance(const ProcessorGroup,const PatchSubset* patches,
-                     const MaterialSubset* matls,DataWarehouse* old\_dw,
-                     DataWarehouse* new\_dw);
+                     const MaterialSubset* matls,DataWarehouse* old_dw,
+                     DataWarehouse* new_dw);
 
-    SimulationStateP sharedState\_;
-    double delt\_;
-    const VarLabel* phi\_label;
-    const VarLabel* residual\_label;
-    SimpleMaterial* mymat\_;
+    SimulationStateP sharedState_;
+    double delt_;
+    const VarLabel* phi_label;
+    const VarLabel* residual_label;
+    SimpleMaterial* mymat_;
 
     Poisson1(const Poisson1&);
     Poisson1& operator=(const Poisson1&);
@@ -430,17 +434,17 @@ the code snippets.
 Poisson1::Poisson1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  phi\_label = VarLabel::create("phi", 
+  phi_label = VarLabel::create("phi", 
                                NCVariable<double>::getTypeDescription());
-  residual\_label = VarLabel::create("residual", 
-                                    sum\_vartype::getTypeDescription());
+  residual_label = VarLabel::create("residual", 
+                                    sum_vartype::getTypeDescription());
 
 }
 
 Poisson1::~Poisson1()
 {
-  VarLabel::destroy(phi\_label);
-  VarLabel::destroy(residual\_label);
+  VarLabel::destroy(phi_label);
+  VarLabel::destroy(residual_label);
 }
 
 \end{verbatim}
@@ -451,18 +455,18 @@ wharehouse storage and retrieval.
 
 \begin{verbatim}
 void Poisson1::problemSetup(const ProblemSpecP& params,
-                            const ProblemSpecP& restart\_prob\_spec,
+                            const ProblemSpecP& restart_prob_spec,
                             GridP& /*grid*/,
                             SimulationStateP& sharedState)
 {
-  sharedState\_ = sharedState;
+  sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
 
-  poisson->require("delt", delt\_);
+  poisson->require("delt", delt_);
 
-  mymat\_ = scinew SimpleMaterial();
+  mymat_ = scinew SimpleMaterial();
 
-  sharedState->registerSimpleMaterial(mymat\_);
+  sharedState->registerSimpleMaterial(mymat_);
 }
 \end{verbatim}
 
@@ -478,9 +482,9 @@ void Poisson1::scheduleInitialize(const LevelP& level,
   Task* task = scinew Task("Poisson1::initialize",
                      this, &Poisson1::initialize);
 
-  task->computes(phi\_label);
-  task->computes(residual\_label);
-  sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
+  task->computes(phi_label);
+  task->computes(residual_label);
+  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 \end{verbatim}
 
@@ -498,9 +502,9 @@ void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
   Task* task = scinew Task("Poisson1::computeStableTimestep",
                      this, &Poisson1::computeStableTimestep);
 
-  task->requires(Task::NewDW, residual\_label);
-  task->computes(sharedState\_->get\_delt\_label());
-  sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
+  task->requires(Task::NewDW, residual_label);
+  task->computes(sharedState_->get_delt_label());
+  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 
 \end{verbatim}
@@ -518,10 +522,10 @@ Poisson1::scheduleTimeAdvance( const LevelP& level,
   Task* task = scinew Task("Poisson1::timeAdvance",
                      this, &Poisson1::timeAdvance);
 
-  task->requires(Task::OldDW, phi\_label, Ghost::AroundNodes, 1);
-  task->computes(phi\_label);
-  task->computes(residual\_label);
-  sched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
+  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computes(phi_label);
+  task->computes(residual_label);
+  sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 \end{verbatim}
 
@@ -549,14 +553,14 @@ void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
                                      const PatchSubset* /*patches*/,
                                      const MaterialSubset* /*matls*/,
                                      DataWarehouse*,
-                                     DataWarehouse* new\_dw)
+                                     DataWarehouse* new_dw)
 {
   if(pg->myrank() == 0){
-    sum\_vartype residual;
-    new\_dw->get(residual, residual\_label);
+    sum_vartype residual;
+    new_dw->get(residual, residual_label);
     cerr << "Residual=" << residual << '\n';
   }
-  new\_dw->put(delt\_vartype(delt\_), sharedState\_->get\_delt\_label());
+  new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
 }
 
 \end{verbatim}
@@ -573,7 +577,7 @@ with a rank of 0.
 void Poisson1::initialize(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
-                          DataWarehouse* /*old\_dw*/, DataWarehouse* new\_dw)
+                          DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
@@ -588,7 +592,7 @@ initialized to 0 for every grid node on the patch.
 
 \begin{verbatim}
     NCVariable<double> phi;
-    new\_dw->allocateAndPut(phi, phi\_label, matl, patch);
+    new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
 \end{verbatim}
 
@@ -611,7 +615,7 @@ loops for visiting each node in the domain.
       }
     }
 
-    new\_dw->put(sum\_vartype(-1), residual\_label);
+    new_dw->put(sum_vartype(-1), residual_label);
   }
 }
 
@@ -628,8 +632,8 @@ simple Jacobi iteration step.
 void Poisson1::timeAdvance(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
-                           DataWarehouse* old\_dw,
-                           DataWarehouse* new\_dw)
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
@@ -643,10 +647,10 @@ and copied to the current timestep's phi variable (\texttt{newphi}).
 
 \begin{verbatim}
 
-    old\_dw->get(phi, phi\_label, matl, patch, Ghost::AroundNodes, 1);
+    old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     NCVariable<double> newphi;
 
-    new\_dw->allocateAndPut(newphi, phi\_label, matl, patch);
+    new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
 
 \end{verbatim}
@@ -665,8 +669,8 @@ points.
 \begin{verbatim}
 
     double residual=0;
-    IntVector l = patch->getNodeLowIndex\_\_New();
-    IntVector h = patch->getNodeHighIndex\_\_New();
+    IntVector l = patch->getNodeLowIndex__New();
+    IntVector h = patch->getNodeHighIndex__New();
 
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
@@ -695,7 +699,7 @@ reduction variable (\texttt{sum\_vartype}) in the data warehouse.
       double diff = newphi[n] - phi[n];
       residual += diff * diff;
     }
-    new\_dw->put(sum\_vartype(residual), residual\_label);
+    new_dw->put(sum_vartype(residual), residual_label);
   }
 }
 
@@ -709,7 +713,7 @@ the \texttt{<Time>} section, and the \texttt{<Grid>} section,
 specifically, the number of patches and the grid resolution.
 
 \begin{verbatim}
-<Uintah\_specification>
+<Uintah_specification>
 
   <Meta>
       <title>Poisson1 test</title>
@@ -718,14 +722,14 @@ specifically, the number of patches and the grid resolution.
   <SimulationComponent>
        <type> poisson1 </type>
   </SimulationComponent>
-  <!--\__________________________________-->
+  <!--__________________________________-->
   <Time>
     <maxTime>       1.0       </maxTime>
     <initTime>      0.0       </initTime>
-    <delt\_min>      0.00001   </delt\_min>
-    <delt\_max>      1         </delt\_max>
-    <max\_Timesteps> 100        </max\_Timesteps>
-    <timestep\_multiplier>  1  </timestep\_multiplier>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 100        </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
 
   <!--__________________________________-->
@@ -757,7 +761,7 @@ specifically, the number of patches and the grid resolution.
     </Level>
 </Grid>
 
-</Uintah\_specification>
+</Uintah_specification>
 
 \end{verbatim}
 
@@ -810,13 +814,13 @@ void Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			this, &Poisson2::timeAdvance,
-			level, sched.get\_rep());
+			level, sched.get_rep());
   task->hasSubScheduler();
-  task->requires(Task::OldDW, phi\_label, Ghost::AroundNodes, 1);
-  task->computes(phi\_label);
+  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computes(phi_label);
   LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc\_patches = lb->getPerProcessorPatchSet(level);
-  sched->addTask(task, perproc\_patches, sharedState\_->allMaterials());
+  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
+  sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }
 
 \end{verbatim}
@@ -842,7 +846,7 @@ the actual Jacobi iteration for a given timestep.
 void Poisson2::timeAdvance(const ProcessorGroup* pg,
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
-			DataWarehouse* old\_dw, DataWarehouse* new\_dw,
+			DataWarehouse* old_dw, DataWarehouse* new_dw,
 			LevelP level, Scheduler* sched)
 {
 
@@ -872,10 +876,10 @@ level task.
   // Create the tasks
   Task* task = scinew Task("iterate",
 			this, &Poisson2::iterate);
-  task->requires(Task::OldDW, phi\_label, Ghost::AroundNodes, 1);
-  task->computes(phi\_label);
-  task->computes(residual\_label);
-  subsched->addTask(task, level->eachPatch(), sharedState\_->allMaterials());
+  task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
+  task->computes(phi_label);
+  task->computes(residual_label);
+  subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 \end{verbatim}
 
 The subscheduler has its own data wharehouse that is separate from the
@@ -891,7 +895,7 @@ warehouse position \texttt{NewDW}.
 
   int count = 0;
   double residual;
-  subsched->get\_dw(1)->transferFrom(old\_dw, phi\_label, patches, matls);
+  subsched->get_dw(1)->transferFrom(old_dw, phi_label, patches, matls);
 \end{verbatim}
 
 Within each iteration, the following must occur for the subscheduler:
@@ -908,19 +912,19 @@ the scheduler's data warehouse.
   // Iterate
   do {
     subsched->advanceDataWarehouse(grid);
-    subsched->get\_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
-    subsched->get\_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
+    subsched->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+    subsched->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
     subsched->execute();    
 
-    sum\_vartype residual\_var;
-    subsched->get\_dw(1)->get(residual\_var, residual\_label);
-    residual = residual\_var;
+    sum_vartype residual_var;
+    subsched->get_dw(1)->get(residual_var, residual_label);
+    residual = residual_var;
 
     if(pg->myrank() == 0)
       cerr << "Iteration " << count++ << ", residual=" << residual << '\n';
-  } while(residual > maxresidual\_);
+  } while(residual > maxresidual_);
 
-  new\_dw->transferFrom(subsched->get\_dw(1), phi\_label, patches, matls);
+  new_dw->transferFrom(subsched->get_dw(1), phi_label, patches, matls);
 }
 
 \end{verbatim}
@@ -934,20 +938,20 @@ in the \textbf{Poisson1} description.
 void Poisson2::iterate(const ProcessorGroup*,
 		    const PatchSubset* patches,
 		    const MaterialSubset* matls,
-		    DataWarehouse* old\_dw, DataWarehouse* new\_dw)
+		    DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
       constNCVariable<double> phi;
-      old\_dw->get(phi, phi\_label, matl, patch, Ghost::AroundNodes, 1);
+      old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
       NCVariable<double> newphi;
-      new\_dw->allocateAndPut(newphi, phi\_label, matl, patch);
+      new_dw->allocateAndPut(newphi, phi_label, matl, patch);
       newphi.copyPatch(phi, newphi.getLow(), newphi.getHigh());
       double residual=0;
-      IntVector l = patch->getNodeLowIndex\_\_New();
-      IntVector h = patch->getNodeHighIndex\_\_New(); 
+      IntVector l = patch->getNodeLowIndex__New();
+      IntVector h = patch->getNodeHighIndex__New(); 
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
 		  patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
 		  patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
@@ -962,7 +966,7 @@ void Poisson2::iterate(const ProcessorGroup*,
 	double diff = newphi[*iter]-phi[*iter];
 	residual += diff*diff;
       }
-      new\_dw->put(sum\_vartype(residual), residual\_label);
+      new_dw->put(sum_vartype(residual), residual_label);
     }
   }
 }
@@ -1012,21 +1016,21 @@ void Burger::initialize(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse*, 
-                        DataWarehouse* new\_dw)
+                        DataWarehouse* new_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
     NCVariable<double> u;
-    new\_dw->allocateAndPut(u, u\_label, matl, patch);
+    new_dw->allocateAndPut(u, u_label, matl, patch);
 
     //Initialize
     // u = sin( pi*x ) + sin( pi*2*y ) + sin(pi*3z )
-    IntVector l = patch->getNodeLowIndex\_\_New();
-    IntVector h = patch->getNodeHighIndex\_\_New();
+    IntVector l = patch->getNodeLowIndex__New();
+    IntVector h = patch->getNodeHighIndex__New();
     
-    for( NodeIterator iter=patch->getNodeIterator\_\_New(); !iter.done(); iter++ ){
+    for( NodeIterator iter=patch->getNodeIterator__New(); !iter.done(); iter++ ){
       IntVector n = *iter;
       Point p = patch->nodePosition(n);
       u[n] = sin( p.x() * 3.14159265358 ) + sin( p.y() * 2*3.14159265358)  +  sin( p.z() * 3*3.14159265358);
@@ -1044,8 +1048,8 @@ shown.
 void Burger::timeAdvance(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset* matls,
-                         DataWarehouse* old\_dw, 
-                         DataWarehouse* new\_dw)
+                         DataWarehouse* old_dw, 
+                         DataWarehouse* new_dw)
 {
   int matl = 0;
   //Loop for all patches on this processor
@@ -1061,8 +1065,8 @@ The grid spacing and timestep values are stored.
 
     // dt, dx
     Vector dx = patch->getLevel()->dCell();
-    delt\_vartype dt;
-    old\_dw->get(dt, sharedState\_->get\_delt\_label());
+    delt_vartype dt;
+    old_dw->get(dt, sharedState_->get_delt_label());
     
   . . . . .  
 \end{verbatim}
@@ -1079,7 +1083,7 @@ the ordinary differential equation in time.
       double dudy = (u[n+IntVector(0,1,0)] - u[n-IntVector(0,1,0)]) /(2.0 * dx.y());
       double dudz = (u[n+IntVector(0,0,1)] - u[n-IntVector(0,0,1)]) /(2.0 * dx.z());
       double du = - u[n] * dt * (dudx + dudy + dudz);
-      new\_u[n]= u[n] + du;
+      new_u[n]= u[n] + du;
     }
 
 \end{verbatim}
@@ -1089,30 +1093,30 @@ on each of the grid faces.
 
 
 \begin{verbatim}
-    //\__________________________________
+    //__________________________________
     // Boundary conditions: Neumann
     // Iterate over the faces encompassing the domain
-    vector<Patch::FaceType>::const\_iterator iter;
+    vector<Patch::FaceType>::const_iterator iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
     for (iter  = bf.begin(); iter != bf.end(); ++iter){
       Patch::FaceType face = *iter;
 
       IntVector axes = patch->faceAxes(face);
-      int P\_dir = axes[0]; // find the principal dir of that face
+      int P_dir = axes[0]; // find the principal dir of that face
 
       IntVector offset(0,0,0);
       if (face == Patch::xminus || face == Patch::yminus || face == Patch::zminus){
-        offset[P\_dir] += 1; 
+        offset[P_dir] += 1; 
       }
       if (face == Patch::xplus || face == Patch::yplus || face == Patch::zplus){
-        offset[P\_dir] -= 1;
+        offset[P_dir] -= 1;
       }
 
       Patch::FaceIteratorType FN = Patch::FaceNodes;
-      for (CellIterator iter = patch->getFaceIterator\_\_New(face,FN);!iter.done(); iter++){
+      for (CellIterator iter = patch->getFaceIterator__New(face,FN);!iter.done(); iter++){
         IntVector n = *iter;
-        new\_u[n] = new\_u[n + offset];
+        new_u[n] = new_u[n + offset];
       }
     }
   }
@@ -1157,13 +1161,13 @@ void HeatEquation::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
 			this, &Poisson2::timeAdvance,
-			level, sched.get\_rep());
+			level, sched.get_rep());
   task->hasSubScheduler();
-  task->requires(Task::OldDW, temperature\_label, Ghost::AroundNodes, 1);
-  task->computes(temperature\_label);
+  task->requires(Task::OldDW, temperature_label, Ghost::AroundNodes, 1);
+  task->computes(temperature_label);
   LoadBalancer* lb = sched->getLoadBalancer();
-  const PatchSet* perproc\_patches = lb->getPerProcessorPatchSet(level);
-  sched->addTask(task, perproc\_patches, sharedState\_->allMaterials());
+  const PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
+  sched->addTask(task, perproc_patches, sharedState_->allMaterials());
 }
 
 \end{verbatim}
@@ -1190,7 +1194,7 @@ the following:
 
 \begin{verbatim}
 
-	<Uintah\_specification>
+	<Uintah_specification>
 
 	<Time>
 
