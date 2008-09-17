@@ -233,10 +233,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes,
                                         d_OrderOfAdvection);
-  cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;   
-  cout_norm << "cfl = " << d_CFL << endl;
-  cout_norm << "max_iteration_equilibration "<<d_max_iter_equilibration<<endl;
-  cout_norm << "Pulled out CFD-ICE block of the input file" << endl;
   //__________________________________
   //  Pull out add heat section
   ProblemSpecP add_heat_ps = cfd_ice_ps->findBlock("ADD_HEAT");
@@ -245,14 +241,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     add_heat_ps->require("add_heat_matls",d_add_heat_matls);
     add_heat_ps->require("add_heat_coeff",d_add_heat_coeff);
     add_heat_ps->require("add_heat_t_start",d_add_heat_t_start);
-    add_heat_ps->require("add_heat_t_final",d_add_heat_t_final);
-    cout_norm << "HEAT WILL BE ADDED"<<endl;
-    cout_norm << "  d_add_heat_t_start: "<< d_add_heat_t_start
-              << "  d_add_heat_t_final: "<< d_add_heat_t_final<< endl;
-    for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
-      cout_norm << "  d_add_heat_matl " << d_add_heat_matls[i] 
-                << "  d_add_heat_coeff "<< d_add_heat_coeff[i]<< endl;
-    } 
+    add_heat_ps->require("add_heat_t_final",d_add_heat_t_final); 
   }
  
  //__________________________________
@@ -319,8 +308,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
      throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
   } 
-  cout_norm << "Scheme for calculating delT: " << d_delT_scheme<< endl;
-  cout_norm << "Limiter on speed of sound inside delT calc.: " << d_delT_knob<< endl;
   
   //__________________________________
   // Pull out Initial Conditions
@@ -361,17 +348,16 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     // ALWAYS have an index number as in <material index = "0">.
     // Index_val = -1 means that we don't register the material by its 
     // index number.
-    if (index_val > -1)
+    if (index_val > -1){
       sharedState->registerICEMaterial(mat,index_val);
-    else
+    }else{
       sharedState->registerICEMaterial(mat);
-
+    }
+      
     if(mat->isSurroundingMatl()) {
       d_surroundingMatl_indx = mat->getDWIndex();  //which matl. is the surrounding matl
     } 
-
-  }     
-  cout_norm << "Pulled out InitialConditions block of the input file" << endl;
+  } 
 
   //_________________________________
   // Exchange Coefficients
@@ -426,8 +412,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     cout << "    b) to prevent outflux Vol > cell volume \n \n" <<endl;
   } 
 
-  cout_norm << "Number of ICE materials: " 
-       << d_sharedState->getNumICEMatls()<< endl;
   //__________________________________
   //  boundary condition warnings
   BC_bulletproofing(prob_spec,sharedState);
