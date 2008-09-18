@@ -2232,6 +2232,8 @@ AC_SUBST(X_LIB_DIR_FLAG)
 SCI_TRY_LINK(RT,rt library,,,rt,,,,optional)
 AC_SUBST( RT_LIB_FLAG )
 
+MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
+
 ##  --  check for the required thread library  ---------------------------
 
 SOCKET_LIBRARY=""
@@ -2352,8 +2354,8 @@ if test "$with_ofed"; then
 
       SCI_TRY_LINK( OFED,Infiniband stuff (for MPI),,,
                     ibverbs ibumad rdmacm pthread,$dir,,,required)
-      MPI_EXTRA_LIB_FLAG=$OFED_LIB_FLAG
-      MPI_EXTRA_LIB_DIR=$OFED_LIB_DIR
+      MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $OFED_LIB_FLAG"
+      MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $OFED_LIB_DIR"
    fi
 fi
 
@@ -2368,8 +2370,8 @@ if test "$with_mx"; then
       BASE_LIB_PATH(dir,$dir)
 
       SCI_TRY_LINK( MX,Myrinet stuff (for MPI),,,myriexpress,$dir,,,required)
-      MPI_EXTRA_LIB_FLAG=$MX_LIB_FLAG
-      MPI_EXTRA_LIB_DIR=$MX_LIB_DIR
+      MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $MX_LIB_FLAG"
+      MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $MX_LIB_DIR"
    fi
 fi
 
@@ -4583,7 +4585,7 @@ if test "$sci_required_glui" = "yes"; then
 
    AC_LANG([C++])
 
-   SCI_TRY_LINK(GLUI,glui library and headers,GL/glut.h glui.h,
+   SCI_TRY_LINK(GLUI,glui library and headers,GL/glut.h GL/glui.h,
                 $_sci_inc,glui,$_sci_lib,$libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG,,required)
 
    AC_LANG([C])
