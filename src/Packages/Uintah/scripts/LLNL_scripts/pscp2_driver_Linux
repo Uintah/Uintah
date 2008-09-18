@@ -8,19 +8,28 @@
 
 FILES      := $(shell cat $(PSCP_FILES))
 TAR_FILES  := $(wildcard *.tar)
-
           
 SRCS =   $(shell for i in $(FILES) ; do \
               echo $$i ;\
           done) 
           
-DESTS := $(patsubst %,../stamp/%,$(SRCS))
+DESTS := $(patsubst %,$(STAMP_DIR)/stamp/%,$(SRCS))
 
-all: $(DESTS)
+all: $(STAMP_DIR)/stamp $(DESTS)
+	@echo "Blowing away the list of transferred files as they have all been sent..."
+	rm -rf $(STAMP_DIR)
 
-../stamp:
+$(STAMP_DIR)/stamp:
 	mkdir $@
 
-../stamp/%: % ../stamp
-	@echo "sending $<"
-	@${TAR} zcBf - $< | ssh -x $(LOGIN) "cd $(REMOTEDIR) && gunzip |tar xBf -"
+$(STAMP_DIR)/stamp/./checkpoints/% : 
+	@mkdir -p $(STAMP_DIR)/stamp/checkpoints
+	@echo "sending checkpoints/`basename $@`"
+	@${TAR} zcBf - checkpoints/`basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && gunzip |tar xBf -"
+	@touch $(STAMP_DIR)/stamp/checkpoints/`basename $@`
+
+$(STAMP_DIR)/stamp/% : 
+	@echo "sending `basename $@`"
+	@${TAR} zcBf - `basename $@` | ssh -x $(LOGIN) "cd $(REMOTEDIR) && gunzip |tar xBf -"
+	@touch $(STAMP_DIR)/stamp/`basename $@`
+
