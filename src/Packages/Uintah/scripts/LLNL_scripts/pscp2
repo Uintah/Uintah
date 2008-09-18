@@ -150,35 +150,34 @@ echo "yes."
 
 echo -n "  Testing: does $REMOTEDIR_PARENT exist on the remote machine... "
 
-#test=`$SSH -x $LOGIN "if(-e $REMOTEDIR_PARENT) echo true"`
+test=`$SSH -x $LOGIN "if(-e $REMOTEDIR_PARENT) echo true"`
 
-#if test "$test" != "true"; then
-#  echo ""
-#  echo ""
-#  echo "  ERROR:  The destination remote directory '$REMOTEDIR_PARENT' does not exist..."
-#  echo "          Are you sure you typed it in correctly?"
-#  echo ""
-#  echo "           NOTE: result of ssh test was: '$test'"
-#  echo ""
-#  exit
-#fi
+if test "$test" != "true"; then
+  echo ""
+  echo ""
+  echo "  ERROR:  The destination remote directory '$REMOTEDIR_PARENT' does not exist..."
+  echo "          Are you sure you typed it in correctly?"
+  echo ""
+  echo "           NOTE: result of ssh test was: '$test'"
+  echo ""
+  exit
+fi
 echo "yes."
 
 echo -n "  Testing: does passwordless access work... "
-#test=`$SSH -x $LOGIN "echo 'password_access_works'"`
-#if test "$test" != "password_access_works"; then
-#  echo ""
-#  echo ""
-#  echo "  ERROR: Passwordless access is not working."
-#  echo "         You must be able to login into the $remote_machine without a password for this script to work"
-#  echo ""
-#  exit
-#fi
+test=`$SSH -x $LOGIN "echo 'password_access_works'"`
+if test "$test" != "password_access_works"; then
+  echo ""
+  echo ""
+  echo "  ERROR: Passwordless access is not working."
+  echo "         You must be able to login into the $remote_machine without a password for this script to work"
+  echo ""
+  exit
+fi
 echo "yes."
 
 echo -n "  Testing: Do we know about the remote operating system?... "
-#OS=`$SSH -x $LOGIN uname`
-OS=Darwin
+OS=`$SSH -x $LOGIN uname`
 
 if test "$OS" == "Darwin"; then
   # Darwin and Linux are similar enought that this works...
@@ -223,8 +222,8 @@ if test "$rmDir" == "y" -o "$rmDir" == "Y"; then
   $SSH -x $LOGIN "/bin/rm -rf $REMOTEDIR; mkdir $REMOTEDIR"
 else
   echo $SSH -x $LOGIN \"mkdir -p $REMOTEDIR\"
-#  $SSH -x $LOGIN "mkdir -p $REMOTEDIR"
-#  scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR
+  $SSH -x $LOGIN "mkdir -p $REMOTEDIR"
+  scp $DATA_TRANSFER_RECORD $LOGIN\:$REMOTEDIR
 fi
 
 cd $localDir
@@ -252,8 +251,8 @@ if test ! $?EDITOR; then
   export EDITOR=vi
 fi
 
-#xterm -bg "DarkSlateGray" -fg "orange" -e $EDITOR $PSCP_FILES
-#chmod ug+rw $PSCP_FILES
+xterm -bg "DarkSlateGray" -fg "orange" -e $EDITOR $PSCP_FILES
+chmod ug+rw $PSCP_FILES
  
 echo
 echo -n "Starting at: "
