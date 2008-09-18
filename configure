@@ -12834,6 +12834,8 @@ _sci_includes=''
 
 
 
+MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
+
 ##  --  check for the required thread library  ---------------------------
 
 SOCKET_LIBRARY=""
@@ -14497,8 +14499,8 @@ _sci_includes=''
 ##
 
 
-      MPI_EXTRA_LIB_FLAG=$OFED_LIB_FLAG
-      MPI_EXTRA_LIB_DIR=$OFED_LIB_DIR
+      MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $OFED_LIB_FLAG"
+      MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $OFED_LIB_DIR"
    fi
 fi
 
@@ -15006,8 +15008,8 @@ _sci_includes=''
 ##
 
 
-      MPI_EXTRA_LIB_FLAG=$MX_LIB_FLAG
-      MPI_EXTRA_LIB_DIR=$MX_LIB_DIR
+      MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $MX_LIB_FLAG"
+      MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $MX_LIB_DIR"
    fi
 fi
 
@@ -57287,7 +57289,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##
 ## arg 1 : GLUI
 ## arg 2 : glui library and headers
-## arg 3 : GL/glut.h glui.h
+## arg 3 : GL/glut.h GL/glui.h
 ## arg 4 : $_sci_inc
 ## arg 5 : glui
 ## arg 6 : $_sci_lib
@@ -57535,7 +57537,7 @@ LIBS="$_sci_libs $libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" GL/glut.h glui.h; do
+for inc in "" GL/glut.h GL/glui.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -57708,7 +57710,7 @@ rm -f conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" GL/glut.h glui.h; do
+  for i in "" GL/glut.h GL/glui.h; do
     #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
      { { echo "$as_me:$LINENO: error: Specifically requested GLUI include file '$_sci_inc/$i' was not found" >&5
