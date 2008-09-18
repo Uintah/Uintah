@@ -30,6 +30,11 @@ end
 
 date
 
+set STAT = "stat --format %s"
+if ( `uname` == "Darwin" ) then
+  set STAT = "stat -f %z"
+endif
+
 #__________________________________
 foreach U ($udas[*]:q)
   echo " "
@@ -123,7 +128,7 @@ foreach U ($udas[*]:q)
         endif
         
         if ( -e $here ) then 
-          set bytes = `stat --format %s $here`
+          set bytes = `$STAT $here`
           if ( $bytes == "0" ) then
             echo "            $here has 0 bytes"
             set passed4 = false
@@ -142,7 +147,7 @@ foreach U ($udas[*]:q)
         endif
         
         if ( -e $here ) then 
-          set bytes = `stat --format %s $here`
+          set bytes = `$STAT $here`
           if ( $bytes == "0" ) then
             echo "            $here has 0 bytes"
             set passed5 = false
@@ -151,7 +156,7 @@ foreach U ($udas[*]:q)
       end
     endif
   end
-  echo "Test 4:  Do all of the pxxxx.xml files exist and have size >0:        $passed4"  
+  echo "Test 4:  Do all of the pxxxx.xml  files exist and have size > 0:      $passed4"  
   echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0:      $passed5"
   
 bottom:  
