@@ -120,7 +120,7 @@
               <upper>        [10,10,10]       </upper>
               <extraCells>   [1,1,1]          </extraCells>
               <patches>      [1,1,1]          </patches>
-              <resolution>   [50,50,50]       </resolution>
+              <resolution>   [75,75,75]       </resolution>
            </Box>
        </Level>
     </Grid>
