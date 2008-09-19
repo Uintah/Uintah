@@ -75,8 +75,8 @@ all : $(LOCAL_FILES2) \
 
 $(LOCAL_FILES) :
 	@echo "Verifying: $(patsubst $(LOCALDIR)/%,%,$@)"
-	@$(RSYNC) -rl --size-only --log-format="File %f bytes transferred %b" --rsh='$(SSH) -x' $(LOGIN):$(patsubst $(LOCALDIR)/%,%,$@) $(LOCALDIR)/.
+	@$(RSYNC) -rl --log-format="File %f bytes transferred %b" --rsh='$(SSH) -x' $(LOGIN):$(patsubst $(LOCALDIR)/%,%,$@) $(LOCALDIR)/
 
 $(LOCAL_FILES2) :
 	@echo "Verifying checkpoints: $(patsubst $(LOCALDIR)/%,%,$@)"
-	@$(RSYNC) -rl --size-only --log-format="Checkpoint file %f bytes transferred %b" --rsh='$(SSH) -x' $(LOGIN):$(patsubst $(LOCALDIR)/%,%,$@) $(LOCALDIR)/checkpoints/.
+	@$(RSYNC) -rl --log-format="Checkpoint file %f bytes transferred %b" --rsh='$(SSH) -x' $(LOGIN):$(patsubst $(LOCALDIR)/%,%,$@) $(LOCALDIR)/checkpoints/
