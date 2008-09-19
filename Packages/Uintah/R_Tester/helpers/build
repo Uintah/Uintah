@@ -20,7 +20,7 @@ retval1=$?
 
 if [ $retval == "0" ]; then
   MAKE=make
-elif[ $retval1 == "0"]; then
+elif [ $retval1 == "0" ]; then
   MAKE=gmake
 fi
 
