@@ -41,8 +41,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
       for (int child = 0; child < numChildren; child++) {
         Iterator nbound_ptr;
         Iterator nu;        // not used;
-   
-                
+
         if (type == "Velocity"){
          const  BoundCondBase* bcb = 
             patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
@@ -65,31 +64,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             }
             delete bc;
           } else
-            delete bcb;
-
-        } else if (type == "Acceleration"){
-          const BoundCondBase* bcb = 
-            patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
-
-          const VelocityBoundCond* bc = 
-            dynamic_cast<const VelocityBoundCond*>(bcb); 
-
-          if (bc != 0) {
-            if (bc->getKind() == "Dirichlet") {
-              for (nbound_ptr.reset();!nbound_ptr.done();nbound_ptr++){
-                IntVector nd = *nbound_ptr;
-                variable[nd] = Vector(0,0,0);
-              }
-              if(interp_type=="gimp" || interp_type=="3rdorderBS"){
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector nd = *it;
-                  variable[nd] = Vector(0,0,0);
-                }
-              }
-            }
-            delete bc;
-          } else
-            delete bcb;
+          delete bcb;
 
         } else if (type == "Symmetric"){
           const BoundCondBase* bcb =
@@ -105,7 +80,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
-                  variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
+//                variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
+                  variable[nd] = Vector(0.,0.,0.);
                 }
               }
               if(interp_type=="3rdorderBS"){
@@ -131,7 +107,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
-                  variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
+//                variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
+                  variable[nd] = Vector(0.,0.,0.);
                 }
               }
               if(interp_type=="3rdorderBS"){
@@ -157,7 +134,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               if(interp_type=="gimp"){
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
-                  variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
+//                variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
+                  variable[nd] = Vector(0.,0.,0.);
                 }
               }
               if(interp_type=="3rdorderBS"){
@@ -177,8 +155,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             }
             delete bc;
           } else
-            delete bcb;
-
+          delete bcb;
         }
       }
     } else
@@ -228,7 +205,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           } else
             delete bcb;
         }
-        
+
+// I'm pretty sure the following is never used.  Keeping for now.  9-18-08
+#if 0
         if(type=="Pressure"){
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
@@ -285,21 +264,15 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               for(NodeIterator it(l,h); !it.done(); it++) {
                 IntVector nd = *it;
                 variable[nd] = variable[nd-off] + gradv*dx;
-#if 0
-                if(face==Patch::xminus){
-                  cout << "node = " << nd << " variable = " << variable[nd]
-                       << " variable-off = " << variable[nd-off] << endl;
-                }
-#endif
               }
             }
             
             delete bc;
           } else
-            delete bcb;
+          delete bcb;
         }
-        
-      }
+#endif
+      }  // child
     } else
       continue;
   }
