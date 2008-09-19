@@ -1801,7 +1801,6 @@ void SerialMPM::updateErosionParameter(const ProcessorGroup*,
       if (cout_dbg.active())
         cout_dbg << "updateErosionParameter:: Updated Erosion " << endl;
 
-
     }
 
     if (cout_dbg.active())
