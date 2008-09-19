@@ -8,13 +8,14 @@
 #
 # Usage:
 #
-#    replace_gold_standard new_gold_uda gold_standard_dir testname force
+#    replace_gold_standard new_gold_uda gold_standard_dir testname force comment
 #        new_gold_uda      : the new uda
 #        gold_standard_dir : location of the gold standard udas
 #        testname          :
 #        force             : -f | -m 
 #                            -f : it won't ask you yes/no questions
 #                            -m : it won't ask, but will only replace memory stats
+#       comment            : user specified -f then they must include a comment for the log file
 #
 
 # echos are commented to not output so much
@@ -22,8 +23,9 @@
 gold_standard_dir="$1"
 replacement_dir="$2"
 testname="$3"
-force="$4" # if set to -f then it won't ask you yes/no questions
-           # if set to -m then it won't ask, but will only replace memory stats
+force="$4"     # if set to -f then it won't ask you yes/no questions
+               # if set to -m then it won't ask, but will only replace memory stats
+comment="$5"   # if using -f or -m then the 5th argument is a comment for the log file
 
 # Info for a log file, to keep track of who replaced gold standards
 logfile="$gold_standard_dir/$testname/replace.log"
@@ -34,9 +36,16 @@ do_perf="false"
 do_input="false"
 do_checkpoint="false"
 
+if [ "$force" = "-f" -a "$comment" = "" ]; then
+  echo "You must add a comment to the log file"
+  echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname> [-f] [log file comment]"
+  exit 1 
+fi
+
+
 # prompt for and replace udas
-if [ $# -ne 3 -a $# -ne 4 ]; then
-  echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname> [-f]"
+if [ $# -ne 3 -a $# -ne 4 -a $# -ne 5 ]; then
+  echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname> [-f] [log file comment]"
   exit 1
 fi
 if [ ! -d $gold_standard_dir/$testname ]; then
@@ -231,8 +240,10 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
     echo -n "replaced input file" >> $logfile
   fi  
   
-  echo "Comment for the replaceLog file: "
-  read comment
+  if [ "$force" != "-f" ]; then
+    echo "Comment for the replaceLog file: "
+    read comment
+  fi
   echo -n "       Comment: $comment" >> $logfile
   
   echo >> $logfile
