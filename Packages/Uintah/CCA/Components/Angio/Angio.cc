@@ -692,8 +692,8 @@ void Angio::actuallyComputeStableTimestep(const ProcessorGroup*,
     //cout << "Need to add some code to computeStableTimestep" << endl;
   const Level* level = getLevel(patches);
   double delt=1;
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+  for(int pa=0;pa<patches->size();pa++){
+    const Patch* patch = patches->get(pa);
     cout_doing << d_myworld->myrank() 
                << " Doing Compute Stable Timestep on patch " << patch->getID()
                << "\t\t Angio \tL-" <<level->getIndex()<< endl;
