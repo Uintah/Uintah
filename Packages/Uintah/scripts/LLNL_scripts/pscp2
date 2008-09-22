@@ -176,6 +176,14 @@ if test "$test" != "password_access_works"; then
 fi
 echo "yes."
 
+if test `uname` == "Darwin"; then
+  HOSTNANE=`hostname`
+  MAKE=make
+else
+  HOSTNANE=`hostname`.`hostname -d`
+  MAKE=gmake
+fi
+
 echo -n "  Testing: Do we know about the remote operating system?... "
 OS=`$SSH -x $LOGIN uname`
 
@@ -210,7 +218,7 @@ if test ! -f $DATA_TRANSFER_RECORD; then
 fi
 
 echo "--------------------------------" >> $DATA_TRANSFER_RECORD
-echo "Data transferred from: `hostname` (`hostname -d`)" >> $DATA_TRANSFER_RECORD
+echo "Data transferred from: $HOSTNAME" >> $DATA_TRANSFER_RECORD
 echo "on `date`."                       >> $DATA_TRANSFER_RECORD
 echo "Data originally in $localDir"     >> $DATA_TRANSFER_RECORD
 echo "Copied by/to $LOGIN:$REMOTEDIR"   >> $DATA_TRANSFER_RECORD
@@ -238,13 +246,13 @@ if test `uname` == "AIX"; then
    FIND=/usr/local/gnu/bin/find
 fi
 
-$FIND . -maxdepth 1 -type f             -exec basename {} \; | grep -v .transferred_files > $PSCP_FILES
-$FIND . -maxdepth 1 -name "t*"  -type d -exec basename {} \; | sort -r >>$PSCP_FILES
-$FIND -maxdepth 2 -path './checkpoints/*' >>$PSCP_FILES
+$FIND .             -maxdepth 1 -type f -exec basename {} \; | grep -v .transferred_files > $PSCP_FILES
+$FIND ./t*          -maxdepth 0 -type d -exec basename {} \; | sort -r                    >>$PSCP_FILES
+$FIND ./checkpoints -maxdepth 1                                                                     >>$PSCP_FILES
 
 echo "Now starting an editor in a separate xterm:  Remove the files you don't want transferred"
 
-if test ! $?EDITOR; then
+if test ! $?EDITOR || test "$EDITOR" == ""; then
   echo
   echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
   echo "And 'vi' sometimes doesn't work well..."
@@ -259,7 +267,7 @@ echo -n "Starting at: "
 date
 echo
 
-/usr/bin/time -p gmake TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc
+/usr/bin/time -p $MAKE TAR=tar -f $pscp2dir/pscp2_driver_$OS -j $nproc
 
 echo
 echo -n "Ending at: "
