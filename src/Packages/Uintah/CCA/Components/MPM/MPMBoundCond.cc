@@ -206,8 +206,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             delete bcb;
         }
 
-// I'm pretty sure the following is never used.  Keeping for now.  9-18-08
-#if 0
+// Used in MPMICE.
+#if 1
         if(type=="Pressure"){
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
