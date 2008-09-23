@@ -9,11 +9,9 @@ Table of Contents
 Introduction
 Top-Level Scripts
   startTester
-  scirunBuildTest
   cron/at jobs
   viewing results
 Intermediate Scripts
-  build_scirun
   runTests
   build_and_run
   do*tests (*=MPM,ARCHES,ICE,etc.)
@@ -166,46 +164,6 @@ format if the weekly tests are to run.  Then it will call runTests which will
 take care of the rest of the testing procedure.  It will also replace (if any)
 the current last_ran.lock, and have it point to BUILDROOT
 
----------------
-scirunBuildTest - tester/bin/scirunBuildTest, sh script
----------------
-
-Overview:
-  scirunBuildTest is a script which tests whether or not SCIRun can build 
-successfully.
-
-Environment Variables Set:
-  OS                      [IRIX64|Linux]
-  CC                      Compiler environment variables, OS-dependent
-  CXX
-  F77
-  PATH                    Path variable
-  CVSROOT                 where to check out code from
-  CVS_RSH                 how to get code from CVSROOT: ssh
-  TMPDIR                  /usr/var if it exists: uses more disk space
-  BUILD_DIR               directory to place builds
-  BUILDROOT               directory of build: BUILD_DIR/SCIRun_noUintah
-  TEST_DATA               Test data
-  PARALLELISM             -j option from command line, or 1
-  VERBOSE                 set true if -verbose set
-  MAKE_PARALLELISM        # procs to build SCIRun with
-  DBG_CONFIGURE           configure options in dbg build
-  OPT_CONFIGURE           configure options in opt build
-  SEND_MAIL_TO            who to send test results to 
-    (scirun-develop by default)
-
-
-
-Files created:
-SCIRun_NoUintah directory (where SCIRun build is set) - BUILDROOT
-BUILDROOT/log             main log file         
-
-
-Side effects:
-
-  Downloads the current SCIRun code and calls build_scirun (which compiles it)
-and if it fails, sends mail to SEND_MAIL_TO.
-
 ------------
 cron/at jobs
 ------------
@@ -273,35 +231,6 @@ Intermediate Scripts
 
 These are tests that are called by the Top-level scripts, or by simpler 
 intermediate scripts.
-
-------------
-build_scirun - tester/bin/build_scirun, sh script
-------------
-called by scirunBuildTest, but can also be run from the command line.
-
-Environment variables that must be set:
-  BUILD_DIR        directory where SCIRun tree is placed
-  BUILDROOT        root of SCIRun build
-  MAKE_PARALLELISM # procs to build SCIRun with
-
-usage:
-
-	build_scirun [mode] ["configure arguments"]
-
-options:
-
-  mode             dbg | opt
-  configure args   arguments to pass to the SCIRun configure script, in quotes
-
-Files created:
-BUILDROOT/configure_[opt|dbg].log   log of the configure
-BUILDROOT/make_[opt|dbg].log        log of the makes
-BUILDROOT/remake_[opt|dbg].log      log of remake
-
-
-Side Effects:
-  build_scirun simply takes care of configuring and compiling SCIRun, as 
-specified in the environment variables
 
 --------
 runTests - Uintah/R_Tester/helpers/runTests, sh script
