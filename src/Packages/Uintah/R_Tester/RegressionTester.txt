@@ -29,7 +29,6 @@ Low-Level Scripts
   compare_udas
   compare_dat_files.pl
   highwater_percent.pl
-  highwater_check.pl
   replace_gold_standard
 Other Items
   __init__.py
@@ -846,29 +845,6 @@ Valid options are:
   -skip_unknown_types (skip variable comparisons of unknown types without error)
 Note: The absolute and relative tolerance tests must both fail
       for a comparison to fail.
-
-
-----------
-setupTests - Uintah/R_Tester/helpers/setupTests - sh script
-----------
-Overview:
-  setupTests is not actually used by the regression tester, but can be used 
-to initialize a directory for using the do*tests described above.
-
-  Usage: setupTests <SCIRUN-ROOT> <SCIRUN-BUILD-ROOT> <dbg or opt> <maxProcs>
-
-where 
-SCIRUN-ROOT        is where the source tree begins
-SCIRUN-BUILD-ROOT  is where the compilation is done
-maxProcs	   is the max number of procs to use in these tests
-
-Side effects:
-  Creates 4 links and as many do*tests as there are executable files in
-Uintah/R_Tester.  The 4 links point to the directory where sus lives, the input
-files are, the goldStandard for this OS and mode (dbg/opt) are, and the 
-TestScripts live.  These are all created in the current directory.  If some
-of these files/links already exist, they are overwritten.
-  
 
 ------------
 Adding tests: (MPM,ARCHES,etc.)
