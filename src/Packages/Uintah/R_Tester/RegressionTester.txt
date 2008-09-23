@@ -763,11 +763,6 @@ percent difference.
 Usage:
   highwater_percent.pl <malloc_stats_file> <compare_malloc_file>
 
-------------------
-highwater_check.pl - Uintah/R_Tester/helpers/highwater_check.pl - perl script
-------------------
-Seems to be obsolete by highwater_percent.pl
-
 ---------------------
 replace_gold_standard - resultsdir/replace_gold_standard - sh script (A)
 --------------------- - Uintah/R_Tester/helpers/replace_gold_standard -  (B)
