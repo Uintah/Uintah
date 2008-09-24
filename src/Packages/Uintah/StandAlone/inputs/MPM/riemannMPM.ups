@@ -94,7 +94,7 @@
     <MaterialProperties>
        <MPM>
          <material>
-              <density>   11.768292682926831   </density>
+              <density>   .11768292682926831   </density>
               <constitutive_model type="ideal_gas">
                   <specific_heat>  717.5        </specific_heat>
                   <gamma>  1.4        </gamma>
@@ -124,7 +124,7 @@
                     <min>           [-2.0, -1.0,-1.0 ]   </min>
                     <max>           [ 0.5,  2.0, 2.0 ]   </max>
                 </box>
-                <res>               [1,1,1]        </res>
+                <res>               [8,1,1]        </res>
                 <velocity>          [0.0,0.0,0.0]   </velocity>
                 <temperature>       300             </temperature>
               </geom_object>
