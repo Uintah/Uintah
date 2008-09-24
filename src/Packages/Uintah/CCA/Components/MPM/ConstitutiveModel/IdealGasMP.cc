@@ -31,9 +31,6 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("gamma", d_initialData.gamma);
   ps->require("specific_heat",d_initialData.cv);
-  ps->getWithDefault("UseArtificialViscosity",
-        d_initialData.UseArtificialViscosity, false);
-
 }
 
 IdealGasMP::IdealGasMP(const IdealGasMP* cm) : ConstitutiveModel(cm)
@@ -46,7 +43,6 @@ IdealGasMP::~IdealGasMP()
 {
 }
 
-
 void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
@@ -57,7 +53,6 @@ void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   cm_ps->appendElement("gamma", d_initialData.gamma);
   cm_ps->appendElement("specific_heat",d_initialData.cv);
-  cm_ps->appendElement("specific_heat",d_initialData.UseArtificialViscosity);
 }
 
 
@@ -244,26 +239,31 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       p = (gamma - 1.0)*rhoM*cv*ptemp[idx];
 
       // try artificial viscosity
-      double AV=0.;
-      if(d_initialData.UseArtificialViscosity){
-        cerr << "Use the MPM Flag for artificial viscosity" << endl;
-        if(velGrad(0,0)<=0.){
-          AV = 2.5*2.5*dx.x()*dx.x()*rhoM*velGrad(0,0)*velGrad(0,0);
+      p_q[idx] = 0.;
+      if (flag->d_artificial_viscosity) {
+        //cerr << "Use the MPM Flag for artificial viscosity" << endl;
+        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
+        double DTrace = D.Trace();
+        if(DTrace<0.){
+          double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+          p_q[idx] = 2.5*2.5*dx_ave*dx_ave*rhoM*DTrace*DTrace;
+        } else {
+          p_q[idx] = 0.;
         }
       }
 
       // Compute artificial viscosity term
+#if 0      
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         //double c_bulk = sqrt(bulk/rho_cur);
-        double c_bulk = dp_drho;
+        double c_bulk = sqrt(dp_drho);
         Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rhoM, dx_ave);
       } else {
         p_q[idx] = 0.;
       }
-
-      //p=p+AV;
+#endif
 
       double P = p - 101325.;
 
