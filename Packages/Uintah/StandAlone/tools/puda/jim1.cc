@@ -65,10 +65,14 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
         ParticleVariable<long64> value_pID;
         ParticleVariable<Point> value_pos;
         ParticleVariable<Vector> value_vel;
+        ParticleVariable<double> value_vol, value_mas, value_tmp;
         ParticleVariable<Matrix3> value_strs;
         da->query(value_pID, "p.particleID", matl, patch, t);
         da->query(value_pos, "p.x",          matl, patch, t);
-        da->query(value_vel, "p.velocity",matl, patch, t);
+        da->query(value_vel, "p.velocity",   matl, patch, t);
+        da->query(value_vol, "p.volume",     matl, patch, t);
+        da->query(value_mas, "p.mass",       matl, patch, t);
+        da->query(value_tmp, "p.temperature",matl, patch, t);
         da->query(value_strs,"p.stress",     matl, patch, t);
         ParticleSubset* pset = value_pos.getParticleSubset();
         if(pset->numParticles() > 0){
@@ -76,8 +80,9 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
           for(;iter != pset->end(); iter++){
             partfile << value_pos[*iter].x() << " "
                      << value_vel[*iter].x() << " "
-                     << value_strs[*iter](0,0) << " ";
-            partfile << value_pID[*iter] <<  endl;
+                     << value_mas[*iter]/value_vol[*iter] << " "
+                     << value_strs[*iter](0,0) << " "
+                     << value_tmp[*iter] << endl;
           } // for
 #if 0
           for(;iter != pset->end(); iter++){
@@ -95,4 +100,3 @@ Uintah::jim1( DataArchive * da, CommandLineFlags & clf )
     }   // for levels
   }
 } // end jim1()
-
