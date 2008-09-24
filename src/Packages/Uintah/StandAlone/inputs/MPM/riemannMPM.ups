@@ -12,7 +12,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.0015      </maxTime>
+       <maxTime>            0.0005      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -60,19 +60,15 @@
    <DataArchiver>
       <filebase>PulseALLMPM.uda</filebase>
       <outputInterval>.0001</outputInterval>
-<!--
-      <outputTimestepInterval>1</outputTimestepInterval>
-      <save label = "p.xx"/>
--->
       <save label = "p.x"/>
       <save label = "p.mass"/>
-      <save label = "g.mass"/>
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.temperature"/>
       <save label = "p.stress"/>
       <save label = "p.dTdt+"/>
       <save label = "p.particleID"/>
+      <save label = "g.mass"/>
       <!-- needed for regression tester dat comparisons -->       
       <save label="KineticEnergy"/>
       <checkpoint interval="0.0005" cycle="2"/>"
@@ -80,7 +76,7 @@
 
     <MPM>
         <interpolator>gimp</interpolator>
-        <artificial_viscosity>false</artificial_viscosity>
+        <artificial_viscosity>true</artificial_viscosity>
         <do_grid_reset>true</do_grid_reset>
     </MPM>
 
@@ -101,14 +97,14 @@
               <density>   11.768292682926831   </density>
               <constitutive_model type="ideal_gas">
                   <specific_heat>  717.5        </specific_heat>
-                  <UseArtificialViscosity>true</UseArtificialViscosity>
+                  <gamma>  1.4        </gamma>
               </constitutive_model>
               <thermal_conductivity>  1000.0          </thermal_conductivity>
-              <specific_heat>         716.0           </specific_heat>
+              <specific_heat>         717.5           </specific_heat>
               <geom_object>
-               <box label="leftpartition">
-                    <min>           [-2.0, -1.0,-1.0 ]   </min>
-                    <max>           [ 0.5,  2.0, 2.0 ]   </max>
+               <box label="rightpartition">
+                    <min>           [ 0.5, -1.0,-1.0 ]   </min>
+                    <max>           [ 2.0,  2.0, 2.0 ]   </max>
                 </box>
                 <res>               [8,1,1]        </res>
                 <velocity>          [0.0,0.0,0.0]   </velocity>
@@ -119,14 +115,14 @@
               <density>   1.1768292682926831   </density>
               <constitutive_model type="ideal_gas">
                   <specific_heat>  717.5        </specific_heat>
-                  <UseArtificialViscosity>true</UseArtificialViscosity>
+                  <gamma>  1.4        </gamma>
               </constitutive_model>
               <thermal_conductivity>  1000.0          </thermal_conductivity>
-              <specific_heat>         716.0           </specific_heat>
+              <specific_heat>         717.5           </specific_heat>
               <geom_object>
-               <box label="rightpartition">
-                    <min>           [ 0.5, -1.0,-1.0 ]   </min>
-                    <max>           [ 2.0,  2.0, 2.0 ]   </max>
+               <box label="leftpartition">
+                    <min>           [-2.0, -1.0,-1.0 ]   </min>
+                    <max>           [ 0.5,  2.0, 2.0 ]   </max>
                 </box>
                 <res>               [1,1,1]        </res>
                 <velocity>          [0.0,0.0,0.0]   </velocity>
@@ -141,5 +137,4 @@
        </MPM>
     </MaterialProperties>  
 
-                     
 </Uintah_specification>
