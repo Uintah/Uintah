@@ -95,10 +95,8 @@ set ylabel "Pressure"
 set y2tics
 set xrange [0:1]
 plot  '$out/exactSolution.dat'     using 1:4 t 'exact' with lines, \
-      '$out/partout0'              using 1:4 t '', \
-      '$out/partout1'              using 1:4 t ''
-#      '$out/partout0'              using 1:($4+101325) t '', \
-#      '$out/partout1'              using 1:($4+101325) t ''
+      '$out/partout0'              using 1:(-\$4+101325) t '', \
+      '$out/partout1'              using 1:(-\$4+101325) t ''
 
 #__________________________________
 #   Temperature
