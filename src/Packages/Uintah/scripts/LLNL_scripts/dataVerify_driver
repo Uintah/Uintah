@@ -45,4 +45,4 @@ all: $(DESTS)
 
 ../stamp/%: % ../stamp
 	@echo "verifying $<)"
-	@$(RSYNC) -rRl --size-only --log-format="missing file %f bytes transferred %b" --rsh='$(SSH) -x' $< $(LOGIN):$(REMOTEDIR)/
+	@$(RSYNC) -rRlt --size-only --log-format="missing file %f bytes transferred %b" --rsh='$(SSH) -x' $< $(LOGIN):$(REMOTEDIR)/
