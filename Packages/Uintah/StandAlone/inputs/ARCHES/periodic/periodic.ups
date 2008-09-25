@@ -34,7 +34,6 @@
   <save label = "continuityResidual"/>
   <save label = "cellType"/>
   <checkpoint cycle = "2" timestepInterval = "10"/>
-  <outputDoubleAsFloat/>
   <compression>gzip</compression>
 </DataArchiver>
 

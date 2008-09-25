@@ -39,7 +39,6 @@
         <save label = "filterdrhodt"/>
 	<save label = "cellType"/>
 	<checkpoint cycle = "2" interval = "0.2"/>
-        <outputDoubleAsFloat/>
         <compression>gzip</compression>
    </DataArchiver>
 
