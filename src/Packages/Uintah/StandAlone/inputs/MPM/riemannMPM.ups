@@ -46,8 +46,8 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0.,0,0]    </lower>
-              <upper>        [1.,1,1]    </upper>
+              <lower>        [0.,0,0]       </lower>
+              <upper>        [1.,.005,.005] </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
               <resolution>   [200,1,1]  </resolution>
@@ -66,7 +66,6 @@
       <save label = "p.velocity"/>
       <save label = "p.temperature"/>
       <save label = "p.stress"/>
-      <save label = "p.dTdt+"/>
       <save label = "p.particleID"/>
       <save label = "g.mass"/>
       <!-- needed for regression tester dat comparisons -->       
