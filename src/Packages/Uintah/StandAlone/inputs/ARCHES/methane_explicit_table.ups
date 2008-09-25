@@ -51,7 +51,6 @@
         <save label = "radiationFluxTIN"/>
         <save label = "radiationFluxBIN"/>
         <checkpoint cycle = "2" interval = "0.2"/>
-        <outputDoubleAsFloat/>
         <compression>gzip</compression>
    </DataArchiver>
 
