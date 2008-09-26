@@ -73,15 +73,27 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
             dynamic_cast<const SymmetryBoundCond*>(bcb); 
           if (bc != 0) {
             if (face == Patch::xplus || face == Patch::xminus){
-              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
+              if(interp_type!="gimp"){
+               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
+               }
               }
               if(interp_type=="gimp"){
+                IntVector off = IntVector(1,0,0);
+                IntVector L,H;
+                if(face==Patch::xminus){
+                  L = l+off; H = h+off;
+                } else if(face==Patch::xplus){
+                  L = l-off; H = h-off;
+                }
+                for(NodeIterator it(L,H); !it.done(); it++) {
+                  IntVector nd = *it;
+                  variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
+                }
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
-//                variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
-                  variable[nd] = Vector(0.,0.,0.);
+                  variable[nd] = Vector(0.,variable[nd].y(), variable[nd].z());
                 }
               }
               if(interp_type=="3rdorderBS"){
@@ -100,15 +112,27 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::yplus || face == Patch::yminus){
-              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+              if(interp_type!="gimp"){
+               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
+               }
               }
               if(interp_type=="gimp"){
+                IntVector off = IntVector(0,1,0);
+                IntVector L,H;
+                if(face==Patch::yminus){
+                  L = l+off; H = h+off;
+                } else if(face==Patch::yplus){
+                  L = l-off; H = h-off;
+                }
+                for(NodeIterator it(L,H); !it.done(); it++) {
+                  IntVector nd = *it;
+                  variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
+                }
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
-//                variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
-                  variable[nd] = Vector(0.,0.,0.);
+                  variable[nd] = Vector(variable[nd].x(),0.,variable[nd].z());
                 }
               }
               if(interp_type=="3rdorderBS"){
@@ -127,15 +151,27 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             if (face == Patch::zplus || face == Patch::zminus){
-              for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
+              if(interp_type!="gimp"){
+               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
                 variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
+               }
               }
               if(interp_type=="gimp"){
+                IntVector off = IntVector(0,0,1);
+                IntVector L,H;
+                if(face==Patch::zminus){
+                  L = l+off; H = h+off;
+                } else if(face==Patch::zplus){
+                  L = l-off; H = h-off;
+                }
+                for(NodeIterator it(L,H); !it.done(); it++) {
+                  IntVector nd = *it;
+                  variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
+                }
                 for(NodeIterator it(l,h); !it.done(); it++) {
                   IntVector nd = *it;
-//                variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
-                  variable[nd] = Vector(0.,0.,0.);
+                  variable[nd] = Vector(variable[nd].x(), variable[nd].y(),0.);
                 }
               }
               if(interp_type=="3rdorderBS"){
