@@ -339,7 +339,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
                 "endian: %s\n"
                 "encoding: raw\n"
                 "Num Particles:=%d\n"
-                "Num Variables:=%d\n", numVars, numParticles*4, endianness.c_str(), numParticles, numVars );
+                "Num Variables:=%d\n", numVars, numParticles, endianness.c_str(), numParticles, numVars );
 
   int pos = 0;
   for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
