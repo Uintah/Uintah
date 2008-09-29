@@ -186,12 +186,12 @@ void Steady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, cons
 // only perform this task on the finest level
 void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, 
                                               const LevelP& level, 
-                                              const ModelInfo* mi){
-  
+                                              const ModelInfo* mi)
+{
   if (level->hasFinerLevel()){
     return;  
   }
-  
+
   Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
                         &Steady_Burn::computeModelSources, mi);
   
@@ -235,7 +235,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   
   t->computes(BurningCellLabel, react_matl);
   t->computes(TsLabel,          react_matl);
-     
+    
   if(d_saveConservedVars->mass ){
     t->computes(Steady_Burn::totalMassBurnedLabel);
   }
@@ -247,7 +247,6 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   if(one_matl->removeReference())
     delete one_matl;
 }
-
 
 void Steady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&, 
                                                           const LevelP&, 
@@ -298,14 +297,14 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     CCVariable<double> sp_vol_src_0, sp_vol_src_1;
 
     /* reactant */
-    new_dw->getModifiable(mass_src_0,     mi->modelMass_srcLabel,  m0, patch);    
+    new_dw->getModifiable(mass_src_0,     mi->modelMass_srcLabel,  m0, patch);
     new_dw->getModifiable(momentum_src_0, mi->modelMom_srcLabel,   m0, patch); 
-    new_dw->getModifiable(energy_src_0,   mi->modelEng_srcLabel,   m0, patch);   
-    new_dw->getModifiable(sp_vol_src_0,   mi->modelVol_srcLabel,   m0, patch);   
+    new_dw->getModifiable(energy_src_0,   mi->modelEng_srcLabel,   m0, patch);  
+    new_dw->getModifiable(sp_vol_src_0,   mi->modelVol_srcLabel,   m0, patch); 
     /* product */
-    new_dw->getModifiable(mass_src_1,     mi->modelMass_srcLabel,  m1, patch);   
-    new_dw->getModifiable(momentum_src_1, mi->modelMom_srcLabel,   m1, patch);   
-    new_dw->getModifiable(energy_src_1,   mi->modelEng_srcLabel,   m1, patch);   
+    new_dw->getModifiable(mass_src_1,     mi->modelMass_srcLabel,  m1, patch);  
+    new_dw->getModifiable(momentum_src_1, mi->modelMom_srcLabel,   m1, patch);  
+    new_dw->getModifiable(energy_src_1,   mi->modelEng_srcLabel,   m1, patch);  
     new_dw->getModifiable(sp_vol_src_1,   mi->modelVol_srcLabel,   m1, patch);
     
     constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol;
@@ -321,13 +320,14 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     
     /* Indicating how many particles a cell contains */
     constParticleVariable<Point>  px;
-    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gp,ngc_p, Mlb->pXLabel);
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gp, ngc_p,
+                                                                Mlb->pXLabel);
     old_dw->get(px, Mlb->pXLabel, pset);
-        
+
     /* Product Data */   
     /* Misc */
-    new_dw->get(press_CC,       Ilb->press_equil_CCLabel,      0, patch, gac, 1);
-    old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,        0, patch, gac, 1);
+    new_dw->get(press_CC,       Ilb->press_equil_CCLabel,     0, patch, gac, 1);
+    old_dw->get(NC_CCweight,    MIlb->NC_CCweightLabel,       0, patch, gac, 1);
 
     CCVariable<double> BurningCell, surfTemp;
     new_dw->allocateAndPut(BurningCell, BurningCellLabel, m0, patch, gn, 0);
@@ -347,10 +347,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
-      old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,      indx, patch, gac, 1);
-      new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,   indx, patch, gac, 1);
+      old_dw->get(temp_CC[m],       MIlb->temp_CCLabel,    indx, patch, gac, 1);
+      new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel, indx, patch, gac, 1);
     }
-    
     
     //===============================================
     //If you change the burning surface criteria logic you must also modify
@@ -364,10 +363,9 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       pFlag[c] += 1.0;
     }    
     setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
- 
+
     Vector dx = patch->dCell();
     MIN_MASS_IN_A_CELL = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
-    
 
     /* Cell Iteration */
     IntVector nodeIdx[8];
@@ -390,7 +388,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       double Tzero = 0.0;
       double temp_vf = 0.0;      
       /*if( (MaxMass-MinMass)/MaxMass>0.4 && (MaxMass-MinMass)/MaxMass<1.0 && pFlag[c]>0 ){ */
-      if( MinMass/MaxMass<0.7 && pFlag[c]>0 ){ 
+      if( MinMass/MaxMass<0.7 && pFlag[c]>0 ){
         /* near interface and containing particles */
         for(int i = -1; i<=1; i++){
           for(int j = -1; j<=1; j++){
@@ -424,11 +422,13 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
           }//end 2nd for
         }//end 1st for
       }//endif
+
       if(burning == 1 && productPress >= ThresholdPressure){
         BurningCell[c]=1.0;
         
-        Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
-       
+        Vector rhoGradVector = computeDensityGradientVector(nodeIdx,NCsolidMass,
+                                                            NC_CCweight,dx);
+
         double surfArea = computeSurfaceArea(rhoGradVector, dx); 
         double Tsurf = 850.0;  // initial guess for the surface temperature.
         
@@ -438,13 +438,13 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         surfTemp[c] = Tsurf;
         
         /* conservation of mass, momentum and energy   */
-         mass_src_0[c]   -= burnedMass;
-         mass_src_1[c]   += burnedMass;
-         totalBurnedMass += burnedMass;
+        mass_src_0[c]   -= burnedMass;
+        mass_src_1[c]   += burnedMass;
+        totalBurnedMass += burnedMass;
        
         Vector momX = vel_CC[c] * burnedMass;
         momentum_src_0[c]  -= momX;
-        momentum_src_1[c]    += momX;
+        momentum_src_1[c]  += momX;
         
         double energyX   = Cp*solidTemp[c]*burnedMass; 
         double releasedHeat = burnedMass * (Qc + Qg);
@@ -454,7 +454,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
         
         double createdVolx = burnedMass * solidSp_vol[c];
         sp_vol_src_0[c]  -= createdVolx;
-        sp_vol_src_1[c]    += createdVolx;
+        sp_vol_src_1[c]  += createdVolx;
       }  // if (cell is ignited)
     }  // cell iterator
 
