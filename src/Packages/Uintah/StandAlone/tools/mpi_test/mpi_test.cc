@@ -532,10 +532,10 @@ point2pointasync_test()
   bool done = false;
   int  totalCompleted = 0;
 
-  double startTime = -1, curTime = -1;
-
-  startTime = Time::currentSeconds();
-
+  double startTime = -1, curTime = -1, lastTime = -1 ;
+  
+  lastTime = startTime = Time::currentSeconds();
+  
   while( !done ) {
 
     // While it is unclear in the docs, apparently the MPI_Testsome
@@ -543,12 +543,16 @@ point2pointasync_test()
     // recv too (ie, places the data in the specified buffer).
     MPI_Testsome( procs, rrequest, &numCompleted, completedBuffer, status );
 
+    //reset timer if progress is made
+    if(numCompleted>0)
+      lastTime=Time::currentSeconds();
+    
     curTime = Time::currentSeconds();
 
     double secsToWait = 50.0;
-    if( curTime > startTime + secsToWait ) { // Give it 'secsToWait' seconds to finish
+    if( curTime > lastTime + secsToWait ) { // Give it 'secsToWait' seconds to finish
       if( rank == 0 ) {
-        cout << "ERROR: Some processors have not responded after " << secsToWait << " seconds.\n";
+        cout << "ERROR: Some processors have not responded after " << curTime - startTime << " seconds.\n";
       }
 
       // Find out (and display) which processors did not successfully respond...
