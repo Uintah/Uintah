@@ -20,7 +20,7 @@
 #    pragma set woff 3201
 #    pragma set woff 1375
 #  endif
-#  include <glui.h>
+#  include <GL/glui.h>
 #  if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #    pragma reset woff 1430
 #    pragma reset woff 3201
