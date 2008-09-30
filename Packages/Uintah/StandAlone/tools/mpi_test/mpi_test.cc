@@ -549,16 +549,14 @@ point2pointasync_test()
     
     curTime = Time::currentSeconds();
 
-    double secsToWait = 50.0;
-    if( curTime > lastTime + secsToWait ) { // Give it 'secsToWait' seconds to finish
-      if( rank == 0 ) {
-        cout << "ERROR: Some processors have not responded after " << curTime - startTime << " seconds.\n";
-      }
-
+    double secsToWait = 100.0;
+    if( curTime - lastTime > secsToWait ) { // Give it 'secsToWait' seconds to finish
+      cout << "Proc " << rank << ": No progress has been made in the last " << curTime - lastTime << " seconds.\n";
+ 
       // Find out (and display) which processors did not successfully respond...
       for( int pos = 0; pos < procs; pos++ ) {
         if( completed[ pos ] == false ) {
-          cout << "Proc " << rank << " failed to hear from processor " << pos << ".\n";
+          cout << "Proc " << rank << ": failed to hear from processor " << pos << ".\n";
           pass = false;
         }
       }
