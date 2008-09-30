@@ -681,6 +681,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     double avgCost = (total_cost+previous_total_cost) / num_procs;
     double hardMaxCost = total_cost;    
     double myMaxCost =hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*d_myworld->myrank();
+    double myStoredMax=DBL_MAX;
     int minProcLoc = -1;
     
     if(!force)  //use initial load balance to start the iteration
@@ -716,13 +717,14 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     //iterate the load balancing algorithm until the max can no longer be lowered
     while(improvement>0)
     {
+      
       double remainingCost=total_cost+previous_total_cost;
       double avgCostPerProc = remainingCost / num_procs;
 
       int currentProc = 0;
       vector<double> currentProcCosts(num_procs,0);
       double currentMaxCost = 0;
-
+      
       for (int p = 0; p < num_patches; p++) {
         int index;
         if (d_doSpaceCurve) {
@@ -768,29 +770,23 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         currentMaxCost=previousProcCosts[currentProc]+currentProcCosts[currentProc];
 
       //if the max was lowered and the assignments are valid
-      if(currentMaxCost<myMaxCost && currentProc<num_procs)
+      if(currentMaxCost<myStoredMax && currentProc<num_procs)
       {
+
+#if 0
         //take this assignment
+        for(int p=0;p<num_patches;p++)
+        {
+          d_tempAssignment[level_offset+p]=temp_assignment[level_offset+p];
+        }
+#else
         d_tempAssignment.swap(temp_assignment);
-
+#endif
         //update myMaxCost
-        myMaxCost=currentMaxCost;
-      }
-      else
-      {
-        //my assignment is not valid so set myMaxCost high
-        myMaxCost=DBL_MAX;
+        myStoredMax=currentMaxCost;
       }
 
-
-      //if currentProc is not in range
-      if(currentProc>=num_procs)
-      {
-        //my max is not valid
-        myMaxCost=DBL_MAX;
-      }
-
-      double_int maxInfo(myMaxCost,d_myworld->myrank());
+      double_int maxInfo(myStoredMax,d_myworld->myrank());
       double_int min;
       //gather the maxes
       //change to all reduce with loc
@@ -821,9 +817,9 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     if(minProcLoc!=-1 && num_procs>1)
     {
       //broadcast load balance
-      MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
+      MPI_Bcast(&d_tempAssignment[level_offset],num_patches,MPI_INT,minProcLoc,d_myworld->getComm());
     }
-    
+
     if(!d_levelIndependent)
     {
       //update previousProcCost
@@ -841,15 +837,19 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //calculate lb stats:
       double totalCost=0;
       vector<double> procCosts(num_procs,0);
+      vector<int> patchCounts(num_procs,0);
       for(int p=0;p<num_patches;p++)
       {
         totalCost+=patch_costs[l][p];
         procCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
+        patchCounts[d_tempAssignment[level_offset+p]]++;
       }
       
       double meanCost=totalCost/num_procs;
       double minCost=procCosts[0];
       double maxCost=procCosts[0];
+      int maxProc=0;
+
       if(d_myworld->myrank()==0)
         stats << "Level:" << l << " ProcCosts:";
       
@@ -858,15 +858,17 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         if(minCost>procCosts[p])
            minCost=procCosts[p];
         else if(maxCost<procCosts[p])
+        {
            maxCost=procCosts[p];
-        
+           maxProc=p;
+        }
         if(d_myworld->myrank()==0)
           stats << procCosts[p] << " ";
       }
         if(d_myworld->myrank()==0)
           stats << endl;
 
-      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << (maxCost-meanCost)/meanCost <<  endl;
+      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << (maxCost-meanCost)/meanCost << " Patches on rank:" << maxProc << " with " << patchCounts[maxProc] << " patches."  << endl;
     }  
     
     level_offset+=num_patches;
