@@ -112,35 +112,41 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     int ILOW=0,IHIGH=0,JLOW=0,JHIGH=0,KLOW=0,KHIGH=0;
     // First, figure out some ranges for for loops
     for(Patch::FaceType face = Patch::startFace;
-        face <= Patch::endFace; face=Patch::nextFace(face)){
-      Patch::BCType bc_type = patch->getBCType(face);
-
-      switch(face) {
-        case Patch::xminus:
+           face <= Patch::endFace; face=Patch::nextFace(face)){
+        Patch::BCType bc_type = patch->getBCType(face);
+                                                                                                                                                                                                 
+        switch(face) {
+         case Patch::xminus:
           if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
-          else if(bc_type == Patch::None){ ILOW = low.x()+1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ ILOW = low.x()+1; }
           break;
-        case Patch::xplus:
+         case Patch::xplus:
           if(bc_type == Patch::Neighbor) { IHIGH = high.x(); }
-          else if(bc_type == Patch::None){ IHIGH = high.x()-1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ IHIGH = high.x()-1; }
           break;
-        case Patch::yminus:
+         case Patch::yminus:
           if(bc_type == Patch::Neighbor) { JLOW = low.y(); }
-          else if(bc_type == Patch::None){ JLOW = low.y()+1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ JLOW = low.y()+1; }
           break;
-        case Patch::yplus:
+         case Patch::yplus:
           if(bc_type == Patch::Neighbor) { JHIGH = high.y(); }
-          else if(bc_type == Patch::None){ JHIGH = high.y()-1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ JHIGH = high.y()-1; }
           break;
-        case Patch::zminus:
+         case Patch::zminus:
           if(bc_type == Patch::Neighbor) { KLOW = low.z(); }
-          else if(bc_type == Patch::None){ KLOW = low.z()+1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ KLOW = low.z()+1; }
           break;
-        case Patch::zplus:
+         case Patch::zplus:
           if(bc_type == Patch::Neighbor) { KHIGH = high.z(); }
-          else if(bc_type == Patch::None){ KHIGH = high.z()-1; }
+          else if(bc_type == Patch::None ||
+                  bc_type == Patch::Coarse){ KHIGH = high.z()-1; }
           break;
-        default:
+         default:
           break;
       }
     }
@@ -344,7 +350,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-	interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
+        interpolator->findCellAndWeights(px[idx], ni, S, psize[idx]);
         
         // Add each particles contribution to the local mass & velocity
         // Must use the node indices
@@ -410,7 +416,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
           //      if(scale_factor > 0.0){
           //        scale_factor=Min(1.0,scale_factor);
-	  //      }
+          //      }
 
           // Loop over velocity fields.  Only proceed if velocity field mass
           // is nonzero (not numerical noise) and the difference from
@@ -600,7 +606,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
           //      if(scale_factor > 0.0){
           //        scale_factor=Min(1.0,scale_factor);
-	  //      }
+          //      }
 
           // Loop over velocity fields.  Only proceed if velocity field mass
           // is nonzero (not numerical noise) and the difference from
