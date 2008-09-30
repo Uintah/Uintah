@@ -50,15 +50,17 @@
 #  include <GL/freeglut_ext.h>
 #endif
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1430
-#pragma set woff 3201
-#pragma set woff 1375
+#  pragma set woff 1430
+#  pragma set woff 3201
+#  pragma set woff 1375
 #endif
-#include <glui.h>
+
+#include <GL/glui.h>
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1430
-#pragma reset woff 3201
-#pragma reset woff 1375
+#  pragma reset woff 1430
+#  pragma reset woff 3201
+#  pragma reset woff 1375
 #endif
 
 #include <unistd.h>  // for sleep
@@ -66,7 +68,7 @@
 #include <cerrno>
 
 #include <sgi_stl_warnings_off.h>
-#include <vector>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 // From Glyph.cc
