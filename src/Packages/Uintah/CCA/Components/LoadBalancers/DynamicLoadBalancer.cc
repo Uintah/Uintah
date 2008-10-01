@@ -755,17 +755,25 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
           {
             currentMaxCost=previousProcCosts[currentProc]+currentProcCosts[currentProc];
           }
-          // move to next proc and add this patch
+          
+          
+          //subtract currentProc's cost from remaining cost
+          remainingCost -= (currentProcCosts[currentProc]+previousProcCosts[currentProc]);
+
+          // move to next proc 
           currentProc++;
 
+          //if currentProc to large then load balance is invalid so break out
           if(currentProc>=num_procs)
             break;
 
+          //assign patch to currentProc
           temp_assignment[level_offset+index] = currentProc;
+         
           //update average (this ensures we don't over/under fill to much)
-          remainingCost -= (currentProcCosts[currentProc]+previousProcCosts[currentProc]);
           avgCostPerProc = remainingCost / (num_procs-currentProc);
           currentProcCosts[currentProc] = patchCost;
+          
         }
       }
 
