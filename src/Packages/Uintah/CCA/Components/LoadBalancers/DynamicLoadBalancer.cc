@@ -331,7 +331,8 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   // get the overall range in all dimensions from all patches
   IntVector high(INT_MIN,INT_MIN,INT_MIN);
   IntVector low(INT_MAX,INT_MAX,INT_MAX);
-  
+ 
+  vector<int> originalPatchCount(d_myworld->size(),0); //store how many patches each patch has originally
   for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
   {
     const Patch* patch = *iter;
@@ -354,6 +355,14 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
         positions.push_back(point[dimensions[d]]);
       }
     }
+    originalPatchCount[proc]++;
+  }
+
+  //compute patch starting locations
+  vector<int> originalPatchStart(d_myworld->size(),0);
+  for(int p=1;p<d_myworld->size();p++)
+  {
+    originalPatchStart[p]=originalPatchStart[p-1]+originalPatchCount[p-1];
   }
   
   //patchset dimensions
@@ -367,7 +376,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
 
   //create SFC
-  sfc.SetLocalSize(positions.size()/dim);
+  sfc.SetLocalSize(originalPatchCount[d_myworld->myrank()]);
   sfc.SetDimensions(r);
   sfc.SetCenter(c);
   sfc.SetRefinementsByDelta(delta); 
@@ -378,16 +387,11 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   vector<int> displs(d_myworld->size(), 0);
   if(d_myworld->size()>1)  
   {
-    int rsize=indices.size();
+    int rsize=indices.size()*sizeof(DistributedIndex);
      
     //gather recv counts
     MPI_Allgather(&rsize,1,MPI_INT,&recvcounts[0],1,MPI_INT,d_myworld->getComm());
     
-    
-    for (unsigned i = 0; i < recvcounts.size(); i++)
-    {
-       recvcounts[i]*=sizeof(DistributedIndex);
-    }
     for (unsigned i = 1; i < recvcounts.size(); i++)
     {
        displs[i] = recvcounts[i-1] + displs[i-1];
@@ -400,14 +404,14 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
                    &displs[0], MPI_BYTE, d_myworld->getComm());
 
     indices.swap(rbuf);
+  
   }
 
   //convert distributed indices to normal indices
   for(unsigned int i=0;i<indices.size();i++)
   {
     DistributedIndex di=indices[i];
-    //order[i]=displs[di.p]/sizeof(DistributedIndex)+di.i;
-    order[i]=(int)ceil((float)di.p*level->numPatches()/d_myworld->size())+di.i;
+    order[i]=originalPatchStart[di.p]+di.i
   }
  
   /*
