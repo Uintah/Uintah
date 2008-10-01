@@ -229,8 +229,8 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     {
       retval=result;
     }
-    if(d_myworld->myrank()==0)
-      rreason << "Regridding needed because refinement flag was found\n";
+    if(d_myworld->myrank()==0 && retval)
+        rreason << "Regridding needed because refinement flag was found\n";
   }
   
   if(retval==true)
