@@ -131,6 +131,9 @@ ArchesLabel::ArchesLabel()
   // Scalar Coef
   d_scalCoefSBLMLabel = VarLabel::create("scalCoefSBLM",CC_double);
 
+  // New Scalar Coefs
+  d_scalarTotCoefLabel  = VarLabel::create("scalarTotCoef",  CC_double); 
+
   // Scalar Non Linear Src
   d_scalNonLinSrcSBLMLabel = VarLabel::create("scalNonLinSrcSBLM",CC_double);
 
@@ -532,6 +535,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_scalarVarSPLabel);
   VarLabel::destroy(d_scalarDissSPLabel);
   VarLabel::destroy(d_scalCoefSBLMLabel);
+  VarLabel::destroy(d_scalarTotCoefLabel);
   VarLabel::destroy(d_scalNonLinSrcSBLMLabel);
   VarLabel::destroy(d_reactscalarSPLabel);
   VarLabel::destroy(d_reactscalarEKTLabel);

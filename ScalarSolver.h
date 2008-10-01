@@ -152,6 +152,15 @@ private:
                          bool d_EKTCorrection,
                          bool doing_EKT_now);
 
+  void calculateScalarCoeff__new( const ProcessorGroup*,
+                                 const Patch* patch,
+                                 double,
+                                 CellInformation* cellinfo,
+                                 ArchesVariables* coeff_vars,
+                                 ArchesConstVariables* constcoeff_vars,
+                                 int conv_scheme);
+
+
 
 private:
   // const VarLabel* (required)

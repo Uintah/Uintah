@@ -263,6 +263,40 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
     }
   }
 }
+//-----------------------------------------------
+// New scalar source calculation.
+// This should replace calculateScalarSource
+// **NOTE!**
+// This is adding:
+// \rho*vol/dt*\phi_t 
+// to the RHS.  
+void 
+Source::calculateScalarSource__new(const ProcessorGroup* pc,
+                              const Patch* patch,
+                              double delta_t,
+                              CellInformation* cellinfo,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars) 
+{
+  double vol = 0.0;
+  double apo = 0.0; 
+
+  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector curr = *iter; 
+
+    vol = cellinfo->sew[curr.x()]*cellinfo->sns[curr.y()]*cellinfo->stb[curr.z()]; 
+    apo = constvars->old_density[curr]*vol/delta_t; 
+    vars->scalarNonlinearSrc[curr] += apo*constvars->old_scalar[curr];
+    
+  }
+
+  // Here we need to add the boundary source term if there are some.
+  if (d_boundaryCondition->getNumSourceBndry() > 0){
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      vars->scalarNonlinearSrc[*iter] += vars->scalarBoundarySrc[*iter];
+    }
+  } 
+}
 
 //****************************************************************************
 // Scalar source calculation
@@ -487,6 +521,35 @@ Source::modifyScalarMassSource(const ProcessorGroup* ,
                     vars->scalarConvectCoeff[Arches::AB],
                     conv_scheme);
 }
+//-----------------------------------------
+// modify scalar mass source 
+// (scalar equivalent to masscal)
+//**NOTE** this looks nearly identical to the one used for 
+//         velocity except for some reason l2up was turned off
+//         for velocity. 
+//         Perhaps we can resuse this code for both?
+void 
+Source::modifyScalarMassSource__new(const ProcessorGroup* ,
+                                    const Patch* patch,
+                                    double,
+                                    ArchesVariables* vars,
+                                    ArchesConstVariables* constvars,
+                                    int conv_scheme)
+{
+  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector curr = *iter; 
+    
+//     div \cdot (\rho u)
+    double smp = conv_scheme == 1 ? 0:
+                 vars->scalarConvCoef[curr].e - vars->scalarConvCoef[curr].w + 
+                 vars->scalarConvCoef[curr].n - vars->scalarConvCoef[curr].s + 
+                 vars->scalarConvCoef[curr].t - vars->scalarConvCoef[curr].b;
+    
+    vars->scalarNonlinearSrc[curr] += -smp*constvars->scalar[curr];  
+                                   
+
+  }
+}
 //______________________________________________________________________
 //
 void 
@@ -662,6 +725,7 @@ Source::calculateVelMMSSource(const ProcessorGroup* ,
 }
 //****************************************************************************
 // Scalar source calculation for MMS
+// Adds an mms source term to RHS. 
 //****************************************************************************
 void 
 Source::calculateScalarMMSSource(const ProcessorGroup*,
@@ -671,19 +735,11 @@ Source::calculateScalarMMSSource(const ProcessorGroup*,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars) 
 {
+  double rho0 = 0.0;
 
-  // Get the patch and variable indices
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-  double rho0=0.0;
-  
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-      }
-    }
-  }
+  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    //waiting for source terms...
+  } 
 }
 //****************************************************************************
 // Pressure source calculation for MMS

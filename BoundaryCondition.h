@@ -370,6 +370,12 @@ public:
                 ArchesVariables* vars,
                 ArchesConstVariables* constvars);
 
+  void scalarBC__new(const ProcessorGroup* pc,
+                const Patch* patch,
+                ArchesVariables* vars,
+                ArchesConstVariables* constvars);
+
+
   ////////////////////////////////////////////////////////////////////////
   // Initialize multi-material wall celltyping and void fraction 
   // calculation
@@ -461,6 +467,13 @@ public:
                        CellInformation*, 
                        ArchesVariables* vars,
                        ArchesConstVariables* constvars);
+  // applies multimaterial bc's for scalars and pressure
+  void mmscalarWallBC__new( const ProcessorGroup*,
+                       const Patch* patch,
+                       CellInformation*, 
+                       ArchesVariables* vars,
+                       ArchesConstVariables* constvars);
+
 
   // applies multimaterial bc's for enthalpy
   void mmEnthalpyWallBC( const ProcessorGroup*,
