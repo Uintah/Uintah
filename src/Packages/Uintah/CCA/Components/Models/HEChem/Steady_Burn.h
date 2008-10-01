@@ -75,6 +75,7 @@ WARNING
     virtual void scheduleComputeModelSources(SchedulerP&,
                                              const LevelP& level,
                                              const ModelInfo*);
+
     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                          const LevelP&,
                                                          const MaterialSet*);
@@ -96,6 +97,10 @@ WARNING
                              const MaterialSubset*, DataWarehouse*, 
                              DataWarehouse*, const ModelInfo*);
     
+    void computeNumPPC(const ProcessorGroup*, const PatchSubset*,
+                       const MaterialSubset*, DataWarehouse*, 
+                       DataWarehouse*, const ModelInfo*);
+    
     double computeSurfaceArea(Vector &rhoGradVector, Vector &dx);
     
     Vector computeDensityGradientVector(IntVector *nodeIdx, 
@@ -103,8 +108,8 @@ WARNING
                                         constNCVariable<double> &NC_CCweight,
                                         Vector &dx);
     
-    double computeBurnedMass(double To, double& Ts,  double P, double Vc, double surfArea, 
-                             double delT, double solidMass);
+    double computeBurnedMass(double To, double& Ts,  double P, double Vc,
+                             double surfArea, double delT, double solidMass);
     
     void printSchedule(const LevelP& level,
                        const string& where); 
@@ -118,6 +123,7 @@ WARNING
     
     const VarLabel* BurningCellLabel;
     const VarLabel* TsLabel;
+    const VarLabel* numPPCLabel;
     const VarLabel* totalMassBurnedLabel;
     const VarLabel* totalHeatReleasedLabel;
     
