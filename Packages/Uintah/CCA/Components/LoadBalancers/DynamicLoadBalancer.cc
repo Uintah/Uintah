@@ -411,7 +411,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   for(unsigned int i=0;i<indices.size();i++)
   {
     DistributedIndex di=indices[i];
-    order[i]=originalPatchStart[di.p]+di.i
+    order[i]=originalPatchStart[di.p]+di.i;
   }
  
   /*
