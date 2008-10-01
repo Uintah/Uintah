@@ -1495,6 +1495,7 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
+
   //fortran call
   fort_bcscalar(idxLo, idxHi,
                 vars->scalarCoeff[Arches::AE],
@@ -1518,6 +1519,63 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
                 vars->scalarDiffusionCoeff[Arches::AB],
                 constvars->cellType, wall_celltypeval,
                 xminus, xplus, yminus, yplus, zminus, zplus);
+}
+void 
+BoundaryCondition::scalarBC__new(const ProcessorGroup*,
+                            const Patch* patch,
+                            ArchesVariables* vars,
+                            ArchesConstVariables* constvars)
+{
+  //This will be removed once the new boundary condition stuff is online:
+  // Like the old code, this only takes care of wall bc's. 
+  // Also, like the old code, it only allows for wall in the x-direction
+
+  // Get the wall boundary and flow field codes
+  int wall = wallCellType();
+  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+ 
+  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector curr = *iter;
+
+    if (constvars->cellType[curr] == wall){
+      //interior intrusions
+      vars->scalarTotCoef[curr].e = 0.0;
+      vars->scalarTotCoef[curr].w = 0.0;
+      vars->scalarTotCoef[curr].n = 0.0;
+      vars->scalarTotCoef[curr].s = 0.0;
+      vars->scalarTotCoef[curr].t = 0.0;
+      vars->scalarTotCoef[curr].b = 0.0;
+      vars->scalarNonlinearSrc[curr] = 0.0;
+      vars->scalarLinearSrc[curr] = -1.0;
+ 
+      vars->scalarConvCoef[curr].e = 0.0;
+      vars->scalarConvCoef[curr].w = 0.0;
+      vars->scalarConvCoef[curr].n = 0.0;
+      vars->scalarConvCoef[curr].s = 0.0;
+      vars->scalarConvCoef[curr].t = 0.0;
+      vars->scalarConvCoef[curr].b = 0.0;
+
+      vars->scalarDiffCoef[curr].e = 0.0;
+      vars->scalarDiffCoef[curr].w = 0.0;
+      vars->scalarDiffCoef[curr].n = 0.0;
+      vars->scalarDiffCoef[curr].s = 0.0;
+      vars->scalarDiffCoef[curr].t = 0.0;
+      vars->scalarDiffCoef[curr].b = 0.0;
+    }
+
+    if (xminus){
+      //domani boundary bc's 
+      if (constvars->cellType[curr - IntVector(1,0,0)] == wall){
+
+        vars->scalarTotCoef[curr].w = 0.0;
+        vars->scalarDiffCoef[curr].w = 0.0;
+        vars->scalarConvCoef[curr].w = 0.0;
+
+      }
+
+    }
+ 
+  }
 }
 
 
@@ -2080,6 +2138,71 @@ BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
                       vars->scalarNonlinearSrc, vars->scalarLinearSrc,
                       constvars->cellType, d_mmWallID);
 }
+
+//______________________________________________________________________
+// New intrusion scalar BC
+void 
+BoundaryCondition::mmscalarWallBC__new( const ProcessorGroup*,
+                                        const Patch* patch,
+                                        CellInformation*,
+                                        ArchesVariables* vars,
+                                        ArchesConstVariables* constvars)
+{
+  // **NOTE**
+  // Why is there a special d_mmWallID? This isn't consistent with how wallid is handled
+
+  // Get the wall boundary and flow field codes
+  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector curr = *iter;
+
+    if (constvars->cellType[curr] == d_mmWallID) {
+      vars->scalarConvCoef[curr].e = 0.0;
+      vars->scalarConvCoef[curr].w = 0.0;
+      vars->scalarConvCoef[curr].n = 0.0;
+      vars->scalarConvCoef[curr].s = 0.0;
+      vars->scalarConvCoef[curr].t = 0.0;
+      vars->scalarConvCoef[curr].b = 0.0;
+
+      vars->scalarTotCoef[curr].e = 0.0;
+      vars->scalarTotCoef[curr].w = 0.0;
+      vars->scalarTotCoef[curr].n = 0.0;
+      vars->scalarTotCoef[curr].s = 0.0;
+      vars->scalarTotCoef[curr].t = 0.0;
+      vars->scalarTotCoef[curr].b = 0.0;
+  
+      vars->scalarNonlinearSrc[curr] = 0.0;
+      vars->scalarLinearSrc[curr] = -1.0;
+    }
+    else {
+      if (constvars->cellType[curr + IntVector(1,0,0)]==d_mmWallID){
+        vars->scalarConvCoef[curr].e = 0.0;
+        vars->scalarTotCoef[curr].e = 0.0;
+      }
+      if (constvars->cellType[curr - IntVector(1,0,0)]==d_mmWallID){
+        vars->scalarConvCoef[curr].w = 0.0;
+        vars->scalarTotCoef[curr].w = 0.0;
+      }
+      if (constvars->cellType[curr + IntVector(0,1,0)]==d_mmWallID){
+        vars->scalarConvCoef[curr].n = 0.0;
+        vars->scalarTotCoef[curr].n = 0.0;
+      }
+      if (constvars->cellType[curr - IntVector(0,1,0)]==d_mmWallID){
+        vars->scalarConvCoef[curr].s = 0.0;
+        vars->scalarTotCoef[curr].s = 0.0;
+      }
+       if (constvars->cellType[curr + IntVector(0,0,1)]==d_mmWallID){
+        vars->scalarConvCoef[curr].t = 0.0;
+        vars->scalarTotCoef[curr].t = 0.0;
+      } 
+       if (constvars->cellType[curr - IntVector(0,0,1)]==d_mmWallID){
+        vars->scalarConvCoef[curr].b = 0.0;
+        vars->scalarTotCoef[curr].b = 0.0;
+      } 
+    }
+
+  }
+}
+ 
 
 //______________________________________________________________________
 // applies multimaterial bc's for enthalpy

@@ -108,6 +108,13 @@ public:
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
                              ArchesConstVariables* constvars);
+ 
+  void calculateScalarSource__new(const ProcessorGroup* pc,
+                              const Patch* patch,
+                              double delta_t,
+                              CellInformation* cellinfo,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars); 
 
   void calculateExtraScalarSource(const ProcessorGroup* pc,
                              const Patch* patch,
@@ -150,6 +157,13 @@ public:
   // Set source terms. Will need more parameters...like velocity and
   // scalars
   void modifyScalarMassSource(const ProcessorGroup* pc,
+                              const Patch* patch,
+                              double delta_t, 
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars,
+                              int conv_scheme);
+
+  void modifyScalarMassSource__new(const ProcessorGroup* pc,
                               const Patch* patch,
                               double delta_t, 
                               ArchesVariables* vars,

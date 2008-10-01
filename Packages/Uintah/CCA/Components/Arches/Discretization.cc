@@ -392,7 +392,6 @@ void
 Discretization::calculateScalarDiagonal(const Patch* patch,
                                         ArchesVariables* coeff_vars)
 {
-  
   // Get the domain size and the patch indices
   IntVector idxLo = patch->getFortranCellLowIndex__New();
   IntVector idxHi = patch->getFortranCellHighIndex__New();
@@ -417,6 +416,20 @@ Discretization::calculateScalarDiagonal(const Patch* patch,
              coeff_vars->scalarLinearSrc);
 
 }
+void Discretization::calculateScalarDiagonal__new(const Patch* patch,
+                                        ArchesVariables* coeff_vars)
+{
+// --new stuff to be turned on when integrator is fixed -- 
+  CellIterator iter = patch->getCellIterator__New();
+  compute_Ap<CCVariable<double> >(iter, coeff_vars->scalarTotCoef, 
+                                        coeff_vars->scalarLinearSrc); 
+
+  // for computing the divergence constraint 
+  compute_Ap<CCVariable<double> >(iter, coeff_vars->scalarDiffCoef,
+                                        coeff_vars->scalarLinearSrc);
+
+}
+
 //****************************************************************************
 // Scalar central scheme with flux limiter (Superbee or Van Leer) 
 // (for convection part only)

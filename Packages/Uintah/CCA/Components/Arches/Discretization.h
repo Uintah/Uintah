@@ -119,6 +119,9 @@ public:
   // Documentation here
   void calculateScalarDiagonal(const Patch* patch,
                                ArchesVariables* vars);
+  void calculateScalarDiagonal__new(const Patch* patch,
+                               ArchesVariables* vars);
+
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
   void calculateScalarFluxLimitedConvection(const Patch* patch,

@@ -263,6 +263,12 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
       // added one more argument of index to specify scalar component
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
+
+    // -------- New Coefficient Stuff -------------
+    tsk->computes(d_lab->d_scalarTotCoefLabel); 
+
+    // --------------------------------------------
+
     tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
     tsk->computes(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
     tsk->computes(d_lab->d_scalNonLinSrcSBLMLabel);
@@ -271,6 +277,12 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 //#endif
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
   }else {
+
+    // -------- New Coefficient Stuff -------------
+    tsk->modifies(d_lab->d_scalarTotCoefLabel); 
+
+    // --------------------------------------------
+
     tsk->modifies(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl, oams);
     tsk->modifies(d_lab->d_scalDiffCoefLabel, d_lab->d_stencilMatl, oams);
     tsk->modifies(d_lab->d_scalNonLinSrcSBLMLabel);
@@ -368,7 +380,13 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
    // allocate matrix coeffs
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
-      
+ 
+    //New coefficients:----------------
+    new_dw->allocateAndPut(scalarVars.scalarTotCoef, 
+                           d_lab->d_scalarTotCoefLabel, indx, patch, gn, 0);
+
+    //---------------------------------   
+
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocateAndPut(scalarVars.scalarCoeff[ii],
                              d_lab->d_scalCoefSBLMLabel, ii, patch);
@@ -398,6 +416,11 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                             d_lab->d_scalDiffCoefLabel, ii, patch);
       scalarVars.scalarDiffusionCoeff[ii].initialize(0.0);
     }
+    //New coefficients:----------------
+    new_dw->getModifiable(scalarVars.scalarTotCoef, 
+                          d_lab->d_scalarTotCoefLabel, indx, patch);
+    //---------------------------------   
+ 
     new_dw->getModifiable(scalarVars.scalarNonlinearSrc,
                           d_lab->d_scalNonLinSrcSBLMLabel, indx, patch);
     scalarVars.scalarNonlinearSrc.initialize(0.0);
@@ -419,17 +442,32 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
-  d_discretize->calculateScalarCoeff(patch,
-                                     cellinfo, 
+  //d_discretize->calculateScalarCoeff(patch,
+  //                                   cellinfo, 
+  //                                   &scalarVars, &constScalarVars,
+  //                                   d_conv_scheme);
+
+  //new stuff-----------------------**DONE**
+  new_dw->allocateTemporary(scalarVars.scalarConvCoef, patch); 
+  new_dw->allocateTemporary(scalarVars.scalarDiffCoef, patch); 
+  calculateScalarCoeff__new(pc, patch,
+                                     delta_t, cellinfo, 
                                      &scalarVars, &constScalarVars,
                                      d_conv_scheme);
 
-  // Calculate scalar source terms
-  // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
-  // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
-  d_source->calculateScalarSource(pc, patch,
+
+   // Calculate scalar source terms
+   // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
+   // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
+   //d_source->calculateScalarSource(pc, patch,
+   //                               delta_t, cellinfo, 
+   //                               &scalarVars, &constScalarVars);
+
+   //---NEW Source term calculation **DONE**
+   d_source->calculateScalarSource__new(pc, patch,
                                   delta_t, cellinfo, 
                                   &scalarVars, &constScalarVars);
+
    if (d_doMMS){
     d_source->calculateScalarMMSSource(pc, patch,
                                     delta_t, cellinfo, 
@@ -506,28 +544,38 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      d_boundaryCondition->scalarBC(pc, patch,
+      //d_boundaryCondition->scalarBC(pc, patch,
+      //                              &scalarVars, &constScalarVars);
+      d_boundaryCondition->scalarBC__new(pc, patch, 
                                     &scalarVars, &constScalarVars);
       /*if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
                                                &scalarVars, &constScalarVars);*/
     }
-    // apply multimaterial intrusion wallbc
-    if (d_MAlab)
-      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+    // apply multimaterial intrusion wallbc ...
+    // NOTE: Why not do this in scalarBC?
+    if (d_MAlab){
+      //d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+      //                                    &scalarVars, &constScalarVars);
+      d_boundaryCondition->mmscalarWallBC__new(pc, patch, cellinfo,
                                           &scalarVars, &constScalarVars);
-    
+    }
     // similar to mascal
-    // inputs :
-    // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t,
-                                     &scalarVars, &constScalarVars,
-                                     d_conv_scheme);
+    //d_source->modifyScalarMassSource(pc, patch, delta_t,
+    //                                 &scalarVars, &constScalarVars,
+    //                                 d_conv_scheme);
+    // ----New modifyScalarMassSource --- **DONE**
+    d_source->modifyScalarMassSource__new(pc, patch, delta_t,
+                                          &scalarVars, &constScalarVars,
+                                          d_conv_scheme);
+
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
-    d_discretize->calculateScalarDiagonal(patch, &scalarVars);
+    //d_discretize->calculateScalarDiagonal(patch, &scalarVars);
+    d_discretize->calculateScalarDiagonal__new(patch, &scalarVars);
+
 
     CCVariable<double> scalar;
     if (doing_EKT_now) {
@@ -585,6 +633,9 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
                              d_lab->d_stencilMatl, oams, gn, 0);
                              
   tsk->requires(Task::NewDW, d_lab->d_scalNonLinSrcSBLMLabel, gn, 0);
+
+  tsk->requires(Task::NewDW, d_lab->d_scalarTotCoefLabel, gn, 0);
+  //tsk->modifies(d_lab->d_scalarTotCoefLabel);
 
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
@@ -667,6 +718,10 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       new_dw->get(constScalarVars.scalarCoeff[ii], 
                                                  d_lab->d_scalCoefSBLMLabel, ii, patch, gn, 0);
     }
+    //new_dw->getModifiable(scalarVars.scalarTotCoef, 
+    //                      d_lab->d_scalarTotCoefLabel, indx, patch);
+    new_dw->get(constScalarVars.scalarTotCoef, d_lab->d_scalarTotCoefLabel, indx, patch, gn, 0);
+
     new_dw->get(constScalarVars.scalarNonlinearSrc,
                                                 d_lab->d_scalNonLinSrcSBLMLabel, indx, patch, gn, 0);
 
@@ -676,16 +731,22 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     }
 
     // make it a separate task later
+    //-----new Explicit solver interface:
+    // same interface for Arches with or without intrusions
+    int intrusionVal = d_boundaryCondition->getMMWallId();
+    bool doingMM = d_MAlab;
+    d_rhsSolver->scalarExplicitUpdate(pc, patch, delta_t, &scalarVars, &constScalarVars, cellinfo, doingMM, intrusionVal);
 
-    if (d_MAlab){
-      d_boundaryCondition->scalarLisolve_mm(pc, patch, delta_t, 
-                                            &scalarVars, &constScalarVars,
-                                            cellinfo);
-    }else{
-      d_rhsSolver->scalarLisolve(pc, patch, delta_t, 
-                                 &scalarVars, &constScalarVars,
-                                 cellinfo);
-    }
+ //   if (d_MAlab){
+ //     d_boundaryCondition->scalarLisolve_mm(pc, patch, delta_t, 
+ //                                           &scalarVars, &constScalarVars,
+ //                                           cellinfo);
+ //   }else{
+ //
+  //    //d_rhsSolver->scalarLisolve(pc, patch, delta_t, 
+  //    //                           &scalarVars, &constScalarVars,
+  //    //                           cellinfo);
+  //  }
     
     
     double scalar_clipped = 0.0;
@@ -735,5 +796,189 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
       d_boundaryCondition->scalarOutletPressureBC(pc, patch, &scalarVars, &constScalarVars);
     }
   }  // patches
+}
+//---------------------------------------------------------------
+// New scalar coefficient method
+void 
+ScalarSolver::calculateScalarCoeff__new( const ProcessorGroup*,
+                                        const Patch* patch,
+                                        double,
+                                        CellInformation* cellinfo,
+                                        ArchesVariables* vars,
+                                        ArchesConstVariables* constvars,
+                                        int conv_scheme)
+{
+  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector curr = *iter; 
+    double tiny = 1.0E-20; //needed?
+
+    // cell face areas and cell volume 
+    double areaew = cellinfo->sns[curr.y()]*cellinfo->stb[curr.z()];  
+    double areans = cellinfo->sew[curr.x()]*cellinfo->stb[curr.z()];
+    double areatb = cellinfo->sew[curr.x()]*cellinfo->sns[curr.y()];
+    double vol = cellinfo->sew[curr.x()]*cellinfo->sns[curr.y()]*cellinfo->stb[curr.z()];
+
+    // -- convection coefficients -- 
+    double ceo = 0.5 * (constvars->density[curr] + constvars->density[curr + IntVector(1,0,0)])
+                  * constvars->uVelocity[curr + IntVector(1,0,0)] * areaew;
+    double cwo = 0.5 * (constvars->density[curr] + constvars->density[curr - IntVector(1,0,0)])
+                  * constvars->uVelocity[curr] * areaew; 
+    double cno = 0.5 * (constvars->density[curr] + constvars->density[curr + IntVector(0,1,0)])
+                  * constvars->vVelocity[curr + IntVector(0,1,0)] * areans; 
+    double cso = 0.5 * (constvars->density[curr] + constvars->density[curr - IntVector(0,1,0)])
+                  * constvars->vVelocity[curr] * areans; 
+    double cto = 0.5 * (constvars->density[curr] + constvars->density[curr + IntVector(0,0,1)])
+                  * constvars->wVelocity[curr + IntVector(0,0,1)] * areatb; 
+    double cbo = 0.5 * (constvars->density[curr] + constvars->density[curr - IntVector(0,0,1)])
+                  * constvars->wVelocity[curr] * areatb; 
+
+    // not sure what this does, but it was labeled "new differencing stuff" in the fortran
+    // we will also store the convection coefficient here too 
+    vars->scalarConvCoef[curr].e = cellinfo->cee[curr.x()]*ceo + cellinfo->cwe[curr.x()]*cwo; 
+    vars->scalarConvCoef[curr].w = cellinfo->cww[curr.x()]*cwo - cellinfo->cwe[curr.x()]*ceo;
+    vars->scalarConvCoef[curr].n = cellinfo->cnn[curr.y()]*cno + cellinfo->csn[curr.y()]*cso; 
+    vars->scalarConvCoef[curr].s = cellinfo->css[curr.y()]*cso - cellinfo->csn[curr.y()]*cno;
+    vars->scalarConvCoef[curr].t = cellinfo->ctt[curr.z()]*cto + cellinfo->cbt[curr.z()]*cbo;  
+    vars->scalarConvCoef[curr].b = cellinfo->cbb[curr.z()]*cbo - cellinfo->cbt[curr.z()]*cto;
+    // Clamp these to zero to eliminate "noise"
+    // Need a more elegant way to take care of this.
+    // This may not even be needed since tiny = 1E-20
+    vars->scalarConvCoef[curr].e = abs(vars->scalarConvCoef[curr].e) < tiny ? 0:vars->scalarConvCoef[curr].e;
+    vars->scalarConvCoef[curr].w = abs(vars->scalarConvCoef[curr].w) < tiny ? 0:vars->scalarConvCoef[curr].w;
+    vars->scalarConvCoef[curr].n = abs(vars->scalarConvCoef[curr].n) < tiny ? 0:vars->scalarConvCoef[curr].n;
+    vars->scalarConvCoef[curr].s = abs(vars->scalarConvCoef[curr].s) < tiny ? 0:vars->scalarConvCoef[curr].s;
+    vars->scalarConvCoef[curr].t = abs(vars->scalarConvCoef[curr].t) < tiny ? 0:vars->scalarConvCoef[curr].t;
+    vars->scalarConvCoef[curr].b = abs(vars->scalarConvCoef[curr].b) < tiny ? 0:vars->scalarConvCoef[curr].b;
+
+    // -- diffusion coefficients -- 
+    // **NOTE removed warning about negative diffusion coefs related to stretching, need warning?
+    vars->scalarDiffCoef[curr].e = 
+                  (cellinfo->fac1ew[curr.x()]*constvars->viscosity[curr + IntVector(1,0,0)] +
+                   cellinfo->fac2ew[curr.x()]*constvars->viscosity[curr + IntVector(cellinfo->e_shift[curr.x()],0,0)])/d_turbPrNo;
+    vars->scalarDiffCoef[curr].w =
+                  (cellinfo->fac3ew[curr.x()]*constvars->viscosity[curr - IntVector(1,0,0)] + 
+                   cellinfo->fac4ew[curr.x()]*constvars->viscosity[curr + IntVector(cellinfo->w_shift[curr.x()],0,0)])/d_turbPrNo;
+    vars->scalarDiffCoef[curr].n = 
+                  (cellinfo->fac1ns[curr.y()]*constvars->viscosity[curr + IntVector(0,1,0)] + 
+                   cellinfo->fac2ns[curr.y()]*constvars->viscosity[curr + IntVector(0,cellinfo->n_shift[curr.y()],0)])/d_turbPrNo;
+    vars->scalarDiffCoef[curr].s = 
+                  (cellinfo->fac3ns[curr.y()]*constvars->viscosity[curr - IntVector(0,1,0)] + 
+                   cellinfo->fac4ns[curr.y()]*constvars->viscosity[curr + IntVector(0,cellinfo->s_shift[curr.y()],0)])/d_turbPrNo;
+    vars->scalarDiffCoef[curr].t = 
+                  (cellinfo->fac1tb[curr.z()]*constvars->viscosity[curr + IntVector(0,0,1)] + 
+                   cellinfo->fac2tb[curr.z()]*constvars->viscosity[curr + IntVector(0,0,cellinfo->t_shift[curr.z()])])/d_turbPrNo;
+    vars->scalarDiffCoef[curr].b = 
+                  (cellinfo->fac3tb[curr.z()]*constvars->viscosity[curr - IntVector(0,0,1)] + 
+                   cellinfo->fac4tb[curr.z()]*constvars->viscosity[curr + IntVector(0,0,cellinfo->b_shift[curr.z()])])/d_turbPrNo; 
+
+    vars->scalarDiffCoef[curr].e *= areaew / cellinfo->dxep[curr.x()];
+    vars->scalarDiffCoef[curr].w *= areaew / cellinfo->dxpw[curr.x()];
+    vars->scalarDiffCoef[curr].n *= areans / cellinfo->dynp[curr.y()];
+    vars->scalarDiffCoef[curr].s *= areans / cellinfo->dyps[curr.y()];
+    vars->scalarDiffCoef[curr].t *= areatb / cellinfo->dztp[curr.z()];
+    vars->scalarDiffCoef[curr].b *= areatb / cellinfo->dzpb[curr.z()];
+
+
+    // -- choose a scheme and compute total coefficient --  
+    // **NOTE might want to replace (int conv_scheme) with an enum?
+    // **NOTE central differencing was turned off in fortran..turn back on?
+    if (conv_scheme == 0) {
+      //L2UP
+      double coefE = vars->scalarDiffCoef[curr].e - 0.5*abs(vars->scalarConvCoef[curr].e);
+      double coefW = vars->scalarDiffCoef[curr].w - 0.5*abs(vars->scalarConvCoef[curr].w);
+      double coefN = vars->scalarDiffCoef[curr].n - 0.5*abs(vars->scalarConvCoef[curr].n);
+      double coefS = vars->scalarDiffCoef[curr].s - 0.5*abs(vars->scalarConvCoef[curr].s);
+      double coefT = vars->scalarDiffCoef[curr].t - 0.5*abs(vars->scalarConvCoef[curr].t);
+      double coefB = vars->scalarDiffCoef[curr].b - 0.5*abs(vars->scalarConvCoef[curr].b);
+
+      double signTest = coefE < 0 ? -1:1;
+      vars->scalarTotCoef[curr].e = vars->scalarDiffCoef[curr].e*(1.0-max(0.0,signTest))
+                                    + max(0.0,coefE) + max(0.0,-vars->scalarConvCoef[curr].e);
+      signTest = coefW < 0 ? -1:1; 
+      vars->scalarTotCoef[curr].w = vars->scalarDiffCoef[curr].w*(1.0-max(0.0,signTest))
+                                    + max(0.0,coefW) + max(0.0,vars->scalarConvCoef[curr].w);
+      signTest = coefN < 0 ? -1:1;
+      vars->scalarTotCoef[curr].n = vars->scalarDiffCoef[curr].n*(1.0-max(0.0,signTest))
+                                    + max(0.0,coefN) + max(0.0,-vars->scalarConvCoef[curr].n);
+      signTest = coefS < 0 ? -1:1;
+      vars->scalarTotCoef[curr].s = vars->scalarDiffCoef[curr].s*(1.0-max(0.0,signTest))
+                                    + max(0.0,coefS) + max(0.0,vars->scalarConvCoef[curr].s); 
+      signTest = coefT < 0 ? -1:1;
+      vars->scalarTotCoef[curr].t = vars->scalarDiffCoef[curr].t*(1.0-max(0.0,signTest))
+                                    + max(0.0,coefT) + max(0.0,-vars->scalarConvCoef[curr].t);
+      signTest = coefB < 0 ? -1:1;
+      vars->scalarTotCoef[curr].b = vars->scalarDiffCoef[curr].b*(1.0-max(0.0,signTest))
+                                    + max(0.0,coefB) + max(0.0,vars->scalarConvCoef[curr].b);
+
+      // This is making me shudder a little bit but it is needed for this scheme.  I am doing this 
+      // here which removes it from the do loop in mascal_scalar
+      vars->scalarConvCoef[curr].e = vars->scalarTotCoef[curr].e < 0.0 ? 0:vars->scalarConvCoef[curr].e;
+      vars->scalarConvCoef[curr].w = vars->scalarTotCoef[curr].w < 0.0 ? 0:vars->scalarConvCoef[curr].w;
+      vars->scalarConvCoef[curr].n = vars->scalarTotCoef[curr].n < 0.0 ? 0:vars->scalarConvCoef[curr].n;
+      vars->scalarConvCoef[curr].s = vars->scalarTotCoef[curr].s < 0.0 ? 0:vars->scalarConvCoef[curr].s;
+      vars->scalarConvCoef[curr].t = vars->scalarTotCoef[curr].t < 0.0 ? 0:vars->scalarConvCoef[curr].t;
+      vars->scalarConvCoef[curr].b = vars->scalarTotCoef[curr].b < 0.0 ? 0:vars->scalarConvCoef[curr].b;
+    }
+    else if (conv_scheme == 1) {
+      //LENO 
+      //**Note: this should change to include the flux limiter stuff here and not put it in another place.
+      //**Note: I don't think I need to bother in zeroing out the convection coef like the fortran code did 
+      //        since I believe it is never used.
+      vars->scalarTotCoef[curr].e = vars->scalarDiffCoef[curr].e;
+      vars->scalarTotCoef[curr].w = vars->scalarDiffCoef[curr].w;
+      vars->scalarTotCoef[curr].n = vars->scalarDiffCoef[curr].n;
+      vars->scalarTotCoef[curr].s = vars->scalarDiffCoef[curr].s;
+      vars->scalarTotCoef[curr].t = vars->scalarDiffCoef[curr].t;
+      vars->scalarTotCoef[curr].b = vars->scalarDiffCoef[curr].b;
+
+    }  
+    else { 
+      //UPWIND (default)
+      double coefE = vars->scalarDiffCoef[curr].e - 0.5*abs(vars->scalarConvCoef[curr].e);
+      double coefW = vars->scalarDiffCoef[curr].w - 0.5*abs(vars->scalarConvCoef[curr].w);
+      double coefN = vars->scalarDiffCoef[curr].n - 0.5*abs(vars->scalarConvCoef[curr].n);
+      double coefS = vars->scalarDiffCoef[curr].s - 0.5*abs(vars->scalarConvCoef[curr].s);
+      double coefT = vars->scalarDiffCoef[curr].t - 0.5*abs(vars->scalarConvCoef[curr].t);
+      double coefB = vars->scalarDiffCoef[curr].b - 0.5*abs(vars->scalarConvCoef[curr].b);
+      
+      double tew = coefE < 0 | coefW < 0 ? 0.0:1.0;
+      double tns = coefN < 0 | coefS < 0 ? 0.0:1.0;
+      double ttb = coefT < 0 | coefB < 0 ? 0.0:1.0;
+
+      double cpe = constvars->density[curr]*
+                  (cellinfo->efac[curr.x()]*constvars->uVelocity[curr+IntVector(1,0,0)] +
+                   cellinfo->wfac[curr.x()]*constvars->uVelocity[curr])*vol/cellinfo->dxep[curr.x()]; 
+      double cpw = constvars->density[curr]*
+                  (cellinfo->efac[curr.x()]*constvars->uVelocity[curr+IntVector(1,0,0)] +
+                   cellinfo->wfac[curr.x()]*constvars->uVelocity[curr])*vol/cellinfo->dxpw[curr.x()];
+      double cpn = constvars->density[curr]*
+                  (cellinfo->nfac[curr.y()]*constvars->vVelocity[curr+IntVector(0,1,0)] + 
+                   cellinfo->sfac[curr.y()]*constvars->vVelocity[curr])*vol/cellinfo->dynp[curr.y()];
+      double cps = constvars->density[curr]*
+                  (cellinfo->nfac[curr.y()]*constvars->vVelocity[curr+IntVector(0,1,0)] + 
+                   cellinfo->sfac[curr.y()]*constvars->vVelocity[curr])*vol/cellinfo->dyps[curr.y()];
+      double cpt = constvars->density[curr]*
+                  (cellinfo->tfac[curr.z()]*constvars->wVelocity[curr+IntVector(0,0,1)] + 
+                   cellinfo->bfac[curr.z()]*constvars->wVelocity[curr])*vol/cellinfo->dztp[curr.z()];
+      double cpb = constvars->density[curr]*
+                  (cellinfo->tfac[curr.z()]*constvars->wVelocity[curr+IntVector(0,0,1)] + 
+                   cellinfo->bfac[curr.z()]*constvars->wVelocity[curr])*vol/cellinfo->dzpb[curr.z()];
+
+      double aec = -0.5*vars->scalarConvCoef[curr].e*tew + max(0.0,-cpe)*(1.0-tew);
+      double awc =  0.5*vars->scalarConvCoef[curr].w*tew + max(0.0, cpw)*(1.0-tew);
+      double anc = -0.5*vars->scalarConvCoef[curr].n*tns + max(0.0,-cpn)*(1.0-tns);
+      double asc =  0.5*vars->scalarConvCoef[curr].s*tns + max(0.0, cps)*(1.0-tns);
+      double atc = -0.5*vars->scalarConvCoef[curr].t*ttb + max(0.0,-cpt)*(1.0-ttb);
+      double abc =  0.5*vars->scalarConvCoef[curr].b*ttb + max(0.0, cpb)*(1.0-ttb);
+
+      vars->scalarTotCoef[curr].e = aec + vars->scalarDiffCoef[curr].e;
+      vars->scalarTotCoef[curr].w = awc + vars->scalarDiffCoef[curr].w;
+      vars->scalarTotCoef[curr].n = anc + vars->scalarDiffCoef[curr].n;
+      vars->scalarTotCoef[curr].s = asc + vars->scalarDiffCoef[curr].s;
+      vars->scalarTotCoef[curr].t = atc + vars->scalarDiffCoef[curr].t;
+      vars->scalarTotCoef[curr].b = abc + vars->scalarDiffCoef[curr].b;
+
+    }
+  }
 }
 
