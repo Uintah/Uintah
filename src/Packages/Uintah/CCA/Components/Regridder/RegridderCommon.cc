@@ -24,6 +24,7 @@ using namespace Uintah;
 
 DebugStream rdbg("Regridder", false);
 DebugStream dilate_dbg("Regridder_dilate", false);
+DebugStream rreason("RegridReason",false);
 
 RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), UintahParallelComponent(pg)
 {
@@ -142,8 +143,12 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
   int retval = false;
   
   if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
+    if(d_myworld->myrank()==0)
+      rreason << "Not regridding because timesteps since regrid is less than min timesteps between regrid\n";
     retval = false;
   } else if ( timeStepsSinceRegrid  > d_maxTimestepsBetweenRegrids ) {
+    if(d_myworld->myrank()==0)
+      rreason << "Regridding because timesteps since regrid is less more than max timesteps between regrid\n";
     retval = true;
   }
   else //check if flags are contained within the finer levels patches
@@ -206,6 +211,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
           {
             if (flags[*ci])
             {
+              //rreason << d_myworld->myrank() << " refinement flag found on level:" << l << " at cell:" << *ci << endl;
               result=true;
               goto GATHER;
             }
@@ -223,6 +229,8 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
     {
       retval=result;
     }
+    if(d_myworld->myrank()==0)
+      rreason << "Regridding needed because refinement flag was found\n";
   }
   
   if(retval==true)
