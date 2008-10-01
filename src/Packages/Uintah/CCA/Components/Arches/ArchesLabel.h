@@ -138,6 +138,9 @@ namespace Uintah {
       const VarLabel* d_scalDiffCoefSrcLabel;
       const VarLabel* d_enthDiffCoefLabel;
 
+      // new scalar coeffs:
+      const VarLabel* d_scalarTotCoefLabel; 
+
       // Scalar NonLinear Src
       const VarLabel* d_scalNonLinSrcSBLMLabel;
 

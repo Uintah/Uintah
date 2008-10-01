@@ -90,6 +90,26 @@ public:
                        ArchesConstVariables* constvars,
                        CellInformation* cellinfo);
 
+  void scalarExplicitUpdate(const ProcessorGroup*,
+                              const Patch* patch,
+                              double delta_t,
+                              ArchesVariables* vars,
+                              ArchesConstVariables* constvars,
+                              CellInformation* cellinfo, 
+                              bool doingMM, int intrusionVal);
+
+  template<class T_mtrx, class T_varmod, class T_varconst> void
+  explicitUpdate(CellIterator iter, 
+                          T_mtrx& A,
+                          T_varconst source, 
+                          constCCVariable<double> old_den, 
+                          T_varconst old_phi,
+                          T_varmod& new_phi,  
+                          constCCVariable<int>  cellType,
+                          CellInformation* cellinfo,
+                          double delta_t, 
+                          bool doingMM, int intrusionVal);
+
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
   }
