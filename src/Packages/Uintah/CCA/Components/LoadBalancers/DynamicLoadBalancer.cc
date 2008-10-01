@@ -777,7 +777,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       if(currentMaxCost<myStoredMax && currentProc<num_procs)
       {
 
-#if 0
+#if 1
         //take this assignment
         for(int p=0;p<num_patches;p++)
         {
