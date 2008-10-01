@@ -821,7 +821,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     if(minProcLoc!=-1 && num_procs>1)
     {
       //broadcast load balance
-      MPI_Bcast(&d_tempAssignment[level_offset],num_patches,MPI_INT,minProcLoc,d_myworld->getComm());
+      MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
     }
 
     if(!d_levelIndependent)
