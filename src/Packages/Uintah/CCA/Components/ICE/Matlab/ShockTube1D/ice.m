@@ -18,7 +18,7 @@
 %
 %   See also SETBOUNDARYCONDITIONS, ADVECTRHO, ADVECTQ.
 
-%clear all;
+clear all;
 close all;
 globalParams;                                       % Load global parameters
 
@@ -32,15 +32,15 @@ P.boxLower          = 0;                            % Location of lower-left cor
 P.boxUpper          = 1;                            % Location of upper-right corner of domain
 
 % Grid
-P.nCells            = 100;                          % Number of cells in each direction
+P.nCells            =200;                          % Number of cells in each direction
 P.extraCells        = 1;                            % Number of ghost cells in each direction
 
 % Time-stepping
-P.maxTime           = 0.005;                        % Maximum simulation time [sec]
+P.maxTime           = 5e-4;                         % Maximum simulation time [sec]
 P.initTime          = 0.0;                          % Initial simulation time [sec]
 P.delt_init         = 1e-6;                         % First timestep [sec]
-P.maxTimeSteps      = 100;                          % Maximum number of timesteps [dimensionless]
-P.CFL               = 0.45;                         % Courant number (~velocity*delT/delX) [dimensionless]
+P.maxTimeSteps      = 1000;                          % Maximum number of timesteps [dimensionless]
+P.CFL               = 0.25;                         % Courant number (~velocity*delT/delX) [dimensionless]
 P.advectionOrder    = 1;                            % 1=1st-order advection operator; 2=possibly-limited-2nd-order
 
 % Material properties (ideal gas)
@@ -50,20 +50,30 @@ P.gamma             = 1.4;                          % gamma coefficient in the E
 %================ ICE Interal Parameters, Debugging Flags ================
 % Debug flags
 P.compareUintah     = 0;                            % Compares vs. Uintah ICE and plots results
-P.debugSteps        = 0;                            % Debug printout of steps (tasks) within timestep
+P.debugSteps        = 1;                            % Debug printout of steps (tasks) within timestep
 P.debugAdvectRho    = 0;                            % Debug printouts in advectRho()
 P.debugAdvectQ      = 0;                            % Debug printouts in advectQ()
-P.printRange        = [48:52];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
+P.printRange        = [48:56];                      % Range of indices to be printed out (around the shock front at the first timestep, for testing)
 P.plotInitialData   = 1;                            % Plots initial data
 
-%================ Partition of the domain into regions ================
 
+%================ Grid Struct (G) ======= ================
+G.nCells      = P.nCells;                           % # interior cells
+G.delX        = (P.boxUpper-P.boxLower)./G.nCells;  % Cell length
+G.ghost_Left  = 1;                                  % Index of left ghost cell
+G.ghost_Right = G.nCells+2*P.extraCells;            % Index of right ghost cell
+G.first_CC    = 2;                                  % Index of first interior cell
+G.first_FC    = 2;                                  % Index of first xminus face
+G.last_CC     = G.nCells+1;                         % Index of last interior cell
+G.last_FC     = G.ghost_Right;                      % index of last xminus face
+
+
+%================ Partition of the domain into regions ================
 numRegions          = 2;                            % Partition of the domain into numRegions regions; physical properties are uniform within each region
 Region              = cell(numRegions,1);           % This array holds the geometrical partition physical info
 count               = 0;
 
 %********** Parameters of the high density left region **********
-
 count               = count+1;
 R.label             = 'leftpartition';              % Title of this region
 R.min               = 0;                            % Location of lower-left corner of this region [length]
@@ -75,14 +85,13 @@ R.pressure          = 101325.0;                     % Initial pressure (1 atmosp
 Region{count}       = R;                            % Add region to list
 
 %********** Parameters of the low density right region **********
-
 count               = count+1;
 R.min               = 0.5;                          % Location of lower-left corner of this region [length]
 R.max               = 1;                            % Location of upper-right corner of this region [length]
 R.velocity          = 0.0;                          % Initial velocity
 R.temperature       = 300.0;                        % Initial temperature [Kelvin]
-R.density           = 0.11768292682926831000;       % Initial density
-R.pressure          = 10132.50;                     % Initial pressure (0.1 atmosphere)
+R.density           = 0.11768292682926831000;        % Initial density
+R.pressure          = 10132.5;                       % Initial pressure (0.1 atmosphere)
 Region{count}       = R;                            % Add region to list
 
 %______________________________________________________________________
@@ -91,40 +100,32 @@ Region{count}       = R;                            % Add region to list
 %================ Cell Centered (CC) ================
 
 totCells        = P.nCells + 2*P.extraCells;    % Array size for CC vars
-x_CC            = zeros(1,totCells);            % Cell centers locations (x-component)
-rho_CC          = zeros(1,totCells);            % Density rho
-xvel_CC         = zeros(1,totCells);            % Velocity u (x-component)
-temp_CC         = zeros(1,totCells);            % Temperature T
-press_eq_CC     = zeros(1,totCells);            % equilibraton pressure
-press_CC        = zeros(1,totCells);            % Pressure p
-volfrac_CC      = zeros(1,totCells);            % Volume fraction theta, = 1 for this single-material problem
-spvol_CC        = zeros(1,totCells);            % Specific volume v0 = theta/rho = 1/(specific density)
-mass_CC         = zeros(1,totCells);            % Mass at time n+1 (see step 9)
-
-gradLim         = zeros(1,totCells);            % Gradient Limiter (for advection)
-grad_x          = zeros(1,totCells);            % Gradient of rho (for advection)
-q_advected      = zeros(1,totCells);            % Advected flux of quantity (for advection)
-mass_slab       = zeros(1,totCells);            % Mass in slab moved in/out a cell in advection
-delPDilatate    = zeros(1,totCells);            % Pressure increment due to dilatation
+x_CC            = zeros(G.ghost_Left,G.ghost_Right);      % Cell centers locations (x-component)
+rho_CC          = zeros(G.ghost_Left,G.ghost_Right);      % Density rho
+xvel_CC         = zeros(G.ghost_Left,G.ghost_Right);      % Velocity u (x-component)
+temp_CC         = zeros(G.ghost_Left,G.ghost_Right);      % Temperature T
+press_eq_CC     = zeros(G.ghost_Left,G.ghost_Right);      % equilibraton pressure
+press_CC        = zeros(G.ghost_Left,G.ghost_Right);      % Pressure p
+volfrac_CC      = zeros(G.ghost_Left,G.ghost_Right);      % Volume fraction theta, = 1 for this single-material problem
+spvol_CC        = zeros(G.ghost_Left,G.ghost_Right);      % Specific volume v0 = theta/rho = 1/(specific density)
+mass_CC         = zeros(G.ghost_Left,G.ghost_Right);      % Mass at time n+1 (see step 9)
+delPDilatate    = zeros(G.ghost_Left,G.ghost_Right);      % Pressure increment due to dilatation
 
 %================ Cell Centered (CC), Lagrangian values (L) ================
 
-del_mom         = zeros(1,totCells);            % Momentum accumulated sources
-del_eng         = zeros(1,totCells);            % Energy accumulated sources
-mass_L          = zeros(1,totCells);            % Mass ( = rho * cell volume )
-mom_L           = zeros(1,totCells);            % Momentum ( = mass * velocity )
-eng_L           = zeros(1,totCells);            % Energy (= mass * internal energy = mass * cv * temperature)
+del_mom         = zeros(G.ghost_Left,G.ghost_Right);      % Momentum accumulated sources
+del_eng         = zeros(G.ghost_Left,G.ghost_Right);      % Energy accumulated sources
+mass_L          = zeros(G.ghost_Left,G.ghost_Right);      % Mass ( = rho * cell volume )
+mom_L           = zeros(G.ghost_Left,G.ghost_Right);      % Momentum ( = mass * velocity )
+eng_L           = zeros(G.ghost_Left,G.ghost_Right);      % Energy (= mass * internal energy = mass * cv * temperature)
 
 %================ Face Centered (FC) ================
-
-totFaces        = P.nCells + 1;                 % Array size for FC vars
-x_FC            = zeros(1,totFaces);            % Face centers locations (x-component)
-xvel_FC         = zeros(1,totFaces);            % Velocity u (x-component)
-press_FC        = zeros(1,totFaces);            % Pressure p
-speedSound_FC   = zeros(1,totFaces);            % c^*
+x_FC            = zeros(G.first_FC,G.last_FC);            % Face centers locations (x-component)
+xvel_FC         = zeros(G.first_FC,G.last_FC);            % Velocity u (x-component)
+press_FC        = zeros(G.first_FC,G.last_FC);            % Pressure p
+speedSound_FC   = zeros(G.first_FC,G.last_FC);            % c^*
 
 %================ Node Centered (NC) ================
-
 totNodes        = P.nCells + 1;                 % Array size for NC vars
 mass_vrtx_1     = zeros(1,totNodes);            % Mass at vertices (for advection)
 mass_vrtx_2     = zeros(1,totNodes);            % --------//-------  (for advection)
@@ -134,335 +135,313 @@ mass_vrtx_2     = zeros(1,totNodes);            % --------//-------  (for advect
 
 %================ Useful constants ================
 
-d_SMALL_NUM = 1e-100;                           % A small number (for bullet-proofing)
-nCells      = P.nCells;                         % # interior cells
-delX        = (P.boxUpper-P.boxLower)./nCells;  % Cell length
+d_SMALL_NUM = 1e-100;                           % A small number (for bullet-proofing
 delT        = P.delt_init;                      % Init timestep
-ghost_Left  = 1;                                % Index of left ghost cell
-ghost_Right = P.nCells+2*P.extraCells;          % Index of right ghost cell
-firstCell   = 2;                                % Index of first interior cell
-lastCell    = nCells+1;                         % Index of last interior cell
+
 if (P.compareUintah)                            % Don't make more than 2 timsteps when comparing to Uintah
-    P.maxTimeSteps = min(P.maxTimeSteps,2);
+  P.maxTimeSteps = min(P.maxTimeSteps,2);
 end
 
 %================ Initialize interior cells ================
 % Initial data at t=0 in the interior domain.
 
-x_CC    = ([1:totCells]-1-0.5).*delX;           % Cell centers coordinates (note the "1-based" matlab index array)
-x_FC    = [1:totFaces].*delX;                   % Face centers coordinates
-for r = 1:numRegions                            % Init each region, assuming they are a non-overlapping all-covering partition of the domain
-    R       = Region{r};
-    first   = max(firstCell,...
-        floor(R.min./delX - 0.5 + firstCell));
-    last    = min(lastCell,...
-        floor(R.max./delX - 0.5 + firstCell));
+x_CC    = ([G.ghost_Left:G.ghost_Right]-1-0.5).*G.delX; % Cell centers coordinates (note the "1-based" matlab index array)
 
-    for j = first:last
-        rho_CC(j)           = R.density;
-        xvel_CC(j)          = R.velocity;
-        temp_CC(j)          = R.temperature;
-        press_CC(j)         = R.pressure;
-    end
+for j = G.first_FC:G.last_FC   % Loop over all xminus cell faces
+  x_FC(j) = (j-1).*G.delX;  
+end
 
+for r = 1:numRegions                                    % Init each region, assuming they are a non-overlapping all-covering partition of the domain
+  R       = Region{r};
+  first   = max(G.first_CC,...
+            floor(R.min./G.delX - 0.5 + G.first_CC));
+  last    = min(G.last_CC,...
+            floor(R.max./G.delX - 0.5 + G.first_CC));
+
+  for j = first:last
+     rho_CC(j)           = R.density;
+    %rho_CC(j)    = 1.2 + 0.5*exp(-((x_CC(j)- 0.5)^2)/.01);
+    xvel_CC(j)   = R.velocity;
+    temp_CC(j)   = R.temperature;
+    press_CC(j)  = (P.gamma -1)*P.cv*R.temperature*rho_CC(j);
+  end
 end
 
 %================ Initialize ghost cells ================
 % Impose boundary conditions (determine ghost cell values from
 % interior cell values).
 
-rho_CC      = setBoundaryConditions(rho_CC      ,'rho_CC');
-xvel_CC     = setBoundaryConditions(xvel_CC     ,'xvel_CC');
-temp_CC     = setBoundaryConditions(temp_CC     ,'temp_CC');
-press_CC    = setBoundaryConditions(press_CC    ,'press_CC');
+rho_CC      = setBoundaryConditions(rho_CC  ,'rho_CC',   G);
+xvel_CC     = setBoundaryConditions(xvel_CC ,'xvel_CC',  G);
+temp_CC     = setBoundaryConditions(temp_CC ,'temp_CC',  G);
+press_CC    = setBoundaryConditions(press_CC,'press_CC', G);
 
 %================ Initialize graphics ================
 if (P.plotInitialData)
-    figure(1);
-    set(gcf,'position',[100,600,400,400]);
-    %================ Plot results ================
+  figure(1);
+  set(gcf,'position',[100,1000,1000,400]);
+  %================ Plot results ================
 
-    subplot(2,2,1), plot(x_CC,rho_CC);
-    xlim([P.boxLower(1) P.boxUpper(1)]);
-    legend('\rho');
-    grid on;
+  subplot(2,2,1), plot(rho_CC);
+  %xlim([P.boxLower(1) P.boxUpper(1)]);
+  legend('\rho');
+  grid on;
 
-    subplot(2,2,2), plot(x_CC,xvel_CC);
-    xlim([P.boxLower(1) P.boxUpper(1)]);
-    legend('u_1');
-    grid on;
+  subplot(2,2,2), plot(x_CC,xvel_CC);
+  xlim([P.boxLower(1) P.boxUpper(1)]);
+  legend('u_1');
+  grid on;
 
-    subplot(2,2,3), plot(x_CC,temp_CC);
-    xlim([P.boxLower(1) P.boxUpper(1)]);
-    legend('T');
-    grid on;
+  subplot(2,2,3), plot(x_CC,temp_CC);
+  xlim([P.boxLower(1) P.boxUpper(1)]);
+  legend('T');
+  grid on;
 
-    subplot(2,2,4), plot(x_CC,press_CC);
-    xlim([P.boxLower(1) P.boxUpper(1)]);
-    legend('p');
-    grid on;
+  subplot(2,2,4), plot(x_CC,press_CC);
+  xlim([P.boxLower(1) P.boxUpper(1)]);
+  legend('p');
+  grid on;
 
-    %M(tstep) = getframe(gcf);
-    print -depsc iceInitialData.eps
+  %M(tstep) = getframe(gcf);
+  print -depsc iceInitialData.eps
+  pause
 end
 
 %______________________________________________________________________
 %     Time integration loop
 t = P.initTime + delT;
-for tstep = 1:P.maxTimeSteps
-    fprintf('\n_____________________________________tstep=%d, t=%e, prev. delT=%e\n', tstep, t, delT);
+tstep = 0;
+%for tstep = 1:P.maxTimeSteps
+while (tstep <= P.maxTimeSteps & t <= P.maxTime)
+  tstep = tstep + 1;
+  fprintf('\n_____________________________________tstep=%d, t=%e, prev. delT=%e\n', tstep, t, delT);
 
-    %_____________________________________________________
-    % 0. Dummy setting for a single-material problem
-    % Set the volume fraction and specific volume.
+  %_____________________________________________________
+  % 0. Dummy setting for a single-material problem
+  % Set the volume fraction and specific volume.
 
-    if (P.debugSteps)
-        fprintf('Step 0: dummy setting for single-material\n');
-    end
+  if (P.debugSteps)
+    fprintf('Step 0: dummy setting for single-material\n');
+  end
 
-    volfrac_CC      = ones(1,totCells);                             % Single material ==> covers 100% of each cell (volfrac=1)
-    spvol_CC        = volfrac_CC ./ (rho_CC + d_SMALL_NUM);         % Specific volume, here also = 1/rho
-
-
-    %_____________________________________________________
-    % 1. Compute thremodynamic/transport properties
-    % These are constants in this application and were already computed in the
-    % initialization stage.
+  volfrac_CC = ones(G.ghost_Left,G.ghost_Right);             % Single material ==> covers 100% of each cell (volfrac=1)
+  spvol_CC   = volfrac_CC ./ (rho_CC + d_SMALL_NUM);         % Specific volume, here also = 1/rho
 
 
-    %_____________________________________________________
-    % 2. Compute the equilibration pressure
-    % Using an equation of State for ideal gas.
-    if (P.debugSteps)
-        fprintf('Step 2: compute equilibration pressure\n');
-    end
-
-    % Update pressure from EOS
-    press_eq_CC      = (P.gamma-1).*P.cv.*rho_CC.*temp_CC;          % Evaluate p from EOS
-
-    % Compute speed of sound at cell centers
-    DpDrho          = (P.gamma-1).*P.cv.*temp_CC;                   % d P / d rho
-    DpDe            = (P.gamma-1).*rho_CC;                          % d P / d e
-    tmp             = DpDrho + ( DpDe .* (press_eq_CC./rho_CC.^2));
-    speedSound_CC   = sqrt(tmp);                                    % Speed of sound
+  %_____________________________________________________
+  % 1. Compute thremodynamic/transport properties
+  % These are constants in this application and were already computed in the
+  % initialization stage.
 
 
-    % Set boundary conditions on p
-    press_eq_CC     =  setBoundaryConditions(press_eq_CC,'press_CC');
+  %_____________________________________________________
+  % 2. Compute the equilibration pressure
+  % Using an equation of State for ideal gas.
+  if (P.debugSteps)
+    fprintf('Step 2: compute equilibration pressure\n');
+  end
+
+  % Update pressure from EOS
+  press_eq_CC      = (P.gamma-1.0).*P.cv.*rho_CC.*temp_CC;          % Evaluate p from EOS
+
+  % Compute speed of sound at cell centers
+  DpDrho          = (P.gamma-1.0).*P.cv.*temp_CC;                   % d P / d rho
+  DpDe            = (P.gamma-1.0).*rho_CC;                          % d P / d e
+  tmp             = DpDrho + ( DpDe .* (press_eq_CC./rho_CC.^2));
+  speedSound_CC   = sqrt(tmp);                                      % Speed of sound
 
 
-    %_____________________________________________________
-    % 3. Compute sources of energy due to chemical reactions
-    % Not applicable to this model.
+  % Set boundary conditions on p
+  press_eq_CC     =  setBoundaryConditions(press_eq_CC,'press_CC',G);
+
+  %_____________________________________________________
+  % 3. Compute sources of energy due to chemical reactions
+  % Not applicable to this model.
 
 
-    %_____________________________________________________
-    % 4. Compute the face-centered velocities
-    if (P.debugSteps)
-        fprintf('Step 4: compute face-centered velocities\n');
-    end
+  %_____________________________________________________
+  % 4. Compute the face-centered velocities
+  if (P.debugSteps)
+    fprintf('Step 4: compute face-centered velocities\n');
+  end
 
-    for j = firstCell-1:lastCell                                    % Loop over all faces
-        left        = j;
-        right       = j+1;
-        speedSound_FC(j) = sqrt(0.5*(speedSound_CC(left)^2 + speedSound_CC(right)^2));
-    end
+  for j = G.first_FC:G.last_FC   % Loop over all xminus cell faces
+    L = j-1;
+    R = j;
+    term1   = (rho_CC(L)*xvel_CC(L) + rho_CC(R)*xvel_CC(R)) / (rho_CC(L) + rho_CC(R));
+
+    term2a  = (2.0*spvol_CC(L)*spvol_CC(R)) / (spvol_CC(L) + spvol_CC(R));
+
+    term2b  = (press_eq_CC(R) - press_eq_CC(L))/G.delX;
     
-    delUStar = delT;                                                % Production ICE / VNR q=0 (1950)
-    %delUStar = 0.5*delT;                                           % Lax-Wendroff    
+    xvel_FC(j)  = term1 - delT*(term2a*term2b);
+  end
+
+  % Set boundary conditions on u @ face centers
+  xvel_FC = setBoundaryConditions(xvel_FC,'xvel_FC', G);
+
+
+  %_____________________________________________________
+  % 5. Compute delta p
+  % p satisfies a differential equation that can be
+  % derived from the other ones plus the EOS. It looks
+  % something like: p_t = -div(theta*u). Here we advance in time
+  % p from tn to t_{n+1} using the advection operator of
+  % theta*u.
+  if (P.debugSteps)
+    fprintf('Step 5: compute delta p\n');
+  end
+
+  % Compute the advection operator of theta*u
+  [ofs, rx] = outFluxVol(xvel_CC, xvel_FC, delT, G);                  % Compute the outflux volumes ofs and centroid vector rx. Needs to be done once for all calls of advectQ in this timestep.
+  
+  [q_advected, gradLim, grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = ...
+    advectRho(volfrac_CC, ofs, rx, xvel_FC, G);                       % Treat vol frac (theta) advection like a mass advection (van Leer limiter, etc.)
+
+  for j = G.first_CC:G.last_CC
+    term1 = ((speedSound_CC(j)^2) / spvol_CC(j) );
+
+    delPDilatate(j) = term1 * q_advected(j);
+    press_CC(j) = press_eq_CC(j) + delPDilatate(j);                   % Advance pressure in time
+  end
+  press_CC =  setBoundaryConditions(press_CC,'press_CC',G);           % Set boundary conditions on the new pressure
+
+
+  %_____________________________________________________
+  % 6. Compute the face-centered pressure
+  if (P.debugSteps)
+    fprintf('Step 6: compute the face-centered pressure\n');
+  end
+
+  for j = G.first_FC:G.last_FC                                   
+    L  = j-1; 
+    R = j;
+    press_FC(j) = (...
+      press_CC(L)   * rho_CC(R) + press_CC(R) * rho_CC(L)) / ...
+      (rho_CC(L) + rho_CC(R) + d_SMALL_NUM);
+  end
+
+
+  %_____________________________________________________
+  % 7. Accumulate sources
+  % We neglect tortion forces, gravity effects, and the
+  % temperature gradient term.
+  if (P.debugSteps)
+    fprintf('Step 7: accumulate sources\n');
+  end
+  
+  for j = G.first_CC:G.last_CC
+    L = j;
+    R = j+1;
+  
+    del_mom(j)  = -delT * G.delX * ...
+      ((press_FC(R) - press_FC(L))/G.delX);
+
+    del_eng(j)  =  G.delX * spvol_CC(j) * press_CC(j) * delPDilatate(j) ...
+      /(speedSound_CC(j)^2);
+  end
+
+
+  %_____________________________________________________
+  % 8. Compute Lagrangian quantities
+  if (P.debugSteps)
+    fprintf('Step 8: compute Lagrangian quantities\n');
+  end
+
+  mass_L      = rho_CC .* G.delX;                                 % m^L = rho * cell_volume;
+  mom_L       = mass_L .* xvel_CC + del_mom;                      % (mu)^L = (mu) + del_(mu)
+  eng_L       = mass_L .* P.cv .* temp_CC + del_eng;              % (me)^L = (me) + del_(me)
+
+  % Translate fluxed quantities to primitive variables
+  rho_CC      = mass_L ./ G.delX;
+  xvel_CC     = mom_L ./ (mass_L + d_SMALL_NUM);
+  temp_CC     = eng_L ./ (P.cv .* mass_L + d_SMALL_NUM);
+
+  % Set boundary conditions for primitive variables
+  rho_CC      = setBoundaryConditions(rho_CC, 'rho_CC',  G);
+  xvel_CC     = setBoundaryConditions(xvel_CC,'xvel_CC', G);
+  temp_CC     = setBoundaryConditions(temp_CC,'temp_CC', G);
+
+  % Translate primitives into fluxed quantities, now with the "B.C." set for them too
+  mass_L      = rho_CC .* G.delX;
+  mom_L       = mass_L .* xvel_CC;
+  eng_L       = mass_L .* P.cv .* temp_CC;
+
+  %_____________________________________________________
+  % 9. Advect and advance in time
+  if (P.debugSteps)
+    fprintf('Step 9: advect and advance in time\n');
+  end
+
+  %==================================
+  % M A S S
+  % Uses van Leer limiter
+  if (P.debugSteps)
+    fprintf ('Advecting density\n');
+  end
+  [q_advected, gradLim, grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = ...
+    advectRho(mass_L, ofs, rx, xvel_FC, G);
+  
+  mass_CC     = mass_L + q_advected;                                % Advection of rho*ofs (the advected volume) = advection correction to the mass
+  rho_CC      = mass_CC ./ G.delX;                                  % Updated density
+  rho_CC      = setBoundaryConditions(rho_CC,'rho_CC', G);          % We need to set B.C. on rho,T,u
+
+  %==================================
+  % M O M E N T U M
+  % Uses compatible flux limiter
+  if (P.debugSteps)
+    fprintf ('Advecting momentum\n');
+  end
+  [q_advected, gradLim, grad_x] = ...
+    advectQ(mom_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, G);
     
-    for j = firstCell-1:lastCell                                    % Loop over all faces
-        left        = j;
-        right       = j+1;
-        term1       = (...
-            rho_CC(left )*xvel_CC(left ) + ...
-            rho_CC(right)*xvel_CC(right) ...
-            ) / (rho_CC(left) + rho_CC(right) + d_SMALL_NUM);
+  xvel_CC     = (mom_L + q_advected) ./ (mass_CC);                % Updated velocity
+  xvel_CC     = setBoundaryConditions(xvel_CC,'xvel_CC', G);
 
-        term2a      = 2.0*spvol_CC(left)*spvol_CC(right) ...
-            / (spvol_CC(left) + spvol_CC(right) + d_SMALL_NUM);
-
-        term2b      = (press_eq_CC(right) - press_eq_CC(left))/delX;
-        
-        %delUStar    = 0.5*delX/speedSound_FC(j);                   % Godunov sonic approxmation
-        xvel_FC(j)  = term1 - delUStar*term2a*term2b;               % Computed [limited] u^*
-    end
-
-    % Set boundary conditions on u @ face centers
-    % Using the B.C. for u directly, not an averaging of U at neighbouring
-    % ghost and interior cells
-    xvel_FC         = setBoundaryConditions(xvel_FC,'xvel_FC');
+  %==================================
+  % E N E R G Y
+  % Uses compatible flux limiter
+  if (P.debugSteps)
+    fprintf ('Advecting energy\n');
+  end
+  [q_advected, gradLim, grad_x] = ...
+    advectQ(eng_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, G);
+  
+  temp_CC     = (eng_L + q_advected)./(P.cv.*mass_CC);            % Updated temperature
+  temp_CC     = setBoundaryConditions(temp_CC,'temp_CC', G);
 
 
-    %_____________________________________________________
-    % 5. Compute delta p
-    % p satisfies a differential equation that can be
-    % derived from the other ones plus the EOS. It looks
-    % something like: p_t = -div(theta*u). Here we advance in time
-    % p from tn to t_{n+1} using the advection operator of
-    % theta*u.
-    if (P.debugSteps)
-        fprintf('Step 5: compute delta p\n');
-    end
+  %_____________________________________________________
+  % 10. End of the timestep
 
-    % Compute the advection operator of theta*u
-    [ofs, rx] = outFluxVol(xvel_FC, delT, delX, nCells);            % Compute the outflux volumes ofs and centroid vector rx. Needs to be done once for all calls of advectQ in this timestep.
-    [q_advected, gradLim, grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = ...
-        advectRho(volfrac_CC, ofs, rx, xvel_FC, delX, nCells);      % Treat vol frac (theta) advection like a mass advection (van Leer limiter, etc.)
+  %================ Compute del_T ================
+  % A G G R E S S I V E
 
-    term1 = ((speedSound_CC.^2) ./ spvol_CC );
-
-    % This is not exactly delP from Bucky's paper, is it?
-    delPStar = delT;                                                % Production ICE / VNR q=0 (1950)
-    %delPStar = 0.5*delT;                                            % Lax-Wendroff        
-    %delPStar    = 0.5*delX./speedSound_CC;                          % Godunov sonic approximation (1961)
-    %delPStar = 2.0*delT;
-    
-%     delPStar = zeros(1,totCells);
-%     for j = firstCell:lastCell-1
-%         delPStarLeft    = 0.5*delX./speedSound_FC(j);                          % Godunov sonic approximation (1961)
-%         delPStarRight    = 0.5*delX./speedSound_FC(j+1);                          % Godunov sonic approximation (1961)
-%         delPStar(j) = 0.5*(delPStarLeft + delPStarRight);
-%     end
-
-    delPDilatate = (delPStar / delT) .* term1 .* q_advected;         % Compute [limited] DelP
-    press_CC = press_eq_CC + delPDilatate;                          % Advance pressure in time    
-    press_CC =  setBoundaryConditions(press_CC,'press_CC');         % Set boundary conditions on the new pressure
+  delt_CFL        = 1e+30;
+  for j = G.first_CC:G.last_CC
+    speed_Sound = speedSound_CC(j);
+    A           = P.CFL*G.delX/(speed_Sound + abs(xvel_CC(j)));
+    delt_CFL    = min(A, delt_CFL);
+  end
+  if (P.debugSteps)
+    fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delt_CFL);
+  end
 
 
-    %_____________________________________________________
-    % 6. Compute the face-centered pressure
-    if (P.debugSteps)
-        fprintf('Step 6: compute the face-centered pressure\n');
-    end
+  %================ Compare with Uintah ICE and Plot Results ================
+  if (P.compareUintah)
+    loadUintah;                                                   % Load Uintah results
+  end
+  plotResults;                                                    % Plot results (and also against Uintah, if compareUintah flag is on)
 
-    for j = firstCell-1:lastCell                                    % Loop over all relevant cells
-        this        = j;                                            % This face index
-        adj         = j+1;                                          % The relevant adjacent face index
-        press_FC(j) = (...
-            press_CC(this) * rho_CC(adj ) + ...
-            press_CC(adj ) * rho_CC(this)) / ...
-            (rho_CC(this) + rho_CC(adj) + d_SMALL_NUM);
-    end
+  %================ Various breaks ================
 
-
-    %_____________________________________________________
-    % 7. Accumulate sources
-    % We neglect tortion forces, gravity effects, and the
-    % temperature gradient term.
-    if (P.debugSteps)
-        fprintf('Step 7: accumulate sources\n');
-    end
-
-    for j = firstCell:lastCell
-        del_mom(j)  = -delT * delX * ...
-            ((press_FC(j) - press_FC(j-1))/delX);
-
-        del_eng(j)  =  delX .*spvol_CC(j) .* press_CC(j) * delPDilatate(j) ...
-            /(speedSound_CC(j).^2);                                 % Shift q to the indices of the rest of the arrays in this formula
-    end
-
-
-    %_____________________________________________________
-    % 8. Compute Lagrangian quantities
-    if (P.debugSteps)
-        fprintf('Step 8: compute Lagrangian quantities\n');
-    end
-
-    mass_L      = rho_CC .* delX;                                   % m^L = rho * cell_volume;
-    mom_L       = mass_L .* xvel_CC + del_mom;                      % (mu)^L = (mu) + del_(mu)
-    eng_L       = mass_L .* P.cv .* temp_CC + del_eng;              % (me)^L = (me) + del_(me)
-
-    % Translate fluxed quantities to primitive variables
-    rho_CC      = mass_L ./ delX;
-    xvel_CC     = mom_L ./ (mass_L + d_SMALL_NUM);
-    temp_CC     = eng_L ./ (P.cv .* mass_L + d_SMALL_NUM);
-
-    % Set boundary conditions for primitive variables
-    rho_CC      = setBoundaryConditions(rho_CC      ,'rho_CC');
-    xvel_CC     = setBoundaryConditions(xvel_CC     ,'xvel_CC');
-    temp_CC     = setBoundaryConditions(temp_CC     ,'temp_CC');
-
-    % Translate primitives into fluxed quantities, now with the "B.C." set for them too
-    mass_L      = rho_CC .* delX;
-    mom_L       = mass_L .* xvel_CC;
-    eng_L       = mass_L .* P.cv .* temp_CC;
-
-    %_____________________________________________________
-    % 9. Advect and advance in time
-    if (P.debugSteps)
-        fprintf('Step 9: advect and advance in time\n');
-    end
-
-    %==================================
-    % M A S S
-    % Uses van Leer limiter
-    if (P.debugSteps)
-        fprintf ('Advecting density\n');
-    end
-    [q_advected, gradLim, grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = ...
-        advectRho(mass_L, ofs, rx, xvel_FC, delX, nCells);
-    mass_CC     = mass_L + q_advected;                              % Advection of rho*ofs (the advected volume) = advection correction to the mass
-    rho_CC      = mass_CC ./ delX;                                  % Updated density
-    rho_CC      = setBoundaryConditions(rho_CC      ,'rho_CC');     % We need to set B.C. on rho,T,u
-    
-    %==================================
-    % M O M E N T U M
-    % Uses compatible flux limiter
-    if (P.debugSteps)
-        fprintf ('Advecting momentum\n');
-    end
-    [q_advected, gradLim, grad_x] = ...
-        advectQ(mom_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-
-
-
-    xvel_CC     = (mom_L + q_advected) ./ (mass_CC);                % Updated velocity
-    xvel_CC     = setBoundaryConditions(xvel_CC     ,'xvel_CC');
-
-    %==================================
-    % E N E R G Y
-    % Uses compatible flux limiter
-    if (P.debugSteps)
-        fprintf ('Advecting energy\n');
-    end
-    [q_advected, gradLim, grad_x] = ...
-        advectQ(eng_L, mass_L, mass_slab, mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, delX, nCells);
-    temp_CC     = (eng_L + q_advected)./(P.cv.*mass_CC);            % Updated temperature
-    temp_CC     = setBoundaryConditions(temp_CC     ,'temp_CC');
-
-
-    %_____________________________________________________
-    % 10. End of the timestep
-
-    %================ Compute del_T ================
-    % A G G R E S S I V E
-
-    delt_CFL        = 1e+30;
-    for j = firstCell:lastCell
-        speed_Sound = speedSound_CC(j);
-        A           = P.CFL*delX/(speed_Sound + abs(xvel_CC(j)));
-        delt_CFL    = min(A, delt_CFL);
-    end
-    if (P.debugSteps)
-        fprintf('Aggressive delT Based on currant number CFL = %.3e\n',delt_CFL);
-    end
-
-
-    %================ Compare with Uintah ICE and Plot Results ================
-    if (P.compareUintah)
-        loadUintah;                                                 % Load Uintah results
-    end
-    plotResults;                                                    % Plot results (and also against Uintah, if compareUintah flag is on)
-
-    %================ Various breaks ================
-
-    delT    = delt_CFL;                                             % Compute delT - "agressively" small
-    t       = t + delT;                                             % Advance time
-    if (t >= P.maxTime)
-        fprintf('Reached maximum time\n');
-        break;
-    end
+  delT    = delt_CFL;                                             % Compute delT - "agressively" small
+  t       = t + delT;                                             % Advance time
+  if (t >= P.maxTime)
+    fprintf('Reached maximum time\n');
+    break;
+  end
 end
 figure(1);
 print -depsc iceResult1.eps
