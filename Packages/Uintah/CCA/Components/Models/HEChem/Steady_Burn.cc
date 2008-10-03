@@ -198,9 +198,6 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gn  = Ghost::None;
-  Ghost::GhostType  gp;
-  int ngc_p;
-  d_sharedState->getParticleGhostLayer(gp, ngc_p);
   const MaterialSubset* react_matl = matl0->thisMaterial();  
 
   Task* t1 = scinew Task("Steady_Burn::computeNumPPC", this, 
@@ -208,7 +205,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   printSchedule(level,"Steady_Burn::scheduleComputeNumPPC\t\t\t");  
 
-  t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gp,ngc_p);
+  t1->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gn);
   t1->computes(numPPCLabel, react_matl);
 
   sched->addTask(t1, level->eachPatch(), mymatls);
@@ -240,7 +237,6 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
   t->requires(Task::NewDW, MIlb->gMassLabel,      react_matl, gac,1);
   t->requires(Task::NewDW, numPPCLabel,           react_matl, gac,1);
-//  t->requires(Task::OldDW, Mlb->pXLabel,          react_matl, gp,ngc_p);
   /*     Misc      */
   t->requires(Task::NewDW,  Ilb->press_equil_CCLabel, one_matl, gac, 1);
   t->requires(Task::OldDW,  MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
@@ -291,19 +287,15 @@ void Steady_Burn::computeNumPPC(const ProcessorGroup*,
 {
   int m0 = matl0->getDWIndex(); /* reactant material */
 
-  Ghost::GhostType  gp;
-  int ngc_p;
-  d_sharedState->getParticleGhostLayer(gp, ngc_p);
-  
   /* Patch Iteration */
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     printTask(patches,patch,"Doing computeNumPPC\t\t\t\t");
 
     /* Indicating how many particles a cell contains */
+    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch);
+
     constParticleVariable<Point>  px;
-    ParticleSubset* pset = old_dw->getParticleSubset(m0, patch, gp, ngc_p,
-                                                     Mlb->pXLabel);
     old_dw->get(px, Mlb->pXLabel, pset);
 
     /* Indicating cells containing how many particles */
