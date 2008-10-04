@@ -134,6 +134,9 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   } else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")){
     // Look for ALC's MPI
     ::usingMPI=true;
+  } else if(getenv("OMPI_MCA_ns_nds_num_procs") || getenv("OMPI_MCA_pls")){
+    // Look for Open MPI
+    ::usingMPI=true;
   } else {
     // Look for mpich
     for(int i=0;i<argc;i++){
