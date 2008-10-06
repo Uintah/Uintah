@@ -142,7 +142,8 @@ HypreSolver::gridSetup(const ProcessorGroup*,
   nx = idxHi.x() - idxLo.x() + 1;
   ny = idxHi.y() - idxLo.y() + 1;
   nz = idxHi.z() - idxLo.z() + 1;
-  
+
+#if 0  
   //__________________________________
   //  bulletproofing      -This sucks Todd
   if( fmodf(nx,2) !=0 || fmodf(ny,2) != 0 || fmodf(nz,2) != 0){
@@ -152,6 +153,7 @@ HypreSolver::gridSetup(const ProcessorGroup*,
          << "Patch: " << patch->getID() << " cells: (" << nx << ","<< ny <<","<< nz <<")" ;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);  
   }
+#endif
      
   for (int i = 0; i < 6; i++){    
     d_A_num_ghost[i] = 0;
