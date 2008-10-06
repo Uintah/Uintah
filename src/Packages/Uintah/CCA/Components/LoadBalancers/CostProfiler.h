@@ -72,7 +72,7 @@ namespace Uintah {
       }
     };
   public:
-    CostProfiler(const ProcessorGroup* myworld) : d_myworld(myworld), d_timestepWindow(20), timesteps(0) {};
+    CostProfiler(const ProcessorGroup* myworld) : d_myworld(myworld), d_timestepWindow(20), timesteps(0) {updateAlpha();};
     void setMinPatchSize(const vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(const PatchSubset* patches, double cost);
@@ -83,7 +83,7 @@ namespace Uintah {
     //get the contribution for region r on level l
     void getWeights(int l, const vector<Region> &regions, vector<double> &weights);
     //sets the decay rate for the exponential average
-    void setTimestepWindow(int window) {d_timestepWindow=window;}
+    void setTimestepWindow(int window) {d_timestepWindow=window, updateAlpha();}
     //initializes the regions in the new level that are not in the old level
     void initializeWeights(const Grid* oldgrid, const Grid* newgrid);
     //resets all counters to zero
@@ -91,9 +91,11 @@ namespace Uintah {
     //returns true if profiling data exists
     bool hasData() {return timesteps>0;}
   private:
+    const void updateAlpha() { d_alpha=2.0/(d_timestepWindow+1); }
     const ProcessorGroup* d_myworld;
             
     int d_timestepWindow;
+    double d_alpha;
     vector<IntVector> d_minPatchSize;
     vector<int> d_minPatchSizeVolume;
 
