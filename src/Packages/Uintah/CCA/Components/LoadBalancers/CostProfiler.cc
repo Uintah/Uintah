@@ -98,7 +98,7 @@ void CostProfiler::outputError(const GridP currentGrid)
           } 
         }
       }
-
+      
       //allreduce sum weights
       if(d_myworld->size()>1)
       {
@@ -110,18 +110,34 @@ void CostProfiler::outputError(const GridP currentGrid)
       }
       if(d_myworld->myrank()==0)
       {
+        //calculate total cost for normalization
+        double total_measured=0, total_predictedzo=0, total_predictedfo=0, total_predictedso=0, total_predictedto=0;
+        for(int r=0;r<(int)regions.size();r++)
+        {
+          total_measured+=measured_sum[r];
+          total_predictedzo+=predictedzo_sum[r];
+          total_predictedfo+=predictedfo_sum[r];
+          total_predictedso+=predictedso_sum[r];
+          total_predictedto+=predictedto_sum[r];
+        }
+        
+#if 0
+        //normalize patch costs
+        for(int r=0;r<(int)regions.size();r++)
+        {
+          measured_sum[r]/=total_measured;
+          predictedzo_sum[r]/=total_predictedzo;
+          predictedfo_sum[r]/=total_predictedfo;
+          predictedso_sum[r]/=total_predictedso;
+          predictedto_sum[r]/=total_predictedto;
+        }
+#endif
         double total_zoerror=0,mean_zoerror=0, total_percent_zoerror=0, mean_percent_zoerror=0;
         double total_foerror=0,mean_foerror=0, total_percent_foerror=0, mean_percent_foerror=0;
         double total_soerror=0,mean_soerror=0, total_percent_soerror=0, mean_percent_soerror=0;
         double total_toerror=0,mean_toerror=0, total_percent_toerror=0, mean_percent_toerror=0;
-        double total_measured=0, total_zopredicted=0, total_fopredicted=0, total_sopredicted=0, total_topredicted=0;
         for(int r=0;r<(int)predictedfo.size();r++)
         {
-          total_measured+=measured_sum[r];
-          total_zopredicted+=predictedzo_sum[r];
-          total_fopredicted+=predictedfo_sum[r];
-          total_sopredicted+=predictedso_sum[r];
-          total_topredicted+=predictedto_sum[r];
           double zoerror=fabs(predictedzo_sum[r]-measured_sum[r]);
           double foerror=fabs(predictedfo_sum[r]-measured_sum[r]);
           double soerror=fabs(predictedso_sum[r]-measured_sum[r]);
@@ -144,10 +160,9 @@ void CostProfiler::outputError(const GridP currentGrid)
         mean_percent_foerror=total_percent_foerror/predictedfo.size();
         mean_percent_soerror=total_percent_soerror/predictedso.size();
         mean_percent_toerror=total_percent_toerror/predictedto.size();
-       stats << timesteps << " " << l <<  " " << mean_percent_zoerror << " " << mean_percent_foerror << " " <<mean_percent_soerror << " " << mean_percent_toerror << " "
-             << total_measured << " " << " " << total_zopredicted << " " << total_fopredicted << " " << total_sopredicted << " " << total_topredicted << endl;
-       cout << timesteps << " " << l <<  " " << mean_percent_zoerror << " " << mean_percent_foerror << " " <<mean_percent_soerror << " " << mean_percent_toerror << " "
-             << total_measured << " " << " " << total_zopredicted << " " << total_fopredicted << " " << total_sopredicted << " " << total_topredicted << endl;
+        stats << timesteps << " " << l <<  " " << mean_percent_zoerror << " " << mean_percent_foerror << " " <<mean_percent_soerror << " " << mean_percent_toerror << " "
+              << total_measured << " " << " " << total_predictedzo << " " << total_predictedfo << " " << total_predictedso << " " << total_predictedto << endl;
+
       }
   }
 }
@@ -178,19 +193,28 @@ void CostProfiler::finalizeContributions(const GridP currentGrid)
       else
         data.timestep++;
 
-      //calculate alpha
-      double alpha=2.0/(min(d_timestepWindow,timesteps)+1);
+      if(timesteps==1)
+      {
+        data.zoweight=data.current;
+        data.foweight=data.current;
+        data.soweight=data.current;
+        data.toweight=data.current;
+      }
+      else
+      {
 
-      //update exponential averagea
-      data.zoweight=data.current;
-      data.foweight=alpha*data.current+(1-alpha)*data.foweight;
-      data.soweight=alpha*data.foweight+(1-alpha)*data.soweight;
-      data.toweight=alpha*data.soweight+(1-alpha)*data.toweight;
+        //update exponential averagea
+        data.zoweight=data.current;
+        data.foweight=d_alpha*data.current+(1-d_alpha)*data.foweight;
+        data.soweight=d_alpha*data.foweight+(1-d_alpha)*data.soweight;
+        data.toweight=d_alpha*data.soweight+(1-d_alpha)*data.toweight;
+      }
+      
       //reset current
       data.current=0;
       
       //if data is old 
-      if (data.timestep>log(.001*alpha)/log(1-alpha))
+      if (data.timestep>log(.001*d_alpha)/log(1-d_alpha))
       {
            //erase saved iterator in order to save space and time
            costs[l].erase(it);
