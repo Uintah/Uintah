@@ -305,31 +305,49 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     //create dnew to contain a subset of the new patches
     for(int p=0; p<newgrid->getLevel(l)->numPatches(); p++) 
     {
-      if(p%d_myworld->size()==d_myworld->myrank())
-      {
-        const Patch* patch = newgrid->getLevel(l)->getPatch(p);
-        dnew.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
-      }
+      const Patch* patch = newgrid->getLevel(l)->getPatch(p);
+      dnew.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
     }
     
     //compute difference
     new_regions=Region::difference(dnew, dold);
-    
+   
+
+    int i=0;
     //initialize weights 
     for(deque<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
     {
-      IntVector low=it->getLow()/d_minPatchSize[l];
-      IntVector high=it->getHigh()/d_minPatchSize[l];
-      
-      //loop through datapoints
-      for(CellIterator iter(low,high); !iter.done(); iter++)
+      //if this region is assigned to me
+      if(i%d_myworld->size()==d_myworld->myrank())
       {
-        //add cost to current contribution
-        costs[l][*iter].zoweight=average_cost;
-        costs[l][*iter].foweight=average_cost;
-        costs[l][*iter].soweight=average_cost;
-        costs[l][*iter].toweight=average_cost;
-      } //end cell iteration
+        //add regions to my map
+        IntVector low=it->getLow()/d_minPatchSize[l];
+        IntVector high=it->getHigh()/d_minPatchSize[l];
+      
+        //loop through datapoints
+        for(CellIterator iter(low,high); !iter.done(); iter++)
+        {
+          //add cost to current contribution
+          costs[l][*iter].zoweight=average_cost;
+          costs[l][*iter].foweight=average_cost;
+          costs[l][*iter].soweight=average_cost;
+          costs[l][*iter].toweight=average_cost;
+        } //end cell iteration
+      }
+      else
+      {
+        //remove regions from my map 
+        //  regions could still be in my map if I owned
+        //  this region on a previous timestep
+        
+        IntVector low=it->getLow()/d_minPatchSize[l];
+        IntVector high=it->getHigh()/d_minPatchSize[l];
+        
+        for(CellIterator iter(low,high); !iter.done(); iter++)
+        {
+          costs[l].erase(*iter);
+        }
+      }//end processor if
     } //end region iteration
   }// end levels iteration
 }
