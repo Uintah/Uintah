@@ -261,7 +261,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
   {
     LevelP level= newGrid->getLevel(l);
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-    level->assignBCS(grid_ps_,0);
+    //level->assignBCS(grid_ps_,0);
   }
   t[4]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
