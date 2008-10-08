@@ -306,7 +306,8 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     for(int p=0; p<newgrid->getLevel(l)->numPatches(); p++) 
     {
       const Patch* patch = newgrid->getLevel(l)->getPatch(p);
-      dnew.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
+      if(p%d_myworld->size()==d_myworld->myrank())
+        dnew.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
     }
     
     //compute difference
@@ -317,37 +318,19 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     //initialize weights 
     for(deque<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
     {
-      //if this region is assigned to me
-      if(i%d_myworld->size()==d_myworld->myrank())
+      //add regions to my map
+      IntVector low=it->getLow()/d_minPatchSize[l];
+      IntVector high=it->getHigh()/d_minPatchSize[l];
+
+      //loop through datapoints
+      for(CellIterator iter(low,high); !iter.done(); iter++)
       {
-        //add regions to my map
-        IntVector low=it->getLow()/d_minPatchSize[l];
-        IntVector high=it->getHigh()/d_minPatchSize[l];
-      
-        //loop through datapoints
-        for(CellIterator iter(low,high); !iter.done(); iter++)
-        {
-          //add cost to current contribution
-          costs[l][*iter].zoweight=average_cost;
-          costs[l][*iter].foweight=average_cost;
-          costs[l][*iter].soweight=average_cost;
-          costs[l][*iter].toweight=average_cost;
-        } //end cell iteration
-      }
-      else
-      {
-        //remove regions from my map 
-        //  regions could still be in my map if I owned
-        //  this region on a previous timestep
-        
-        IntVector low=it->getLow()/d_minPatchSize[l];
-        IntVector high=it->getHigh()/d_minPatchSize[l];
-        
-        for(CellIterator iter(low,high); !iter.done(); iter++)
-        {
-          costs[l].erase(*iter);
-        }
-      }//end processor if
+        //add cost to current contribution
+        costs[l][*iter].zoweight=average_cost;
+        costs[l][*iter].foweight=average_cost;
+        costs[l][*iter].soweight=average_cost;
+        costs[l][*iter].toweight=average_cost;
+      } //end cell iteration
       i++;
     } //end region iteration
   }// end levels iteration
