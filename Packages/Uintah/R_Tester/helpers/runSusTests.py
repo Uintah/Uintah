@@ -417,7 +417,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # set the command name for mpirun - differs on different platforms
   MPIHEAD="mpirun -np"
   if environ['OS'] == "Linux":
-    MPIHEAD="mpirun -nsigs -x MALLOC_STATS,SCI_SIGNALMODE -np" 
+    MPIHEAD="mpirun -x MALLOC_STATS,SCI_SIGNALMODE -np" 
 
   # set where to view the log files
   logpath = environ['WEBLOG']
