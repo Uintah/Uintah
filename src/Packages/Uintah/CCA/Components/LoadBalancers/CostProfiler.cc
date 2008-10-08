@@ -348,6 +348,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
           costs[l].erase(*iter);
         }
       }//end processor if
+      i++;
     } //end region iteration
   }// end levels iteration
 }
