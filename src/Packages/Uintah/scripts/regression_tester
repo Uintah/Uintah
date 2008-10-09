@@ -163,7 +163,8 @@ for arg in $*; do
             do_mpmf=1;;
         -models)
             echo "Scheduling the models tests . . ."
-            do_models=1;;
+            do_models=1
+            MPI_RUN="yes";;
         -mpmarches)
             echo "Scheduling the mpmarches tests . . ."
             do_mpmarches=1;;
@@ -216,7 +217,7 @@ echo "Using the >> $DIR << gold standard directory."
 
 # Set up the various test cases
 
-mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts testConvert1MAdd"
+mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush periodic_disks const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts"
 mpmf_test_cases="regressionFMPM"
 ice_test_cases="advect rieman_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 ice_amr_test_cases="hotBlob_AMR advect2matAMR"
@@ -227,7 +228,7 @@ smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="jp8cyl"
-examples_test_cases="poisson1 poisson2"
+examples_test_cases="poisson1"
 
 # Check if the applications sus and compare_uda are available
 
@@ -279,6 +280,8 @@ run_test () {
 
     echo; date
 
+    run_test_return=0
+
     if test -x /usr/bin/lamboot; then
         /usr/bin/lamboot
     fi
@@ -286,6 +289,9 @@ run_test () {
     cd $results
     cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
     input_file=../$n.ups.rt
+    if [ ! -h inputs ]; then
+        ln -s ../inputs .
+    fi
 
     num_proc
     opts=""
@@ -310,16 +316,19 @@ run_test () {
     if test -n "$success"; then 
         echo $success
         cd ..
+        run_test_return=0
     else
         echo; echo "FAILURE running sus . . ."
         cd ..
         continue
+        run_test_return=1
     fi
 
     if test -x /usr/bin/lamhalt; then
         /usr/bin/lamhalt
     fi
 
+    return $run_test_return
 }
 
 
@@ -341,9 +350,11 @@ compare_results () {
     if test -n "$compare"; then
         echo $compare
         cd ..
+        return 0
     else
         echo; echo "FAILURE running compare_uda . . ."
         cd ..
+        return 1
     fi
 }
 
@@ -374,112 +385,43 @@ run_restart () {
     fi
 }
 
-mpm_test () {
-    echo; echo "Testing $mpm_test_cases"
+uda_name () {
+    uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
     
-    for n in $mpm_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
-        compare_results 
-        run_restart
-    done
 }
 
-mpmf_test () {
-    echo; echo "Testing $mpmf_test_cases"
-    
-    for n in $mpmf_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
-        compare_results 
-        run_restart
-        MPI=""
-    done
-}
+run_case () {
 
-mpmice_test () {
-    echo; echo "Testing $mpmice_test_cases"
-    
-    for n in $mpmice_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-        compare_results
-        run_restart
-        MPI=""
-    done
-}
-model_test () {
-    echo; echo "Testing $model_test_cases"
-    echo "making link to inputs directory"
-    cd $results
-    ln -s ../inputs .
-    cd ..
-    
-    for n in $model_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-        compare_results
-        run_restart
-        MPI=""
-    done
-}
-impm_test () {
-    echo; echo "Testing $impm_test_cases"
-    
-    for n in $impm_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-        compare_results
-        run_restart
-    done
-    MPI=""
-}
+## Use indirect expansion to get the list of cases to run found 
+## in tc variable
 
-smpm_test () {
-    echo; echo "Testing $smpm_test_cases"
-    
-    for n in $smpm_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        compare_results
-        run_restart
-        MPI=""
-    done
-}
+    test_case=$1
+    tc=${test_case}_test_cases
+    echo; echo "Testing ${!tc}"
 
+    all_tests_pass=true
 
-ice_test () {
-    echo; echo "Testing $ice_test_cases"
-    
-    for n in $ice_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        compare_results
+    for n in ${!tc}; do
+        uda_name
+#        run_test
+#        compare_results
         run_restart
         MPI=""
+        if   (run_test && compare_results ) && $all_tests_pass  ; then
+            all_tests_pass=true
+        else
+            all_tests_pass=false
+        fi
     done
-}
-ice_amr_test () {
-    echo; echo "Testing $ice_amr_test_cases"
     
-    for n in $ice_amr_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        compare_results
-        run_restart
-        MPI=""
-    done
-}
-mpmice_amr_test () {
-    echo; echo "Testing $mpmice_amr_test_cases"
-    
-    for n in $mpmice_amr_test_cases; do
-        run_test
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        compare_results
-        run_restart
-        MPI=""
-    done
+    if [ $all_tests_pass == true ]; then
+        echo "returning 0"
+        return 0
+    else
+        echo "returning 1"
+        return 1
+    fi
+
 }
 
 arches_test () {
@@ -524,26 +466,6 @@ mpmarches_test () {
     done
 }
 
-examples_test () {
-    echo; echo "Testing $examples_test_cases"
-    
-    for n in $examples_test_cases; do
-        echo; echo "Running: ./sus -poisson1 $INPUTS/$CASE/$n.ups"
-        run_test
-        ./sus -poisson1 $INPUTS/$CASE/$n.ups &> $n.out
-        success=`grep "successfully" $n.out`
-        if test -n "$success"; then 
-            echo $success
-        else
-            echo; echo "FAILURE running sus . . ."
-            continue
-        fi
-
-        compare_results
-        run_restart
-        MPI=""
-    done
-}
 
 if test -n "$ALL"; then
    do_mpm=1
@@ -567,65 +489,67 @@ echo
 
 if test "$do_mpm" -eq 1; then
     CASE=MPM
-    opts=-mpm
-    mpm_test
+    run_case mpm
+    rt_value=$?
 fi
 
 if test "$do_mpmf" -eq 1; then
     CASE=MPMF
-    opts=-mpmf
-    mpmf_test
+    run_case mpmf
+    rt_value=$?
 fi
 
 if test "$do_ice" -eq 1; then
     CASE=ICE
-    opts=-ice
-    ice_test
+    run_case ice
+    rt_value=$?
 fi
 if test "$do_ice_amr" -eq 1; then
-    CASE=ICE    # this won't work when we have MPMICE AMR
-    opts=-ice
-    ice_amr_test
+    CASE=ICE   
+    run_case ice_amr
+    rt_value=$?
 fi
 if test "$do_mpmice" -eq 1; then
     CASE=MPMICE
-    opts=-mpmice
-    mpmice_test
+    run_case mpmice
+    rt_value=$?
 fi
 if test "$do_mpmice_amr" -eq 1; then
     CASE=MPMICE
-    opts=-mpmice
-    mpmice_amr_test
+    run_case mpmice_amr
+    rt_value=$?
 fi
 if test "$do_models" -eq 1; then 
     CASE=Models
-    opts="-mpi"
-    model_test
+    run_case model
+    rt_value=$?
 fi
 if test "$do_smpm" -eq 1; then
     CASE=SMPM
-    opts=-smpm
-    smpm_test
+    run_case smpm
+    rt_value=$?
 fi
 if test "$do_impm" -eq 1; then
     CASE=IMPM
-    MPI="mpirun -np 1 "
-    opts="-impm"
-    impm_test
+    run_case impm
+    rt_value=$?
 fi
 if test "$do_arches" -eq 1; then
     CASE=ARCHES
     opts=-arches
     arches_test
+    rt_value=$?
 fi
 if test "$do_mpmarches" -eq 1; then
     CASE=MPMARCHES
     opts=-mpmarches
     mpmarches_test
+    rt_value=$?
 fi
 if test "$do_examples" -eq 1; then
     CASE=Examples
-    examples_test
+    run_case examples
+    rt_value=$?
 fi
 if test "$do_remove" -eq 1; then
     REMOVE
@@ -634,3 +558,7 @@ fi
 echo
 echo "Ending tests at:   `date`"
 echo
+
+
+exit $rt_value
+
