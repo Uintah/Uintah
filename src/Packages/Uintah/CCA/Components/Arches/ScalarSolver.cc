@@ -442,31 +442,31 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // compute ith component of scalar stencil coefficients
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
-  //d_discretize->calculateScalarCoeff(patch,
-  //                                   cellinfo, 
-  //                                   &scalarVars, &constScalarVars,
-  //                                   d_conv_scheme);
+  d_discretize->calculateScalarCoeff(patch,
+                                     cellinfo, 
+                                     &scalarVars, &constScalarVars,
+                                     d_conv_scheme);
 
   //new stuff-----------------------**DONE**
   new_dw->allocateTemporary(scalarVars.scalarConvCoef, patch); 
   new_dw->allocateTemporary(scalarVars.scalarDiffCoef, patch); 
-  calculateScalarCoeff__new(pc, patch,
-                                     delta_t, cellinfo, 
-                                     &scalarVars, &constScalarVars,
-                                     d_conv_scheme);
+  //calculateScalarCoeff__new(pc, patch,
+  //                                   delta_t, cellinfo, 
+  //                                   &scalarVars, &constScalarVars,
+  //                                   d_conv_scheme);
 
 
    // Calculate scalar source terms
    // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
    // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
-   //d_source->calculateScalarSource(pc, patch,
-   //                               delta_t, cellinfo, 
-   //                               &scalarVars, &constScalarVars);
-
-   //---NEW Source term calculation **DONE**
-   d_source->calculateScalarSource__new(pc, patch,
+   d_source->calculateScalarSource(pc, patch,
                                   delta_t, cellinfo, 
                                   &scalarVars, &constScalarVars);
+
+   //---NEW Source term calculation **DONE**
+   //d_source->calculateScalarSource__new(pc, patch,
+   //                               delta_t, cellinfo, 
+   //                               &scalarVars, &constScalarVars);
 
    if (d_doMMS){
     d_source->calculateScalarMMSSource(pc, patch,
@@ -544,10 +544,10 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      //d_boundaryCondition->scalarBC(pc, patch,
-      //                              &scalarVars, &constScalarVars);
-      d_boundaryCondition->scalarBC__new(pc, patch, 
+      d_boundaryCondition->scalarBC(pc, patch,
                                     &scalarVars, &constScalarVars);
+      //d_boundaryCondition->scalarBC__new(pc, patch, 
+      //                              &scalarVars, &constScalarVars);
       /*if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
                                                &scalarVars, &constScalarVars);*/
@@ -555,26 +555,26 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // apply multimaterial intrusion wallbc ...
     // NOTE: Why not do this in scalarBC?
     if (d_MAlab){
-      //d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
-      //                                    &scalarVars, &constScalarVars);
-      d_boundaryCondition->mmscalarWallBC__new(pc, patch, cellinfo,
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
                                           &scalarVars, &constScalarVars);
+      //d_boundaryCondition->mmscalarWallBC__new(pc, patch, cellinfo,
+      //                                    &scalarVars, &constScalarVars);
     }
     // similar to mascal
-    //d_source->modifyScalarMassSource(pc, patch, delta_t,
-    //                                 &scalarVars, &constScalarVars,
-    //                                 d_conv_scheme);
+    d_source->modifyScalarMassSource(pc, patch, delta_t,
+                                     &scalarVars, &constScalarVars,
+                                     d_conv_scheme);
     // ----New modifyScalarMassSource --- **DONE**
-    d_source->modifyScalarMassSource__new(pc, patch, delta_t,
-                                          &scalarVars, &constScalarVars,
-                                          d_conv_scheme);
+    //d_source->modifyScalarMassSource__new(pc, patch, delta_t,
+    //                                      &scalarVars, &constScalarVars,
+    //                                      d_conv_scheme);
 
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
-    //d_discretize->calculateScalarDiagonal(patch, &scalarVars);
-    d_discretize->calculateScalarDiagonal__new(patch, &scalarVars);
+    d_discretize->calculateScalarDiagonal(patch, &scalarVars);
+    //d_discretize->calculateScalarDiagonal__new(patch, &scalarVars);
 
 
     CCVariable<double> scalar;
@@ -735,18 +735,18 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     // same interface for Arches with or without intrusions
     int intrusionVal = d_boundaryCondition->getMMWallId();
     bool doingMM = d_MAlab;
-    d_rhsSolver->scalarExplicitUpdate(pc, patch, delta_t, &scalarVars, &constScalarVars, cellinfo, doingMM, intrusionVal);
+    //d_rhsSolver->scalarExplicitUpdate(pc, patch, delta_t, &scalarVars, &constScalarVars, cellinfo, doingMM, intrusionVal);
 
- //   if (d_MAlab){
- //     d_boundaryCondition->scalarLisolve_mm(pc, patch, delta_t, 
- //                                           &scalarVars, &constScalarVars,
- //                                           cellinfo);
- //   }else{
- //
-  //    //d_rhsSolver->scalarLisolve(pc, patch, delta_t, 
-  //    //                           &scalarVars, &constScalarVars,
-  //    //                           cellinfo);
-  //  }
+    if (d_MAlab){
+      d_boundaryCondition->scalarLisolve_mm(pc, patch, delta_t, 
+                                            &scalarVars, &constScalarVars,
+                                            cellinfo);
+    }else{
+ 
+      d_rhsSolver->scalarLisolve(pc, patch, delta_t, 
+                                 &scalarVars, &constScalarVars,
+                                 cellinfo);
+    }
     
     
     double scalar_clipped = 0.0;
