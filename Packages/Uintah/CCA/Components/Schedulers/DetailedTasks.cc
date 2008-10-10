@@ -568,11 +568,16 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
   totalLow = low;
   totalHigh = high;
   DetailedDep* dep = batch->head;
+
+  DetailedDep* valid_dep = 0;
+
+  //search each dep
   for(;dep != 0; dep = dep->next){
+    //if deps are equivalent
     if(fromPatch == dep->fromPatch && matl == dep->matl
-       && (req == dep->req
-     || (req->var->equals(dep->req->var)
-         && req->mapDataWarehouse() == dep->req->mapDataWarehouse()))) {
+        && (req == dep->req
+          || (req->var->equals(dep->req->var)
+            && req->mapDataWarehouse() == dep->req->mapDataWarehouse()))) {
 
       // total range - the same var in each dep needs to have the same patchlow/high
       dep->patchLow = totalLow = Min(totalLow, dep->patchLow);
@@ -587,7 +592,7 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
       int newSize = newRange.x()*newRange.y()*newRange.z();
       int requiredSize = requiredRange.x()*requiredRange.y()*requiredRange.z();
       int oldSize = oldRange.x()*oldRange.y()*oldRange.z();
-      
+
       bool extraComm = newSize > requiredSize+oldSize;
 
       if (sc_->useSmallMessages()) {
@@ -595,11 +600,24 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
         // processor, we can either pack them in one dependency and send the min and max of their range (which
         // will frequently result in sending the entire patch), or we can use two dependencies (which will get packed into
         // one message) and only send the resulting data.
-        
+
         // We want to create a new dep in such cases.  However, we don't want to do this in cases where we simply add more
         // ghost cells.
         if (!extraComm)
-          break;
+        {
+          //if dep matches without extending that dep
+          if(dep->low==new_l && dep->high==new_h)
+          {
+            //take that dep as this is the ideal dependency
+            valid_dep=dep;
+            break;
+          }
+          else
+          {
+            //this dep is valid but there may be a better one so continue searching
+             valid_dep=dep;
+          }
+        }
         else if (dbg.active()) {
           dbg << d_myworld->myrank() << "            Ignoring: " << dep->low << " " << dep->high << ", fromPatch = ";
           if (fromPatch)
@@ -614,11 +632,13 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
         if (extraComm) {
           extraCommunication_ += newSize - (requiredSize+oldSize);
         }
+        //not using small messages so take the first dep you find, it will be extended
+        valid_dep=dep;
         break;
       }
     }
   }
-  return dep;
+  return valid_dep;
 }
 #if 1
 /*************************
