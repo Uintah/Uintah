@@ -717,14 +717,6 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   while(matching_dep!=0)
   {
     
-    //if the dependency is already in the map then short circuit out of this function.  
-    if(matching_dep->low==new_dep->low && matching_dep->high==new_dep->high )
-    {
-      matching_dep->toTasks.splice(matching_dep->toTasks.begin(),new_dep->toTasks);
-      delete new_dep;
-      return;
-    }
-    
     //debugging output
     if(dbg.active()){
       dbg << d_myworld->myrank() << "            EXTENDED from " << new_dep->low << " " << new_dep->high << " to " << Min(new_dep->low, matching_dep->low) << " " <<  Max(new_dep->high, matching_dep->high) << "\n";
@@ -739,7 +731,15 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     //extend the dependency range
     new_dep->low = Min(new_dep->low, matching_dep->low);
     new_dep->high = Max(new_dep->high, matching_dep->high);
-
+    
+    //if the same dependency already exists then short circuit out of this function.  
+    if(matching_dep->low==new_dep->low && matching_dep->high==new_dep->high )
+    {
+      matching_dep->toTasks.splice(matching_dep->toTasks.begin(),new_dep->toTasks);
+      delete new_dep;
+      return;
+    }
+    
     //copy matching dependencies toTasks to the new dependency
     new_dep->toTasks.splice(new_dep->toTasks.begin(),matching_dep->toTasks); 
 
