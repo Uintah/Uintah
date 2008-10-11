@@ -1160,7 +1160,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate Tdot due to artificial viscosity
       double Tdot_AV = de_s/state->specificHeat;
-      //pdTdt[idx] += Tdot_AV;
+      pdTdt[idx] += Tdot_AV;
 
       Matrix3 tensorHy = one*p;
    
