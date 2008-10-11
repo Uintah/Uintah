@@ -902,7 +902,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Calculate Tdot due to artificial viscosity
       double Tdot_AV = de_s/C_p;
-      //pdTdt[idx] += Tdot_AV;
+      pdTdt[idx] += Tdot_AV;
 
       // Compute the deviatoric stress
       if (Phi <= 0.0 || flowStress <= 0.0) {

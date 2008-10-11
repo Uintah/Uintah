@@ -1289,7 +1289,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
         p_q[idx] = 0.;
         de_s = 0.;
       }
-//      pdTdt[idx] += de_s/state->specificHeat;
+      pdTdt[idx] += de_s/state->specificHeat;
     }  // end loop over particles
 
     waveSpeed = dx/waveSpeed;
