@@ -28,6 +28,7 @@ static DebugStream doing("DynamicLoadBalancer_doing", false);
 static DebugStream lb("DynamicLoadBalancer_lb", false);
 static DebugStream dbg("DynamicLoadBalancer", false);
 static DebugStream stats("LBStats",false);
+static DebugStream times("LBTimes",false);
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
   : LoadBalancerCommon(myworld), d_costProfiler(myworld), sfc(myworld)
@@ -637,7 +638,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 {
   doing << d_myworld->myrank() << "   APF\n";
   double time = Time::currentSeconds();
-
+  double lbtimes[5]={0};
+  double start=time;
   vector<vector<double> > patch_costs;
 
   int num_procs = d_myworld->size();
@@ -662,12 +664,15 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   else {
     getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
   }
+
+  lbtimes[0]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
   int level_offset=0;
 
   vector<double> previousProcCosts(num_procs,0);
   double previous_total_cost=0;
   for(int l=0;l<grid->numLevels();l++){
-          
+
     const LevelP& level = grid->getLevel(l);
     int num_patches = level->numPatches();
     vector<int> order(num_patches);
@@ -680,6 +685,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
+    lbtimes[1]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
 
     //hard maximum cost for assigning a patch to a processor
     double avgCost = (total_cost+previous_total_cost) / num_procs;
@@ -687,7 +694,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     double myMaxCost =hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*d_myworld->myrank();
     double myStoredMax=DBL_MAX;
     int minProcLoc = -1;
-    
+
     if(!force)  //use initial load balance to start the iteration
     {
       //compute costs of current load balance
@@ -715,20 +722,20 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     //temperary vector to assign the load balance in
     vector<int> temp_assignment(d_tempAssignment);
     vector<int> maxList(num_procs);
-    
+
     int iter=0;
     double improvement=1;
     //iterate the load balancing algorithm until the max can no longer be lowered
     while(improvement>0)
     {
-      
+
       double remainingCost=total_cost+previous_total_cost;
       double avgCostPerProc = remainingCost / num_procs;
 
       int currentProc = 0;
       vector<double> currentProcCosts(num_procs,0);
       double currentMaxCost = 0;
-      
+
       for (int p = 0; p < num_patches; p++) {
         int index;
         if (d_doSpaceCurve) {
@@ -755,8 +762,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
           {
             currentMaxCost=previousProcCosts[currentProc]+currentProcCosts[currentProc];
           }
-          
-          
+
+
           //subtract currentProc's cost from remaining cost
           remainingCost -= (currentProcCosts[currentProc]+previousProcCosts[currentProc]);
 
@@ -769,11 +776,11 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 
           //assign patch to currentProc
           temp_assignment[level_offset+index] = currentProc;
-         
+
           //update average (this ensures we don't over/under fill to much)
           avgCostPerProc = remainingCost / (num_procs-currentProc);
           currentProcCosts[currentProc] = patchCost;
-          
+
         }
       }
 
@@ -800,12 +807,17 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 
       double_int maxInfo(myStoredMax,d_myworld->myrank());
       double_int min;
+
+      lbtimes[2]+=Time::currentSeconds()-start;
+      start=Time::currentSeconds();
       //gather the maxes
       //change to all reduce with loc
       if(num_procs>1)
         MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
       else
         min=maxInfo;
+      lbtimes[3]+=Time::currentSeconds()-start;
+      start=Time::currentSeconds();
 
       //set improvement
       improvement=hardMaxCost-min.val;
@@ -826,11 +838,17 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       iter++;
     }
 
+    lbtimes[2]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
+
     if(minProcLoc!=-1 && num_procs>1)
     {
       //broadcast load balance
       MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
     }
+
+    lbtimes[4]+=Time::currentSeconds()-start;
+    start=Time::currentSeconds();
 
     if(!d_levelIndependent)
     {
@@ -843,7 +861,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       }
       previous_total_cost+=total_cost;
     }
-    
+
     if(stats.active() && d_myworld->myrank()==0)
     {
       //calculate lb stats:
@@ -856,7 +874,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
         procCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
         patchCounts[d_tempAssignment[level_offset+p]]++;
       }
-      
+
       double meanCost=totalCost/num_procs;
       double minCost=procCosts[0];
       double maxCost=procCosts[0];
@@ -864,26 +882,40 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 
       if(d_myworld->myrank()==0)
         stats << "Level:" << l << " ProcCosts:";
-      
+
       for(int p=0;p<num_procs;p++)
       {
         if(minCost>procCosts[p])
-           minCost=procCosts[p];
+          minCost=procCosts[p];
         else if(maxCost<procCosts[p])
         {
-           maxCost=procCosts[p];
-           maxProc=p;
+          maxCost=procCosts[p];
+          maxProc=p;
         }
         if(d_myworld->myrank()==0)
           stats << procCosts[p] << " ";
       }
-        if(d_myworld->myrank()==0)
-          stats << endl;
+      if(d_myworld->myrank()==0)
+        stats << endl;
 
       stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << (maxCost-meanCost)/meanCost << " Patches on rank:" << maxProc << " with " << patchCounts[maxProc] << " patches."  << endl;
     }  
-    
+
     level_offset+=num_patches;
+  }
+  if(times.active())
+  {
+    double avg[5];
+    MPI_Reduce(&lbtimes,&avg,5,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    if(d_myworld->myrank()==0) {
+      cout << "LoadBalance Times: "; 
+      for(int i=0;i<5;i++)
+      {
+        avg[i]/=d_myworld->size();
+        cout << avg[i] << " ";
+      }
+      cout << endl;
+    }
   }
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
   time = Time::currentSeconds() - time;
