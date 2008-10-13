@@ -560,15 +560,15 @@ void DetailedTask::findRequiringTasks(const VarLabel* var,
     }
   }
 }
-
 DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req, 
                                                     const Patch* fromPatch, int matl, IntVector low, IntVector high,
-                                                    IntVector& totalLow, IntVector& totalHigh)
+                                                    IntVector& totalLow, IntVector& totalHigh, DetailedDep* &parent_dep)
 {
   totalLow = low;
   totalHigh = high;
   DetailedDep* dep = batch->head;
 
+  parent_dep=0;
   DetailedDep* valid_dep = 0;
 
   //search each dep
@@ -605,18 +605,9 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
         // ghost cells.
         if (!extraComm)
         {
-          //if dep matches without extending that dep
-          if(dep->low==new_l && dep->high==new_h)
-          {
-            //take that dep as this is the ideal dependency
-            valid_dep=dep;
-            break;
-          }
-          else
-          {
-            //this dep is valid but there may be a better one so continue searching
-             valid_dep=dep;
-          }
+          //combining does not create extra communication so take this dep;
+          valid_dep=dep;
+          break;
         }
         else if (dbg.active()) {
           dbg << d_myworld->myrank() << "            Ignoring: " << dep->low << " " << dep->high << ", fromPatch = ";
@@ -626,7 +617,6 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
             dbg << "NULL\n";
           dbg << d_myworld->myrank() << " TP: " << totalLow << " " << totalHigh << endl;
         }
-
       }
       else {
         if (extraComm) {
@@ -637,6 +627,8 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
         break;
       }
     }
+    //pointer to dependency before this dep so insertion/deletion can be done quicker
+    parent_dep=dep;
   }
   return valid_dep;
 }
@@ -645,6 +637,13 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
  * parameters passed in.  If a similar detailed dependency
  * already exists it will combine those depedencies into a single
  * dependency.  
+ *
+ * Dependencies are ordered from oldest to newest in a linked list.  It is vital that 
+ * this order is maintained.  Failure to maintain this order can cause messages to be combined 
+ * inconsistently across different tasks causing various problems.  New depdencies are added
+ * to the end of the list.  If a depdency was combined then the extended dependency is added
+ * at the same location that i was first combined.  This is to ensure all future dependencies
+ * combine with the same dependencies as the original.
  */
 void
 DetailedTasks::possiblyCreateDependency(DetailedTask* from,
@@ -730,7 +729,14 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
            low, high, cond);
   
   //search for a dependency that can be combined with this dependency
-  DetailedDep* matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh);
+  
+  //location of parent dependency
+  DetailedDep* parent_dep;
+
+  DetailedDep* matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh, parent_dep);
+
+  //This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
+  DetailedDep* insert_dep=parent_dep;
 
   //if we have matching dependencies we will extend the new dependency to include the old one and delete the old one
   while(matching_dep!=0)
@@ -781,24 +787,12 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     }
 
     //remove the matching_dep from the batch list
-
-    //check if head is the matching dep
-    if(batch->head==matching_dep)
+    if(parent_dep==NULL)
     {
-      //point head to next dep
       batch->head=matching_dep->next;
     }
-    else //head is not the matching dep so it must be in the list
+    else
     {
-      DetailedDep *parent_dep=batch->head;
-   
-      //search list for matching dep
-      while(parent_dep->next!=matching_dep)
-      {
-        parent_dep=parent_dep->next;
-        ASSERT(parent_dep->next!=NULL);
-      }
-      //remove matching dep from list
       parent_dep->next=matching_dep->next;
     }
 
@@ -806,7 +800,11 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     delete matching_dep;
 
     //search for another matching detailed deps
-    matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh);
+    matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh, parent_dep);
+    
+    //if the matching dep is the current insert dep then we must move the insert dep to the new parent dep
+    if(matching_dep==insert_dep)
+      insert_dep=parent_dep;
   }
   
   // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
@@ -814,10 +812,20 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   new_dep->patchLow = varRangeLow;
   new_dep->patchHigh = varRangeHigh;
 
-  //add the new dep to the front of the batch
-  new_dep->next=batch->head;
-  batch->head = new_dep;
-  
+
+  if(insert_dep==NULL)
+  {
+    //no dependencies are in the list so add it to the head
+    batch->head=new_dep;
+    new_dep->next=NULL;
+  }
+  else 
+  {
+    //depedencies already exist so add it at the insert location.
+    new_dep->next=insert_dep->next;
+    insert_dep->next=new_dep;
+  }
+
   //add communication for particle data
   // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
   if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) 

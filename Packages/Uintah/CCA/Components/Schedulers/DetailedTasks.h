@@ -340,7 +340,7 @@ namespace Uintah {
     // helper of possiblyCreateDependency
     DetailedDep* findMatchingDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req, 
                                          const Patch* fromPatch, int matl, IntVector low, IntVector high,
-                                         IntVector& totalLow, IntVector& totalHigh);
+                                         IntVector& totalLow, IntVector& totalHigh, DetailedDep* &parent_dep);
 
 
     void addScrubCount(const VarLabel* var, int matlindex,
