@@ -57,6 +57,7 @@ AMRSimulationController::~AMRSimulationController()
 {
 }
 
+double barrier_times[5]={0};
 void
 AMRSimulationController::run()
 {
@@ -123,7 +124,7 @@ AMRSimulationController::run()
    int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
    double delt = 0;
 
-   double start,time[4]={0};
+   double start;
   
    d_lb->resetCostProfiler();
    while( ( t < d_timeinfo->maxTime ) && 
@@ -131,8 +132,8 @@ AMRSimulationController::run()
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
      if(dbg_barrier.active()) {
-       for(int i=0;i<4;i++) {
-         time[i]=0;
+       for(int i=0;i<5;i++) {
+         barrier_times[i]=0;
        }
      }
 #ifdef USE_TAU_PROFILING
@@ -146,12 +147,6 @@ AMRSimulationController::run()
        doRegridding(currentGrid, false);
      }
     
-     if(dbg_barrier.active()) {
-       start=Time::currentSeconds();
-       MPI_Barrier(d_myworld->getComm());
-       time[0]+=Time::currentSeconds()-start;
-     }
-
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
      int totalFine=1;
@@ -218,7 +213,7 @@ AMRSimulationController::run()
      if(dbg_barrier.active()) {
        start=Time::currentSeconds();
        MPI_Barrier(d_myworld->getComm());
-       time[1]+=Time::currentSeconds()-start;
+       barrier_times[2]+=Time::currentSeconds()-start;
      }
 
      // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
@@ -267,7 +262,7 @@ AMRSimulationController::run()
      {
        start=Time::currentSeconds();
        MPI_Barrier(d_myworld->getComm());
-       time[2]+=Time::currentSeconds()-start;
+       barrier_times[3]+=Time::currentSeconds()-start;
      }
 
      // adjust the delt for each level and store it in all applicable dws.
@@ -303,12 +298,12 @@ AMRSimulationController::run()
      if(dbg_barrier.active()) {
        start=Time::currentSeconds();
        MPI_Barrier(d_myworld->getComm());
-       time[3]+=Time::currentSeconds()-start;
-       double avg[4];
-       MPI_Reduce(&time,&avg,4,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+       barrier_times[4]+=Time::currentSeconds()-start;
+       double avg[5];
+       MPI_Reduce(&barrier_times,&avg,5,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
        if(d_myworld->myrank()==0) {
-          cout << "Barrier Time: "; 
-          for(int i=0;i<4;i++)
+          cout << "Barrier Times: "; 
+          for(int i=0;i<5;i++)
           {
             avg[i]/=d_myworld->size();
             cout << avg[i] << " ";
@@ -629,17 +624,29 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep());
+  if(dbg_barrier.active()) {
+    double start;
+    start=Time::currentSeconds();
+    MPI_Barrier(d_myworld->getComm());
+    barrier_times[0]+=Time::currentSeconds()-start;
+  }
   double regridTime = Time::currentSeconds() - start;
   d_sharedState->regriddingTime += regridTime;
   d_sharedState->setRegridTimestep(false);
 
   int lbstate = initialTimestep ? LoadBalancer::init : LoadBalancer::regrid;
- 
+
   if (currentGrid != oldGrid) {
     d_lb->possiblyDynamicallyReallocate(currentGrid, lbstate); 
+    if(dbg_barrier.active()) {
+      double start;
+      start=Time::currentSeconds();
+      MPI_Barrier(d_myworld->getComm());
+      barrier_times[1]+=Time::currentSeconds()-start;
+    }
     currentGrid->assignBCS(d_grid_ps,d_lb);
     currentGrid->performConsistencyCheck();
-    
+
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
       d_sharedState->setRegridTimestep(true);
@@ -649,21 +656,21 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
       }
       cout << endl;
       if (amrout.active()) {
-	      amrout << "---------- NEW GRID ----------" << endl;
-	      amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
-	      for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
-	        LevelP level = currentGrid->getLevel( levelIndex );
-	        amrout << "  Level " << level->getID()
-		        << ", indx: "<< level->getIndex()
-		        << " has " << level->numPatches() << " patch(es)" << endl;
-	        for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
-	          const Patch* patch = *patchIter;
-	          amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
-		        << ": box=" << patch->getExtraBox()
-		        << ", lowIndex=" << patch->getExtraCellLowIndex__New() << ", highIndex="
-		        << patch->getExtraCellHighIndex__New() << ")" << endl;
-	        }
-	      }
+        amrout << "---------- NEW GRID ----------" << endl;
+        amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
+        for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+          LevelP level = currentGrid->getLevel( levelIndex );
+          amrout << "  Level " << level->getID()
+            << ", indx: "<< level->getIndex()
+            << " has " << level->numPatches() << " patch(es)" << endl;
+          for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+            const Patch* patch = *patchIter;
+            amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
+              << ": box=" << patch->getExtraBox()
+              << ", lowIndex=" << patch->getExtraCellLowIndex__New() << ", highIndex="
+              << patch->getExtraCellHighIndex__New() << ")" << endl;
+          }
+        }
       }
     }
 
@@ -674,7 +681,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 
     double time = Time::currentSeconds() - start;
     if(d_myworld->myrank() == 0){
-        cout << "done regridding (" << time << " seconds, regridding took " << regridTime;
+      cout << "done regridding (" << time << " seconds, regridding took " << regridTime;
       if (!initialTimestep)
         cout << ", scheduling and copying took " << scheduleTime << ")";
       cout << endl;
