@@ -905,14 +905,24 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   }
   if(times.active())
   {
-    double avg[5];
+    double avg[5]={0};
     MPI_Reduce(&lbtimes,&avg,5,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     if(d_myworld->myrank()==0) {
-      cout << "LoadBalance Times: "; 
+      cout << "LoadBalance Avg Times: "; 
       for(int i=0;i<5;i++)
       {
         avg[i]/=d_myworld->size();
         cout << avg[i] << " ";
+      }
+      cout << endl;
+    }
+    double max[5]={0};
+    MPI_Reduce(&lbtimes,&max,5,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+    if(d_myworld->myrank()==0) {
+      cout << "LoadBalance Max Times: "; 
+      for(int i=0;i<5;i++)
+      {
+        cout << max[i] << " ";
       }
       cout << endl;
     }
