@@ -56,18 +56,12 @@ namespace Uintah {
     struct Contribution
     {
       double current; //current contribution that has not been finalized
-      double zoweight;  //current zeroth order weight
-      double foweight;  //current first order weight
-      double soweight;  //current second order weight
-      double toweight;  //current third order weight
+      double weight;  //current first order weight
       int timestep;  //last timestep this datapoint was updated
       Contribution ()
       {
         current=0;
-        zoweight=0;
-        foweight=0;
-        soweight=0;
-        toweight=0;
+        weight=0;
         timestep=0;
       }
     };

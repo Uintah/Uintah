@@ -71,8 +71,8 @@ void CostProfiler::outputError(const GridP currentGrid)
         regions[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
       }
 
-      vector<double> predictedzo_sum(regions.size(),0), predictedfo_sum(regions.size(),0), predictedso_sum(regions.size(),0), predictedto_sum(regions.size(),0), measured_sum(regions.size(),0);
-      vector<double> predictedzo(regions.size(),0), predictedfo(regions.size(),0), predictedso(regions.size(),0), predictedto(regions.size(),0), measured(regions.size(),0);
+      vector<double> predicted_sum(regions.size(),0), measured_sum(regions.size(),0);
+      vector<double>  predicted(regions.size(),0), measured(regions.size(),0);
  
       for(int r=0;r<(int)regions.size();r++)
       {
@@ -89,11 +89,8 @@ void CostProfiler::outputError(const GridP currentGrid)
           //if in the map
           if(it!=costs[l].end())
           {
-            //add predictedfo and measured costs to respective arrays
-            predictedzo[r]+=it->second.zoweight;
-            predictedfo[r]+=it->second.foweight;
-            predictedso[r]+=it->second.soweight;
-            predictedto[r]+=it->second.toweight;
+            //add predicted and measured costs to respective arrays
+            predicted[r]+=it->second.weight;
             measured[r]+=it->second.current;
           } 
         }
@@ -102,23 +99,17 @@ void CostProfiler::outputError(const GridP currentGrid)
       //allreduce sum weights
       if(d_myworld->size()>1)
       {
-        MPI_Reduce(&predictedzo[0],&predictedzo_sum[0],predictedzo.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-        MPI_Reduce(&predictedfo[0],&predictedfo_sum[0],predictedfo.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-        MPI_Reduce(&predictedso[0],&predictedso_sum[0],predictedso.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-        MPI_Reduce(&predictedto[0],&predictedto_sum[0],predictedto.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+        MPI_Reduce(&predicted[0],&predicted_sum[0],predicted.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
         MPI_Reduce(&measured[0],&measured_sum[0],measured.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
       }
       if(d_myworld->myrank()==0)
       {
         //calculate total cost for normalization
-        double total_measured=0, total_predictedzo=0, total_predictedfo=0, total_predictedso=0, total_predictedto=0;
+        double total_measured=0, total_predicted=0;
         for(int r=0;r<(int)regions.size();r++)
         {
           total_measured+=measured_sum[r];
-          total_predictedzo+=predictedzo_sum[r];
-          total_predictedfo+=predictedfo_sum[r];
-          total_predictedso+=predictedso_sum[r];
-          total_predictedto+=predictedto_sum[r];
+          total_predicted+=predicted_sum[r];
         }
         
 #if 0
@@ -126,42 +117,20 @@ void CostProfiler::outputError(const GridP currentGrid)
         for(int r=0;r<(int)regions.size();r++)
         {
           measured_sum[r]/=total_measured;
-          predictedzo_sum[r]/=total_predictedzo;
-          predictedfo_sum[r]/=total_predictedfo;
-          predictedso_sum[r]/=total_predictedso;
-          predictedto_sum[r]/=total_predictedto;
+          predicted_sum[r]/=total_predicted;
         }
 #endif
-        double total_zoerror=0,mean_zoerror=0, total_percent_zoerror=0, mean_percent_zoerror=0;
-        double total_foerror=0,mean_foerror=0, total_percent_foerror=0, mean_percent_foerror=0;
-        double total_soerror=0,mean_soerror=0, total_percent_soerror=0, mean_percent_soerror=0;
-        double total_toerror=0,mean_toerror=0, total_percent_toerror=0, mean_percent_toerror=0;
-        for(int r=0;r<(int)predictedfo.size();r++)
+        double total_error=0,mean_error=0, total_percent_error=0, mean_percent_error=0;
+        for(int r=0;r<(int)predicted.size();r++)
         {
-          double zoerror=fabs(predictedzo_sum[r]-measured_sum[r]);
-          double foerror=fabs(predictedfo_sum[r]-measured_sum[r]);
-          double soerror=fabs(predictedso_sum[r]-measured_sum[r]);
-          double toerror=fabs(predictedto_sum[r]-measured_sum[r]);
-          total_zoerror+=zoerror;
-          total_foerror+=foerror;
-          total_soerror+=soerror;
-          total_toerror+=toerror;
+          double error=fabs(predicted_sum[r]-measured_sum[r]);
+          total_error+=error;
           ASSERT(measured_sum[r]!=0);
-          total_percent_zoerror+=(zoerror/measured_sum[r]);
-          total_percent_foerror+=(foerror/measured_sum[r]);
-          total_percent_soerror+=(soerror/measured_sum[r]);
-          total_percent_toerror+=(toerror/measured_sum[r]);
+          total_percent_error+=(error/measured_sum[r]);
         }
-        mean_zoerror=total_zoerror/predictedzo.size();
-        mean_foerror=total_foerror/predictedfo.size();
-        mean_soerror=total_soerror/predictedso.size();
-        mean_toerror=total_toerror/predictedto.size();
-        mean_percent_zoerror=total_percent_zoerror/predictedzo.size();
-        mean_percent_foerror=total_percent_foerror/predictedfo.size();
-        mean_percent_soerror=total_percent_soerror/predictedso.size();
-        mean_percent_toerror=total_percent_toerror/predictedto.size();
-        stats << timesteps << " " << l <<  " " << mean_percent_zoerror << " " << mean_percent_foerror << " " <<mean_percent_soerror << " " << mean_percent_toerror << " "
-              << total_measured << " " << " " << total_predictedzo << " " << total_predictedfo << " " << total_predictedso << " " << total_predictedto << endl;
+        mean_error=total_error/predicted.size();
+        mean_percent_error=total_percent_error/predicted.size();
+        stats << timesteps << " " << l <<  " " << mean_percent_error << " " << total_measured << " " << total_predicted << endl;
 
       }
   }
@@ -195,19 +164,13 @@ void CostProfiler::finalizeContributions(const GridP currentGrid)
 
       if(timesteps==1)
       {
-        data.zoweight=data.current;
-        data.foweight=data.current;
-        data.soweight=data.current;
-        data.toweight=data.current;
+        data.weight=data.current;
       }
       else
       {
 
         //update exponential averagea
-        data.zoweight=data.current;
-        data.foweight=d_alpha*data.current+(1-d_alpha)*data.foweight;
-        data.soweight=d_alpha*data.foweight+(1-d_alpha)*data.soweight;
-        data.toweight=d_alpha*data.soweight+(1-d_alpha)*data.toweight;
+        data.weight=d_alpha*data.current+(1-d_alpha)*data.weight;
       }
       
       //reset current
@@ -244,7 +207,7 @@ void CostProfiler::getWeights(int l, const vector<Region> &regions, vector<doubl
       if(it!=costs[l].end())
       {
         //add cost to weight
-        partial_weights[r]+=it->second.zoweight;
+        partial_weights[r]+=it->second.weight;
       }
     }
   }
@@ -258,10 +221,8 @@ void CostProfiler::getWeights(int l, const vector<Region> &regions, vector<doubl
 void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
 {
   if(d_myworld->myrank()==0)
-          stats << timesteps << " " << 9999 << " " 
-                << 0 << " " << 0 << " " << 0 << " " << 0 << " " 
-                << 0 << " " << 0 << " " << 0 << " " << 0 << " " 
-                << 0 << " "  << endl;
+    stats << timesteps << " " << 9999 <<  " " << 0 << " " << 0 << " " << 0 << endl;
+  
   //for each level
   for(int l=1;l<newgrid->numLevels();l++)
   {
@@ -326,10 +287,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       for(CellIterator iter(low,high); !iter.done(); iter++)
       {
         //add cost to current contribution
-        costs[l][*iter].zoweight=average_cost;
-        costs[l][*iter].foweight=average_cost;
-        costs[l][*iter].soweight=average_cost;
-        costs[l][*iter].toweight=average_cost;
+        costs[l][*iter].weight=average_cost;
       } //end cell iteration
       i++;
     } //end region iteration
