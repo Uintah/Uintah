@@ -120,7 +120,7 @@ namespace Uintah {
    
   //cost profiling functions
     //update the contribution for this patch
-    void addContribution(const PatchSubset* patches ,double cost) {d_costProfiler.addContribution(patches,cost);}
+    void addContribution(DetailedTask *task ,double cost) {d_costProfiler.addContribution(task,cost);}
     //finalize the contributions (updates the weight, should be called once per timestep)
     void finalizeContributions(const GridP currentGrid) { d_costProfiler.finalizeContributions(currentGrid);}
     //initializes the regions in the new level that are not in the old level

@@ -23,6 +23,7 @@ namespace Uintah {
   class Scheduler;
   class VarLabel;
   class DataArchive;
+  class DetailedTask;
 
   typedef vector<SCIRun::IntVector> SizeList;
 /****************************************
@@ -128,7 +129,7 @@ WARNING
 
   //cost profiling functions
     //update the contribution for this patch
-    virtual void addContribution(const PatchSubset* patches, double cost) {};
+    virtual void addContribution(DetailedTask *task, double cost) {};
     //finalize the contributions (updates the weight, should be called once per timestep)
     virtual void finalizeContributions(const GridP currentgrid) {};
     //initializes the weights in regions in the new grid that are not in the old level

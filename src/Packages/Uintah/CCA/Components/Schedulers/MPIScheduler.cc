@@ -282,7 +282,7 @@ MPIScheduler::runTask( DetailedTask         * task, int iteration)
       //if(d_myworld->myrank()==0 && task->getPatches()!=0)
       //  cout << d_myworld->myrank() << " adding: " << task->getTask()->getName() << " to profile:" << dtask << " on patches:" << *(task->getPatches()) << endl;
       //add contribution for patchlist
-      getLoadBalancer()->addContribution(task->getPatches(),dtask);
+      getLoadBalancer()->addContribution(task,dtask);
     }
   }
 
