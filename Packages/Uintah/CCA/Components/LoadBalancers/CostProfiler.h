@@ -57,7 +57,7 @@ namespace Uintah {
     CostProfiler(const ProcessorGroup* myworld) : d_myworld(myworld), d_profiler(myworld) {};
     void setMinPatchSize(const vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
-    void addContribution(const PatchSubset* patches, double cost);
+    void addContribution(DetailedTask *task, double cost);
     //finalize the contributions for this timestep
     void finalizeContributions(const GridP currentGrid);
     //outputs the error associated with the profiler

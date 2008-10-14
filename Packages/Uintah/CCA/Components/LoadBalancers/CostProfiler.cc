@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
 using namespace SCIRun;
@@ -8,9 +9,9 @@ void CostProfiler::setMinPatchSize(const vector<IntVector> &min_patch_size)
   d_profiler.setMinPatchSize(min_patch_size);
 }
 
-void CostProfiler::addContribution(const PatchSubset *patches, double cost)
+void CostProfiler::addContribution(DetailedTask *task, double cost)
 {
-  d_profiler.addContribution(patches,cost);
+  d_profiler.addContribution(task->getPatches(),cost);
 }
 
 void CostProfiler::outputError(const GridP currentGrid)
