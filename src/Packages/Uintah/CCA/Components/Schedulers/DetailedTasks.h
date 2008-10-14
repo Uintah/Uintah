@@ -34,7 +34,7 @@ namespace Uintah {
   class SchedulerCommon;
 
   typedef std::map<int, std::set<PSPatchMatlGhost> > ParticleExchangeVar;
-
+  enum ProfileType {Normal,Fine};
   
   class DetailedDep {
   public:
@@ -153,7 +153,8 @@ namespace Uintah {
     DetailedTask(Task* task, const PatchSubset* patches,
 		 const MaterialSubset* matls, DetailedTasks* taskGroup);
     ~DetailedTask();
-    
+   
+    void setProfileType(ProfileType type) {d_profileType=type;}
     void doit(const ProcessorGroup* pg, vector<OnDemandDataWarehouseP>& oddws,
 	      vector<DataWarehouseP>& dws);
     // Called after doit and mpi data sent (packed in buffers) finishes.
@@ -247,6 +248,11 @@ namespace Uintah {
 
     DetailedTask(const Task&);
     DetailedTask& operator=(const Task&);
+    
+    //specifies the type of task this is
+      //normal executes on either the patches cells or the patches coarse cells
+      //fine executes on the patches fine cells (for example coarsening)
+    ProfileType d_profileType;
   };
 
   class DetailedTasks {

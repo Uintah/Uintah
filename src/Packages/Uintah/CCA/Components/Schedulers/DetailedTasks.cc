@@ -170,7 +170,8 @@ DetailedTask::DetailedTask(Task* task, const PatchSubset* patches,
     taskGroup(taskGroup),
     numPendingInternalDependencies(0),
     internalDependencyLock("DetailedTask Internal Dependencies"),
-    resourceIndex(-1)
+    resourceIndex(-1),
+    d_profileType(Normal)
 {
   if(patches) {
     // patches and matls must be sorted
