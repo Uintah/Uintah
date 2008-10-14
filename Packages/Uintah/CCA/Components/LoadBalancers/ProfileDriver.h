@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_CostProfiler_H
-#define UINTAH_HOMEBREW_CostProfiler_H
+#ifndef UINTAH_HOMEBREW_ProfileDriver_H
+#define UINTAH_HOMEBREW_ProfileDriver_H
 
 #include <map>
 #include <vector>
@@ -12,19 +12,18 @@ using namespace std;
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/ProfileDriver.h>
 namespace Uintah {
    /**************************************
      
      CLASS
-       CostProfiler 
+       ProfileDriver 
       
        Profiles the execution costs of regions of the domain for use by the 
        DynamicLoadBalancer cost model
       
      GENERAL INFORMATION
       
-       CostProfiler.h
+       ProfileDriver.h
       
        Justin Luitjens
        Department of Computer Science
@@ -35,7 +34,7 @@ namespace Uintah {
        Copyright (C) 2000 SCI Group
       
      KEYWORDS
-       CostProfiler
+       ProfileDriver
        DynamicLoadBalancer
       
      DESCRIPTION
@@ -52,9 +51,22 @@ namespace Uintah {
       
      ****************************************/
 
-  class CostProfiler {
+  class ProfileDriver {
+    //contribution data point.  
+    struct Contribution
+    {
+      double current; //current contribution that has not been finalized
+      double weight;  //current first order weight
+      int timestep;  //last timestep this datapoint was updated
+      Contribution ()
+      {
+        current=0;
+        weight=0;
+        timestep=0;
+      }
+    };
   public:
-    CostProfiler(const ProcessorGroup* myworld) : d_myworld(myworld), d_profiler(myworld) {};
+    ProfileDriver(const ProcessorGroup* myworld) : d_myworld(myworld), d_timestepWindow(20), timesteps(0) {updateAlpha();};
     void setMinPatchSize(const vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
     void addContribution(const PatchSubset* patches, double cost);
@@ -65,17 +77,24 @@ namespace Uintah {
     //get the contribution for region r on level l
     void getWeights(int l, const vector<Region> &regions, vector<double> &weights);
     //sets the decay rate for the exponential average
-    void setTimestepWindow(int window) {d_profiler.setTimestepWindow(window);}
+    void setTimestepWindow(int window) {d_timestepWindow=window, updateAlpha();}
     //initializes the regions in the new level that are not in the old level
     void initializeWeights(const Grid* oldgrid, const Grid* newgrid);
     //resets all counters to zero
     void reset();
     //returns true if profiling data exists
-    bool hasData() {return d_profiler.hasData();}
+    bool hasData() {return timesteps>0;}
   private:
+    const void updateAlpha() { d_alpha=2.0/(d_timestepWindow+1); }
     const ProcessorGroup* d_myworld;
-    ProfileDriver d_profiler;
+            
+    int d_timestepWindow;
+    double d_alpha;
+    vector<IntVector> d_minPatchSize;
+    vector<int> d_minPatchSizeVolume;
 
+    vector<map<IntVector, Contribution> > costs;
+    int timesteps;
   };
 } // End namespace Uintah
 
