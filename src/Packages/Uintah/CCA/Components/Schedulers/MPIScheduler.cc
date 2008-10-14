@@ -429,6 +429,12 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
       //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
       mpidbg <<d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
 
+      numMessages_++;
+      int typeSize;
+
+      MPI_Type_size(datatype,&typeSize);
+      messageVolume_+=count*typeSize;
+
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
 		d_myworld->getComm(), &requestid);
