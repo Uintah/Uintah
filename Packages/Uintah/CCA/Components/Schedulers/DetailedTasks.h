@@ -155,6 +155,7 @@ namespace Uintah {
     ~DetailedTask();
    
     void setProfileType(ProfileType type) {d_profileType=type;}
+    ProfileType getProfileType() {return d_profileType;}
     void doit(const ProcessorGroup* pg, vector<OnDemandDataWarehouseP>& oddws,
 	      vector<DataWarehouseP>& dws);
     // Called after doit and mpi data sent (packed in buffers) finishes.
