@@ -291,7 +291,10 @@ AMRSimulationController::run()
      printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep()-1,delt,t);
      // Execute the current timestep, restarting if necessary
      executeTimestep(t, delt, currentGrid, totalFine);
-   
+     
+     // Print MPI statistics
+     d_scheduler->printMPIStats();
+
      // Update the profiler weights
      d_lb->finalizeContributions(currentGrid);
      
