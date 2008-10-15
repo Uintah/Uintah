@@ -87,6 +87,8 @@ WARNING
     virtual bool useDynamicDilation() = 0;
 
     virtual vector<IntVector> getMinPatchSize() = 0;
+
+    virtual vector<IntVector> getRefinementRatios() = 0;
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);

@@ -1595,6 +1595,8 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   if(regridder)
   {
     d_costProfiler.setMinPatchSize(regridder->getMinPatchSize());
+    d_costProfiler.setRefinementRatios(regridder->getRefinementRatios());
+    d_costProfiler.setNumLevels(regridder->maxLevels());
   }
   else
   {

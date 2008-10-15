@@ -54,8 +54,9 @@ namespace Uintah {
 
   class CostProfiler {
   public:
-    CostProfiler(const ProcessorGroup* myworld) : d_myworld(myworld), d_profiler(myworld) {};
+    CostProfiler(const ProcessorGroup* myworld) : d_myworld(myworld), d_profiler(myworld), d_fineProfiler(myworld) {};
     void setMinPatchSize(const vector<IntVector> &min_patch_size);
+    void setRefinementRatios(const vector<IntVector> &refinementRatios) {d_refinementRatios=refinementRatios;}
     //add the contribution for region r on level l
     void addContribution(DetailedTask *task, double cost);
     //finalize the contributions for this timestep
@@ -65,16 +66,25 @@ namespace Uintah {
     //get the contribution for region r on level l
     void getWeights(int l, const vector<Region> &regions, vector<double> &weights);
     //sets the decay rate for the exponential average
-    void setTimestepWindow(int window) {d_profiler.setTimestepWindow(window);}
+    void setTimestepWindow(int window) {d_profiler.setTimestepWindow(window);d_fineProfiler.setTimestepWindow(window);}
     //initializes the regions in the new level that are not in the old level
     void initializeWeights(const Grid* oldgrid, const Grid* newgrid);
     //resets all counters to zero
     void reset();
     //returns true if profiling data exists
     bool hasData() {return d_profiler.hasData();}
+    //sets the maximum number of levels
+    void setNumLevels(int num) {d_numLevels=num;}
   private:
     const ProcessorGroup* d_myworld;
+    //the profiler for normal tasks
     ProfileDriver d_profiler;
+    //the profiler for fine tasks
+    ProfileDriver d_fineProfiler;
+    
+    vector<IntVector> d_refinementRatios;
+    vector<IntVector> d_minPatchSize;
+    int d_numLevels;
 
   };
 } // End namespace Uintah
