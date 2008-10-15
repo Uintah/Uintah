@@ -28,6 +28,7 @@ void Task::initialize()
   for(int i=0;i<TotalDWs;i++)
     dwmap[i]=Task::InvalidDW;
   sortedOrder=-1;
+  d_fineTask=false;
 }
 
 Task::ActionBase::~ActionBase()
@@ -143,6 +144,9 @@ Task::requires(WhichDW dw, const VarLabel* var,
     d_requiresOldDW.insert(make_pair(var, dep));
   else
     d_requires.insert(make_pair(var, dep));
+
+  if(patches_dom==FineLevel || matls_dom==FineLevel)
+    d_fineTask=true;
 }
 
 void
