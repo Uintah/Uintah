@@ -336,8 +336,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculatePressDiagonal(patch,&pressureVars);
 
     if (d_boundaryCondition->anyArchesPhysicalBC()){
-      d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
-                                      cellinfo, &pressureVars,&constPressureVars);
+      d_boundaryCondition->pressureBC(patch, &pressureVars,&constPressureVars);
     }
   }
 

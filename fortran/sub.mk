@@ -10,7 +10,6 @@ SRCS += \
 	$(SRCDIR)/areain.F \
 	$(SRCDIR)/arrass.F \
 	$(SRCDIR)/inlpresbcinout.F \
-	$(SRCDIR)/bcpress.F \
 	$(SRCDIR)/bcscalar.F \
 	$(SRCDIR)/bcuvel.F \
 	$(SRCDIR)/bcvvel.F \
