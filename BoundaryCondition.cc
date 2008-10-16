@@ -81,8 +81,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
 
-#define NEW 
-
 
 //****************************************************************************
 // Constructor for BoundaryCondition
