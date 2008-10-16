@@ -65,7 +65,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcuvel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcvvel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcwvel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcpress_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
@@ -81,6 +80,9 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
+
+#define NEW 
+
 
 //****************************************************************************
 // Constructor for BoundaryCondition
@@ -1381,95 +1383,106 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 
 }
 
-//****************************************************************************
-// Actually compute the pressure bcs
-//****************************************************************************
+
+
+
+//______________________________________________________________________
+//  Set the boundary conditions on the pressure stencil.
+// This will change when we move to the UCF based boundary conditions
+
 void 
-BoundaryCondition::pressureBC(const ProcessorGroup*,
-                              const Patch* patch,
-                              DataWarehouse* /*old_dw*/,
-                              DataWarehouse* new_dw,
-                              CellInformation* /*cellinfo*/,
+BoundaryCondition::pressureBC(const Patch* patch,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
 {
-  // Get the low and high index for the patch
-  IntVector domLo = constvars->cellType.getFortLowIndex();
-  IntVector domHi = constvars->cellType.getFortHighIndex();
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-  IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
-  IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
-  ASSERTEQ(domLong,                  vars->pressCoeff.getWindow()->getLowIndex());
-  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressCoeff.getWindow()->getHighIndex());
-
-  ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
-  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = wallCellType();
-  int pressure_celltypeval = pressureCellType();
-  int outlet_celltypeval = outletCellType();
-  // ** WARNING ** Symmetry is hardcoded to -3
+  // shortcuts
+  int wall_BC = wallCellType();
+  int pressure_BC = pressureCellType();
+  int outlet_BC = outletCellType();
   // int symmetry_celltypeval = -3;
-
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  int neumann_bc = -1;
-  int dirichlet_bc = 1;
+  
+  CCVariable<Stencil7>& A = vars->pressCoeff;
+  constCCVariable<int>& cellType = constvars->cellType;
   
   //__________________________________
-  // Move stencil7 data into CCVariable<double> arrays
-  // so fortran code can deal with it.  This sucks --Todd
-  CCVariable<double>AP, AE, AW, AN, AS, AT, AB;
-  
-  string direction = "copyInto";
-  CellIterator iter = patch->getExtraCellIterator__New();
-  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
-                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
-  
-  
-  //fortran call
-  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-               AP,AE, AW, AN, AS, AT, AB,
-               vars->pressNonlinearSrc, vars->pressLinearSrc,
-               constvars->cellType, wall_celltypeval, wall_celltypeval,
-               neumann_bc,
-               xminus, xplus, yminus, yplus, zminus, zplus);
-
-  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-               AP, AE, AW, AN, AS, AT, AB,
-               vars->pressNonlinearSrc, vars->pressLinearSrc,
-               constvars->cellType, wall_celltypeval, outlet_celltypeval,
-               dirichlet_bc,
-               xminus, xplus, yminus, yplus, zminus, zplus);
-
-  fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-               AP, AE, AW, AN, AS, AT, AB,
-               vars->pressNonlinearSrc, vars->pressLinearSrc,
-               constvars->cellType, wall_celltypeval, pressure_celltypeval,
-               dirichlet_bc,
-               xminus, xplus, yminus, yplus, zminus, zplus);
-  
-  for (int ii = 0; ii < d_numInlets; ii++) {
-    fort_bcpress(domLo, domHi, idxLo, idxHi, constvars->pressure,
-                 AP, AE, AW, AN, AS, AT, AB,
-                 vars->pressNonlinearSrc, vars->pressLinearSrc,
-                 constvars->cellType, wall_celltypeval,
-                 d_flowInlets[ii]->d_cellTypeID,
-                 neumann_bc,
-                 xminus, xplus, yminus, yplus, zminus, zplus);
+  //  intrusion Boundary Conditions
+  if(d_intrusionBC){
+    for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      IntVector c = *iter;
+      if(cellType[c] == wall_BC){
+        A[c].p = 0.0;
+        A[c].e = 0.0;
+        A[c].w = 0.0;
+        A[c].n = 0.0;
+        A[c].s = 0.0;
+        A[c].t = 0.0;
+        A[c].b = 0.0;
+        vars->pressNonlinearSrc[c] = 0.0;
+        vars->pressLinearSrc[c] = -1.0;
+      }
+    }
   }
+
   //__________________________________
-  //  This sucks --Todd
-  direction = "out";
-  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
-                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
+  //  Pressure, outlet, and wall BC
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    Patch::FaceType face = *itr;
+    
+    IntVector offset = patch->faceDirection(face);
+    
+    CellIterator iter = patch->getFaceIterator__New(face, Patch::InteriorFaceCells);
+    
+    //face:       -x +x -y +y -z +z
+    //Stencil 7   w, e, s, n, b, t;
+    for(;!iter.done(); iter++){
+      IntVector c = *iter;
+      IntVector adj = c + offset;
+      
+      if( cellType[adj] == pressure_BC ||
+          cellType[adj] == outlet_BC){
+        // dirichlet_BC
+        A[c].p = A[c].p +  A[c][face];
+        A[c][face] = 0.0;
+      }
+
+      if( cellType[adj] == wall_BC){
+        // Neumann zero gradient BC
+        A[c].p = A[c].p - A[c][face];
+        A[c][face] = 0.0;
+      }
+    }
+  }
+  
+  //__________________________________
+  //  Inlets
+  // This assumes that all inlets have Neumann (zero gradient) pressure BCs
+  for (int ii = 0; ii < d_numInlets; ii++) {
+    
+    for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+      Patch::FaceType face = *itr;
+
+      IntVector offset = patch->faceDirection(face);
+
+      CellIterator iter = patch->getFaceIterator__New(face, Patch::InteriorFaceCells);
+
+      //face:       -x +x -y +y -z +z
+      //Stencil 7   w, e, s, n, b, t;
+      for(;!iter.done(); iter++){
+        IntVector c = *iter;
+        IntVector adj = c + offset;
+        
+        if( cellType[adj] == d_flowInlets[ii]->d_cellTypeID){
+          // Neumann zero gradient BC
+          
+          A[c].p = A[c].p -  A[c][face];
+          A[c][face] = 0.0;
+        }
+      }
+    }
+  }
 }
 
 //****************************************************************************

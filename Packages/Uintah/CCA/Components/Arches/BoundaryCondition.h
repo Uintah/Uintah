@@ -355,11 +355,7 @@ public:
 
   ///////////////////////////////////////////////////////////////////////
   // Actually compute pressure BC terms
-  void pressureBC(const ProcessorGroup*,
-                  const Patch* patch,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw,
-                  CellInformation* cellinfo,
+  void pressureBC(const Patch* patch,
                   ArchesVariables* vars,
                   ArchesConstVariables* constvars);
 
