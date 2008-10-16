@@ -232,14 +232,14 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
-    new_dw->get(constPressureVars.cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
       old_dw->get(constPressureVars.pressure, timelabels->pressure_guess, indx, patch, gn, 0);
     }else{
       new_dw->get(constPressureVars.pressure, timelabels->pressure_guess, indx, patch, gn, 0);
     }
-
+    new_dw->get(constPressureVars.cellType,     d_lab->d_cellTypeLabel,    indx, patch, gac, 1);
     new_dw->get(constPressureVars.density,      d_lab->d_densityCPLabel,   indx, patch, gac, 1);
     new_dw->get(constPressureVars.uVelRhoHat,   d_lab->d_uVelRhoHatLabel,  indx, patch, gaf, 1);
     new_dw->get(constPressureVars.vVelRhoHat,   d_lab->d_vVelRhoHatLabel,  indx, patch, gaf, 1);
@@ -249,6 +249,19 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constPressureVars.divergence,   d_lab->d_divConstraintLabel,indx, patch, gn, 0);
 #endif
 
+    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+        &&(((!(extraProjection))&&(!(d_EKTCorrection)))
+           ||((d_EKTCorrection)&&(doing_EKT_now)))){
+      new_dw->allocateAndPut(pressureVars.pressCoeff,        d_lab->d_presCoefPBLMLabel,      indx, patch);
+      new_dw->allocateAndPut(pressureVars.pressNonlinearSrc, d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
+    }else{
+      new_dw->getModifiable(pressureVars.pressCoeff,         d_lab->d_presCoefPBLMLabel,      indx, patch);
+      new_dw->getModifiable(pressureVars.pressNonlinearSrc,  d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
+    }
+    
+    new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
+    pressureVars.pressLinearSrc.initialize(0.0);   
+    pressureVars.pressNonlinearSrc.initialize(0.0);   
 
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
@@ -259,16 +272,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
   
-    // Calculate Pressure Coeffs
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        &&(((!(extraProjection))&&(!(d_EKTCorrection)))
-           ||((d_EKTCorrection)&&(doing_EKT_now)))){
-      new_dw->allocateAndPut(pressureVars.pressCoeff,
-                             d_lab->d_presCoefPBLMLabel, indx, patch);
-    }else{
-      new_dw->getModifiable(pressureVars.pressCoeff,
-                            d_lab->d_presCoefPBLMLabel, indx, patch);
-    }
+
+    //__________________________________
 
     calculatePressureCoeff(patch, cellinfo, &pressureVars, &constPressureVars);
 
@@ -283,25 +288,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     }
 
-    // Calculate Pressure Source
-    //  inputs : pressureSPBC, [u,v,w]VelocitySIVBC, densityCP,
-    //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
-    //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
-    // Allocate space
-
-    new_dw->allocateTemporary(pressureVars.pressLinearSrc,  patch);
-    pressureVars.pressLinearSrc.initialize(0.0);
-    
-    if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        &&(((!(extraProjection))&&(!(d_EKTCorrection)))
-           ||((d_EKTCorrection)&&(doing_EKT_now))))
-      new_dw->allocateAndPut(pressureVars.pressNonlinearSrc,
-                             d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
-    else
-      new_dw->getModifiable(pressureVars.pressNonlinearSrc,
-                            d_lab->d_presNonLinSrcPBLMLabel, indx, patch);
-    pressureVars.pressNonlinearSrc.initialize(0.0);
-
+ 
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
                                           cellinfo, &pressureVars,
                                           &constPressureVars,
@@ -325,9 +312,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Pressure Diagonal
     d_discretize->calculatePressDiagonal(patch,&pressureVars);
 
-    if (d_boundaryCondition->anyArchesPhysicalBC()){
-      d_boundaryCondition->pressureBC(patch, &pressureVars,&constPressureVars);
-    }
+    d_boundaryCondition->pressureBC(patch, &pressureVars,&constPressureVars);
   }
 
 }
@@ -534,8 +519,7 @@ PressureSolver::pressureLinearSolve(const ProcessorGroup* pc,
   // will make the following subroutine separate
   // get patch numer ***warning****
   // sets matrix
-  d_linearSolver->setPressMatrix(pc, patch,
-                                 &pressureVars, &constPressureVars, d_lab);
+  d_linearSolver->setPressMatrix(pc, patch,&pressureVars, &constPressureVars, d_lab);
 }
 
 // ************************************************************************
@@ -726,10 +710,6 @@ PressureSolver::normPressure(const Patch* patch,
     IntVector c = *iter;
     vars->pressure[c] = vars->pressure[c] - pressref;
   } 
- 
-  #if 0
-  fort_normpress(idxLo, idxHi, vars->pressure, pressref);
-  #endif
 }  
 //______________________________________________________________________
 
