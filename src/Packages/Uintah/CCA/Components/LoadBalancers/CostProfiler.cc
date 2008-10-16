@@ -50,10 +50,10 @@ void CostProfiler::addContribution(DetailedTask *task, double cost)
         high=high/d_minPatchSize[l+1];
         
         //add the intersection to regions
-        regions.push_back(r);
+        regions.push_back(Region(low,high));
         levels.push_back(l+1);
       }
-    } 
+    }
     d_fineProfiler.addContribution(regions,levels,cost);
   }
   else  //this is a normal task to profile it in the normal profiler 
