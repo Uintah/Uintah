@@ -5962,23 +5962,6 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
   }  // zplus
 }
 
-// //****************************************************************************
-// // Actually compute the MMS pressure bcs
-// //****************************************************************************
-void 
-BoundaryCondition::mmspressureBC(const ProcessorGroup*,
-                                 const Patch* patch,
-                                 DataWarehouse* /*old_dw*/,
-                                 DataWarehouse* /*new_dw*/,
-                                 CellInformation* /*cellinfo*/,
-                                 ArchesVariables* vars,
-                                 ArchesConstVariables* constvars)
-{
-  //this routine is not used since Wall boundary conditions should set the 
-  // pressure coefs accordingly for MMS
-
-}
-
 //****************************************************************************
 // Actually compute the MMS scalar bcs
 //****************************************************************************
