@@ -42,7 +42,7 @@ void CostProfiler::addContribution(DetailedTask *task, double cost)
       for(int f=0;f<fp.size();f++)
       {
         //intersect r and fine patch
-        IntVector low=Min(r.getLow(),fp[f]->getCellLowIndex__New());
+        IntVector low=Max(r.getLow(),fp[f]->getCellLowIndex__New());
         IntVector high=Min(r.getHigh(),fp[f]->getCellHighIndex__New());
         
         //coarsen by fine level min patch size
