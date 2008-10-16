@@ -21,7 +21,8 @@ from helpers.modUPS import modUPS
 
 
 TESTS = [
-        ("mpmpipe_test", "pipe.ups", 1.1, "Linux", ["exactComparison"])
+        ("mpmpipe_test", "pipe.ups", 1.1, "Linux", ["exactComparison"]),
+        ("methaneFireWContainer", "methaneFireWContainer.ups", 1.1, "Linux", ["exactComparison"])
 ] 
                      
 exit(runSusTests(argv, TESTS, "MPMARCHES"))
