@@ -582,14 +582,6 @@ public:
                         ArchesConstVariables* constvars,
                         double time_shift,
                         double dt);
-                              
-    void mmspressureBC(const ProcessorGroup*,
-                       const Patch* patch,
-                       DataWarehouse* /*old_dw*/,
-                       DataWarehouse* /*new_dw*/,
-                       CellInformation* /*cellinfo*/,
-                       ArchesVariables* vars,
-                       ArchesConstVariables* constvars);
 
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;

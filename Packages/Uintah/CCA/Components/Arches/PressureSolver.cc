@@ -313,21 +313,11 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                             &constPressureVars);
     }
 
-    // Calculate Pressure BC
-    //  inputs : pressureIN, presCoefPBLM
-    //  outputs: presCoefPBLM
-
-
     // do multimaterial bc; this is done before 
     // calculatePressDiagonal because unlike the outlet
     // boundaries in the explicit projection, we want to 
     // show the effect of AE, etc. in AP for the 
-    // intrusion boundaries
-    if (d_boundaryCondition->anyArchesPhysicalBC())
-      /*if (d_boundaryCondition->getIntrusionBC())
-        d_boundaryCondition->intrusionPressureBC(pc, patch, cellinfo,
-                                                 &pressureVars,&constPressureVars);*/
-    
+    // intrusion boundaries    
     if (d_MAlab){
       d_boundaryCondition->mmpressureBC(new_dw, patch,
                                         &pressureVars, &constPressureVars);
