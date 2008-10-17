@@ -98,7 +98,61 @@
 	   </MPM>
 
        </MaterialProperties>
-	
+		<BoundaryConditions>
+
+		 <Face side = "x-">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "x+">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "y-">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>                  
+
+		<Face side = "y+">
+                        <BCType id = "all" var = "Dirichlet" label = "Velocity">
+				<value> [0.0,0.0,0.0] </value>
+                        </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "z-">
+                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>
+
+                <Face side = "z+">
+                        <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+                        <BCType id = "all" var = "Dirichlet" label = "Temperature">
+				<value> 298.0 </value>
+                        </BCType>
+                </Face>                           
+
+	</BoundaryConditions>
+
+
     <Grid>
         <BoundaryConditions/>
         <Level>
