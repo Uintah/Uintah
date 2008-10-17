@@ -48,8 +48,11 @@ void ProfileDriver::finalizeContributions()
       else
         data.timestep++;
 
-      if(timesteps==1)
+      if(timesteps<=2)
       {
+        //first couple timesteps should be set to last timestep to initialize the system
+          //the first couple timesteps are not representative of the actual cost as extra things
+          //are occuring.
         data.weight=data.current;
       }
       else
