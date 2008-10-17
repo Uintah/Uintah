@@ -61,7 +61,6 @@ using namespace SCIRun;
 #endif
 
 
-
 const int Arches::NDIM = 3;
 
 // ****************************************************************************
@@ -1394,49 +1393,22 @@ Arches::interpInitialConditionToStaggeredGrid(const ProcessorGroup* ,
     
     IntVector idxLo, idxHi;
 
-
-
-    idxLo = patch->getSFCXFORTLowIndex();
-    idxHi = patch->getSFCXFORTHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector xminusCell(colX-1, colY, colZ);
-
-          uVelocity[currCell] = 0.5*(uVelocityCC[currCell] +
-                                     uVelocityCC[xminusCell]);
-
-        }
-      }
+    for(CellIterator iter = patch->getSFCXIterator__New(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector L = c - IntVector(1,0,0);
+      uVelocity[c] = 0.5 * (uVelocityCC[c] + uVelocityCC[L]);
     }
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector yminusCell(colX, colY-1, colZ);
-
-          vVelocity[currCell] = 0.5*(vVelocityCC[currCell] +
-                                     vVelocityCC[yminusCell]);
-
-        }
-      }
+    
+    for(CellIterator iter = patch->getSFCYIterator__New(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector L = c - IntVector(0,1,0);
+      vVelocity[c] = 0.5 * (vVelocityCC[c] + vVelocityCC[L]);
     }
-    idxLo = patch->getSFCZFORTLowIndex();
-    idxHi = patch->getSFCZFORTHighIndex();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector zminusCell(colX, colY, colZ-1);
-
-          wVelocity[currCell] = 0.5*(wVelocityCC[currCell] +
-                                     wVelocityCC[zminusCell]);
-
-        }
-      }
+    
+    for(CellIterator iter = patch->getSFCXIterator__New(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector L = c - IntVector(0,0,1);
+      wVelocity[c] = 0.5 * (wVelocityCC[c] + wVelocityCC[L]);
     }
   }
 }
