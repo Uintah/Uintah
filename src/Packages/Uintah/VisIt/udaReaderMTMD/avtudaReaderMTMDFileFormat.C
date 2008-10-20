@@ -47,6 +47,7 @@
 #include <string>
 
 #include <vtkPoints.h>
+#include <vtkPolyData.h>
 #include <vtkFieldData.h>
 #include <vtkFloatArray.h>
 #include <vtkIntArray.h>
@@ -102,7 +103,7 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename)
 
 	cout << folder << endl;
 	
-	char * lib = getenv("UINTAH_UDA_TO_VIS_LIB");
+	char* lib = getenv("UINTAH_UDA_TO_VIS_LIB");
 	if(lib == NULL) {
 	  cerr << "The environment variable UINTAH_UDA_TO_VIS_LIB isn't set!!!\n";
 	  EXCEPTION1(InvalidDBTypeException, "The environment variable UINTAH_UDA_TO_VIS_LIB isn't set!!!");
@@ -111,8 +112,9 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename)
 	  // libHandle = dlopen("/home/collab/sshankar/svn_new/SCIRun/hex64opt/lib/libPackages_Uintah_StandAlone_tools_uda2nrrd.so", RTLD_NOW); // The dylib locn should be changed
 	  libHandle = dlopen(lib, RTLD_NOW); // The dylib locn should be changed
 	  if (!libHandle) {
-	      cerr << "The library libuda2vis could not be located!!!\n"; 
-		  EXCEPTION1(InvalidDBTypeException, "The library libuda2vis could not be located!!!");
+		  char* errString = dlerror();
+	      cerr << string(errString) << endl; 
+		  EXCEPTION1(InvalidDBTypeException, errString);
 	  }
 	}
 
@@ -183,6 +185,7 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename)
 	currLevel = -1;
 	currVar.assign("any_var");
 	currMesh.assign("any_mesh");
+	// callDomainNesting = false;
 	// patchInfoReq = true;
 	// levelInfoReq = true;
 	
@@ -238,15 +241,79 @@ avtudaReaderMTMDFileFormat::GetNTimesteps(void)
 void
 avtudaReaderMTMDFileFormat::FreeUpResources(void)
 {
-    cout << "In Free up resources\n";
-	currLevel = -1;
-	currVar.assign("any_var");
-	currMesh.assign("any_mesh");
+  cout << "In Free up resources\n";
+  currLevel = -1;
+  currVar.assign("any_var");
+  currMesh.assign("any_mesh");
+ 
+ // callDomainNesting = false;
 	
-	// levelPatchVecPtr = NULL;
-	// patchInfoVecPtr = NULL;
+ // levelPatchVecPtr = NULL;
+ // patchInfoVecPtr = NULL;
+ 
+  // if (levelPatchVecPtr !=  NULL) // just a pre-cautionary measure
+    // delete levelPatchVecPtr;
+	
+  // if (patchInfoVecPtr !=  NULL) // just a pre-cautionary measure
+    // delete patchInfoVecPtr;	
 }
 
+
+// ****************************************************************************
+//  Method: avtudaReaderMTMDFileFormat::ActivateTimestep
+//
+//  Purpose:
+//      Tells the reader it can now do some initialization work.
+//  
+//  Programmer: sshankar
+//  Creation:   Aug 4, 2008
+//
+// ****************************************************************************
+
+/*void
+avtudaReaderMTMDFileFormat::ActivateTimestep(int ts)
+{
+    // cout << "\n\nActivating timestep: " << ts << "\n\n";
+	if (callDomainNesting) {
+	  cout << "Making the much required call to getPatchInfo\n";
+	  patchInfoVecPtr = (*getPatchInfo)(folder, ts, currMesh, true); // remove_boundary: true or false
+	  levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
+	  int numLevels = levelPatchVecObj.size();
+		  
+	  // if there is just a single level, there is no need to call this function
+	  if (numLevels > 1) {
+	    cout << "CalculateDomainNesting() called\n";
+	    CalculateDomainNesting(ts);
+	  }
+	  
+	  callDomainNesting = false;
+    }
+}*/
+
+// ****************************************************************************
+//  Method:  avtudaReaderMTMDFileFormat::RegisterVariableList
+//
+//  Purpose:
+//    Records the active variable name so per-variable ghosting can be applied
+//    during GetMesh calls.
+//
+//  Programmer:  Mark C. Miller 
+//  Creation:    December 9, 2003 
+//
+// ****************************************************************************
+
+/*void
+avtudaReaderMTMDFileFormat::RegisterVariableList(const char *prim_var_name,
+                                          const std::vector<CharStrRef> &)
+{
+    cout << "\n\n\nActive variable: " << string(prim_var_name) << "\n\n\n";
+	
+	if ((currMesh.compare(prim_var_name) != 0) 
+	     && (string(prim_var_name).find("mesh_particle") == string::npos)) { // no domain nesting for particles
+	  callDomainNesting = true;
+      currMesh.assign(prim_var_name);
+    }
+}*/
 
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData
@@ -271,6 +338,14 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 	
 	// Prevent VisIt from sorting the variables.
     // md->SetMustAlphabetizeVariables(false);
+	
+	// currTimeStep = timeState;
+
+	// if (levelPatchVecPtr !=  NULL) // just a pre-cautionary measure
+	  // delete levelPatchVecPtr;
+
+	// if (patchInfoVecPtr !=  NULL) // just a pre-cautionary measure
+	  // delete patchInfoVecPtr;	
 
 	levelPatchVecPtr = (*getTotalNumPatches)(folder, timeState);
 	levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
@@ -348,7 +423,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 			string mesh_for_this_var;
 			
 			mt = AVT_AMR_MESH;
-			topological_dimension = 1;
+			topological_dimension = 3;
 			
 			if (vartype.find("NC") != string::npos) {
 			  cent = AVT_NODECENT;
@@ -383,7 +458,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 			
 			mesh->name = buffer;
 			mesh->meshType = AVT_AMR_MESH;
-			mesh->topologicalDimension = 1;
+			mesh->topologicalDimension = 3;
 			mesh->spatialDimension = 3;
 			mesh->blockOrigin = 0;
 			
@@ -547,7 +622,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
     vector<int> levelEnd;
     for (int level = 0 ; level < num_levels ; level++) {
       levelStart.push_back(totalPatches);
-      totalPatches += levelPatchVecObj[level].noPatches;;
+      totalPatches += levelPatchVecObj[level].noPatches;
       levelEnd.push_back(totalPatches);
     }
 
@@ -584,10 +659,12 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
 	multiplier[num_levels-1][1] = 1;
 	multiplier[num_levels-1][2] = 1;
     for (int level = num_levels-2 ; level >= 0 ; level--) {
-	  int* refinement_ratio = levelPatchVecObj[level].rr;
+	  int* refinement_ratio = levelPatchVecObj[level+1].rr;
 	  for (int i = 0; i < 3; i++) {
         multiplier[level][i] = multiplier[level+1][i] * refinement_ratio[i];
-	  }	
+		cout << multiplier[level][i] << " ";
+	  }
+	  cout << endl;	
     }
 
     //
@@ -599,7 +676,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
     rdb->SetNumDomains(totalPatches);
     for (int patch = 0 ; patch < totalPatches ; patch++) {
       int my_level, local_patch;
-      GetLevelAndLocalPatchNumber(patch, my_level, local_patch, timestate);
+      GetLevelAndLocalPatchNumber(patch, timestate, my_level, local_patch);
 
 	  // int* indexArr = (*getPatchLoIndex)(folder, timestate, my_level, local_patch); // this should be stored somewhere
 
@@ -660,19 +737,26 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
     //
     for (int i = 0 ; i < totalPatches ; i++) {
       int my_level, local_patch;
-      GetLevelAndLocalPatchNumber(i, my_level, local_patch, timestate);
+      GetLevelAndLocalPatchNumber(i, timestate, my_level, local_patch);
 
       // int* indexArr = (*getPatchLoIndex)(folder, timestate, my_level, local_patch); // this should be stored somewhere
 
       vector<int> logExts(6);
-      logExts[0] = patchInfoVecObj[i].indexArr[0];
-      logExts[3] = patchInfoVecObj[i].indexArr[3] - 1;
-      logExts[1] = patchInfoVecObj[i].indexArr[1];
-      logExts[4] = patchInfoVecObj[i].indexArr[4] - 1;
-      logExts[2] = patchInfoVecObj[i].indexArr[2];
-      logExts[5] = patchInfoVecObj[i].indexArr[5] - 1;
-
-      cout << childPatches[i].size() << endl;
+	  
+	  logExts[0] = patchInfoVecObj[i].indexArr[0];
+	  logExts[3] = patchInfoVecObj[i].indexArr[3] - 1;
+	  logExts[1] = patchInfoVecObj[i].indexArr[1];
+	  logExts[4] = patchInfoVecObj[i].indexArr[4] - 1;
+	  logExts[2] = patchInfoVecObj[i].indexArr[2]; 
+	  logExts[5] = patchInfoVecObj[i].indexArr[5] - 1;
+      
+	  if (childPatches[i].size() > 0) {
+	    cout << "Parent: " << i << " Child patches: ";
+		for (int j = 0; j < childPatches[i].size(); j++) {
+          cout << childPatches[i][j] << " ";
+	    }
+		cout << endl;
+	  } 	
 
       dn->SetNestingForDomain(i, my_level, childPatches[i], logExts);
     }
@@ -717,6 +801,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 	if (meshName.find("mesh_particle") == string::npos) { // volume data
 		cout << "\nIn GetMesh, timestate: " << timestate << "\n";
 		
+		cout << "domain: " << domain << endl;
+		
 		cout << meshName << " ";
 
         size_t found1 = meshName.find("_");
@@ -728,16 +814,16 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 		cout << varName << endl;
 		cout << matlNo << endl;
 		
-		if (currMesh.compare(varName) != 0) {  // patchInfoReq may not be required
+		if (currMesh.compare(varName) != 0) {
 		  cout << "Making the much required call to getPatchInfo\n";
-		  patchInfoVecPtr = (*getPatchInfo)(folder, timestate, meshname);
+		  patchInfoVecPtr = (*getPatchInfo)(folder, timestate, meshname, true);
 		  levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
 		  int numLevels = levelPatchVecObj.size();
 		  
 		  // if there is just a single level, there is no need to call this function
 		  if (numLevels > 1) {
 			cout << "CalculateDomainNesting() called\n";
-		    CalculateDomainNesting(timestate);
+		     CalculateDomainNesting(timestate);
 		  }
 		  
 		  currMesh.assign(varName);
@@ -778,6 +864,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 		int cellValColln_x = indexArr[3] - indexArr[0];
 		int cellValColln_y = indexArr[4] - indexArr[1];
 		int cellValColln_z = indexArr[5] - indexArr[2];
+		
+		cout << cellValColln_x << " " << cellValColln_y << " " << cellValColln_z << endl;
 		
 		// cout << cellValColln_x << " " << cellValColln_y << " " << cellValColln_z << endl;
 		/*for (int i = 0; i < 6; i++)
@@ -918,6 +1006,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
 		timeStep *timeStepObjPtr;
 		
+		// not removing the boundary with particle data
 		if (matl.compare("*") == 0) {
 		  timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false, 0); 
 		  cout << "All data\n";
@@ -1056,7 +1145,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 	
 	vtkFloatArray *rv = vtkFloatArray::New();
 
-	if (varName.find("p.") == string::npos) {
+	if (varName.find("p.") == string::npos) { // volume data
 		size_t found = varName.find("/");
 		string tmpVarName = varName;
 		
@@ -1073,7 +1162,18 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 		
 		unsigned int count = 0;
 		
-		if ((currLevel != level) || (currVar.find(tmpVarName) == string::npos)) { 
+		if ((currLevel != level) || (currVar.find(tmpVarName) == string::npos)) {
+		  /*if (currVar.find(tmpVarName) == string::npos) {
+		    levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
+		    int numLevels = levelPatchVecObj.size();
+			
+			// if there is just a single level, there is no need to call this function
+			if (numLevels > 1) {
+			  cout << "CalculateDomainNesting() called\n";
+		      CalculateDomainNesting(timestate);
+			}
+		  }*/
+		    
 		  cout << "Making the much required call to collect information at level " << level << "\n";
 		  currLevel = level;
 		  currVar.assign(tmpVarName);
@@ -1092,8 +1192,9 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 		  strcpy(arr2d[8], buffer); 
 		  strcpy(arr2d[9], "-o");
 		  strcpy(arr2d[10], "test"); // anything will do
+		  strcpy(arr2d[11], "-nbc"); // boundary cells not required
 
-		  timeStep* timeStepObjPtr = (*processData)(11, arr2d, timestate, true, 0, false, local_patch);
+		  timeStep* timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, local_patch);
 		  timeStep &timeStepObj = *timeStepObjPtr;
 		
 		  cellVals& cellValColln = *(timeStepObj.cellValColln);
@@ -1135,6 +1236,15 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 		int cellValColln_x = indexArr[3] - indexArr[0];
 		int cellValColln_y = indexArr[4] - indexArr[1];
 		int cellValColln_z = indexArr[5] - indexArr[2];
+		
+		int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
+		
+		indexArr[0] = indexArr[0] - hiLoArr[0]; 
+	    indexArr[1] = indexArr[1] - hiLoArr[1]; 
+        indexArr[2] = indexArr[2] - hiLoArr[2];
+        indexArr[3] = indexArr[3] - hiLoArr[0]; 
+        indexArr[4] = indexArr[4] - hiLoArr[1]; 
+        indexArr[5] = indexArr[5] - hiLoArr[2];
 		
 		cout << "[ " << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << " ] " ;
 		cout << "[ " << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << " ] "  << endl;
@@ -1295,10 +1405,11 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 		  strcpy(arr2d[6], matlNo.c_str());
 		  strcpy(arr2d[7], "-l");
 		  strcpy(arr2d[8], buffer);
-		  strcpy(arr2d[9], "-o");
-		  strcpy(arr2d[10], "test"); // anything will do
+		  strcpy(arr2d[9], "-o"); // this is not required
+		  strcpy(arr2d[10], "test"); // this is not required
+		  strcpy(arr2d[11], "-nbc");
 
-		  timeStep *timeStepObjPtr = (*processData)(9, arr2d, timestate, true, 0, false, local_patch);
+		  timeStep *timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, local_patch);
 	      timeStep &timeStepObj = *timeStepObjPtr;
 		
 		  cellVals& cellValColln = *(timeStepObj.cellValColln);
@@ -1381,6 +1492,15 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 		int cellValColln_x = indexArr[3] - indexArr[0];
 		int cellValColln_y = indexArr[4] - indexArr[1];
 		int cellValColln_z = indexArr[5] - indexArr[2];
+		
+		int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
+		
+		indexArr[0] = indexArr[0] - hiLoArr[0]; 
+	    indexArr[1] = indexArr[1] - hiLoArr[1]; 
+        indexArr[2] = indexArr[2] - hiLoArr[2];
+        indexArr[3] = indexArr[3] - hiLoArr[0]; 
+        indexArr[4] = indexArr[4] - hiLoArr[1]; 
+        indexArr[5] = indexArr[5] - hiLoArr[2];
 		
 		cout << "[ " << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << " ] " ;
 		cout << "[ " << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << " ] "  << endl;
