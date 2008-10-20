@@ -29,6 +29,7 @@ static DebugStream lb("DynamicLoadBalancer_lb", false);
 static DebugStream dbg("DynamicLoadBalancer", false);
 static DebugStream stats("LBStats",false);
 static DebugStream times("LBTimes",false);
+double lbtimes[5]={0};
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
   : LoadBalancerCommon(myworld), d_costProfiler(myworld), sfc(myworld)
@@ -320,6 +321,10 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
 {
   vector<DistributedIndex> indices; //output
   vector<double> positions;
+  double start=Time::currentSeconds();
+  
+  lbtimes[0]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
   
   vector<int> recvcounts(d_myworld->size(), 0);
 
@@ -376,6 +381,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   double c[3]={center[dimensions[0]],center[dimensions[1]],center[dimensions[2]]};
   double delta[3]={min_patch_size[dimensions[0]],min_patch_size[dimensions[1]],min_patch_size[dimensions[2]]};
 
+
   //create SFC
   sfc.SetLocalSize(originalPatchCount[d_myworld->myrank()]);
   sfc.SetDimensions(r);
@@ -383,7 +389,14 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   sfc.SetRefinementsByDelta(delta); 
   sfc.SetLocations(&positions);
   sfc.SetOutputVector(&indices);
+  
+  lbtimes[1]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
+  
   sfc.GenerateCurve();
+  
+  lbtimes[2]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
 
   vector<int> displs(d_myworld->size(), 0);
   if(d_myworld->size()>1)  
@@ -407,6 +420,8 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     indices.swap(rbuf);
   
   }
+  lbtimes[3]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
 
   //convert distributed indices to normal indices
   for(unsigned int i=0;i<indices.size();i++)
@@ -414,6 +429,8 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     DistributedIndex di=indices[i];
     order[i]=originalPatchStart[di.p]+di.i;
   }
+  lbtimes[4]+=Time::currentSeconds()-start;
+  start=Time::currentSeconds();
  
   /*
   if(d_myworld->myrank()==0)
@@ -633,14 +650,15 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
   doing << d_myworld->myrank() << "   APF END\n";
   return doLoadBalancing;
 }
+  
 
 bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 {
   doing << d_myworld->myrank() << "   APF\n";
-  double time = Time::currentSeconds();
-  double lbtimes[5]={0};
-  double start=time;
   vector<vector<double> > patch_costs;
+  double time = Time::currentSeconds();
+  for(int i=0;i<lbtimes[5];i++)
+    lbtimes[i]=0;
 
   int num_procs = d_myworld->size();
   DataWarehouse* olddw = d_scheduler->get_dw(0);
@@ -665,8 +683,6 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     getCosts(grid.get_rep(), regions, patch_costs, on_regrid);
   }
 
-  lbtimes[0]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
   int level_offset=0;
 
   vector<double> previousProcCosts(num_procs,0);
@@ -685,8 +701,6 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &order[0]);
     }
-    lbtimes[1]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
 
     //hard maximum cost for assigning a patch to a processor
     double avgCost = (total_cost+previous_total_cost) / num_procs;
@@ -808,16 +822,12 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double_int maxInfo(myStoredMax,d_myworld->myrank());
       double_int min;
 
-      lbtimes[2]+=Time::currentSeconds()-start;
-      start=Time::currentSeconds();
       //gather the maxes
       //change to all reduce with loc
       if(num_procs>1)
         MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
       else
         min=maxInfo;
-      lbtimes[3]+=Time::currentSeconds()-start;
-      start=Time::currentSeconds();
 
       //set improvement
       improvement=hardMaxCost-min.val;
@@ -838,17 +848,12 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       iter++;
     }
 
-    lbtimes[2]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
 
     if(minProcLoc!=-1 && num_procs>1)
     {
       //broadcast load balance
       MPI_Bcast(&d_tempAssignment[0],d_tempAssignment.size(),MPI_INT,minProcLoc,d_myworld->getComm());
     }
-
-    lbtimes[4]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
 
     if(!d_levelIndependent)
     {
