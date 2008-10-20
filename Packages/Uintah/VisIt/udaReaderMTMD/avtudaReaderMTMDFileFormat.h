@@ -88,7 +88,8 @@ class avtudaReaderMTMDFileFormat : public avtMTMDFileFormat
     virtual int           GetNTimesteps(void);
 
     virtual const char    *GetType(void)   { return "udaReaderMTMD"; };
-    virtual void          FreeUpResources(void); 
+    virtual void          FreeUpResources(void);
+	// virtual void          ActivateTimestep(int); 
 
     virtual vtkDataSet    *GetMesh(int, int, const char *);
     virtual vtkDataArray  *GetVar(int, int, const char *);
@@ -112,8 +113,9 @@ class avtudaReaderMTMDFileFormat : public avtMTMDFileFormat
 	
 	int currLevel;
 	string currVar, currMesh;
-
-    int ncomps;
+	// bool callDomainNesting;
+	
+	int ncomps;
 	
 	timeStep*			   (*processData)(int, char[][128], int, bool, int, bool, int);
 	udaVars*			   (*getVarList)(const string&);
@@ -123,11 +125,13 @@ class avtudaReaderMTMDFileFormat : public avtMTMDFileFormat
 	int*				   (*getPatchIndex)(const string&, int, int, int, const string&);
     varMatls*			   (*getMaterials)(const string&, const string&, int);
 	levelPatchVec*		   (*getTotalNumPatches)(const string&, int);
-	patchInfoVec*		   (*getPatchInfo)(const string&, int, const string&);
+	patchInfoVec*		   (*getPatchInfo)(const string&, int, const string&, bool);
 	int*				   (*getNumPatches)(const string&, int, int);
 	int*				   (*getNumLevels)(const string&, int);
 
     virtual void           PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
+	// virtual void           RegisterVariableList(const char *,
+    //                                            const vector<CharStrRef> &);
 	void				   GetLevelAndLocalPatchNumber(int, int, int&, int&);
 	void				   CalculateDomainNesting(int);
 	
