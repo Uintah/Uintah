@@ -1,10 +1,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/PressureBoundCond.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <vector>
 #include <iostream>
@@ -46,10 +43,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
          const  BoundCondBase* bcb = 
             patch->getArrayBCValues(face,dwi,"Velocity",nu,nbound_ptr,child);
 
-          const VelocityBoundCond* bc = 
-            dynamic_cast<const VelocityBoundCond*>(bcb); 
+         const BoundCond<Vector>* bc = 
+           dynamic_cast<const BoundCond<Vector>*>(bcb); 
           if (bc != 0) {
-            if (bc->getKind() == "Dirichlet") {
+            if (bc->getBCType__NEW() == "Dirichlet") {
               Vector bcv = bc->getValue();
               for (nbound_ptr.reset();!nbound_ptr.done();nbound_ptr++){ 
                 IntVector nd = *nbound_ptr;
@@ -69,9 +66,8 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         } else if (type == "Symmetric"){
           const BoundCondBase* bcb =
             patch->getArrayBCValues(face,dwi,"Symmetric",nu,nbound_ptr,child);
-          const SymmetryBoundCond* bc = 
-            dynamic_cast<const SymmetryBoundCond*>(bcb); 
-          if (bc != 0) {
+          
+          if (bcb->getBCType__NEW() == "symmetry") {
             if (face == Patch::xplus || face == Patch::xminus){
               if(interp_type!="gimp"){
                for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
@@ -189,9 +185,9 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
                 }
               }
             }
-            delete bc;
+            delete bcb;
           } else
-          delete bcb;
+            delete bcb;
         }
       }
     } else
@@ -221,10 +217,10 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr,child);
 
-          const TemperatureBoundCond* bc = 
-            dynamic_cast<const TemperatureBoundCond*>(bcb);
+          const BoundCond<double>* bc = 
+            dynamic_cast<const BoundCond<double>*>(bcb);
           if (bc != 0){
-            if (bc->getKind() == "Dirichlet") {
+            if (bc->getBCType__NEW() == "Dirichlet") {
               double bcv = bc->getValue();
               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
@@ -248,11 +244,11 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
 
-          const PressureBoundCond* bc = 
-            dynamic_cast<const PressureBoundCond*>(bcb);
+          const BoundCond<double>* bc = 
+            dynamic_cast<const BoundCond<double>*>(bcb);
           
           if (bc != 0) {
-            if (bc->getKind() == "Dirichlet") {
+            if (bc->getBCType__NEW() == "Dirichlet") {
               double bcv = bc->getValue();
               for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++){
                 IntVector nd = *nbound_ptr;
@@ -266,7 +262,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
               }
             }
             
-            if (bc->getKind() == "Neumann" && (interp_type=="gimp" 
+            if (bc->getBCType__NEW() == "Neumann" && (interp_type=="gimp" 
                                                ||  interp_type=="3rdorderBS")) {
               Vector deltax = patch->dCell();
               double dx = -9;
