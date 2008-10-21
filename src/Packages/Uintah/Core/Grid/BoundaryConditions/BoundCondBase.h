@@ -38,15 +38,16 @@ WARNING
 
   class BoundCondBase  {
   public:
+  
     BoundCondBase() {};
-    BoundCondBase(const string type) : d_type(type) {};
     virtual ~BoundCondBase() {};
     virtual BoundCondBase* clone() = 0;
-    string getType() const { return d_type;};
-    virtual string getKind() const = 0;
+    const string getBCVariable() const { return d_variable; };
+    const string getBCType__NEW() const { return d_type__NEW; };
     
   protected:
-    string d_type,d_kind;
+    string d_variable; // Pressure, Density, etc
+    string d_type__NEW; // Dirichlet, Neumann, etc
     
   };
 } // End namespace Uintah

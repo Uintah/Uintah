@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -39,25 +40,66 @@ WARNING
   
 ****************************************/
 
+ class NoValue {
+
+ public:
+   NoValue() {};
+   ~NoValue() {};
+ };
+
  template <class T>  class BoundCond : public BoundCondBase {
  public:
    BoundCond() {};
-   BoundCond(const string& kind) : BoundCondBase()
+
+   BoundCond(string var_name, string type, T value) 
      {
-       d_kind=kind;
+       d_variable = var_name;
+       d_type__NEW = type;
+       d_value = value;
      };
    virtual ~BoundCond() {};
-   virtual BoundCond* clone() = 0;
-   virtual string getKind() const 
-     {
-       // Tells whether it is Dirichlet or Neumann
-       return d_kind;
-     };
+   virtual BoundCond* clone()
+   {
+     return scinew BoundCond(*this);
+   };
+
    T getValue() const { return d_value;}; 
+
    
  protected:
    T d_value;
+
+ };
+
+
+ template <> class BoundCond<NoValue> : public BoundCondBase {
+
+
+ public:
+
+   BoundCond(string var_name,string type)
+     {
+       d_variable = var_name;
+       d_type__NEW = type;
+       d_value = NoValue();
+     };
+
+   BoundCond(string var_name)
+     {
+       d_variable = var_name;
+       d_type__NEW = "";
+       d_value = NoValue();
+     };
+
+   virtual BoundCond* clone()
+   {
+     return scinew BoundCond(*this);
+   };
+
    
+ protected:
+   NoValue d_value;
+
  };
  
 } // End namespace Uintah

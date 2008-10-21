@@ -1,14 +1,9 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/PressureBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/DensityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SpecificVolBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/MassFracBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -17,98 +12,41 @@
 
 using namespace Uintah;
 
-void BoundCondFactory::create(ProblemSpecP& child,
-                              BoundCondBase* &bc, int& mat_id)
+void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc, 
+                              int& mat_id)
 
 {
   map<string,string> bc_attr;
   child->getAttributes(bc_attr);
   
-  //__________________________________
-  // add Models transport variables labels here
-  // hard coding ...yuck
-  bool ModelsBC = false;   //
-  string::size_type pos1 = bc_attr["label"].find ("massFraction");
-  string::size_type pos2 = bc_attr["label"].find ("scalar");
-  string::size_type pos3 = bc_attr["label"].find ("cumulativeEnergyReleased");
-  
-  if ( pos1 != std::string::npos || pos2 != std::string::npos 
-    || pos3 != std::string::npos){
-    ModelsBC = true;
-  }
   
   // Check to see if "id" is defined
   if (bc_attr.find("id") == bc_attr.end()) 
     SCI_THROW(ProblemSetupException("id is not specified in the BCType tag", __FILE__, __LINE__));
   
   if (bc_attr["id"] != "all"){
-    mat_id = atoi(bc_attr["id"].c_str());
+    std::istringstream ss(bc_attr["id"]);
+    ss >> mat_id;
   }else{
     mat_id = -1;  
   }
+
+  //  std::cout << "mat_id = " << mat_id << std::endl;
+  // Determine whether or not things are a scalar, Vector or a NoValue, i.e.
+  // Symmetry
+
+  double d_value;
+  Vector v_value;
+
+  if (child->get("value",d_value) != 0)
+    bc = scinew BoundCond<double>(bc_attr["label"],bc_attr["var"],d_value);
+  else if (child->get("value",v_value) != 0) {
+    bc = scinew BoundCond<Vector>(bc_attr["label"],bc_attr["var"],v_value);
+    // std::cout << "v_value = " << v_value << std::endl;
+  }
+  else
+    bc = scinew BoundCond<NoValue>(bc_attr["label"],bc_attr["var"]);
   
-  if (bc_attr["label"] == "Symmetric") {
-    bc = scinew SymmetryBoundCond(child);
-  }
-  
-  else if (bc_attr["label"] == "Velocity" && 
-           (bc_attr["var"]   == "Neumann"  ||
-            bc_attr["var"]   == "LODI" ||
-            bc_attr["var"]   == "Custom" ||
-            bc_attr["var"]   == "creep" ||
-            bc_attr["var"]   == "slip" ||
-            bc_attr["var"]   == "MMS_1" ||
-            bc_attr["var"]   == "Sine" ||
-            bc_attr["var"]   == "Dirichlet") ) {
-    bc = scinew VelocityBoundCond(child,bc_attr["var"]);
-  }
-  
-  else if (bc_attr["label"] == "Temperature" &&
-           (bc_attr["var"]   == "Neumann"  ||
-            bc_attr["var"]   == "LODI" ||
-            bc_attr["var"]   == "Custom" ||
-            bc_attr["var"]   == "slip" ||
-            bc_attr["var"]   == "MMS_1" ||
-            bc_attr["var"]   == "Sine" ||
-            bc_attr["var"]   == "Dirichlet") ) {
-    bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
-  }
-  
-  else if (bc_attr["label"] == "Pressure" &&
-           (bc_attr["var"]   == "Neumann"  ||
-            bc_attr["var"]   == "LODI" ||
-            bc_attr["var"]   == "Custom" ||
-            bc_attr["var"]   == "MMS_1" ||
-            bc_attr["var"]   == "Sine" ||
-            bc_attr["var"]   == "Dirichlet") ) {
-    bc = scinew PressureBoundCond(child,bc_attr["var"]);
-  }
-  
-  else if (bc_attr["label"] == "Density" &&
-           (bc_attr["var"]   == "Neumann"  ||
-            bc_attr["var"]   == "Dirichlet_perturbed"  ||
-            bc_attr["var"]   == "LODI" ||
-            bc_attr["var"]   == "Custom" ||
-            bc_attr["var"]   == "Dirichlet") ) {
-    bc = scinew DensityBoundCond(child,bc_attr["var"]);
-  } 
-  else if (bc_attr["label"] == "SpecificVol" &&
-           (bc_attr["var"]   == "Neumann" ||
-            bc_attr["var"]   == "Dirichlet" ||
-            bc_attr["var"]   == "computeFromEOS" ||
-            bc_attr["var"]   == "computeFromDensity") ) {
-    bc = scinew SpecificVolBoundCond(child,bc_attr["var"]);
-  }
-  else if (ModelsBC &&
-           (bc_attr["var"]   == "Neumann"  ||
-            bc_attr["var"]   == "Dirichlet") ) {  
-    bc = scinew MassFractionBoundCond(child,bc_attr["var"],bc_attr["label"]);
-  }
-  else {
-    std::ostringstream warn;
-    warn << "BoundCondFactory: Unknown Boundary Condition: "<< bc_attr["label"]
-         << " Type " << "(" << bc_attr["var"] << ")  " << std::endl;
-    SCI_THROW(ProblemSetupException(warn.str(), __FILE__, __LINE__));
-  }
+
 }
 

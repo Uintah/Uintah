@@ -248,7 +248,8 @@ ProblemSpec::get(const string& name, double &value)
     std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
-      printf( "WARNING: ProblemSpec.cc: get(%s, double): stringstream failed...\n", name.c_str() );
+      ps = 0;
+      //      cout << "WARNING: ProblemSpec.cc: get(%s, double): stringstream failed..." << name << endl;
     }
   }
           
@@ -272,6 +273,7 @@ ProblemSpec::get(const string& name, unsigned int &value)
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, uint): stringstream failed...\n", name.c_str() );
+      ps = 0;
     }
   }
           
@@ -296,6 +298,7 @@ ProblemSpec::get(const string& name, int &value)
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, int): stringstream failed...\n", name.c_str() );
+      ps = 0;
     }
   }
 
@@ -320,6 +323,7 @@ ProblemSpec::get(const string& name, long &value)
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, long): stringstream failed...\n", name.c_str() );
+      ps = 0;
     }
   }
 

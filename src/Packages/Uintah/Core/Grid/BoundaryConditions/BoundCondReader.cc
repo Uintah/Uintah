@@ -11,7 +11,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/UnionBCData.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/Auxiliary.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
@@ -261,8 +261,6 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   return bcGeom;
 }
 
-
-
 void
 BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 {  
@@ -297,8 +295,9 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
       BoundCondBase* bc;
       BoundCondFactory::create(child,bc,mat_id);
       BCR_dbg << "Inserting into mat_id = " << mat_id << " bc = " 
-        <<  bc->getType() << " bctype = " << typeid(*bc).name() 
-        <<  " "  << bc  << endl;
+              <<  bc->getBCVariable() << " bctype = " 
+              <<  bc->getBCType__NEW() 
+              <<  " "  << bc  << endl;
 
       bctype_data.insert(pair<int,BoundCondBase*>(mat_id,bc->clone()));
       delete bc;
@@ -314,7 +313,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     }
     for (set<int>::const_iterator i = materials.begin(); i != materials.end();
          i++) {
-      AuxiliaryBoundCond* bc = scinew AuxiliaryBoundCond();
+      BoundCondBase* bc = scinew BoundCond<NoValue>("Auxiliary");
       bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
       delete bc;
     }
@@ -324,8 +323,8 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
     multimap<int,BoundCondBase*>::const_iterator it;
     for (it = bctype_data.begin(); it != bctype_data.end(); it++) {
       BCR_dbg << "Getting out mat_id = " << it->first << " bc = " 
-        << it->second->getType() << " bctype = " 
-        << typeid(*(it->second)).name() << endl;
+              << it->second->getBCVariable() <<  " bctype = " 
+              << it->second->getBCType__NEW() << endl;
       //      cout << "mat = " << it -> first << " BoundCondBase address = " 
       //   << it->second << " bctype = " 
       //   << typeid(*(it->second)).name() << endl;
@@ -443,6 +442,7 @@ BoundCondReader::read(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
   } 
 
 }
+
 
 const BCDataArray BoundCondReader::getBCDataArray(Patch::FaceType& face) const
 {

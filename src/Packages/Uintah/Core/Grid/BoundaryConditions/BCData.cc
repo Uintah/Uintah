@@ -27,19 +27,19 @@ BCData::BCData()
 
 BCData::~BCData()
 {
-   bcDataType::const_iterator itr;
+  vector<BoundCondBase*>::const_iterator itr;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
-     delete itr->second;
+    delete (*itr);
   }
   d_BCData.clear();
 }
 
 BCData::BCData(const BCData& rhs)
 {
-  bcDataType* m = const_cast<bcDataType *>(&(rhs.d_BCData));
-  bcDataType::const_iterator itr;
-  for (itr = m->begin(); itr != m->end(); itr++)
-    d_BCData[itr->first]=itr->second->clone();
+  vector<BoundCondBase*>::const_iterator i;
+  for (i = rhs.d_BCData.begin(); i != rhs.d_BCData.end(); ++i) {
+    d_BCData.push_back((*i)->clone());
+  }
 }
 
 BCData& BCData::operator=(const BCData& rhs)
@@ -48,29 +48,29 @@ BCData& BCData::operator=(const BCData& rhs)
     return *this;
 
   // Delete the lhs
-  bcDataType::const_iterator itr;
+  vector<BoundCondBase*>::const_iterator itr;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) 
-    delete itr->second;
+    delete (*itr);
 
   d_BCData.clear();
   // Copy the rhs to the lhs
-  bcDataType* m = const_cast<bcDataType *>(&(rhs.d_BCData));
-  for (itr = m->begin(); itr != m->end(); itr++) {
-    //    cerr << "copying BoundCondBase address = " << itr->second 
-    //           << " bctype = " << itr->first << endl;
-    d_BCData[itr->first] = itr->second->clone();
-    //    cerr << "cloned  BoundCondBase address = " << d_BCData[itr->first] 
-    //         << " bctype = " << itr->first << endl;
-  }
   
+  vector<BoundCondBase*>::const_iterator i;
+  for (i = rhs.d_BCData.begin(); i != rhs.d_BCData.end(); ++i) {
+    d_BCData.push_back((*i)->clone());
+  }
+    
   return *this;
 }
 
 bool BCData::operator==(const BCData& rhs)
 {
-  bcDataType::const_iterator itr;
+  if (d_BCData.size() != rhs.d_BCData.size())
+    return false;
+
+  vector<BoundCondBase*>::const_iterator itr;
   for (itr = d_BCData.begin(); itr != d_BCData.end();) {
-    if (rhs.find(itr->first) == false)
+    if (rhs.find((*itr)->getBCVariable()) == false)
       return false;
     else
       ++itr;
@@ -80,7 +80,7 @@ bool BCData::operator==(const BCData& rhs)
 
 bool BCData::operator<(const BCData& rhs) const
 {
-  bcDataType::const_iterator itr;
+  vector<BoundCondBase*>::const_iterator itr;
   if (d_BCData.size() < rhs.d_BCData.size())
     return true;
   else 
@@ -90,72 +90,60 @@ bool BCData::operator<(const BCData& rhs) const
 void 
 BCData::setBCValues(BoundCondBase* bc)
 {
-  if (!find(bc->getType()))
-    d_BCData[bc->getType()]=bc->clone();
+  if (!find(bc->getBCVariable()))
+    d_BCData.push_back(bc->clone());
 }
 
 
 
 const BoundCondBase*
-BCData::getBCValues(const string& type) const
+BCData::getBCValues(const string& var_name) const
 {
   // The default location for BCs defined for all materials is mat_id = -1.
   // Need to first check the actual mat_id specified.  If this is not found,
   // then will check mat_id = -1 case.  If it isn't found, then return 0.
 
 
-  bcDataType::const_iterator itr;
-#ifdef PRINT
-  cerr << "Finding " << type << endl;
-#endif
-  itr = d_BCData.find(type);
-  if (itr != d_BCData.end()) {
-#ifdef PRINT
-    cerr << "Found it! " << endl;
-    cerr << "bctype return = " << typeid(*(itr->second)).name() << endl;
-#endif
-    return itr->second->clone();
-  }  else {
-#ifdef PRINT
-    cerr << "Didn't find it" << endl;
-#endif
-    return 0;
+  vector<BoundCondBase*>::const_iterator itr;
+  for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) {
+    if ((*itr)->getBCVariable() == var_name)
+      return (*itr)->clone();
   }
+  return 0;
+
 }
 
-bool BCData::find(const string& type) const
-{
-  bcDataType::const_iterator itr;
 
-  itr = d_BCData.find(type);
-  if (itr != d_BCData.end())
-    return true;
-  else
-    return false;
+bool BCData::find(const string& var_name) const
+{
+  vector<BoundCondBase*>::const_iterator itr;
+
+  for (itr = d_BCData.begin(); itr != d_BCData.end(); ++itr) {
+    if ((*itr)->getBCVariable() == var_name) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool BCData::find(const string& bc_type,const string& bc_variable) const
 {
-  bcDataType::const_iterator itr;
+  const BoundCondBase* bc = getBCValues(bc_variable);
 
-  itr = d_BCData.find(bc_variable);
-  if (itr != d_BCData.end()) {
-    //cerr << "getType = " << itr->second->getKind() << endl;
-    if (itr->second->getKind() == bc_type)
+  if (bc) {
+    if (bc->getBCType__NEW() == bc_type)
       return true;
-    else
-      return false;
-  }
-  return false;
-    
+  }  
+  return false; 
+      
 }
 
 void BCData::combine(BCData& from)
 {
-  bcDataType::const_iterator itr;
+  vector<BoundCondBase*>::const_iterator itr;
   for (itr = from.d_BCData.begin(); itr != from.d_BCData.end(); ++itr) {
     // cerr << "bc = " << itr->first << " address = " << itr->second << endl;
-    setBCValues(itr->second);
+    setBCValues(*itr);
   }
 
 }
@@ -163,12 +151,11 @@ void BCData::combine(BCData& from)
 
 void BCData::print() const
 {
-  bcDataType::const_iterator itr;
+  vector<BoundCondBase*>::const_iterator itr;
   BCData_dbg << "size of d_BCData = " << d_BCData.size() << endl;
   for (itr = d_BCData.begin(); itr != d_BCData.end(); itr++) {
-    BCData_dbg << "BC = " << itr->first << " actual name = " 
-	       << itr->second->getType() << " bctype = " 
-	       << typeid(*(itr->second)).name() << " " << itr->second << endl;
+    BCData_dbg << "BC = " << (*itr)->getBCVariable() << " type = " 
+	       << (*itr)->getBCType__NEW() << endl;
   }
   
 }
