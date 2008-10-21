@@ -60,8 +60,9 @@ typedef vector<levelPatch> levelPatchVec;
 class patchInfo {
  public: 
    int indexArr[6];
+   int hiLoArr[6];
    double minMaxArr[6];
-   patchInfo(int* indexArrPtr, double* minMaxArrPtr) {
+   patchInfo(int* indexArrPtr, double* minMaxArrPtr, int *hiLoPtr) {
 	 indexArr[0] = indexArrPtr[0];	
      indexArr[1] = indexArrPtr[1];	
 	 indexArr[2] = indexArrPtr[2];	
@@ -74,7 +75,14 @@ class patchInfo {
 	 minMaxArr[2] = minMaxArrPtr[2];
 	 minMaxArr[3] = minMaxArrPtr[3];
 	 minMaxArr[4] = minMaxArrPtr[4];
-	 minMaxArr[5] = minMaxArrPtr[5];			
+	 minMaxArr[5] = minMaxArrPtr[5];
+	 
+	 hiLoArr[0] = hiLoPtr[0];
+	 hiLoArr[1] = hiLoPtr[1];
+	 hiLoArr[2] = hiLoPtr[2];
+	 hiLoArr[3] = hiLoPtr[3];
+	 hiLoArr[4] = hiLoPtr[4];
+	 hiLoArr[5] = hiLoPtr[5]; 						
      // memcpy(indexArr, indexArrPtr, sizeof(indexArrPtr));
 	 // memcpy(minMaxArr, minMaxArrPtr, sizeof(minMaxArrPtr));
    }

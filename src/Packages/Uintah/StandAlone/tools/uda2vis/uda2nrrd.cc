@@ -354,7 +354,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 /////////////////////////////////////////////////////////////////////
 extern "C"
 patchInfoVec*
-getPatchInfo(const string& input_uda_name, int timeStepNo, const string& varType) {
+getPatchInfo(const string& input_uda_name, int timeStepNo, const string& varType, 
+			 bool remove_boundary) {
   DataArchive* archive = scinew DataArchive(input_uda_name);
 
   vector<int> index;
@@ -371,6 +372,7 @@ getPatchInfo(const string& input_uda_name, int timeStepNo, const string& varType
   
   IntVector patch_lo, patch_hi, low, hi;
   Point min, max;
+  int *hiLoArr = new int[6];
   int *indexArr = new int[6];
   double *minMaxArr = new double[6];
   
@@ -381,44 +383,92 @@ getPatchInfo(const string& input_uda_name, int timeStepNo, const string& varType
 	int numPatches = level->numPatches();
 	for (int j = 0; j < numPatches; j++) {
 	  const Patch* patch = level->getPatch(j);
-      // patch_lo = patch->getLowIndex() - low;
-	  // patch_hi = patch->getHighIndex() - low;
 	  
-	  if(varType.find("CC") != string::npos) {
-	    patch_lo = patch->getExtraCellLowIndex__New();
-		patch_hi = patch->getExtraCellHighIndex__New();
+	  if (remove_boundary) { // this needs to be kept outside the loop, same check again and again
+	    cout << "Remove the boundary " << varType << endl;
+	    if(varType.find("CC") != string::npos) {
+		  cout << "In here\n";
+	      patch_lo = patch->getCellLowIndex__New();
+		  patch_hi = patch->getCellHighIndex__New();
+		  if ((j == 0) || (j == 1)) {
+		    cout << patch_lo << endl;
+		    cout << patch_hi << endl;
+		  }
+	    } 
+	    else {
+		  patch_lo = patch->getNodeLowIndex__New();
+	      if(varType.find("SFCX") != string::npos)
+	        patch_hi = patch->getHighIndex(Patch::XFaceBased);
+		  else if(varType.find("SFCY") != string::npos)
+			patch_hi = patch->getHighIndex(Patch::YFaceBased);
+		  else if(varType.find("SFCZ") != string::npos)
+		    patch_hi = patch->getHighIndex(Patch::ZFaceBased);
+		  else if(varType.find("NC") != string::npos)
+		    patch_hi = patch->getExtraNodeHighIndex__New();
+	    }
+	  }
+	  else { // don't remove the boundary
+	    if(varType.find("CC") != string::npos) {
+	      patch_lo = patch->getExtraCellLowIndex__New();
+		  patch_hi = patch->getExtraCellHighIndex__New();
+	    } 
+	    else {
+          patch_lo = patch->getExtraNodeLowIndex__New();
+	      if(varType.find("SFCX") != string::npos)
+	        patch_hi = patch->getSFCXHighIndex__New();
+		  else if(varType.find("SFCY") != string::npos)
+			patch_hi = patch->getSFCYHighIndex__New();
+		  else if(varType.find("SFCZ") != string::npos)
+		    patch_hi = patch->getSFCZHighIndex__New();
+		  else if(varType.find("NC") != string::npos)
+		    patch_hi = patch->getNodeHighIndex__New();
+	    }
+	  }
+	  
+	  if(remove_boundary) {
+	    level->findInteriorIndexRange(low, hi);
+		// level->getInteriorSpatialRange(box);
 	  } 
 	  else {
-        patch_lo = patch->getExtraNodeLowIndex__New();
-	    if(varType.find("SFCX") != string::npos)
-	      patch_hi = patch->getSFCXHighIndex__New();
-		else if(varType.find("SFCY") != string::npos)
-		  patch_hi = patch->getSFCYHighIndex__New();
-		else if(varType.find("SFCZ") != string::npos)
-		  patch_hi = patch->getSFCZHighIndex__New();
-		else if(varType.find("NC") != string::npos)
-		  patch_hi = patch->getNodeHighIndex__New();
-	  }
+	    level->findIndexRange(low, hi);
+		// level->getSpatialRange(box);
+	  }	
   
-	  level->findIndexRange(low, hi);
+      // Moved above
+	  // level->findIndexRange(low, hi);
   
-	  patch_lo = patch_lo - low;
-	  patch_hi = patch_hi - low;
-	  
 	  indexArr[0] = patch_lo.x(); 
 	  indexArr[1] = patch_lo.y(); 
       indexArr[2] = patch_lo.z();
       indexArr[3] = patch_hi.x(); 
       indexArr[4] = patch_hi.y(); 
-      indexArr[5] = patch_hi.z();
+      indexArr[5] = patch_hi.z();  
 	  
-	  min = patch->getExtraBox().lower();
-	  max = patch->getExtraBox().upper();
+	  if ((j == 0) || (j == 1)) { 
+	    cout << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << endl;
+	    cout << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << endl;
+	  }
+	  
+	  hiLoArr[0] = low.x();
+	  hiLoArr[1] = low.y();
+	  hiLoArr[2] = low.z();
+	  hiLoArr[3] = hi.x();
+	  hiLoArr[4] = hi.y();
+	  hiLoArr[5] = hi.z();
+	  
+	  if(remove_boundary) {
+	    min = patch->getBox().lower();
+	    max = patch->getBox().upper();
+	  }
+	  else {
+	    min = patch->getExtraBox().lower();
+	    max = patch->getExtraBox().upper();
+	  }
 	  
 	  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
 	  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
 	  
-	  patchInfo patchInfoObj(indexArr, minMaxArr);
+	  patchInfo patchInfoObj(indexArr, minMaxArr, hiLoArr);
 	  patchInfoVecPtr->push_back(patchInfoObj);
     }
   }		
