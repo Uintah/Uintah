@@ -3,12 +3,6 @@
 SRCDIR   := Packages/Uintah/Core/Grid/BoundaryConditions
 
 SRCS     += \
-	$(SRCDIR)/VelocityBoundCond.cc \
-	$(SRCDIR)/TemperatureBoundCond.cc \
-	$(SRCDIR)/PressureBoundCond.cc \
-	$(SRCDIR)/DensityBoundCond.cc \
-	$(SRCDIR)/SpecificVolBoundCond.cc \
-	$(SRCDIR)/MassFracBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondReader.cc \
 	$(SRCDIR)/BCData.cc \

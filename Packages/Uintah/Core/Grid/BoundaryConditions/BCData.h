@@ -4,6 +4,7 @@
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
+#include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
@@ -11,6 +12,7 @@
 namespace Uintah {
 using std::map;
 using std::string;
+using std::vector;
 
 
 /**************************************
@@ -60,8 +62,8 @@ WARNING
       // The map is for the name of the
     // bc type and then the actual bc data, i.e. 
     // "Velocity", VelocityBoundCond
-    typedef map<string,BoundCondBase*>  bcDataType;
-    bcDataType d_BCData;
+    vector<BoundCondBase*>  d_BCData;
+
     
   };
 } // End namespace Uintah

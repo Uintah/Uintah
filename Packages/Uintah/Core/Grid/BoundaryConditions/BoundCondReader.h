@@ -90,13 +90,14 @@ namespace Uintah {
     /// boundary condition.
     /// 
     /// 
+
     void read(ProblemSpecP& ps,const ProblemSpecP& grid_ps );
 
     /// Read in the geometric tags: side, circle, and rectangle.  Performs
     /// error checking if the tag is not present or if the circle and rectangle
     /// tags are not specified correctly.
     BCGeomBase* createBoundaryConditionFace(ProblemSpecP& ps,
-                                       const ProblemSpecP& grid_ps,
+                                            const ProblemSpecP& grid_ps,
 					    Patch::FaceType& face_side);
 
 

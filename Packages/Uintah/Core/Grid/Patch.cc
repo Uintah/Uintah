@@ -353,6 +353,7 @@ Patch::getArrayBCValues(Patch::FaceType face,
 {
   BCDataArray* bcd = (*d_arrayBCS)[face];
   if (bcd) {
+    bcd->print();
     const BoundCondBase* bc = bcd->getBoundCondData(mat_id,type,child);
     if (bc) {
       bcd->getCellFaceIterator(mat_id,cell_ptr,child);
