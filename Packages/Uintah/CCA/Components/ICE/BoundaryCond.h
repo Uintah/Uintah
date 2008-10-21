@@ -5,9 +5,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/DensityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -173,8 +171,6 @@ bool getIteratorBCValueBCKind( const Patch* patch,
 						       "Symmetric", bound_ptr, 
 							nu, child);
 
-  const SymmetryBoundCond* new_sym_bc = 
-    dynamic_cast<const SymmetryBoundCond *>(sym_bc);
 
   const BoundCond<T> *new_bcs =  dynamic_cast<const BoundCond<T> *>(bc);       
 
@@ -182,9 +178,9 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   bc_kind="NotSet";
   if (new_bcs != 0) {      // non-symmetric
     bc_value = new_bcs->getValue();
-    bc_kind = new_bcs->getKind();
+    bc_kind = new_bcs->getBCType__NEW();
   }        
-  if (new_sym_bc != 0) {       // symmetric
+  if (sym_bc != 0 && sym_bc->getBCType__NEW() == "symmetry") {  // symmetric
     bc_kind = "symmetric";
   }
   if (desc == "zeroNeumann" ){
@@ -239,13 +235,14 @@ bool getIteratorBCValueBCKind( const Patch* patch,
 						     "Density", 
                                                      nu1,nu2,child);
 
-   const BoundCond<double> *new_bcs = 
+
+   const BoundCond<double> *density_bcs = 
      dynamic_cast<const BoundCond<double> *>(bc);
    
-   const DensityBoundCond *density_bcs =  
-     dynamic_cast<const DensityBoundCond *>(new_bcs);   
+   double K;
+   if (density_bcs)
+     K = density_bcs->getValue();
 
-   double K = density_bcs->getConstant();
 
    // Seed the random number generator with the number of seconds since 
    // midnight Jan. 1, 1970.

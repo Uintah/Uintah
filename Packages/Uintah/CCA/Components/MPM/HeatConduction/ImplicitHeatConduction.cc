@@ -3,7 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
@@ -398,10 +398,10 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
 
           temp_bcs = patch->getArrayBCValues(face,matl,"Temperature",nu,
                                              nbound_ptr,child);
-          const TemperatureBoundCond* bc =
-            dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
+          const BoundCond<double>* bc =
+            dynamic_cast<const BoundCond<double>*>(temp_bcs);
           if (bc != 0) {
-            if (bc->getKind() == "Dirichlet") {
+            if (bc->getBCType__NEW() == "Dirichlet") {
               for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                 gtemp[*nbound_ptr] = bc->getValue();
               }

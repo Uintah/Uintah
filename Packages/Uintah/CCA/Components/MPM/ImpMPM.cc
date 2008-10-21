@@ -38,9 +38,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -2415,10 +2412,10 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                                               nbound_ptr,child);
             sym_bcs  = patch->getArrayBCValues(face,matl,"Symmetric",nu,
                                                nbound_ptr,child);
-            const VelocityBoundCond* bc =
-              dynamic_cast<const VelocityBoundCond*>(vel_bcs);
+            const BoundCond<Vector>* bc =
+              dynamic_cast<const BoundCond<Vector>*>(vel_bcs);
             if (bc != 0) {
-              if (bc->getKind() == "Dirichlet") {
+              if (bc->getBCType__NEW() == "Dirichlet") {
                 for (nbound_ptr.reset(); !nbound_ptr.done(); nbound_ptr++) {
                   gvelocity_old[*nbound_ptr] = bc->getValue();
                   gacceleration[*nbound_ptr] = bc->getValue();
@@ -2436,8 +2433,8 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
               delete bc;
             } else
               delete vel_bcs;
-            const SymmetryBoundCond* sbc =
-              dynamic_cast<const SymmetryBoundCond*>(sym_bcs);
+            const BoundCond<NoValue>* sbc =
+              dynamic_cast<const BoundCond<NoValue>*>(sym_bcs);
             if (sbc != 0) {
               if (face == Patch::xplus || face == Patch::xminus)
                 for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
