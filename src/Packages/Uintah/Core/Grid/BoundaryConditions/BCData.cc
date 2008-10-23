@@ -131,9 +131,12 @@ bool BCData::find(const string& bc_type,const string& bc_variable) const
   const BoundCondBase* bc = getBCValues(bc_variable);
 
   if (bc) {
-    if (bc->getBCType__NEW() == bc_type)
+    if (bc->getBCType__NEW() == bc_type) {
+      delete bc;
       return true;
-  }  
+    }
+  }
+  delete bc;
   return false; 
       
 }
