@@ -52,6 +52,7 @@ handleParticleData( QueryInfo & qinfo );
 
 void
 saveParticleData( std::vector<ParticleDataContainer> & data,
-                  const std::string                  & filename );
+                  const std::string                  & filename,
+                  double                               current_time );
 
 #endif // UDA2NRRD_PARTICLES_H
