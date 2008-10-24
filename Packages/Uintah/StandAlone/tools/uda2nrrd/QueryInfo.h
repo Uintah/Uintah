@@ -15,23 +15,24 @@ public:
              LevelP level,
              string varname,
              ConsecutiveRangeSet materials,
-             int timestep,
+             int timestep, double time,
              bool combine_levels,
              const Uintah::TypeDescription *type ) :
     archive(archive), grid(grid),
     level(level), varname(varname),
-    materials(materials), timestep(timestep),
+    materials(materials), timestep(timestep), time( time ),
     combine_levels(combine_levels),
     type(type)
   {}
   
-  DataArchive* archive;
-  GridP grid;
-  LevelP level;
-  string varname;
+  DataArchive * archive;
+  GridP         grid;
+  LevelP        level;
+  string        varname;
   ConsecutiveRangeSet materials;
-  int timestep;
-  bool combine_levels;
+  int           timestep;
+  double        time;
+  bool          combine_levels;
   const Uintah::TypeDescription *type;
 };
 
