@@ -125,8 +125,9 @@ handleData( QueryInfo &    qinfo,
       BBox lbox;
       qinfo.level->getSpatialRange( lbox );
 
-      ostringstream extentsString, levelString;
+      ostringstream extentsString, levelString, timeString;
       extentsString << lbox;
+      timeString << qinfo.time;
 
       if( qinfo.combine_levels ) {
         levelString << "all (" << qinfo.grid->numLevels() << ")";
@@ -135,6 +136,7 @@ handleData( QueryInfo &    qinfo,
         levelString << qinfo.level->getIndex();
       }
 
+      nrrdKeyValueAdd( nrrd, "time",    timeString.str().c_str() );
       nrrdKeyValueAdd( nrrd, "extents", extentsString.str().c_str() );
       nrrdKeyValueAdd( nrrd, "level",   levelString.str().c_str() );
 

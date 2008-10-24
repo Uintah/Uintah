@@ -517,7 +517,7 @@ main(int argc, char** argv)
         const Uintah::TypeDescription* subtype = td->getSubType();
           
         QueryInfo qinfo( archive, grid, level, variable_name, materialsOfInterest,
-                         time, args.use_all_levels, td );
+                         time, current_time, args.use_all_levels, td );
 
         IntVector hi, low, range;
         BBox box;
@@ -644,7 +644,7 @@ main(int argc, char** argv)
       } // end variables loop
 
       if( do_particles ) {
-        saveParticleData( particleDataArray, filename );
+        saveParticleData( particleDataArray, filename, current_time );
       }
 
     } // end time step loop

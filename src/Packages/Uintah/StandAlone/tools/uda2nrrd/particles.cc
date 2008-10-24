@@ -292,7 +292,8 @@ handleParticleData( QueryInfo & qinfo )
 
 void
 saveParticleData( vector<ParticleDataContainer> & particleVars,
-                  const string                  & filename )
+                  const string                  & filename,
+                  double                          current_time )
 {
 
   string header = filename + ".nhdr";
@@ -339,7 +340,9 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
                 "endian: %s\n"
                 "encoding: raw\n"
                 "Num Particles:=%d\n"
-                "Num Variables:=%d\n", numVars, numParticles, endianness.c_str(), numParticles, numVars );
+                "Num Variables:=%d\n"
+                "time:=%.9lf\n",
+           numVars, numParticles, endianness.c_str(), numParticles, numVars, current_time );
 
   int pos = 0;
   for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
