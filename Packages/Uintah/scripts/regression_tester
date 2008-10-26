@@ -74,7 +74,7 @@ if test ! -d $results; then
     echo
     echo "Creating 'TestResults' directory..."
     echo
-    mkdir TestResults
+    mkdir $results
 fi
 
 do_mpm=0
@@ -360,9 +360,12 @@ compare_results () {
 }
 
 run_restart () {
+
+    run_restart_return=0
+
     if test $do_restart -eq 1; then
         cd $results
-
+	echo $PWD
         uda_new=`echo $uda | tr -d "/"`
 
         echo; echo "Running: $MPI sus $opts -restart -t 0 -copy $uda_new.000"
@@ -376,14 +379,18 @@ run_restart () {
             compare=`grep "passed" $n.compare_restart`
             if test -n "$compare"; then
                 echo $compare
+		run_restart_return=0
             else
                 echo; echo "FAILURE running compare_uda on restart test . . ."
+		run_restart_return=1
             fi
         else
             echo; echo "FAILURE running sus . . ."
+	    run_restart_return=1
         fi
         cd ..
     fi
+    return $run_restart_return
 }
 
 uda_name () {
@@ -406,9 +413,9 @@ run_case () {
         uda_name
 #        run_test
 #        compare_results
-        run_restart
+#        run_restart
         MPI=""
-        if   (run_test && compare_results ) && $all_tests_pass  ; then
+        if   (run_test && compare_results && run_restart) && $all_tests_pass  ; then
             all_tests_pass=true
         else
             all_tests_pass=false
