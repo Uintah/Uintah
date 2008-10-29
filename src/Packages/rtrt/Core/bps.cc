@@ -81,8 +81,9 @@ void BPS::run()
     for(int i=0;i<count;i++){
 	barrier->wait(np);
 	static int g=0;
-	if(g != i)
-	    cerr << "OOPS!\n";
+	if(g != i) {
+	    cerr << "bps.cc: OOPS!\n";
+        }
 	barrier->wait(np);
 	if(proc==0)
 	    g++;

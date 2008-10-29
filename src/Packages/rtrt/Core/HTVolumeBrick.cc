@@ -10,11 +10,12 @@
 #include <Core/Thread/Thread.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <fstream>
-#include <iostream>
+#include   <fstream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <cstdio>
+#include <cstring>
 #include <unistd.h>
 
 using namespace rtrt;
@@ -214,7 +215,9 @@ HTVolumeBrick::HTVolumeBrick(Material* matl, VolumeDpy* dpy,
   }
   char buf2[200];
   in.getline(buf2,200);
-  char *filestr="HTVolumeBrick file";
+
+  const char * filestr = "HTVolumeBrick file";
+
   if(strncmp(buf2, filestr, strlen(filestr)-1)){
     cerr << filebase << " is not a valid HTVolumeBrick file\n";
     exit(1);

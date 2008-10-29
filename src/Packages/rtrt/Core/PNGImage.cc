@@ -15,13 +15,15 @@
 #include <sci_defs/image_defs.h>
 
 #ifdef HAVE_PNG
-#include <Core/Thread/Mutex.h>
-#include <png.h>
+#  include <Core/Thread/Mutex.h>
+#  include <png.h>
 #endif
 
 #include <sgi_stl_warnings_off.h>
-#include <fstream>
+#  include <fstream>
 #include <sgi_stl_warnings_on.h>
+
+#include <cstdlib>
 
 using namespace rtrt;
 using namespace std;

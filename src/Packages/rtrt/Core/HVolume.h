@@ -18,17 +18,18 @@
 #include <Core/Thread/WorkQueue.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <fstream>
-#include <iostream>
+#include   <fstream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <cstdlib>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h> // for strdup
 
 #ifdef __APPLE__
-#include <sys/stat.h>
+#  include <sys/stat.h>
 #endif
 
 namespace rtrt {

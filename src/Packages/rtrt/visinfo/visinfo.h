@@ -57,7 +57,7 @@ extern "C" {
 
 
 XVisualInfo* visGetGLXVisualInfo(Display* dpy, int screen, int* nVInfo);
-int visPixelFormat(char* criteria);
+int visPixelFormat(const char* criteria);
 
 
 

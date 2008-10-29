@@ -4,6 +4,7 @@
 #include <Packages/rtrt/Core/Ray.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/BrickArray2.h>
+#include <Packages/rtrt/Core/UV.h>
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>
@@ -11,19 +12,17 @@
 #include <Core/Thread/Mutex.h>
 
 #include <cstdio>
+#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 
-#include <sgi_stl_warnings_off.h>
-#include <fstream>
-#include <iostream>
-#include <sgi_stl_warnings_on.h>
-
-#include <Packages/rtrt/Core/UV.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+
+#include <sgi_stl_warnings_off.h>
+#include   <fstream>
+#include   <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 using SCIRun::Mutex;

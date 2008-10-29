@@ -10,11 +10,12 @@
 #include <Packages/rtrt/Core/Material.h>
 #include <Packages/rtrt/Core/RegularColorMap.h>
 
+#include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <string>
+#include   <iostream>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
 #include <cstdlib>
@@ -359,10 +360,11 @@ void GridSpheres::preprocess(double, int&, int&)
   time=SCIRun::Time::currentSeconds();
   for(int i=0;i<totalsize;i++){
     if(current[i] != counts[i*2+1]){
-      cerr << "OOPS!\n";
-      cerr << "current: " << current[i] << '\n';
-      cerr << "counts: " << counts[i*2+1] << '\n';
-      exit(1);
+      cerr << "GridSpheres.cc: OOPS!\n";
+      cerr << "                current: " << current[i] << '\n';
+      cerr << "                counts: " << counts[i*2+1] << '\n';
+      cerr << "Goodbye.\n";
+      Thread::exitAll( 1 );
     }
 #if 0
     cerr << "cell " << i << ": ";
@@ -375,8 +377,9 @@ void GridSpheres::preprocess(double, int&, int&)
   }
   for(int i=0;i<total;i++){
     if(cells[i]==-1234){
-      cerr << "OOPS: cells[" << i << "]==-1234!\n";
-      exit(1);
+      cerr << "GridSpheres.cc: OOPS: cells[" << i << "]==-1234!\n";
+      cerr << "Goodbye.\n";
+      Thread::exitAll( 1 );
     }
   }
   cerr << "5/6 Verifying grid took " << SCIRun::Time::currentSeconds()-time << " seconds\n";

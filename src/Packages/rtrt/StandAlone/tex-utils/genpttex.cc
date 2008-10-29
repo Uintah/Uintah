@@ -28,19 +28,23 @@
 #include <Core/Thread/Thread.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <fstream>
-#include <vector>
+#include   <iostream>
+#include   <fstream>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <unistd.h> // For read and close of files.
+#include <fcntl.h>
+
+#include <cstring>
+
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 
 #ifdef WRITE_SHPEREDATA
 #  undef WRITE_SPHEREDATA
 #endif
+
 #define WRITE_SPHEREDATA 1
 
 using namespace rtrt;

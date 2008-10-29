@@ -1061,7 +1061,7 @@ visGetGLXVisualInfo(Display* dpy, int screen, int* nVInfo) {
  *****************************************************************************/
 
 int
-visPixelFormat(char* criteria) {
+visPixelFormat(const char* criteria) {
 	int status;
 
 	CriteriaP = criteria;

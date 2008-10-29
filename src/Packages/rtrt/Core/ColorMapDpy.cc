@@ -11,15 +11,18 @@
 #include <Core/Thread/Time.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <algorithm>
+#include   <iostream>
+#include   <fstream>
+#include   <iomanip>
+#include   <algorithm>
 #include <sgi_stl_warnings_on.h>
 
 #include <cstdlib>
 #include <cstdio>
+#include <cstring>
+
 #include <X11/keysym.h>
+
 #if defined(__GNUG__) || defined(__ECC)
 #  include <sci_values.h>
 #endif

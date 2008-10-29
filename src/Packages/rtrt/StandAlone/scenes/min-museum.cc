@@ -91,7 +91,7 @@ typedef struct TriStrip {
   int *verts;              /* vertex index list */
 } TriStrip;
 
-char *elem_names[] = { /* list of the kinds of elements in the user's object */
+const char *elem_names[] = { /* list of the kinds of elements in the user's object */
   "vertex", "face", "tristrips"
 };
 

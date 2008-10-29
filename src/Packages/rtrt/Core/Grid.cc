@@ -48,10 +48,10 @@ Grid::~Grid()
 }
 
 void Grid::calc_se(const BBox& obj_bbox, const BBox& bbox,
-			  const Vector& diag,
-			  int nx, int ny, int nz,
-			  int& sx, int& sy, int& sz,
-			  int& ex, int& ey, int& ez)
+                          const Vector& diag,
+                          int nx, int ny, int nz,
+                          int& sx, int& sy, int& sz,
+                          int& ex, int& ey, int& ez)
 {
   //    cerr << "obbx min " << obj_bbox.min() << endl;
   //    cerr << "obbx max " << obj_bbox.max() << endl;
@@ -77,12 +77,12 @@ void Grid::calc_se(const BBox& obj_bbox, const BBox& bbox,
     cerr << "obj_bbox=" << obj_bbox.min() << ", " << obj_bbox.max() << '\n';
     cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
     cerr << "diag=" << diag << '\n';
-    exit(1);
+    Thread::exitAll( 1 );
   }
   if(sy < 0 || ey >= ny){
     cerr << "NY out of bounds!\n";
     cerr << "sy=" << sy << ", ey=" << ey << '\n';
-    exit(1);
+    Thread::exitAll( 1 );
   }
   if(sz < 0 || ez >= nz){
     cerr << "NZ out of bounds!\n";
@@ -92,7 +92,7 @@ void Grid::calc_se(const BBox& obj_bbox, const BBox& bbox,
     cerr << "obj_bbox=" << obj_bbox.min() << ", " << obj_bbox.max() << '\n';
     cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
     cerr << "diag=" << diag << '\n';
-    exit(1);
+    Thread::exitAll( 1 );
   }
 }
 
@@ -103,8 +103,8 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
   
   if (Names::hasName(this)) std::cerr << "\n\n"
                              << "\n==========================================================\n"
-			     << "* Building Regular Grid for Object " << Names::getName(this)
-			     << "\n==========================================================\n";
+                             << "* Building Regular Grid for Object " << Names::getName(this)
+                             << "\n==========================================================\n";
 
   //    cerr << "Building grid\n";
     double time=Time::currentSeconds();
@@ -144,23 +144,23 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     if(fy<2){
       fx *= sqrt( fy/2 );
       if( fx < 2 ) { 
-	fx = 2; 
-	fz *= fy/2;
+        fx = 2; 
+        fz *= fy/2;
       } else {
-	fz *= sqrt( fy/2 );
+        fz *= sqrt( fy/2 );
       }
       fy=2;
     }
     if(fz<2){
       fx *= sqrt( fz/2 );
       if( fx < 2 ) { 
-	fx = 2; 
-	fy *= fz/2;
+        fx = 2; 
+        fy *= fz/2;
       } else {
-	fy *= sqrt( fz/2 );
+        fy *= sqrt( fz/2 );
       }
       if( fy < 2 ){
-	fy = 2;
+        fy = 2;
       }
       fz=2;
     }
@@ -169,24 +169,24 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     ny=(int)(fy+.5);
     nz=(int)(fz+.5);
     if(nx<2)
-	nx=2;
+        nx=2;
     if(ny<2)
-	ny=2;
+        ny=2;
     if(nz<2)
-	nz=2;
+        nz=2;
 
     int ngrid=nx*ny*nz;
     //    cerr << "Computing " << nx << 'x' << ny << 'x' << nz << " grid for " << ngrid << " cells (wanted " << ncells << ")\n";
 
 
     if(counts)
-	delete[] counts;
+        delete[] counts;
     if(grid)
-	delete[] grid;
+        delete[] grid;
     counts=new int[2*ngrid];
     //    cerr << "counts=" << counts << ":" << counts+2*ngrid << '\n';
     for(int i=0;i<ngrid*2;i++)
-	counts[i]=0;
+        counts[i]=0;
 
     double itime=time;
     int nynz=ny*nz;
@@ -196,13 +196,13 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     real polynormal[3];
  
     for(int i=0;i<prims.size();i++){
-	double tnow=Time::currentSeconds();
-	if(tnow-itime > 5.0){
-	  //	    cerr << i << "/" << prims.size() << '\n';
-	    itime=tnow;
-	}
-	BBox obj_bbox;
-	prims[i]->compute_bounds(obj_bbox, maxradius);
+        double tnow=Time::currentSeconds();
+        if(tnow-itime > 5.0){
+          //        cerr << i << "/" << prims.size() << '\n';
+            itime=tnow;
+        }
+        BBox obj_bbox;
+        prims[i]->compute_bounds(obj_bbox, maxradius);
 
         Tri *tri = dynamic_cast<Tri*>(prims[i]);
         if (tri) {
@@ -242,7 +242,7 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
         for(int x=sx;x<=ex;x++){
             for(int y=sy;y<=ey;y++){
                 int idx=x*nynz+y*nz+sz;
-		for(int z=sz;z<=ez;z++){
+                for(int z=sz;z<=ez;z++){
                     if (tri || ttri) {
                        verts[0][0] = p0.x() - ((double)x+.5);
                        verts[1][0] = p1.x() - ((double)x+.5);
@@ -261,26 +261,26 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
                     }
                     else {
                        counts[idx*2+1]++;
-		       idx++;
+                       idx++;
                     }
-		}
-	    }
-	}
+                }
+            }
+        }
     }
 
     //    cerr << "4/7 Counting cells took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     int total=0;
     for(int i=0;i<ngrid;i++){
-	int count=counts[i*2+1];
-	counts[i*2]=total;
-	total+=count;
+        int count=counts[i*2+1];
+        counts[i*2]=total;
+        total+=count;
     }
     //    cerr << "Allocating " << total << " grid cells (" << double(total)/prims.size() << " per object, " << double(total)/ngrid << " per cell)\n";
     grid=new Object*[total];
     //    cerr << "grid=" << grid << ":" << grid+total << '\n';
     for(int i=0;i<total;i++)
-	grid[i]=0;
+        grid[i]=0;
     //    cerr << "total=" << total << '\n';
     //    cerr << "5/7 Calculating offsets took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
@@ -289,13 +289,13 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     current.initialize(0);
 
     for(int i=0;i<prims.size();i++){
-	double tnow=Time::currentSeconds();
-	if(tnow-itime > 5.0){
-	    cerr << i << "/" << prims.size() << '\n';
-	    itime=tnow;
-	}
-	BBox obj_bbox;
-	prims[i]->compute_bounds(obj_bbox, maxradius);
+        double tnow=Time::currentSeconds();
+        if(tnow-itime > 5.0){
+            cerr << i << "/" << prims.size() << '\n';
+            itime=tnow;
+        }
+        BBox obj_bbox;
+        prims[i]->compute_bounds(obj_bbox, maxradius);
 
         Tri *tri = dynamic_cast<Tri*>(prims[i]);
 
@@ -331,12 +331,12 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
         }
 
 
-	int sx, sy, sz, ex, ey, ez;
-	calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
-	for(int x=sx;x<=ex;x++){
-	    for(int y=sy;y<=ey;y++){
-		int idx=x*nynz+y*nz+sz;
-		for(int z=sz;z<=ez;z++){
+        int sx, sy, sz, ex, ey, ez;
+        calc_se(obj_bbox, bbox, diag, nx, ny, nz, sx, sy, sz, ex, ey, ez);
+        for(int x=sx;x<=ex;x++){
+            for(int y=sy;y<=ey;y++){
+                int idx=x*nynz+y*nz+sz;
+                for(int z=sz;z<=ez;z++){
                     if (tri || ttri) {
                        verts[0][0] = p0.x() - ((double)x+.5);
                        verts[1][0] = p1.x() - ((double)x+.5);
@@ -357,38 +357,39 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
                        idx++;
                     }
                     else {
-		       int cur=current[idx];
-		       int pos=counts[idx*2]+cur;
-		       grid[pos]=prims[i];
-		       current[idx]++;
-		       idx++;
+                       int cur=current[idx];
+                       int pos=counts[idx*2]+cur;
+                       grid[pos]=prims[i];
+                       current[idx]++;
+                       idx++;
                     }
-		}
-	    }
-	}
+                }
+            }
+        }
     }
     //    cerr << "6/7 Filling grid took " << Time::currentSeconds()-time << " seconds\n";
     time=Time::currentSeconds();
     for(int i=0;i<ngrid;i++){
-	if(current[i] != counts[i*2+1]){
-	    cerr << "OOPS!\n";
-	    cerr << "current: " << current[i] << '\n';
-	    cerr << "counts: " << counts[i*2+1] << '\n';
-	    exit(1);
-	}
+        if(current[i] != counts[i*2+1]){
+            cerr << "Grid.cc: OOPS!\n";
+            cerr << "         current: " << current[i] << '\n';
+            cerr << "         counts: " << counts[i*2+1] << '\n';
+            cerr << "Goodbye!\n";
+            Thread::exitAll( 1 );
+        }
     }
     for(int i=0;i<total;i++){
-	if(!grid[i]){
-	    cerr << "OOPS: grid[" << i << "]==0!\n";
-	    exit(1);
-	}
+        if(!grid[i]){
+            cerr << "OOPS: grid[" << i << "]==0!\n";
+            Thread::exitAll( 1 );
+        }
     }
     //    cerr << "7/7 Verifying grid took " << Time::currentSeconds()-time << " seconds\n";
     //    cerr << "Done building grid\n";
 }
 
 void Grid::intersect(Ray& ray, HitInfo& hit,
-		    DepthStats* st, PerProcessorContext* ppc)
+                    DepthStats* st, PerProcessorContext* ppc)
 {
   if (ray.already_tested[0] == this ||
       ray.already_tested[1] == this ||
@@ -423,7 +424,7 @@ void Grid::intersect(Ray& ray, HitInfo& hit,
     didx_dx=-nynz;
     dix_dx=-1;
     ddx=0;
-  }	
+  }     
   double y0, y1;
   int didx_dy, diy_dy;
   int ddy;
@@ -531,21 +532,21 @@ void Grid::intersect(Ray& ray, HitInfo& hit,
       ix+=dix_dx;
       idx+=didx_dx;
       if(ix<0 || ix>=nx)
-	break;
+        break;
     } else if(next_y < next_z){
       t=next_y;
       next_y+=dtdy;
       iy+=diy_dy;
       idx+=didx_dy;
       if(iy<0 || iy>=ny)
-	break;
+        break;
     } else {
       t=next_z;
       next_z+=dtdz;
       iz+=diz_dz;
       idx+=didx_dz;
       if(iz<0 || iz >=nz)
-	break;
+        break;
     }
     if(hit.min_t < t)
       break;
@@ -553,7 +554,7 @@ void Grid::intersect(Ray& ray, HitInfo& hit,
 }
 
 void Grid::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
-			   DepthStats* st, PerProcessorContext* ppc)
+                           DepthStats* st, PerProcessorContext* ppc)
 {
   if (ray.already_tested[0] == this ||
       ray.already_tested[1] == this ||
@@ -589,7 +590,7 @@ void Grid::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
     didx_dx=-nynz;
     dix_dx=-1;
     ddx=0;
-  }	
+  }     
   double y0, y1;
   int didx_dy, diy_dy;
   int ddy;
@@ -699,21 +700,21 @@ void Grid::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
       ix+=dix_dx;
       idx+=didx_dx;
       if(ix<0 || ix>=nx)
-	break;
+        break;
     } else if(next_y < next_z){
       t=next_y;
       next_y+=dtdy;
       iy+=diy_dy;
       idx+=didx_dy;
       if(iy<0 || iy>=ny)
-	break;
+        break;
     } else {
       t=next_z;
       next_z+=dtdz;
       iz+=diz_dz;
       idx+=didx_dz;
       if(iz<0 || iz >=nz)
-	break;
+        break;
     }
     if(hit.min_t < t)
       break;
@@ -721,8 +722,8 @@ void Grid::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 }
 
 void Grid::softshadow_intersect(Light* light, Ray& ray,
-				HitInfo& hit, double dist, Color& atten,
-				DepthStats* st, PerProcessorContext* ppc)
+                                HitInfo& hit, double dist, Color& atten,
+                                DepthStats* st, PerProcessorContext* ppc)
 {
   if (ray.already_tested[0] == this ||
       ray.already_tested[1] == this ||
@@ -758,7 +759,7 @@ void Grid::softshadow_intersect(Light* light, Ray& ray,
     didx_dx=-nynz;
     dix_dx=-1;
     ddx=0;
-  }	
+  }     
   double y0, y1;
   int didx_dy, diy_dy;
   int ddy;
@@ -868,21 +869,21 @@ void Grid::softshadow_intersect(Light* light, Ray& ray,
       ix+=dix_dx;
       idx+=didx_dx;
       if(ix<0 || ix>=nx)
-	break;
+        break;
     } else if(next_y < next_z){
       t=next_y;
       next_y+=dtdy;
       iy+=diy_dy;
       idx+=didx_dy;
       if(iy<0 || iy>=ny)
-	break;
+        break;
     } else {
       t=next_z;
       next_z+=dtdz;
       iz+=diz_dz;
       idx+=didx_dz;
       if(iz<0 || iz >=nz)
-	break;
+        break;
     }
     if(hit.min_t < t)
       break;
