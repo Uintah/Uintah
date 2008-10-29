@@ -66,7 +66,7 @@ if test ! -d "$INPUTS"; then
    exit
 fi
 
-input_file=
+in_file=
 
 # Set the test results directory
 results=TestResults
@@ -144,7 +144,8 @@ for arg in $*; do
             do_examples=1;;
         -arches)
             echo "Scheduling the arches tests . . ."
-            do_arches=1;;
+            do_arches=1
+            MPI_RUN="yes";;
         -ice_amr)
             echo "Scheduling the ICE AMR tests . . ."
             do_ice_amr=1
@@ -227,8 +228,8 @@ mpmice_amr_test_cases="advect_2L_MI"
 model_test_cases="HePlume JP8_Radiation"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
-arches_test_cases="methane_explicit_table"
-mpmarches_test_cases="jp8cyl"
+arches_test_cases="constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
+mpmarches_test_cases="pipe methaneFireWContainer"
 examples_test_cases="poisson1"
 
 # Check if the applications sus and compare_uda are available
@@ -254,7 +255,7 @@ REMOVE () {
 }
 
 num_proc () {
-    numproc=`grep -m1 patches $input_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
+    numproc=`grep -m1 patches $in_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
 #   echo "number of patches" $numproc
 }
 
@@ -287,12 +288,11 @@ run_test () {
         /usr/bin/lamboot
     fi
 
-    cd $results
-    cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
-    input_file=../$n.ups.rt
-    if [ ! -h inputs ]; then
-        ln -s ../inputs .
-    fi
+#    cd $results
+#    cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
+#    input_file=../$n.ups.rt
+
+    cp $in_file .
 
     num_proc
     opts=""
@@ -309,18 +309,19 @@ run_test () {
 
     mem_check
 
-    echo; echo "Running: $MPI sus $opts $input_file"
-    $MPI ../sus $opts $input_file &> $n.out
-    rm $input_file
+    echo; echo "Running: $MPI sus $opts $n.ups"
+    $MPI ../sus $opts $n.ups &> $n.out
+    rm $n.ups
+#    rm $in_file
 
     success=`grep "successfully" $n.out`
     if test -n "$success"; then 
         echo $success
-        cd ..
+#        cd ..
         run_test_return=0
     else
         echo; echo "FAILURE running sus . . ."
-        cd ..
+#        cd ..
         continue
         run_test_return=1
     fi
@@ -334,7 +335,7 @@ run_test () {
 
 
 compare_results () {
-    cd $results
+#    cd $results
     
     # Inside of the component directory find the location of the 
     # gold standard uda and pass it to compare_uda
@@ -350,11 +351,11 @@ compare_results () {
     compare=`grep "passed" $n.compare`
     if test -n "$compare"; then
         echo $compare
-        cd ..
+#        cd ..
         return 0
     else
         echo; echo "FAILURE running compare_uda . . ."
-        cd ..
+#        cd ..
         return 1
     fi
 }
@@ -364,7 +365,7 @@ run_restart () {
     run_restart_return=0
 
     if test $do_restart -eq 1; then
-        cd $results
+#        cd $results
 	echo $PWD
         uda_new=`echo $uda | tr -d "/"`
 
@@ -388,13 +389,24 @@ run_restart () {
             echo; echo "FAILURE running sus . . ."
 	    run_restart_return=1
         fi
-        cd ..
+#        cd ..
     fi
     return $run_restart_return
 }
 
+input_file () {
+
+   in_file=`find -L $1 -name "$2.ups"`
+   if [ -z $in_file ]; then
+       return 1
+   else
+       return 0
+   fi
+
+}
+
 uda_name () {
-    uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
+    uda=`grep filebase $1 | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | awk '{print $1}'  `
     
 }
 
@@ -409,18 +421,28 @@ run_case () {
 
     all_tests_pass=true
 
+    cd $results
+
+    if [ ! -h inputs ]; then
+        ln -s ../inputs .
+    fi
+
     for n in ${!tc}; do
-        uda_name
+	input_file inputs/$CASE $n
+        uda_name $in_file
 #        run_test
 #        compare_results
 #        run_restart
         MPI=""
-        if   (run_test && compare_results && run_restart) && $all_tests_pass  ; then
+        if (run_test && compare_results && run_restart) && $all_tests_pass ; 
+        then
             all_tests_pass=true
         else
             all_tests_pass=false
         fi
     done
+
+    cd ..
     
     if [ $all_tests_pass == true ]; then
         echo "returning 0"
@@ -430,48 +452,6 @@ run_case () {
         return 1
     fi
 
-}
-
-arches_test () {
-    echo; echo "Testing $arches_test_cases"
-    
-    for n in $arches_test_cases; do
-        echo; echo "Running: mpirun -np 1 sus -arches $INPUTS/$CASE/$n.ups"
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        mpirun -np 1 sus -arches -mpi $INPUTS/$CASE/$n.ups &> $n.out
-        success=`grep "successfully" $n.out`
-        if test -n "$success"; then 
-            echo $success
-        else
-            echo; echo "FAILURE running sus . . ."
-            continue
-        fi
-
-        compare_results
-        run_restart
-        MPI=""
-    done
-}
-
-mpmarches_test () {
-    echo; echo "Testing $mpmarches_test_cases"
-    
-    for n in $mpmarches_test_cases; do
-
-        uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-        cd $results
-        cp ../$INPUTS/ARCHES/StaticMixingTables/JP-8/NAE.rxn.new NAE.rxn.new
-        cd ../
-
-        MPI_RUN_OLD=$MPI_RUN
-        MPI_RUN="yes"
-        MPI='mpirun -np 1'
-        run_test
-
-        compare_results
-        run_restart
-        MPI=""
-    done
 }
 
 
@@ -544,14 +524,16 @@ if test "$do_impm" -eq 1; then
 fi
 if test "$do_arches" -eq 1; then
     CASE=ARCHES
-    opts=-arches
-    arches_test
+#    opts=-arches
+#    arches_test
+    run_case arches
     rt_value=$?
 fi
 if test "$do_mpmarches" -eq 1; then
     CASE=MPMARCHES
-    opts=-mpmarches
-    mpmarches_test
+#    opts=-mpmarches
+#    mpmarches_test
+    run_case mpmarches
     rt_value=$?
 fi
 if test "$do_examples" -eq 1; then
