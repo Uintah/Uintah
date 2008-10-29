@@ -11,12 +11,12 @@
 #include <Core/Thread/CleanupManager.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <fstream>
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <algorithm>
-#include <vector>
+#include   <fstream>
+#include   <iostream>
+#include   <fstream>
+#include   <iomanip>
+#include   <algorithm>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <cstdlib>
@@ -24,6 +24,8 @@
 #include <X11/keysym.h>
 #include <sci_values.h>
 #include <unistd.h> // For sleep()
+
+#include <cstring>
 
 using namespace rtrt;
 using SCIRun::Mutex;

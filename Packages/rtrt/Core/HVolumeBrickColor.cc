@@ -19,8 +19,8 @@
 #include <GL/glu.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <fstream>
-#include <iostream>
+#include   <fstream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <sys/types.h>
@@ -28,6 +28,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdio>
+#include <cstring>
 
 #define XK_LATIN1
 #include <X11/keysymdef.h>
@@ -341,7 +342,8 @@ void HVolumeBrickColorDpy::run()
     }
     int screen=DefaultScreen(dpy);
 
-    char* criteria="sb, max rgb";
+    const char* criteria = "sb, max rgb";
+
     if(!visPixelFormat(criteria)){
 	cerr << "Error setting pixel format for visinfo\n";
 	cerr << "Syntax error in criteria: " << criteria << '\n';

@@ -26,11 +26,12 @@
 #include <Core/Geometry/Transform.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <fstream>
-#include <iostream>
+#include   <fstream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <cstdlib>
+#include <cstring>
 
 using namespace SCIRun;
 using namespace rtrt;

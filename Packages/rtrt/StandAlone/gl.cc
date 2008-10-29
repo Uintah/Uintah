@@ -8,7 +8,7 @@
 #include <Core/Thread/Semaphore.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <unistd.h> // For sleep()

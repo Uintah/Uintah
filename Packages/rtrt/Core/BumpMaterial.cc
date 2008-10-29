@@ -12,6 +12,7 @@
 #include <Packages/rtrt/Core/vec.h>
 
 #include <cmath>
+#include <cstring>
 
 using namespace rtrt;
 using namespace SCIRun;

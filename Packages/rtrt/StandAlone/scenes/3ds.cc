@@ -18,21 +18,24 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+
+#include <string.h>
+
 #if !defined(__linux) && !defined(__APPLE__)
-#include <bstring.h>
+#  include <bstring.h>
 #endif
 
 #if defined(__sgi) || defined(__APPLE__)
-#define SWAP
+#  define SWAP
 #endif
 #if defined(__i386__) || defined(__ia64__) || defined(__x86_64__)
-#define NOSWAP
+#  define NOSWAP
 #endif
 
 #ifndef SWAP
-#ifndef NOSWAP
-#error "Architecture bytesex not defined..."
-#endif
+#  ifndef NOSWAP
+#    error "Architecture bytesex not defined..."
+#  endif
 #endif
 
 #define CH_VERSION 0x0002
@@ -135,14 +138,16 @@ struct Mat {
 
 Mat::Mat()
 {
-    name="unknown";
-    ambient=diffuse=specular=Color(0,0,0);
-    shininess=0;
-    transp=0;
-    xpfall=0;
-    refblur=0;
-    twosided=false;
-    shading_value=0;
+    static char * unknown = "unknown";
+
+    name      = unknown;
+    ambient   = diffuse=specular=Color(0,0,0);
+    shininess = 0;
+    transp    = 0;
+    xpfall    = 0;
+    refblur   = 0;
+    twosided  = false;
+    shading_value = 0;
 }
 
 class Chunk {

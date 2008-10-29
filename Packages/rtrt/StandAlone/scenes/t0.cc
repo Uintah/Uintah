@@ -16,6 +16,7 @@
 #include <Packages/rtrt/Core/Checker.h>
 #include <Packages/rtrt/Core/TimeObj.h>
 #include <Packages/rtrt/Core/BV1.h>
+
 #include <iostream>
 #include <cmath>
 #include <string>
@@ -149,10 +150,13 @@ Scene* make_scene(int argc, char* argv[])
     int scenesize=2;
     double light_radius=0.8;
     for(int i=1;i<argc;i++){
-	if(strcmp(argv[i], "-size")==0){
+
+      string arg = argv[i];
+
+	if( arg == "-size") {
 	    i++;
 	    scenesize=atoi(argv[i]);
-	} else if(strcmp(argv[i], "-light")==0){
+	} else if( arg == "-light") {
 	    i++;
 	    light_radius=atof(argv[i]);
 	} else {

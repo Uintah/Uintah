@@ -5,11 +5,13 @@
 #include <Core/Persistent/Pstreams.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <cstdio>
 #include <cmath>
+
+#include <cstdlib>
 
 using namespace rtrt;
 using namespace SCIRun;
