@@ -657,7 +657,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   doing << d_myworld->myrank() << "   APF\n";
   vector<vector<double> > patch_costs;
   double time = Time::currentSeconds();
-  for(int i=0;i<lbtimes[5];i++)
+  for(int i=0;i<5;i++)
     lbtimes[i]=0;
 
   int num_procs = d_myworld->size();
