@@ -168,7 +168,8 @@ for arg in $*; do
             MPI_RUN="yes";;
         -mpmarches)
             echo "Scheduling the mpmarches tests . . ."
-            do_mpmarches=1;;
+            do_mpmarches=1
+            MPI_RUN="yes";;
         -sm)
             echo "Scheduling the smpm tests . . ."
             do_smpm=1;;
@@ -229,7 +230,7 @@ model_test_cases="HePlume JP8_Radiation"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 arches_test_cases="constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
-mpmarches_test_cases="pipe methaneFireWContainer"
+mpmarches_test_cases="mpmpipe_test methaneFireWContainer"
 examples_test_cases="poisson1"
 
 # Check if the applications sus and compare_uda are available
