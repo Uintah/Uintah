@@ -163,7 +163,7 @@ main( int argc, char *argv[] )
   double  min = DBL_MAX;
   double  max = DBL_MIN;
 
-  const int NUM_BINS = 20;
+  const int NUM_BINS = 40;
   int       bins[ NUM_BINS ];
 
   for( int cnt = 0; cnt < NUM_BINS; cnt++ ) { bins[ cnt ] = 0; }
@@ -188,14 +188,14 @@ main( int argc, char *argv[] )
     if( value > max ) max = value;
 
 
-    double base = 0.0000001;
+    double base = 0.0000005;
     for( int cnt = 1; cnt <= NUM_BINS; cnt++ ) { 
       if( value > base ) {
         bins[ cnt-1 ]++;
-        outdata[ num_vars ] = base_radius / cnt;
+        outdata[ num_vars ] = base_radius * ( (10 - (cnt-1))/ 10.0 );
         break;
       }
-      base /= 10;
+      base /= 4;
     }
     if( value < base ) {
       printf( "ERROR: This should not happen... variable is way too small...\n" );
@@ -220,10 +220,14 @@ main( int argc, char *argv[] )
   }
   
   for( int cnt = 0; cnt < NUM_BINS; cnt++ ) { 
-    printf( "bin[%d] = %d\n", cnt, bins[cnt] );
+    if( ( bins[cnt] > 0 ) || cnt == (NUM_BINS-1) ) {
+      printf( "\nbin[%d] = %d", cnt, bins[cnt] );
+    } else {
+      printf( "." ); fflush( stdout );
+    }
   }
 
-  printf( "min/max: %.18lf, %.18lf\n", min, max );
+  printf( "\nmin/max: %.18lf, %.18lf\n", min, max );
 
   NrrdIoState * nios = nrrdIoStateNew();
   nrrdIoStateSet( nios, nrrdIoStateDetachedHeader, true );
