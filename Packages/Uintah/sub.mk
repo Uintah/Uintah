@@ -9,6 +9,10 @@ SUBDIRS := \
 	$(SRCDIR)/tools        \
 	$(SRCDIR)/testprograms
 
+ifeq ($(BUILD_VISIT),yes)
+  SUBDIRS += $(SRCDIR)/VisIt
+endif
+
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += $(SRCDIR)/Dataflow
 endif

@@ -516,6 +516,11 @@ SCI_ARG_WITH(boost,
   [with_boost="$withval"
    sci_required_boost=yes],
   [with_boost=""])
+SCI_ARG_WITH(visit,
+  AC_HELP_STRING(--with-visit=DIR,
+                 Turn on VisIt visualization tool support.  Point to VisIt installation.),
+  [with_visit="$withval"],
+  [with_visit=""])
 SCI_ARG_WITH(loki,
   AC_HELP_STRING(--with-loki=DIR,
                  Use the Loki in DIR),
@@ -2341,6 +2346,32 @@ sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 AC_SUBST(SEMAPHORE_LIB_FLAG)
 
 AC_SUBST(CFLAGS)
+
+##  --  Enable VisIt -----------------------------
+
+if test "$with_visit"; then
+   if test "$with_visit" == "yes"; then 
+      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
+   fi
+   if ! test -f "$with_visit/src/bin/xml2makefile"; then 
+      AC_MSG_ERROR( Could not find xml2makefile in $with_visit/src/bin/... )
+   fi
+
+   sci_defs_files="$sci_defs_files Packages/Uintah/VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
+
+   BUILD_VISIT=yes
+   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libPackages_Uintah_StandAlone_tools_uda2vis.so
+   VISIT_INSTALL_DIR=$with_visit
+fi
+
+AC_SUBST( BUILD_VISIT )
+AC_SUBST( UINTAH_UDA_TO_VIS_LIB )
+AC_SUBST( VISIT_INSTALL_DIR )
+
+# patch the generated makefile to include -I/packages dir
+# add make (of visit files) to take place when make (of uintah) happens
+
+# Copy avtudaReaderMTMDFileFormat.C to bin side... patch this file to update UINTAH_UDA_TO_VIS_LIB to be the correct string.
 
 ##  --  search for OFED (Infiniband Drivers) -----------------------------
 
@@ -4585,16 +4616,22 @@ if test "$sci_required_glui" = "yes"; then
 
    AC_LANG([C++])
 
+   AC_MSG_WARN( If the following check for glui.h fails it may be due to the fact
+                that glui.h used to reside in /usr/include but with more modern
+                distributions is found in /usr/include/GL.  If you do not have 
+                glui.h in /usr/include/GL please create a symbolic link to it.
+                Contact dav@sci.utah.edu if you have questions about this. )
+
    SCI_TRY_LINK(GLUI,glui library and headers,GL/glut.h GL/glui.h,
                 $_sci_inc,glui,$_sci_lib,$libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG,,required)
 
    AC_LANG([C])
 
-  if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-    AC_MSG_WARN("$GLUI_LIB_DIR_FLAG")
-    AC_MSG_WARN("flag for GLUI has been removed.")
-    GLUI_LIB_DIR_FLAG=""
-  fi
+   if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+     AC_MSG_WARN("$GLUI_LIB_DIR_FLAG")
+     AC_MSG_WARN("flag for GLUI has been removed.")
+     GLUI_LIB_DIR_FLAG=""
+   fi
 
 fi # end sci_required_glui
 

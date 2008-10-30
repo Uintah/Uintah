@@ -21,18 +21,19 @@
 #include <Core/Containers/HashTable.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
-#include <list>
+#include   <string>
+#include   <vector>
+#include   <list>
 #include <sgi_stl_warnings_on.h>
 
 #include <fcntl.h>
 
 #ifndef _WIN32
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include <Packages/Uintah/Core/DataArchive/uintahshare.h>
+
 namespace Uintah {
 
 using namespace SCIRun;

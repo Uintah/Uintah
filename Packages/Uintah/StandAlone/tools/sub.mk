@@ -12,6 +12,9 @@ SUBDIRS := \
 	$(SRCDIR)/puda        \
 	$(SRCDIR)/radiusMaker \
         $(SRCDIR)/uda2nrrd    \
-        $(SRCDIR)/uda2vis
+
+ifeq ($(BUILD_VISIT),yes)
+  SUBDIRS += $(SRCDIR)/uda2vis
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
