@@ -281,11 +281,8 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     
     for( int i =1 ; i < d_scalar->initialize_diffusion_knob; i++ ){
       bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
-      SFCXVariable<double> placeHolderX;
-      SFCYVariable<double> placeHolderY;
-      SFCZVariable<double> placeHolderZ;
-      scalarDiffusionOperator(new_dw, patch, use_vol_frac, f,
-                              placeHolderX, placeHolderY, placeHolderZ,
+      CCVariable<double> placeHolder;
+      scalarDiffusionOperator(new_dw, patch, use_vol_frac, f, placeHolder,
                               f, FakeDiffusivity, fakedelT);
     }
         
@@ -534,13 +531,10 @@ void SimpleRxn::computeModelSources(const ProcessorGroup*,
     if(diff_coeff_test != 0.0){ 
       
       bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
-      SFCXVariable<double> placeHolderX;
-      SFCYVariable<double> placeHolderY;
-      SFCZVariable<double> placeHolderZ;
+      CCVariable<double> placeHolder;
 
       scalarDiffusionOperator(new_dw, patch, use_vol_frac, f_old,
-                              placeHolderX, placeHolderY, placeHolderZ,
-                              f_src, diff_coeff, delT);
+                              placeHolder,f_src, diff_coeff, delT);
     }
 
 

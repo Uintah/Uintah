@@ -14,9 +14,7 @@ namespace Uintah {
                        const bool use_vol_frac,                                
                        const CCVariable<double>& Temp_CC,          
                        const CCVariable<double>& diff_coeff,
-                       const SFCXVariable<double>& vol_fracX_FC,  
-                       const SFCYVariable<double>& vol_fracY_FC,  
-                       const SFCZVariable<double>& vol_fracZ_FC,                  
+                       const CCVariable<double>& vol_frac_CC,                
                        SFCXVariable<double>& q_X_FC,               
                        SFCYVariable<double>& q_Y_FC,               
                        SFCZVariable<double>& q_Z_FC);
@@ -25,9 +23,7 @@ namespace Uintah {
                          const Patch* patch,
                          const bool use_vol_frac,
                          const CCVariable<double>& q_CC,
-                         const SFCXVariable<double>& vol_fracX_FC,
-                         const SFCYVariable<double>& vol_fracY_FC,
-                         const SFCZVariable<double>& vol_fracZ_FC,
+                         const CCVariable<double>& vol_frac_CC,
                          CCVariable<double>& q_diffusion_src,
                          const CCVariable<double>& diff_coeff,
                          const double delT);            

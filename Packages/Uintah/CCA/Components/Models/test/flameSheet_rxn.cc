@@ -248,13 +248,9 @@ void flameSheet_rxn::initialize(const ProcessorGroup*,
 
     for( int i =1 ; i < d_smear_initialDistribution_knob; i++ ){
       bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
-      constCCVariable<double> placeHolder;
-      SFCXVariable<double> placeHolderX;
-      SFCYVariable<double> placeHolderY;
-      SFCZVariable<double> placeHolderZ;
+      CCVariable<double> placeHolder;
       scalarDiffusionOperator(new_dw, patch, use_vol_frac,  f,
-                              placeHolderX, placeHolderY, placeHolderZ,
-                              f, FakeDiffusivity, fakedelT); 
+                              placeHolder,f, FakeDiffusivity, fakedelT); 
     }  // diffusion loop
   }  // patches
 }
@@ -408,9 +404,7 @@ void flameSheet_rxn::computeModelSources(const ProcessorGroup*,
     //  Tack on diffusion
     if(d_diffusivity != 0.0){ 
       bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
-      SFCXVariable<double> placeHolderX;
-      SFCYVariable<double> placeHolderY;
-      SFCZVariable<double> placeHolderZ;
+      CCVariable<double> placeHolder;
       /*`==========TESTING==========*/    
       // this needs to be changed
       CCVariable<double> diff_coeff;
@@ -418,8 +412,7 @@ void flameSheet_rxn::computeModelSources(const ProcessorGroup*,
       diff_coeff.initialize(d_diffusivity);    
       /*==========TESTING==========`*/
       scalarDiffusionOperator(new_dw, patch, use_vol_frac,f_old,
-                              placeHolderX, placeHolderY, placeHolderZ,
-                              f_src, diff_coeff, delT);
+                              placeHolder,f_src, diff_coeff, delT);
     }  // diffusivity > 0 
 
   }

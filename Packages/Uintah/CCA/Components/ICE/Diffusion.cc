@@ -23,9 +23,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
                                   const Patch* patch,
                                   const bool use_vol_frac,
                                   const CCVariable<double>& q_CC,  
-                                  const SFCXVariable<double>& vol_fracX_FC,
-                                  const SFCYVariable<double>& vol_fracY_FC,
-                                  const SFCZVariable<double>& vol_fracZ_FC,
+                                  const CCVariable<double>& vol_frac_CC,
                                   CCVariable<double>& q_diffusion_src,
                                   const CCVariable<double>& diff_coeff,
                                   const double delT)
@@ -48,8 +46,7 @@ void scalarDiffusionOperator(DataWarehouse* new_dw,
   double areaZ = dx.x() * dx.y();
 
   q_flux_allFaces( new_dw, patch, use_vol_frac, q_CC, diff_coeff,
-                   vol_fracX_FC, vol_fracY_FC, vol_fracZ_FC,
-                   q_X_FC, q_Y_FC, q_Z_FC);
+                   vol_frac_CC, q_X_FC, q_Y_FC, q_Z_FC);
                    
   for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
     IntVector c = *iter;
@@ -74,7 +71,7 @@ template <class T>
                  IntVector adj_offset,
                  const CCVariable<double>& diff_coeff,
                  const double dx,
-                 const T& vol_frac_FC,
+                 const CCVariable<double>& vol_frac_CC,
                  const CCVariable<double>& q_CC,
                  T& q_fluxFC,
                  const bool use_vol_frac)
@@ -88,10 +85,11 @@ template <class T>
       IntVector R = *iter;
       IntVector L = R + adj_offset;
       
-      double diff_coeff_FC = (2.0 * diff_coeff[L] * diff_coeff[R] )/
-                                   (diff_coeff[L] + diff_coeff[R] + SMALL_NUM);
+      double d_c_L = (diff_coeff[L]*vol_frac_CC[L]);
+      double d_c_R = (diff_coeff[R]*vol_frac_CC[R]);
+      double diff_coeff_FC = (2.0 * d_c_L * d_c_R )/( d_c_L + d_c_R + SMALL_NUM);
 
-      q_fluxFC[R] = -vol_frac_FC[R] * diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
+      q_fluxFC[R] = -diff_coeff_FC* (q_CC[R] - q_CC[L])/dx;
     }
   }else
    for(;!iter.done(); iter++){
@@ -114,9 +112,7 @@ void q_flux_allFaces(DataWarehouse* new_dw,
                      const bool use_vol_frac,   
                      const CCVariable<double>& q_CC,
                      const CCVariable<double>& diff_coeff,
-                     const SFCXVariable<double>& vol_fracX_FC,
-                     const SFCYVariable<double>& vol_fracY_FC,
-                     const SFCZVariable<double>& vol_fracZ_FC,
+                     const CCVariable<double>& vol_frac_CC,
                      SFCXVariable<double>& q_X_FC,
                      SFCYVariable<double>& q_Y_FC,
                      SFCZVariable<double>& q_Z_FC)
@@ -164,15 +160,15 @@ void q_flux_allFaces(DataWarehouse* new_dw,
   //  For each face the diffusion flux
   q_flux_FC<SFCXVariable<double> >(X_FC_iterLimits,
                                    adj_offset[0],  diff_coeff, dx.x(),
-                                   vol_fracX_FC, q_CC, q_X_FC, use_vol_frac);
+                                   vol_frac_CC, q_CC, q_X_FC, use_vol_frac);
 
   q_flux_FC<SFCYVariable<double> >(Y_FC_iterLimits,
                                    adj_offset[1], diff_coeff, dx.y(),
-                                   vol_fracY_FC, q_CC, q_Y_FC, use_vol_frac);
+                                   vol_frac_CC, q_CC, q_Y_FC, use_vol_frac);
   
   q_flux_FC<SFCZVariable<double> >(Z_FC_iterLimits,
                                    adj_offset[2],  diff_coeff, dx.z(),
-                                   vol_fracZ_FC, q_CC, q_Z_FC, use_vol_frac); 
+                                   vol_frac_CC, q_CC, q_Z_FC, use_vol_frac); 
 }
 /*---------------------------------------------------------------------
  Function~  ICE::computeTauX_Components
