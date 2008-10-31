@@ -1368,10 +1368,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW, lb->thermalCondLabel,  ice_matls, gac,1);
   t->requires(Task::NewDW, lb->rho_CCLabel,                  gac,1);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,               gac,1);
-  t->requires(Task::NewDW, lb->vol_fracX_FCLabel, ice_matls, gac,2);
-  t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
-  t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gac,1);
 
   if(d_with_mpm){
    t->requires(Task::NewDW,lb->TMV_CCLabel,       press_matl,oims, gn);
@@ -4011,7 +4008,7 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,      indx,patch, gac,1);
       new_dw->get(rho_CC,     lb->rho_CCLabel,         indx,patch, gac,1);
       new_dw->get(kappa,      lb->compressibilityLabel,indx,patch, gn, 0);
-      new_dw->get(vol_frac,   lb->vol_frac_CCLabel,    indx,patch, gn, 0);
+      new_dw->get(vol_frac,   lb->vol_frac_CCLabel,    indx,patch, gac,1);
        
       new_dw->allocateAndPut(int_eng_source, 
                                lb->int_eng_source_CCLabel,indx,patch);
@@ -4025,26 +4022,14 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       if(ice_matl){
         double thermalCond_test = ice_matl->getThermalConductivity();
         if(thermalCond_test != 0.0 ){
-          if(numMatls > 1){
-            cout <<"ICE:Compute heat diffusion:  currently the heat diffusion" 
-            " calculation doesn't work for multiple materials. Set the ICE: thermal conductivity to 0.0 --Todd"<< endl;
-          }
           constCCVariable<double> Temp_CC;
           constCCVariable<double> thermalCond;
           new_dw->get(thermalCond, lb->thermalCondLabel, indx,patch,gac,1); 
           old_dw->get(Temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1); 
 
-          constSFCXVariable<double> vol_fracX_FC;
-          constSFCYVariable<double> vol_fracY_FC;
-          constSFCZVariable<double> vol_fracZ_FC;
-          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel,indx,patch,gac, 2);
-          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel,indx,patch,gac, 2);
-          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel,indx,patch,gac, 2);
-
           bool use_vol_frac = true; // include vol_frac in diffusion calc.
           scalarDiffusionOperator(new_dw, patch, use_vol_frac, Temp_CC,
-                                  vol_fracX_FC, vol_fracY_FC, vol_fracZ_FC,
-                                  heatCond_src, thermalCond, delT);
+                                  vol_frac, heatCond_src, thermalCond, delT);
         }
       }
                                      

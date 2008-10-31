@@ -755,17 +755,14 @@ void NonAdiabaticTable::computeModelSources(const ProcessorGroup*,
                               matl, patch);
         
         bool use_vol_frac = false; // don't include vol_frac in diffusion calc.
-        SFCXVariable<double> placeHolderX;
-        SFCYVariable<double> placeHolderY;
-        SFCZVariable<double> placeHolderZ;
+        CCVariable<double> placeHolder;
         
         CCVariable<double> diff_coeff_cc;
         new_dw->allocateTemporary(diff_coeff_cc, patch);
         diff_coeff_cc.initialize(diff_coeff);
         
         scalarDiffusionOperator(new_dw, patch, use_vol_frac, f_old,
-                                placeHolderX, placeHolderY, placeHolderZ,
-                                f_src, diff_coeff_cc, delT);
+                                placeHolder, f_src, diff_coeff_cc, delT);
       }
 
       //__________________________________
