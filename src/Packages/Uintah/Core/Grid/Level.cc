@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondReader.h>
 
 #include <Core/Geometry/BBox.h>
@@ -196,8 +197,6 @@ void Level::performConsistencyCheck() const
       }
     }
   }
-
-
 }
 
 
@@ -707,6 +706,18 @@ void Level::setBCTypes()
       bitfield>>=2;
     }
   }
+  
+  //__________________________________
+  //  bullet proofing
+  for (int dir=0; dir<3; dir++){
+    if(d_periodicBoundaries[dir] == 1 && d_extraCells[dir] !=0) {
+      ostringstream warn;
+      warn<< "\n \n INPUT FILE ERROR: \n You've specified a periodic boundary condition on a face with extra cells specified\n"
+          <<" Please set the extra cells on that face to 0";
+      throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
+    }
+  }
+  
   
   d_finalized=true;
 }
