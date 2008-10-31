@@ -181,7 +181,7 @@ void q_flux_allFaces(DataWarehouse* new_dw,
           - The viscosity we're using isn't right if it varies spatially.   
  ---------------------------------------------------------------------  */
 void computeTauX( const Patch* patch,
-                  constSFCXVariable<double>& vol_fracX_FC,  
+                  constCCVariable<double>& vol_frac_CC,  
                   constCCVariable<Vector>& vel_CC,      
                   const CCVariable<double>& viscosity,                
                   const Vector dx,                       
@@ -221,8 +221,8 @@ void computeTauX( const Patch* patch,
     double delZ = dx.z();
     IntVector left(i-1, j, k); 
 
-    term1 =  viscosity[left];
-    term2 =  viscosity[c];
+    term1 =  viscosity[left] * vol_frac_CC[left];
+    term2 =  viscosity[c] * vol_frac_CC[c];
     double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
@@ -270,32 +270,33 @@ void computeTauX( const Patch* patch,
     //__________________________________
     //  tau_XX
     grad_uvel = (vel_CC[c].x() - vel_CC[left].x())/delX;
-    grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
-    grad_wvel = (wvel_EC_front    - wvel_EC_back )   /delZ;
+    grad_vvel = (vvel_EC_top   - vvel_EC_bottom)  /delY;
+    grad_wvel = (wvel_EC_front - wvel_EC_back )   /delZ;
 
     term1 = 2.0 * vis_FC * grad_uvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
-    tau_X_FC[c].x( vol_fracX_FC[c] * (term1 - term2)); 
+    tau_X_FC[c].x(term1 - term2); 
 
     //__________________________________
     //  tau_XY
-    grad_1 = (uvel_EC_top      - uvel_EC_bottom)  /delY;
+    grad_1 = (uvel_EC_top   - uvel_EC_bottom)  /delY;
     grad_2 = (vel_CC[c].y() - vel_CC[left].y())/delX;
-    tau_X_FC[c].y(vol_fracX_FC[c] * vis_FC * (grad_1 + grad_2)); 
+    tau_X_FC[c].y(vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_XZ
-    grad_1 = (uvel_EC_front    - uvel_EC_back)    /delZ;
+    grad_1 = (uvel_EC_front - uvel_EC_back)    /delZ;
     grad_2 = (vel_CC[c].z() - vel_CC[left].z())/delX;
-    tau_X_FC[c].z(vol_fracX_FC[c] * vis_FC * (grad_1 + grad_2)); 
+    tau_X_FC[c].z(vis_FC * (grad_1 + grad_2)); 
 
-    
-//     if (i == 0 && k == 0){
-//       cout<<cell<<" tau_XX: "<<tau_X_FC[cell].x()<<
-//       " tau_XY: "<<tau_X_FC[cell].y()<<
-//       " tau_XZ: "<<tau_X_FC[cell].z()<<
-//       " patch: " <<patch->getID()<<endl;     
-//     } 
+    #if 0
+    if (c == IntVector(0,51,0) || c == IntVector(50,51,0)){
+      cout<<c<<" tau_XX: "<<tau_X_FC[c].x()<<
+      " tau_XY: "<<tau_X_FC[c].y()<<
+      " tau_XZ: "<<tau_X_FC[c].z()<<
+      " patch: " <<patch->getID()<<endl;     
+    } 
+    #endif
   }
 }
 
@@ -310,7 +311,7 @@ void computeTauX( const Patch* patch,
           - The viscosity we're using isn't right if it varies spatially. 
  ---------------------------------------------------------------------  */
 void computeTauY( const Patch* patch,
-                  constSFCYVariable<double>& vol_fracY_FC,   
+                  constCCVariable<double>& vol_frac_CC,   
                   constCCVariable<Vector>& vel_CC,      
                   const CCVariable<double>& viscosity,                
                   const Vector dx,                       
@@ -349,8 +350,8 @@ void computeTauY( const Patch* patch,
     double delZ = dx.z();
     IntVector bottom(i,j-1,k);
     
-    term1 =  viscosity[bottom];
-    term2 =  viscosity[c];
+    term1 =  viscosity[bottom] * vol_frac_CC[bottom];
+    term2 =  viscosity[c] * vol_frac_CC[c];
     double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
@@ -398,33 +399,35 @@ void computeTauY( const Patch* patch,
                             
     //__________________________________
     //  tau_YY
-    grad_uvel = (uvel_EC_right    - uvel_EC_left)      /delX;
+    grad_uvel = (uvel_EC_right - uvel_EC_left)      /delX;
     grad_vvel = (vel_CC[c].y() - vel_CC[bottom].y())/delY;
-    grad_wvel = (wvel_EC_front    - wvel_EC_back )     /delZ;
+    grad_wvel = (wvel_EC_front - wvel_EC_back )     /delZ;
 
     term1 = 2.0 * vis_FC * grad_vvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
-    tau_Y_FC[c].y(vol_fracY_FC[c] * (term1 - term2)); 
+    tau_Y_FC[c].y(term1 - term2); 
     
     //__________________________________
     //  tau_YX
     grad_1 = (vel_CC[c].x() - vel_CC[bottom].x())/delY;
-    grad_2 = (vvel_EC_right    - vvel_EC_left)      /delX;
-    tau_Y_FC[c].x(vol_fracY_FC[c] * vis_FC * (grad_1 + grad_2) ); 
+    grad_2 = (vvel_EC_right - vvel_EC_left)      /delX;
+    tau_Y_FC[c].x( vis_FC * (grad_1 + grad_2) ); 
 
 
     //__________________________________
     //  tau_YZ
-    grad_1 = (vvel_EC_front    - vvel_EC_back)      /delZ;
+    grad_1 = (vvel_EC_front - vvel_EC_back)      /delZ;
     grad_2 = (vel_CC[c].z() - vel_CC[bottom].z())/delY;
-    tau_Y_FC[c].z(vol_fracY_FC[c] * vis_FC * (grad_1 + grad_2)); 
+    tau_Y_FC[c].z( vis_FC * (grad_1 + grad_2)); 
     
-//     if (i == 0 && k == 0){    
-//       cout<< cell<< " tau_YX: "<<tau_Y_FC[cell].x()<<
-//       " tau_YY: "<<tau_Y_FC[cell].y()<<
-//       " tau_YZ: "<<tau_Y_FC[cell].z()<<
-//        " patch: "<<patch->getID()<<endl;
-//     }
+    #if 0
+     if (c == IntVector(0,51,0) || c == IntVector(50,51,0)){    
+       cout<< c<< " tau_YX: "<<tau_Y_FC[c].x()<<
+       " tau_YY: "<<tau_Y_FC[c].y()<<
+       " tau_YZ: "<<tau_Y_FC[c].z()<<
+       " patch: "<<patch->getID()<<endl;
+     }
+    #endif
   }
 }
 
@@ -438,7 +441,7 @@ void computeTauY( const Patch* patch,
           - The viscosity we're using isn't right if it varies spatially.
  ---------------------------------------------------------------------  */
 void computeTauZ( const Patch* patch,
-                  constSFCZVariable<double>& vol_fracZ_FC,   
+                  constCCVariable<double>& vol_frac_CC,   
                   constCCVariable<Vector>& vel_CC,      
                   const CCVariable<double>& viscosity,               
                   const Vector dx,                       
@@ -477,8 +480,8 @@ void computeTauZ( const Patch* patch,
     double delZ = dx.z();
     IntVector back(i, j, k-1); 
     
-    term1 =  viscosity[back];
-    term2 =  viscosity[c];
+    term1 =  viscosity[back] * vol_frac_CC[back];
+    term2 =  viscosity[c] * vol_frac_CC[c];
     double vis_FC = (2.0 * term1 * term2)/(term1 + term2); 
 
     //__________________________________
@@ -526,24 +529,24 @@ void computeTauZ( const Patch* patch,
     //__________________________________
     //  tau_ZX
     grad_1 = (vel_CC[c].x() - vel_CC[back].x()) /delZ;
-    grad_2 = (wvel_EC_right    - wvel_EC_left)     /delX;
-    tau_Z_FC[c].x(vol_fracZ_FC[c] * vis_FC * (grad_1 + grad_2)); 
+    grad_2 = (wvel_EC_right - wvel_EC_left)     /delX;
+    tau_Z_FC[c].x(vis_FC * (grad_1 + grad_2)); 
 
     //__________________________________
     //  tau_ZY
     grad_1 = (vel_CC[c].y() - vel_CC[back].y()) /delZ;
-    grad_2 = (wvel_EC_top      - wvel_EC_bottom)   /delY;
-    tau_Z_FC[c].y( vol_fracZ_FC[c] * vis_FC * (grad_1 + grad_2) ); 
+    grad_2 = (wvel_EC_top   - wvel_EC_bottom)   /delY;
+    tau_Z_FC[c].y( vis_FC * (grad_1 + grad_2) ); 
 
     //__________________________________
     //  tau_ZZ
-    grad_uvel = (uvel_EC_right    - uvel_EC_left)    /delX;
-    grad_vvel = (vvel_EC_top      - vvel_EC_bottom)  /delY;
+    grad_uvel = (uvel_EC_right - uvel_EC_left)    /delX;
+    grad_vvel = (vvel_EC_top   - vvel_EC_bottom)  /delY;
     grad_wvel = (vel_CC[c].z() - vel_CC[back].z())/delZ;
 
     term1 = 2.0 * vis_FC * grad_wvel;
     term2 = (2.0/3.0) * vis_FC * (grad_uvel + grad_vvel + grad_wvel);
-    tau_Z_FC[c].z( vol_fracZ_FC[c] * (term1 - term2)); 
+    tau_Z_FC[c].z( (term1 - term2)); 
 
 //  cout<<"tau_ZX: "<<tau_Z_FC[cell].x()<<
 //        " tau_ZY: "<<tau_Z_FC[cell].y()<<

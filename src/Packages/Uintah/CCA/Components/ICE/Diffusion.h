@@ -39,21 +39,21 @@ namespace Uintah {
                  const bool use_vol_frac);
                  
    void computeTauX( const Patch* patch,
-                     constSFCXVariable<double>& vol_fracX_FC,  
+                     constCCVariable<double>& vol_frac_CC,  
                      constCCVariable<Vector>& vel_CC,     
                      const CCVariable<double>& viscosity,               
                      const Vector dx,                      
                      SFCXVariable<Vector>& tau_X_FC);      
 
    void computeTauY( const Patch* patch,
-                     constSFCYVariable<double>& vol_fracX_FC,  
+                     constCCVariable<double>& vol_frac_CC,  
                      constCCVariable<Vector>& vel_CC,     
                      const CCVariable<double>& viscosity,              
                      const Vector dx,                      
                      SFCYVariable<Vector>& tau_Y_FC);      
 
    void computeTauZ( const Patch* patch,
-                     constSFCZVariable<double>& vol_fracZ_FC,  
+                     constCCVariable<double>& vol_frac_CC,  
                      constCCVariable<Vector>& vel_CC,     
                      const CCVariable<double>& viscosity,              
                      const Vector dx,                      
