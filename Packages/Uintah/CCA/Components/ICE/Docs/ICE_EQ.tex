@@ -1,10 +1,10 @@
 \documentclass[fleqn]{article}
 \usepackage{amsmath}
-\usepackage{doublespace}
-\usepackage{algorithmic}
+\usepackage{setspace}
+\usepackage{algorithmic}    % Debian:texlive-science package
 \usepackage{color}
 \usepackage[dvips]{graphicx}
-\usepackage{vmargin}
+\usepackage{vmargin}        % Debian: texlive-latex-extra package
 %\setpapersize{USletter}
 \setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0pt}{0mm}
 %...................................................
@@ -103,7 +103,8 @@ and $\kappa_m = \frac{v^o_m}{c^2_m}$ .
     V \theta_m \kappa_m P \Delta P_{\text{Dilatate}}
     - \delt \nabla (\theta^{*^f} q_{m}^{*^f})
     + \delt V \SUM{l}  \theta_m \theta_l R_{ml}(T_l^{{n+1}^L} - T_m^{{n+1}^L} )$ \\
-where $q^{*^f} = - k^f \nabla T$ and $\theta^{*^f} = \text{ Computed during the advection of } \theta_m$
+where $\theta^{*^f}q^{*^f} = - <\theta k> \nabla T$ and 
+${<}\theta k{>} = (2 (\theta k)_{m_R} (\theta k)_{m_L} )/((\theta k)_{m_R}  + (\theta k)_{m_L} )$
 %__________________________________
 
 \item \underline{Compute Lagrangian quantities}\\
