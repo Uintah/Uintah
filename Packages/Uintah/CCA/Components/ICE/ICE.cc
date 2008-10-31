@@ -1320,11 +1320,8 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   t->requires(Task::NewDW,lb->viscosityLabel,   ice_matls, gac, 2);
   t->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls, gac, 2);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,   ice_matls, gac, 2);
-  t->requires(Task::NewDW,lb->rho_CCLabel,                   gac, 2);
-  t->requires(Task::NewDW, lb->vol_fracX_FCLabel, ice_matls, gac,2);
-  t->requires(Task::NewDW, lb->vol_fracY_FCLabel, ice_matls, gac,2);
-  t->requires(Task::NewDW, lb->vol_fracZ_FCLabel, ice_matls, gac,2);
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel, Ghost::None);
+  t->requires(Task::NewDW,lb->rho_CCLabel,       gac,2);
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel, gac,2);
 
   if(d_turbulence){
     t->requires(Task::NewDW,lb->uvel_FCMELabel,   ice_matls, gac, 3);
@@ -3824,7 +3821,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       indx = matl->getDWIndex();
 
       new_dw->get(rho_CC,  lb->rho_CCLabel,      indx,patch,gac,2);
-      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,gn, 0);
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,patch,gac,2);
       CCVariable<Vector>   mom_source;
       new_dw->allocateAndPut(mom_source,  lb->mom_source_CCLabel,  indx, patch);
       mom_source.initialize(Vector(0.,0.,0.));
@@ -3852,10 +3849,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         //  compute the shear stress terms
         double viscosity_test = ice_matl->getViscosity();
         if(viscosity_test != 0.0){
-          if(numMatls > 1 && (d_myworld->myrank() == 0)){
-            cout << "ICE:Compute viscous ShearStress:  currently the shear stress" 
-            " calculation doesn't work for multiple materials. Set the dynamic viscosity to 0.0 --Todd"<< endl;
-          }
         
           CCVariable<double> viscosity;  // don't alter the original value
           new_dw->allocateTemporary(viscosity, patch, gac, 2);
@@ -3864,19 +3857,10 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
           if(d_turbulence){ 
             d_turbulence->callTurb(new_dw,patch,vel_CC,rho_CC,indx,lb,
                                    d_sharedState, viscosity);
-          }//turb
-          constSFCXVariable<double> vol_fracX_FC;
-          constSFCYVariable<double> vol_fracY_FC;
-          constSFCZVariable<double> vol_fracZ_FC;
-           
-          new_dw->get(vol_fracX_FC, lb->vol_fracX_FCLabel, indx,patch,gac, 2);
-          new_dw->get(vol_fracY_FC, lb->vol_fracY_FCLabel, indx,patch,gac, 2);
-          new_dw->get(vol_fracZ_FC, lb->vol_fracZ_FCLabel, indx,patch,gac, 2);
-          //double Time = dataArchiver->getCurrentTime();
-         
-          computeTauX(patch, vol_fracX_FC, vel_CC,viscosity,dx, tau_X_FC);
-          computeTauY(patch, vol_fracY_FC, vel_CC,viscosity,dx, tau_Y_FC);
-          computeTauZ(patch, vol_fracZ_FC, vel_CC,viscosity,dx, tau_Z_FC);
+          }         
+          computeTauX(patch, vol_frac, vel_CC,viscosity,dx, tau_X_FC);
+          computeTauY(patch, vol_frac, vel_CC,viscosity,dx, tau_Y_FC);
+          computeTauZ(patch, vol_frac, vel_CC,viscosity,dx, tau_Z_FC);
         }
         if(viscosity_test == 0.0 && d_turbulence){
           string warn="ERROR:\n input :viscosity can't be zero when calculate turbulence";
@@ -3906,7 +3890,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         
         viscous_source=(tau_X_FC[right].x() - tau_X_FC[left].x())  * areaX +
                        (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
-                       (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;
+                       (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;             
 
         mom_source[c].x( (-pressure_source * areaX + 
                            viscous_source +
@@ -3922,7 +3906,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
 
         mom_source[c].y( (-pressure_source * areaY +
                            viscous_source +
-                           mass * gravity.y() * include_term) * delT ); 
+                           mass * gravity.y() * include_term) * delT );    
    
         //__________________________________
         //    Z - M O M E N T U M
