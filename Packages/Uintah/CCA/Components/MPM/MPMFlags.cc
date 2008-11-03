@@ -24,6 +24,7 @@ MPMFlags::MPMFlags()
   d_integrator_type = "explicit";
   d_integrator = Explicit;
   d_AMR = false;
+  d_axisymmetric = false;
 
   d_artificial_viscosity = false;
   d_artificialViscCoeff1 = 0.2;
@@ -98,6 +99,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 
   mpm_flag_ps->get("interpolator", d_interpolator_type);
   mpm_flag_ps->get("AMR", d_AMR);
+  mpm_flag_ps->get("axisymmetric", d_axisymmetric);
   mpm_flag_ps->get("reference_temperature", d_ref_temp); // for thermal stress
   mpm_flag_ps->get("withColor",  d_with_color);
   mpm_flag_ps->get("artificial_damping_coeff", d_artificialDampCoeff);
@@ -231,6 +233,8 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("time_integrator", d_integrator_type);
 
   ps->appendElement("interpolator", d_interpolator_type);
+  ps->appendElement("AMR", d_AMR);
+  ps->appendElement("axisymmetric", d_axisymmetric);
   ps->appendElement("reference_temperature", d_ref_temp);
   ps->appendElement("withColor",  d_with_color);
   ps->appendElement("artificial_damping_coeff", d_artificialDampCoeff);
