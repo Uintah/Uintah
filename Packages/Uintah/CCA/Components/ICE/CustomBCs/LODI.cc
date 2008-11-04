@@ -541,7 +541,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
                << " patch " << patch->getID()<<endl;
       //_____________________________________
       // S I D E S
-      IntVector axes = patch->faceAxes(face);
+      IntVector axes = patch->getFaceAxes(face);
       int P_dir = axes[0]; // find the principal dir
       double delta = dx[P_dir];
 
@@ -610,7 +610,7 @@ void computeNu(CCVariable<Vector>& nu,
                << " patch " << patch->getID()<<endl;   
               
       vector<int> otherDir(2);
-      IntVector axes = patch->faceAxes(face);
+      IntVector axes = patch->getFaceAxes(face);
       int P_dir   = axes[0]; // principal direction
       otherDir[0] = axes[1]; // other vector directions
       otherDir[1] = axes[2];  
@@ -648,7 +648,7 @@ void computeNu(CCVariable<Vector>& nu,
         //  Find the Vector components Edir1 and Edir2
         //  for this particular edge
         IntVector faceDir = patch->faceDirection(face0);
-        IntVector axes = patch->faceAxes(face0);
+        IntVector axes = patch->getFaceAxes(face0);
         int Edir1 = axes[0];
         int Edir2 = remainingVectorComponent(P_dir, Edir1);
         
@@ -779,7 +779,7 @@ void  lodi_bc_preprocess( const Patch* patch,
       IntVector lo = iter.begin();
       IntVector hi = iter.end();
     
-      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
       if(face==Patch::xminus || face==Patch::yminus || face==Patch::zminus){
         hi[P_dir] += 2;
       }
@@ -867,7 +867,7 @@ void getBoundaryEdges(const Patch* patch,
   // Looking down on the face, examine 
   // each edge (clockwise).  If there
   // are no neighboring patches then it's a valid edge
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];   
   IntVector minus(Patch::xminus, Patch::yminus, Patch::zminus);
@@ -928,7 +928,7 @@ void FaceDensity_LODI(const Patch* patch,
   const CCVariable<Vector>& vel_old = lv->vel_old;
   const double delT = lv->delT;
   
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];
@@ -1007,7 +1007,7 @@ void FaceDensity_LODI(const Patch* patch,
     IntVector offset = IntVector(1,1,1)  - Abs(patch->faceDirection(face)) 
                                          - Abs(patch->faceDirection(face0));
            
-    IntVector axes = patch->faceAxes(face0);
+    IntVector axes = patch->getFaceAxes(face0);
     int Edir1 = axes[0];
     int Edir2 = remainingVectorComponent(P_dir, Edir1);
   
@@ -1079,7 +1079,7 @@ double time = sharedState->getElapsedTime();
   CCVariable<double>& p  = lv->press_tmp;          
   double delT = lv->delT;
                  
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];
@@ -1197,7 +1197,7 @@ double time = sharedState->getElapsedTime();
     IntVector offset = IntVector(1,1,1)  - Abs(patch->faceDirection(face)) 
                                          - Abs(patch->faceDirection(face0));
            
-    IntVector axes = patch->faceAxes(face0);
+    IntVector axes = patch->getFaceAxes(face0);
     int Edir1 = axes[0];
     int Edir2 = remainingVectorComponent(P_dir, Edir1);
      
@@ -1363,7 +1363,7 @@ void FaceTemp_LODI(const Patch* patch,
   const CCVariable<Vector>& nu  = lv->nu;
   const double delT  = lv->delT;
               
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];
@@ -1467,7 +1467,7 @@ void FaceTemp_LODI(const Patch* patch,
                    + Abs(patch->faceDirection(face0));
     IntVector offset = IntVector(1,1,1) - edge;
            
-    IntVector axes = patch->faceAxes(face0);
+    IntVector axes = patch->getFaceAxes(face0);
     int Edir1 = axes[0];
     int Edir2 = remainingVectorComponent(P_dir, Edir1);
      

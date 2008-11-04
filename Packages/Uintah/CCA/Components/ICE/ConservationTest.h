@@ -48,7 +48,7 @@ void  conservationTest(const Patch* patch,
   for (iter  = bf.begin(); iter != bf.end(); ++iter){
     Patch::FaceType face = *iter;
 
-    IntVector axes = patch->faceAxes(face);
+    IntVector axes = patch->getFaceAxes(face);
     int P_dir = axes[0];  // principal direction
     double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
     

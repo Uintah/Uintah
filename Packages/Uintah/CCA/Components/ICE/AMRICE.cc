@@ -1350,7 +1350,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
   ASSERT(whichTask == "computeRefluxCorrection" || whichTask == "applyRefluxCorrection" );
 
   // find the intersection of the fine patch face iterator and underlying coarse patch
-  IntVector dir = finePatch->faceAxes(patchFace);        // face axes
+  IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
   int p_dir = dir[0];                                    // normal direction 
   IntVector f_lo_face = f_iter.begin();                  // fineLevel face indices   
   IntVector f_hi_face = f_iter.end();
@@ -1729,7 +1729,7 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
 
           // divide the number of cells 
           IntVector rr= finePatch->getLevel()->getRefinementRatio();
-          IntVector dir = finePatch->faceAxes(patchFace);
+          IntVector dir = finePatch->getFaceAxes(patchFace);
           int y = dir[1];
           int z = dir[2];
           count += n_CFI_cells/(rr[y] * rr[z]);

@@ -178,7 +178,7 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
       Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
       Vector C2 = Vector(1.0) - C1;
       
-      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
       
       IntVector offset = patch->faceDirection(face);
       
@@ -304,7 +304,7 @@ void set_imp_DelP_BC( CCVariable<double>& imp_delP,
       Vector C1 = (refineRatio.asVector() - Vector(1))/(refineRatio.asVector() + Vector(1));
       Vector C2 = Vector(1.0) - C1;
       
-      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
       
       cout << " using linear Interpolation for impDelP " << endl;;
      
@@ -377,7 +377,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
       IntVector lo = iter_tmp.begin();
       IntVector hi = iter_tmp.end();
     
-      int P_dir = patch->faceAxes(face)[0];  //principal dir.
+      int P_dir = patch->getFaceAxes(face)[0];  //principal dir.
       if(face==Patch::xminus || face==Patch::yminus || face==Patch::zminus){
         hi[P_dir] += 2;
       }
@@ -468,7 +468,7 @@ void setBC(CCVariable<double>& press_CC,
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
    
-    IntVector dir= patch->faceAxes(face);
+    IntVector dir= patch->getFaceAxes(face);
     Vector cell_dx = patch->dCell();
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
 
@@ -529,7 +529,7 @@ void setBC(CCVariable<double>& press_CC,
         //at the cell center of cell 0,0,0 
         Vector press_ref_pt = gridMin + 1.5*dx_L0;
 
-        int p_dir = patch->faceAxes(face)[0];     // normal  face direction
+        int p_dir = patch->getFaceAxes(face)[0];     // normal  face direction
         
         // Only apply this correction in case of Neumann or Dirichlet BC
         bool Neumann_BC = (bc_kind=="Neumann" || bc_kind=="zeroNeumann");
@@ -688,7 +688,7 @@ void setBC(CCVariable<double>& var_CC,
         Vector gravity = sharedState->getGravity();                             
         Material *matl = sharedState->getMaterial(mat_id);
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-        int P_dir =  patch->faceAxes(face)[0];  // principal direction
+        int P_dir =  patch->getFaceAxes(face)[0];  // principal direction
         
         if (gravity[P_dir] != 0 && desc == "Temperature" && ice_matl 
              && topLevelTimestep >0) {
@@ -799,7 +799,7 @@ void setBC(CCVariable<Vector>& var_CC,
         //  plane of symetry  
         if ( bc_kind == "symmetric" &&
             (desc == "Velocity" || desc == "set_if_sym_BC" ) ) {
-          int P_dir = patch->faceAxes(face)[0];  // principal direction
+          int P_dir = patch->getFaceAxes(face)[0];  // principal direction
           IntVector sign = IntVector(1,1,1);
           sign[P_dir] = -1;
 
@@ -849,7 +849,7 @@ void setSpecificVolBC(CCVariable<double>& sp_vol_CC,
     Patch::FaceType face = *iter;
     bool IveSetBC = false;
        
-    IntVector dir= patch->faceAxes(face);
+    IntVector dir= patch->getFaceAxes(face);
     Vector cell_dx = patch->dCell();
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
     

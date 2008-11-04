@@ -174,7 +174,7 @@ void Burger::timeAdvance(const ProcessorGroup*,
     for (iter  = bf.begin(); iter != bf.end(); ++iter){
       Patch::FaceType face = *iter;
 
-      IntVector axes = patch->faceAxes(face);
+      IntVector axes = patch->getFaceAxes(face);
       int P_dir = axes[0]; // find the principal dir of that face
 
       IntVector offset(0,0,0);

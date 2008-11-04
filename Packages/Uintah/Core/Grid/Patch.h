@@ -1174,7 +1174,7 @@ WARNING
        * Returns the principal axis along a face and
        *the orthognonal axes to that face (right hand rule).
        */
-      static inline IntVector faceAxes(const FaceType& face) 
+      static inline IntVector getFaceAxes(const FaceType& face) 
       {
         switch(face)
         {

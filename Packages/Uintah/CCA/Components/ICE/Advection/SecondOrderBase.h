@@ -128,7 +128,7 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
  
   for (f_iter  = faces.begin(); f_iter != faces.end(); ++f_iter){
     Patch::FaceType face = *f_iter;
-    IntVector axes = patch->faceAxes(face);
+    IntVector axes = patch->getFaceAxes(face);
     int P_dir = axes[0]; // find the principal dir
     IntVector offset(0,0,0);
     offset[P_dir] = 1;
