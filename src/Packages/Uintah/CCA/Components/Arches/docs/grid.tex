@@ -21,15 +21,6 @@
     {\line(1,0){12}}
     
 
-  %__________________________________  
-  % staggard Grid 
-  \color{blue}  
-  \linethickness{0.075mm}
-  \multiput(0.5,0.5)(1,0){13}%
-    {\line(0,1){12}}
-  
-  \multiput(0.5,0.5)(0,1){13}%
-    {\line(1,0){12}}
     
   %__________________________________ 
   % dots  
@@ -61,9 +52,20 @@
     
   \put(1,10){0,9} 
   \put(1,11){0,10}   
-  
-  \put(1,1.5){\framebox(1,1)[b]}
-  \put(1.5,1){\framebox(1,1)[b]}
+  %__________________________________
+  % u control volume
+  \color{blue}
+  \put(0.5,1){\framebox(1,1)[b]}
+  \put(10.5,1){\framebox(1,1)[b]}
+  \put(0.5,10){\framebox(1,1)[b]}
+  \put(10.5,10){\framebox(1,1)[b]}  
+  %__________________________________
+  % v control volume
+  \color{black}
+  \put(1,0.5){\framebox(1,1)[b]}
+  \put(1,10.5){\framebox(1,1)[b]}
+  \put(10,0.5){\framebox(1,1)[b]}
+  \put(10,10.5){\framebox(1,1)[b]}  
      
 \end{picture}
 
