@@ -14,7 +14,7 @@ PROCESS=$2
 DB=`which idb` 
 
 #get nodes
-NODESFILE=$HOME/.sge/job.$JOBID.hostlist.*
+NODESFILE=$HOME/.sge/prolog_hostfile.$JOBID.*
 
 if [ ! -f $NODESFILE ] ; then
   echo "error NODESFILE '$NODESFILE' does not exist"
@@ -47,25 +47,23 @@ do
   PSOUT=`ssh $node "ps -o pid,command x | grep $PROCESS | grep -v grep | grep -v bash | grep -v ssh | grep -v ibrun"`
   #extract pids
   PIDS=`echo "$PSOUT" | cut -f 1 -d " "`
+
+  echo $node
+
   for pid in $PIDS
   do
     COMMAND="cd $DIR && echo 'y' | $DB  -gdb -pid $pid -command .gdbcommands 2> /dev/null"
     #echo "Running command '$COMMAND'" >&2
     #execute gdb
     #ssh $node "$COMMAND" > .stack.$node.$pid &
-    ssh $node "$COMMAND" 2> /dev/null 1> .stack.$node.$pid &
+    echo ".stack.$node.$pid"
+    ssh $node "$COMMAND" 2> /dev/null #1> .stack.$node.$pid 
+    #cat .stack.$node.$pid
+    echo " "
+    echo " "
+    echo " "
+    #rm -f .stack.$node.$pid
   done
-done
-
-echo "Waiting for commands to finish"
-
-wait
-#combine results
-
-for file in .stack.*.*
-do
-  cat $file
-  rm $file
 done
 
 #remove left over files
