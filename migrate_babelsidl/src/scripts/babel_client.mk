@@ -39,6 +39,7 @@ COMPONENT := $(notdir $(TMPSRCDIR))
 $(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)clientbabel.make: $(patsubst %, $(SRCTOP_ABS)/%,$(CLIENT_SIDL)) $(CCASIDL) Core/Babel/timestamp
 	$(BABEL) --client=$(BABEL_LANGUAGE) \
            --hide-glue \
+           --cca-mode \
            --make-prefix=$(subst clientbabel.make,,$(notdir $@))client \
            --repository-path=$(BABEL_REPOSITORY) \
            --output-directory=$(subst glue/,,$(dir $@)) $<
