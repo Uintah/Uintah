@@ -38,6 +38,7 @@ using namespace Uintah;
 using namespace std;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
 
+
 //****************************************************************************
 // Default constructor for MomentumSolver
 //****************************************************************************
@@ -1247,6 +1248,8 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
 
   sched->addTask(tsk, patches, matls);
 }
+
+
 //****************************************************************************
 // Actually average the Runge-Kutta hat velocities here
 //****************************************************************************
@@ -1305,318 +1308,250 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     factor_new = timelabels->factor_new;
     factor_divide = timelabels->factor_divide;
 
-    IntVector indexLow, indexHigh;
-    indexLow = patch->getSFCXFORTLowIndex();
-    indexHigh = patch->getSFCXFORTHighIndex();
-
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector xminusCell(colX-1, colY, colZ);
-          
-          if (new_density[currCell]<=1.0e-12 || new_density[xminusCell]<=1.0e-12){
-            new_uvel[currCell] = 0.0;
-          }else{
-            new_uvel[currCell] = (factor_old*old_uvel[currCell]*
-                (old_density[currCell]+old_density[xminusCell]) +
-                factor_new*new_uvel[currCell]*
-                (temp_density[currCell]+temp_density[xminusCell]))/
-                (factor_divide*(new_density[currCell]+new_density[xminusCell]));
-          }
-        }
+    IntVector x_offset(1,0,0);
+    IntVector y_offset(0,1,0);
+    IntVector z_offset(0,0,1);
+    
+    //__________________________________
+    //  X  (This includes the extra cells)
+    CellIterator SFCX_iter = patch->getSFCXIterator__New();
+    
+    for(; !SFCX_iter.done(); SFCX_iter++) {
+      IntVector c = *SFCX_iter;
+      IntVector L = c - x_offset;
+      if (new_density[c]<=1.0e-12 || new_density[L]<=1.0e-12){     // CLAMP
+        new_uvel[c] = 0.0;
+      }else{
+        new_uvel[c] = (factor_old * old_uvel[c] * (old_density[c]  + old_density[L])
+                    +  factor_new * new_uvel[c] * (temp_density[c] + temp_density[L]))/
+                       (factor_divide * (new_density[c] + new_density[L]));
       }
     }
-    indexLow = patch->getSFCYFORTLowIndex();
-    indexHigh = patch->getSFCYFORTHighIndex();
-
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector yminusCell(colX, colY-1, colZ);
-          
-          if (new_density[currCell]<=1.0e-12 || new_density[yminusCell]<=1.0e-12)
-            new_vvel[currCell] = 0.0;
-          else
-            new_vvel[currCell] = (factor_old*old_vvel[currCell]*
-                (old_density[currCell]+old_density[yminusCell]) +
-                factor_new*new_vvel[currCell]*
-                (temp_density[currCell]+temp_density[yminusCell]))/
-                (factor_divide*(new_density[currCell]+new_density[yminusCell]));
-
-        }
+    //__________________________________
+    // Y  (This includes the extra cells)
+    CellIterator SFCY_iter = patch->getSFCZIterator__New();
+    
+    for(; !SFCY_iter.done(); SFCY_iter++) {
+      IntVector c = *SFCY_iter;
+      IntVector L = c - y_offset;
+      if (new_density[c]<=1.0e-12 || new_density[L]<=1.0e-12){     // CLAMP
+        new_vvel[c] = 0.0;
+      }else{
+        new_vvel[c] = (factor_old * old_vvel[c] * (old_density[c]  + old_density[L])
+                    +  factor_new * new_vvel[c] * (temp_density[c] + temp_density[L]))/
+                       (factor_divide * (new_density[c] + new_density[L]));
       }
     }
-    indexLow = patch->getSFCZFORTLowIndex();
-    indexHigh = patch->getSFCZFORTHighIndex();
-
-    for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-      for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-        for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          IntVector zminusCell(colX, colY, colZ-1);
-          
-          if (new_density[currCell]<=1.0e-12 || new_density[zminusCell]<=1.0e-12)
-            new_wvel[currCell] = 0.0;
-          else
-            new_wvel[currCell] = (factor_old*old_wvel[currCell]*
-                (old_density[currCell]+old_density[zminusCell]) +
-                factor_new*new_wvel[currCell]*
-                (temp_density[currCell]+temp_density[zminusCell]))/
-                (factor_divide*(new_density[currCell]+new_density[zminusCell]));
-
-        }
+    //__________________________________
+    // Z  (This includes the extra cells)
+    CellIterator SFCZ_iter = patch->getSFCZIterator__New();
+    
+    for(; !SFCZ_iter.done(); SFCZ_iter++) {
+      IntVector c = *SFCZ_iter;
+      IntVector L = c - z_offset;
+      if (new_density[c]<=1.0e-12 || new_density[L]<=1.0e-12){     // CLAMP
+        new_wvel[c] = 0.0;
+      }else{
+        new_wvel[c] = (factor_old * old_wvel[c] * (old_density[c]  + old_density[L])
+                    +  factor_new * new_wvel[c] * (temp_density[c] + temp_density[L]))/
+                       (factor_divide * (new_density[c] + new_density[L]));
       }
     }
-
+    
+//__________________________________
+//  Apply boundary conditions
 // Tangential bc's are not needed to be set for hat velocities
 // Commented them out to avoid confusion
-  if (d_boundaryCondition->anyArchesPhysicalBC()) {
-  int outlet_celltypeval = d_boundaryCondition->outletCellType();
-  int pressure_celltypeval = d_boundaryCondition->pressureCellType();
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+    if (d_boundaryCondition->anyArchesPhysicalBC()) {
+      int outlet_celltypeval = d_boundaryCondition->outletCellType();
+      int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+      IntVector idxLo = patch->getFortranCellLowIndex__New();
+      IntVector idxHi = patch->getFortranCellHighIndex__New();
+      bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+      bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+      bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+      bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+      bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  int sign = 0;
+      int sign = 0;
 
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
+      if (xminus) {
+        int colX = idxLo.x();
+        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector xminusCell(colX-1, colY, colZ);
+            IntVector xplusCell(colX+1, colY, colZ);
 
-        if ((cellType[xminusCell] == outlet_celltypeval)||
-            (cellType[xminusCell] == pressure_celltypeval)) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-            new_uvel[currCell] = 0.0;
-          else {
-          if (cellType[xminusCell] == outlet_celltypeval)
-            sign = 1;
-          else
-            sign = -1;
-          if (sign * old_uvel[currCell] < -1.0e-10)
-            new_uvel[currCell] = new_uvel[xplusCell];
-          else
-            new_uvel[currCell] = 0.0;
+            if ((cellType[xminusCell] == outlet_celltypeval)||
+                (cellType[xminusCell] == pressure_celltypeval)) {
+              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
+                  ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
+                new_uvel[currCell] = 0.0;
+              else {
+              if (cellType[xminusCell] == outlet_celltypeval)
+                sign = 1;
+              else
+                sign = -1;
+              if (sign * old_uvel[currCell] < -1.0e-10)
+                new_uvel[currCell] = new_uvel[xplusCell];
+              else
+                new_uvel[currCell] = 0.0;
+              }
+              new_uvel[xminusCell] = new_uvel[currCell];
+
+            }
           }
-          new_uvel[xminusCell] = new_uvel[currCell];
-          /*if (!(yminus && (colY == idxLo.y())))
-            new_vvel[xminusCell] = new_vvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            new_wvel[xminusCell] = new_wvel[currCell];*/
         }
-        else
-           new_uvel[currCell] = (factor_old*old_uvel[currCell]*
-                (old_density[currCell]+old_density[xminusCell]) +
-                factor_new*new_uvel[currCell]*
-                (temp_density[currCell]+temp_density[xminusCell]))/
-                (factor_divide*(new_density[currCell]+new_density[xminusCell]));
       }
-    }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector xplusplusCell(colX+2, colY, colZ);
+      if (xplus) {
+        int colX = idxHi.x();
+        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+          for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector xplusCell(colX+1, colY, colZ);
+            IntVector xplusplusCell(colX+2, colY, colZ);
 
-        if ((cellType[xplusCell] == outlet_celltypeval)||
-            (cellType[xplusCell] == pressure_celltypeval)) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-            new_uvel[xplusCell] = 0.0;
-          else {
-          if (cellType[xplusCell] == outlet_celltypeval)
-            sign = 1;
-          else
-            sign = -1;
-          if (sign * old_uvel[xplusCell] > 1.0e-10)
-            new_uvel[xplusCell] = new_uvel[currCell];
-          else
-            new_uvel[xplusCell] = 0.0;
-          }
-          new_uvel[xplusplusCell] = new_uvel[xplusCell];
-        /*  if (!(yminus && (colY == idxLo.y())))
-            new_vvel[xplusCell] = new_vvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            new_wvel[xplusCell] = new_wvel[currCell];*/
-        }
-        else
-           new_uvel[xplusCell] = (factor_old*old_uvel[xplusCell]*
-                (old_density[xplusCell]+old_density[currCell]) +
-                factor_new*new_uvel[xplusCell]*
-                (temp_density[xplusCell]+temp_density[currCell]))/
-                (factor_divide*(new_density[xplusCell]+new_density[currCell]));
-      }
-    }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
+            if ((cellType[xplusCell] == outlet_celltypeval)||
+                (cellType[xplusCell] == pressure_celltypeval)) {
+              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
+                  ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
+                new_uvel[xplusCell] = 0.0;
+              else {
+              if (cellType[xplusCell] == outlet_celltypeval)
+                sign = 1;
+              else
+                sign = -1;
+              if (sign * old_uvel[xplusCell] > 1.0e-10)
+                new_uvel[xplusCell] = new_uvel[currCell];
+              else
+                new_uvel[xplusCell] = 0.0;
+              }
+              new_uvel[xplusplusCell] = new_uvel[xplusCell];
 
-        if ((cellType[yminusCell] == outlet_celltypeval)||
-            (cellType[yminusCell] == pressure_celltypeval)) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            new_vvel[currCell] = 0.0;
-          else {
-          if (cellType[yminusCell] == outlet_celltypeval)
-            sign = 1;
-          else
-            sign = -1;
-          if (sign * old_vvel[currCell] < -1.0e-10)
-            new_vvel[currCell] = new_vvel[yplusCell];
-          else
-            new_vvel[currCell] = 0.0;
+            }
           }
-          new_vvel[yminusCell] = new_vvel[currCell];
-        /*  if (!(xminus && (colX == idxLo.x())))
-            new_uvel[yminusCell] = new_uvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            new_wvel[yminusCell] = new_wvel[currCell];*/
         }
-        else
-           new_vvel[currCell] = (factor_old*old_vvel[currCell]*
-                (old_density[currCell]+old_density[yminusCell]) +
-                factor_new*new_vvel[currCell]*
-                (temp_density[currCell]+temp_density[yminusCell]))/
-                (factor_divide*(new_density[currCell]+new_density[yminusCell]));
       }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector yplusplusCell(colX, colY+2, colZ);
+      if (yminus) {
+        int colY = idxLo.y();
+        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector yminusCell(colX, colY-1, colZ);
+            IntVector yplusCell(colX, colY+1, colZ);
 
-        if ((cellType[yplusCell] == outlet_celltypeval)||
-            (cellType[yplusCell] == pressure_celltypeval)) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            new_vvel[yplusCell] = 0.0;
-          else {
-          if (cellType[yplusCell] == outlet_celltypeval)
-            sign = 1;
-          else
-            sign = -1;
-          if (sign * old_vvel[yplusCell] > 1.0e-10)
-            new_vvel[yplusCell] = new_vvel[currCell];
-          else
-            new_vvel[yplusCell] = 0.0;
-          }
-          new_vvel[yplusplusCell] = new_vvel[yplusCell];
-         /* if (!(xminus && (colX == idxLo.x())))
-            new_uvel[yplusCell] = new_uvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-            new_wvel[yplusCell] = new_wvel[currCell];*/
-        }
-        else
-           new_vvel[yplusCell] = (factor_old*old_vvel[yplusCell]*
-                (old_density[yplusCell]+old_density[currCell]) +
-                factor_new*new_vvel[yplusCell]*
-                (temp_density[yplusCell]+temp_density[currCell]))/
-                (factor_divide*(new_density[yplusCell]+new_density[currCell]));
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        IntVector zplusCell(colX, colY, colZ+1);
+            if ((cellType[yminusCell] == outlet_celltypeval)||
+                (cellType[yminusCell] == pressure_celltypeval)) {
+              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
+                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
+                new_vvel[currCell] = 0.0;
+              else {
+              if (cellType[yminusCell] == outlet_celltypeval)
+                sign = 1;
+              else
+                sign = -1;
+              if (sign * old_vvel[currCell] < -1.0e-10)
+                new_vvel[currCell] = new_vvel[yplusCell];
+              else
+                new_vvel[currCell] = 0.0;
+              }
+              new_vvel[yminusCell] = new_vvel[currCell];
 
-        if ((cellType[zminusCell] == outlet_celltypeval)||
-            (cellType[zminusCell] == pressure_celltypeval)) {
-          if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            new_wvel[currCell] = 0.0;
-          else {
-          if (cellType[zminusCell] == outlet_celltypeval)
-            sign = 1;
-          else
-            sign = -1;
-          if (sign * old_wvel[currCell] < -1.0e-10)
-            new_wvel[currCell] = new_wvel[zplusCell];
-          else
-            new_wvel[currCell] = 0.0;
+            }
           }
-          new_wvel[zminusCell] = new_wvel[currCell];
-        /*  if (!(xminus && (colX == idxLo.x())))
-            new_uvel[zminusCell] = new_uvel[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-            new_vvel[zminusCell] = new_vvel[currCell];*/
         }
-        else
-           new_wvel[currCell] = (factor_old*old_wvel[currCell]*
-                (old_density[currCell]+old_density[zminusCell]) +
-                factor_new*new_wvel[currCell]*
-                (temp_density[currCell]+temp_density[zminusCell]))/
-                (factor_divide*
-                (new_density[currCell]+new_density[zminusCell]));
       }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector zplusplusCell(colX, colY, colZ+2);
+      if (yplus) {
+        int colY = idxHi.y();
+        for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector yplusCell(colX, colY+1, colZ);
+            IntVector yplusplusCell(colX, colY+2, colZ);
 
-        if ((cellType[zplusCell] == outlet_celltypeval)||
-            (cellType[zplusCell] == pressure_celltypeval)) {
-          if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-            new_wvel[zplusCell] = 0.0;
-          else {
-          if (cellType[zplusCell] == outlet_celltypeval)
-            sign = 1;
-          else
-            sign = -1;
-          if (sign * old_wvel[zplusCell] > 1.0e-10)
-            new_wvel[zplusCell] = new_wvel[currCell];
-          else
-            new_wvel[zplusCell] = 0.0;
+            if ((cellType[yplusCell] == outlet_celltypeval)||
+                (cellType[yplusCell] == pressure_celltypeval)) {
+              if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
+                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
+                new_vvel[yplusCell] = 0.0;
+              else {
+              if (cellType[yplusCell] == outlet_celltypeval)
+                sign = 1;
+              else
+                sign = -1;
+              if (sign * old_vvel[yplusCell] > 1.0e-10)
+                new_vvel[yplusCell] = new_vvel[currCell];
+              else
+                new_vvel[yplusCell] = 0.0;
+              }
+              new_vvel[yplusplusCell] = new_vvel[yplusCell];
+
+            }
           }
-          new_wvel[zplusplusCell] = new_wvel[zplusCell];
-        /*  if (!(xminus && (colX == idxLo.x())))
-            new_uvel[zplusCell] = new_uvel[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-            new_vvel[zplusCell] = new_vvel[currCell];*/
         }
-        else
-           new_wvel[zplusCell] = (factor_old*old_wvel[zplusCell]*
-                (old_density[zplusCell]+old_density[currCell]) +
-                factor_new*new_wvel[zplusCell]*
-                (temp_density[zplusCell]+temp_density[currCell]))/
-                (factor_divide*(new_density[zplusCell]+new_density[currCell]));
       }
-    }
-  }
-  }
-  }
+      if (zminus) {
+        int colZ = idxLo.z();
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector zminusCell(colX, colY, colZ-1);
+            IntVector zplusCell(colX, colY, colZ+1);
+
+            if ((cellType[zminusCell] == outlet_celltypeval)||
+                (cellType[zminusCell] == pressure_celltypeval)) {
+              if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
+                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
+                new_wvel[currCell] = 0.0;
+              else {
+              if (cellType[zminusCell] == outlet_celltypeval)
+                sign = 1;
+              else
+                sign = -1;
+              if (sign * old_wvel[currCell] < -1.0e-10)
+                new_wvel[currCell] = new_wvel[zplusCell];
+              else
+                new_wvel[currCell] = 0.0;
+              }
+              new_wvel[zminusCell] = new_wvel[currCell];
+
+            }
+          }
+        }
+      }
+      if (zplus) {
+        int colZ = idxHi.z();
+        for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+          for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+            IntVector currCell(colX, colY, colZ);
+            IntVector zplusCell(colX, colY, colZ+1);
+            IntVector zplusplusCell(colX, colY, colZ+2);
+
+            if ((cellType[zplusCell] == outlet_celltypeval)||
+                (cellType[zplusCell] == pressure_celltypeval)) {
+              if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
+                  ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
+                new_wvel[zplusCell] = 0.0;
+              else {
+              if (cellType[zplusCell] == outlet_celltypeval)
+                sign = 1;
+              else
+                sign = -1;
+              if (sign * old_wvel[zplusCell] > 1.0e-10)
+                new_wvel[zplusCell] = new_wvel[currCell];
+              else
+                new_wvel[zplusCell] = 0.0;
+              }
+              new_wvel[zplusplusCell] = new_wvel[zplusCell];
+
+            }
+          }
+        }
+      }
+    }  // any physical BC
+  }  // patches
 }
 // ****************************************************************************
 // Schedule preparation for extra projection
