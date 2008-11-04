@@ -261,7 +261,7 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
   c_lo_patch = coarseLevel->mapCellToFiner(c_lo_patch);     
   c_hi_patch = coarseLevel->mapCellToFiner(c_hi_patch); 
 
-  IntVector dir = finePatch->faceAxes(patchFace);        // face axes
+  IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
   int pdir = dir[0];
   int y = dir[1];  // tangential directions
   int z = dir[2];

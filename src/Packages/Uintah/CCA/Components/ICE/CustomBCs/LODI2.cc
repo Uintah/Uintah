@@ -734,7 +734,7 @@ void computeLi(StaticArray<CCVariable<Vector> >& L,
                << " patch " << patch->getID()<<endl;
       //_____________________________________
       // S I D E S
-      IntVector dir = patch->faceAxes(face);
+      IntVector dir = patch->getFaceAxes(face);
       int P_dir = dir[0]; // find the principal dir
       double delta = dx[P_dir];
 
@@ -804,7 +804,7 @@ void getBoundaryEdges(const Patch* patch,
   // Looking down on the face, examine 
   // each edge (clockwise).  If there
   // are no neighboring patches then it's a valid edge
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];   
   IntVector minus(Patch::xminus, Patch::yminus, Patch::zminus);
@@ -862,7 +862,7 @@ void FaceDensity_LODI(const Patch* patch,
   constCCVariable<double>& speedSound = lv->speedSound;
   constCCVariable<Vector>& vel_CC     = lv->vel_CC;  
   
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   
   IntVector offset = patch->faceDirection(face);
@@ -945,7 +945,7 @@ void FaceVel_LODI(const Patch* patch,
   constCCVariable<double>& rho_CC     = lv->rho_CC;
   constCCVariable<double>& speedSound = lv->speedSound;
 
-  IntVector dir= patch->faceAxes(face);                 
+  IntVector dir= patch->getFaceAxes(face);                 
   int P_dir = dir[0];  // principal direction
   int dir1  = dir[1];  // transverse
   int dir2  = dir[2];  // transvers
@@ -1049,7 +1049,7 @@ void FaceTemp_LODI(const Patch* patch,
   constCCVariable<double>& rho_CC    = lv->rho_CC;
   constCCVariable<Vector>& vel_CC   = lv->vel_CC;
               
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   double dx = DX[P_dir];
   
@@ -1137,7 +1137,7 @@ void FacePress_LODI(const Patch* patch,
   StaticArray<CCVariable<Vector> >& L = lv->Li;
  
   Vector DX =patch->dCell();
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   
   IntVector offset = patch->faceDirection(face);

@@ -417,7 +417,7 @@ template<class T>
   coarseLevel->findCellIndexRange(gridLo,gridHi);
   gridHi -= IntVector(1,1,1);  // we need the inclusive gridHi
   
-  IntVector dir = finePatch->faceAxes(patchFace);        // face axes
+  IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
   int p_dir = dir[0];                                    // normal direction 
   int y = dir[1];             // Orthogonal to the patch face
   int z = dir[2];

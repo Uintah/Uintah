@@ -285,7 +285,7 @@ void set_MicroSlipVelocity_BC(const Patch* patch,
     constCCVariable<double> rho_CC    = sv->rho_CC;
     
     IntVector offset = patch->faceDirection(face);
-    IntVector axes = patch->faceAxes(face);
+    IntVector axes = patch->getFaceAxes(face);
     //int P_dir = axes[0];  // principal direction
     //int dir1  = axes[1];  // Jennifer double check what these indicies
     //int dir2  = axes[2];  // are for the different faces
@@ -363,7 +363,7 @@ void set_MicroSlipTemperature_BC(const Patch* patch,
     //CCVariable<double>& lamda          = sv->lamda;
     constCCVariable<double>& Temp_CC  = sv->Temp_CC;
 
-    IntVector axes = patch->faceAxes(face);
+    IntVector axes = patch->getFaceAxes(face);
     //int P_dir = axes[0];  // principal direction
     Vector DX = patch->dCell();
     //double dx = DX[P_dir];

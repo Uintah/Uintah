@@ -212,7 +212,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
                             const int child)
 {
  IntVector oneCell = patch->faceDirection(face);
- IntVector dir= patch->faceAxes(face);
+ IntVector dir= patch->getFaceAxes(face);
  double dx = cell_dx[dir[0]];
 
  bool IveSetBC = false;
@@ -339,7 +339,7 @@ bool getIteratorBCValueBCKind( const Patch* patch,
   //    find dx, sign on that face, and direction face is pointing  
   IntVector faceDir_tmp = patch->faceDirection(face);
   IntVector faceDir     = Abs(faceDir_tmp);
-  IntVector dir = patch->faceAxes(face);
+  IntVector dir = patch->getFaceAxes(face);
   double sign = faceDir_tmp[dir[0]];
   double dx   = cell_dx[dir[0]];
 
@@ -515,7 +515,7 @@ void set_CFI_BC( CCVariable<T>& q_CC, const Patch* patch)
       Patch::FaceType face = *iter;
       
       IntVector oneCell = patch->faceDirection(face);
-      int p_dir = patch->faceAxes(face)[0];  //principal dir.
+      int p_dir = patch->getFaceAxes(face)[0];  //principal dir.
       Vector dx = patch->dCell();
       
       Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;

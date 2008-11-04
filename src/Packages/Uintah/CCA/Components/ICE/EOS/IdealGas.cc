@@ -87,7 +87,7 @@ void IdealGas::hydrostaticTempAdjustment(Patch::FaceType face,
                                          const Vector& cell_dx,
                                          CCVariable<double>& Temp_CC)
 { 
-  IntVector axes = patch->faceAxes(face);
+  IntVector axes = patch->getFaceAxes(face);
   int P_dir = axes[0];  // principal direction
   double plusMinusOne = patch->faceDirection(face)[P_dir];
   // On xPlus yPlus zPlus you add the increment 
