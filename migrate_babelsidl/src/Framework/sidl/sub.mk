@@ -55,6 +55,7 @@ $(FWKGLUEDIR_ABS)/serverbabel.make: $(FWKSIDL) Core/Babel/timestamp
 	$(BABEL) --server=C++ \
            --output-directory=$(FWKIMPLDIR_ABS) \
            --make-prefix=server \
+           --cca-mode \
            --hide-glue \
            --repository-path=$(BABEL_REPOSITORY) \
            --vpath=$(FWKIMPLDIR_ABS) $(filter %.sidl, $+)
