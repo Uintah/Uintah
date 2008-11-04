@@ -45,6 +45,7 @@ $(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)babel.make: $(OBJTOP_ABS)/$(TMPSRCDI
 	$(BABEL) --server=$(BABEL_LANGUAGE) \
            --output-directory=$(subst glue/,,$(dir $@)) \
            --make-prefix=$(subst babel.make,,$(notdir $@)) \
+           --cca-mode \
            --hide-glue \
            --repository-path=$(BABEL_REPOSITORY) \
            --vpath=$(subst glue/,,$(dir $@)) $(filter %.sidl, $+)
@@ -52,8 +53,8 @@ $(SRCTOP_ABS)/$(TMPSRCDIR)/glue/$(COMPONENT)babel.make: $(OBJTOP_ABS)/$(TMPSRCDI
 $(OBJTOP_ABS)/$(TMPSRCDIR)/glue:
 	if ! test -d $@; then mkdir -p $@; fi
 
-$(COMPONENT)IMPL_SRC_DIRS :=
-$(COMPONENT)IOR_SRC_DIRS :=
+$(COMPONENT)IMPL_SRC_DIRS := .
+$(COMPONENT)IOR_SRC_DIRS := .
 include $(SRCTOP_ABS)/$(TMPSRCDIR)/$(COMPONENT)babel.make.package
 INCLUDES := $(INCLUDES) -I$($(COMPONENT)IMPL_SRC_DIRS) -I$($(COMPONENT)IOR_SRC_DIRS)
 
