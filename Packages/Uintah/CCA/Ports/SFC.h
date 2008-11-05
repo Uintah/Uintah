@@ -15,6 +15,7 @@ using namespace std;
 #include <Core/Thread/Time.h>
 #include <Packages/Uintah/CCA/Ports/uintahshare.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Util/Assert.h>
 using namespace SCIRun;
 using namespace Uintah;
 namespace Uintah{
@@ -2872,6 +2873,7 @@ void SFC<LOCS>::Parallel0()
   unsigned int i;
  
   SerialH<DIM,BITS>(&histories[0]);  //Saves results in sendbuf
+
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[0]+=finish-start;
@@ -2906,6 +2908,7 @@ void SFC<LOCS>::Parallel0()
   {
     (*orders)[i]=histories[i].index;
   }
+  
   /*
   cout << rank << ": final list: ";
   for(unsigned int i=0;i<histories.size();i++)
@@ -2933,6 +2936,461 @@ struct MergeInfo
 
 #define ASCENDING 0
 #define DESCENDING 1
+#if 1
+template<class LOCS> template<class BITS>
+int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<History<BITS> >&recievebuf, vector<History<BITS> > &mergebuf)
+{
+  //cout << rank <<  ": Merge Exchange started with " << to << endl;
+  int direction= (int) (rank>to);
+  //BITS emax, emin;
+  queue<MPI_Request> squeue, rqueue;
+  unsigned int n2;
+
+  MergeInfo<BITS> myinfo,theirinfo;
+
+  MPI_Request srequest, rrequest;
+  MPI_Status status;
+  
+  myinfo.n=n;
+  if(n!=0)
+  {
+    myinfo.min=sendbuf[0].bits;
+    myinfo.max=sendbuf[n-1].bits;
+  }
+  //cout << rank << " n:" << n << " min:" << (int)myinfo.min << "max:" << (int)myinfo.max << endl;
+
+  MPI_Isend(&myinfo,sizeof(myinfo),MPI_BYTE,to,0,Comm,&srequest);
+  MPI_Irecv(&theirinfo,sizeof(theirinfo),MPI_BYTE,to,0,Comm,&rrequest);
+  MPI_Wait(&rrequest,&status);
+  MPI_Wait(&srequest,&status);
+
+  if(myinfo.n==0 || theirinfo.n==0)
+  {
+     return 0;
+  }
+  
+  //min_max exchange
+  if(direction==ASCENDING)
+  {
+    if(myinfo.max<=theirinfo.min) //no exchange needed
+        return 0;
+    else if(myinfo.min>=theirinfo.max) //full exchange needed
+    {
+      int sendn=n;  //the number of elements to send
+      int send_offset=0; //the index of the first element to send
+      if(n>theirinfo.n)
+      {
+        //i have more elements than the other side
+          //we don't want to the number of elements to change
+          //so copy the first elements to the end of the merge buff
+
+        //move last elements to merge buf
+        int diff=n-theirinfo.n;
+        for(int i=0;i<diff;i++)
+        {
+          mergebuf[n-diff+i]=sendbuf[i];
+        }
+
+        sendn=theirinfo.n;
+        send_offset=diff;
+      }
+      
+       //send the elements to be merged
+       MPI_Isend(&sendbuf[send_offset],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+       //recv the elements to be merged
+       MPI_Irecv(&mergebuf[0],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
+       MPI_Wait(&rrequest,&status);
+       MPI_Wait(&srequest,&status);
+       sendbuf.swap(mergebuf);
+       return 1;
+    }
+  }
+  else //DESCENDING
+  {
+    if(theirinfo.max<=myinfo.min) //no exchange needed
+        return 0;
+    else if(myinfo.max<=theirinfo.min) //full exchange needed
+    {
+      int sendn=n;  //the number of elements to send
+      int send_offset=0; //the index of the first element to send
+
+      if(n>theirinfo.n)
+      {
+        //i have more elements than the other side
+          //we don't want to the number of elements to change
+          //so copy the last elements to the begining of the merge buff
+
+        //move last elements to merge buf
+        int diff=n-theirinfo.n;
+        
+        for(int i=0;i<diff;i++)
+        {
+          mergebuf[i]=sendbuf[n-diff+i];
+        }
+        
+        sendn=theirinfo.n;
+        send_offset=diff;
+
+      }
+      
+      //send the elements to be merged
+      MPI_Isend(&sendbuf[0],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+      //recv the elements to be merged
+      MPI_Irecv(&mergebuf[send_offset],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
+      MPI_Wait(&rrequest,&status);
+      MPI_Wait(&srequest,&status);
+      sendbuf.swap(mergebuf);
+      return 1;
+    }
+  }
+  n2=theirinfo.n;
+  //cout << rank << ": Max-min done\n";
+  
+  recievebuf.resize(n2);
+  
+  History<BITS> *sbuf=&sendbuf[0], *rbuf=&recievebuf[0], *mbuf=&mergebuf[0];
+  History<BITS> *msbuf=sbuf, *mrbuf=rbuf;
+  
+  unsigned int nsend=n;
+  unsigned int nrecv=n2;
+  //sample exchange
+  unsigned int minn=min(n,n2);
+  unsigned int sample_size=(int)(minn*sample_percent);
+
+  if(sample_size>=5)
+  {
+//    cout << rank << " creating samples\n";
+    BITS *highsample=(BITS*)mbuf, *lowsample=(BITS*)rbuf, *mysample, *theirsample;
+    float stridelow,stridehigh,mystride;
+    unsigned int index=0, ihigh=0,ilow=0,count=0;
+    if(direction==ASCENDING)
+    {
+      mysample=lowsample;
+      theirsample=highsample;
+      mystride=stridelow=n/(float)sample_size;
+      stridehigh=n2/(float)sample_size;
+    }
+    else
+    {
+      mysample=highsample;
+      theirsample=lowsample;
+      stridelow=n2/(float)sample_size;
+      mystride=stridehigh=n/(float)sample_size;
+    }
+  
+    //create sample
+    for(unsigned int i=0;i<sample_size;i++)
+    {
+      index=int(mystride*i);
+      mysample[i]=sbuf[index].bits;
+    }
+//    cout << "exchanging samples\n";
+    //exchange samples
+    MPI_Isend(mysample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&srequest);
+    MPI_Irecv(theirsample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&rrequest);
+  
+    MPI_Wait(&rrequest,&status);
+    MPI_Wait(&srequest,&status);
+    
+//    cout << "done exchanging samples\n";
+    //merge samples
+    while(count<minn)
+    {
+      if(lowsample[ilow]<=highsample[ihigh])
+      {
+        ilow++;
+      }
+      else
+      {
+        ihigh++;
+      }
+      count=int(ilow*stridelow)+int(ihigh*stridehigh);
+    }
+    
+    if(ilow>sample_size) //handle case where ilow goes to far
+    {
+      ihigh+=(ilow-sample_size);
+    }
+    nrecv=nsend=int((ihigh+2)*stridehigh);
+
+    if(nsend>n)
+    {
+      nsend=n;
+    }
+    if(nrecv>n2)
+    {
+      nrecv=n2;
+    }
+  }  
+  //final exchange
+  //cout << rank << ": sample done\n";
+  
+  int b;
+  unsigned int block_count=0;
+  int sremaining=nsend;
+  int rremaining=nrecv;
+//  cout << sremaining << " " << rremaining << endl;
+  unsigned int sent=0, recvd=0;
+  //unsigned int merged=0;
+//  cout << rank << " Block size: " << comm_block_size << endl;  
+  
+  
+  if(direction==ASCENDING)
+  {
+    //Merge Ascending
+    //Send Descending
+    //Recieve Ascending
+      
+    History<BITS> *start1=msbuf,*start2=mrbuf,*end1=start1+n,*end2=mrbuf,*out=mbuf, *outend=mbuf+n;
+    //position buffers
+    sbuf+=n;
+    
+    while(block_count<blocks_in_transit)
+    {
+      //send
+      if(sremaining>0)
+      {
+        int send=min(sremaining,(int)comm_block_size);
+        sbuf-=send;
+        MPI_Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        squeue.push(srequest);
+        sent+=send;
+        sremaining-=send;
+      }
+      
+      //recieve
+      if(rremaining>0)
+      {
+        int recv=min(rremaining,(int)comm_block_size);
+        MPI_Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        rqueue.push(rrequest);
+        recvd+=recv;
+        rremaining-=recv;
+      }
+    
+      block_count++;
+    }
+    while(!rqueue.empty())
+    {
+      MPI_Wait(&(rqueue.front()),&status);
+
+      //start next communication
+      //send next block
+      if(sremaining>0)
+      {
+        int send=min(sremaining,(int)comm_block_size);
+        sbuf-=send;
+        MPI_Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        squeue.push(srequest);
+        sent+=send;
+        sremaining-=send;
+      }
+      
+      if(rremaining>0)
+      {
+        int recv=min(rremaining,(int)comm_block_size);
+        MPI_Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        rqueue.push(rrequest);
+        recvd+=recv;
+        rremaining-=recv;
+      }
+      
+      rqueue.pop();
+      
+      MPI_Get_count(&status,MPI_BYTE,&b);
+      b/=sizeof(History<BITS>);
+      end2+=b;
+     
+      //while there is more merging needed and I have recieved histories 
+      while(start2<end2 && out<outend)
+      {
+        //size of merge blocks
+        int mb=min(int(end1-start1),(int)merge_block_size);
+        int rb=min(int(end2-start2),(int)merge_block_size);
+        
+        BITS mmin=start1->bits, mmax=(start1+mb-1)->bits, bmin=start2->bits,bmax=(start2+rb-1)->bits; 
+
+        if(mmax<=bmin) //take everything from mine
+        {
+          int s=min(mb,int(outend-out));
+          //cout << rank << ": take " << s << " from mine\n";
+          memcpy(out,start1,s*sizeof(History<BITS>));
+          start1+=s;
+          out+=s;
+        }
+        else if (bmax<mmin) //take everything from theirs
+        {
+          int s=min(rb,int(outend-out));
+          //cout << rank << ": take " << s << " from theirs\n";
+          memcpy(out,start2,s*sizeof(History<BITS>));
+          start2+=s;
+          out+=s;
+        }
+        else  //lists overlap, merge them
+        {
+          History<BITS>* tmpend2=start2+rb,*tmpend1=start1+mb;
+          for(; start2 < tmpend2 && start1<tmpend1 && out<outend ; out++)
+          {
+            if(*start2 < *start1)
+              *out=*start2++;
+            else
+              *out=*start1++;
+          }
+        }
+      }
+  
+    
+      //wait for a send, it should be done now
+      MPI_Wait(&(squeue.front()),&status);
+      squeue.pop();
+    }
+    int rem=outend-out;
+    if(rem>0)
+    {
+      memcpy(out,start1,rem*sizeof(History<BITS>));    
+    }
+  }
+  else
+  {
+    //Merge Descending
+    //Send Ascending
+    //Recieve Descending
+
+    //position buffers
+    mbuf+=n;
+    rbuf+=n2;
+
+    msbuf+=n-1;
+    mrbuf+=n2-1;
+
+    History<BITS> *start1=msbuf,*start2=mrbuf,*end1=start1-n,*end2=mrbuf,*out=mbuf-1, *outend=out-n;
+      
+    while(block_count<blocks_in_transit)
+    {
+      //send
+      if(sremaining>0)
+      {
+        int send=min(sremaining,(int)comm_block_size);
+        MPI_Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        squeue.push(srequest);
+        sent+=send;
+        sremaining-=send;
+      }
+
+      if(rremaining>0)
+      {
+        int recv=min(rremaining,(int)comm_block_size);
+        rbuf-=recv;
+        MPI_Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        rqueue.push(rrequest);
+        recvd+=recv;
+        rremaining-=recv;
+      }
+      block_count++;
+    }
+    while(!rqueue.empty())
+    {
+      MPI_Wait(&(rqueue.front()),&status);
+    
+      //start next communication
+      if(sremaining>0)
+      {
+        int send=min(sremaining,(int)comm_block_size);
+        MPI_Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        squeue.push(srequest);
+        sent+=send;
+        sremaining-=send;
+      }
+      if(rremaining>0)
+      {
+        int recv=min(rremaining,(int)comm_block_size);
+        rbuf-=recv;
+        MPI_Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        rqueue.push(rrequest);
+        recvd+=recv;
+        rremaining-=recv;
+      }
+      
+      rqueue.pop();
+
+      MPI_Get_count(&status,MPI_BYTE,&b);
+      b/=sizeof(History<BITS>);
+
+      end2-=b;
+      
+      while(start2>end2 && out>outend)
+      {
+        //size of merge blocks
+        int mb=min(int(start1-end1),(int)merge_block_size);
+        int rb=min(int(start2-end2),(int)merge_block_size);
+      
+        BITS mmin=(start1-mb+1)->bits, mmax=start1->bits, bmin=(start2-rb+1)->bits,bmax=start2->bits; 
+        
+        if(mmin>bmax) //take everything from mine
+        {
+          int s=min(mb,int(out-outend));
+          memcpy(out-s+1,start1-s+1,s*sizeof(History<BITS>));
+          start1-=s;
+          out-=s;
+        }
+        else if (bmin>=mmax) //take everything from theirs
+        {
+          int s=min(rb,int(out-outend));
+          memcpy(out-s+1,start2-s+1,s*sizeof(History<BITS>));
+          start2-=s;
+          out-=s;
+        }
+        else  //lists overlap, merge them
+        {
+          History<BITS> *tmpend2=start2-rb, *tmpend1=start1-mb;
+          for(; start2 > tmpend2 && start1 > tmpend1 && out>outend  ; out--)
+          {
+            if(*start2 > *start1)
+              *out=*start2--;
+            else
+              *out=*start1--;
+          }
+        }
+      }
+
+
+      MPI_Wait(&(squeue.front()),&status);
+      squeue.pop();
+    }
+
+    int rem=out-outend;
+    if(rem>0)
+    {
+      memcpy(out-rem+1,start1-rem+1,rem*sizeof(History<BITS>));
+    }
+
+    /*
+    if(merged<n) //merge additional elements off of msbuf
+    {
+      int rem=n-merged;
+      memcpy(mbuf-rem,msbuf-rem+1,(rem)*sizeof(History<BITS>));
+//      cout << rank << " (DSC) merging more from " << to << endl;
+    }
+    */
+  }
+  while(!rqueue.empty())
+  {
+    MPI_Wait(&(rqueue.front()),&status);
+    rqueue.pop();
+//    cout << rank << " recieved left over block\n";
+  }
+  while(!squeue.empty())
+  {
+    MPI_Wait(&(squeue.front()),&status);
+    squeue.pop();
+//    cout << rank << " sent left over block\n";
+  }
+  
+  sendbuf.swap(mergebuf);
+  //cout << rank << ": done ME\n";
+  return 1;
+}
+#else
 template<class LOCS> template<class BITS>
 int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<History<BITS> >&recievebuf, vector<History<BITS> > &mergebuf)
 {
@@ -3349,7 +3807,7 @@ int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<Hist
   //cout << rank << ": done ME\n";
   return 1;
 }
-
+#endif
 struct HC_MERGE
 {
   unsigned int base;
