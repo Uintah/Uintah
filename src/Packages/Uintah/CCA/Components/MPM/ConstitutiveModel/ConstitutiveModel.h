@@ -262,6 +262,27 @@ namespace Uintah {
 	  }
       };
 
+     inline void computeAxiSymVelocityGradient(Matrix3& velGrad,
+                                             vector<IntVector>& ni,
+                                             vector<Vector>& d_S,
+                                             vector<double>& S,
+                                             const double* oodx,
+                                             constNCVariable<Vector>& gVelocity,
+                                             const Point& px)
+     {
+        // x -> r, y -> z, z -> theta
+        for(int k = 0; k < flag->d_8or27; k++) {
+          Vector gvel = gVelocity[ni[k]];
+          for (int j = 0; j<2; j++){
+            for (int i = 0; i<2; i++) {
+              velGrad(i,j)+=gvel[i] * d_S[k][j] * oodx[j];
+            }
+          }
+          velGrad(2,2) += gvel.x()*S[k]/px.x();
+        }
+     };
+
+
     inline void computeVelocityGradient(Matrix3& velGrad,
 					vector<IntVector>& ni,
 					vector<Vector>& d_S,

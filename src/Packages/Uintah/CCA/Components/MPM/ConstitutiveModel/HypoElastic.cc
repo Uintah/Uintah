@@ -274,6 +274,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
     double c_dil=0.0,Jinc;
@@ -350,18 +351,28 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-
-      // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
+      // Initialize velocity gradient
       velGrad.set(0.0);
-      short pgFld[27];
-      if (flag->d_fracture) {
-        for(int k=0; k<27; k++)
-          pgFld[k]=pgCode[idx][k];
-        computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
-      } else {
-        computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+
+      if(!flag->d_axisymmetric){
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+        short pgFld[27];
+        if (flag->d_fracture) {
+         for(int k=0; k<27; k++){
+           pgFld[k]=pgCode[idx][k];
+         }
+         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
+        } else {
+         computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+        }
+      } else {  // axi-symmetric kinematics
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                    psize[idx]);
+        // x -> r, y -> z, z -> theta
+        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
       }
 
       // Rate of particle temperature change for thermal stress
@@ -389,7 +400,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       // Compute the local sound speed
       double rho_cur = rho_orig/J;
       c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
-      // 
+       
       // This is the (updated) Cauchy stress
       pstress_new[idx] = pstress[idx] + 
                          (DPrime*2.*G + Identity*bulk*D.Trace())*delT;

@@ -502,9 +502,9 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                     this, &SerialMPM::applyExternalLoads);
                   
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
   if (flags->d_useLoadCurves) {
-    t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
     t->computes(             lb->pLoadCurveIDLabel_preReloc);
   }
@@ -512,7 +512,6 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
 //  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
 
   sched->addTask(t, patches, matls);
-
 }
 
 void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
@@ -1987,27 +1986,56 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       Matrix3 stresspress;
       int n8or27 = flags->d_8or27;
 
-      for (ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); 
-           iter++){
-        particleIndex idx = *iter;
+      if(!flags->d_axisymmetric){
+        for (ParticleSubset::iterator iter = pset->begin();
+             iter != pset->end(); 
+             iter++){
+          particleIndex idx = *iter;
   
-        // Get the node indices that surround the cell
-        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
-                                                            psize[idx]);
+          // Get the node indices that surround the cell
+          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                              psize[idx]);
+          stressvol  = pstress[idx]*pvol[idx];
+          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+          partvoldef += pvol[idx];
 
-        stressvol  = pstress[idx]*pvol[idx];
-        //stresspress = pstress[idx] + Id*p_pressure[idx];
-        stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
-        partvoldef += pvol[idx];
+          for (int k = 0; k < n8or27; k++){
+            if(patch->containsNode(ni[k])){
+              Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+                         d_S[k].z()*oodx[2]);
+              div *= pErosion[idx];
+              internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
+              gstress[ni[k]]       += stressvol * S[k];
+            }
+          }
+        }
+      }
 
-        for (int k = 0; k < n8or27; k++){
-          if(patch->containsNode(ni[k])){
-            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
-                       d_S[k].z()*oodx[2]);
-            div *= pErosion[idx];
-            internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
-            gstress[ni[k]]       += stressvol * S[k];
+      if(flags->d_axisymmetric){
+        for (ParticleSubset::iterator iter = pset->begin();
+             iter != pset->end();
+             iter++){
+          particleIndex idx = *iter;
+
+          // Get the node indices that surround the cell
+          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                              psize[idx]);
+          stressvol  = pstress[idx]*pvol[idx];
+          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+          partvoldef += pvol[idx];
+  
+          // r is the x direction, z (axial) is the y direction
+          double IFr=0.,IFz=0.;
+          for (int k = 0; k < n8or27; k++){
+            if(patch->containsNode(ni[k])){
+               IFr = d_S[k].x()*oodx[0]*stresspress(0,0) +
+                    d_S[k].y()*oodx[1]*stresspress(0,1) +
+                      S[k]*stresspress(2,2)/px[idx].x();
+              IFz = d_S[k].x()*oodx[0]*stresspress(0,1)
+                  + d_S[k].y()*oodx[1]*stresspress(1,1);
+              internalforce[ni[k]] -=  Vector(IFr,IFz,0.0) * pvol[idx];
+              gstress[ni[k]]       += stressvol * S[k];
+            }
           }
         }
       }
@@ -2147,7 +2175,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
           acceleration[c] = acc +  gravity;
 //                 acceleration[c] =
 //                    (internalforce[c] + externalforce[c]
-//                    -50000.*velocity[c]*mass[c])/mass[c]
+//                    -500.*velocity[c]*mass[c])/mass[c]
 //                    + gravity;
       }
     }
@@ -2308,6 +2336,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      // Get the particle position data
+      constParticleVariable<Point>  px;
+      old_dw->get(px, lb->pXLabel, pset);
 
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
@@ -2324,9 +2355,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
           }
         }
         if(do_PressureBCs){
-        // Get the particle position data
-        constParticleVariable<Point>  px;
-        old_dw->get(px, lb->pXLabel, pset);
 
         // Get the load curve data
         constParticleVariable<int> pLoadCurveID;
@@ -2418,7 +2446,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
         new_dw->allocateAndPut(pExternalForce_new, 
                                lb->pExtForceLabel_preReloc,  pset);
-        
         
         for(ParticleSubset::iterator iter = pset->begin();
             iter != pset->end(); iter++){
