@@ -110,6 +110,7 @@ namespace Uintah {
     ParticleVariable<int> pLoadCurveID;
 
     MPMLabel* d_lb;
+    MPMFlags* d_flags;
 
     bool d_useLoadCurves;
     bool d_with_color;

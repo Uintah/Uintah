@@ -18,6 +18,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
@@ -36,6 +37,8 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_with_color = flags->d_with_color;
   d_ref_temp = flags->d_ref_temp; // for thermal stress 
   d_artificial_viscosity = flags->d_artificial_viscosity;
+
+  d_flags = flags;
 
   registerPermanentParticleState(matl);
 }
@@ -449,9 +452,8 @@ void ParticleCreator::allocateVariablesAdd(DataWarehouse* new_dw,
     if(d_artificial_viscosity){
       p_q[*n]      = o_q[*o];
     }
-
   }
-  
+
   (*newState)[d_lb->pDispLabel]           =pdisp.clone();
   (*newState)[d_lb->pXLabel]              =position.clone();
   (*newState)[d_lb->pVelocityLabel]       =pvelocity.clone();
@@ -540,7 +542,14 @@ ParticleCreator::initializeParticle(const Patch* patch,
               1./((double) ppc.y()),
               1./((double) ppc.z()));
   position[i] = p;
-  pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
+  if(d_flags->d_axisymmetric){
+    // assume unit radian extent in the circumferential direction
+    pvolume[i]  = p.x()*dxpp.x()*dxpp.y();
+  } else {
+    // standard voxel volume
+    pvolume[i]  = dxpp.x()*dxpp.y()*dxpp.z();
+  }
+
   psize[i]    = size;
 
   pvelocity[i]    = (*obj)->getInitialVelocity();
