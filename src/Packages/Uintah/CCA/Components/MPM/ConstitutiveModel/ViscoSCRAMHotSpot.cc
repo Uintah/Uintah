@@ -267,8 +267,8 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<Short27> pgCode;
   constParticleVariable<double>  pMass, pVol, pTemp;
   constParticleVariable<double>  pCrackRadius;
-  constParticleVariable<Point>   pX;
-  constParticleVariable<Vector>  pVel, pSize;
+  constParticleVariable<Point>   px;
+  constParticleVariable<Vector>  pVel, psize;
   constParticleVariable<Matrix3> pDefGrad, pSig;
   constParticleVariable<double>  pHotSpotT1, pHotSpotT2;
   constParticleVariable<double>  pHotSpotPhi1, pHotSpotPhi2;
@@ -304,6 +304,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     // Initialize patch variables
     double se = 0;
@@ -316,11 +317,11 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
 
     // Get the particle and grid data for the current patch
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    old_dw->get(pX,            lb->pXLabel,                  pset);
+    old_dw->get(px,            lb->pXLabel,                  pset);
     old_dw->get(pMass,         lb->pMassLabel,               pset);
     old_dw->get(pVol,          lb->pVolumeLabel,             pset);
     old_dw->get(pTemp,         lb->pTemperatureLabel,        pset);
-    old_dw->get(pSize,         lb->pSizeLabel,               pset);
+    old_dw->get(psize,         lb->pSizeLabel,               pset);
     old_dw->get(pVel,          lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,      lb->pDeformationMeasureLabel, pset);
     old_dw->get(pSig,          lb->pStressLabel,             pset);
@@ -392,17 +393,28 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       double K = (2.0*G*(1.0+nu))/(3.0*(1.0-2.0*nu));
       //double alphaK = 3.0*K*(alpha*variation);
 
-      // Compute the velocity gradient
-      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S, pSize[idx]);
-      
       velGrad.set(0.0);
       short pgFld[27];
       if (flag->d_fracture) {
-        for(int k=0; k<27; k++)
+        for(int k=0; k<27; k++){
           pgFld[k]=pgCode[idx][k];
+        }
+        // Compute the velocity gradient
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S, psize[idx]);
         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
       } else {
-        computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+        if(!flag->d_axisymmetric){
+         // Get the node indices that surround the cell
+         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+         computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
+        } else {  // axi-symmetric kinematics
+         // Get the node indices that surround the cell
+         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                    psize[idx]);
+         // x -> r, y -> z, z -> theta
+         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
+        }
       }
 
       // Calculate rate of deformation, deviatoric rate of deformation

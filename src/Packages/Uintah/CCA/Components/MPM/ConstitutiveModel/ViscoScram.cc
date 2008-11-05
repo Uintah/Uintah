@@ -442,8 +442,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
   constParticleVariable<Short27>   pgCode;
   constParticleVariable<double>    pMass, pVol, pTemperature;
   constParticleVariable<double>    pCrackRadius;
-  constParticleVariable<Point>     pX;
-  constParticleVariable<Vector>    pVelocity, pSize;
+  constParticleVariable<Point>     px;
+  constParticleVariable<Vector>    pVelocity, psize;
   constParticleVariable<Matrix3>   pDefGrad, pStress;
   constNCVariable<Vector>          gvelocity, Gvelocity;
   constParticleVariable<double>    pTempPrev;
@@ -462,6 +462,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     // initialize strain energy and wavespeed to zero
     double se = 0;
@@ -475,11 +476,11 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // Get the particle and grid data for the current patch
-    old_dw->get(pX,                  lb->pXLabel,                  pset);
+    old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pMass,               lb->pMassLabel,               pset);
     old_dw->get(pVol,                lb->pVolumeLabel,             pset);
     old_dw->get(pTemperature,        lb->pTemperatureLabel,        pset);
-    old_dw->get(pSize,               lb->pSizeLabel,               pset);
+    old_dw->get(psize,               lb->pSizeLabel,               pset);
     old_dw->get(pVelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,            lb->pDeformationMeasureLabel, pset);
     old_dw->get(pStress,             lb->pStressLabel,             pset);
@@ -562,17 +563,29 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
         }
       }
 
-      // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(pX[idx], ni, d_S,pSize[idx]);
-      
       Matrix3 velGrad(0.0);
       short pgFld[27];
       if (flag->d_fracture) {
-        for(int k=0; k<27; k++)
+        for(int k=0; k<27; k++){
           pgFld[k]=pgCode[idx][k];
+        }
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S,psize[idx]);
         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gvelocity,Gvelocity);
       } else {
-        computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+        if(!flag->d_axisymmetric){
+         // Get the node indices that surround the cell
+         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+         computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
+        } else {  // axi-symmetric kinematics
+         // Get the node indices that surround the cell
+         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                    psize[idx]);
+         // x -> r, y -> z, z -> theta
+         computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
+        }
+
       }
 
       // Compute the deformation gradient increment using the time_step

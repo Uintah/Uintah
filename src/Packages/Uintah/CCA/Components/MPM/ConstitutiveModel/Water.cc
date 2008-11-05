@@ -163,6 +163,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -216,10 +217,19 @@ void Water::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
       velGrad.set(0.0);
-      computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+      if(!flag->d_axisymmetric){
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
+      } else {  // axi-symmetric kinematics
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                   psize[idx]);
+        // x -> r, y -> z, z -> theta
+        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
+      }
 
       deformationGradient_new[idx]=(velGrad*delT+Identity)
                                     *deformationGradient[idx];

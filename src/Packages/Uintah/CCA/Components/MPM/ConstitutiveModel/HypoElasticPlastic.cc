@@ -584,6 +584,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     //cerr << getpid() << " patch = " << patch->getID() << endl;
     // Get grid size
@@ -711,20 +712,28 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      //cerr << getpid() << " idx = " << idx << endl;
       // Calculate the velocity gradient (L) from the grid velocity
-
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
       Matrix3 tensorL(0.0);
       short pgFld[27];
       if (flag->d_fracture) {
-        for(int k=0; k<27; k++) 
+        for(int k=0; k<27; k++){ 
           pgFld[k]=pgCode[idx][k];
-
+        }
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
         computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
       } else {
-        computeVelocityGradient(tensorL,ni,d_S,oodx,gVelocity);
+        if(!flag->d_axisymmetric){
+         // Get the node indices that surround the cell
+         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+         computeVelocityGradient(tensorL,ni,d_S, oodx, gVelocity);
+        } else {  // axi-symmetric kinematics
+         // Get the node indices that surround the cell
+         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                    psize[idx]);
+         // x -> r, y -> z, z -> theta
+         computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gVelocity,px[idx]);
+        }
       }
 
       // Compute the deformation gradient increment using the time_step
