@@ -175,6 +175,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -227,10 +228,19 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
         particleIndex idx = *iter;
 
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
         Matrix3 tensorL(0.0);
-        computeVelocityGradient(tensorL,ni,d_S,oodx,gvelocity);
+        if(!flag->d_axisymmetric){
+         // Get the node indices that surround the cell
+         interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+         computeVelocityGradient(tensorL,ni,d_S, oodx, gvelocity);
+        } else {  // axi-symmetric kinematics
+         // Get the node indices that surround the cell
+         interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                    psize[idx]);
+         // x -> r, y -> z, z -> theta
+         computeAxiSymVelocityGradient(tensorL,ni,d_S,S,oodx,gvelocity,px[idx]);
+        }
         velGrad[idx]=tensorL;
 
         deformationGradient_new[idx]=(tensorL*delT+Identity)

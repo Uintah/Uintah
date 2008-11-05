@@ -654,6 +654,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector>    d_S(interpolator->size());
+    vector<double>    S(interpolator->size());
     
     // Get grid size
     Vector dx = patch->dCell();
@@ -761,8 +762,18 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       //-----------------------------------------------------------------------
       // Calculate the velocity gradient (L) from the grid velocity
       Matrix3 velGrad(0.0);
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-      computeVelocityGradient(velGrad, ni, d_S, oodx, gVelocity, pErosion[idx]);
+      if(!flag->d_axisymmetric){
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity);
+      } else {  // axi-symmetric kinematics
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                   psize[idx]);
+        // x -> r, y -> z, z -> theta
+        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,px[idx]);
+      }
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient F_n^np1 = dudx * dt + Identity

@@ -280,6 +280,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
     double c_dil=0.0;
@@ -350,11 +351,20 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
-      // Get the node indices that surround the cell
-      interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
-
       velGrad.set(0.0);
-      computeVelocityGradient(velGrad,ni,d_S,oodx,gvelocity);
+      if(!flag->d_axisymmetric){
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
+
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gvelocity);
+      } else {  // axi-symmetric kinematics
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
+                                                                   psize[idx]);
+        // x -> r, y -> z, z -> theta
+        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gvelocity,px[idx]);
+      }
+
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain

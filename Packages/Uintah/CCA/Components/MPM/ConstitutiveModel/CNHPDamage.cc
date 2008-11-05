@@ -181,7 +181,6 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<Matrix3>      pDeformRate;
 
   // Local variables 
-  short pgFld[27];
   double J = 0.0, p = 0.0, IEl = 0.0, U = 0.0, W = 0.0, c_dil=0.0;
   double fTrial = 0.0, muBar = 0.0, delgamma = 0.0, sTnorm = 0.0, Jinc = 0.0;
   Matrix3 velGrad(0.0), tauDev(0.0), defGradInc(0.0);
@@ -195,6 +194,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
     vector<Vector> d_S(interpolator->size());
+    vector<double> S(interpolator->size());
 
     // Initialize patch variables
     double se = 0.0;
@@ -256,15 +256,31 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
+      // Initialize velocity gradient
+      Matrix3 velGrad(0.0);
 
-      interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,pSize[idx]);
-      // Compute the velocity gradient
-      if (flag->d_fracture) {
-        for(int k = 0; k < flag->d_8or27; k++) pgFld[k] = pgCode[idx][k];
-        computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
-      } else {
-        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity, pErosion[idx]);
+      if(!flag->d_axisymmetric){
+        // Get the node indices that surround the cell
+        interpolator->findCellAndShapeDerivatives(pX[idx],ni,d_S,pSize[idx]);
+
+        short pgFld[27];
+        if (flag->d_fracture) {
+         for(int k=0; k<27; k++){
+           pgFld[k]=pgCode[idx][k];
+         }
+         computeVelocityGradient(velGrad,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
+        } else {
+        double erosion = pErosion[idx];
+        computeVelocityGradient(velGrad,ni,d_S, oodx, gVelocity, erosion);
+        }
+      } else {  // axi-symmetric kinematics
+        // Get the node indices that surround the cell
+        interpolator->findCellAndWeightsAndShapeDerivatives(pX[idx],ni,S,d_S,
+                                                                    pSize[idx]);
+        // x -> r, y -> z, z -> theta
+        computeAxiSymVelocityGradient(velGrad,ni,d_S,S,oodx,gVelocity,pX[idx]);
       }
+
       pDeformRate[idx] = (velGrad + velGrad.Transpose())*0.5;
       
       // 1) Compute the deformation gradient increment using the time_step
