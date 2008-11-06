@@ -125,7 +125,6 @@ $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/add_mm_enth_src_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/enthalpyradthinsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/mascal_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/mascal_scalar_fort.h
-$(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/mmmomsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/pressrcpred_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/pressrcpred_var_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/scalsrc_fort.h

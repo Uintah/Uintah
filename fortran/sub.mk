@@ -35,7 +35,6 @@ SRCS += \
 	$(SRCDIR)/mmbcenthalpy_energyex.F \
 	$(SRCDIR)/mmenthalpywallbc.F \
 	$(SRCDIR)/mmcelltypeinit.F \
-	$(SRCDIR)/mmmomsrc.F \
 	$(SRCDIR)/mmscalarwallbc.F \
 	$(SRCDIR)/mmwallbc.F \
 	$(SRCDIR)/mmwallbc_trans.F \
@@ -90,7 +89,6 @@ $(SRCDIR)/mm_explicit_vel.$(OBJEXT): $(SRCDIR)/mm_explicit_vel_fort.h
 $(SRCDIR)/mmbcvelocity.$(OBJEXT): $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/mmcelltypeinit.$(OBJEXT): $(SRCDIR)/mmcelltypeinit_fort.h
 $(SRCDIR)/mmenthalpywallbc.$(OBJEXT): $(SRCDIR)/mmenthalpywallbc_fort.h
-$(SRCDIR)/mmmomsrc.$(OBJEXT): $(SRCDIR)/mmmomsrc_fort.h
 $(SRCDIR)/mmscalarwallbc.$(OBJEXT): $(SRCDIR)/mmscalarwallbc_fort.h
 $(SRCDIR)/mmwallbc.$(OBJEXT): $(SRCDIR)/mmwallbc_fort.h
 $(SRCDIR)/mmwallbc_trans.$(OBJEXT): $(SRCDIR)/mmwallbc_trans_fort.h
