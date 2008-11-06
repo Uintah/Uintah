@@ -124,6 +124,13 @@ WARNING
         InteriorFaceCells               //Includes cells on the interior of the face
       };
 
+      enum EdgeIteratorType {
+        ExtraCells,                     //Extra cells on the edge
+        ExtraCellsMinusCorner,          //Extra cells on the edge without the corners
+        ExtraSFC,                       //SFC variables on the edge
+        ExtraSFCMinusCorner,            //SFC variables on the edge without the corners
+      };
+
       class Compare {
         public:
           inline bool operator()(const Patch* p1, const Patch* p2) const {
@@ -607,7 +614,7 @@ WARNING
        *Returns an iterator to the edge of two intersecting faces.
        *if minusCornerCells is true the edge will exclude corner cells.
        */
-      CellIterator getEdgeCellIterator__New(const FaceType& face0,const FaceType& face1,bool minusCornerCells=true) const;
+      CellIterator getEdgeCellIterator__New(const FaceType& face0,const FaceType& face1,const EdgeIteratorType &type) const;
 
       /*************************************************************
        *The following queries are for fortran.  Fortran indexing

@@ -900,9 +900,8 @@ void FaceDensity_LODI(const Patch* patch,
     
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0);
-    bool minusCornerCells = true;
     CellIterator iterLimits =  
-                patch->getEdgeCellIterator__New(face, face0, minusCornerCells);
+                patch->getEdgeCellIterator__New(face, face0, Patch::ExtraCellsMinusCorner);
                 
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;      
@@ -1003,9 +1002,8 @@ void FaceVel_LODI(const Patch* patch,
    
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0);
-    bool minusCornerCells = true;
     CellIterator iterLimits =  
-                patch->getEdgeCellIterator__New(face, face0, minusCornerCells);
+                patch->getEdgeCellIterator__New(face, face0, Patch::ExtraCellsMinusCorner);
                       
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;
@@ -1093,9 +1091,8 @@ void FaceTemp_LODI(const Patch* patch,
     Patch::FaceType face0 = *iter;
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0); 
-    bool minusCornerCells = true;
     CellIterator iterLimits =  
-                patch->getEdgeCellIterator__New(face, face0, minusCornerCells);
+                patch->getEdgeCellIterator__New(face, face0, Patch::ExtraCellsMinusCorner);
              
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;
@@ -1174,9 +1171,8 @@ void FacePress_LODI(const Patch* patch,
     Patch::FaceType face0 = *iter;
     IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
                                          - patch->faceDirection(face0); 
-    bool minusCornerCells = true;
     CellIterator iterLimits =  
-                patch->getEdgeCellIterator__New(face, face0, minusCornerCells);
+                patch->getEdgeCellIterator__New(face, face0, Patch::ExtraCellsMinusCorner);
              
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;

@@ -809,61 +809,113 @@ Patch::getFaceIterator__New(const FaceType& face, const FaceIteratorType& domain
 }
 /**
  * Returns an iterator to the edge of two intersecting faces.
- * if minusCornerCells is true the edge will exclude corner cells.
+ * ExtraCells:  returns the intersecting extra cells between two faces
+ * ExtraMinusCornerCells:  returns the intersecting extra cells minus the corner cells on two faces
+ * SFCVars: returns the intersecting SFC vars between two faces
  */
 CellIterator    
 Patch::getEdgeCellIterator__New(const FaceType& face0, 
-                           const FaceType& face1,bool minusCornerCells) const
+                           const FaceType& face1,const EdgeIteratorType &type) const
 {
   FaceType face[2]={face0,face1};
-
-  //will contain extra cells
-  vector<IntVector>loPt(2), hiPt(2); 
-  loPt[0] = loPt[1] = getExtraCellLowIndex__New();
-  hiPt[0] = hiPt[1] = getExtraCellHighIndex__New();
-
   int dim[2]={getFaceDimension(face0),getFaceDimension(face1)};
 
   //return an empty iterator if trying to intersect the same dimension
   if(dim[0]==dim[1])
     return CellIterator(IntVector(0,0,0),IntVector(0,0,0));
 
-  for (int f = 0; f < 2 ; f++ ) {
-   
+  //the bounds of the patch iterators
+  IntVector patchLow, patchHigh;
+  IntVector patchExtraLow, patchExtraHigh;
+
+  //determine the correct query functions
+  switch(type)
+  {
+    case ExtraCells: case ExtraCellsMinusCorner:
+      patchLow=getCellLowIndex__New();
+      patchHigh=getCellHighIndex__New();
+      patchExtraLow=getExtraCellLowIndex__New();
+      patchExtraHigh=getExtraCellHighIndex__New();
+      break;
+    case ExtraSFC: case ExtraSFCMinusCorner:
+      switch(dim[0])
+      {
+        case 0:
+          patchLow=getSFCXLowIndex__New();
+          patchHigh=getSFCXHighIndex__New();
+          patchExtraLow=getExtraSFCXLowIndex__New();
+          patchExtraHigh=getExtraSFCXHighIndex__New();
+          break;
+        case 1:
+          patchLow=getSFCYLowIndex__New();
+          patchHigh=getSFCYHighIndex__New();
+          patchExtraLow=getExtraSFCYLowIndex__New();
+          patchExtraHigh=getExtraSFCYHighIndex__New();
+          break;
+        case 2:
+          patchLow=getSFCZLowIndex__New();
+          patchHigh=getSFCZHighIndex__New();
+          patchExtraLow=getExtraSFCZLowIndex__New();
+          patchExtraHigh=getExtraSFCZHighIndex__New();
+          break;
+      }
+      break;
+    default:
+      throw SCIRun::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
+  };
+  vector<IntVector>loPt(2), hiPt(2); 
+
+  loPt[0] = loPt[1] = patchExtraLow;
+  hiPt[0] = hiPt[1] = patchExtraHigh;
+
+  //restrict to edge
+  for (int f = 0; f < 2 ; f++ ) 
+  {
+//      cout << "restricting on face:" << int(face[f]) << " dim:" << dim[f] << endl;
+//      cout << " low before:" << loPt[f] << endl;
+//      cout << " patchLow:" << patchLow << endl;
+//      cout << " high before:" << hiPt[f] << endl;
+//      cout << " patchHigh:" << patchHigh << endl;
     switch(face[f])
     {
-        case xminus: case yminus: case zminus:
-          //restrict to face
-          hiPt[f][dim[f]]=getCellLowIndex__New()[dim[f]];
-          break;
-        case xplus: case yplus: case zplus:
-          //restrict to face
-          loPt[f][dim[f]]=getCellHighIndex__New()[dim[f]];
-          break;
-        default:
-          throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
-          break;
-
+      case xminus: case yminus: case zminus:
+        //restrict to minus face
+        hiPt[f][dim[f]]=patchLow[dim[f]];
+        break;
+      case xplus: case yplus: case zplus:
+        //restrict to plus face
+        loPt[f][dim[f]]=patchHigh[dim[f]];
+        break;
+      default:
+        break;
     }
+//      cout << " new low:" << loPt[f] << endl;
+//      cout << " nigh high:" << hiPt[f] << endl;
 
-    //remove the corner cells by pruning the other dimension's extra cells
-    if(minusCornerCells)
+    switch(type)
     {
-      //compute the dimension of the face not being used
-      int otherdim=3-dim[0]-dim[1];
-  
-      loPt[f][otherdim]=getCellLowIndex__New()[otherdim];
-      hiPt[f][otherdim]=getCellHighIndex__New()[otherdim];
-    }
+      //prune corner cells
+      case ExtraCellsMinusCorner: case ExtraSFCMinusCorner:
+      {
+        //compute the dimension of the face not being used
+        int otherdim=3-dim[0]-dim[1];
+
+        //remove the corner cells by pruning the other dimension's extra cells
+        loPt[f][otherdim]=patchLow[otherdim];
+        hiPt[f][otherdim]=patchHigh[otherdim];
+        break;
+      }
+      default:
+        //do nothing
+        break;
+     }
   }
 
   // compute the edge low and high pt from the intersection
   IntVector LowPt  = Max(loPt[0], loPt[1]);
   IntVector HighPt = Min(hiPt[0], hiPt[1]);
-  
-  return CellIterator(LowPt, HighPt);
-  
 
+  return CellIterator(LowPt, HighPt);
 }
 
 Box Patch::getGhostBox(const IntVector& lowOffset,
@@ -1887,18 +1939,18 @@ void Patch::finalizePatch()
   }
 */
 
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xminus,yminus)==getEdgeCellIterator__New(xminus,yminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xminus,yplus)==getEdgeCellIterator__New(xminus,yplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xminus,zminus)==getEdgeCellIterator__New(xminus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xminus,zplus)==getEdgeCellIterator__New(xminus,zplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xplus,yminus)==getEdgeCellIterator__New(xplus,yminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xplus,yplus)==getEdgeCellIterator__New(xplus,yplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xplus,zminus)==getEdgeCellIterator__New(xplus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xplus,zplus)==getEdgeCellIterator__New(xplus,zplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yminus,zminus)==getEdgeCellIterator__New(yminus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yminus,zplus)==getEdgeCellIterator__New(yminus,zplus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getEdgeCellIterator__New(yplus,zminus));
-  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xminus,yminus)==getEdgeCellIterator__New(xminus,yminus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xminus,yplus)==getEdgeCellIterator__New(xminus,yplus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xminus,zminus)==getEdgeCellIterator__New(xminus,zminus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xminus,zplus)==getEdgeCellIterator__New(xminus,zplus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yminus)==Neighbor ||  getEdgeCellIterator(xplus,yminus)==getEdgeCellIterator__New(xplus,yminus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(yplus)==Neighbor ||  getEdgeCellIterator(xplus,yplus)==getEdgeCellIterator__New(xplus,yplus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(xplus,zminus)==getEdgeCellIterator__New(xplus,zminus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(xplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(xplus,zplus)==getEdgeCellIterator__New(xplus,zplus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yminus,zminus)==getEdgeCellIterator__New(yminus,zminus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yminus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yminus,zplus)==getEdgeCellIterator__New(yminus,zplus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zminus)==Neighbor ||  getEdgeCellIterator(yplus,zminus)==getEdgeCellIterator__New(yplus,zminus,ExtraCellsMinusCorner));
+  ASSERT(d_extraCells!=IntVector(1,1,1) || getBCType(yplus)==Neighbor || getBCType(zplus)==Neighbor ||  getEdgeCellIterator(yplus,zplus)==getEdgeCellIterator__New(yplus,zplus,ExtraCellsMinusCorner));
 
 #endif 
 #endif
