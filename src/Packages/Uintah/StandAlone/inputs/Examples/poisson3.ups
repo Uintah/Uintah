@@ -7,6 +7,10 @@
        <title>Poisson3 test</title>
    </Meta>
 
+   <SimulationComponent>
+        <type> poisson3 </type>
+   </SimulationComponent>
+    
    <Time>
        <maxTime>1.0</maxTime>
        <initTime>0.0</initTime>
@@ -28,6 +32,39 @@
     </Poisson>
 
     <Grid>
+      <BoundaryConditions>
+        <Face side = "x-">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 1. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "x+">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "y-">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>                  
+        <Face side = "y+">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "z-">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "z+">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+      </BoundaryConditions>
+
        <Level>
            <Box label = "11">
               <lower>[0,0,0]</lower>
