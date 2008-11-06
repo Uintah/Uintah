@@ -104,6 +104,12 @@ public:
                   CCVariable<Stencil7>& A,
                   T& source);
                   
+   template<class T>
+   void compute_Ap_stencilMatrix(CellIterator iter,
+                                 StencilMatrix<T>& A,
+                                 T& source);   
+  
+                  
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
   void calculateVelDiagonal(const Patch* patch,
