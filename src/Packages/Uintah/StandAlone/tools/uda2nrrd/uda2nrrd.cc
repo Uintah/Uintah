@@ -115,7 +115,7 @@ usage( const string& badarg, const string& progname )
   cerr << "Chatty Options\n";
   cerr << "  -vv,--verbose (prints status of output)\n";
   cerr << "  -q,--quiet (very little output)\n";
-  exit(1);
+  Thread::exitAll( 1 );
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -262,7 +262,7 @@ main(int argc, char** argv)
     cout << "\n\n";
     cout << "Error: Couldn't create output file ('" << tmp_filename << "')... please check permissions.\n";
     cout << "\n\n";
-    exit( 1 );
+    Thread::exitAll( 1 );
   }
   remove( tmp_filename.c_str() );
   fclose( fp );
@@ -310,7 +310,7 @@ main(int argc, char** argv)
           cout << "vars[" << vi << "] = " << vars[vi] << "\n";
         }
         cout << "\nGoodbye!!\n\n";
-        exit( -1 );
+        Thread::exitAll( 1 );
       }
     } 
     else { // Not particles...
@@ -319,7 +319,7 @@ main(int argc, char** argv)
         cerr << "\n";
         cerr << "A variable name must be specified!  Use '-v [name]'.  (Or -p for particles.)\n";
         cerr << "\n";
-        exit( -1 );
+        Thread::exitAll( 1 );
       }
 
       unsigned int vi = 0;
@@ -339,7 +339,7 @@ main(int argc, char** argv)
           cout << "vars[" << vi << "] = " << vars[vi] << "\n";
         }
         cerr << "\nExiting!!\n\n";
-        exit(-1);
+        Thread::exitAll( 1 );
       }
       var_indices.push_back( vi );
     }
@@ -360,8 +360,8 @@ main(int argc, char** argv)
     /////////////////////////////////////////////////////
     // figure out the lower and upper bounds on the timesteps
     if (time_step_lower >= times.size()) {
-      cerr << "timesteplow must be between 0 and " << times.size()-1 << "\n";
-      exit(1);
+      cerr << "ERROR: timesteplow must be between 0 and " << times.size()-1 << ". Goodbye.\n";
+      Thread::exitAll( 1 );
     }
       
     // set default max time value
@@ -372,9 +372,9 @@ main(int argc, char** argv)
     }
     
     if (time_step_upper >= times.size() || time_step_upper < time_step_lower) {
-      cerr << "timestephigh("<<time_step_lower<<") must be greater than " << time_step_lower 
-           << " and less than " << times.size()-1 << "\n";
-      exit(1);
+      cerr << "ERRIR: timestephigh("<<time_step_lower<<") must be greater than " 
+           << time_step_lower << " and less than " << times.size()-1 << ". Goodbye.\n";
+      Thread::exitAll( 1 );
     }
       
     if( !args.quiet ) { 
@@ -447,7 +447,7 @@ main(int argc, char** argv)
                   cout << "\n";
                   cout << "Error: uda2nrrd currently can only handle particles on only a single level.  Goodbye.\n";
                   cout << "\n";
-                  exit(1);
+                  Thread::exitAll( 1 );
                 }
                 // The particles are on this level...
                 found_particle_level = true;
@@ -577,7 +577,7 @@ main(int argc, char** argv)
             cout << "ERROR: extracting particle information, but you didn't specify particles\n"
                  << "       with '-p' on the command line... please start over and use -p.\n";
             cout << "\n\n";
-            exit( 1 );
+            Thread::exitAll( 1 );
           }
 
           ParticleDataContainer data;
@@ -606,7 +606,7 @@ main(int argc, char** argv)
             break;
           default:
             cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";
-            exit(1);
+            Thread::exitAll( 1 );
           } // end switch( subtype )
             
           particleDataArray.push_back( data );
@@ -634,11 +634,11 @@ main(int argc, char** argv)
           case Uintah::TypeDescription::long_type:
           case Uintah::TypeDescription::long64_type:
             cerr << "Subtype " << subtype->getName() << " is not implemented...\n";
-            exit(1);
+            Thread::exitAll( 1 );
             break;
           default:
             cerr << "Unknown subtype\n";
-            exit(1);
+            Thread::exitAll( 1 );
           }
         }
       } // end variables loop
@@ -651,9 +651,9 @@ main(int argc, char** argv)
     
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << "\n";
-    exit(1);
+    Thread::exitAll( 1 );
   } catch(...){
     cerr << "Caught unknown exception\n";
-    exit(1);
+    Thread::exitAll( 1 );
   }
 }
