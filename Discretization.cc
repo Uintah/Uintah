@@ -37,6 +37,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
 
+
 //****************************************************************************
 // Default constructor for Discretization
 //****************************************************************************
@@ -310,6 +311,23 @@ Discretization::compute_Ap(CellIterator iter,
 
 
 
+
+//****************************************************************************
+// Calculate the diagonal term A.p in the matrix 
+//****************************************************************************
+template<class T> void
+Discretization::compute_Ap_stencilMatrix(CellIterator iter,
+                                         StencilMatrix<T>& A,
+                                         T& source) 
+{
+  for(; !iter.done();iter++) { 
+    IntVector c = *iter;
+    A[Arches::AP][c] = A[Arches::AE][c] + A[Arches::AW][c] 
+                     + A[Arches::AN][c] + A[Arches::AS][c] 
+                     + A[Arches::AT][c] + A[Arches::AB][c] - source[c];
+  }
+}
+
 //****************************************************************************
 // Calculate the diagonal terms (velocity)
 //****************************************************************************
@@ -318,57 +336,31 @@ Discretization::calculateVelDiagonal(const Patch* patch,
                                      int index,
                                      ArchesVariables* coeff_vars)
 {
-  
-  // Get the patch and variable indices
-  IntVector idxLo;
-  IntVector idxHi;
   switch(index) {
-  case Arches::XDIR:
-    idxLo = patch->getSFCXFORTLowIndex();
-    idxHi = patch->getSFCXFORTHighIndex();
-
-    fort_apcal_all(idxLo, idxHi, coeff_vars->uVelocityCoeff[Arches::AP],
-                  coeff_vars->uVelocityCoeff[Arches::AE],
-                  coeff_vars->uVelocityCoeff[Arches::AW],
-                  coeff_vars->uVelocityCoeff[Arches::AN],
-                  coeff_vars->uVelocityCoeff[Arches::AS],
-                  coeff_vars->uVelocityCoeff[Arches::AT],
-                  coeff_vars->uVelocityCoeff[Arches::AB],
-                  coeff_vars->uVelLinearSrc);
-
+    case Arches::XDIR:
+    {
+    CellIterator iter = patch->getSFCXIterator__New();
+    compute_Ap_stencilMatrix<SFCXVariable<double> >(iter,coeff_vars->uVelocityCoeff,
+                                                         coeff_vars->uVelLinearSrc);
+    }
     break;
   case Arches::YDIR:
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
-
-    fort_apcal_all(idxLo, idxHi, coeff_vars->vVelocityCoeff[Arches::AP],
-                  coeff_vars->vVelocityCoeff[Arches::AE],
-                  coeff_vars->vVelocityCoeff[Arches::AW],
-                  coeff_vars->vVelocityCoeff[Arches::AN],
-                  coeff_vars->vVelocityCoeff[Arches::AS],
-                  coeff_vars->vVelocityCoeff[Arches::AT],
-                  coeff_vars->vVelocityCoeff[Arches::AB],
-                  coeff_vars->vVelLinearSrc);
-
+    {
+    CellIterator iter = patch->getSFCYIterator__New();
+    compute_Ap_stencilMatrix<SFCYVariable<double> >(iter,coeff_vars->vVelocityCoeff,
+                                                         coeff_vars->vVelLinearSrc);
+    }
     break;
   case Arches::ZDIR:
-    idxLo = patch->getSFCZFORTLowIndex();
-    idxHi = patch->getSFCZFORTHighIndex();
-
-    fort_apcal_all(idxLo, idxHi, coeff_vars->wVelocityCoeff[Arches::AP],
-                  coeff_vars->wVelocityCoeff[Arches::AE],
-                  coeff_vars->wVelocityCoeff[Arches::AW],
-                  coeff_vars->wVelocityCoeff[Arches::AN],
-                  coeff_vars->wVelocityCoeff[Arches::AS],
-                  coeff_vars->wVelocityCoeff[Arches::AT],
-                  coeff_vars->wVelocityCoeff[Arches::AB],
-                  coeff_vars->wVelLinearSrc);
-
+    {
+    CellIterator iter = patch->getSFCZIterator__New();
+    compute_Ap_stencilMatrix<SFCZVariable<double> >(iter,coeff_vars->wVelocityCoeff,
+                                                         coeff_vars->wVelLinearSrc);
+    }
     break;
   default:
     throw InvalidValue("Invalid index in Discretization::calcVelDiagonal", __FILE__, __LINE__);
   }
-
 }
 
 //****************************************************************************
@@ -393,7 +385,9 @@ Discretization::calculateScalarDiagonal(const Patch* patch,
   // Get the domain size and the patch indices
   IntVector idxLo = patch->getFortranCellLowIndex__New();
   IntVector idxHi = patch->getFortranCellHighIndex__New();
-
+  
+  // This is the only function that uses fort_apcal_all
+  
   fort_apcal_all(idxLo, idxHi, coeff_vars->scalarCoeff[Arches::AP],
              coeff_vars->scalarCoeff[Arches::AE],
              coeff_vars->scalarCoeff[Arches::AW],
