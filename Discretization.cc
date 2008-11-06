@@ -37,7 +37,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
 
-
 //****************************************************************************
 // Default constructor for Discretization
 //****************************************************************************
@@ -68,9 +67,9 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
 {
   if (index == Arches::XDIR) {
 
-    // Get the patch indices
-    IntVector idxLoU = patch->getSFCXFORTLowIndex();
-    IntVector idxHiU = patch->getSFCXFORTHighIndex();
+    IntVector idxLoU = patch->getFortranSFCXLowIndex__New();
+    IntVector idxHiU = patch->getFortranSFCXHighIndex__New();
+
     // Calculate the coeffs
     fort_uvelcoef(coeff_constvars->uVelocity,
                   coeff_vars->uVelocityConvectCoeff[Arches::AE],
@@ -107,9 +106,8 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
 
   } else if (index == Arches::YDIR) {
 
-    // Get the patch indices
-    IntVector idxLoV = patch->getSFCYFORTLowIndex();
-    IntVector idxHiV = patch->getSFCYFORTHighIndex();
+    IntVector idxLoV = patch->getFortranSFCYLowIndex__New();
+    IntVector idxHiV = patch->getFortranSFCYHighIndex__New();
 
     // Calculate the coeffs
     fort_vvelcoef(coeff_constvars->vVelocity,
@@ -147,9 +145,9 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
   } else if (index == Arches::ZDIR) {
 
     // Get the patch indices
-    IntVector idxLoW = patch->getSFCZFORTLowIndex();
-    IntVector idxHiW = patch->getSFCZFORTHighIndex();
-
+    IntVector idxLoW = patch->getFortranSFCZLowIndex__New();
+    IntVector idxHiW = patch->getFortranSFCZHighIndex__New();
+    
     // Calculate the coeffs
     fort_wvelcoef(coeff_constvars->wVelocity,
                   coeff_vars->wVelocityConvectCoeff[Arches::AE],
