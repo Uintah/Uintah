@@ -34,11 +34,13 @@ using namespace SCIRun;
 #endif
 #include <Packages/Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmmomsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
+
+#define NEW
+
 
 //****************************************************************************
 // Constructor for Source
@@ -581,6 +583,7 @@ Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
                     conv_scheme);
 }
 
+
 //****************************************************************************
 // Add the momentum source from continuous solid-gas momentum exchange
 //****************************************************************************
@@ -592,41 +595,41 @@ Source::computemmMomentumSource(const ProcessorGroup*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
-  IntVector idxLoU;
-  IntVector idxHiU;
-  
   switch(index) {
-  case 1:
-  // Get the low and high index for the patch and the variables
-  idxLoU = patch->getSFCXFORTLowIndex();
-  idxHiU = patch->getSFCXFORTHighIndex();
-  
-
-  fort_mmmomsrc(idxLoU, idxHiU, vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-                constvars->mmuVelSu, constvars->mmuVelSp);
+  case 1:           // X component
+  {
+    CellIterator iter = patch->getSFCXIterator__New(); 
+    for(; !iter.done();iter++) { 
+      IntVector c = *iter;
+      vars->uVelNonlinearSrc[c]  += constvars->mmuVelSu[c];
+      vars->uVelLinearSrc[c]     += constvars->mmuVelSp[c];
+    }
+  }
   break;
-  case 2:
-  // Get the low and high index for the patch and the variables
-    idxLoU = patch->getSFCYFORTLowIndex();
-    idxHiU = patch->getSFCYFORTHighIndex();
-
-    fort_mmmomsrc(idxLoU, idxHiU, vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-                  constvars->mmvVelSu, constvars->mmvVelSp);
-    break;
-  case 3:
-  // Get the low and high index for the patch and the variables
-    idxLoU = patch->getSFCZFORTLowIndex();
-    idxHiU = patch->getSFCZFORTHighIndex();
-  
-    fort_mmmomsrc(idxLoU, idxHiU, vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-                  constvars->mmwVelSu, constvars->mmwVelSp);
-    break;
+  case 2:           // Y component
+  {
+    CellIterator iter = patch->getSFCYIterator__New(); 
+    for(; !iter.done();iter++) { 
+      IntVector c = *iter;
+      vars->vVelNonlinearSrc[c]  += constvars->mmvVelSu[c];
+      vars->vVelLinearSrc[c]     += constvars->mmvVelSp[c];
+    }
+  }
+  break;
+  case 3:           // Z component
+  {
+    CellIterator iter = patch->getSFCZIterator__New(); 
+    for(; !iter.done();iter++) { 
+      IntVector c = *iter;
+      vars->wVelNonlinearSrc[c]  += constvars->mmwVelSu[c];
+      vars->wVelLinearSrc[c]     += constvars->mmwVelSp[c];
+    }
+  }
+  break;
   default:
     cerr << "Invalid Index value" << endl;
-    break;
+  break;
   }
-
-  // add in su and sp terms from multimaterial based on index
 }
 
 //****************************************************************************
