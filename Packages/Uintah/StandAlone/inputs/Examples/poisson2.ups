@@ -30,14 +30,47 @@
     </Poisson>
 
     <Grid>
-       <Level>
-           <Box label = "1">
-              <lower>[0,0,0]</lower>
-              <upper>[1.0,1.0,1.0]</upper>
-               <resolution>[50,50,50]</resolution>
-              <patches>[2,1,1]</patches>
-           </Box>
-       </Level>
+      <BoundaryConditions>
+        <Face side = "x-">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 1. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "x+">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "y-">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>                  
+        <Face side = "y+">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "z-">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+        <Face side = "z+">
+          <BCType id = "0"   label = "Phi"     var = "Dirichlet"> 
+            <value> 0. </value> 
+          </BCType> 
+        </Face>
+      </BoundaryConditions>
+
+      <Level>
+        <Box label = "1">
+          <lower>[0,0,0]</lower>
+          <upper>[1.0,1.0,1.0]</upper>
+          <resolution>[50,50,50]</resolution>
+          <patches>[2,1,1]</patches>
+        </Box>
+      </Level>
     </Grid>
 
     <PhysicalConstants>
