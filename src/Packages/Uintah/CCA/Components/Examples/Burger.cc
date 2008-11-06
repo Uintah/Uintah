@@ -12,6 +12,8 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 
 using namespace Uintah;
 //______________________________________________________________________

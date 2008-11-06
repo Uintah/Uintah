@@ -14,6 +14,8 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
 
 using namespace Uintah;
 
@@ -96,12 +98,39 @@ void Poisson2::initialize(const ProcessorGroup*,
       NCVariable<double> phi;
       new_dw->allocateAndPut(phi, phi_label, matl, patch);
       phi.initialize(0);
+
+      for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+           face=Patch::nextFace(face)) {
+        
+        if (patch->getBCType(face) == Patch::None) {
+          int numChildren = 
+            patch->getBCDataArray(face)->getNumberChildren(matl);
+          for (int child = 0; child < numChildren; child++) {
+            Iterator nbound_ptr, nu;
+            
+            const BoundCondBase* bcb = patch->getArrayBCValues(face,matl,"Phi",
+                                                               nu,nbound_ptr,
+                                                               child);
+            
+            const BoundCond<double>* bc = 
+              dynamic_cast<const BoundCond<double>*>(bcb); 
+            double value = bc->getValue();
+            for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
+              phi[*nbound_ptr]=value;
+              
+            }
+          }
+        }
+      }    
+#if 0        
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
 	IntVector l,h;
 	patch->getFaceNodes(Patch::xminus, 0, l, h);
 	for(NodeIterator iter(l,h); !iter.done(); iter++)
 	  phi[*iter]=1;
       }
+#endif
+
     }
   }
 }
