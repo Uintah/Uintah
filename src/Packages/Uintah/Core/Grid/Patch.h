@@ -129,6 +129,8 @@ WARNING
         ExtraCellsMinusCorner,          //Extra cells on the edge without the corners
         ExtraSFC,                       //SFC variables on the edge
         ExtraSFCMinusCorner,            //SFC variables on the edge without the corners
+        SFC,                            //SFC variables on the edge between normal and extra cells
+        SFCMinusCorner                  //Same as SFC without the corners
       };
 
       class Compare {
