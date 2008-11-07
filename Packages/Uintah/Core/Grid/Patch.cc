@@ -860,6 +860,30 @@ Patch::getEdgeCellIterator__New(const FaceType& face0,
           break;
       }
       break;
+    case SFC: case SFCMinusCorner:
+      switch(dim[0])
+      {
+        case 0:
+          patchLow=getSFCXLowIndex__New()+IntVector(1,1,1);
+          patchHigh=getSFCXHighIndex__New()-IntVector(1,1,1);
+          patchExtraLow=getSFCXLowIndex__New();
+          patchExtraHigh=getSFCXHighIndex__New();
+          break;
+        case 1:
+          patchLow=getSFCYLowIndex__New()+IntVector(1,1,1);
+          patchHigh=getSFCYHighIndex__New()-IntVector(1,1,1);
+          patchExtraLow=getSFCYLowIndex__New();
+          patchExtraHigh=getSFCYHighIndex__New();
+          break;
+        case 2:
+          patchLow=getSFCZLowIndex__New()+IntVector(1,1,1);
+          patchHigh=getSFCZHighIndex__New()+IntVector(1,1,1);
+          patchExtraLow=getSFCZLowIndex__New();
+          patchExtraHigh=getSFCZHighIndex__New();
+          break;
+      }
+       
+      break;
     default:
       throw SCIRun::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
   };
@@ -871,11 +895,6 @@ Patch::getEdgeCellIterator__New(const FaceType& face0,
   //restrict to edge
   for (int f = 0; f < 2 ; f++ ) 
   {
-//      cout << "restricting on face:" << int(face[f]) << " dim:" << dim[f] << endl;
-//      cout << " low before:" << loPt[f] << endl;
-//      cout << " patchLow:" << patchLow << endl;
-//      cout << " high before:" << hiPt[f] << endl;
-//      cout << " patchHigh:" << patchHigh << endl;
     switch(face[f])
     {
       case xminus: case yminus: case zminus:
@@ -889,13 +908,11 @@ Patch::getEdgeCellIterator__New(const FaceType& face0,
       default:
         break;
     }
-//      cout << " new low:" << loPt[f] << endl;
-//      cout << " nigh high:" << hiPt[f] << endl;
 
     switch(type)
     {
       //prune corner cells
-      case ExtraCellsMinusCorner: case ExtraSFCMinusCorner:
+      case ExtraCellsMinusCorner: case ExtraSFCMinusCorner: case SFCMinusCorner:
       {
         //compute the dimension of the face not being used
         int otherdim=3-dim[0]-dim[1];
