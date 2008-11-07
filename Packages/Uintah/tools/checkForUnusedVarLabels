@@ -46,13 +46,6 @@ foreach file ( $files[*]:q )
   endif
 end
 
-set test = `printenv GNUGREP`
-if ( $test == ""  ) then
-  echo " you need to set the path to gnu grep"
-  echo " setenv GNUGREP <path to gnu grep> "
-  exit(1)
-endif
-
 
 #______________________________________________________________________
 # find all the varLabels
@@ -72,7 +65,7 @@ foreach XXX ( $varLabels[*]:q )
   
   foreach file ( $files[*]:q ) 
     echo "in file $file"
-    @ numHits += `$GNUGREP -w -c $XXX $file`
+    @ numHits += `grep -w -c $XXX $file`
   end
   
   if ( $numHits < 1 ) then
