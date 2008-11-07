@@ -325,8 +325,6 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   
   lbtimes[0]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
-  
-  vector<int> recvcounts(d_myworld->size(), 0);
 
   //this should be removed when dimensions in shared state is done
   int dim=d_sharedState->getNumDims();
@@ -398,17 +396,15 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   lbtimes[2]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
 
-  vector<int> displs(d_myworld->size(), 0);
   if(d_myworld->size()>1)  
   {
-    int rsize=indices.size()*sizeof(DistributedIndex);
-     
-    //gather recv counts
-    MPI_Allgather(&rsize,1,MPI_INT,&recvcounts[0],1,MPI_INT,d_myworld->getComm());
+    vector<int> recvcounts(d_myworld->size(), 0);
+    vector<int> displs(d_myworld->size(), 0);
     
-    for (unsigned i = 1; i < recvcounts.size(); i++)
+    for (unsigned i = 0; i < recvcounts.size(); i++)
     {
-       displs[i] = recvcounts[i-1] + displs[i-1];
+      displs[i]=originalPatchStart[i]*sizeof(DistributedIndex);
+      recvcounts[i]=originalPatchCount[i]*sizeof(DistributedIndex);
     }
 
     vector<DistributedIndex> rbuf(level->numPatches());
