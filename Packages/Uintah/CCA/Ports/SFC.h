@@ -2944,7 +2944,6 @@ int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<Hist
   int direction= (int) (rank>to);
   //BITS emax, emin;
   queue<MPI_Request> squeue, rqueue;
-  unsigned int n2;
 
   MergeInfo<BITS> myinfo,theirinfo;
 
@@ -3043,85 +3042,17 @@ int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<Hist
       return 1;
     }
   }
-  n2=theirinfo.n;
+
   //cout << rank << ": Max-min done\n";
-  
-  recievebuf.resize(n2);
+ 
+  recievebuf.resize(theirinfo.n);
   
   History<BITS> *sbuf=&sendbuf[0], *rbuf=&recievebuf[0], *mbuf=&mergebuf[0];
   History<BITS> *msbuf=sbuf, *mrbuf=rbuf;
   
   unsigned int nsend=n;
-  unsigned int nrecv=n2;
-  //sample exchange
-  unsigned int minn=min(n,n2);
-  unsigned int sample_size=(int)(minn*sample_percent);
-
-  if(sample_size>=5)
-  {
-//    cout << rank << " creating samples\n";
-    BITS *highsample=(BITS*)mbuf, *lowsample=(BITS*)rbuf, *mysample, *theirsample;
-    float stridelow,stridehigh,mystride;
-    unsigned int index=0, ihigh=0,ilow=0,count=0;
-    if(direction==ASCENDING)
-    {
-      mysample=lowsample;
-      theirsample=highsample;
-      mystride=stridelow=n/(float)sample_size;
-      stridehigh=n2/(float)sample_size;
-    }
-    else
-    {
-      mysample=highsample;
-      theirsample=lowsample;
-      stridelow=n2/(float)sample_size;
-      mystride=stridehigh=n/(float)sample_size;
-    }
+  unsigned int nrecv=theirinfo.n;
   
-    //create sample
-    for(unsigned int i=0;i<sample_size;i++)
-    {
-      index=int(mystride*i);
-      mysample[i]=sbuf[index].bits;
-    }
-//    cout << "exchanging samples\n";
-    //exchange samples
-    MPI_Isend(mysample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&srequest);
-    MPI_Irecv(theirsample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&rrequest);
-  
-    MPI_Wait(&rrequest,&status);
-    MPI_Wait(&srequest,&status);
-    
-//    cout << "done exchanging samples\n";
-    //merge samples
-    while(count<minn)
-    {
-      if(lowsample[ilow]<=highsample[ihigh])
-      {
-        ilow++;
-      }
-      else
-      {
-        ihigh++;
-      }
-      count=int(ilow*stridelow)+int(ihigh*stridehigh);
-    }
-    
-    if(ilow>sample_size) //handle case where ilow goes to far
-    {
-      ihigh+=(ilow-sample_size);
-    }
-    nrecv=nsend=int((ihigh+2)*stridehigh);
-
-    if(nsend>n)
-    {
-      nsend=n;
-    }
-    if(nrecv>n2)
-    {
-      nrecv=n2;
-    }
-  }  
   //final exchange
   //cout << rank << ": sample done\n";
   
@@ -3258,10 +3189,10 @@ int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<Hist
 
     //position buffers
     mbuf+=n;
-    rbuf+=n2;
+    rbuf+=theirinfo.n;
 
     msbuf+=n-1;
-    mrbuf+=n2-1;
+    mrbuf+=theirinfo.n-1;
 
     History<BITS> *start1=msbuf,*start2=mrbuf,*end1=start1-n,*end2=mrbuf,*out=mbuf-1, *outend=out-n;
       
@@ -3353,7 +3284,6 @@ int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<Hist
         }
       }
 
-
       MPI_Wait(&(squeue.front()),&status);
       squeue.pop();
     }
@@ -3390,7 +3320,8 @@ int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<Hist
   //cout << rank << ": done ME\n";
   return 1;
 }
-#else
+#endif
+#if 0
 template<class LOCS> template<class BITS>
 int SFC<LOCS>::MergeExchange(int to,vector<History<BITS> > &sendbuf, vector<History<BITS> >&recievebuf, vector<History<BITS> > &mergebuf)
 {
