@@ -439,9 +439,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
 		d_myworld->getComm(), &requestid);
       int bytes = count;
-#ifdef USE_PACKING
-      MPI_Pack_size(count, datatype, d_myworld->getComm(), &bytes);
-#endif
+      
       sendsLock.lock(); // Dd: ??
       sends_.add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
       sendsLock.unlock(); // Dd: ??
@@ -618,9 +616,6 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       MPI_Irecv(buf, count, datatype, from, batch->messageTag,
           d_myworld->getComm(), &requestid);
       int bytes = count;
-#ifdef USE_PACKING
-      MPI_Pack_size(count, datatype, d_myworld->getComm(), &bytes);
-#endif
       recvs_.add(requestid, bytes,
           scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
           ostr.str(), batch->messageTag);
