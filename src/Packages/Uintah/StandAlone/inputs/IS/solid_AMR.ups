@@ -16,7 +16,7 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            6.00e-3     </maxTime>
+       <maxTime>            1000     </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           1.0e-12     </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -128,7 +128,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>solid_amr.uda</filebase>
-      <outputInterval> .00001 </outputInterval>
+      <outputInterval> 0.000025 </outputInterval>
       <save label="press_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
@@ -291,7 +291,7 @@
               </difference>                                             
             <res>                 [2,2,2]         </res>                
             <velocity>            [0.0,0.0,0.0]   </velocity>           
-            <temperature>         600             </temperature>        
+            <temperature>         525             </temperature>        
            </geom_object>                                
          </material>
 
@@ -316,7 +316,7 @@
                </intersection>
                <res>                 [2,2,2]         </res>
                <velocity>            [0.0,0.0,0.0]   </velocity>
-               <temperature>         600.0           </temperature>
+               <temperature>         515.0           </temperature>
              </geom_object>
              <geom_object>
                <difference>
@@ -412,7 +412,7 @@
         <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
         <BoundaryParticles>    3            </BoundaryParticles>
         <ThresholdPressure>    50000        </ThresholdPressure>
-        <IgnitionTemp>         550.0        </IgnitionTemp>
+        <IgnitionTemp>         500.0        </IgnitionTemp>
       </Model> 
     </Models>
 
