@@ -135,6 +135,7 @@ void Poisson1::initialize(const ProcessorGroup*,
             phi[*nbound_ptr]=value;
 
           }
+          delete bcb;
         }
       }
     }            
