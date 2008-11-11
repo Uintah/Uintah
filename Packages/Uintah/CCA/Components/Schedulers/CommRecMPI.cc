@@ -68,7 +68,7 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg,
   MPI_Waitsome((int)ids.size(), &ids[0], &donecount,
 	       &indices[0], &statii[0]);
   //mixedDebug << me <<  "after waitsome\n";
-  return donesome(pg, donecount, finishedGroups);
+  return donesome(pg, donecount, statii, finishedGroups);
 }
 
 bool CommRecMPI::waitsome(const ProcessorGroup * pg, CommRecMPI & cr,
@@ -85,6 +85,7 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg, CommRecMPI & cr,
   statii.resize(size);
   
   vector<MPI_Request> combinedIDs;
+  vector<MPI_Status> mystatii,crstatii;
   vector<int> combinedIndices(size);
   int donecount;
   unsigned i;
@@ -132,9 +133,11 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg, CommRecMPI & cr,
   for (int i = 0; i < donecount; i++) {
     if (combinedIndices[i] < mySize) {
       indices.push_back(combinedIndices[i]);
+      mystatii.push_back(statii[i]);
       myDonecount++;
     } else {
       cr.indices.push_back(combinedIndices[i]-mySize);
+      crstatii.push_back(statii[i]);
       crDonecount++;
     }
   }
@@ -144,8 +147,8 @@ bool CommRecMPI::waitsome(const ProcessorGroup * pg, CommRecMPI & cr,
   // want that set to complete, but we are completing as many
   // of cr as we can
 
-  cr.donesome(pg, crDonecount, finishedGroups);
-  return donesome(pg, myDonecount, finishedGroups);
+  cr.donesome(pg, crDonecount,crstatii, finishedGroups);
+  return donesome(pg, myDonecount,mystatii, finishedGroups);
   
 }
 bool CommRecMPI::testsome(const ProcessorGroup * pg, 
@@ -160,10 +163,10 @@ bool CommRecMPI::testsome(const ProcessorGroup * pg,
   int donecount;
   MPI_Testsome((int)ids.size(), &ids[0], &donecount,
 	       &indices[0], &statii[0]);
-  return donesome(pg, donecount, finishedGroups);
+  return donesome(pg, donecount,statii, finishedGroups);
 }
 
-bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, 
+bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_Status> statii,
 			   list<int>* finishedGroups )
 {
   bool anyFinished = false;
