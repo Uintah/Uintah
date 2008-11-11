@@ -82,11 +82,11 @@ public:
   virtual ~ReceiveHandler()
   { delete unpackHandler_; delete batchHandler_; }
 
-  virtual void finishedCommunication(const ProcessorGroup * pg)
+  virtual void finishedCommunication(const ProcessorGroup * pg, MPI_Status &status)
   {
     // The order is important: it should unpack before informing the
     // DependencyBatch that the data has been received.
-    if (unpackHandler_ != 0) unpackHandler_->finishedCommunication(pg);
+    if (unpackHandler_ != 0) unpackHandler_->finishedCommunication(pg,status);
     if (batchHandler_ != 0) batchHandler_->finishedCommunication(pg);
   }
 private:

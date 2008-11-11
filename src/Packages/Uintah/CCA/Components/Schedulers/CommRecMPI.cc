@@ -182,7 +182,7 @@ bool CommRecMPI::donesome( const ProcessorGroup * pg, int donecount, vector<MPI_
 	mixedDebug << "Actually received " << idx << "\n";
 	cerrLock.unlock();
       }
-      handlers[idx]->finishedCommunication(pg);
+      handlers[idx]->finishedCommunication(pg,statii[i]);
       ASSERT(handlers[idx]!=0);
       delete handlers[idx];
       handlers[idx]=0;
@@ -246,7 +246,7 @@ void CommRecMPI::waitall(const ProcessorGroup * pg)
   //      << ids.size() << " waiters\n";
   for(int i=0;i<(int)ids.size();i++){
     if(handlers[i]) {
-      handlers[i]->finishedCommunication(pg);
+      handlers[i]->finishedCommunication(pg,statii[i]);
       ASSERT(handlers[i]!=0);
       delete handlers[i];
       handlers[i]=0;
