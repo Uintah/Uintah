@@ -87,13 +87,13 @@ else
         Core/Thread       \
         Core/Util         \
         Packages/Uintah/Core/DataArchive \
-        Packages/Uintah/Core/Grid        \
-        Packages/Uintah/Core/Parallel    \
-        Packages/Uintah/Core/Labels      \
-        Packages/Uintah/Core/Util        \
-        Packages/Uintah/Core/Math        \
         Packages/Uintah/Core/Disclosure  \
         Packages/Uintah/Core/Exceptions  \
+        Packages/Uintah/Core/Grid        \
+        Packages/Uintah/Core/Labels      \
+        Packages/Uintah/Core/Math        \
+        Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Util        \
         Packages/Uintah/CCA/Ports        \
         Packages/Uintah/CCA/Components/Parent \
         Packages/Uintah/CCA/Components/Models \
@@ -278,6 +278,11 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # Uintah
 # Convenience targets for Specific executables 
+
+ifeq ($(BUILD_VISIT),yes)
+  VISIT_STUFF=visit_stuff
+endif
+
 uintah: sus \
         puda \
         dumpfields \
@@ -299,7 +304,8 @@ uintah: sus \
         faceextract \
         link_inputs \
         link_tools \
-        link_regression_tester
+        link_regression_tester \
+	$(VISIT_STUFF)
 
 ###############################################
 
