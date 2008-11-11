@@ -37,19 +37,22 @@ namespace Uintah {
     void get_type(void*&, int&, MPI_Datatype&, MPI_Comm comm);
     void get_type(void*&, int&, MPI_Datatype&);
     void pack(MPI_Comm comm, int& out_count);
-    void unpack(MPI_Comm comm);
-
+    void unpack(MPI_Comm comm, MPI_Status &status); 
+    static void setCompressionLevel(int level) {compression_level=level;};
+    static void setCompressionThreshold(unsigned long threshold) {compression_threshold=threshold;};
     // PackBufferInfo is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  After receive
     // requests have finished, then it needs to unpack what got received.
-   void finishedCommunication(const ProcessorGroup * pg)
-    { unpack(pg->getComm()); }
+   void finishedCommunication(const ProcessorGroup * pg,MPI_Status &status)
+    { unpack(pg->getComm(),status); }
     
   private:
     PackBufferInfo(const PackBufferInfo&);
     PackBufferInfo& operator=(const PackBufferInfo&);
 
     PackedBuffer* packedBuffer;
+    static int compression_level;
+    static unsigned long compression_threshold;
   };
 }
 

@@ -17,7 +17,7 @@ namespace Uintah {
   class UINTAHSHARE AfterCommunicationHandler {
   public:
     virtual ~AfterCommunicationHandler() {}
-    virtual void finishedCommunication(const ProcessorGroup*) = 0;
+    virtual void finishedCommunication(const ProcessorGroup*, MPI_Status &status) = 0;
   };
 
   class UINTAHSHARE Sendlist : public AfterCommunicationHandler {
@@ -32,7 +32,7 @@ namespace Uintah {
     // Sendlist is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  The only task
     // it needs to do to handle finished send requests is simply get deleted.
-    virtual void finishedCommunication(const ProcessorGroup*) {}
+    virtual void finishedCommunication(const ProcessorGroup*, MPI_Status &status) {}
 
   };
 
