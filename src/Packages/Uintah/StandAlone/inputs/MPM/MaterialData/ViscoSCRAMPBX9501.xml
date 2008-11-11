@@ -7,7 +7,7 @@
   <InitialCrackRadius>     3.0e-5   </InitialCrackRadius>
   <CrackPowerValue>        10.0     </CrackPowerValue>
   <CrackMaxGrowthRate>     300.0    </CrackMaxGrowthRate>
-  <StressIntensityF>     500000.0   </StressIntensityF>
+  <StressIntensityF>       500.0    </StressIntensityF>
   <CrackFriction>          0.35     </CrackFriction>
   <CrackGrowthRate>        12.0     </CrackGrowthRate>
   <G1>                     3.5e8    </G1>
