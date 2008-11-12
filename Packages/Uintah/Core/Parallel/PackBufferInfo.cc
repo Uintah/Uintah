@@ -39,12 +39,16 @@ PackBufferInfo::get_type(void*& out_buf, int& out_count,
     int packed_size;
     int total_packed_size=0;
     for (int i = 0; i < (int)startbufs.size(); i++) {
-      MPI_Pack_size(counts[i], datatypes[i], comm, &packed_size);
-      total_packed_size += packed_size;
+      if(counts[i]>0)
+      {
+        MPI_Pack_size(counts[i], datatypes[i], comm, &packed_size);
+        total_packed_size += packed_size;
+      }
     }
+    
     packedBuffer = scinew PackedBuffer(total_packed_size);
     packedBuffer->addReference();
-
+    
     datatype = MPI_PACKED;
     cnt=total_packed_size;
     buf = packedBuffer->getBuffer();
@@ -77,11 +81,12 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
       MPI_Pack(startbufs[i], counts[i], datatypes[i], buf, bufsize,
 	       &position, comm);
   }
+  
   out_count = position;
   ASSERT(out_count==packedBuffer->getBufSize());
       
   //if larger than compression threshold
-  if(compression_level>0 && out_count>(int)compression_threshold && out_count>0)
+  if(compression_level>0 && out_count>(int)compression_threshold)
   {
     ASSERT(out_count*1.001+12<COMPRESS_BUF_SIZE);
     unsigned long size=COMPRESS_BUF_SIZE;
@@ -144,7 +149,7 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
     MPI_Get_count(&status,MPI_BYTE,&compressed_size);
   
     //message was compressed only if the recieved size is less than the bufsize and the compressed size is non-zero
-    if((unsigned long)compressed_size<bufsize && compressed_size>0)
+    if((unsigned long)compressed_size<bufsize)
     {
       //copy to the buffer
       memcpy(compress_buf,buf,compressed_size);

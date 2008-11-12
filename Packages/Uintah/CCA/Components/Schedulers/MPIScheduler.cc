@@ -437,31 +437,35 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      if( dbg.active()) {
-	cerrLock.lock();
-        //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
+      //only send message if size is greather than zero
+      if(count>0)
+      {
+        if( dbg.active()) {
+          cerrLock.lock();
+          //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
           dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag 
-              << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
-        //dbg.setActive(false);
+            << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
+          //dbg.setActive(false);
+        }
+        //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
+        mpidbg <<d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
+
+        numMessages_++;
+        int typeSize;
+
+        MPI_Type_size(datatype,&typeSize);
+        messageVolume_+=count*typeSize;
+
+        MPI_Request requestid;
+        MPI_Isend(buf, count, datatype, to, batch->messageTag,
+            d_myworld->getComm(), &requestid);
+        int bytes = count;
+
+        sendsLock.lock(); // Dd: ??
+        sends_.add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
+        sendsLock.unlock(); // Dd: ??
+        mpi_info_.totalsendmpi += Time::currentSeconds() - start;
       }
-      //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
-      mpidbg <<d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
-
-      numMessages_++;
-      int typeSize;
-
-      MPI_Type_size(datatype,&typeSize);
-      messageVolume_+=count*typeSize;
-
-      MPI_Request requestid;
-      MPI_Isend(buf, count, datatype, to, batch->messageTag,
-		d_myworld->getComm(), &requestid);
-      int bytes = count;
-      
-      sendsLock.lock(); // Dd: ??
-      sends_.add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
-      sendsLock.unlock(); // Dd: ??
-      mpi_info_.totalsendmpi += Time::currentSeconds() - start;
     }
   } // end for (DependencyBatch * batch = task->getComputes() )
   double dsend = Time::currentSeconds()-sendstart;
@@ -617,28 +621,31 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
 #else
       mpibuff.get_type(buf, count, datatype);
 #endif
-      int from = batch->fromTask->getAssignedResourceIndex();
-      ASSERTRANGE(from, 0, d_myworld->size());
-      MPI_Request requestid;
+      //only recieve message if size is greater than zero
+      if(count>0)
+      {
+        int from = batch->fromTask->getAssignedResourceIndex();
+        ASSERTRANGE(from, 0, d_myworld->size());
+        MPI_Request requestid;
 
-      if( dbg.active()) {
-        cerrLock.lock();
-        //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43)
-        dbg << d_myworld->myrank() << " Recving message number " << batch->messageTag 
-          << " from " << from << ": " << ostr.str() << "\n"; cerrLock.unlock();
-        //dbg.setActive(false);
+        if( dbg.active()) {
+          cerrLock.lock();
+          //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43)
+          dbg << d_myworld->myrank() << " Recving message number " << batch->messageTag 
+            << " from " << from << ": " << ostr.str() << "\n"; cerrLock.unlock();
+          //dbg.setActive(false);
+        }
+
+        //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43) 
+        mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";
+        MPI_Irecv(buf, count, datatype, from, batch->messageTag,
+            d_myworld->getComm(), &requestid);
+        int bytes = count;
+        recvs_.add(requestid, bytes,
+            scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
+            ostr.str(), batch->messageTag);
+        mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
       }
-
-      //if (d_myworld->myrank() == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && from == 43) 
-      mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ", length=" << count << "\n";
-      MPI_Irecv(buf, count, datatype, from, batch->messageTag,
-          d_myworld->getComm(), &requestid);
-      int bytes = count;
-      recvs_.add(requestid, bytes,
-          scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
-          ostr.str(), batch->messageTag);
-      mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
-
     }
     else {
       // Nothing really need to be received, but let everyone else know
