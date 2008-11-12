@@ -378,11 +378,6 @@ protected:
   virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
                                             const MaterialSet*);
 
-#if 0
-  void scheduleComputeArtificialViscosity(SchedulerP&, const PatchSet*,
-                                          const MaterialSet*);
-#endif
-
   virtual void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
                                           
