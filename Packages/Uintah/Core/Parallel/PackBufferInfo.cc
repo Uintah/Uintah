@@ -78,9 +78,10 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
 	       &position, comm);
   }
   out_count = position;
-
+  ASSERT(out_count==packedBuffer->getBufSize());
+      
   //if larger than compression threshold
-  if(compression_level>0 && out_count>(int)compression_threshold)
+  if(compression_level>0 && out_count>(int)compression_threshold && out_count>0)
   {
     ASSERT(out_count*1.001+12<COMPRESS_BUF_SIZE);
     unsigned long size=COMPRESS_BUF_SIZE;
@@ -120,6 +121,7 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
       }
     }
   }
+  
   // When it is all packed, only the buffer necessarily needs to be kept
   // around until after it is sent.
   delete sendlist;
@@ -140,9 +142,9 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
   {
     int compressed_size;
     MPI_Get_count(&status,MPI_BYTE,&compressed_size);
-
-    //message was compressed only if the recieved size is less than the bufsize
-    if((unsigned long)compressed_size<bufsize)
+  
+    //message was compressed only if the recieved size is less than the bufsize and the compressed size is non-zero
+    if((unsigned long)compressed_size<bufsize && compressed_size>0)
     {
       //copy to the buffer
       memcpy(compress_buf,buf,compressed_size);
