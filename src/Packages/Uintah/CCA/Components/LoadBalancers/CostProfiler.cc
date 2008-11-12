@@ -21,7 +21,7 @@ void CostProfiler::addContribution(DetailedTask *task, double cost)
 
   vector<Region> regions;
   vector<int> levels;
-  if(task->getTask()->isFineTask())
+  if(task->getTask()->isFineTask() )
   {
     const PatchSubset *patches=task->getPatches();
 
@@ -100,7 +100,7 @@ void CostProfiler::outputError(const GridP currentGrid)
     //get measured and predicted weights
     d_profiler.getMeasuredAndPredictedWeights(l,regions,measured,predicted);
 
-    double total_measured_error=0, total_volume=0, total_measured=0, total_predicted=0;
+    double total_measured_error=0, total_volume=0, total_measured=0, total_predicted=0, total_measured_percent_error=0;
     if(d_myworld->myrank()==0)
     {
       //add measured and predicted
@@ -109,14 +109,16 @@ void CostProfiler::outputError(const GridP currentGrid)
         total_measured+=measured[r];
         total_predicted+=predicted[r];
         total_measured_error+=fabs(measured[r]-predicted[r]);
+        total_measured_percent_error+=fabs(measured[r]-predicted[r])/measured[r];
         total_volume+=regions[r].getVolume();
       }
 
-      cout << "Normal Profile Error: " << l << " " << total_measured_error/total_volume << " " << total_measured << " " << total_predicted << endl;
+      //cout << "Normal Profile Error: " << l << " " << total_measured_error/total_volume << " " << total_measured << " " << total_predicted << endl;
+      cout << "Normal Profile Error: " << l << " " << total_measured_error/regions.size() << " " << total_measured_percent_error/regions.size() << " " << total_measured << " " << total_predicted << endl;
 
     }
 
-    double total_measured_error_fine=0, total_volume_fine=0, total_measured_fine=0, total_predicted_fine=0;
+    double total_measured_error_fine=0, total_volume_fine=0, total_measured_fine=0, total_predicted_fine=0, total_measured_percent_error_fine=0;
     if(l+1<currentGrid->numLevels())
     {
       d_fineProfiler.getMeasuredAndPredictedWeights(l+1,fineRegions,measured_fine,predicted_fine);
@@ -127,17 +129,29 @@ void CostProfiler::outputError(const GridP currentGrid)
           total_measured_fine+=measured_fine[r];
           total_predicted_fine+=predicted_fine[r];
           total_measured_error_fine+=fabs(measured_fine[r]-predicted_fine[r]);
+          if(measured_fine[r]>0)
+          {
+            total_measured_percent_error_fine+=fabs(measured_fine[r]-predicted_fine[r])/measured_fine[r];
+          }
           total_volume_fine+=fineRegions[r].getVolume();
         }
 
-        cout << "Fine Profile Error:" << l << " " << total_measured_error_fine/total_volume_fine 
+        //cout << "Fine Profile Error:" << l << " " << total_measured_error_fine/total_volume_fine 
+        //  << " " << total_measured_fine << " " << total_predicted_fine  << endl;
+        cout << "Fine Profile Error:" << l << " " << total_measured_error_fine/regions.size() 
+          << " " << total_measured_percent_error_fine/regions.size() 
           << " " << total_measured_fine << " " << total_predicted_fine  << endl;
 
       }
     }
-    if(d_myworld->myrank()==0)  
-      cout << "Total Profile Error:" << l << " " << (total_measured_error+total_measured_error_fine)/(total_volume+total_volume_fine) << " "
+    if(d_myworld->myrank()==0) 
+    {
+      //cout << "Total Profile Error:" << l << " " << (total_measured_error+total_measured_error_fine)/(total_volume+total_volume_fine) << " "
+      //  << total_measured+total_measured_fine << " " << total_predicted+total_predicted_fine << endl;
+      cout << "Total Profile Error:" << l << " " << (total_measured_error+total_measured_error_fine)/regions.size() << " "
+        <<  (total_measured_percent_error+total_measured_percent_error_fine)/regions.size() << " "
         << total_measured+total_measured_fine << " " << total_predicted+total_predicted_fine << endl;
+    }
   }
 }
 void CostProfiler::finalizeContributions(const GridP currentGrid)
