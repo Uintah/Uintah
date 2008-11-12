@@ -85,10 +85,28 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
     ASSERT(out_count*1.001+12<COMPRESS_BUF_SIZE);
     unsigned long size=COMPRESS_BUF_SIZE;
     //compress the buffer
-    if(compress2((Bytef*)compress_buf,&size,(const Bytef*)buf,out_count,compression_level) != Z_OK)
+
+    int retval;
+    if( (retval=compress2((Bytef*)compress_buf,&size,(const Bytef*)buf,out_count,compression_level)) != Z_OK)
     {
-      cout << "uncompressed size:" << out_count << " compression_level:" << compression_level << endl;
-      throw SCIRun::InternalError("Compression of MPI message failed", __FILE__, __LINE__);
+      switch(retval)
+      {
+        case Z_MEM_ERROR:
+          throw SCIRun::InternalError("Compression returned Z_MEM_ERROR", __FILE__, __LINE__);
+          break;
+        case Z_BUF_ERROR:
+          throw SCIRun::InternalError("Compression returned Z_BUF_ERROR", __FILE__, __LINE__);
+          break;
+        case Z_DATA_ERROR:
+          throw SCIRun::InternalError("Compression returned Z_DATA_ERROR", __FILE__, __LINE__);
+          break;
+        case Z_STREAM_ERROR:
+          throw SCIRun::InternalError("Compression returned Z_STREAM_ERROR", __FILE__, __LINE__);
+          break;
+        default:
+          throw SCIRun::InternalError("Compression of MPI message failed", __FILE__, __LINE__);
+          break;
+      }
     }
     else
     {
@@ -129,10 +147,28 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
       //copy to the buffer
       memcpy(compress_buf,buf,compressed_size);
 
+      int retval;
       //uncompress buffer
-      if( uncompress((Bytef*)buf,&bufsize,(const Bytef*)compress_buf,compressed_size)  != Z_OK)
+      if( (retval=uncompress((Bytef*)buf,&bufsize,(const Bytef*)compress_buf,compressed_size))  != Z_OK)
       {
-        throw SCIRun::InternalError("Decompression of MPI message failed", __FILE__, __LINE__);
+        switch(retval)
+        {
+          case Z_MEM_ERROR:
+            throw SCIRun::InternalError("Uncompression returned Z_MEM_ERROR", __FILE__, __LINE__);
+            break;
+          case Z_BUF_ERROR:
+            throw SCIRun::InternalError("Uncompression returned Z_BUF_ERROR", __FILE__, __LINE__);
+            break;
+          case Z_DATA_ERROR:
+            throw SCIRun::InternalError("Uncompression returned Z_DATA_ERROR", __FILE__, __LINE__);
+            break;
+          case Z_STREAM_ERROR:
+            throw SCIRun::InternalError("Uncompression returned Z_STREAM_ERROR", __FILE__, __LINE__);
+            break;
+          default:
+            throw SCIRun::InternalError("Uncompression of MPI message failed", __FILE__, __LINE__);
+            break;
+        }
       }
       ASSERT(bufsize==(unsigned long)packedBuffer->getBufSize());
     }
