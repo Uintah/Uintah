@@ -14848,12 +14848,6 @@ fi
 
 
 
-# run xml2makefile command
-# patch the generated makefile to include -I/packages dir
-# add make (of visit files) to take place when make (of uintah) happens
-
-# Copy avtudaReaderMTMDFileFormat.C to bin side... patch this file to update UINTAH_UDA_TO_VIS_LIB to be the correct string.
-
 ##  --  search for OFED (Infiniband Drivers) -----------------------------
 
 if test "$with_ofed"; then
@@ -36615,6 +36609,9 @@ esac
 
 
 
+MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $F_LIB_FLAG"
+MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
+
 ##  --  search for Java ------------------------
 
 ## Sun distribution only
@@ -40901,7 +40898,7 @@ echo "$as_me: error: We recommend that you don't use MKL on a Mac... use the def
 ## arg 4 : $_sci_inc
 ## arg 5 : mkl mkl_core mkl_intel_lp64 guide
 ## arg 6 : $_sci_lib
-## arg 7 : $THREAD_LIB_FLAG
+## arg 7 : $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -41139,7 +41136,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $THREAD_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -41394,7 +41391,7 @@ _sci_includes=''
 ## arg 4 : $_sci_inc
 ## arg 5 : mkl mkl_def guide
 ## arg 6 : $_sci_lib
-## arg 7 : $THREAD_LIB_FLAG
+## arg 7 : $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -41632,7 +41629,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $THREAD_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
