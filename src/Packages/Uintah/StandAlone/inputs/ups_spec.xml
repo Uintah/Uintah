@@ -422,6 +422,7 @@
     <artificial_viscosity      spec="OPTIONAL BOOLEAN" />
     <accumulate_strain_energy  spec="OPTIONAL BOOLEAN" />
     <use_load_curves           spec="OPTIONAL BOOLEAN" />
+    <axisymmetric              spec="OPTIONAL BOOLEAN" />
     <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
         <dynamic  spec="OPTIONAL BOOLEAN" />
         <solver   spec="REQUIRED STRING 'petsc, simple'" />
