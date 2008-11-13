@@ -47,7 +47,7 @@
 
 #include <avtMTMDFileFormat.h>
 
-#include <vector>
+#include <string>
 
 // ****************************************************************************
 //  Class: avtudaReaderMTMDFileFormat
@@ -96,8 +96,8 @@ public:
 protected:
   // DATA MEMBERS
         
-  int     timeSteps;
-  string  folder;
+  int          timeSteps;
+  std::string  folder;
         
   void  * libHandle;
   char  * error, arr2d[128][128];
@@ -109,23 +109,23 @@ protected:
   vecVal ***vecValMatrix;
   tenVal ***tenValMatrix;
         
-  int    currLevel;
-  string currVar, currMesh;
+  int         currLevel;
+  std::string currVar, currMesh;
   // bool callDomainNesting;
         
   int ncomps;
         
   timeStep*        (*processData)(int, char[][128], int, bool, int, bool, int);
-  udaVars*         (*getVarList)(const string&);
-  int*             (*getTimeSteps)(const string&);
-  double*          (*getBBox)(const string&, int, int);
-  double*          (*getPatchBBox)(const string&, int, int, int);
-  int*             (*getPatchIndex)(const string&, int, int, int, const string&);
-  varMatls*        (*getMaterials)(const string&, const string&, int);
-  levelPatchVec*   (*getTotalNumPatches)(const string&, int);
-  patchInfoVec*    (*getPatchInfo)(const string&, int, const string&, bool);
-  int*             (*getNumPatches)(const string&, int, int);
-  int*             (*getNumLevels)(const string&, int);
+  udaVars*         (*getVarList)(const std::string&);
+  int*             (*getTimeSteps)(const std::string&);
+  double*          (*getBBox)(const std::string&, int, int);
+  double*          (*getPatchBBox)(const std::string&, int, int, int);
+  int*             (*getPatchIndex)(const std::string&, int, int, int, const std::string&);
+  varMatls*        (*getMaterials)(const std::string&, const std::string&, int);
+  levelPatchVec*   (*getTotalNumPatches)(const std::string&, int);
+  patchInfoVec*    (*getPatchInfo)(const std::string&, int, const std::string&, bool);
+  int*             (*getNumPatches)(const std::string&, int, int);
+  int*             (*getNumLevels)(const std::string&, int);
 
   virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
   // virtual void     RegisterVariableList(const char *,
