@@ -73,7 +73,7 @@ AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.59 
 ##  type "autoconf --version" to find out what version you have.
-AC_PREREQ(2.59)
+AC_PREREQ(2.61)
 
 AC_COPYRIGHT(
 ##
@@ -2368,11 +2368,6 @@ AC_SUBST( BUILD_VISIT )
 AC_SUBST( UINTAH_UDA_TO_VIS_LIB )
 AC_SUBST( VISIT_INSTALL_DIR )
 
-# patch the generated makefile to include -I/packages dir
-# add make (of visit files) to take place when make (of uintah) happens
-
-# Copy avtudaReaderMTMDFileFormat.C to bin side... patch this file to update UINTAH_UDA_TO_VIS_LIB to be the correct string.
-
 ##  --  search for OFED (Infiniband Drivers) -----------------------------
 
 if test "$with_ofed"; then
@@ -3289,6 +3284,9 @@ esac
 AC_SUBST(F_LIB_FLAG)
 AC_SUBST(F_LIB_DIR_FLAG)
 
+MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $F_LIB_FLAG"
+MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
+
 ##  --  search for Java ------------------------
 
 ## Sun distribution only
@@ -3637,9 +3635,11 @@ if test "$with_mkl"; then
        ;;
      *)
        SCI_TRY_LINK(BLAS,mkl version of (blas) libraries and headers,mkl_cblas.h,
-                    $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,$THREAD_LIB_FLAG,,$_sci_optional)
+                    $_sci_inc,mkl mkl_core mkl_intel_lp64 guide,$_sci_lib,
+                    $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
        SCI_TRY_LINK(LAPACK,mkl version of (lapack) libraries and headers,mkl_lapack.h,
-                    $_sci_inc,mkl mkl_def guide,$_sci_lib,$THREAD_LIB_FLAG,,$_sci_optional)
+                    $_sci_inc,mkl mkl_def guide,$_sci_lib,
+                    $THREAD_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
        ;;
   esac
 
