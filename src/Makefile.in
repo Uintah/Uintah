@@ -266,6 +266,7 @@ endif
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
+	rm -f Packages/Uintah/VisIt/udaReaderMTMD/*
 
 distclean:: clean
 	rm -f config.status config.log config.cache
