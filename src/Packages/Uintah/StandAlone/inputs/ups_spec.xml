@@ -23,9 +23,10 @@
 
        need: OPTIONAL, REQUIRED, MULTIPLE   (Probably need MULTIPLE-REQ and MULTIPLE-OPT.
                                              Currently MULTIPLE means 0 or more...)
-       type: DOUBLE, INTEGER, STRING, VECTOR, NO_DATA (NO_DATA means the tag doesn't have any
-                                                    data (text) but can have attributes and/or
-                                                    sub-tags.)
+       type: DOUBLE, INTEGER, STRING, VECTOR, MULTIPLE_INTEGERS,
+             MULTIPLE_DOUBLES, NO_DATA (NO_DATA means the tag doesn't have any
+                                        data (text) but can have attributes and/or
+                                        sub-tags.)
 
        validValues is a _single_ string (see below for how it is parsed) that contains valid values
        or the value of the tag.  The specification of valid values depends on the type of the tag:
@@ -116,6 +117,8 @@
     <type               spec="REQUIRED STRING 'mpm, arches, ice, mpmice, mpmarches, impm, switcher'" />
   </SimulationComponent>
 
+  <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,
+             then no data will be saved (and no .uda dir will be created). -->
   <DataArchiver         spec="REQUIRED NO_DATA"
                                    children="ONE_OF(outputInterval, outputTimestepInterval)" >
       <filebase         spec="REQUIRED STRING" />
@@ -148,7 +151,7 @@
     <dbg_outputInterval     spec="REQUIRED DOUBLE" />
     <dbg_BeginIndex         spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
     <dbg_EndIndex           spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
-    <dbg_Matls              spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [0,1] -->
+    <dbg_Matls              spec="REQUIRED MULTIPLE_INTEGERS" />
     <dbg_SigFigs            spec="OPTIONAL INTEGER '1, 20'" />
     <dbg_Level              spec="OPTIONAL INTEGER '1, 20'" />
     <dbg_SymmetryPlanes     spec="OPTIONAL INTEGER '1, 3'" />
@@ -433,7 +436,9 @@
         <heat_transfer_coefficient  spec="OPTIONAL DOUBLE" />
         
         <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
-        <constitutive_model         spec="REQUIRED NO_DATA">
+        <constitutive_model         spec="REQUIRED NO_DATA"
+                                    attribute1="type REQUIRED STRING 'comp_mooney_rivlin, comp_neo_hook, elastic_plastic, hypo_elastic, hypoelastic_plastic, ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH, small_strain_plastic, trans_iso_hyper, water'">
+          <he_constant_1            spec="REQUIRED DOUBLE 'positive'" />
           <he_constant_2            spec="REQUIRED DOUBLE 'positive'" />
           <he_PR                    spec="REQUIRED DOUBLE 'positive'" />
         </constitutive_model>
@@ -444,7 +449,7 @@
       <contact                      spec="REQUIRED NO_DATA" >
         <type                       spec="REQUIRED STRING 'null, single_velocity, rigid, specified, friction, approach'" />
         <mu                         spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
-        <materials                  spec="OPTIONAL INTEGER" /> <!-- FIXME:  INTEGERS ACTUALLY, AS BELOW IN EXCHANGE PROPERTIES -->
+        <materials                  spec="OPTIONAL MULTIPLE_INTEGERS" />
       </contact>
       <thermal_contact              spec="OPTIONAL NO_DATA" />
     </MPM>
@@ -465,8 +470,8 @@
 
     <exchange_properties      spec="OPTIONAL NO_DATA" >
       <exchange_coefficients  spec="REQUIRED NO_DATA" >
-        <momentum             spec="REQUIRED STRING" /> <!-- FIXME: not string, HOW TO HANDLE [1.0,1.0] -->
-        <heat                 spec="REQUIRED STRING" /> <!-- FIXME: not string, HOW TO HANDLE [1.0,1.0] -->
+        <momentum             spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                 spec="REQUIRED MULTIPLE_DOUBLES" />
       </exchange_coefficients>
     </exchange_properties>
 
