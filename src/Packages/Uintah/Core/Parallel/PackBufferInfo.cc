@@ -45,13 +45,10 @@ PackBufferInfo::get_type(void*& out_buf, int& out_count,
         total_packed_size += packed_size;
       }
     }
-   
-    if(total_packed_size>0)
-    {
-      packedBuffer = scinew PackedBuffer(total_packed_size);
-      packedBuffer->addReference();
-    }
-    
+
+    packedBuffer = scinew PackedBuffer(total_packed_size);
+    packedBuffer->addReference();
+
     datatype = MPI_PACKED;
     cnt=total_packed_size;
     buf = packedBuffer->getBuffer();
