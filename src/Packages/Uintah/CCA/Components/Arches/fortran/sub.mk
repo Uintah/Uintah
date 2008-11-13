@@ -24,7 +24,6 @@ SRCS += \
 	$(SRCDIR)/fixval_trans.F \
 	$(SRCDIR)/inlbcs.F \
 	$(SRCDIR)/intrusion_computevel.F \
-	$(SRCDIR)/mascal.F \
 	$(SRCDIR)/mascal_scalar.F \
 	$(SRCDIR)/mm_computevel.F\
 	$(SRCDIR)/mm_explicit.F\
@@ -80,7 +79,6 @@ $(SRCDIR)/enthalpyradthinsrc.$(OBJEXT): $(SRCDIR)/enthalpyradthinsrc_fort.h
 $(SRCDIR)/explicit_scalar.$(OBJEXT): $(SRCDIR)/explicit_scalar_fort.h
 $(SRCDIR)/explicit_vel.$(OBJEXT): $(SRCDIR)/explicit_vel_fort.h
 $(SRCDIR)/inlbcs.$(OBJEXT): $(SRCDIR)/inlbcs_fort.h $(SRCDIR)/ramping.h
-$(SRCDIR)/mascal.$(OBJEXT): $(SRCDIR)/mascal_fort.h
 $(SRCDIR)/mascal_scalar.$(OBJEXT): $(SRCDIR)/mascal_scalar_fort.h
 $(SRCDIR)/mm_computevel.$(OBJEXT): $(SRCDIR)/mm_computevel_fort.h
 $(SRCDIR)/mm_explicit.$(OBJEXT): $(SRCDIR)/mm_explicit_fort.h

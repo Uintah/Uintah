@@ -26,7 +26,6 @@ using namespace Uintah;
 using namespace SCIRun;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
 #ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
 #else
@@ -38,9 +37,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
-
-#define NEW
-
 
 //****************************************************************************
 // Constructor for Source
@@ -410,83 +406,81 @@ Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
                           cellinfo->sew, cellinfo->sns, cellinfo->stb, tref);
 }
 
+
 //****************************************************************************
-// Calls Fortran MASCAL
+// Compute the mass source term due to continuity and utilization of the 
+// conservative form of the pde
+//****************************************************************************
+template<class T> void
+Source::compute_massSource(CellIterator iter,
+                           const T& vel,
+                           StencilMatrix<T>& velCoeff,
+                           T& velNonLinearSrc,
+                           StencilMatrix<T>& velConvectCoeff) 
+{
+  //__________________________________
+  // examine each element of the matrix
+  for(; !iter.done();iter++) { 
+    IntVector c = *iter;
+    
+    double tiny=1e-20;
+    
+    for(int e = 1; e <= 6; e++){          // N S E W T B
+      if( fabs(velCoeff[e][c]) < tiny ){ //  1 2 3 4 5 6
+        velConvectCoeff[e][c] = 0.0;
+      }
+    }
+  }
+  
+  //__________________________________
+  // mass src term
+  for(iter.reset(); !iter.done();iter++) { 
+    IntVector c = *iter;
+    double difference = velConvectCoeff[Arches::AN][c] - velConvectCoeff[Arches::AS][c]
+                      + velConvectCoeff[Arches::AE][c] - velConvectCoeff[Arches::AW][c]
+                      + velConvectCoeff[Arches::AT][c] - velConvectCoeff[Arches::AB][c];
+ 
+    velNonLinearSrc[c] = velNonLinearSrc[c] - difference * vel[c];
+    
+  }
+}
+
+//****************************************************************************
+// 
 //****************************************************************************
 void 
-Source::modifyVelMassSource(const ProcessorGroup* ,
-                            const Patch* patch,
-                            double,
+Source::modifyVelMassSource(const Patch* patch,
                             int index,
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars)
 {
-  // Get the patch and variable indices
-  // And call the fortran routine (MASCAL)
-  IntVector idxLo;
-  IntVector idxHi;
-  IntVector domLo;
-  IntVector domHi;
   switch(index) {
-  case Arches::XDIR:
-    idxLo = patch->getSFCXFORTLowIndex();
-    idxHi = patch->getSFCXFORTHighIndex();
-    fort_mascal(idxLo, idxHi, constvars->uVelocity,
-                vars->uVelocityCoeff[Arches::AE],
-                vars->uVelocityCoeff[Arches::AW],
-                vars->uVelocityCoeff[Arches::AN],
-                vars->uVelocityCoeff[Arches::AS],
-                vars->uVelocityCoeff[Arches::AT],
-                vars->uVelocityCoeff[Arches::AB],
-                vars->uVelNonlinearSrc,
-                vars->uVelocityConvectCoeff[Arches::AE],
-                vars->uVelocityConvectCoeff[Arches::AW],
-                vars->uVelocityConvectCoeff[Arches::AN],
-                vars->uVelocityConvectCoeff[Arches::AS],
-                vars->uVelocityConvectCoeff[Arches::AT],
-                vars->uVelocityConvectCoeff[Arches::AB]);
-
-    break;
-  case Arches::YDIR:
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
-    fort_mascal(idxLo, idxHi, constvars->vVelocity,
-                vars->vVelocityCoeff[Arches::AE],
-                vars->vVelocityCoeff[Arches::AW],
-                vars->vVelocityCoeff[Arches::AN],
-                vars->vVelocityCoeff[Arches::AS],
-                vars->vVelocityCoeff[Arches::AT],
-                vars->vVelocityCoeff[Arches::AB],
-                vars->vVelNonlinearSrc,
-                vars->vVelocityConvectCoeff[Arches::AE],
-                vars->vVelocityConvectCoeff[Arches::AW],
-                vars->vVelocityConvectCoeff[Arches::AN],
-                vars->vVelocityConvectCoeff[Arches::AS],
-                vars->vVelocityConvectCoeff[Arches::AT],
-                vars->vVelocityConvectCoeff[Arches::AB]);
-
-    break;
-  case Arches::ZDIR:
-    idxLo = patch->getSFCZFORTLowIndex();
-    idxHi = patch->getSFCZFORTHighIndex();
-    fort_mascal(idxLo, idxHi, constvars->wVelocity,
-                vars->wVelocityCoeff[Arches::AE],
-                vars->wVelocityCoeff[Arches::AW],
-                vars->wVelocityCoeff[Arches::AN],
-                vars->wVelocityCoeff[Arches::AS],
-                vars->wVelocityCoeff[Arches::AT],
-                vars->wVelocityCoeff[Arches::AB],
-                vars->wVelNonlinearSrc,
-                vars->wVelocityConvectCoeff[Arches::AE],
-                vars->wVelocityConvectCoeff[Arches::AW],
-                vars->wVelocityConvectCoeff[Arches::AN],
-                vars->wVelocityConvectCoeff[Arches::AS],
-                vars->wVelocityConvectCoeff[Arches::AT],
-                vars->wVelocityConvectCoeff[Arches::AB]);
-
-    break;
+  case Arches::XDIR:{
+    CellIterator iter = patch->getSFCXIterator();
+    
+    compute_massSource<SFCXVariable<double> >(iter, constvars->uVelocity, 
+                                              vars->uVelocityCoeff,
+                                              vars->uVelNonlinearSrc, 
+                                              vars->uVelocityConvectCoeff);
+    }break;
+  case Arches::YDIR:{
+    CellIterator iter = patch->getSFCYIterator();
+    
+    compute_massSource<SFCYVariable<double> >(iter, constvars->vVelocity, 
+                                              vars->vVelocityCoeff,
+                                              vars->vVelNonlinearSrc, 
+                                              vars->vVelocityConvectCoeff);  
+    }break;
+  case Arches::ZDIR:{
+    CellIterator iter = patch->getSFCZIterator();
+    
+    compute_massSource<SFCZVariable<double> >(iter, constvars->wVelocity, 
+                                              vars->wVelocityCoeff,
+                                              vars->wVelNonlinearSrc, 
+                                              vars->wVelocityConvectCoeff);
+    }break;
   default:
-    throw InvalidValue("Invalid index in Source::calcVelMassSrc", __FILE__, __LINE__);
+    throw InvalidValue("Invalid index in Source::modifyVelMassSource", __FILE__, __LINE__);
   }
 }
 
@@ -666,65 +660,7 @@ Source::calculateVelMMSSource(const ProcessorGroup* ,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)
 {
-//  double time = d_lab->d_sharedState->getElapsedTime();
-  // Get the patch and variable indices
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
-
-  double rho0=0.0;
-  switch(index) {
-  case Arches::XDIR:
-
-  for (int colZ = idxLoU.z(); colZ <= idxHiU.z(); colZ ++) {
-    for (int colY = idxLoU.y(); colY <= idxHiU.y(); colY ++) {
-      for (int colX = idxLoU.x(); colX <= idxHiU.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-
-        //Make sure that this is the density you want
-        rho0 = constvars->new_density[currCell];
-      }
-    }
-  }
-
-
-    break;
-  case Arches::YDIR:
-    
-  for (int colZ = idxLoV.z(); colZ <= idxHiV.z(); colZ ++) {
-    for (int colY = idxLoV.y(); colY <= idxHiV.y(); colY ++) {
-      for (int colX = idxLoV.x(); colX <= idxHiV.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-
-        //This density should change depending on what you are verifying...
-        rho0 = constvars->new_density[currCell];
-
-      }
-    }
-  }
-
-
-    break;
-  case Arches::ZDIR:
-
-  for (int colZ = idxLoW.z(); colZ <= idxHiW.z(); colZ ++) {
-    for (int colY = idxLoW.y(); colY <= idxHiW.y(); colY ++) {
-      for (int colX = idxLoW.x(); colX <= idxHiW.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        //This density should change depending on what you are verifying...
-        rho0 = constvars->new_density[currCell];
-      }
-    }
-  }
-
-
-    break;
-  default:
-    throw InvalidValue("Invalid index in LinearSource::calcVelSrc", __FILE__, __LINE__);
-  }
+// empty for now
 }
 //****************************************************************************
 // Scalar source calculation for MMS

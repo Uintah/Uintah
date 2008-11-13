@@ -950,8 +950,11 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
     //           [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-      d_source->modifyVelMassSource(pc, patch, delta_t, index,
+
+      d_source->modifyVelMassSource(patch,index,
                                     &velocityVars, &constVelocityVars);
+                                    
+
 
       // Calculate Velocity diagonal
       //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
@@ -971,6 +974,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                          cellinfo, &velocityVars,
                                          &constVelocityVars);
       }
+
 
       //MMS boundary conditions ~Setting the uncorrected velocities~
       if (d_doMMS) { 
@@ -1024,7 +1028,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
   }
   }
 
-    
+        
     }
     double time_shift = 0.0;
     if (d_boundaryCondition->getInletBC()) {
@@ -1037,6 +1041,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         (d_boundaryCondition->getPressureBC()))
       d_boundaryCondition->velRhoHatOutletPressureBC(pc, patch,
                                            &velocityVars, &constVelocityVars);
+
     /*
   if (d_pressure_correction) {
   int outlet_celltypeval = d_boundaryCondition->outletCellType();

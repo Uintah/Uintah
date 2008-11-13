@@ -142,13 +142,14 @@ public:
                                  CellInformation* cellinfo,
                                  ArchesVariables* vars,
                                  ArchesConstVariables* constvars);
-
-  ////////////////////////////////////////////////////////////////////////
-  // Set source terms. Will need more parameters...like velocity and
-  // scalars
-  void modifyVelMassSource(const ProcessorGroup* pc,
-                           const Patch* patch,
-                           double delta_t, 
+  template<class T>
+  void compute_massSource(CellIterator iter,
+                           const T& vel,
+                           StencilMatrix<T>& velCoeff,
+                           T& velNonLinearSrc,
+                           StencilMatrix<T>& velConvectCoeff);
+                           
+  void modifyVelMassSource(const Patch* patch,
                            int index,
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
