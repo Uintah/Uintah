@@ -95,7 +95,7 @@ toString( const vector<string> & vec )
 // MULTIPLE = 0 or more occurrences
 enum need_e { OPTIONAL, REQUIRED, MULTIPLE, INVALID_NEED };
 // VECTORs are specified as [0.0,0.0,0.0]
-enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, INVALID_TYPE };
+enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, INVALID_TYPE, MULTIPLE_DOUBLES, MULTIPLE_INTEGERS };
 
 ostream &
 operator<<( ostream & out, const need_e & need )
@@ -119,6 +119,8 @@ operator<<( ostream & out, const type_e & type )
   else if( type == VECTOR )  { out << "VECTOR"; }
   else if( type == BOOLEAN ) { out << "BOOLEAN"; }
   else if( type == NO_DATA ) { out << "NO_DATA"; }
+  else if( type == MULTIPLE_INTEGERS ) { out << "MULTIPLE_INTEGERS"; }
+  else if( type == MULTIPLE_DOUBLES )  { out << "MULTIPLE_DOUBLES"; }
   else {                       out << "Error: type_e '<<' operator.  Value of " << (int)type << " is invalid... \n"; }
   return out;
 }
@@ -162,6 +164,12 @@ getType( const string & typeStr )
   }
   else if( typeStr == "NO_DATA" ) {
     return NO_DATA;
+  }
+  else if( typeStr == "MULTIPLE_DOUBLES" ) {
+    return MULTIPLE_DOUBLES;
+  }
+  else if( typeStr == "MULTIPLE_INTEGERS" ) {
+    return MULTIPLE_INTEGERS;
   }
   else {
     cout << "Error: ProblemSpecReader.cc: type (" << typeStr << ") did not parse correctly... "
@@ -776,6 +784,52 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
       }
     }
     break;
+  case MULTIPLE_INTEGERS:
+    {
+      int loc = text.find( "." );
+      if( loc != -1 ) {
+        throw ProblemSetupException( classType + " ('" + completeName + "') should have a multiple integer values (but has: '" +
+                                     text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                     __FILE__, __LINE__ );
+      }
+      char tokens[ text.length() + 1];
+      strcpy ( tokens, text.c_str() );
+
+      char * token = strtok( tokens, "[,]" );
+
+      while( token != NULL ) {
+        int result;
+        int num = sscanf( token, "%d", &result );
+
+        if( num != 1 ) {
+          throw ProblemSetupException( classType + " ('" + completeName + "') should have a multiple double values (but has: '" +
+                                       text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                       __FILE__, __LINE__ );
+        } 
+        token = strtok( NULL, "[,]" );
+      }
+    }
+    break;
+  case MULTIPLE_DOUBLES:
+    {
+      char tokens[ text.length() + 1];
+      strcpy ( tokens, text.c_str() );
+
+      char * token = strtok( tokens, "[,]" );
+
+      while( token != NULL ) {
+        double result;
+        int    num = sscanf( token, "%lf", &result );
+
+        if( num != 1 ) {
+          throw ProblemSetupException( classType + " ('" + completeName + "') should have a multiple double values (but has: '" +
+                                       text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                       __FILE__, __LINE__ );
+        } 
+        token = strtok( NULL, "[,]" );
+      }
+    }
+    break;
   case NO_DATA:
     // Already handled above...
   case INVALID_TYPE:
@@ -924,9 +978,11 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int le
   for( unsigned int pos = 0; pos < root->subTags_.size(); pos++ ) {
     Tag * tag = root->subTags_[ pos ];
     if( tag->need_ == REQUIRED && tag->occurrences_ == 0 ) {
-      throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
-                                   "' missing.  Please fix XML in .ups file or correct validation Tag list.",
-                                   __FILE__, __LINE__ );
+      //throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
+      //                             "' missing.  Please fix XML in .ups file or correct validation Tag list.",
+      //                             __FILE__, __LINE__ );
+      cout << "ERROR: Required tag '" << tag->getCompleteName() 
+           << "' missing.  Please fix XML in .ups file or correct validation Tag list.\n";
     }
   }
 } // end validate()
