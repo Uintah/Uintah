@@ -146,6 +146,13 @@ DataArchiver::problemSetup(const ProblemSpecP& params,
    map<string, string> attributes;
    SaveNameItem saveItem;
    ProblemSpecP save = p->findBlock("save");
+
+   if( save == 0 ) {
+     if( Uintah::Parallel::getMPIRank() == 0 ) {
+       cout << "\nWARNING: No data will be saved as none was specified to be saved in the .ups file!\n\n";
+     }
+   }
+
    while( save != 0 ) {
       attributes.clear();
       save->getAttributes(attributes);
