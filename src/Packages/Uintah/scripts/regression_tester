@@ -349,9 +349,10 @@ compare_results () {
     echo "../compare_uda $compare_uda_options  $goldStandard $uda" > $n.compare 2>&1
     ../compare_uda $compare_uda_options $goldStandard $uda >> $n.compare 2>&1
     
-    compare=`grep "passed" $n.compare`
-    if test -n "$compare"; then
-        echo $compare
+#    compare=`grep "passed" $n.compare`
+  
+    if [ $? -eq 0 ]; then 
+        echo "Sucess running compare_uda . . ."
 #        cd ..
         return 0
     else
