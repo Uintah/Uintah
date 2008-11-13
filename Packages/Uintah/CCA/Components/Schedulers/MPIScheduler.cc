@@ -646,6 +646,12 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
             ostr.str(), batch->messageTag);
         mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
       }
+      else
+      {
+        //no message was sent so clean up buffer and handler
+        delete p_mpibuff;
+        delete pBatchRecvHandler;
+      }
     }
     else {
       // Nothing really need to be received, but let everyone else know

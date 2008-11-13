@@ -45,9 +45,12 @@ PackBufferInfo::get_type(void*& out_buf, int& out_count,
         total_packed_size += packed_size;
       }
     }
-    
-    packedBuffer = scinew PackedBuffer(total_packed_size);
-    packedBuffer->addReference();
+   
+    if(total_packed_size>0)
+    {
+      packedBuffer = scinew PackedBuffer(total_packed_size);
+      packedBuffer->addReference();
+    }
     
     datatype = MPI_PACKED;
     cnt=total_packed_size;
@@ -158,6 +161,7 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
       //uncompress buffer
       if( (retval=uncompress((Bytef*)buf,&bufsize,(const Bytef*)compress_buf,compressed_size))  != Z_OK)
       {
+        cout << Parallel::getMPIRank() << " error uncompressing.  buffer size:" << packedBuffer->getBufSize() << " message size:" << compressed_size << endl;
         switch(retval)
         {
           case Z_MEM_ERROR:
