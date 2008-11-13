@@ -86,8 +86,7 @@ PackBufferInfo::pack(MPI_Comm comm, int& out_count)
   }
   
   out_count = position;
-  ASSERT(out_count==packedBuffer->getBufSize());
-      
+
   //if larger than compression threshold
   if(compression_level>0 && out_count>(int)compression_threshold)
   {
@@ -151,7 +150,9 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
     int compressed_size;
     MPI_Get_count(&status,MPI_BYTE,&compressed_size);
   
-    //message was compressed only if the recieved size is less than the bufsize and the compressed size is non-zero
+    //if the recieved size is less than the bufsize then the message was likely compressed
+      //there are cases where it still might be uncompressed.
+      //for example:  if MPI_Pack_size returned a value that is larger than the actual space needed
     if((unsigned long)compressed_size<bufsize)
     {
       //copy to the buffer
@@ -161,7 +162,6 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
       //uncompress buffer
       if( (retval=uncompress((Bytef*)buf,&bufsize,(const Bytef*)compress_buf,compressed_size))  != Z_OK)
       {
-        cout << Parallel::getMPIRank() << " error uncompressing.  buffer size:" << packedBuffer->getBufSize() << " message size:" << compressed_size << endl;
         switch(retval)
         {
           case Z_MEM_ERROR:
@@ -170,11 +170,12 @@ PackBufferInfo::unpack(MPI_Comm comm,MPI_Status &status)
           case Z_BUF_ERROR:
             throw SCIRun::InternalError("Uncompression returned Z_BUF_ERROR", __FILE__, __LINE__);
             break;
-          case Z_DATA_ERROR:
-            throw SCIRun::InternalError("Uncompression returned Z_DATA_ERROR", __FILE__, __LINE__);
-            break;
           case Z_STREAM_ERROR:
             throw SCIRun::InternalError("Uncompression returned Z_STREAM_ERROR", __FILE__, __LINE__);
+            break;
+          case Z_DATA_ERROR: 
+            //this likely means the data was not compressed so just copy the message over
+            memcpy(buf,compress_buf,compressed_size);
             break;
           default:
             throw SCIRun::InternalError("Uncompression of MPI message failed", __FILE__, __LINE__);
