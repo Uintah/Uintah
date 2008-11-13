@@ -29,7 +29,7 @@ visit_stuff : $(links_to_create) ${VISIT_SRCDIR}/Makefile.visit ${VISIT_SRCDIR}/
 #
 $(links_to_create) :
 	@echo "Creating symbolic link to $@... this occurs only one time."
-	@ln -fs $(SRCTOP)/$(VISIT_SRCDIR)/`basename $@` $@
+	@ln -fs $(SRCTOP_ABS)/$(VISIT_SRCDIR)/`basename $@` $@
 
 #
 # This creates the VisIt Makefile.  Have to move your Makefile out of
@@ -41,7 +41,7 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libPackages_Uintah_StandAlone_tools_uda2vis
 	  rm -f Makefile.visit; \
 	  mv Makefile Makefile.sci; \
 	  ${VISIT_INSTALL_DIR}/src/bin/xml2makefile -private -clobber udaReaderMTMD.xml; \
-	  sed -e "s,^CPPFLAGS=,CPPFLAGS=-I${OBJTOP_ABS} -I${SRCTOP} ," Makefile > Makefile.visit; \
+	  sed -e "s,^CPPFLAGS=,CPPFLAGS=-I${OBJTOP_ABS} -I${SRCTOP_ABS} ," Makefile > Makefile.visit; \
 	  mv Makefile.sci Makefile
 
 #
