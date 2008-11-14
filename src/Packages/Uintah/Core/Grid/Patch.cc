@@ -1703,63 +1703,108 @@ IntVector Patch::noNeighborsHigh() const
 
 /**
 * Returns the low index for a variable of type basis with extraCells or
-* the boundaryLayer specified in boundaryLayer.  Having both extraCells
-* and a boundaryLayer is an error.
+* the boundaryLayer specified in boundaryLayer.  Boundary layers take 
+* precidence over extra cells.
 */
 IntVector Patch::getExtraLowIndex(VariableBasis basis,
 			     const IntVector& boundaryLayer) const
 {
-  //both extraCells and a boundaryLayer cannot exist
-  ASSERT(boundaryLayer==IntVector(0,0,0) || getExtraCells()==IntVector(0,0,0));
+  //no boundary layer so use extra cells
+  if(boundaryLayer==IntVector(0,0,0))
+  {
+    switch (basis) {
+      case CellBased:
+        return getExtraCellLowIndex__New();
+      case NodeBased:
+        return getExtraNodeLowIndex__New();
+      case XFaceBased:
+        return getExtraSFCXLowIndex__New();
+      case YFaceBased:
+        return getExtraSFCYLowIndex__New();
+      case ZFaceBased:
+        return getExtraSFCZLowIndex__New();
+      case AllFaceBased:
+        SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraLowIndex(basis)",
+              __FILE__, __LINE__));
+      default:
+        SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraLowIndex(basis)",
+              __FILE__, __LINE__));
+    }
+  }
+  else
+  {
+    switch (basis) {
+      case CellBased:
+        return getCellLowIndex__New()-noNeighborsLow()*boundaryLayer;
+      case NodeBased:
+        return getNodeLowIndex__New()-noNeighborsLow()*boundaryLayer;
+      case XFaceBased:
+        return getSFCXLowIndex__New()-noNeighborsLow()*boundaryLayer;
+      case YFaceBased:
+        return getSFCYLowIndex__New()-noNeighborsLow()*boundaryLayer;
+      case ZFaceBased:
+        return getSFCZLowIndex__New()-noNeighborsLow()*boundaryLayer;
+      case AllFaceBased:
+        SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraLowIndex(basis)",
+              __FILE__, __LINE__));
+      default:
+        SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraLowIndex(basis)",
+              __FILE__, __LINE__));
+    }
 
-  switch (basis) {
-  case CellBased:
-    return getExtraCellLowIndex__New()-noNeighborsLow()*boundaryLayer;
-  case NodeBased:
-    return getExtraNodeLowIndex__New()-noNeighborsLow()*boundaryLayer;
-  case XFaceBased:
-    return getExtraSFCXLowIndex__New()-noNeighborsLow()*boundaryLayer;
-  case YFaceBased:
-    return getExtraSFCYLowIndex__New()-noNeighborsLow()*boundaryLayer;
-  case ZFaceBased:
-    return getExtraSFCZLowIndex__New()-noNeighborsLow()*boundaryLayer;
-  case AllFaceBased:
-    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraLowIndex(basis)",
-                            __FILE__, __LINE__));
-  default:
-    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraLowIndex(basis)",
-                            __FILE__, __LINE__));
   }
 }
  
 /**
 * Returns the high index for a variable of type basis with extraCells or
-* the boundaryLayer specified in boundaryLayer.  Having both extraCells
-* and a boundaryLayer is an error.
+* the boundaryLayer specified in boundaryLayer.  Boundary layers take precidence 
+* over extra cells.
 */
 IntVector Patch::getExtraHighIndex(VariableBasis basis,
 			      const IntVector& boundaryLayer) const
 {
-  //both extraCells and a boundaryLayer cannot exist
-  ASSERT(boundaryLayer==IntVector(0,0,0) || getExtraCells()==IntVector(0,0,0));
-  
-  switch (basis) {
-  case CellBased:
-    return getExtraCellHighIndex__New()+noNeighborsHigh()*boundaryLayer;
-  case NodeBased:
-    return getExtraNodeHighIndex__New()+noNeighborsHigh()*boundaryLayer;
-  case XFaceBased:
-    return getExtraSFCXHighIndex__New()+noNeighborsHigh()*boundaryLayer;
-  case YFaceBased:
-    return getExtraSFCYHighIndex__New()+noNeighborsHigh()*boundaryLayer;
-  case ZFaceBased:
-    return getExtraSFCZHighIndex__New()+noNeighborsHigh()*boundaryLayer;
-  case AllFaceBased:
-    SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraHighIndex(basis)",
-                            __FILE__, __LINE__));
-  default:
-    SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraIndex(basis)",
-                            __FILE__, __LINE__));
+ 
+  if(boundaryLayer==IntVector(0,0,0))
+  {
+    switch (basis) {
+      case CellBased:
+        return getExtraCellHighIndex__New();
+      case NodeBased:
+        return getExtraNodeHighIndex__New();
+      case XFaceBased:
+        return getExtraSFCXHighIndex__New();
+      case YFaceBased:
+        return getExtraSFCYHighIndex__New();
+      case ZFaceBased:
+        return getExtraSFCZHighIndex__New();
+      case AllFaceBased:
+        SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraHighIndex(basis)",
+              __FILE__, __LINE__));
+      default:
+        SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraIndex(basis)",
+              __FILE__, __LINE__));
+    }
+  }
+  else
+  {
+    switch (basis) {
+      case CellBased:
+        return getCellHighIndex__New()+noNeighborsHigh()*boundaryLayer;
+      case NodeBased:
+        return getNodeHighIndex__New()+noNeighborsHigh()*boundaryLayer;
+      case XFaceBased:
+        return getSFCXHighIndex__New()+noNeighborsHigh()*boundaryLayer;
+      case YFaceBased:
+        return getSFCYHighIndex__New()+noNeighborsHigh()*boundaryLayer;
+      case ZFaceBased:
+        return getSFCZHighIndex__New()+noNeighborsHigh()*boundaryLayer;
+      case AllFaceBased:
+        SCI_THROW(InternalError("AllFaceBased not implemented in Patch::getExtraHighIndex(basis)",
+              __FILE__, __LINE__));
+      default:
+        SCI_THROW(InternalError("Illegal VariableBasis in Patch::getExtraIndex(basis)",
+              __FILE__, __LINE__));
+    }
   }
 }
 
