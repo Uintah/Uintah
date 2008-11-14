@@ -128,6 +128,11 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
       throw SCIRun::InternalError("Invalid Compression Level in Scheduler",__FILE__,__LINE__);
   }
 
+  if(compression_level>0 && d_myworld->myrank()==0)
+  {
+    cout << "Using compression level " << compression_level << " with a threshold of " << compression_threshold << endl;
+  }
+    
   PackBufferInfo::setCompressionLevel(compression_level);
   PackBufferInfo::setCompressionThreshold(compression_threshold);
   if(d_myworld->myrank()==0)
