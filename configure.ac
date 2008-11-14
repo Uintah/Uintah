@@ -1118,7 +1118,7 @@ esac
 
 ASSERTION_LEVEL="$enable_assertion_level"
 THROW_LEVEL="$enable_throw_level"
-extra_cflags="";
+extra_cflags=""
 
 if test "$output_avg_walltime" != "no"; then
   extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
@@ -1537,6 +1537,9 @@ case $host in
          FORTRAN_UNDERSCORE=linux
          ;;
       *gfortran*)
+         if test "$DEBUG" = "yes"; then
+            FFLAGS="$FFLAGS -fbounds-check"
+         fi
          FFLAGS="$FFLAGS $extra_cflags"   
          FORTRAN_UNDERSCORE=end
          ;;        
