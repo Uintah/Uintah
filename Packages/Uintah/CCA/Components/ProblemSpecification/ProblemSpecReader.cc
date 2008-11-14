@@ -47,6 +47,7 @@
 #include <vector>
 
 #include <cstdio>
+#include <cstring>
 
 #include <libxml/tree.h>
 #include <libxml/parser.h>
