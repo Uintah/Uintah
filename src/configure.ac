@@ -1631,6 +1631,9 @@ case $host in
           FORTRAN_UNDERSCORE=linux
           ;;
         *gfortran*)
+          if test "$DEBUG" = "yes"; then
+             FFLAGS="$FFLAGS -fbounds-check"
+          fi
           FFLAGS="$FFLAGS $extra_cflags"   
           FORTRAN_UNDERSCORE=linux
           ;;        
@@ -1730,6 +1733,9 @@ case $host in
 	 FORTRAN_UNDERSCORE=linux
          ;;
       *gfortran*)
+         if test "$DEBUG" = "yes"; then
+            FFLAGS="$FFLAGS -fbounds-check"
+         fi
          FFLAGS="$FFLAGS $extra_cflags" 
          FORTRAN_UNDERSCORE=end
          ;;       
