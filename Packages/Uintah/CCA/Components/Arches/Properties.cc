@@ -74,6 +74,13 @@ Properties::Properties(const ArchesLabel* label,
 Properties::~Properties()
 {
   delete d_mixingModel;
+
+  // delete temporary state-space variables
+  for (LabelMap::iterator iLabel = d_labelMap.begin(); 
+        iLabel != d_labelMap.end(); iLabel ++ ) 
+  {
+    VarLabel::destroy((*iLabel).second); 
+  } 
 }
 
 //****************************************************************************
@@ -180,6 +187,44 @@ Properties::problemSetup(const ProblemSpecP& params)
       else
         db->getWithDefault("empirical_soot",d_empirical_soot,true);
     }
+
+  }
+
+  //New table interface stuff:
+  // This bit of code parses the input file and any saved label with 
+  // a "table_lookup = true" attribute will be added to the list of dependent 
+  // variable to be obtained from the table.
+  // Note that the VarLabels are created on the fly here.
+  const ProblemSpecP params_root = db->getRootNode(); 
+  ProblemSpecP db_vars = params_root->findBlock("DataArchiver"); 
+
+  if (db_vars) {
+    for (ProblemSpecP db_var = db_vars->findBlock("save"); 
+          db_var !=0; db_var = db_var->findNextBlock("save")){
+      string tableLookup;
+      string name; 
+      db_var->getAttribute("table_lookup", tableLookup);
+      db_var->getAttribute("label", name);
+
+      if (tableLookup=="true") {
+        //This variable is added to the table lookup list
+        //Here we have assumed that all table look up variables are of type double
+        const VarLabel* tempLabel = VarLabel::create(name, CCVariable<double>::getTypeDescription());
+
+        LabelMap::iterator iLabel = d_labelMap.find(name); 
+        if (iLabel == d_labelMap.end()){
+          iLabel = d_labelMap.insert(make_pair(name, tempLabel)).first;
+        }
+
+        d_listDepVarNames.push_back(name);
+        CCVariable<double>* tempVar = new CCVariable<double>;
+        
+        VarMap::iterator iVar = d_varMap.find(name);
+        if (iVar == d_varMap.end()){
+          iVar = d_varMap.insert(make_pair(name, tempVar)).first;
+        }
+      } 
+    }
   }
 }
 
@@ -206,6 +251,102 @@ Properties::computeInletProperties(const InletStream& inStream,
     throw InvalidValue("Mixing Model not supported", __FILE__, __LINE__);
   }
 }
+
+//---------------------------------------------------------------------------
+// New compute props interface
+//---------------------------------------------------------------------------
+void 
+Properties::sched_computeProps(SchedulerP& sched, 
+                         const PatchSet* patches, 
+                         const MaterialSet* matls, 
+                         const TimeIntegratorLabel* timelabels, 
+                         bool modify_ref_density)
+{
+  string md = ""; 
+  if (!(modify_ref_density)) md += "RKSSP";
+  string taskname =  "Properties::computeProps" +
+                     timelabels->integrator_step_name + md;
+  Task* tsk = scinew Task(taskname, this,
+                          &Properties::computeProps,
+                          timelabels, modify_ref_density); 
+  Ghost::GhostType  gn = Ghost::None;
+  
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+    //compute variables on the first time step
+    for (LabelMap::iterator iLabel = d_labelMap.begin(); 
+        iLabel != d_labelMap.end(); iLabel ++ ){
+      tsk->computes((*iLabel).second); 
+    } 
+  } else {
+    //modify variables
+    for (LabelMap::iterator iLabel = d_labelMap.begin(); 
+        iLabel != d_labelMap.end(); iLabel ++ ){
+      tsk->modifies((*iLabel).second);       
+    } 
+  }
+  sched->addTask(tsk, patches, matls);
+
+}   
+void 
+Properties::computeProps(const ProcessorGroup* pc, 
+                         const PatchSubset* patches, 
+                         const MaterialSubset*, 
+                         DataWarehouse*, 
+                         DataWarehouse* new_dw, 
+                         const TimeIntegratorLabel* timelabels, 
+                         bool modify_ref_density)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->
+                     getArchesMaterial(archIndex)->getDWIndex(); 
+    const Patch* patch = patches->get(p);
+
+    //get dep vars from dw:
+    VarMap varMap;
+    for (vector<string>::iterator iName = d_listDepVarNames.begin(); iName != d_listDepVarNames.end(); iName++){
+
+      string currName = (*iName); 
+      LabelMap::iterator iLabel = d_labelMap.find(currName); 
+    
+      CCVariable<double>* tempVar = new CCVariable<double>;
+      VarMap::iterator iVar = varMap.find(currName);
+      if (iVar == varMap.end()){
+        iVar = varMap.insert(make_pair(currName, tempVar)).first;
+      }
+      
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+        //allocate and put variables for first time step
+        new_dw->allocateAndPut(*((*iVar).second), (*iLabel).second, indx, patch);  
+        
+      } else {
+        //already allocated so get it
+        new_dw->getModifiable(*((*iVar).second), (*iLabel).second, indx, patch); 
+
+      }
+    } 
+
+    for (CellIterator iCell=patch->getCellIterator__New(); !iCell.done(); iCell++){
+
+      //call getState(vector<double> indepVars, d_listDepVarNames)
+      // returns a vector (map?) 
+
+      //loop over all dep vars:
+      for (vector<string>::iterator iName = d_listDepVarNames.begin(); iName != d_listDepVarNames.end(); iName++){
+
+        //if this is a pointer copy this shouldn't be slow
+        string currName = (*iName); 
+
+        LabelMap::iterator iLabel = d_labelMap.find(currName); 
+        VarMap::iterator iVar = varMap.find(currName); 
+
+        //set iVar to the value from the table
+     
+      } //name/var loop 
+    } //cell loop
+  } //patch loop 
+}                  
   
 
 //****************************************************************************
