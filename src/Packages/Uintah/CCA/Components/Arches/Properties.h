@@ -1,4 +1,4 @@
-//----- Properties.h --------------------------------------------------
+
 
 #ifndef Uintah_Component_Arches_Properties_h
 #define Uintah_Component_Arches_Properties_h
@@ -103,6 +103,21 @@ public:
                             bool initialize,
                             bool d_EKTCorrection,
                             bool doing_EKT_now);
+
+  void sched_computeProps(SchedulerP&, 
+                          const PatchSet* patches,
+                          const MaterialSet* matls,
+                          const TimeIntegratorLabel* timelabels,
+                          bool modify_density);
+ 
+  void computeProps(const ProcessorGroup* pc, 
+                    const PatchSubset* patches, 
+                    const MaterialSubset*, 
+                    DataWarehouse*, 
+                    DataWarehouse* new_dw, 
+                    const TimeIntegratorLabel* timelabels, 
+                    bool modify_ref_density);
+
 
 
   ///////////////////////////////////////////////////////////////////////
@@ -303,6 +318,19 @@ private:
       bool d_sulfur_balance_es;
 
       const ProcessorGroup* d_myworld;
+
+
+      // New Table Interface Stuff:
+      typedef map<string, const VarLabel* > LabelMap;
+      typedef map<string, CCVariable<double>* > VarMap;
+
+      VarMap d_varMap;
+      LabelMap d_labelMap;  
+
+      vector<string> d_listDepVarNames;
+      vector<CCVariable<double>* > d_depVars; 
+
+    
 }; // end class Properties
 } // End namespace Uintah
 
