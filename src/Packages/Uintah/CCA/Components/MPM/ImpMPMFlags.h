@@ -21,7 +21,7 @@ namespace Uintah {
 
   public:
 
-    ImpMPMFlags();
+    ImpMPMFlags(const ProcessorGroup* myworld);
 
     virtual ~ImpMPMFlags();
 
