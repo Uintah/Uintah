@@ -7,7 +7,7 @@ using namespace std;
 
 static DebugStream dbg("ImpMPMFlags", false);
 
-ImpMPMFlags::ImpMPMFlags() : MPMFlags()
+ImpMPMFlags::ImpMPMFlags(const ProcessorGroup* myworld) : MPMFlags(myworld)
 {
 
   d_conv_crit_disp   = 1.e-10;
@@ -86,4 +86,3 @@ ImpMPMFlags::outputProblemSpec(ProblemSpecP& ps)
                   d_interpolateParticleTempToGridEveryStep);
 
 }
-

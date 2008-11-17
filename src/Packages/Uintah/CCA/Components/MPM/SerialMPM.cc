@@ -85,7 +85,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   MPMCommon(myworld), UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
-  flags = scinew MPMFlags();
+  flags = scinew MPMFlags(myworld);
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;

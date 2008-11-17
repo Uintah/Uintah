@@ -60,7 +60,7 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :
   SerialMPM(myworld)
 {
   lb = scinew MPMLabel();
-  flags = scinew MPMFlags();
+  flags = scinew MPMFlags(myworld);
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;

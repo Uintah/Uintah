@@ -5,7 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
 #include <Packages/Uintah/Core/Grid/TOBSplineInterpolator.h>
 #include <Packages/Uintah/Core/Grid/BSplineInterpolator.h>
-//#include <Packages/Uintah/Core/Grid/AMRInterpolator.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -17,7 +17,7 @@ using namespace std;
 
 static DebugStream dbg("MPMFlags", false);
 
-MPMFlags::MPMFlags()
+MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 {
   d_interpolator_type = "linear";
   d_ref_temp = 0.0; // for thermal stress
@@ -61,6 +61,7 @@ MPMFlags::MPMFlags()
   d_max_vel = 3.e105;
   d_with_ice = false;
   d_with_arches = false;
+  d_myworld = myworld;
 }
 
 MPMFlags::~MPMFlags()
@@ -110,8 +111,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("use_load_curves", d_useLoadCurves);
 
   if(d_artificial_viscosity && d_integrator_type == "implicit"){
-    cerr << "artificial viscosity is not implemented" << endl;
-    cerr << "with implicit time integration" << endl;
+    if (d_myworld->myrank() == 0){
+      cerr << "artificial viscosity is not implemented" << endl;
+      cerr << "with implicit time integration" << endl;
+    }
   }
 
   mpm_flag_ps->get("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
