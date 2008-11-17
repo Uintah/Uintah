@@ -81,7 +81,7 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   MPMCommon(myworld), UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
-  flags = scinew ImpMPMFlags();
+  flags = scinew ImpMPMFlags(myworld);
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
   d_rigid_body = false;
