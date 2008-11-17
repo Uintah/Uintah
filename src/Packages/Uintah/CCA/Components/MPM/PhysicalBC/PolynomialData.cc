@@ -204,8 +204,10 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   double minValue = interpolateRadial(min,theta);
   double maxValue = interpolateRadial(max,theta);
 
+#if 0
   if (minValue < 0. || maxValue < 0.)
     cout << "WARNING values less than 0" << endl;
+#endif
 
 
   // y = m*x + b for doing linear interpolation between two polynomial curves.
@@ -221,6 +223,15 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   if (value < minValue && value < maxValue)
     cout << "WARNING values computed incorrectly" << endl;
     
+
+  if(value < 0.){
+    cout << "_________________________________"<< endl;
+    cout << "WARNING: " << endl;
+    cout << "Negative external heat flux detected " ;
+    cout << "clamping value to 0.0" << endl;
+    cout << "_________________________________"<< endl;
+    value = 0.;
+  }
   return value;
   
 }
