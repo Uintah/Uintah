@@ -79,12 +79,13 @@ namespace Uintah {
 
     bool        d_with_ice;
     bool        d_with_arches;
+    const ProcessorGroup* d_myworld;
 
     std::vector<std::string> d_bndy_face_txt_list; 
 
     ParticleInterpolator* d_interpolator;
 
-    MPMFlags();
+    MPMFlags(const ProcessorGroup* myworld);
 
     virtual ~MPMFlags();
 
