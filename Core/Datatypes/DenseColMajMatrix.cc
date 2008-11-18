@@ -57,17 +57,7 @@
 #include <vector>
 
 #if defined(HAVE_LAPACK)
-#include <Core/Math/sci_lapack.h>
-#endif
-
-#if defined(HAVE_CBLAS)
-#if defined(__APPLE__)
-#include <vecLib/cblas.h>
-#else
-extern "C"{
-#include <cblas.h>
-}
-#endif
+#  include <Core/Math/sci_lapack.h>
 #endif
 
 using std::cout;

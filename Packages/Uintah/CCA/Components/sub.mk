@@ -21,11 +21,12 @@ endif
 DUMMY_LIB      = $(SRCDIR)/Dummy
 
 SUBDIRS := \
-        $(SRCDIR)/DataArchiver \
-        $(SRCDIR)/Models \
+        $(SRCDIR)/DataArchiver  \
+        $(SRCDIR)/Examples      \
+        $(SRCDIR)/Models        \
         $(SRCDIR)/LoadBalancers \
-        $(SRCDIR)/Schedulers \
-        $(SRCDIR)/Regridder \
+        $(SRCDIR)/Schedulers    \
+        $(SRCDIR)/Regridder     \
         $(SRCDIR)/SimulationController \
         $(DUMMY_LIB)      \
         $(MPM)            \
@@ -34,12 +35,10 @@ SUBDIRS := \
         $(ARCHES)         \
         $(MPMARCHES)      \
         $(SRCDIR)/ProblemSpecification \
-        $(SRCDIR)/PatchCombiner \
-        $(SRCDIR)/Solvers \
-        $(SRCDIR)/SwitchingCriteria \
-        $(SRCDIR)/Parent
-
-UNUSED = $(SRCDIR)/Examples
+        $(SRCDIR)/PatchCombiner        \
+        $(SRCDIR)/Solvers              \
+        $(SRCDIR)/SwitchingCriteria    \
+        $(SRCDIR)/Parent 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

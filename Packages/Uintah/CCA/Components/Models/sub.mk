@@ -33,7 +33,8 @@ PSELIBS := \
         Packages/Uintah/CCA/Components/ICE \
         Packages/Uintah/CCA/Components/MPMICE
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY) \
+           $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
 
 ifneq ($(HAVE_PETSC),)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
