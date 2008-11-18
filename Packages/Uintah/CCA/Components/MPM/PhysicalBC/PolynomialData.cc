@@ -145,6 +145,7 @@ double PolynomialData::interpolateRadial(const int polyNum, const double theta)
   value += d_polyData[polyNum][3]* sin(2.*theta);
   value += d_polyData[polyNum][4]* cos(2.*theta);
 
+  value = max(0.0, value);       // clamp
   return value;
 }
 
@@ -204,7 +205,7 @@ double PolynomialData::interpolateValue(const Point& test_pt)
   double minValue = interpolateRadial(min,theta);
   double maxValue = interpolateRadial(max,theta);
 
-#if 0
+#if 1
   if (minValue < 0. || maxValue < 0.)
     cout << "WARNING values less than 0" << endl;
 #endif
@@ -224,14 +225,6 @@ double PolynomialData::interpolateValue(const Point& test_pt)
     cout << "WARNING values computed incorrectly" << endl;
     
 
-  if(value < 0.){
-    cout << "_________________________________"<< endl;
-    cout << "WARNING: " << endl;
-    cout << "Negative external heat flux detected " ;
-    cout << "clamping value to 0.0" << endl;
-    cout << "_________________________________"<< endl;
-    value = 0.;
-  }
   return value;
   
 }
