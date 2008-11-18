@@ -96,6 +96,30 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   // folder.assign("/home/sci/kuzimmer/work/SCIRunData/JP8_MR.uda.000");
   // folder.assign("/home/collab/sshankar/csafe_data/guni.2L.2C.uda.000");
   // folder.assign("/home/collab/sshankar/csafe_data/M2wedge.2L.uda.001");
+
+  // Verify that it is a UDA index.xml file:
+  //   The 2nd line should look like this <Uintah_DataArchive>.
+
+  FILE * fp = fopen( filename, "r" );
+  if( fp == NULL ) {
+
+    string error = string( "Failed to open file: " ) + filename;
+    EXCEPTION1( InvalidDBTypeException, error.c_str() );
+  }
+
+  char line[1024];
+  char * result = fgets( line, 1024, fp );
+  if( result ) { 
+    result = fgets( line, 1024, fp );
+  }
+  
+  string lineStr = line;
+  if( !result || lineStr.find( "<Uintah_DataArchive>" ) == string::npos ) {
+    string error = string( filename ) + " does not appear to be a <Uintah_DataArchive>.";
+    printf("here: %s\n", error.c_str());
+    EXCEPTION1( InvalidDBTypeException, error.c_str() );
+  }
+  fclose( fp );
         
   folder.assign(filename);
   size_t found = folder.find_last_of("/");
