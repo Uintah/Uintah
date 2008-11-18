@@ -71,8 +71,14 @@
 ##  initialize configure 
 AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
 
-##  require autoconf version 2.59 
-##  type "autoconf --version" to find out what version you have.
+##  require autoconf version 2.61
+##     The reason to require the latest autoconf is to try and get everyone who
+##     updates configure to use the same version.  By doing so, the SVN diffs
+##     don't look completely different from minor changes.  (This happens
+##     if people switch back and forth between different versions of autoconf.)
+##
+##     type "autoconf --version" to find out what version you have.
+##
 AC_PREREQ(2.61)
 
 AC_COPYRIGHT(
@@ -749,7 +755,7 @@ fi
 if test "$sci_required_scirun" = "no"; then
   sci_required_dataflow=no
 fi
- 
+
 BUILD_DATAFLOW="$sci_required_dataflow"
 if test "$sci_required_dataflow" = "yes"; then
   DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW 1"
