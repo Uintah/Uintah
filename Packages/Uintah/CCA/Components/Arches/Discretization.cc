@@ -37,7 +37,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
 
-
 //****************************************************************************
 // Default constructor for Discretization
 //****************************************************************************
@@ -67,9 +66,12 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                                        ArchesConstVariables* coeff_constvars)
 {
   if (index == Arches::XDIR) {
-
-    IntVector idxLoU = patch->getFortranSFCXLowIndex__New();
-    IntVector idxHiU = patch->getFortranSFCXHighIndex__New();
+  
+    // ignore faces that lie on the edge of the computational domain
+    // in the principal direction
+    IntVector oci(-1,0,0);  // one cell inward
+    IntVector idxLoU = patch->getExtraLowIndex(Patch::XFaceBased, oci);
+    IntVector idxHiU = patch->getExtraHighIndex(Patch::XFaceBased,oci)-IntVector(1,1,1);
 
     // Calculate the coeffs
     fort_uvelcoef(coeff_constvars->uVelocity,
@@ -106,9 +108,10 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                   idxLoU, idxHiU);
 
   } else if (index == Arches::YDIR) {
-
-    IntVector idxLoV = patch->getFortranSFCYLowIndex__New();
-    IntVector idxHiV = patch->getFortranSFCYHighIndex__New();
+  
+    IntVector oci(0,-1,0);  // one cell inward
+    IntVector idxLoV = patch->getExtraLowIndex(Patch::YFaceBased, oci);
+    IntVector idxHiV = patch->getExtraHighIndex(Patch::YFaceBased,oci)-IntVector(1,1,1);
 
     // Calculate the coeffs
     fort_vvelcoef(coeff_constvars->vVelocity,
@@ -144,11 +147,11 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                   cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
                   idxLoV, idxHiV);
   } else if (index == Arches::ZDIR) {
-
-    // Get the patch indices
-    IntVector idxLoW = patch->getFortranSFCZLowIndex__New();
-    IntVector idxHiW = patch->getFortranSFCZHighIndex__New();
-    
+  
+    IntVector oci(0,0,-1);  // one cell inward
+    IntVector idxLoW = patch->getExtraLowIndex(Patch::ZFaceBased, oci);
+    IntVector idxHiW = patch->getExtraHighIndex(Patch::ZFaceBased,oci)-IntVector(1,1,1);    
+  
     // Calculate the coeffs
     fort_wvelcoef(coeff_constvars->wVelocity,
                   coeff_vars->wVelocityConvectCoeff[Arches::AE],
