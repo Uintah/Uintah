@@ -58,13 +58,12 @@ PSELIBS := \
 	Core/Geometry Core/Util          \
 	Core/Math
 
-
-LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
+	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
 
 ifeq ($(HAVE_PETSC),yes)
   LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
-
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -33,5 +33,15 @@
 @DEF_BLAS@
 @DEF_CBLAS@
 
+#if defined(HAVE_CBLAS)
+#  if defined(__APPLE__)
+#    include <vecLib/cblas.h>
+#  else
+     extern "C"{
+#      include <@CBLAS_H@>
+     }
+#  endif
+#endif
+
 #endif
 

@@ -31,7 +31,6 @@
 #define SCI_TEEM_DEFS_H
 
 @DEF_TEEM@
-@DEF_GDCM@
 
 #endif
 

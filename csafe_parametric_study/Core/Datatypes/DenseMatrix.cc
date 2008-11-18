@@ -60,16 +60,6 @@
 #include <Core/Math/sci_lapack.h>
 #endif
 
-#if defined(HAVE_CBLAS)
-#if defined(__APPLE__)
-#include <vecLib/cblas.h>
-#else
-extern "C"{
-#include <cblas.h>
-}
-#endif
-#endif
-
 using std::cout;
 using std::endl;
 using std::vector;
