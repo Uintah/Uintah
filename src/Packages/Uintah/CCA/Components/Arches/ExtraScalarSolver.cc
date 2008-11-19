@@ -428,13 +428,6 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }else{ 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
     }
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-    Ghost::GhostType  gn = Ghost::None;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
-    // from old_dw get PCELL, DENO, FO
-    new_dw->get(constScalarVars.cellType,  d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     DataWarehouse* old_values_dw;
     if (timelabels->use_old_values){
@@ -442,29 +435,33 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }else{
       old_values_dw = new_dw;
     }
+    
+    //__________________________________
+    Ghost::GhostType  gn = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gaf = Ghost::AroundFaces;
+    // from old_dw get PCELL, DENO, FO
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+    new_dw->get(constScalarVars.cellType,  d_lab->d_cellTypeLabel, indx, patch, gac, 1);
+    
     old_values_dw->get(constScalarVars.old_scalar, d_scalar_label, indx, patch, gn, 0);
     
     CCVariable<double> const_density;
     if (d_scalar_density_weighted){
-      old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, indx, patch, gn, 0);
+      old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, indx, patch, gn,  0);
+      new_dw->get(       constScalarVars.density,     d_lab->d_densityCPLabel, indx, patch, gac, 2);
     }else {
-      const_density.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+      new_dw->allocateTemporary(const_density,patch, gac,1);
       const_density.initialize(1.0);
       constScalarVars.old_density = const_density;
+      constScalarVars.density     = const_density;
     }
   
-    // from new_dw get DEN, VIS, F, U, V, W
-    if (d_scalar_density_weighted){
-      new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, indx, patch,  gac, 2);
-    }else{
-      constScalarVars.density = const_density;
-    }
-    
     CCVariable<double> zero_viscosity;
     if (d_scalar_diffusion){
       new_dw->get(constScalarVars.viscosity, d_lab->d_viscosityCTSLabel, indx, patch,  gac, 2);
     }else {
-      zero_viscosity.allocate(patch->getExtraCellLowIndex__New(), patch->getExtraCellHighIndex__New());
+      new_dw->allocateTemporary(zero_viscosity,patch, gac, 1);
       zero_viscosity.initialize(0.0);
       constScalarVars.viscosity = zero_viscosity;
     }
@@ -626,9 +623,6 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
       d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
                                           &scalarVars, &constScalarVars);
     
-    // similar to mascal
-    // inputs :
-    // outputs:
     d_source->modifyScalarMassSource(pc, patch, delta_t,
                                      &scalarVars, &constScalarVars,
                                      d_conv_scheme);
