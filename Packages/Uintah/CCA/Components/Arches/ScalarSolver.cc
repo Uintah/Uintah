@@ -361,9 +361,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     old_values_dw->get(constScalarVars.old_scalar,  d_lab->d_scalarSPLabel,  indx, patch, gn, 0);
     old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, indx, patch, gn, 0);
-  
-    // from new_dw get DEN, VIS, F, U, V, W
-    new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel,            indx, patch, gac, 2);
+    new_dw->get(       constScalarVars.density,     d_lab->d_densityCPLabel, indx, patch, gac, 2);
 
     if (d_dynScalarModel){
       new_dw->get(constScalarVars.viscosity, d_lab->d_scalarDiffusivityLabel,indx, patch, gac, 2);
@@ -404,7 +402,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                            d_lab->d_scalDiffCoefSrcLabel, indx, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);
 //#endif
-        new_dw->getModifiable(scalarVars.scalarBoundarySrc,
+    new_dw->getModifiable(scalarVars.scalarBoundarySrc,
                                 d_lab->d_scalarBoundarySrcLabel, indx, patch);
   }else {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
