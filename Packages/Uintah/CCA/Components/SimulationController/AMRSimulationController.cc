@@ -242,7 +242,15 @@ AMRSimulationController::run()
      double old_init_delt = d_timeinfo->max_initial_delt;
      double new_init_delt = 0.;
 
-     if(needRecompile(t, delt, currentGrid) || first ){
+     bool nr;
+     if( (nr=needRecompile(t, delt, currentGrid)) || first ){
+       if(nr)
+       {
+         //if needRecompile returns true it has reload balanced and thus we need 
+         //to assign the boundary conditions.
+          currentGrid->assignBCS(d_grid_ps,d_lb);
+          currentGrid->performConsistencyCheck();
+       }
        new_init_delt = d_timeinfo->max_initial_delt;
        if (new_init_delt != old_init_delt) {
          // writes to the DW in the next section below
