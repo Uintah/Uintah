@@ -2,10 +2,17 @@
 #define UINTAH_HOMEBREW_PARALLEL_H
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/Core/Parallel/uintahshare.h>
+
+// While not used here, this is a convenience for anyone using Parallel... as they
+// most likley will need 'cout' (or more specifically, Proc0Cout).
+// (Even though this references Uintah/Core/Grid, it doesn't create a circular
+// dependency because it doesn't use any functions/symbols.)
+#include <Packages/Uintah/Core/Grid/Proc0Cout.h>
+
 namespace Uintah {
 
 class ProcessorGroup;
@@ -112,7 +119,5 @@ WARNING
       Parallel& operator=(const Parallel&);
    };
 } // End namespace Uintah
-
-
 
 #endif
