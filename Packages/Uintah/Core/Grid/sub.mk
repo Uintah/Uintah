@@ -12,24 +12,25 @@ SUBDIRS := \
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 SRCS += \
+        $(SRCDIR)/AMR.cc                   \
         $(SRCDIR)/Box.cc                   \
+        $(SRCDIR)/BSplineInterpolator.cc   \
+        $(SRCDIR)/Ghost.cc                 \
         $(SRCDIR)/Grid.cc                  \
         $(SRCDIR)/Level.cc                 \
+        $(SRCDIR)/LinearInterpolator.cc    \
         $(SRCDIR)/Material.cc              \
+        $(SRCDIR)/Node27Interpolator.cc    \
         $(SRCDIR)/PatchRangeTree.cc        \
-        $(SRCDIR)/Region.cc                \
         $(SRCDIR)/Patch.cc                 \
-        $(SRCDIR)/Ghost.cc                 \
+	$(SRCDIR)/Proc0Cout.cc             \
+        $(SRCDIR)/Region.cc                \
+        $(SRCDIR)/SimpleMaterial.cc        \
         $(SRCDIR)/SimulationState.cc       \
         $(SRCDIR)/SimulationTime.cc        \
         $(SRCDIR)/Task.cc                  \
-        $(SRCDIR)/UnknownVariable.cc       \
-        $(SRCDIR)/SimpleMaterial.cc        \
-        $(SRCDIR)/LinearInterpolator.cc    \
-        $(SRCDIR)/AMR.cc                   \
-        $(SRCDIR)/Node27Interpolator.cc    \
-        $(SRCDIR)/BSplineInterpolator.cc   \
-        $(SRCDIR)/TOBSplineInterpolator.cc 
+        $(SRCDIR)/TOBSplineInterpolator.cc \
+        $(SRCDIR)/UnknownVariable.cc       
 
 PSELIBS := \
         Core/Geometry   \

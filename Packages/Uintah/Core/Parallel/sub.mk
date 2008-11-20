@@ -5,13 +5,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/Core/Parallel
 
 SRCS     += \
+	$(SRCDIR)/BufferInfo.cc              \
+	$(SRCDIR)/MPI_Communicator.cc        \
+	$(SRCDIR)/PackBufferInfo.cc          \
 	$(SRCDIR)/Parallel.cc                \
 	$(SRCDIR)/ProcessorGroup.cc          \
 	$(SRCDIR)/UintahParallelComponent.cc \
 	$(SRCDIR)/UintahParallelPort.cc      \
-	$(SRCDIR)/BufferInfo.cc              \
-	$(SRCDIR)/PackBufferInfo.cc          \
-	$(SRCDIR)/MPI_Communicator.cc        \
 	$(SRCDIR)/Vampir.cc
 
 PSELIBS := \
