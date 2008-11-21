@@ -64,9 +64,10 @@ const std::string BabelComponentModel::DEFAULT_XML_PATH("/CCA/Components/BabelTe
 
 BabelComponentModel::BabelComponentModel(const SCIJumpFramework& framework,
                                          const StringVector& xmlPaths)
-  : ComponentModel(std::string("babel"), framework),
+  : ComponentModel(std::string("babel"), 0),
     lock_components("BabelComponentModel::components lock")
 {
+  this->framework = framework;
   buildComponentList(xmlPaths);
 }
 
