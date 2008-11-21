@@ -2123,6 +2123,13 @@ void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) cons
 
 void Patch::initializeBoundaryConditions()
 {
+  if (d_arrayBCS) {
+    for (unsigned int i = 0; i< 6; ++i) {
+      delete (*d_arrayBCS)[i];
+    }
+    d_arrayBCS->clear();
+    delete d_arrayBCS;
+  }
   d_arrayBCS = scinew vector<BCDataArray*>(6);
   for (unsigned int i = 0; i< 6; ++i)
     (*d_arrayBCS)[i] = 0;
