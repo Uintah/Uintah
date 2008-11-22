@@ -287,7 +287,7 @@ string getStackTrace(void* context /*=0*/)
       
       stacktrace << i - 1 << ". " << names[i] << '\n';
       stacktrace << "  in " << demangled << '\n';
-      delete demangled;
+      free(demangled);
      } else { // Just output the raw symbol
       stacktrace << i - 1 << ". " << names[i] << '\n';
      }

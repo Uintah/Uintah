@@ -106,7 +106,7 @@ MacroSubstitute( const char * var_value )
 	  macro = new char[end-start+2];
 	  sprintf(macro,"%s",&var_val[start]);
 	  const char *env = sci_getenv(macro);
-	  delete macro;
+	  delete [] macro;
 	  if (env) 
 	    newstring += string(env);
 	  var_val[cur]=')';
