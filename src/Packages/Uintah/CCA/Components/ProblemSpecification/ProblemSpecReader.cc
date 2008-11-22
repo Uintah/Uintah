@@ -692,6 +692,7 @@ ProblemSpecReader::parseValidationFile()
       }
     }
   }
+  xmlFreeDoc(doc);
   dbg << "done parsing ups_spec.xml\n";
 }
 

@@ -78,6 +78,7 @@ namespace Uintah {
     d_reduceUda = false;
     d_doMultiTaskgraphing = false;
     d_archive = NULL;
+    d_sim = 0;
 
     d_ups->writeMessages(d_myworld->myrank() == 0);
     d_grid_ps=d_ups->findBlock("Grid");
