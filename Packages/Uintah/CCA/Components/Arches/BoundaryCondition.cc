@@ -6,7 +6,7 @@
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
+
 #include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
@@ -14,39 +14,25 @@
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
-#include <Core/Containers/StaticArray.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+
+#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
 
 #include <iostream>
 #include <sstream>
@@ -204,7 +190,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     }
   }
   else {
-    cout << "Flow inlet boundary not specified" << endl;
+    proc0cout << "Flow inlet boundary not specified" << endl;
     d_inletBoundary = false;
   }
  
@@ -215,7 +201,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     ++total_cellTypes;
   }
   else {
-    cout << "Wall boundary not specified" << endl;
+    proc0cout << "Wall boundary not specified"<<endl;
     d_wallBoundary = false;
   }
   
@@ -245,7 +231,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     ++total_cellTypes;
   }
   else {
-    cout << "Pressure boundary not specified" << endl;
+    proc0cout << "Pressure boundary not specified"<< endl;
     d_pressureBoundary = false;
   }
   
@@ -275,7 +261,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     ++total_cellTypes;
   }
   else {
-    cout << "Outlet boundary not specified" << endl;
+    proc0cout << "Outlet boundary not specified"<<endl;
     d_outletBoundary = false;
   }
 
@@ -286,7 +272,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     ++total_cellTypes;
   }
   else {
-    cout << "Intrusion boundary not specified" << endl;
+    proc0cout << "Intrusion boundary not specified"<<endl;
     d_intrusionBoundary = false;
   }
 
@@ -554,10 +540,10 @@ BoundaryCondition::sched_mmWallCellTypeInit(SchedulerP& sched,
   //  double time = d_lab->d_sharedState->getElapsedTime();
   bool recalculateCellType = false;
   int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  //  cout << "Current DW number = " << dwnumber << endl;
-  //  if (time < 1.0e-10 || !fixCellType) recalculateCellType = true;
-  if (dwnumber < 2 || !fixCellType) recalculateCellType = true;
-  //  cout << "recalculateCellType =" << recalculateCellType << endl;
+  
+  if (dwnumber < 2 || !fixCellType){
+    recalculateCellType = true;
+  }
 
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::OldDW, d_lab->d_mmgasVolFracLabel,   gn, 0);
@@ -612,17 +598,12 @@ BoundaryCondition::mmWallCellTypeInit(const ProcessorGroup*,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     
-
-    //    double time = d_lab->d_sharedState->getElapsedTime();
     bool recalculateCellType = false;
     int dwnumber = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-    //    cout << "Current DW number = " << dwnumber << endl;
-    //    if (time < 1.0e-10 || !fixCellType) recalculateCellType = true;
     if (dwnumber < 2 || !fixCellType){
       recalculateCellType = true;
     }
-    //    cout << "recalculateCellType = " << recalculateCellType << endl;
-
+    
     // New DW void fraction to decide cell types and reset void fractions
 
     constCCVariable<double> voidFrac;
@@ -988,7 +969,7 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched,
 // Actually set flat profile at flow inlet boundary
 //****************************************************************************
 void 
-BoundaryCondition::setProfile(const ProcessorGroup* /*pc*/,
+BoundaryCondition::setProfile(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset*,
                               DataWarehouse*,
@@ -1219,8 +1200,7 @@ BoundaryCondition::setProfile(const ProcessorGroup* /*pc*/,
 // Actually calculate the velocity BC
 //****************************************************************************
 void 
-BoundaryCondition::velocityBC(const ProcessorGroup*,
-                              const Patch* patch,
+BoundaryCondition::velocityBC(const Patch* patch,
                               int index,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
@@ -1487,8 +1467,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
 // Actually compute the scalar bcs
 //****************************************************************************
 void 
-BoundaryCondition::scalarBC(const ProcessorGroup*,
-                            const Patch* patch,
+BoundaryCondition::scalarBC(const Patch* patch,
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars)
 {
@@ -1531,11 +1510,12 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
                 constvars->cellType, wall_celltypeval,
                 xminus, xplus, yminus, yplus, zminus, zplus);
 }
+
+//______________________________________________________________________
 void 
-BoundaryCondition::scalarBC__new(const ProcessorGroup*,
-                            const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars)
+BoundaryCondition::scalarBC__new(const Patch* patch,
+                                 ArchesVariables* vars,
+                                 ArchesConstVariables* constvars)
 {
   //This will be removed once the new boundary condition stuff is online:
   // Like the old code, this only takes care of wall bc's. 
@@ -1592,8 +1572,7 @@ BoundaryCondition::scalarBC__new(const ProcessorGroup*,
 
 //****************************************************************************
 void
-BoundaryCondition::intrusionTemperatureBC(const ProcessorGroup*,
-                                          const Patch* patch,
+BoundaryCondition::intrusionTemperatureBC(const Patch* patch,
                                           constCCVariable<int>& cellType,
                                           CCVariable<double>& temperature)
 {
@@ -1613,8 +1592,7 @@ BoundaryCondition::intrusionTemperatureBC(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void
-BoundaryCondition::mmWallTemperatureBC(const ProcessorGroup*,
-                                       const Patch* patch,
+BoundaryCondition::mmWallTemperatureBC(const Patch* patch,
                                        constCCVariable<int>& cellType,
                                        constCCVariable<double> solidTemp,
                                        CCVariable<double>& temperature,
@@ -1649,8 +1627,7 @@ BoundaryCondition::mmWallTemperatureBC(const ProcessorGroup*,
 //______________________________________________________________________
 // compute intrusion wall bc
 void 
-BoundaryCondition::intrusionVelocityBC(const ProcessorGroup*,
-                                       const Patch* patch,
+BoundaryCondition::intrusionVelocityBC(const Patch* patch,
                                        int index, CellInformation*,
                                        ArchesVariables* vars,
                                        ArchesConstVariables* constvars)
@@ -1755,8 +1732,7 @@ BoundaryCondition::intrusionwVelocityBC( const Patch* patch,
 //______________________________________________________________________
 //
 void 
-BoundaryCondition::intrusionMomExchangeBC(const ProcessorGroup*,
-                                          const Patch* patch,
+BoundaryCondition::intrusionMomExchangeBC(const Patch* patch,
                                           int index, CellInformation* cellinfo,
                                           ArchesVariables* vars,
                                           ArchesConstVariables* constvars)
@@ -1860,8 +1836,7 @@ BoundaryCondition::intrusionwVelMomExBC(const Patch* patch,
 //______________________________________________________________________
 //
 void 
-BoundaryCondition::intrusionEnergyExBC(const ProcessorGroup*,
-                                       const Patch* patch,
+BoundaryCondition::intrusionEnergyExBC(const Patch* patch,
                                        CellInformation* cellinfo,
                                        ArchesVariables* vars,
                                        ArchesConstVariables* constvars)
@@ -1927,8 +1902,7 @@ BoundaryCondition::intrusionPressureBC(DataWarehouse* new_dw,
 //______________________________________________________________________
 // applies multimaterial bc's for scalars and pressure
 void
-BoundaryCondition::intrusionScalarBC( const ProcessorGroup*,
-                                      const Patch* patch,
+BoundaryCondition::intrusionScalarBC( const Patch* patch,
                                       CellInformation*,
                                       ArchesVariables* vars,
                                       ArchesConstVariables* constvars)
@@ -1947,8 +1921,7 @@ BoundaryCondition::intrusionScalarBC( const ProcessorGroup*,
 //______________________________________________________________________
 //
 void
-BoundaryCondition::intrusionEnthalpyBC( const ProcessorGroup*,
-                                        const Patch* patch, 
+BoundaryCondition::intrusionEnthalpyBC( const Patch* patch, 
                                         double delta_t,
                                         CellInformation* cellinfo,
                                         ArchesVariables* vars,
@@ -1978,8 +1951,7 @@ BoundaryCondition::intrusionEnthalpyBC( const ProcessorGroup*,
 //______________________________________________________________________
 // compute multimaterial wall bc
 void 
-BoundaryCondition::mmvelocityBC(const ProcessorGroup*,
-                                const Patch* patch,
+BoundaryCondition::mmvelocityBC(const Patch* patch,
                                 int index, CellInformation*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
@@ -2126,8 +2098,7 @@ BoundaryCondition::mmpressureBC(DataWarehouse* new_dw,
 //______________________________________________________________________
 // applies multimaterial bc's for scalars and pressure
 void
-BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
-                                   const Patch* patch,
+BoundaryCondition::mmscalarWallBC( const Patch* patch,
                                    CellInformation*,
                                    ArchesVariables* vars,
                                    ArchesConstVariables* constvars)
@@ -2153,8 +2124,7 @@ BoundaryCondition::mmscalarWallBC( const ProcessorGroup*,
 //______________________________________________________________________
 // New intrusion scalar BC
 void 
-BoundaryCondition::mmscalarWallBC__new( const ProcessorGroup*,
-                                        const Patch* patch,
+BoundaryCondition::mmscalarWallBC__new( const Patch* patch,
                                         CellInformation*,
                                         ArchesVariables* vars,
                                         ArchesConstVariables* constvars)
@@ -2218,8 +2188,7 @@ BoundaryCondition::mmscalarWallBC__new( const ProcessorGroup*,
 //______________________________________________________________________
 // applies multimaterial bc's for enthalpy
 void
-BoundaryCondition::mmEnthalpyWallBC( const ProcessorGroup*,
-                                     const Patch* patch,
+BoundaryCondition::mmEnthalpyWallBC( const Patch* patch,
                                      CellInformation*,
                                      ArchesVariables* vars,
                                      ArchesConstVariables* constvars)
@@ -2598,7 +2567,7 @@ BoundaryCondition::BCSourceInfo::problemSetup(ProblemSpecP& params)
       }
     }else if (velocityType == "absolute"){
       massfluxchild->require("normals",normal); //since it is absolute, we need tell it what faces and how to scale it. ie v_{face,i} = n_i*V
-      cout << "normal =" << normal << endl;
+      proc0cout << "normal =" << normal<<endl;
     }else{
       throw ParameterNotFound(" Must specify an absolute or relative attribute for the <Velocity> or <MassFlux>.",__FILE__,__LINE__); 
     }
@@ -2620,7 +2589,7 @@ BoundaryCondition::BCSourceInfo::problemSetup(ProblemSpecP& params)
     }
     else if (velocityType == "absolute"){
       velchild->require("normals",normal); //since it is absolute, we need tell it what faces and how to scale it. ie v_{face,i} = n_i*V
-      cout << "normal =" << normal << endl;
+      proc0cout << "normal =" << normal<<endl;
     }else{
       throw ParameterNotFound(" Must specify an absolute or relative attribute for the <Velocity> or <MassFlux>.",__FILE__,__LINE__); 
     }
@@ -3077,11 +3046,10 @@ BoundaryCondition::sched_computeScalarSourceTerm(SchedulerP& sched,
 // *--------------------------------------------------------*
 void 
 BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
-                                           const PatchSubset* patches,
+                                            const PatchSubset* patches,
                                            const MaterialSubset*,
                                            DataWarehouse* old_dw,
-                                           DataWarehouse* new_dw
-                                                                                   )
+                                           DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -3240,8 +3208,7 @@ BoundaryCondition::computeScalarSourceTerm(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void
-BoundaryCondition::calculateIntrusionVel(const ProcessorGroup* ,
-                                         const Patch* patch,
+BoundaryCondition::calculateIntrusionVel(const Patch* patch,
                                          int index,
                                          CellInformation* ,
                                          ArchesVariables* vars,
@@ -3306,8 +3273,7 @@ BoundaryCondition::calculateIntrusionVel(const ProcessorGroup* ,
 //______________________________________________________________________
 //
 void
-BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
-                                            const Patch* patch,
+BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
                                             double delta_t,
                                             int index,
                                             CellInformation* cellinfo,
@@ -3390,8 +3356,7 @@ BoundaryCondition::calculateVelocityPred_mm(const ProcessorGroup* ,
 //______________________________________________________________________
 //
 void 
-BoundaryCondition::calculateVelRhoHat_mm(const ProcessorGroup* ,
-                                         const Patch* patch,
+BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
                                          int index, double delta_t,
                                          CellInformation* cellinfo,
                                          ArchesVariables* vars,
@@ -3481,8 +3446,7 @@ BoundaryCondition::calculateVelRhoHat_mm(const ProcessorGroup* ,
 // Scalar Solve for Multimaterial
 //****************************************************************************
 void 
-BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
-                                    const Patch* patch,
+BoundaryCondition::scalarLisolve_mm(const Patch* patch,
                                     double delta_t,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars,
@@ -3512,8 +3476,7 @@ BoundaryCondition::scalarLisolve_mm(const ProcessorGroup*,
 // Enthalpy Solve for Multimaterial
 //****************************************************************************
 void 
-BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
-                                      const Patch* patch,
+BoundaryCondition::enthalpyLisolve_mm(const Patch* patch,
                                       double delta_t,
                                       ArchesVariables* vars,
                                       ArchesConstVariables* constvars,
@@ -3542,10 +3505,9 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 // Set zero gradient for scalar for outlet and pressure BC
 //****************************************************************************
 void 
-BoundaryCondition::scalarOutletPressureBC(const ProcessorGroup*,
-                            const Patch* patch,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars)
+BoundaryCondition::scalarOutletPressureBC(const Patch* patch,
+                                          ArchesVariables* vars,
+                                          ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
   IntVector idxLo = patch->getFortranCellLowIndex__New();
@@ -3641,8 +3603,7 @@ BoundaryCondition::scalarOutletPressureBC(const ProcessorGroup*,
 // Set the inlet rho hat velocity BC
 //****************************************************************************
 void 
-BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
-                                    const Patch* patch,
+BoundaryCondition::velRhoHatInletBC(const Patch* patch,
                                     ArchesVariables* vars,
                                     ArchesConstVariables* constvars,
                                     double time_shift)
@@ -3679,8 +3640,7 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
 // Commented them out to avoid confusion
 //****************************************************************************
 void 
-BoundaryCondition::velRhoHatOutletPressureBC(const ProcessorGroup*,
-                                             const Patch* patch,
+BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
                                              ArchesVariables* vars,
                                              ArchesConstVariables* constvars)
 {
@@ -3891,8 +3851,7 @@ BoundaryCondition::velRhoHatOutletPressureBC(const ProcessorGroup*,
 // Set zero gradient for tangent velocity on outlet and pressure bc
 //****************************************************************************
 void 
-BoundaryCondition::velocityOutletPressureTangentBC(const ProcessorGroup*,
-                                                   const Patch* patch,
+BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
                                                    const int index,
                                                    ArchesVariables* vars,
                                                    ArchesConstVariables* constvars)
@@ -4300,8 +4259,7 @@ BoundaryCondition::velocityOutletPressureTangentBC(const ProcessorGroup*,
 // Add pressure gradient to outlet velocity
 //****************************************************************************
 void 
-BoundaryCondition::addPresGradVelocityOutletPressureBC(const ProcessorGroup*,
-                                                       const Patch* patch,
+BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
                                                        const int index,
                                                        CellInformation* cellinfo,
                                                        const double delta_t,
@@ -4743,7 +4701,7 @@ void BoundaryCondition::sched_correctVelocityOutletBC(SchedulerP& sched,
 // Correct outlet velocity
 //****************************************************************************
 void 
-BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
+BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup*,
                                            const PatchSubset* ,
                                            const MaterialSubset*,
                                            DataWarehouse* old_dw,
@@ -4770,8 +4728,6 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
   d_overallMB = fabs((totalFlowIN - denAccum - totalFlowOUT - 
                        netFlowOUT_outbc)/(totalFlowIN+1.e-20));
 
-  int me = pc->myrank();
-
   if (d_outletBoundary) {
     if (totalAreaOUT > 0.0) {
       uvwcorr = (totalFlowIN - denAccum - totalFlowOUT - netFlowOUT_outbc)/
@@ -4783,17 +4739,18 @@ BoundaryCondition::correctVelocityOutletBC(const ProcessorGroup* pc,
     uvwcorr = 0.0;
   }
 
-  if (me == 0) {
-    if (d_overallMB > 0.0){
-      cerr << "Overall Mass Balance " << log10(d_overallMB/1.e-7+1.e-20) << endl;
-    }
-    cerr << "Total flow in " << totalFlowIN << endl;
-    cerr << "Total flow out " << totalFlowOUT << endl;
-    cerr << "Density accumulation " << denAccum << endl;
-    cerr << "Total flow out BC " << netFlowOUT_outbc << endl;
-    cerr << "Overall velocity correction " << uvwcorr << endl;
-    cerr << "Total Area out " << totalAreaOUT << endl;
+
+  if (d_overallMB > 0.0){
+    proc0cout << "Overall Mass Balance " << log10(d_overallMB/1.e-7+1.e-20)<<endl;
   }
+  proc0cout << "Total flow in               " << totalFlowIN << endl;
+  proc0cout << "Total flow out              " << totalFlowOUT<< endl;
+  proc0cout << "Total flow out BC           " << netFlowOUT_outbc << endl;
+  proc0cout << "Total Area out              " << totalAreaOUT << endl;
+  proc0cout << "Overall velocity correction " << uvwcorr << endl;
+  proc0cout << "Density accumulation        " << denAccum << endl;
+
+  
   if (timelabels->integrator_last_step){
     new_dw->put(delt_vartype(uvwcorr), d_lab->d_uvwoutLabel);
   }
@@ -4833,7 +4790,7 @@ BoundaryCondition::sched_initInletBC(SchedulerP& sched,
 // Actually initialize inlet BCs
 //****************************************************************************
 void 
-BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
+BoundaryCondition::initInletBC(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset*,
                                DataWarehouse*,
@@ -4955,7 +4912,7 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
 // Get mixture fraction flow rate
 //****************************************************************************
 void 
-BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
+BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset*,
                                      DataWarehouse*,
@@ -4995,7 +4952,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
 
     double scalarIN = 0.0;
     double scalarOUT = 0.0;
-    getVariableFlowRate(pc,patch, cellinfo, &constVars, scalar,
+    getVariableFlowRate(patch, cellinfo, &constVars, scalar,
                         &scalarIN, &scalarOUT); 
 
     new_dw->put(sum_vartype(scalarOUT-scalarIN), d_lab->d_scalarFlowRateLabel);
@@ -5004,7 +4961,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     double co2OUT = 0.0;
     if (d_carbon_balance) {
       new_dw->get(co2, d_lab->d_co2INLabel, indx, patch, gn, 0);
-      getVariableFlowRate(pc,patch, cellinfo, &constVars, co2,
+      getVariableFlowRate(patch, cellinfo, &constVars, co2,
                         &co2IN, &co2OUT); 
       new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateLabel);
     }
@@ -5019,7 +4976,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
           const VarLabel* templabel = (*iss)->getScalarLabel();
                   
           new_dw->get(co2_es, templabel, indx, patch, gn, 0);
-          getVariableFlowRate(pc,patch, cellinfo, &constVars, co2_es,
+          getVariableFlowRate(patch, cellinfo, &constVars, co2_es,
                   &co2IN, &co2OUT); 
           new_dw->put(sum_vartype(co2OUT-co2IN), d_lab->d_CO2FlowRateESLabel);
         }
@@ -5031,7 +4988,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     double so2OUT = 0.0;
     if (d_sulfur_balance) {
       new_dw->get(so2, d_lab->d_so2INLabel, indx, patch, gn, 0);
-      getVariableFlowRate(pc,patch, cellinfo, &constVars, so2, &so2IN, &so2OUT); 
+      getVariableFlowRate(patch, cellinfo, &constVars, so2, &so2IN, &so2OUT); 
       new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateLabel);
     } 
         
@@ -5047,7 +5004,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
           const VarLabel* templabel = (*iss)->getScalarLabel();
                   
           new_dw->get(so2_es, templabel, indx, patch, gn, 0);
-          getVariableFlowRate(pc,patch, cellinfo, &constVars, so2_es,
+          getVariableFlowRate(patch, cellinfo, &constVars, so2_es,
                   &so2IN, &so2OUT); 
           new_dw->put(sum_vartype(so2OUT-so2IN), d_lab->d_SO2FlowRateESLabel);
         }
@@ -5058,7 +5015,7 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup* pc,
     double enthalpyOUT = 0.0;
     if (d_enthalpySolve) {
       new_dw->get(enthalpy, d_lab->d_enthalpySPLabel, indx, patch, gn, 0);
-      getVariableFlowRate(pc,patch, cellinfo, &constVars, enthalpy,
+      getVariableFlowRate(patch, cellinfo, &constVars, enthalpy,
                         &enthalpyIN, &enthalpyOUT); 
       new_dw->put(sum_vartype(enthalpyOUT-enthalpyIN), d_lab->d_enthalpyFlowRateLabel);
     }
@@ -5113,7 +5070,7 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
 // Correct outlet velocity
 //****************************************************************************
 void 
-BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
+BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
                                        const PatchSubset* ,
                                        const MaterialSubset*,
                                        DataWarehouse* old_dw,
@@ -5144,7 +5101,6 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
     double totalRadSrc = 0.0;
     double normTotalRadSrc = 0.0;
 
-    int me = pc->myrank();
     new_dw->get(sum_scalarFlowRate, d_lab->d_scalarFlowRateLabel);
     scalarFlowRate = sum_scalarFlowRate;
     if (d_carbon_balance) {
@@ -5190,11 +5146,11 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
       if ((d_enthalpySolve)&&(scalarValue > 0.0))
             totalEnthalpyFlowRate += fi->flowRate * fi->calcStream.getEnthalpy();
     }
-    if (totalFlowRate > 0.0)
+    if (totalFlowRate > 0.0){
       scalarEfficiency = scalarFlowRate / totalFlowRate;
-    else 
-      if (me == 0)
-        cout << "WARNING! No mixture fraction in the domain." << endl;
+    }else{ 
+      proc0cout << "WARNING! No mixture fraction in the domain."<<endl;
+    }
     new_dw->put(delt_vartype(scalarEfficiency), d_lab->d_scalarEfficiencyLabel);
 
     if (d_carbon_balance) {
@@ -5232,11 +5188,9 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
         enthalpyEfficiency = enthalpyFlowRate/totalEnthalpyFlowRate;
         normTotalRadSrc = totalRadSrc/totalEnthalpyFlowRate;
         enthalpyEfficiency -= normTotalRadSrc;
+      }else{ 
+        proc0cout << "No enthalpy in the domain"<< endl;
       }
-      else 
-        //throw InvalidValue("No enthalpy in the domain", __FILE__, __LINE__);
-        if (me == 0)
-          cout << "No enthalpy in the domain"<<endl;
       new_dw->put(delt_vartype(enthalpyEfficiency), d_lab->d_enthalpyEfficiencyLabel);
       new_dw->put(delt_vartype(normTotalRadSrc), d_lab->d_normTotalRadSrcLabel);
     }
@@ -5246,8 +5200,7 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 // Get boundary flow rate for a given variable
 //****************************************************************************
 void 
-BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
-                                       const Patch* patch,
+BoundaryCondition::getVariableFlowRate(const Patch* patch,
                                        CellInformation* cellinfo,
                                        ArchesConstVariables* constvars,
                                        constCCVariable<double> balance_var,
@@ -5351,7 +5304,7 @@ void BoundaryCondition::sched_setInletFlowRates(SchedulerP& sched,
 // copy inlet flow rates for nosolve
 //****************************************************************************
 void 
-BoundaryCondition::setInletFlowRates(const ProcessorGroup* pc,
+BoundaryCondition::setInletFlowRates(const ProcessorGroup*,
                                      const PatchSubset* ,
                                      const MaterialSubset*,
                                      DataWarehouse* old_dw,
@@ -5371,8 +5324,7 @@ BoundaryCondition::setInletFlowRates(const ProcessorGroup* pc,
 //Actually calculate the mms velocity BC
 //****************************************************************************
 void 
-BoundaryCondition::mmsvelocityBC(const ProcessorGroup*,
-                                 const Patch* patch,
+BoundaryCondition::mmsvelocityBC(const Patch* patch,
                                  int index,
                                  CellInformation* cellinfo,
                                  ArchesVariables* vars,
@@ -5427,13 +5379,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
 
   double time=d_lab->d_sharedState->getElapsedTime();
   double current_time = time + time_shift;
-  //double current_time = time;
-
-  //cout << "PRINTING uVelRhoHat before bc: " << endl;
-  //cout << " the time shift = " << time_shift << endl;
-  //cout << " current time = " << time << endl;
-  //vars->uVelRhoHat.print(cerr);
-  
   
   if (xminus) {
     
@@ -5598,8 +5543,6 @@ BoundaryCondition::mmsuVelocityBC(const Patch* patch,
       }
     }
   }
-  //cout << "PRINTING uVelRhoHat after bc: " << endl;
-  //vars->uVelRhoHat.print(cerr);
 }
   
 //****************************************************************************
@@ -5964,8 +5907,7 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
 // Actually compute the MMS scalar bcs
 //****************************************************************************
 void 
-BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
-                               const Patch* patch,
+BoundaryCondition::mmsscalarBC(const Patch* patch,
                                CellInformation* cellinfo,
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars,
@@ -6129,8 +6071,9 @@ BoundaryCondition::mmsscalarBC(const ProcessorGroup*,
 // Schedule  prefill
 //****************************************************************************
 void 
-BoundaryCondition::sched_Prefill(SchedulerP& sched, const PatchSet* patches,
-                                    const MaterialSet* matls)
+BoundaryCondition::sched_Prefill(SchedulerP& sched, 
+                                 const PatchSet* patches,
+                                 const MaterialSet* matls)
 {
   Task* tsk = scinew Task("BoundaryCondition::Prefill",this,
                           &BoundaryCondition::Prefill);
@@ -6174,7 +6117,7 @@ BoundaryCondition::sched_Prefill(SchedulerP& sched, const PatchSet* patches,
 // Actually set flat profile at flow inlet boundary
 //****************************************************************************
 void 
-BoundaryCondition::Prefill(const ProcessorGroup* /*pc*/,
+BoundaryCondition::Prefill(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset*,
                            DataWarehouse* old_dw,

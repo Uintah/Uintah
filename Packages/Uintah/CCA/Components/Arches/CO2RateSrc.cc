@@ -4,15 +4,10 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 
 using namespace std;
@@ -41,19 +36,25 @@ CO2RateSrc::~CO2RateSrc()
 void 
 CO2RateSrc::problemSetup(const ProblemSpecP& params)
 {
-   ProblemSpecP db = params;
-   //Get the name of what to look for in the table
-   // we "require" this because this source is specifically 
-   // designed for a table-read source term.
-   db->require("tableName", d_tableName);
-   db->getWithDefault("scaleFactor", d_scaleFactor, 1.0);
+  ProblemSpecP db = params;
+  //Get the name of what to look for in the table
+  // we "require" this because this source is specifically 
+  // designed for a table-read source term.
+  db->require("tableName", d_tableName);
+  db->getWithDefault("scaleFactor", d_scaleFactor, 1.0);
 
-   //Initialize
-    setTableIndex(-1);
-
-   //warning
-   cout << "** WARNING! **\n";
-   cout << "   The CO2Rate Source term requires that carbon_balance_es be set to true! \n";
+  //Initialize
+  setTableIndex(-1);
+    
+  //__________________________________
+  //  bulletproofing
+  bool test;  
+  ProblemSpecP BC_ps = params->findBlock("BoundaryConditions");
+  BC_ps->getWithDefault("carbon_balance_es", test, false);
+  
+  if (test == false){
+    throw ProblemSetupException("The CO2Rate Source term requires that carbon_balance_es be set to true! \n",__FILE__, __LINE__);
+  }
 }
 //****************************************************************************
 // Schedule source computation

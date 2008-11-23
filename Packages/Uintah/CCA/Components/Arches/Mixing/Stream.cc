@@ -30,7 +30,6 @@ Stream::Stream()
   d_mole = false;
   d_numMixVars = 0;
   d_numRxnVars = 0;
-  d_lsoot = false;
 }
 
 Stream::Stream(int numSpecies,  int numElements)

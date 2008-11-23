@@ -783,7 +783,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
         if (d_MAlab && d_boundaryCondition->getIfCalcEnergyExchange()) {
           bool d_energyEx = d_boundaryCondition->getIfCalcEnergyExchange();
           new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, indx, patch, gn, 0);
-          d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType,
+          d_boundaryCondition->mmWallTemperatureBC(patch, constEnthalpyVars.cellType,
                                                    solidTemp, enthalpyVars.temperature,
                                                    d_energyEx);
         }
@@ -819,8 +819,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : enthalpySP, scalCoefSBLM
     // outputs: scalCoefSBLM
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      d_boundaryCondition->scalarBC(pc, patch, 
-                                      &enthalpyVars, &constEnthalpyVars);
+      d_boundaryCondition->scalarBC(patch, &enthalpyVars, &constEnthalpyVars);
 
       /*if (d_boundaryCondition->getIntrusionBC()) {
         d_boundaryCondition->intrusionEnergyExBC(pc, patch, cellinfo,
@@ -832,7 +831,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     // apply multimaterial intrusion wallbc
     if (d_MAlab)
-      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+      d_boundaryCondition->mmscalarWallBC( patch, cellinfo,
                                           &enthalpyVars, &constEnthalpyVars);
 
     // similar to mascal
@@ -993,7 +992,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 
     // make it a separate task later
     if (d_MAlab){ 
-      d_boundaryCondition->enthalpyLisolve_mm(pc, patch, delta_t, 
+      d_boundaryCondition->enthalpyLisolve_mm(patch, delta_t, 
                                               &enthalpyVars, 
                                               &constEnthalpyVars, 
                                               cellinfo);
@@ -1008,7 +1007,7 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 // Outlet bc is done here not to change old enthalpy
     if ((d_boundaryCondition->getOutletBC())||
         (d_boundaryCondition->getPressureBC()))
-    d_boundaryCondition->scalarOutletPressureBC(pc, patch,
+    d_boundaryCondition->scalarOutletPressureBC(patch,
                                           &enthalpyVars, &constEnthalpyVars);
 
   }

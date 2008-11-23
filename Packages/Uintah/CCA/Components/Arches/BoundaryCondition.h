@@ -2,15 +2,12 @@
 #ifndef Uintah_Components_Arches_BoundaryCondition_h
 #define Uintah_Components_Arches_BoundaryCondition_h
 
-#include <Core/Containers/Array1.h>
 
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
@@ -319,16 +316,15 @@ public:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
 
-       void computeInletAreaBCSource(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
+  void computeInletAreaBCSource(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
 
   ////////////////////////////////////////////////////////////////////////
   // Actually compute velocity BC terms
-  void velocityBC(const ProcessorGroup* pc,
-                  const Patch* patch,
+  void velocityBC(const Patch* patch,
                   int index,
                   CellInformation* cellinfo,
                   ArchesVariables* vars,
@@ -336,8 +332,7 @@ public:
 
   ////////////////////////////////////////////////////////////////////////
   // Actually compute mms velocity BC terms
-  void mmsvelocityBC(const ProcessorGroup* pc,
-                     const Patch* patch,
+  void mmsvelocityBC(const Patch* patch,
                      int index,
                      CellInformation* cellinfo,
                      ArchesVariables* vars,
@@ -345,8 +340,7 @@ public:
                      double time_shift,
                      double dt);
 
-  void mmsscalarBC(const ProcessorGroup*,
-                   const Patch* patch,
+  void mmsscalarBC(const Patch* patch,
                    CellInformation* cellinfo,
                    ArchesVariables* vars,
                    ArchesConstVariables* constvars,
@@ -361,15 +355,13 @@ public:
 
   ////////////////////////////////////////////////////////////////////////
   // Actually compute scalar BC terms
-  void scalarBC(const ProcessorGroup* pc,
-                const Patch* patch,
+  void scalarBC(const Patch* patch,
                 ArchesVariables* vars,
                 ArchesConstVariables* constvars);
 
-  void scalarBC__new(const ProcessorGroup* pc,
-                const Patch* patch,
-                ArchesVariables* vars,
-                ArchesConstVariables* constvars);
+  void scalarBC__new(const Patch* patch,
+                     ArchesVariables* vars,
+                     ArchesConstVariables* constvars);
 
 
   ////////////////////////////////////////////////////////////////////////
@@ -391,39 +383,33 @@ public:
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
   // for computing intrusion bc's
-  void intrusionTemperatureBC(const ProcessorGroup*,
-                              const Patch* patch,
+  void intrusionTemperatureBC(const Patch* patch,
                               constCCVariable<int>& cellType,
                               CCVariable<double>& temperature);
 
-  void mmWallTemperatureBC(const ProcessorGroup*,
-                           const Patch* patch,
+  void mmWallTemperatureBC(const Patch* patch,
                            constCCVariable<int>& cellType,
                            constCCVariable<double> solidTemp,
                            CCVariable<double>& temperature,
                            bool d_energyEx);
 
-  void calculateIntrusionVel(const ProcessorGroup*,
-                             const Patch* patch,
+  void calculateIntrusionVel(const Patch* patch,
                              int index,
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
                              ArchesConstVariables* constvars);
 
-  void intrusionVelocityBC(const ProcessorGroup*,
-                           const Patch* patch,
+  void intrusionVelocityBC(const Patch* patch,
                            int index, CellInformation* cellinfo,
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
-  void intrusionMomExchangeBC(const ProcessorGroup*,
-                              const Patch* patch,
+  void intrusionMomExchangeBC(const Patch* patch,
                               int index, CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars);
 
-  void intrusionEnergyExBC(const ProcessorGroup*,
-                           const Patch* patch,
+  void intrusionEnergyExBC(const Patch* patch,
                            CellInformation* cellinfo,
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
@@ -433,22 +419,19 @@ public:
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
-  void intrusionScalarBC(const ProcessorGroup*,
-                         const Patch* patch,
+  void intrusionScalarBC(const Patch* patch,
                          CellInformation* cellinfo,
                          ArchesVariables* vars,
                          ArchesConstVariables* constvars);
 
-  void intrusionEnthalpyBC(const ProcessorGroup*,
-                           const Patch* patch, 
+  void intrusionEnthalpyBC(const Patch* patch, 
                            double delta_t,
                            CellInformation* cellinfo,
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
   // compute multimaterial wall bc
-  void mmvelocityBC(const ProcessorGroup*,
-                    const Patch* patch,
+  void mmvelocityBC(const Patch* patch,
                     int index, CellInformation* cellinfo,
                     ArchesVariables* vars,
                     ArchesConstVariables* constvars);
@@ -458,82 +441,70 @@ public:
                     ArchesVariables* vars,
                     ArchesConstVariables* constvars);
   // applies multimaterial bc's for scalars and pressure
-  void mmscalarWallBC( const ProcessorGroup*,
-                       const Patch* patch,
+  void mmscalarWallBC( const Patch* patch,
                        CellInformation*, 
                        ArchesVariables* vars,
                        ArchesConstVariables* constvars);
   // applies multimaterial bc's for scalars and pressure
-  void mmscalarWallBC__new( const ProcessorGroup*,
-                       const Patch* patch,
+  void mmscalarWallBC__new( const Patch* patch,
                        CellInformation*, 
                        ArchesVariables* vars,
                        ArchesConstVariables* constvars);
 
 
   // applies multimaterial bc's for enthalpy
-  void mmEnthalpyWallBC( const ProcessorGroup*,
-                         const Patch* patch,
+  void mmEnthalpyWallBC( const Patch* patch,
                          CellInformation* cellinfo,
                          ArchesVariables* vars,
                          ArchesConstVariables* constvars);
 
   ////////////////////////////////////////////////////////////////////////
   // Calculate uhat for multimaterial case (only for nonintrusion cells)
-  void calculateVelRhoHat_mm(const ProcessorGroup* /*pc*/,
-                             const Patch* patch,
+  void calculateVelRhoHat_mm(const Patch* patch,
                              int index,
                              double delta_t,
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
                              ArchesConstVariables* constvars);
 
-  void calculateVelocityPred_mm(const ProcessorGroup*,
-                                const Patch* patch,
+  void calculateVelocityPred_mm(const Patch* patch,
                                 double delta_t,
                                 int index,
                                 CellInformation* cellinfo,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars);
 
-  void scalarLisolve_mm(const ProcessorGroup*,
-                        const Patch*,
+  void scalarLisolve_mm(const Patch*,
                         double delta_t,
                         ArchesVariables* vars,
                         ArchesConstVariables* constvars,
                         CellInformation* cellinfo);
                     
-  void enthalpyLisolve_mm(const ProcessorGroup*,
-                          const Patch*,
+  void enthalpyLisolve_mm(const Patch*,
                           double delta_t,
                           ArchesVariables* vars,
                           ArchesConstVariables* constvars,
                           CellInformation* cellinfo);
 // New boundary conditions
-  void scalarOutletPressureBC(const ProcessorGroup* pc,
-                              const Patch* patch,
+  void scalarOutletPressureBC(const Patch* patch,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars);
 
-  void velRhoHatInletBC(const ProcessorGroup* pc,
-                        const Patch* patch,
+  void velRhoHatInletBC(const Patch* patch,
                         ArchesVariables* vars,
                         ArchesConstVariables* constvars,
                         double time_shift);
 
-  void velRhoHatOutletPressureBC(const ProcessorGroup* pc,
-                                 const Patch* patch,
+  void velRhoHatOutletPressureBC(const Patch* patch,
                                  ArchesVariables* vars,
                                  ArchesConstVariables* constvars);
 
-  void velocityOutletPressureTangentBC(const ProcessorGroup* pc,
-                                       const Patch* patch,
+  void velocityOutletPressureTangentBC(const Patch* patch,
                                        const int index,
                                        ArchesVariables* vars,
                                        ArchesConstVariables* constvars);
 
-  void addPresGradVelocityOutletPressureBC(const ProcessorGroup* pc,
-                                           const Patch* patch,
+  void addPresGradVelocityOutletPressureBC(const Patch* patch,
                                            const int index,
                                            CellInformation* cellinfo,
                                            const double delta_t,
@@ -687,8 +658,7 @@ private:
 
   ////////////////////////////////////////////////////////////////////////
   // Actually calculate pressure bcs
-  void computePressureBC(const ProcessorGroup* pc,
-                         const PatchSubset* patches,
+  void computePressureBC(const PatchSubset* patches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
@@ -696,62 +666,61 @@ private:
 
   ////////////////////////////////////////////////////////////////////////
   // Actually set the velocity, density and props flat profile
-  void setProfile(const ProcessorGroup* pc,
+  void setProfile(const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset* matls,
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw);
                   
 
-  void Prefill(const ProcessorGroup* pc,
+  void Prefill(const ProcessorGroup*,
                const PatchSubset* patches,
                const MaterialSubset* matls,
                DataWarehouse* old_dw,
                DataWarehouse* new_dw);
                
 
-  void initInletBC(const ProcessorGroup* pc,
+  void initInletBC(const ProcessorGroup*,
                    const PatchSubset* patches,
                    const MaterialSubset* matls,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw);
 
 // New boundary conditions
-  void getFlowINOUT(const ProcessorGroup* pc,
+  void getFlowINOUT(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
                     DataWarehouse* new_dw,
                     const TimeIntegratorLabel* timelabels);
 
-  void correctVelocityOutletBC(const ProcessorGroup* pc,
+  void correctVelocityOutletBC(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
                                const TimeIntegratorLabel* timelabels);
 
-  void getScalarFlowRate(const ProcessorGroup* pc,
+  void getScalarFlowRate(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
 
-  void getScalarEfficiency(const ProcessorGroup* pc,
-                          const PatchSubset* patches,
-                          const MaterialSubset* matls,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+  void getScalarEfficiency(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
 
-  void getVariableFlowRate(const ProcessorGroup*,
-                           const Patch* patch,
+  void getVariableFlowRate(const Patch* patch,
                            CellInformation* cellinfo,
                            ArchesConstVariables* constvars,
                            constCCVariable<double> balance_var,
                            double* varIN, 
                            double* varOUT); 
 
-  void setInletFlowRates(const ProcessorGroup* pc,
+  void setInletFlowRates(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,

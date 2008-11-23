@@ -9,32 +9,28 @@
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
+
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Containers/StaticArray.h>
-#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
 #include <Core/Thread/Time.h>
 #include <Core/Math/MiscMath.h>
 
@@ -150,10 +146,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_co_output       = d_mixingModel->getCOOutput();
   d_sulfur_chem     = d_mixingModel->getSulfurChem();
   d_soot_precursors = d_mixingModel->getSootPrecursors();
-  d_tabulated_soot  = d_mixingModel->getTabulatedSoot();
-
-  cout << "d_co_output "<< d_co_output << endl;
-  
+  d_tabulated_soot  = d_mixingModel->getTabulatedSoot();  
   d_radiationCalc = false;
 
   if (d_calcEnthalpy) {
@@ -1172,7 +1165,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     if (d_MAlab && d_DORadiationCalc && !initialize) {
       bool d_energyEx = d_bc->getIfCalcEnergyExchange();
-      d_bc->mmWallTemperatureBC(pc, patch, cellType, solidTemp, temperature,
+      d_bc->mmWallTemperatureBC(patch, cellType, solidTemp, temperature,
                                 d_energyEx);
     }
 
