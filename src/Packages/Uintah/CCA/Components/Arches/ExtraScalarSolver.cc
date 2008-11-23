@@ -612,7 +612,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      d_boundaryCondition->scalarBC(pc, patch,
+      d_boundaryCondition->scalarBC(patch,
                                     &scalarVars, &constScalarVars);
       /*if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,
@@ -620,7 +620,7 @@ void ExtraScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     // apply multimaterial intrusion wallbc
     if (d_MAlab)
-      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+      d_boundaryCondition->mmscalarWallBC(patch, cellinfo,
                                           &scalarVars, &constScalarVars);
     
     d_source->modifyScalarMassSource(pc, patch, delta_t,
@@ -799,7 +799,7 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     // make it a separate task later
 
     if (d_MAlab){
-      d_boundaryCondition->scalarLisolve_mm(pc, patch, delta_t, 
+      d_boundaryCondition->scalarLisolve_mm(patch, delta_t, 
                                             &scalarVars, &constScalarVars,
                                             cellinfo);
     }else{
@@ -845,7 +845,7 @@ ExtraScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 // Outlet bc is done here not to change old scalar
     if ((d_boundaryCondition->getOutletBC())||
         (d_boundaryCondition->getPressureBC()))
-    d_boundaryCondition->scalarOutletPressureBC(pc, patch,
+    d_boundaryCondition->scalarOutletPressureBC(patch,
                                         &scalarVars, &constScalarVars);
 
   }

@@ -9,29 +9,26 @@
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Geometry/Vector.h>
+
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Thread/Time.h>
-#include <Core/Math/MinMax.h>
 
 using namespace std;
-
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -78,16 +75,16 @@ IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
   if (d_calcVariance) {
-    cout << "Scale similarity type model with Reynolds filter will be used" << endl;
-    cout << "to model variance" << endl;
+    proc0cout << "Scale similarity type model with Reynolds filter will be used"<<endl;
+    proc0cout << "to model variance" << endl;
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
     db->getWithDefault("filter_variance_limit_scalar",
                        d_filter_var_limit_scalar,true);
     if (d_filter_var_limit_scalar){
-      cout << "Scalar for variance limit will be Reynolds filtered" << endl;
+      proc0cout << "Scalar for variance limit will be Reynolds filtered" << endl;
     }else {
-      cout << "WARNING! Scalar for variance limit will NOT be filtered" << endl;
-      cout << "possibly causing high variance values" << endl;
+      proc0cout << "WARNING! Scalar for variance limit will NOT be filtered" << endl;
+      proc0cout << "possibly causing high variance values"<<endl;
     }
   }
 

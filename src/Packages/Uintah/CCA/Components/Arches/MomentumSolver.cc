@@ -292,7 +292,7 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Actual compute operations
 
     if (d_MAlab) {
-      d_boundaryCondition->calculateVelocityPred_mm(pc, patch, 
+      d_boundaryCondition->calculateVelocityPred_mm(patch, 
                                                     delta_t, index, cellinfo,
                                                     &velocityVars,
                                                     &constVelocityVars);
@@ -310,12 +310,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                    &constVelocityVars);*/
     }
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
-      d_boundaryCondition->addPresGradVelocityOutletPressureBC(pc, patch, index, cellinfo,
+      d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, index, cellinfo,
                                                                 delta_t, &velocityVars,
                                                                 &constVelocityVars);
     }
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
-      d_boundaryCondition->velocityOutletPressureTangentBC(pc, patch, index,
+      d_boundaryCondition->velocityOutletPressureTangentBC(patch, index,
                                             &velocityVars, &constVelocityVars);
     }
 
@@ -921,7 +921,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       if (d_boundaryCondition->anyArchesPhysicalBC()) {
 
         if (!d_doMMS) {
-          d_boundaryCondition->velocityBC(pc, patch, 
+          d_boundaryCondition->velocityBC(patch, 
                                         index,
                                         cellinfo, &velocityVars,
                                         &constVelocityVars);
@@ -942,7 +942,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
       if (d_MAlab)
-               d_boundaryCondition->mmvelocityBC(pc, patch, index, cellinfo,
+               d_boundaryCondition->mmvelocityBC(patch, index, cellinfo,
                                           &velocityVars, &constVelocityVars);
     
     // Modify Velocity Mass Source
@@ -965,12 +965,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                          &velocityVars);
 
       if (d_MAlab) {
-        d_boundaryCondition->calculateVelRhoHat_mm(pc, patch, index, delta_t,
+        d_boundaryCondition->calculateVelRhoHat_mm(patch, index, delta_t,
                                                    cellinfo, &velocityVars,
                                                    &constVelocityVars);
       }
       else {
-        d_rhsSolver->calculateHatVelocity(pc, patch, index, delta_t,
+        d_rhsSolver->calculateHatVelocity(pc,patch, index, delta_t,
                                          cellinfo, &velocityVars,
                                          &constVelocityVars);
       }
@@ -983,7 +983,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         time_shiftmms = delta_t * timelabels->time_position_multiplier_before_average;
 
 
-        d_boundaryCondition->mmsvelocityBC(pc, patch, index, cellinfo, 
+        d_boundaryCondition->mmsvelocityBC(patch, index, cellinfo, 
                                            &velocityVars, &constVelocityVars, 
                                            time_shiftmms, 
                                            delta_t);
@@ -1033,13 +1033,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     double time_shift = 0.0;
     if (d_boundaryCondition->getInletBC()) {
     time_shift = delta_t * timelabels->time_position_multiplier_before_average;
-    d_boundaryCondition->velRhoHatInletBC(pc, patch,
+    d_boundaryCondition->velRhoHatInletBC(patch,
                                           &velocityVars, &constVelocityVars,
                                           time_shift);
     }
     if ((d_boundaryCondition->getOutletBC())||
         (d_boundaryCondition->getPressureBC()))
-      d_boundaryCondition->velRhoHatOutletPressureBC(pc, patch,
+      d_boundaryCondition->velRhoHatOutletPressureBC(patch,
                                            &velocityVars, &constVelocityVars);
 
     /*
@@ -1651,13 +1651,13 @@ MomentumSolver::prepareExtraProjection(const ProcessorGroup* pc,
       double time_shift = 0.0;
       if (d_boundaryCondition->getInletBC()) {
         time_shift = delta_t * timelabels->time_position_multiplier_before_average;
-        d_boundaryCondition->velRhoHatInletBC(pc, patch,
+        d_boundaryCondition->velRhoHatInletBC(patch,
                                               &velocityVars, &constVelocityVars,
                                               time_shift);
       }
       if ((d_boundaryCondition->getOutletBC())||
           (d_boundaryCondition->getPressureBC()))
-        d_boundaryCondition->velRhoHatOutletPressureBC(pc, patch,
+        d_boundaryCondition->velRhoHatOutletPressureBC(patch,
                                            &velocityVars, &constVelocityVars);
     }
   }

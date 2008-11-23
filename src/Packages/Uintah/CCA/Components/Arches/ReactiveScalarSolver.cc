@@ -418,12 +418,12 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : scalarSP, reactscalCoefSBLM
     // outputs: reactscalCoefSBLM
     if (d_boundaryCondition->anyArchesPhysicalBC()){
-      d_boundaryCondition->scalarBC(pc, patch, 
+      d_boundaryCondition->scalarBC(patch, 
                                   &reactscalarVars, &constReactscalarVars);
     }
   // apply multimaterial intrusion wallbc
     if (d_MAlab){
-      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
+      d_boundaryCondition->mmscalarWallBC(patch, cellinfo,
                                 &reactscalarVars, &constReactscalarVars);
     }    
 
@@ -614,7 +614,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 // Outlet bc is done here not to change old scalar
     if ((d_boundaryCondition->getOutletBC())||
         (d_boundaryCondition->getPressureBC())){
-      d_boundaryCondition->scalarOutletPressureBC(pc, patch, &reactscalarVars, &constReactscalarVars);
+      d_boundaryCondition->scalarOutletPressureBC(patch, &reactscalarVars, &constReactscalarVars);
     }
   }
 }
