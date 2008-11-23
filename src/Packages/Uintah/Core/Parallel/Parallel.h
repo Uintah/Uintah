@@ -7,11 +7,9 @@
 
 #include <Packages/Uintah/Core/Parallel/uintahshare.h>
 
-// While not used here, this is a convenience for anyone using Parallel... as they
-// most likley will need 'cout' (or more specifically, Proc0Cout).
-// (Even though this references Uintah/Core/Grid, it doesn't create a circular
-// dependency because it doesn't use any functions/symbols.)
-#include <Packages/Uintah/Core/Grid/Proc0Cout.h>
+// macro used by components to eliminate excess spew on 
+// large parallel runs
+#define proc0cout if(Parallel::getMPIRank()==0) cout
 
 namespace Uintah {
 
