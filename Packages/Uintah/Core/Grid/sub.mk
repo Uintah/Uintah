@@ -23,7 +23,6 @@ SRCS += \
         $(SRCDIR)/Node27Interpolator.cc    \
         $(SRCDIR)/PatchRangeTree.cc        \
         $(SRCDIR)/Patch.cc                 \
-	$(SRCDIR)/Proc0Cout.cc             \
         $(SRCDIR)/Region.cc                \
         $(SRCDIR)/SimpleMaterial.cc        \
         $(SRCDIR)/SimulationState.cc       \
