@@ -13,6 +13,7 @@ SUBDIRS := \
 	$(SRCDIR)/Math          \
 	$(SRCDIR)/Parallel      \
 	$(SRCDIR)/ProblemSpec   \
+	$(SRCDIR)/Tracker       \
 	$(SRCDIR)/Util          
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

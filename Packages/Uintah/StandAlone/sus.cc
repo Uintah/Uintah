@@ -13,7 +13,13 @@
  */
 
 #include <TauProfilerForSCIRun.h>
+
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Tracker/TrackerClient.h>
+
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
 #include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
@@ -29,9 +35,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
 #include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/InternalError.h>
@@ -155,7 +158,9 @@ usage( const std::string & message,
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
       cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
-      cerr << "-validate              : Verifies the .ups file is valid and quits!\n";
+      cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
+      cerr << "-track               : Turns on (external) simulation tracking... continues w/o tracking if connection fails.\n";
+      cerr << "-TRACK               : Turns on (external) simulation tracking... dies if connection fails.\n";
       cerr << "\n\n";
     }
   quit();
@@ -214,6 +219,7 @@ main( int argc, char** argv )
   string solver;
   IntVector layout(1,1,1);
   bool   onlyValidateUps = false;
+  bool   track = false, track_or_die = false;
 
   // Checks to see if user is running an MPI version of sus.
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
@@ -302,6 +308,11 @@ main( int argc, char** argv )
       do_svnStat = true;
     } else if(arg == "-validate") {
       onlyValidateUps = true;
+    } else if(arg == "-track") {
+      track = true;
+    } else if(arg == "-TRACK") {
+      track = true;
+      track_or_die = true;
     } else if (arg[0] == '-') {
       // component name - must be the only remaining option with a hyphen
       if (component.length() > 0) {
@@ -331,8 +342,27 @@ main( int argc, char** argv )
  
   create_sci_environment( NULL, 0, true );
   
-  if(filename == ""){
+  if( filename == "" ){
     usage("No input file specified", "", argv[0]);
+  }
+
+  if( track ) {
+    string server = "blaze.sci.utah.edu";
+    bool   result = TrackerClient::initialize( server );
+
+    if( result ) {
+      if ( track_or_die ) {
+        cout << "\n";
+        cout << "Error: Tracking initialization failed... Good bye.\n";
+        cout << "\n";
+        Thread::exitAll( 1 );
+      }
+      else {
+        cout << "\n";
+        cout << "WARNING: Tracking initialization failed... (Could not contact Server).  Tracking will not take place.\n";
+        cout << "\n";
+      }
+    }
   }
 
   if (restart || combine_patches || reduce_uda) {

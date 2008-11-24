@@ -31,7 +31,10 @@
 
 
 #include <Core/Util/Socket.h>
+
+#include <sstream>
 #include <string>
+
 #include <cstring>
 #include <cerrno>
 
@@ -41,7 +44,6 @@
 #else
 #  include <fcntl.h>
 #endif
-#include <iostream>
 
 #if defined(__APPLE__)
 #  define SOCKET_NOSIGNAL SO_NOSIGPIPE
@@ -126,8 +128,8 @@ Socket::listen() const
 bool 
 Socket::accept(Socket& new_socket) const
 {
-  int addr_length = sizeof(addr_);
-  new_socket.sock_ = ::accept(sock_, (sockaddr*)&addr_, 
+  int addr_length = sizeof(new_socket.addr_);
+  new_socket.sock_ = ::accept(sock_, (sockaddr*)&new_socket.addr_, 
 			      (socklen_t*) &addr_length);
   
   if (new_socket.sock_ <= 0) { 
@@ -236,6 +238,8 @@ Socket::connect(const std::string host, const int port)
   int status = ::connect(sock_, (sockaddr*)&addr_, sizeof(addr_));
 
   if (status == 0) { return true; }
+
+  perror("ERROR 2 in connect()");
   return false;
 }
 
@@ -266,6 +270,14 @@ Socket::set_blocking(const bool b)
     perror("ERROR in set_non_blocking() set");
   }
 #endif
+}
+
+string
+Socket::getSocketInfo() 
+{
+  ostringstream info;
+  info << inet_ntoa( addr_.sin_addr ) << "(" << ntohs( addr_.sin_port ) << ")";
+  return info.str();
 }
 
 } //namespace SCIRun
