@@ -93,6 +93,7 @@ else
         Packages/Uintah/Core/Labels      \
         Packages/Uintah/Core/Math        \
         Packages/Uintah/Core/Parallel    \
+        Packages/Uintah/Core/Tracker     \
         Packages/Uintah/Core/Util        \
         Packages/Uintah/CCA/Ports        \
         Packages/Uintah/CCA/Components/Parent \

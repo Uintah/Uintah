@@ -3,14 +3,15 @@
 SRCDIR := Packages/Uintah/StandAlone/tools
 
 SUBDIRS := \
-	$(SRCDIR)/compare_mms \
-	$(SRCDIR)/dumpfields  \
-	$(SRCDIR)/extractors  \
+        $(SRCDIR)/compare_mms \
+        $(SRCDIR)/dumpfields  \
+        $(SRCDIR)/extractors  \
         $(SRCDIR)/graphview   \
         $(SRCDIR)/mpi_test    \
-	$(SRCDIR)/pfs         \
-	$(SRCDIR)/puda        \
-	$(SRCDIR)/radiusMaker \
+        $(SRCDIR)/pfs         \
+        $(SRCDIR)/puda        \
+        $(SRCDIR)/radiusMaker \
+        $(SRCDIR)/tracker     \
         $(SRCDIR)/uda2nrrd    \
 
 ifeq ($(BUILD_VISIT),yes)

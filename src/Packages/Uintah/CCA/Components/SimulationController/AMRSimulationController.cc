@@ -1,39 +1,45 @@
 #include <sci_defs/malloc_defs.h>
 
 #include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
+
+#include <Core/Containers/Array3.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Containers/Array3.h>
-#include <Core/Thread/Time.h>
 #include <Core/OS/ProcessInfo.h>
+#include <Core/Thread/Time.h>
+
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Packages/Uintah/Core/Grid/SimulationTime.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Tracker/TrackerClient.h>
+
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
+#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <Packages/Uintah/CCA/Ports/Regridder.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+
 #include <TauProfilerForSCIRun.h>
+
 #include <iostream>
 #include <iomanip>
 
@@ -130,6 +136,9 @@ AMRSimulationController::run()
    while( ( t < d_timeinfo->maxTime ) && 
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
+
+     TrackerClient::trackEvent( Tracker::TIMESTEP_STARTED, t );
+
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
      if(dbg_barrier.active()) {
        for(int i=0;i<5;i++) {

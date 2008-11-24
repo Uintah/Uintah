@@ -77,6 +77,7 @@ class Socket
 
   //! Read string message from the socket. Use this for control messages.
   //! Read up to the first '\n' character, and stuff into the input s.
+  //! ('Read' DOES NOT RETURN UNTIL A '\n' IS READ.)
   int read(std::string &s) const;
 
   //! Read specified amount of data. buf must be allocated by caller, 
@@ -91,6 +92,9 @@ class Socket
 
   //! Test for valid socket descriptor.
   bool is_valid() const { return sock_ != -1; }
+
+  //! Returns a string of the form "HostName (port #)"
+  std::string getSocketInfo();
 
  private:
   char            *buf_;
