@@ -553,6 +553,8 @@ main( int argc, char** argv )
     delete sim;
     delete solve;
     delete output;
+    ProblemSpecReader* n_reader = static_cast<ProblemSpecReader* >(reader);
+    n_reader->clean();
     delete reader;
 #ifndef NO_ICE
     delete modelmaker;

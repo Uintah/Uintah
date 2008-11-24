@@ -1052,6 +1052,13 @@ ProblemSpecReader::~ProblemSpecReader()
 {
 }
 
+void 
+ProblemSpecReader::clean()
+{
+  delete uintahSpec_;
+  delete commonTags_;
+}
+
 ProblemSpecP
 ProblemSpecReader::readInputFile( bool validate /* = false */ )
 {
