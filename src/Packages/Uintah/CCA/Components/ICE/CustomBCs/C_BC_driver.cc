@@ -44,6 +44,9 @@ void preprocess_CustomBCs(const string& where,
   const Level* level = patch->getLevel();
   old_dw->get(delT, C_BC_basket->sharedState->get_delt_label(),level);
    
+   C_BC_basket->setMicroSlipBcs = false;
+   C_BC_basket->set_MMS_BCs     = false;
+   C_BC_basket->set_Sine_BCs    = false;
   //__________________________________
   //   LODI
   if(C_BC_basket->usingLodi){  
