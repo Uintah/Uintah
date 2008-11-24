@@ -21,6 +21,8 @@ namespace Uintah {
     ProblemSpecReader( const std::string& upsFilename );
     ~ProblemSpecReader();
 
+    void clean();
+
     // be sure to call releaseDocument on this ProblemSpecP
     virtual ProblemSpecP readInputFile( bool validate = false );
 
