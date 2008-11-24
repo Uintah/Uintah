@@ -102,7 +102,7 @@ void MPMPetscSolver::initialize()
   PetscPopSignalHandler();
 
   if(argc>0)
-    delete argv;
+    delete [] argv;
 }
 /**************************************************************
  * Creates a mapping from nodal coordinates, IntVector(x,y,z), 
