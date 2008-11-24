@@ -22,6 +22,7 @@ PlasticityState::PlasticityState()
   initialMeltTemp = 0.0;
   specificHeat = 0.0;
   porosity = 0.0;
+  energy = 0.0;
   backStress = Matrix3(0.0);
 }
 
@@ -46,6 +47,7 @@ PlasticityState::PlasticityState(const PlasticityState& state)
   initialMeltTemp = state.initialMeltTemp ;
   specificHeat = state.specificHeat;
   porosity = state.porosity;
+  energy = state.energy;
   backStress = state.backStress;
 }
 
@@ -70,6 +72,7 @@ PlasticityState::PlasticityState(const PlasticityState* state)
   initialMeltTemp = state->initialMeltTemp ;
   specificHeat = state->specificHeat;
   porosity = state->porosity;
+  energy = state->energy;
   backStress = state->backStress;
 }
 
@@ -100,6 +103,7 @@ PlasticityState::operator=(const PlasticityState& state)
   initialMeltTemp = state.initialMeltTemp ;
   specificHeat = state.specificHeat;
   porosity = state.porosity;
+  energy = state.energy;
   backStress = state.backStress;
   return *this;
 }
@@ -127,6 +131,7 @@ PlasticityState::operator=(const PlasticityState* state)
   initialMeltTemp = state->initialMeltTemp ;
   specificHeat = state->specificHeat;
   porosity = state->porosity;
+  energy = state->energy;
   backStress = state->backStress;
   return this;
 }

@@ -14,6 +14,7 @@ SRCS     += \
 	$(SRCDIR)/DefaultHypoElasticEOS.cc \
 	$(SRCDIR)/HyperElasticEOS.cc \
 	$(SRCDIR)/MieGruneisenEOS.cc \
+	$(SRCDIR)/MieGruneisenEOSEnergy.cc \
 	$(SRCDIR)/PlasticityModel.cc \
 	$(SRCDIR)/PlasticityModelFactory.cc \
 	$(SRCDIR)/IsoHardeningPlastic.cc \

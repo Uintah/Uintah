@@ -38,6 +38,7 @@ namespace Uintah {
     double initialMeltTemp;
     double specificHeat;
     double porosity;
+    double energy;
     Matrix3 backStress;
 
     PlasticityState();
