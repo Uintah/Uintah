@@ -124,19 +124,18 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   // Look for SGI MPI
   if(getenv("MPI_ENVIRONMENT")){
     ::usingMPI=true;
-  } else if(getenv("RMS_PROCS") || getenv("RMS_STOPONELANINIT")){
-    // Look for CompaqMPI - that latter is set on ASCI Q
-    // This isn't conclusive, but we will go with it.
+  } else if(getenv("RMS_PROCS") || getenv("RMS_STOPONELANINIT")) {           // CompaqMPI (ASCI Q)
+    // Above check isn't conclusive, but we will go with it.
     ::usingMPI=true;
-  } else if(getenv("LAMWORLD") || getenv("LAMRANK")){
-    // Look for LAM-MPI
+  } else if(getenv("LAMWORLD") || getenv("LAMRANK")) {                       // LAM-MPI
     ::usingMPI=true;
-  } else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")){
-    // Look for ALC's MPI
+  } else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")) {              // ALC's MPI (LLNL)
+
     ::usingMPI=true;
-  } else if(getenv("OMPI_MCA_ns_nds_num_procs") || getenv("OMPI_MCA_pls")){
-    // Look for Open MPI
+  } else if(getenv("OMPI_MCA_ns_nds_num_procs") || getenv("OMPI_MCA_pls")) { // Open MPI
     ::usingMPI=true;
+  } else if( getenv("MPI_LOCALNRANKS") ) {                                   // Updraft.chpc.utah.edu
+    ::usingMPI = true;
   } else {
     // Look for mpich
     for(int i=0;i<argc;i++){
