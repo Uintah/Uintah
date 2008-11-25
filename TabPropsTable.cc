@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
-#include <stdexcept>
 
 using namespace std;
 using namespace Uintah;
@@ -149,7 +148,7 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
     // - if table file name has .h5 extension, remove it
     // - otherwise, assume it is an .h5 file but no extension was given
     string extension (tableFileName.end()-3,tableFileName.end());
-    if(extension==".h5" | extension==".H5") {
+    if( extension == ".h5" || extension == ".H5" ) {
         tableFileName = tableFileName.substr( 0, tableFileName.size() - 3 );
     }
 
@@ -203,7 +202,7 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
     // verifyTable( bool diagnositcMode, bool strictMode )
     // diagnostic mode - false (runtime mode)
     // strict moe - false (warning only)
-    this.verifyTable( b_diagnostic_mode, b_strict_mode );
+    verifyTable( b_diagnostic_mode, b_strict_mode );
 
 }
 
@@ -217,12 +216,10 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
 const vector<double>
 TabPropsTable::getState( const double * indepVarValues )
 {
-    if(b_table_isloaded = false) {
-        // throw error;
+    if( b_table_isloaded == false ) {
         throw InternalError("You requested a thermodynamic state, but you did not specify which table you wanted to use!!!",__FILE__,__LINE__);
-        
     }
-  
+
     // for each dependent variable, query table
     for( unsigned int i=0 ; i < allUserDepVarNames.size() ; i++) {
         myQueryResults[i] = statetbl.query( allUserDepVarNames[i], &indepVarValues[i] );
@@ -291,10 +288,8 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
 
         // if strict mode, throw an error and quit
         if(strictMode == true) {
-            
-            // throw an error
-            throw InternalError("You specified dependent variables in your input file that you wanted to save, but some of them were not found in the table!!!",__FILE__,__LINE__);
-        
+            throw InternalError( "You specified dependent variables in your input file that you wanted to save, "
+                                 "but some of them were not found in the table!!!",__FILE__,__LINE__);
         }
         else if(strictMode == false) {
             

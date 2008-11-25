@@ -1,3 +1,9 @@
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
+
+#include <Core/Exceptions/InternalError.h>
+
+#include <sci_defs/hdf5_defs.h>
+
 #include <vector>
 #include <algorithm>
 #include <cmath>
@@ -5,26 +11,16 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
-
-using std::vector;
-using std::string;
-
 // these are for temporary diagnostics...
 #include <iostream>
 #include <fstream>
-using std::cout; using std::endl;
 
-//#include <sci_defs/hdf_defs.h>
-#include <hdf5.h>
-#if defined( HAVE_HDF5 )
-// this if statement ends at the bottom of the document
-
-
-
-//====================================================================
+using namespace std;
+using namespace SCIRun;
+using namespace Uintah;
 
 //--------------------------------------------------------------------
+
 StateTable::StateTable( const int numDim )
 {
   numDim_ = numDim;
@@ -56,7 +52,7 @@ StateTable::add_entry( const string & name,
     std::ostringstream errmsg;
     errmsg << "ERROR: Inconsistent dimensionality detected for entry '" << name << "'" << std::endl
            << "       Previous entries had " << numDim_ << " dimensions";
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   
   // disallow duplicates.
@@ -70,7 +66,7 @@ StateTable::add_entry( const string & name,
     std::ostringstream errmsg;
     errmsg << "ERROR: Attempted to add a duplicate entry to the table." << std::endl
            << "       An entry with the name: '" << name << "' already exists.";
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
 
   // ensure that this spline's independent variable names match the others in the table.
@@ -85,7 +81,7 @@ StateTable::add_entry( const string & name,
       if( *istr != *istr2 )
         errmsg << "      ('" << *istr << "','" << *istr2 << "')" << std::endl;
     }
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   // populate list of dependent variable names
   depVarNames_.push_back( name );
@@ -114,6 +110,7 @@ StateTable::has_indepvar( const string & name ) const
 void
 StateTable::write_hdf5( const string & prefix )
 {
+#if defined( HAVE_HDF5 )
   const string fileName = prefix+".h5";
 
   //
@@ -125,15 +122,17 @@ StateTable::write_hdf5( const string & prefix )
   if( fid < 0 ){
     std::ostringstream errmsg;
     errmsg << "ERROR creating file '" << fileName << "'" << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   
   const hid_t baseGroup = H5Gcreate( fid, prefix.c_str(), 0 );
 
-  if( baseGroup < 0 )
-    throw std::runtime_error( "ERROR: could not create an HDF5 base group!!" );
-  else
+  if( baseGroup < 0 ) {
+    throw InternalError( "ERROR: could not create an HDF5 base group!!", __FILE__, __LINE__ );
+  }
+  else {
     write_hdf5( baseGroup );
+  }
 
   H5Gclose( baseGroup );
 
@@ -143,15 +142,19 @@ StateTable::write_hdf5( const string & prefix )
   if( nopen != 0 ){
     std::ostringstream errmsg;
     errmsg << "There are " << nopen << " open HDF5 identifiers." << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
 */
   H5Fclose( fid );
+#endif
 }
+
 //--------------------------------------------------------------------
+
 void
 StateTable::write_hdf5( const hid_t & group )
 {
+#if defined( HAVE_HDF5 )
   const hid_t h5s = H5Screate( H5S_SCALAR );
 
   // write the dimension to the file
@@ -161,7 +164,7 @@ StateTable::write_hdf5( const hid_t & group )
     errmsg << "ERROR from StateTable::write_hdf5()" << std::endl
            << "      could not write to the specified group.  " << std::endl
            << "      Ensure that the file is open and the group is valid.";
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   H5Awrite( h5a, H5T_NATIVE_INT, &numDim_ );
   H5Aclose( h5a );
@@ -208,7 +211,7 @@ StateTable::write_hdf5( const hid_t & group )
     if( spGroup < 0 ){
       std::ostringstream errmsg;
       errmsg << "ERROR: Could not create HDF5 group named '" << splineName << "'" << std::endl;
-      throw std::runtime_error( errmsg.str() );
+      throw InternalError( errmsg.str(), __FILE__, __LINE__ );
     }
     
     //
@@ -217,12 +220,14 @@ StateTable::write_hdf5( const hid_t & group )
     itbl->second->write_hdf5( spGroup );
     H5Gclose( spGroup );
   }
+#endif
 }
 //--------------------------------------------------------------------
 void
 StateTable::read_hdf5( const string & prefix,
                        string inputGroupName )
 {
+#if defined( HAVE_HDF5 )
   const string fileName = prefix + ".h5";
 
   if( inputGroupName.empty() ) inputGroupName = prefix;
@@ -236,7 +241,7 @@ StateTable::read_hdf5( const string & prefix,
     std::ostringstream errmsg;
     errmsg << "ERROR: Could not open HDF5 file: '" << fileName << "'"  << std::endl
            << "       Check for file's existence and verify file name." << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
 
   const hid_t baseGroup = H5Gopen( fid, inputGroupName.c_str() );
@@ -244,23 +249,27 @@ StateTable::read_hdf5( const string & prefix,
     std::ostringstream errmsg;
     errmsg << "ERROR: Could not open group named '" << prefix
            << "' from file '" << fileName << "'" << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
 
   read_hdf5( baseGroup );
 
   H5Gclose( baseGroup );
   H5Fclose( fid );
+#endif
 }
+
 //--------------------------------------------------------------------
+
 void
 StateTable::read_hdf5( const hid_t & group )
 {
+#if defined( HAVE_HDF5 )
   // check for valid group
   if( group < 0 ){
     std::ostringstream errmsg;
     errmsg << "ERROR: Tried to read an invalid group!" << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__  );
   }
     
   //
@@ -302,10 +311,10 @@ StateTable::read_hdf5( const hid_t & group )
     H5Iget_name( group, gnam, 50 );
     errmsg << "ERROR: Inconsistent number of objects found in group: '" << gnam << "'." <<std::endl
            << "       Found " << nn << " but expecting " << nEntries << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
 
-  for( unsigned int isp=0; isp<nEntries; ++isp ){
+  for( unsigned int isp=0; isp<nEntries; ++isp ) {
     
     //
     // get the name for this dataset
@@ -338,7 +347,7 @@ StateTable::read_hdf5( const hid_t & group )
     default:
       std::ostringstream errmsg;
       errmsg << "ERROR: unsupported dimension for BSpline creation!";
-      throw std::runtime_error( errmsg.str() );
+      throw InternalError( errmsg.str(), __FILE__, __LINE__ );
     }
     entry->read_hdf5( spGroup );
     H5Gclose( spGroup );
@@ -348,9 +357,11 @@ StateTable::read_hdf5( const hid_t & group )
     //
     add_entry( spGroupName, entry, indepVarNames_ );
   }
-
+#endif
 }
+
 //--------------------------------------------------------------------
+
 void
 StateTable::write_tecplot( const std::vector<int> & npts,
                            const std::vector<double> & upbounds,
@@ -652,15 +663,12 @@ StateTable::getIndex( const int i,
     }
     break;
   default:
-    throw std::runtime_error("Unsupported number of independent variables");
+    throw InternalError( "Unsupported number of independent variables", __FILE__, __LINE__ );
   }
   return ipt;
 }
 
 //--------------------------------------------------------------------
-
-//====================================================================
-//====================================================================
 
 /*
 #include <cmath>
@@ -707,16 +715,3 @@ int main()
   cout << "done" << endl;
 }
 */
-
-
-
-
-#else
-  /*
-  cout << "\n";
-  cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
-  cout << "\n";
-  Thread::exitAll( -1 );
-  */
-#endif // for defined( HAVE_HDF5 )
-
