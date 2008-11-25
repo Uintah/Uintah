@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <string>
 
-#include <BSpline.h>
-#include <LU.h>
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/BSpline.h>
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/LU.h>
 
 // #include <hdf5.h>
 // changing this to conform with SCIRun - the user should ONLY include <sci_defs/hdf_defs.h>
