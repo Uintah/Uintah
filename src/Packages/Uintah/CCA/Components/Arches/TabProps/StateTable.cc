@@ -5,7 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <StateTable.h>
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
 
 using std::vector;
 using std::string;

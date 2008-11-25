@@ -6,7 +6,7 @@
 #include <string>
 #include <stdexcept>
 
-#include <BSpline.h>
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/BSpline.h>
 
 #include <sci_defs/hdf_defs.h>
 #if defined( HAVE_HDF5 )
