@@ -38,11 +38,13 @@ basis_funs( const int i,              // index for location of interest
     left[j] = u-U[i+1-j];
     right[j] = U[i+j]-u;
     double saved = 0.0;
+    
     for( int r=0; r<j; r++ ){
       double tmp = N[r]/(right[r+1]+left[j-r]);
       N[r] = saved + right[r+1]*tmp;
       saved = left[j-r]*tmp;
     }
+    
     N[j] = saved;
   }
 }
@@ -62,15 +64,20 @@ int find_indx( const int n,               // number of control points
   //
   // see "The NURBS Book" second edition, ALG A2.1 (p. 68)
   //
-  if( u == U[n+1]) return n-1;
+  if( u == U[n+1]){
+    return n-1;
+  }
+  
   int low = p;
   int high = n+1;
   int mid = (low+high)/2;
+  
   while( u < U[mid]  ||  u >= U[mid+1] ){
-    if( u < U[mid] )
+    if( u < U[mid] ){
       high = mid;
-    else
+    }else{
       low = mid;
+    }
     mid = (low+high)/2;
   }
   return mid;
@@ -126,25 +133,31 @@ set_knot_vector( const vector<double> & uk,
 
   // set up the knot vector by averaging the (sorted, reduced) uk
   knots.clear();
-  for( int i=0; i<=order; i++ )
+  for( int i=0; i<=order; i++ ){
     knots.push_back(0.0);
+  }
 
   for( int j=1; j<nn-order; j++ ){
     double tmp = 0.0;
-    for( int i=j; i<j+order; i++ )
+    
+    for( int i=j; i<j+order; i++ ){
       tmp += uksrt[i];
+    }
     tmp /= double(order);
 
     // avoid duplicates.  Only push back if this is a "new" entry.
-    if( std::find( knots.begin(), knots.end(), tmp ) == knots.end() )
+    if( std::find( knots.begin(), knots.end(), tmp ) == knots.end() ){
       knots.push_back(tmp);
+    }
   }
-  for( int i=0; i<=order; i++ )
+  for( int i=0; i<=order; i++ ){
     knots.push_back(1.0);
+  }
 
   // ensure that the knot vector is non-decreasing
-  for( int i=1; i<(int)knots.size(); i++ )
+  for( int i=1; i<(int)knots.size(); i++ ){
     assert( knots[i] >= knots[i-1] );
+  }
 
   return nn;
 }
@@ -169,29 +182,43 @@ test_basis_fun()
 
   const int order = 2;   const int npts = n-order-1;
   double u = 5./2.;   int ix = find_indx( npts, order, u, U );
-  if( ix != 4 ) isOkay = false;
-
+  if( ix != 4 ){
+    isOkay = false;
+  }
   const double tol = 1.0e-12;
   vector<double> Ni0(1,0.0), Ni1(2,0.0), Ni2(3,0.0);
   basis_funs( ix, 0, u, U, Ni0 );  // linear
   basis_funs( ix, 1, u, U, Ni1 );  // quadratic
   basis_funs( ix, 2, u, U, Ni2 );  // cubic
 
-  if( std::fabs(Ni0[0] - 1.0) > tol ) isOkay = false;
+  if( std::fabs(Ni0[0] - 1.0) > tol ){
+    isOkay = false;
+  }
+  
   if( std::fabs(Ni1[0] - 0.5) > tol ||
-      std::fabs(Ni1[1] - 0.5) > tol ) isOkay = false;
+      std::fabs(Ni1[1] - 0.5) > tol ){
+    isOkay = false;
+  }
+  
   if( std::fabs(Ni2[0] - 1./8.) > tol ||
       std::fabs(Ni2[1] - 6./8.) > tol ||
-      std::fabs(Ni2[2] - 1./8.) > tol ) isOkay = false;
-
+      std::fabs(Ni2[2] - 1./8.) > tol ){
+    isOkay = false;
+  }
   u=4.6; ix=find_indx(npts,order,u,U);
   basis_funs( ix, order, u, U, Ni2 );
   if( std::fabs(Ni2[0] - 0.16) > tol ||
       std::fabs(Ni2[1] - 0.48) > tol ||
-      std::fabs(Ni2[2] - 0.36) > tol ) isOkay = false;
-
-  u=0.0; ix=find_indx(npts,order,u,U);  basis_funs( ix, order, u, U, Ni2 );
-  u=5.0; ix=find_indx(npts,order,u,U);  basis_funs( ix, order, u, U, Ni2 );
+      std::fabs(Ni2[2] - 0.36) > tol ){
+    isOkay = false;
+  }
+  
+  u=0.0; 
+  ix=find_indx(npts,order,u,U);  
+  basis_funs( ix, order, u, U, Ni2 );
+  u=5.0; 
+  ix=find_indx(npts,order,u,U);  
+  basis_funs( ix, order, u, U, Ni2 );
 
   isOkay ? cout << "PASS." << endl : cout << "FAIL!" << endl;
 
@@ -271,10 +298,15 @@ BSpline1D::dump()
        << " order: " << order_ << ",  npts: " << npts_ << ", nknots: " << (int)knots_.size()
        << ", max/min: " << maxIndepVarVal_ << "/" << minIndepVarVal_ << endl
        << " knots: ";
-  for( ii=knots_.begin(); ii!= knots_.end(); ii++ ) cout << *ii << ", ";
+  for( ii=knots_.begin(); ii!= knots_.end(); ii++ ){
+    cout << *ii << ", ";
+  }
+  
   cout << endl;
   cout << " ctrlPts: ";
-  for( ii=controlPts_.begin(); ii!=controlPts_.end(); ii++ ) cout << *ii << ", ";
+  for( ii=controlPts_.begin(); ii!=controlPts_.end(); ii++ ){
+    cout << *ii << ", ";
+  }
   cout << endl;
 }
 //--------------------------------------------------------------------
@@ -337,8 +369,9 @@ BSpline1D::value( const double * indepVar ) const
   const int shift = ix-order_;
   vector<double>::const_iterator ibf = basisFun_.begin();
   vector<double>::const_iterator icp = controlPts_.begin() + shift;
-  for( ; ibf!=basisFun_.end(); ibf++, icp++ )
+  for( ; ibf!=basisFun_.end(); ibf++, icp++ ){
     result += (*ibf)*(*icp);
+  }
 
   return result;
 }
@@ -484,8 +517,9 @@ BSpline2D::BSpline2D( const BSpline2D& src )
 BSpline2D::~BSpline2D()
 {
   vector<const BSpline1D*>::iterator ii;
-  for( ii=dim2Splines_.begin(); ii!=dim2Splines_.end(); ii++ )
+  for( ii=dim2Splines_.begin(); ii!=dim2Splines_.end(); ii++ ){
     delete *ii;
+  }
 
   delete sp1_;
 }
@@ -509,8 +543,9 @@ BSpline2D::compute_control_pts( const std::vector<double> & indepVars1,
 
     // obtain the dependent variable vector for this curve
     const int shift = j*n;
-    for(int i=0; i<n; i++) dpvrs[i]=depVars[i+shift];
-
+    for(int i=0; i<n; i++){
+      dpvrs[i]=depVars[i+shift];
+    }
     // spline it
     BSpline1D sp1d( order_, indepVars1, dpvrs );
 
@@ -532,8 +567,9 @@ BSpline2D::compute_control_pts( const std::vector<double> & indepVars1,
   for( int i=0; i<n; i++ ){
 
     // load the dependent variables vector
-    for(int j=0; j<m; j++)  dpvrs[j] = RR[j][i];
-
+    for(int j=0; j<m; j++){
+      dpvrs[j] = RR[j][i];
+    }
     // spline this one and save it
     BSpline1D * sp1d = new BSpline1D( order_, indepVars2, dpvrs );
     dim2Splines_.push_back( sp1d );
@@ -728,8 +764,9 @@ BSpline3D::compute_control_pts( const std::vector<double> & x1,
 
       // get the dependent variable vector for this curve
       const int shift = n1_*( k*n2_ + j );
-      for( int i=0; i<n1_; i++ ) dpvrs[i] = phi[i+shift];
-
+      for( int i=0; i<n1_; i++ ){
+        dpvrs[i] = phi[i+shift];
+      }
       // spline it.
       BSpline1D sp( order_, x1, dpvrs );
 
@@ -1193,8 +1230,9 @@ BSpline5D::compute_control_pts( const std::vector<double> & x1,
 	  const int jshift = kshift+j*n1_;
 
 	  // get the dependent variable vector for this curve
-	  for( int i=0; i<n1_; i++ ) dpvrs[i] = phi[i+jshift];
-
+	  for( int i=0; i<n1_; i++ ){ 
+          dpvrs[i] = phi[i+jshift];
+         }
 	  // spline it.
 	  BSpline1D sp( order_, x1, dpvrs );
 
