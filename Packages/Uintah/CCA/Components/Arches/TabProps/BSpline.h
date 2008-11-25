@@ -1,17 +1,15 @@
 #ifndef BSpline_H
 #define BSpline_H
 
-//#include <sci_defs/hdf_defs.h>
-#include <hdf5.h>
-#if defined( HAVE_HDF5 )
-// this if statement ends at the end of the document
+#include <sci_defs/hdf5_defs.h>
 
-
+#if !defined( HAVE_HDF5 ) // this if statement ends at the end of the document
+#  define hid_t int
+#endif
 
 #include <vector>
 
-//====================================================================
-//====================================================================
+namespace Uintah {
 
 /**
  *  @class  BSpline
@@ -57,7 +55,6 @@ class BSpline{
 
   double value( std::vector<double> & x ) const{ return value( &x[0] ); }
   
-#ifndef NO_HDF5
   /**
    *  Read a spline from an HDF5 database.  The file should be opened
    *  and an hdf5 "group" specified.  This spline will be read from the
@@ -71,7 +68,6 @@ class BSpline{
    *  specified group.
    */
   virtual void write_hdf5( const hid_t & group ) const = 0;
-#endif
 
  protected:
 
@@ -150,10 +146,8 @@ class BSpline1D : public BSpline{
    */
   void dump();
 
-#ifndef NO_HDF5
   void write_hdf5( const hid_t & group ) const;
-  void  read_hdf5( const hid_t & group );
-#endif
+  void read_hdf5( const hid_t & group );
 
   inline bool operator == (const BSpline1D& a ) const{
     return ( a.npts_ == npts_ &&
@@ -232,11 +226,8 @@ class BSpline2D : public BSpline{
    */
   double value( const double* indepVar ) const;
   
-
-#ifndef NO_HDF5
   void write_hdf5( const hid_t & group ) const;
-  void  read_hdf5( const hid_t & group );
-#endif
+  void read_hdf5( const hid_t & group );
 
   inline bool operator == (const BSpline2D& a) const{
     bool isEqual = true;
@@ -319,10 +310,8 @@ class BSpline3D : public BSpline{
    */
   double value( const double* ) const;
 
-#ifndef NO_HDF5
   void write_hdf5( const hid_t & group ) const;
-  void  read_hdf5( const hid_t & group );
-#endif
+  void read_hdf5( const hid_t & group );
 
   inline bool operator == (const BSpline3D& a) const{
     bool isEqual = true;
@@ -409,10 +398,8 @@ class BSpline4D : public BSpline{
    */
   double value( const double* x ) const;
 
-#ifndef NO_HDF5
   void write_hdf5( const hid_t & group ) const;
-  void  read_hdf5( const hid_t & group );
-#endif
+  void read_hdf5( const hid_t & group );
 
   inline bool operator == (const BSpline4D& a) const{
     bool isEqual = true;
@@ -502,10 +489,8 @@ class BSpline5D : public BSpline{
    */
   double value( const double* x ) const;
 
-#ifndef NO_HDF5
   void write_hdf5( const hid_t & group ) const;
-  void  read_hdf5( const hid_t & group );
-#endif
+  void read_hdf5( const hid_t & group );
 
   inline bool operator == (const BSpline5D& a) const{
     bool isEqual = true;
@@ -535,22 +520,6 @@ class BSpline5D : public BSpline{
   BSpline5D& operator=(const BSpline5D&); // no assignment
 };
 
-//====================================================================
-//====================================================================
-
-
-
-// end of if (no hdf5 is defined)
-#else
-/*
-    std::cout << "\n";
-    std::cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
-    std::cout << "\n";
-    Thread::exitAll( -1 );
-*/
-
-#endif
-
-
+} // end namespace Uintah
 
 #endif // end of #ifndef BSpline_H

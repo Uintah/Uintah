@@ -30,8 +30,11 @@
 #ifndef SCI_HDF5_DEFS_H
 #define SCI_HDF5_DEFS_H
 
-#include <hdf5.h>
 @DEF_HDF5@
+
+#if defined( HAVE_HDF5 )
+#  include <hdf5.h>
+#endif
 
 #endif
 
