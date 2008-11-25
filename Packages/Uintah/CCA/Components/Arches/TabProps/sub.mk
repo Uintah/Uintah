@@ -21,6 +21,6 @@ PSELIBS := \
 
 #LIBS := $(HDF5_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 LIBS := $(HDF5_LIBRARY)
+INCLUDES += $(HDF5_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
