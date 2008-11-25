@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include <LU.h>
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/LU.h>
 
 //--------------------------------------------------------------------
 LU::LU( const int dim, const int bandwidth )
