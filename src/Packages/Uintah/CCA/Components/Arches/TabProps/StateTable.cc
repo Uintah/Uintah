@@ -29,8 +29,9 @@ StateTable::StateTable( const int numDim )
 StateTable::~StateTable()
 {
   Table::const_iterator itbl;
-  for( itbl=splineTbl_.begin(); itbl!=splineTbl_.end(); itbl++ )
+  for( itbl=splineTbl_.begin(); itbl!=splineTbl_.end(); itbl++ ){
     delete itbl->second;
+  }
 }
 //--------------------------------------------------------------------
 void
@@ -59,8 +60,11 @@ StateTable::add_entry( const string & name,
   const BSpline * const entry = find_entry( name );
   if( entry == NULL ){
     //cout << "adding entry: '" << name << "' to table." << endl;
-    if( createCopy )  splineTbl_[name] = spline->clone();
-    else              splineTbl_[name] = spline;
+    if( createCopy ){
+      splineTbl_[name] = spline->clone();
+    }else{              
+      splineTbl_[name] = spline;
+    }
   }
   else{
     std::ostringstream errmsg;
@@ -78,8 +82,9 @@ StateTable::add_entry( const string & name,
     vector<string>::const_iterator istr =indepVarNames_.begin();
     vector<string>::const_iterator istr2=indepVarNames.begin();
     for( ; istr!=indepVarNames_.end(); ++istr, ++istr2 ) {
-      if( *istr != *istr2 )
+      if( *istr != *istr2 ){
         errmsg << "      ('" << *istr << "','" << *istr2 << "')" << std::endl;
+      }
     }
     throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
@@ -92,8 +97,9 @@ StateTable::find_entry( const string & name ) const
 {
   Table::const_iterator itbl = splineTbl_.begin();
   for( ; itbl!=splineTbl_.end(); itbl++ ){
-    if( itbl->first == name )
+    if( itbl->first == name ){
       return itbl->second;
+    }
   }
   return NULL;
 }
@@ -102,8 +108,11 @@ bool
 StateTable::has_indepvar( const string & name ) const
 {
   vector<string>::const_iterator istr;
-  for( istr=indepVarNames_.begin(); istr!=indepVarNames_.end(); istr++ )
-    if( name == *istr ) return true;
+  for( istr=indepVarNames_.begin(); istr!=indepVarNames_.end(); istr++ ){
+    if( name == *istr ){
+      return true;
+    }
+  }
   return false;
 }
 //--------------------------------------------------------------------
@@ -129,8 +138,7 @@ StateTable::write_hdf5( const string & prefix )
 
   if( baseGroup < 0 ) {
     throw InternalError( "ERROR: could not create an HDF5 base group!!", __FILE__, __LINE__ );
-  }
-  else {
+  }else {
     write_hdf5( baseGroup );
   }
 
@@ -202,9 +210,7 @@ StateTable::write_hdf5( const hid_t & group )
   //
   int splineCount=0;
   Table::const_iterator itbl;
-  for( itbl =splineTbl_.begin();
-       itbl!=splineTbl_.end();
-       ++itbl, ++splineCount )
+  for( itbl =splineTbl_.begin();itbl!=splineTbl_.end(); ++itbl, ++splineCount )
   {
     const string splineName = itbl->first;
     const hid_t spGroup = H5Gcreate( group, splineName.c_str(), 0 );
@@ -230,8 +236,9 @@ StateTable::read_hdf5( const string & prefix,
 #if defined( HAVE_HDF5 )
   const string fileName = prefix + ".h5";
 
-  if( inputGroupName.empty() ) inputGroupName = prefix;
-  
+  if( inputGroupName.empty() ){
+    inputGroupName = prefix;
+  }
   //
   // open an HDF5 file and generate the group for
   // the requested table at the root of the file.
@@ -383,21 +390,24 @@ StateTable::write_tecplot( const std::vector<int> & npts,
 
   // write independent variable labels
   vector<string>::const_iterator inam;
-  for( inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam )
+  for( inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
     fout << "  \"" << *inam << "\"";
+  }
 
   // write dependent variable labels
   Table::const_iterator itbl;
-  for( itbl=splineTbl_.begin(); itbl!=splineTbl_.end(); ++itbl )
+  for( itbl=splineTbl_.begin(); itbl!=splineTbl_.end(); ++itbl ){
     fout << "  \"" << itbl->first << "\"";
+  }
 
   fout << endl;
   
   // write information about number of points - data will be written in block format
   fout << "ZONE ";
   string label[] = {"I=", "J=", "K="};
-  for(unsigned int i=0; i<npts.size(); ++i )
+  for(unsigned int i=0; i<npts.size(); ++i ){
     fout << label[i] << npts[i] << ", ";
+  }
   fout << "F=BLOCK";
   fout << endl;
   
@@ -410,28 +420,37 @@ StateTable::write_tecplot( const std::vector<int> & npts,
       fout << endl << "# " << indepVarNames_[0] << endl;
       double spacing = (upbounds[0]-lobounds[0])/double(npts[0]-1);
       double shift = lobounds[0];
-      for( int k=0; k<npts[2]; ++k )
-        for( int j=0; j<npts[1]; ++j )
-          for( int i=0; i<npts[0]; ++i )
+      for( int k=0; k<npts[2]; ++k ){
+        for( int j=0; j<npts[1]; ++j ){
+          for( int i=0; i<npts[0]; ++i ){
             fout << " " << i*spacing+shift << endl;
+          }
+        }
+      }
       fout << endl;
 
       fout << endl << "# " << indepVarNames_[1] << endl;
       spacing = (upbounds[1]-lobounds[1])/double(npts[1]-1);
       shift = lobounds[1];
-      for( int k=0; k<npts[2]; ++k )
-        for( int j=0; j<npts[1]; ++j )
-          for( int i=0; i<npts[0]; ++i )
+      for( int k=0; k<npts[2]; ++k ){
+        for( int j=0; j<npts[1]; ++j ){
+          for( int i=0; i<npts[0]; ++i ){
             fout << " " << j*spacing+shift << endl;
+          }
+        }
+      }
       fout << endl;
 
       fout << endl << "# " << indepVarNames_[2] << endl;
       spacing = (upbounds[2]-lobounds[2])/double(npts[2]-1);
       shift = lobounds[2];
-      for( int k=0; k<npts[2]; ++k )
-        for( int j=0; j<npts[1]; ++j )
-          for( int i=0; i<npts[0]; ++i )
+      for( int k=0; k<npts[2]; ++k ){
+        for( int j=0; j<npts[1]; ++j ){
+          for( int i=0; i<npts[0]; ++i ){
             fout << " " << k*spacing+shift << endl;
+          }
+        }
+      }
       fout << endl;
       break;
     }
@@ -440,17 +459,21 @@ StateTable::write_tecplot( const std::vector<int> & npts,
       fout << endl << "# " << indepVarNames_[0] << endl;
       double spacing = (upbounds[0]-lobounds[0])/double(npts[0]-1);
       double shift = lobounds[0];
-      for( int j=0; j<npts[1]; ++j )
-        for( int i=0; i<npts[0]; ++i )
+      for( int j=0; j<npts[1]; ++j ){
+        for( int i=0; i<npts[0]; ++i ){
           fout << " " << i*spacing+shift << endl;
+        }
+      }
       fout << endl;
 
       fout << endl << "# " << indepVarNames_[1] << endl;
       spacing = (upbounds[1]-lobounds[1])/double(npts[1]-1);
       shift = lobounds[1];
-      for( int j=0; j<npts[1]; ++j )
-        for( int i=0; i<npts[0]; ++i )
+      for( int j=0; j<npts[1]; ++j ){
+        for( int i=0; i<npts[0]; ++i ){
           fout << " " << j*spacing+shift << endl;
+        }
+      }
       fout << endl;
       break;
     }
@@ -459,8 +482,9 @@ StateTable::write_tecplot( const std::vector<int> & npts,
       fout << endl << "# " << indepVarNames_[0] << endl;
       double spacing = (upbounds[0]-lobounds[0])/double(npts[0]-1);
       double shift = lobounds[0];
-      for( int i=0; i<npts[0]; ++i )
+      for( int i=0; i<npts[0]; ++i ){
         fout << " " << i*spacing+shift << endl;
+      }
       fout << endl;
       break;
     }
@@ -574,7 +598,9 @@ StateTable::write_matlab( const std::vector<int>& npts,
     for( int i=0; i<ntot; ++i ){
       const int ipt = getIndex( i, npts, ivar );
       double value = ipt*spacing+shift;
-      if( logScale[ivar] ) value=std::pow(10,value);
+      if( logScale[ivar] ){
+        value=std::pow(10,value);
+      }
       fout << "  " << value << " ..." << endl;
     }
     fout << "];" << endl << endl;
@@ -608,7 +634,9 @@ StateTable::write_matlab( const std::vector<int>& npts,
         const double shift = lobounds[ivar];
         const int ipt = getIndex( i, npts, ivar );
         double value = ipt*spacing+shift;
-        if( logScale[ivar] ) value = std::pow(10,value);
+        if( logScale[ivar] ){
+          value = std::pow(10,value);
+        }
         query[ivar] = value;
       }
 

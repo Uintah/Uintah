@@ -3,14 +3,6 @@
 #ifndef Uintah_Component_Arches_TabPropsTable_h
 #define Uintah_Component_Arches_TabPropsTable_h
 
-// constructor
-// destructor
-// problemSetup
-// getState
-// verifyTable
-// getIndepVars
-// getDepVars
-
 // includes for Arches
 #include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
@@ -21,20 +13,24 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 
-// includes for C++
-#include <sgi_stl_warnings_off.h>
-#include     <vector>
-#include     <map>
-#include     <string>
-#include     <stdexcept>
-#include <sgi_stl_warnings_on.h>
-
 /***************************************************************************
 CLASS
     TabPropsTable 
        
 GENERAL INFORMATION
-    TabPropsTable.h - representation of reaction and mixing table created using Dr. James Sutherland's TabProps program.  Dependent variables are B-Splined, and spline coefficients are put into an HDF5 formated file.  This class creates a TabProps StateTable object, reads data from a table into the StateTable object, and can query the StateTable object for the value of a dependent variable given values for independent variables, as well as return names for independent and dependent variables, and verify tables by checking the names of the dependent variables requested by the user in the input file to dependent variables tabulated in the table.  Functionality will also be added to utilize the StateTable functions to convert the table data to a matlab file to easily investigate the results of the table creation.
+    TabPropsTable.h - representation of reaction and mixing table
+    created using Dr. James Sutherland's TabProps program.  Dependent
+    variables are B-Splined, and spline coefficients are put into an
+    HDF5 formated file.  This class creates a TabProps StateTable object,
+    reads datafrom a table into the StateTable object, and can query the
+    StateTable object for the value of a dependent variable given values
+    for independent variables, as well as return names for independent
+    and dependent variables, and verify tables by checking the names of
+    the dependent variables requested by the user in the input file to
+    dependent variables tabulated in the table. Functionality will also be
+    added to utilize the StateTable functions to convert the table data to
+    a matlab file to easily investigate the results of the table creation.
+
 
     Author: Charles Reid (charles.reid@utah.edu)
     
@@ -48,7 +44,15 @@ KEYWORDS
     Mixing Table 
 
 DESCRIPTION
-    TabPropsTable is a child class of MixingRxnTable.  Its methods are specific to tables created using Dr. James Sutherland's TabProps program.  While there are many programs available with which to create tables (DARS, Cantera, Chemkin, etc.), each of these specific table formats can be read into TabProps by writing a unique reader class into TabProps (for example, TabProps/src/prepro/rxnmdl/JCSFlamelets.C, which interfaces with the custom format of a flamelet code that Dr. Sutherland also wrote), the data splined, and the spline coefficients pushed into the HDF5 file.
+    TabPropsTable is a child class of MixingRxnTable.  Its methods are
+    specific to tables created using Dr. James Sutherland's TabProps
+    program.  While there are many programs available with which to create
+    tables (DARS, Cantera, Chemkin, etc.), each of these specific table
+    formats can be read into TabProps by writing a unique reader class
+    into TabProps (for example, TabProps/src/prepro/rxnmdl/JCSFlamelets.C,
+    which interfaces with the custom format of a flamelet code that
+    Dr. Sutherland also wrote), the data splined, and the spline
+    coefficients pushed into the HDF5 file.
 
 PATTERNS
     None
