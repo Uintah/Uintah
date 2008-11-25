@@ -63,6 +63,7 @@ POSSIBLE REVISIONS
 
 namespace Uintah {
 class Properties;
+class StateTable;
 class TabPropsTable : public MixingRxnTable {
 
 public:
@@ -92,7 +93,7 @@ public:
   // GROUP: Verify Methods :
   // Methods used in verifying the table
   void verifyTable( bool diagnosticMode,
-                    bool strictMode );
+                    bool strictMode ) const;
 
 
   // GROUP: Get Methods :
@@ -125,7 +126,6 @@ private:
     
     // create vector to store table query results
     std::vector<double> myQueryResults;
-    std::vector<bool> myVerifyResults;
 
     // create a StateTable object to represent the table data
     StateTable statetbl;

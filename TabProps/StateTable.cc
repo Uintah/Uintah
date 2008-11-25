@@ -15,7 +15,8 @@ using std::string;
 #include <fstream>
 using std::cout; using std::endl;
 
-#include <sci_defs/hdf_defs.h>
+//#include <sci_defs/hdf_defs.h>
+#include <hdf5.h>
 #if defined( HAVE_HDF5 )
 // this if statement ends at the bottom of the document
 
@@ -711,9 +712,11 @@ int main()
 
 
 #else
+  /*
   cout << "\n";
   cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
   cout << "\n";
   Thread::exitAll( -1 );
+  */
 #endif // for defined( HAVE_HDF5 )
 

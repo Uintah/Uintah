@@ -1294,9 +1294,11 @@ BSpline5D::read_hdf5( const hid_t & group )
 
 
 #else
+  /*
   cout << "\n";
   cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
   cout << "\n";
   Thread::exitAll( -1 );
+  */
 #endif // for defined( HAVE_HDF5 )
 
