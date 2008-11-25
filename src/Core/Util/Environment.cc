@@ -131,6 +131,19 @@ MacroSubstitute( const char * var_value )
   return retval;
 }
 
+void
+SCIRun::show_env()
+{
+  printf( "\n" );
+  printf("Environment:\n" );
+
+  map<string,string>::const_iterator iter = scirun_env.begin();
+  while( iter != scirun_env.end() ) {
+    printf( "  %s : %s\n", iter->first.c_str(), iter->second.c_str() );
+    iter++;
+  }
+}
+
 // WARNING: According to other software (specifically: tcl) you should
 // lock before messing with the environment.
 
@@ -204,8 +217,6 @@ getWin32RegistryValues(string& obj, string& src, string& thirdparty, string& pac
 }
 #endif
 
-// get_existing_env() will fill up the SCIRun::existing_env string set
-// with all the currently set environment variable keys, but not their values
 void
 SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = false */ )
 {
