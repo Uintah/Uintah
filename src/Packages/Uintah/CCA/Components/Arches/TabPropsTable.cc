@@ -4,10 +4,10 @@
 //
 
 // includes for Arches
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/TabPropsTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 
 // includes for Uintah
@@ -235,7 +235,7 @@ TabPropsTable::getState( const double * indepVarValues )
 //****************************************************************************
 void
 TabPropsTable::verifyTable(  bool diagnosticMode,
-                             bool strictMode )
+                             bool strictMode ) const
 {
     // already have list of dep vars
     // already have list of dependent variables specified in the input file
@@ -248,6 +248,8 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
     // 
     int numNegativeResults = 0;
     bool toggle;
+    std::vector<bool> myVerifyResults;
+    
     for( unsigned int i=0; i < allUserDepVarNames.size(); i++) {
         toggle = false; // toggle = "is this user-requested dep var in the table?"
         for( unsigned int j=0; j < allDepVarNames.size(); j++) {

@@ -1,7 +1,8 @@
 #ifndef BSpline_H
 #define BSpline_H
 
-#include <sci_defs/hdf_defs.h>
+//#include <sci_defs/hdf_defs.h>
+#include <hdf5.h>
 #if defined( HAVE_HDF5 )
 // this if statement ends at the end of the document
 
@@ -541,10 +542,13 @@ class BSpline5D : public BSpline{
 
 // end of if (no hdf5 is defined)
 #else
-  cout << "\n";
-  cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
-  cout << "\n";
-  Thread::exitAll( -1 );
+/*
+    std::cout << "\n";
+    std::cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
+    std::cout << "\n";
+    Thread::exitAll( -1 );
+*/
+
 #endif
 
 
