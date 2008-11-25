@@ -68,6 +68,13 @@ namespace SCIRun {
   //   otherwise.
   SCISHARE bool sci_getenv_p( const std::string & key );
 
+  // show_env
+  //
+  //   Prints out (stdout) all environment variables (and their
+  //   values) that the SCI Env knows about.
+  //
+  SCISHARE void show_env();
+
 } // end namespace SCIRun
 
 #endif // #ifndef Core_Util_Environment_h
