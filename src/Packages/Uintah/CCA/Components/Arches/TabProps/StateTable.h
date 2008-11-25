@@ -8,12 +8,9 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/TabProps/BSpline.h>
 
-//#include <sci_defs/hdf_defs.h>
-#include <hdf5.h>
-#if defined( HAVE_HDF5 )
-// this if ends at the end of the document
+#include <sci_defs/hdf5_defs.h>
 
-
+namespace Uintah {
 
 /**
  *  @class  StateTable
@@ -225,17 +222,6 @@ private:
 
 };
 
-
-// end of the if statement above (if defined(have_hdf5))
-#else
-/*
-    cout << "\n";
-    cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
-    cout << "\n";
-    Thread::exitAll( -1 );
-*/
-#endif
-
-
+} // end namespace Uintah
 
 #endif

@@ -1,36 +1,29 @@
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/BSpline.h>
+
+#include <Packages/Uintah/CCA/Components/Arches/TabProps/LU.h>
+
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Thread/Thread.h>
+
 #include <assert.h>
 #include <cmath>
 #include <algorithm>
+
 #include <string>
-
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/BSpline.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/LU.h>
-
-// #include <hdf5.h>
-// changing this to conform with SCIRun - the user should ONLY include <sci_defs/hdf_defs.h>
-//
-// if the following code is put around the entire class (i.e. the whole class is in the "if then" part of the if statement), the class cannot be run unless configure is run with --with-hdf5=....
-
-#include <sci_defs/hdf5_defs.h>
-#if defined( HAVE_HDF5 )
-// (this if ends at the end of the class file...)
-
-
-
 #include <sstream>
 #include <iostream> 
-#include <stdexcept>
 
-using std::vector;
-using std::string;
+using namespace Uintah;
+using namespace SCIRun;
+using namespace std;
 
-namespace{
 //--------------------------------------------------------------------
-void basis_funs( const int i,              // index for location of interest
-		 const int p,              // order of approximation
-		 const double u,           // location of interest
-		 const vector<double> & U, // knot vector
-		 vector<double> & N )      // shape function array
+void
+basis_funs( const int i,              // index for location of interest
+            const int p,              // order of approximation
+            const double u,           // location of interest
+            const vector<double> & U, // knot vector
+            vector<double> & N )      // shape function array
 {
   //
   // see "The NURBS Book" second edition, ALG A2.2 (p. 70)
@@ -59,11 +52,11 @@ int find_indx( const int n,               // number of control points
 	       const double u,            // location of interest
 	       const vector<double> & U ) // knot vector
 {
-  if( u < U[0] || u > U[n+1] ){
-    std::ostringstream errmsg;
-    errmsg << "Request (" << u << ") exceeds bounds." << std::endl
-	   << "Valid range: [" << U[0] << "," << U[n+1] << "]" << std::endl;
-    throw std::runtime_error( errmsg.str() );
+  if( u < U[0] || u > U[n+1] ) {
+    ostringstream errmsg;
+    errmsg << "Request (" << u << ") exceeds bounds.\n"
+	   << "Valid range: [" << U[0] << "," << U[n+1] << "]\n";
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   
   //
@@ -88,17 +81,19 @@ double get_uk( const double indepVar,
 	       const double minIndepVarVal,
 	       const bool clipExtrema )
 {
-  const double value = (clipExtrema)
-    ? std::min( std::max(indepVar,minIndepVarVal), maxIndepVarVal )
-    : indepVar;
+  const double value = clipExtrema ? min( std::max(indepVar,minIndepVarVal), maxIndepVarVal )
+                                   : indepVar;
     
-  return (value-minIndepVarVal)/(maxIndepVarVal-minIndepVarVal);
+  return (value-minIndepVarVal) / (maxIndepVarVal-minIndepVarVal);
 }
+ 
 //--------------------------------------------------------------------
-void set_uk( const vector<double> & indepVars,
-	     vector<double> & uk,
-	     double & maxIndepVarVal,
-	     double & minIndepVarVal )
+
+void
+set_uk( const vector<double> & indepVars,
+        vector<double> & uk,
+        double & maxIndepVarVal,
+        double & minIndepVarVal )
 {
   //
   // Set uk by scaling it to lie between 0 and 1. Return the scaling
@@ -112,10 +107,13 @@ void set_uk( const vector<double> & indepVars,
     uk.push_back( get_uk( indepVars[i], maxIndepVarVal, minIndepVarVal, false ) );
   }
 }
+
 //--------------------------------------------------------------------
-int set_knot_vector( const vector<double> & uk,
-		     const int order,
-		     vector<double> & knots )
+
+int
+set_knot_vector( const vector<double> & uk,
+                 const int order,
+                 vector<double> & knots )
 {
   // jcs fix this.  we only need structured meshes with increasing uk.
   //     We should ensure that it is increasing, however.
@@ -150,17 +148,19 @@ int set_knot_vector( const vector<double> & uk,
 
   return nn;
 }
+
 //--------------------------------------------------------------------
 // unit test for computation of basis functions
 // test is hard-coded for 2nd order and a particular knot sequence
 #define numof(t) (sizeof(t)/sizeof(t[0]))
-bool test_basis_fun()
+
+bool
+test_basis_fun()
 {
   using namespace std;
   cout << "  Testing basis function evaluation ... ";
 
   bool isOkay = true;
-
 
   // the knot vector
   double UU[] = { 0., 0., 0., 1., 2., 3., 4., 4., 5., 5., 5. };
@@ -196,47 +196,55 @@ bool test_basis_fun()
   isOkay ? cout << "PASS." << endl : cout << "FAIL!" << endl;
 
   return isOkay;
-}
-} // namespace (local)
+} // end test_basis_fun()
 
 //====================================================================
 
 BSpline::BSpline( const int order,
 		  const int dimension,
-		  const bool doClip )
-  : order_( order ),
-    dim_( dimension ),
-    enableValueClipping_( doClip )
+		  const bool doClip ) :
+  order_( order ),
+  dim_( dimension ),
+  enableValueClipping_( doClip )
 {
+#if !defined( HAVE_HDF5 ) 
+  cout << "\n";
+  cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format,\n" 
+       << " but you didn't specify an installation of HDF5 when you ran configure.\n";
+  cout << "\n";
+  Thread::exitAll( -1 );
+#endif
 }
-//--------------------------------------------------------------------
+
 BSpline::~BSpline()
 {
 }
-//--------------------------------------------------------------------
 
 //====================================================================
 
-//--------------------------------------------------------------------
 BSpline1D::BSpline1D( const int order,
 		      const vector<double> & indepVars,
 		      const vector<double> & depVars,
-		      const bool allowClipping )
-  : BSpline( order, 1, allowClipping ),
-    npts_( indepVars.size() )
+		      const bool allowClipping ) :
+  BSpline( order, 1, allowClipping ),
+  npts_( indepVars.size() )
 {
   basisFun_.assign(order_+1,0.0);
   compute_control_pts( indepVars, depVars );
 }
+
 //--------------------------------------------------------------------
-BSpline1D::BSpline1D( const bool allowClipping )
-  : BSpline( 0, 1, allowClipping ),
-    npts_( 0 )
+
+BSpline1D::BSpline1D( const bool allowClipping ) :
+  BSpline( 0, 1, allowClipping ),
+  npts_( 0 )
 {
 }
+
 //--------------------------------------------------------------------
-BSpline1D::BSpline1D( const BSpline1D& src )
-  : BSpline( src.order_, 1, src.enableValueClipping_ )
+
+BSpline1D::BSpline1D( const BSpline1D& src ) :
+  BSpline( src.order_, 1, src.enableValueClipping_ )
 {
   npts_ = src.npts_;
   maxIndepVarVal_ = src.maxIndepVarVal_;
@@ -244,11 +252,14 @@ BSpline1D::BSpline1D( const BSpline1D& src )
   knots_ = src.knots_;
   controlPts_ = src.controlPts_;
   basisFun_.assign( order_+1, 0.0 );
-}//--------------------------------------------------------------------
+}
+
 BSpline1D::~BSpline1D()
 {
 }
+
 //--------------------------------------------------------------------
+
 void
 BSpline1D::dump()
 {
@@ -332,10 +343,11 @@ BSpline1D::value( const double * indepVar ) const
   return result;
 }
 //--------------------------------------------------------------------
-#ifndef NO_HDF5
+
 void
 BSpline1D::write_hdf5( const hid_t & group ) const
 {
+#if defined( HAVE_HDF5 ) 
   const hid_t h5s = H5Screate( H5S_SCALAR );  // use this later too.
 
   //------------------------------
@@ -386,11 +398,14 @@ BSpline1D::write_hdf5( const hid_t & group ) const
   H5Dwrite( cpData, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, &controlPts_[0] );
   H5Dclose( cpData );
   H5Sclose( contptDS );
+#endif
 }
+
 //--------------------------------------------------------------------
 void
 BSpline1D::read_hdf5( const hid_t & group )
 {
+#if defined( HAVE_HDF5 )
   // get the order
   hid_t h5a = H5Aopen_name( group, "order" );
   H5Aread( h5a, H5T_NATIVE_INT, &order_ );
@@ -423,21 +438,18 @@ BSpline1D::read_hdf5( const hid_t & group )
   H5Dclose( cpData );
 
   npts_ = controlPts_.size();
-}
-//--------------------------------------------------------------------
 #endif
+}
 
 //====================================================================
-//====================================================================
-
 
 //--------------------------------------------------------------------
 BSpline2D::BSpline2D( const int order,
 		      const std::vector<double> & indepVars1,
 		      const std::vector<double> & indepVars2,
 		      const std::vector<double> & depVars,
-		      const bool allowClipping )
-  : BSpline( order, 2, allowClipping )
+		      const bool allowClipping ) :
+  BSpline( order, 2, allowClipping )
 {
   const int nn = depVars.size();
   const int n1n2 = indepVars1.size()*indepVars2.size();
@@ -447,7 +459,7 @@ BSpline2D::BSpline2D( const int order,
     errmsg << "ERROR in BSpline2d::BSpline2d()!  Inconsistent dimensionality between" << std::endl
 	   << "      independent (" << n1n2 << ") and dependent (" << nn << ") variables"
 	   << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   
   compute_control_pts( indepVars1, indepVars2, depVars );
@@ -567,10 +579,10 @@ BSpline2D::value( const double* indepVar ) const
   */
 }
 //--------------------------------------------------------------------
-#ifndef NO_HDF5
 void
 BSpline2D::write_hdf5( const hid_t & group ) const
 {
+#if defined( HAVE_HDF5 )
   const hid_t h5s = H5Screate( H5S_SCALAR );
 
   // write out the information for how many 1-D splines we have
@@ -595,11 +607,15 @@ BSpline2D::write_hdf5( const hid_t & group ) const
 
   // dump out the spline for the other dimension
   sp1_->write_hdf5( group );
+#endif
 }
+
 //--------------------------------------------------------------------
+
 void
 BSpline2D::read_hdf5( const hid_t & group )
 {
+#if defined( HAVE_HDF5 )
   int nsp=0;
   hid_t h5a = H5Aopen_name( group, "Number1Dsplines" );
   H5Aread( h5a, H5T_NATIVE_INT, &nsp );
@@ -617,21 +633,18 @@ BSpline2D::read_hdf5( const hid_t & group )
 
   sp1_ = new BSpline1D( enableValueClipping_ );
   sp1_->read_hdf5( group );
-}
 #endif
-//--------------------------------------------------------------------
+}
 
 //====================================================================
 
-
-//--------------------------------------------------------------------
 BSpline3D::BSpline3D( const int order,
 		      const std::vector<double> & x1,
 		      const std::vector<double> & x2,
 		      const std::vector<double> & x3,
 		      const std::vector<double> & phi,
-		      const bool allowClipping )
-  : BSpline( order, 3, allowClipping ),
+		      const bool allowClipping ) :
+  BSpline( order, 3, allowClipping ),
     n1_( (int)x1.size() ),
     n2_( (int)x2.size() ),
     n3_( (int)x3.size() ),
@@ -644,24 +657,28 @@ BSpline3D::BSpline3D( const int order,
     errmsg << "ERROR in BSpline3D::BSpline3D()!  Inconsistent dimensionality between" << std::endl
 	   << "      independent (" << n1_*n2_*n3_ << ") and dependent (" << nn << ") variables"
 	   << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   
   compute_control_pts( x1, x2, x3, phi );
 }
+
 //--------------------------------------------------------------------
-BSpline3D::BSpline3D( const bool allowClipping )
-  : BSpline( 0, 3, allowClipping ),
-    n1_(0), n2_(0), n3_(0),
-    sp1_( NULL )
+
+BSpline3D::BSpline3D( const bool allowClipping ) :
+  BSpline( 0, 3, allowClipping ),
+  n1_(0), n2_(0), n3_(0),
+  sp1_( NULL )
 {
 }
+
 //--------------------------------------------------------------------
-BSpline3D::BSpline3D( const BSpline3D& src )
-  : BSpline( src.order_, 3, src.enableValueClipping_ ),
-    n1_( src.n1_ ),
-    n2_( src.n2_ ),
-    n3_( src.n3_ )
+
+BSpline3D::BSpline3D( const BSpline3D& src ) :
+  BSpline( src.order_, 3, src.enableValueClipping_ ),
+  n1_( src.n1_ ),
+  n2_( src.n2_ ),
+  n3_( src.n3_ )
 {
   // deep copy
   sp1_ = new BSpline1D( *(src.sp1_) );
@@ -671,16 +688,21 @@ BSpline3D::BSpline3D( const BSpline3D& src )
     sp2d_.push_back( new BSpline2D( **isp ) );
   }
 }
+
 //--------------------------------------------------------------------
+
 BSpline3D::~BSpline3D()
 {
   vector<const BSpline2D*>::const_iterator ibs;
-  for( ibs=sp2d_.begin(); ibs!=sp2d_.end(); ibs++ )
+  for( ibs=sp2d_.begin(); ibs!=sp2d_.end(); ibs++ ) {
     delete *ibs;
+  }
 
   delete sp1_;
 }
+
 //--------------------------------------------------------------------
+
 void
 BSpline3D::compute_control_pts( const std::vector<double> & x1,
 				const std::vector<double> & x2,
@@ -790,10 +812,11 @@ BSpline3D::value( const double* x ) const
   */
 }
 //--------------------------------------------------------------------
-#ifndef NO_HDF5
+
 void
 BSpline3D::write_hdf5( const hid_t & group ) const
 {
+#if defined( HAVE_HDF5 )
   const hid_t h5s = H5Screate( H5S_SCALAR );
 
   // write out the information for how many 2-D splines we have
@@ -818,11 +841,15 @@ BSpline3D::write_hdf5( const hid_t & group ) const
 
   // dump out the spline for the other dimension
   sp1_->write_hdf5( group );
+#endif
 }
+
 //--------------------------------------------------------------------
+
 void
 BSpline3D::read_hdf5( const hid_t & group )
 {
+#if defined( HAVE_HDF5 )
   int nsp=0;
   hid_t h5a = H5Aopen_name( group, "Number2Dsplines" );
   H5Aread( h5a, H5T_NATIVE_INT, &nsp );
@@ -840,8 +867,9 @@ BSpline3D::read_hdf5( const hid_t & group )
 
   sp1_ = new BSpline1D( enableValueClipping_ );
   sp1_->read_hdf5( group );
-}
 #endif
+}
+
 //--------------------------------------------------------------------
 
 //====================================================================
@@ -861,12 +889,12 @@ BSpline4D::BSpline4D( const int order,
     n4_( (int)x4.size() ),
     sp1_( NULL )
 {
-  if( n1_*n2_*n3_*n4_ != (int)phi.size() ){
-    std::ostringstream errmsg;
+  if( n1_*n2_*n3_*n4_ != (int)phi.size() ) {
+    ostringstream errmsg;
     errmsg << "ERROR in BSpline4D::BSpline4D()!  Inconsistent dimensionality between" << std::endl
 	   << "      independent (" << n1_*n2_*n3_*n4_ << ") and dependent (" << phi.size()
 	   << ") variables" << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   
   compute_control_pts( x1, x2, x3, x4, phi );
@@ -1007,10 +1035,11 @@ BSpline4D::value( const double* x ) const
 
 }
 //--------------------------------------------------------------------
-#ifndef NO_HDF5
+
 void
 BSpline4D::write_hdf5( const hid_t & group ) const
 {
+#if defined( HAVE_HDF5 )
   const hid_t h5s = H5Screate( H5S_SCALAR );
 
   // write out the information for how many 3-D splines we have
@@ -1035,11 +1064,15 @@ BSpline4D::write_hdf5( const hid_t & group ) const
 
   // dump out the spline for the other dimension
   sp1_->write_hdf5( group );
+#endif
 }
+
 //--------------------------------------------------------------------
+
 void
 BSpline4D::read_hdf5( const hid_t & group )
 {
+#if defined( HAVE_HDF5 )
   int nsp=0;
   hid_t h5a = H5Aopen_name( group, "Number3Dsplines" );
   H5Aread( h5a, H5T_NATIVE_INT, &nsp );
@@ -1057,13 +1090,11 @@ BSpline4D::read_hdf5( const hid_t & group )
 
   sp1_ = new BSpline1D( enableValueClipping_ );
   sp1_->read_hdf5( group );
-}
 #endif
-//--------------------------------------------------------------------
+}
 
 //====================================================================
 
-//--------------------------------------------------------------------
 BSpline5D::BSpline5D( const int order,
 		      const std::vector<double> & x1,
 		      const std::vector<double> & x2,
@@ -1071,40 +1102,44 @@ BSpline5D::BSpline5D( const int order,
 		      const std::vector<double> & x4,
 		      const std::vector<double> & x5,
 		      const std::vector<double> & phi,
-		      const bool allowClipping )
-  : BSpline( order, 5, allowClipping ),
-    n1_( (int)x1.size() ),
-    n2_( (int)x2.size() ),
-    n3_( (int)x3.size() ),
-    n4_( (int)x4.size() ),
-    n5_( (int)x5.size() ),
-    sp1_( NULL )
+		      const bool allowClipping ) :
+  BSpline( order, 5, allowClipping ),
+  n1_( (int)x1.size() ),
+  n2_( (int)x2.size() ),
+  n3_( (int)x3.size() ),
+  n4_( (int)x4.size() ),
+  n5_( (int)x5.size() ),
+  sp1_( NULL )
 {
-  if( n1_*n2_*n3_*n4_*n5_ != (int)phi.size() ){
+  if( n1_*n2_*n3_*n4_*n5_ != (int)phi.size() ) {
     std::ostringstream errmsg;
     errmsg << "ERROR in BSpline5D::BSpline5D()!  Inconsistent dimensionality between"  << std::endl
 	   << "      independent (" << n1_*n2_*n3_*n4_*n5_ << ") and dependent (" << phi.size()
 	   << ") variables"  << std::endl;
-    throw std::runtime_error( errmsg.str() );
+    throw InternalError( errmsg.str(), __FILE__, __LINE__ );
   }
   
   compute_control_pts( x1, x2, x3, x4, x5, phi );
 }
+
 //--------------------------------------------------------------------
-BSpline5D::BSpline5D( const bool allowClipping )
-  : BSpline( 0, 5 ),
-    n1_(0), n2_(0), n3_(0), n4_(0), n5_(0),
-    sp1_( NULL )
+
+BSpline5D::BSpline5D( const bool allowClipping ) :
+  BSpline( 0, 5 ),
+  n1_(0), n2_(0), n3_(0), n4_(0), n5_(0),
+  sp1_( NULL )
 {
 }
+
 //--------------------------------------------------------------------
-BSpline5D::BSpline5D( const BSpline5D& src )
-  : BSpline( src.order_, 5, src.enableValueClipping_ ),
-    n1_( src.n1_ ),
-    n2_( src.n2_ ),
-    n3_( src.n3_ ),
-    n4_( src.n4_ ),
-    n5_( src.n5_ )
+
+BSpline5D::BSpline5D( const BSpline5D& src ) :
+  BSpline( src.order_, 5, src.enableValueClipping_ ),
+  n1_( src.n1_ ),
+  n2_( src.n2_ ),
+  n3_( src.n3_ ),
+  n4_( src.n4_ ),
+  n5_( src.n5_ )
 {
   // deep copy
   sp1_ = new BSpline1D( *(src.sp1_) );
@@ -1113,17 +1148,20 @@ BSpline5D::BSpline5D( const BSpline5D& src )
   for( isp=src.sp4d_.begin(); isp!=src.sp4d_.end(); isp++ )
     sp4d_.push_back( new BSpline4D(**isp) );
 }
+
 //--------------------------------------------------------------------
-//--------------------------------------------------------------------
+
 BSpline5D::~BSpline5D()
 {
   vector<const BSpline4D*>::const_iterator isp;
-  for( isp=sp4d_.begin(); isp!=sp4d_.end(); isp++ )
+  for( isp=sp4d_.begin(); isp!=sp4d_.end(); isp++ ) {
     delete *isp;
-
+  }
   delete sp1_;
 }
+
 //--------------------------------------------------------------------
+
 void
 BSpline5D::compute_control_pts( const std::vector<double> & x1,
 				const std::vector<double> & x2,
@@ -1235,10 +1273,11 @@ BSpline5D::value( const double* x ) const
   return sp1_->value( &x[0] );
 }
 //--------------------------------------------------------------------
-#ifndef NO_HDF5
+
 void
 BSpline5D::write_hdf5( const hid_t & group ) const
 {
+#if defined( HAVE_HDF5 )
   const hid_t h5s = H5Screate( H5S_SCALAR );
 
   // write out the information for how many 4-D splines we have
@@ -1263,11 +1302,15 @@ BSpline5D::write_hdf5( const hid_t & group ) const
 
   // dump out the spline for the other dimension
   sp1_->write_hdf5( group );
+#endif
 }
+
 //--------------------------------------------------------------------
+
 void
 BSpline5D::read_hdf5( const hid_t & group )
 {
+#if defined( HAVE_HDF5 )
   int nsp=0;
   hid_t h5a = H5Aopen_name( group, "Number4Dsplines" );
   H5Aread( h5a, H5T_NATIVE_INT, &nsp );
@@ -1285,20 +1328,5 @@ BSpline5D::read_hdf5( const hid_t & group )
 
   sp1_ = new BSpline1D( enableValueClipping_ );
   sp1_->read_hdf5( group );
-}
 #endif
-//--------------------------------------------------------------------
-
-//====================================================================
-
-
-
-#else
-  /*
-  cout << "\n";
-  cout << "ERROR: The TabProps table reader needs HDF5, since TabProps tables are in HDF5 format, but you didn't specify an installation of HDF5 when you ran configure.\n";
-  cout << "\n";
-  Thread::exitAll( -1 );
-  */
-#endif // for defined( HAVE_HDF5 )
-
+}
