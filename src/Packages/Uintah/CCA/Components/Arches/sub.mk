@@ -20,7 +20,7 @@ SRCS += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/PhysicalConstants.cc \
         $(SRCDIR)/PicardNonlinearSolver.cc \
         $(SRCDIR)/PressureSolver.cc \
-        $(SRCDIR)/MixingRxn.cc \
+        $(SRCDIR)/MixingRxnTable.cc \
         $(SRCDIR)/TabPropsTable.cc \
         $(SRCDIR)/Properties.cc \
         $(SRCDIR)/ReactiveScalarSolver.cc \
