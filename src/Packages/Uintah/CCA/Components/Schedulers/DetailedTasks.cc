@@ -569,6 +569,7 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
   DetailedDep* dep = batch->head;
 
   parent_dep=0;
+  DetailedDep* last_dep=0;
   DetailedDep* valid_dep = 0;
 
   //search each dep
@@ -605,9 +606,25 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
         // ghost cells.
         if (!extraComm)
         {
-          //combining does not create extra communication so take this dep;
-          valid_dep=dep;
-          break;
+          //combining does not create extra communication so take possibly this dep;
+          //first check if the dep completely includes this dep
+          if(dep->low==new_l && dep->high==new_h)
+          {
+            //take this dep
+            parent_dep=last_dep;
+            valid_dep=dep;
+            break;
+          }
+          else
+          {
+              //only take the dep if we haven't already found one
+              if(valid_dep==0)
+              {
+                parent_dep=last_dep;
+                valid_dep=dep;
+              }
+              //keep searching in case there is a better dep to combine with
+          }
         }
         else if (dbg.active()) {
           dbg << d_myworld->myrank() << "            Ignoring: " << dep->low << " " << dep->high << ", fromPatch = ";
@@ -628,8 +645,11 @@ DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch, Deta
       }
     }
     //pointer to dependency before this dep so insertion/deletion can be done quicker
-    parent_dep=dep;
+    last_dep=dep;
   }
+  if(valid_dep==0)
+    parent_dep=last_dep;
+
   return valid_dep;
 }
 /*************************
