@@ -13,7 +13,9 @@ SRCS := \
         $(SRCDIR)/StateTable.cc
 
 PSELIBS := \
-    Core/Geometry
+    Core/Exceptions \
+    Core/Geometry   \
+    Core/Thread
 
 # variables HDF5_LIBRARY, BLAS_LIBRARY, etc are set in configVars.mk
 # everything compiles OK with either LIBS var, I don't think the blas/lapack libraries make a difference
