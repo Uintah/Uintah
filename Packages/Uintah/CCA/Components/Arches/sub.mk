@@ -65,6 +65,7 @@ PSELIBS := \
         Packages/Uintah/CCA/Components/Arches/fortran   \
         Packages/Uintah/CCA/Components/Arches/Mixing    \
         Packages/Uintah/CCA/Components/Arches/Radiation \
+        Packages/Uintah/CCA/Components/Arches/TabProps  \
         Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
         Packages/Uintah/CCA/Ports     \
         Packages/Uintah/Core/Parallel \
