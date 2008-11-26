@@ -29,7 +29,7 @@ namespace Uintah
     out << "low: " << pmg.low_ << " ";
     out << "high: " << pmg.high_ << " ";
     out << "dwid: " << pmg.dwid_ << " ";
-
+    out << "count: " << pmg.count_ << " ";
     return out;
   }
 }
