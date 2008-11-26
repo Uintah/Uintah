@@ -913,15 +913,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // material configuration
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
-      //Bogus thermal expansion crap
-      // Subtract the thermal expansion to get D_e + D_p
-      double temperature = pTemperature[idx];
-      //double dT_dt = (temperature - pTempPrev[idx])/delT;
-      //cout << getpid() << " idx = " << idx << " D(e,p,t) = " << tensorD 
-      //     << " T = " << temperature << " Told = " << pTempPrev[idx]
-      //     << " Tdot = " << dT_dt <<  endl;
-      //tensorD -= one*(alpha*dT_dt);
-
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
@@ -934,6 +925,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double pressure = tensorSig.Trace()/3.0;
       Matrix3 tensorP = one*pressure;
       tensorS = tensorSig - tensorP;
+
+      double temperature = pTemperature[idx];
 
       // Set up the PlasticityState (for t_n+1)
       PlasticityState* state = scinew PlasticityState();
@@ -1010,7 +1003,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
         // Evaluate yield condition
         double traceOfTrialStress = 3.0*pressure + 
-          tensorD.Trace()*(2.0*mu_cur*delT);
+                                        tensorD.Trace()*(2.0*mu_cur*delT);
         double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
                                                  traceOfTrialStress, 
                                                  porosity, state->yieldStress);
@@ -1197,7 +1190,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // Calculate the updated hydrostatic stress
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
-      double Dkk = 0.5*(tensorL+tensorL.Transpose()).Trace();
+      double Dkk = tensorD.Trace();
 //      double dT_isentropic = d_eos->computeIsentropicTemperatureIncrement(
 //                                            temperature,rho_0,rho_cur,Dkk,delT);
 
@@ -1215,12 +1208,12 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 //      double Tdot_AV = de_s/state->specificHeat;
 //      pdTdt[idx] += Tdot_AV;
 
-      double dev_se = (tensorD(0,0)*tensorS(0,0) +
-                       tensorD(1,1)*tensorS(1,1) +
-                       tensorD(2,2)*tensorS(2,2) +
-                  2.0*(tensorD(0,1)*tensorS(0,1) + 
-                       tensorD(0,2)*tensorS(0,2) +
-                       tensorD(1,2)*tensorS(1,2)));
+      double dev_se = (tensorD(0,0)*tensorEta(0,0) +
+                       tensorD(1,1)*tensorEta(1,1) +
+                       tensorD(2,2)*tensorEta(2,2) +
+                  2.0*(tensorD(0,1)*tensorEta(0,1) + 
+                       tensorD(0,2)*tensorEta(0,2) +
+                       tensorD(1,2)*tensorEta(1,2)));
 
       // This has units (in MKS) of (N*m)/(kg*s) aka Watts/kg
       double edot = -(p + p_q[idx])*Vdot + dev_se*sp_vol;
