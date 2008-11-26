@@ -44,12 +44,12 @@ namespace Uintah {
 
 struct UINTAHSHARE PSPatchMatlGhost {
   PSPatchMatlGhost(const Patch* patch, int matl, 
-                   IntVector low, IntVector high, int dwid)
-    : patch_(patch), matl_(matl), low_(low), high_(high), dwid_(dwid)
+                   IntVector low, IntVector high, int dwid, int count=1)
+    : patch_(patch), matl_(matl), low_(low), high_(high), dwid_(dwid), count_(count)
   {}
   PSPatchMatlGhost(const PSPatchMatlGhost& copy)
     : patch_(copy.patch_), matl_(copy.matl_), low_(copy.low_), 
-       high_(copy.high_), dwid_(copy.dwid_)
+       high_(copy.high_), dwid_(copy.dwid_), count_(copy.count_)
   {}
   
   bool operator<(const PSPatchMatlGhost& other) const;
@@ -66,7 +66,7 @@ struct UINTAHSHARE PSPatchMatlGhost {
   IntVector low_;
   IntVector high_;
   int dwid_;
-
+  mutable int count_; //a count of how many times this has been created
 };  
 
   ostream& operator<<(ostream &out, const PSPatchMatlGhost &pmg);

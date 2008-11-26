@@ -798,11 +798,30 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
           << " range " << matching_dep->low << " " << matching_dep->high << " cond " << cond 
           << " dw " << req->mapDataWarehouse() << endl;
 
+      
       if (fromresource == d_myworld->myrank()) {
-        particleSends_[toresource].erase(pmg);
+        std::set<PSPatchMatlGhost>::iterator iter=particleSends_[toresource].find(pmg);
+        ASSERT(iter!=particleSends_[toresource].end());
+        //subtract one from the count
+        iter->count_--;
+        //if the count is zero erase it from the sends list
+        if(iter->count_==0)
+        {
+          particleSends_[toresource].erase(iter);
+          //particleSends_[toresource].erase(pmg);
+        }
       }
       else if (toresource == d_myworld->myrank()) {
-        particleRecvs_[fromresource].erase(pmg);
+        std::set<PSPatchMatlGhost>::iterator iter=particleRecvs_[fromresource].find(pmg);
+        ASSERT(iter!=particleRecvs_[fromresource].end());
+        //subtract one from the count
+        iter->count_--;
+        //if the count is zero erase it from the recvs list
+        if(iter->count_==0)
+        {
+          particleRecvs_[fromresource].erase(iter);
+          //particleRecvs_[fromresource].erase(pmg);
+        }
       }
     }
 
@@ -850,11 +869,37 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
   if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) 
   {
-    if (fromresource == d_myworld->myrank())
-      particleSends_[toresource].insert(PSPatchMatlGhost(fromPatch, matl, new_dep->low, new_dep->high, (int) cond));
-    else if (toresource == d_myworld->myrank())
-      particleRecvs_[fromresource].insert(PSPatchMatlGhost(fromPatch, matl, new_dep->low, new_dep->high, (int) cond));
+    PSPatchMatlGhost pmg=PSPatchMatlGhost(fromPatch, matl, new_dep->low, new_dep->high, (int) cond,1);
     
+    if (fromresource == d_myworld->myrank())
+    {
+      std::set<PSPatchMatlGhost>::iterator iter=particleSends_[toresource].find(pmg);
+      if(iter==particleSends_[toresource].end()) //if does not exist
+      {
+        //add to the sends list
+        particleSends_[toresource].insert(pmg);
+      }
+      else
+      {
+        //increment count
+        iter->count_++;
+      }
+    }
+    else if (toresource == d_myworld->myrank())
+    {
+      std::set<PSPatchMatlGhost>::iterator iter=particleRecvs_[fromresource].find(pmg);
+      if(iter==particleRecvs_[fromresource].end())
+      {
+        //add to the recvs list
+        particleRecvs_[fromresource].insert(pmg);
+      }
+      else
+      {
+        //increment the count
+        iter->count_++;
+      }
+
+    }
     if (req->var->getName() == "p.x") 
       dbg << d_myworld->myrank() << " scheduling particles from " << fromresource << " to " << toresource 
           << " on patch " << fromPatch->getID() << " matl " << matl << " range " << low << " " << high 
