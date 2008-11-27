@@ -776,7 +776,8 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     //extend the dependency range
     new_dep->low = Min(new_dep->low, matching_dep->low);
     new_dep->high = Max(new_dep->high, matching_dep->high);
-    
+   
+    /*
     //if the same dependency already exists then short circuit out of this function.  
     if(matching_dep->low==new_dep->low && matching_dep->high==new_dep->high )
     {
@@ -784,6 +785,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
       delete new_dep;
       return;
     }
+    */
     
     //copy matching dependencies toTasks to the new dependency
     new_dep->toTasks.splice(new_dep->toTasks.begin(),matching_dep->toTasks); 
