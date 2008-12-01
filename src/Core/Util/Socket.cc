@@ -230,7 +230,7 @@ Socket::connect(const std::string host, const int port)
   struct hostent* hostentry;
   hostentry = gethostbyname(host.c_str());
   if (hostentry == 0) {
-    perror("ERROR in connect()");
+    printf( "ERROR in connect(): %d.  Check in netdb.h for what this number means.\n", h_errno );
     return false;
   }
   addr_.sin_addr.s_addr = *((u_long*)(hostentry->h_addr_list[0]));
