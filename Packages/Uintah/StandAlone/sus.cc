@@ -168,13 +168,15 @@ usage( const std::string & message,
 
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 int
-main( int argc, char** argv )
+main( int argc, char* argv[], char *env[] )
 {
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
-  // turn off Thread asking so sus can cleanly exit on abortive behavior.  
+
+  // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
   // Can override this behavior with the environment variable SCI_SIGNALMODE
   Thread::setDefaultAbortMode("exit");
+
 #ifdef USE_TAU_PROFILING
 
   // WARNING:
@@ -340,17 +342,18 @@ main( int argc, char** argv )
     }
   }
  
-  create_sci_environment( NULL, 0, true );
-  
+  // Pass the env into the sci env so it can be used there...
+  create_sci_environment( env, 0, true );
+
   if( filename == "" ){
     usage("No input file specified", "", argv[0]);
   }
 
   if( track ) {
-    string server = "blaze.sci.utah.edu";
-    bool   result = TrackerClient::initialize( server );
+    string server  = "updraft1.privatearch.arches";
+    bool   initialized = TrackerClient::initialize( server );
 
-    if( result ) {
+    if( !initialized ) {
       if ( track_or_die ) {
         cout << "\n";
         cout << "Error: Tracking initialization failed... Good bye.\n";
