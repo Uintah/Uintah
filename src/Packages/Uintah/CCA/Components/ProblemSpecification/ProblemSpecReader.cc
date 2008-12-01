@@ -983,8 +983,8 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int le
       //throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
       //                             "' missing.  Please fix XML in .ups file or correct validation Tag list.",
       //                             __FILE__, __LINE__ );
-      cout << "ERROR: Required tag '" << tag->getCompleteName() 
-           << "' missing.  Please fix XML in .ups file or correct validation Tag list.\n";
+      proc0cout << "ERROR: Required tag '" << tag->getCompleteName() 
+                << "' missing.  Please fix XML in .ups file or correct validation Tag list.\n";
     }
   }
 } // end validate()
