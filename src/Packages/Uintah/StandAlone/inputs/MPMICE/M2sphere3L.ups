@@ -15,9 +15,22 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-      <!-- <max_Timesteps> 400 </max_Timesteps>--> 
+      <!-- <max_Timesteps> 400 </max_Timesteps>-->
        <timestep_multiplier>0.8 </timestep_multiplier>
    </Time>
+
+   <SimulationComponent>
+        <type> mpmice </type>
+   </SimulationComponent>
+   
+   <LoadBalancer>
+      <type>DLB</type>
+      <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
+      <levelIndependent>true</levelIndependent>
+      <doSpaceCurve>true</doSpaceCurve>
+      <doCostProfiling>false</doCostProfiling>
+      <timestepInterval>200</timestepInterval>
+   </LoadBalancer>
 
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -92,12 +105,13 @@
     </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>        [-0.05,0.0, -0.05]   </lower>
-              <upper>        [ 0.25,0.05, 0.05]   </upper>
+              <lower>        [-0.1,-0.1, -0.1]   </lower>
+              <upper>        [ 0.3,0.1, 0.1]   </upper>
               <extraCells>   [1,1,1]                  </extraCells>
-              <patches>      [1,1,1]                  </patches>
+              <patches>      [4,2,2]                  </patches>
+              <resolution>   [64,32,32]               </resolution>
             </Box>
-           <spacing>         [0.005,0.005,0.005]       </spacing>
+           <!--spacing>         [0.005,0.005,0.005]       </spacing-->
        </Level>
     </Grid>
 
@@ -127,7 +141,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.3</cfl>
        <ICE>
         <advection type = "SecondOrder"/>
         
@@ -147,10 +161,15 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
       <Regridder>
+        <type>BNR</type>
+        <dynamic_dilation>false</dynamic_dilation>
+        <max_timestep_interval> 300 </max_timestep_interval>
+        <min_patch_size>        [[16,16,16]]        </min_patch_size>
+        <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
         <max_levels>3</max_levels>
         <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[10,5,5][2,2,2]]  </lattice_refinement_ratio>
         <cell_stability_dilation>   [1,1,1]   </cell_stability_dilation>
+        <!--cell_regrid_dilation> [1,1,1] </cell_regrid_dilation-->
         <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
         <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
       </Regridder>
@@ -213,8 +232,8 @@
            <geom_object>
               <difference>
                 <box label = "the whole computational domain">
-                    <min>           [-1.5,-1.05,-1.25]    </min>
-                    <max>           [1.5,1.05,1.25]   </max>
+                    <min>           [-10,-10,-10]    </min>
+                    <max>           [10,10,10]   </max>
                 </box>
                 <sphere label = "fast_sphere"> </sphere>
               </difference>
