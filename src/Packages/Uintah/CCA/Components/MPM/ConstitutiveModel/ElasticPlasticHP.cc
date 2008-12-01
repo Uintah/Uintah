@@ -832,11 +832,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      // Assign zero internal heating by default - modify if necessary.
+      // Assign zero int. heating by default, modify with appropriate sources
+      // This has units (in MKS) of K/s  (i.e. temperature/time)
       pdTdt[idx] = 0.0;
-
-      //  cout << getpid() << " idx = " << idx 
-      //       << " vel = " << pVelocity[idx] << endl;
 
       //-----------------------------------------------------------------------
       // Stage 1:
@@ -1191,8 +1189,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
 
       double Dkk = tensorD.Trace();
-//      double dT_isentropic = d_eos->computeIsentropicTemperatureIncrement(
-//                                            temperature,rho_0,rho_cur,Dkk,delT);
+      double dTdt_isentropic = d_eos->computeIsentropicTemperatureRate(
+                                                 temperature,rho_0,rho_cur,Dkk);
+      pdTdt[idx] += dTdt_isentropic;
 
       double de_s=0.;
       if (flag->d_artificial_viscosity) {
@@ -1205,8 +1204,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       }
 
       // Calculate Tdot due to artificial viscosity
-//      double Tdot_AV = de_s/state->specificHeat;
-//      pdTdt[idx] += Tdot_AV;
+      double Tdot_AV = de_s/state->specificHeat;
+      pdTdt[idx] += Tdot_AV;
 
       double dev_se = (tensorD(0,0)*tensorEta(0,0) +
                        tensorD(1,1)*tensorEta(1,1) +
@@ -1219,9 +1218,6 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double edot = -(p + p_q[idx])*Vdot + dev_se*sp_vol;
 
       pEnergy_new[idx] = pEnergy[idx] + edot*delT;
-
-      // This has units (in MKS) of K/s  (i.e. temperature/time)
-      pdTdt[idx] = edot/state->specificHeat;
 
       Matrix3 tensorHy = one*p;
    
@@ -1282,13 +1278,13 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           pDamage_new[idx] = pDamage[idx];
 
         // Calculate rate of temperature increase due to plastic strain
- //       double taylorQuinney = d_initialData.Chi;
-//        double fac = taylorQuinney/(rho_cur*state->specificHeat);
+        double taylorQuinney = d_initialData.Chi;
+        double fac = taylorQuinney/(rho_cur*state->specificHeat);
 
         // Calculate Tdot (internal plastic heating rate)
-//        double Tdot_PW = state->yieldStress*state->plasticStrainRate*fac;
+        double Tdot_PW = state->yieldStress*state->plasticStrainRate*fac;
 
-//        pdTdt[idx] += (Tdot_PW)*d_isothermal;
+        pdTdt[idx] += Tdot_PW;
       }
 
       //-----------------------------------------------------------------------
