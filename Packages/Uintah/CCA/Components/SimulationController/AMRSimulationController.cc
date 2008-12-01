@@ -89,11 +89,11 @@ AMRSimulationController::run()
    d_scheduler->initialize(1, 1);
    d_scheduler->advanceDataWarehouse(currentGrid, true);
     
-   double t;
+   double time;
 
    // set up sim, regridder, and finalize sharedState
    // also reload from the DataArchive on restart
-   postGridSetup(currentGrid, t);
+   postGridSetup( currentGrid, time );
 
    calcStartTime();
 
@@ -116,9 +116,9 @@ AMRSimulationController::run()
    }
 
    // setup, compile, and run the taskgraph for the initialization timestep
-   doInitialTimestep(currentGrid, t);
+   doInitialTimestep( currentGrid, time );
 
-   setStartSimTime(t);
+   setStartSimTime( time );
    initSimulationStatsVars();
 #ifndef DISABLE_SCI_MALLOC
    AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
@@ -133,11 +133,11 @@ AMRSimulationController::run()
    double start;
   
    d_lb->resetCostProfiler();
-   while( ( t < d_timeinfo->maxTime ) && 
+   while( ( time < d_timeinfo->maxTime ) && 
           ( iterations < d_timeinfo->maxTimestep ) && 
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
 
-     TrackerClient::trackEvent( Tracker::TIMESTEP_STARTED, t );
+     TrackerClient::trackEvent( Tracker::TIMESTEP_STARTED, time );
 
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
      if(dbg_barrier.active()) {
@@ -176,7 +176,7 @@ AMRSimulationController::run()
      delt = delt_var;
      
      // delt adjusted based on timeinfo parameters
-     adjustDelT(delt, d_sharedState->d_prev_delt, first, t);
+     adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
      // printSimulationStats( d_sharedState, delt, t );
@@ -237,7 +237,7 @@ AMRSimulationController::run()
      // Put the current time into the shared state so other components
      // can access it.  Also increment (by one) the current time step
      // number so components can tell what timestep they are on. 
-     d_sharedState->setElapsedTime(t);
+     d_sharedState->setElapsedTime( time );
      d_sharedState->incrementCurrentTopLevelTimeStep();
 #ifndef DISABLE_SCI_MALLOC
      AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
@@ -252,7 +252,7 @@ AMRSimulationController::run()
      double new_init_delt = 0.;
 
      bool nr;
-     if( (nr=needRecompile(t, delt, currentGrid)) || first ){
+     if( (nr=needRecompile( time, delt, currentGrid )) || first ){
        if(nr)
        {
          //if needRecompile returns true it has reload balanced and thus we need 
@@ -265,14 +265,14 @@ AMRSimulationController::run()
          // writes to the DW in the next section below
          delt = new_init_delt;
        }
-       first=false;
-       recompile(t, delt, currentGrid, totalFine);
+       first = false;
+       recompile( time, delt, currentGrid, totalFine );
      }
      else {
        if (d_output){
          // This is not correct if we have switched to a different
          // component, since the delt will be wrong 
-         d_output->finalizeTimestep(t, delt, currentGrid, d_scheduler, 0);
+         d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
        }
      }
      if(dbg_barrier.active())
@@ -305,9 +305,9 @@ AMRSimulationController::run()
 
      calcWallTime();
 
-     printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep()-1,delt,t);
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
      // Execute the current timestep, restarting if necessary
-     executeTimestep(t, delt, currentGrid, totalFine);
+     executeTimestep( time, delt, currentGrid, totalFine );
      
      // Print MPI statistics
      d_scheduler->printMPIStats();
@@ -342,7 +342,7 @@ AMRSimulationController::run()
 //      sleep(1);
 //      TAU_PROFILE_STOP(sleepy);
 #endif
-     t += delt;
+     time += delt;
      TAU_DB_DUMP();
    } // end while ( time )
 
@@ -350,9 +350,9 @@ AMRSimulationController::run()
    delt_vartype delt_var;
    d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
    delt = delt_var;
-   adjustDelT(delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), t);
+   adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
    calcWallTime();
-   printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep(),delt,t);
+   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
    // d_ups->releaseDocument();
 
