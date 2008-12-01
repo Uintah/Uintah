@@ -51,7 +51,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #endif
 
-
 const int Arches::NDIM = 3;
 
 // ****************************************************************************
@@ -1421,7 +1420,7 @@ Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 }
 
 // ****************************************************************************
-// Actual interpolation from FC to CC Variable
+// interpolation from FC to CC Variable
 // ****************************************************************************
 void 
 Arches::getCCVelocities(const ProcessorGroup* ,
@@ -1435,21 +1434,13 @@ Arches::getCCVelocities(const ProcessorGroup* ,
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
+    CCVariable<double> uvel_CC;
+    CCVariable<double> vvel_CC;
+    CCVariable<double> wvel_CC;
 
-    constSFCXVariable<double> newUVel;
-    constSFCYVariable<double> newVVel;
-    constSFCZVariable<double> newWVel;
-    CCVariable<double> newCCUVel;
-    CCVariable<double> newCCVVel;
-    CCVariable<double> newCCWVel;
-
-    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-    
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
 
@@ -1459,168 +1450,88 @@ Arches::getCCVelocities(const ProcessorGroup* ,
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     else 
       throw VariableNotFoundInGrid("cellInformation"," ", __FILE__, __LINE__);
+      
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     Ghost::GhostType  gaf = Ghost::AroundFaces;
-    new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(uvel_FC, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(vvel_FC, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(wvel_FC, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
     
-    new_dw->getModifiable(newCCUVel, d_lab->d_newCCUVelocityLabel,indx, patch);
-    new_dw->getModifiable(newCCVVel, d_lab->d_newCCVVelocityLabel,indx, patch);
-    new_dw->getModifiable(newCCWVel, d_lab->d_newCCWVelocityLabel,indx, patch);
-    newCCUVel.initialize(0.0);
-    newCCVVel.initialize(0.0);
-    newCCWVel.initialize(0.0);
+    new_dw->getModifiable(uvel_CC, d_lab->d_newCCUVelocityLabel,indx, patch);
+    new_dw->getModifiable(vvel_CC, d_lab->d_newCCVVelocityLabel,indx, patch);
+    new_dw->getModifiable(wvel_CC, d_lab->d_newCCWVelocityLabel,indx, patch);
+    uvel_CC.initialize(0.0);
+    vvel_CC.initialize(0.0);
+    wvel_CC.initialize(0.0);
+    //__________________________________
+    //  
+    for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++) {
+      IntVector c = *iter;
+      int i = c.x();
+      int j = c.y();
+      int k = c.z();
 
-    for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
-        for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
-          
-          IntVector idx(ii,jj,kk);
-          IntVector idxU(ii+1,jj,kk);
-          IntVector idxV(ii,jj+1,kk);
-          IntVector idxW(ii,jj,kk+1);
-          
-          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-                         cellinfo->efac[ii] * newUVel[idxU];
-          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-                         cellinfo->nfac[jj] * newVVel[idxV];
-          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-                         cellinfo->tfac[kk] * newWVel[idxW];
-          
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-        }
-      }
+      IntVector idxU(i+1,j,k);
+      IntVector idxV(i,j+1,k);
+      IntVector idxW(i,j,k+1);
+
+      uvel_CC[c] = cellinfo->wfac[i] * uvel_FC[c] +
+                   cellinfo->efac[i] * uvel_FC[idxU];
+                     
+      vvel_CC[c] = cellinfo->sfac[j] * vvel_FC[c] +
+                   cellinfo->nfac[j] * vvel_FC[idxV];
+                     
+      wvel_CC[c] = cellinfo->bfac[k] * wvel_FC[c] +
+                   cellinfo->tfac[k] * wvel_FC[idxW];
     }
-    // boundary conditions not to compute erroneous values in the case of ramping
-    if (xminus) {
-      int ii = idxLo.x()-1;
-      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-        for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-          IntVector idx(ii,jj,kk);
-          IntVector idxU(ii+1,jj,kk);
-          IntVector idxV(ii,jj+1,kk);
-          IntVector idxW(ii,jj,kk+1);
-          
-          double new_u = newUVel[idxU];
-          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-                         cellinfo->nfac[jj] * newVVel[idxV];
-          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-                         cellinfo->tfac[kk] * newWVel[idxW];
-          
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-        }
-      }
-    }
-    if (xplus) {
-      int ii =  idxHi.x()+1;
-      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-        for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-          IntVector idx(ii,jj,kk);
-          IntVector idxU(ii+1,jj,kk);
-          IntVector idxV(ii,jj+1,kk);
-          IntVector idxW(ii,jj,kk+1);
-          
-          double new_u = newUVel[idx];
-          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-                         cellinfo->nfac[jj] * newVVel[idxV];
-          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-                         cellinfo->tfac[kk] * newWVel[idxW];
-          
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-        }
-      }
-    }
-    if (yminus) {
-      int jj = idxLo.y()-1;
-      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-          IntVector idx(ii,jj,kk);
-          IntVector idxU(ii+1,jj,kk);
-          IntVector idxV(ii,jj+1,kk);
-          IntVector idxW(ii,jj,kk+1);
-          
-          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-                         cellinfo->efac[ii] * newUVel[idxU];
-          double new_v = newVVel[idxV];
-          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-                         cellinfo->tfac[kk] * newWVel[idxW];
-          
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-        }
-      }
-    }
-    if (yplus) {
-      int jj =  idxHi.y()+1;
-      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
-        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-          IntVector idx(ii,jj,kk);
-          IntVector idxU(ii+1,jj,kk);
-          IntVector idxV(ii,jj+1,kk);
-          IntVector idxW(ii,jj,kk+1);
-          
-          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-                         cellinfo->efac[ii] * newUVel[idxU];
-          double new_v = newVVel[idx];
-          double new_w = cellinfo->bfac[kk] * newWVel[idx] +
-                         cellinfo->tfac[kk] * newWVel[idxW];
-          
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-        }
-      }
-    }
-    if (zminus) {
-      int kk = idxLo.z()-1;
-      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-          IntVector idx(ii,jj,kk);
-          IntVector idxU(ii+1,jj,kk);
-          IntVector idxV(ii,jj+1,kk);
-          IntVector idxW(ii,jj,kk+1);
-          
-          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-                         cellinfo->efac[ii] * newUVel[idxU];
-          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-                         cellinfo->nfac[jj] * newVVel[idxV];
-          double new_w = newWVel[idxW];
-          
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-        }
-      }
-    }
-    if (zplus) {
-      int kk =  idxHi.z()+1;
-      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
-        for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
-          IntVector idx(ii,jj,kk);
-          IntVector idxU(ii+1,jj,kk);
-          IntVector idxV(ii,jj+1,kk);
-          IntVector idxW(ii,jj,kk+1);
-          
-          double new_u = cellinfo->wfac[ii] * newUVel[idx] +
-                         cellinfo->efac[ii] * newUVel[idxU];
-          double new_v = cellinfo->sfac[jj] * newVVel[idx] +
-                         cellinfo->nfac[jj] * newVVel[idxV];
-          double new_w = newWVel[idx];
-          
-          newCCUVel[idx] = new_u;
-          newCCVVel[idx] = new_v;
-          newCCWVel[idx] = new_w;
-        }
-      }
+    //__________________________________
+    // Apply boundary conditions
+    vector<Patch::FaceType> b_face;
+    patch->getBoundaryFaces(b_face);
+    vector<Patch::FaceType>::const_iterator itr;
+    
+    // Loop over boundary faces
+    for( itr = b_face.begin(); itr != b_face.end(); ++itr ){
+      Patch::FaceType face = *itr;
+ 
+      IntVector f_dir = patch->getFaceDirection(face); 
+
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+      CellIterator iter=patch->getFaceIterator__New(face, MEC);
+      
+      IntVector lo = iter.begin();
+      int i = lo.x();
+      int j = lo.y();
+      int k = lo.z();
+      
+      Vector one_or_zero = Vector(1,1,1) - Abs(f_dir.asVector());
+      // one_or_zero: faces x-+   (0,1,1)
+      //                    y-+   (1,0,1)
+      //                    z-+   (1,1,0)
+        
+      for(;!iter.done();iter++){                                 
+        IntVector c = *iter;                                     
+                                                                 
+        IntVector idxU(i+1,j,k);                                 
+        IntVector idxV(i,j+1,k);                                 
+        IntVector idxW(i,j,k+1);                                 
+                                                                 
+        uvel_CC[c] = one_or_zero.x() *                         
+                      (cellinfo->wfac[i] * uvel_FC[c] +          
+                       cellinfo->efac[i] * uvel_FC[idxU]) +      
+                      (1.0 - one_or_zero.x()) * uvel_FC[idxU];  
+                                                                 
+        vvel_CC[c] = one_or_zero.y() *                         
+                       (cellinfo->sfac[j] * vvel_FC[c] +         
+                        cellinfo->nfac[j] * vvel_FC[idxV]) +     
+                       (1.0 - one_or_zero.y()) * vvel_FC[idxV];  
+                                                                 
+        wvel_CC[c] = one_or_zero.z() *                         
+                      (cellinfo->bfac[k] * wvel_FC[c] +          
+                       cellinfo->tfac[k] * wvel_FC[idxW] ) +     
+                      (1.0 - one_or_zero.z()) * wvel_FC[idxW];   
+      }                                                          
     }
   }
 }
