@@ -85,12 +85,11 @@ namespace Uintah {
 				   const Matrix3& rateOfDeformation,
 				   const double& delT);
 
-    // Calculate temperature increment due to compression/expansion
-    double computeIsentropicTemperatureIncrement(const double T,
-                                                 const double rho_0,
-                                                 const double rho_cur,
-                                                 const double Dtrace,
-                                                 const double delT);
+    // Calculate rate of temperature change due to compression/expansion
+    double computeIsentropicTemperatureRate(const double T,
+                                            const double rho_0,
+                                            const double rho_cur,
+                                            const double Dtrace);
   
     double eval_dp_dJ(const MPMMaterial* matl,
                       const double& delF,

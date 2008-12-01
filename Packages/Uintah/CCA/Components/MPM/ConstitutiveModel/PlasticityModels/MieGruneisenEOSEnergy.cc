@@ -65,15 +65,14 @@ MieGruneisenEOSEnergy::computePressure(const MPMMaterial* matl,
 
 
 double 
-MieGruneisenEOSEnergy::computeIsentropicTemperatureIncrement(const double T,
-                                                       const double rho_0,
-                                                       const double rho_cur,
-                                                       const double Dtrace,
-                                                       const double delT)
+MieGruneisenEOSEnergy::computeIsentropicTemperatureRate(const double T,
+                                                        const double rho_0,
+                                                        const double rho_cur,
+                                                        const double Dtrace)
 {
-  double dT = -T*d_const.Gamma_0*rho_0*Dtrace*delT/rho_cur;
+  double dTdt = -T*d_const.Gamma_0*rho_0*Dtrace/rho_cur;
 
-  return dT;
+  return dTdt;
 }
 
 double 

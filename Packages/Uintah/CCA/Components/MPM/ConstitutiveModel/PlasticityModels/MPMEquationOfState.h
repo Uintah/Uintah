@@ -44,6 +44,13 @@ namespace Uintah {
    virtual double eval_dp_dJ(const MPMMaterial* matl,
                              const double& delF,
                              const PlasticityState* state) = 0;
+
+    // Calculate rate of temperature change due to compression/expansion
+    virtual double computeIsentropicTemperatureRate(const double T,
+                                                    const double rho_0,
+                                                    const double rho_cur,
+                                                    const double Dtrace);
+
   };
 } // End namespace Uintah
       
