@@ -1,5 +1,4 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
-#include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
