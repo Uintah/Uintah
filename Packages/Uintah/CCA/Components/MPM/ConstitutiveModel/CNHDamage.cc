@@ -1,5 +1,4 @@
 #include "CNHDamage.h"
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
@@ -7,19 +6,20 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Math/Gaussian.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> 
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <Core/Math/MinMax.h>
+#include <Core/Math/Gaussian.h>
+#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
 #include <sgi_stl_warnings_on.h>
 
 using std::cerr;
@@ -259,42 +259,25 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     return;
   }
 
+  // Local variables 
+  double  J, p, IEl, U, W, c_dil;
+  Matrix3 Shear, pBBar_new, pDefGradInc;
+  Matrix3 pDispGrad, FF;
+
   // Constants
-  Ghost::GhostType gac = Ghost::AroundCells;
   double onethird = (1.0/3.0);
-  Matrix3 Identity; Identity.Identity();
-  int dwi = matl->getDWIndex();
+  Matrix3 Identity;
+  Identity.Identity();
   double shear = d_initialData.Shear;
   double bulk  = d_initialData.Bulk;
-  double rho_0 = matl->getInitialDensity();
-
-  // Get delT
-  delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-  // Particle and grid data
-  constParticleVariable<Short27> pgCode;
-  constParticleVariable<int>     pFailed;
-  constParticleVariable<double>  pMass, pFailureStrain, pErosion;
-  constParticleVariable<Point>   pX;
-  constParticleVariable<Vector>  pSize, pVelocity;
-  constParticleVariable<Matrix3> pDefGrad, pBeBar;
-  constNCVariable<Vector>        gDisp;
-  constNCVariable<Vector>        gVelocity;
-  constNCVariable<Vector>        GVelocity; 
-  ParticleVariable<int>          pFailed_new;
-  ParticleVariable<double>       pVol_new, pdTdt, pFailureStrain_new,p_q;
-  ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
-  ParticleVariable<Matrix3>      pDeformRate;
-
-  // Local variables 
-  double  J = 0.0, p = 0.0, IEl = 0.0, U = 0.0, W = 0.0, c_dil=0.0;
-  Matrix3 Shear(0.0), pBBar_new(0.0), pDefGradInc(0.0);
-  Matrix3 pDispGrad(0.0), FF(0.0);
+  double rho_orig = matl->getInitialDensity();
 
   // Loop thru patches
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
+
+    // Get patch info
+    Vector dx = patch->dCell();
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
@@ -305,14 +288,31 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     double se = 0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-    // Get patch info
-
-    Vector dx = patch->dCell();
-    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-
     // Get particle info
+    int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    old_dw->get(pMass,                    lb->pMassLabel,               pset);
+
+    // Get delT
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    Ghost::GhostType gac = Ghost::AroundCells;
+
+    // Particle and grid data
+    constParticleVariable<Short27> pgCode;
+    constParticleVariable<int>     pFailed;
+    constParticleVariable<double>  pmass, pFailureStrain, pErosion;
+    constParticleVariable<Point>   pX;
+    constParticleVariable<Vector>  pSize, pVelocity;
+    constParticleVariable<Matrix3> pDefGrad, pBeBar;
+    constNCVariable<Vector>        gDisp;
+    constNCVariable<Vector>        gVelocity;
+    constNCVariable<Vector>        GVelocity; 
+    ParticleVariable<int>          pFailed_new;
+    ParticleVariable<double>       pvolume_new, pdTdt, pFailureStrain_new,p_q;
+    ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
+    ParticleVariable<Matrix3>      pDeformRate;
+
+    old_dw->get(pmass,                    lb->pMassLabel,               pset);
     old_dw->get(pX,                       lb->pXLabel,                  pset);
     old_dw->get(pSize,                    lb->pSizeLabel,               pset);
     old_dw->get(pVelocity,                lb->pVelocityLabel,           pset);
@@ -330,7 +330,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     }
     
     // Allocate space for updated particle variables
-    new_dw->allocateAndPut(pVol_new, 
+    new_dw->allocateAndPut(pvolume_new, 
                            lb->pVolumeLabel_preReloc,             pset);
     new_dw->allocateAndPut(pdTdt, 
                            lb->pdTdtLabel_preReloc,               pset);
@@ -351,6 +351,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     // Copy failure strains to new dw
     pFailureStrain_new.copyData(pFailureStrain);
 
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     // Loop thru particle set in patch
     ParticleSubset::iterator iter = pset->begin();
     for (; iter != pset->end(); iter++) {
@@ -384,7 +385,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       }
 
       // Compute the rate of defomation tensor
-      pDeformRate[idx] = (velGrad + velGrad.Transpose())*0.5;
+      Matrix3 D = (velGrad + velGrad.Transpose())*0.5;
+      pDeformRate[idx] = D;
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient ( F_n^np1 = dudx * dt + Identity)
@@ -403,7 +405,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       pDefGrad_new[idx] = FF;
 
       // Get the deformed volume
-      pVol_new[idx]=(pMass[idx]/rho_0)*J;
+      pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute Bbar
       Matrix3 pRelDefGradBar = pDefGradInc*pow(Jinc, -onethird);
@@ -416,7 +418,6 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
       // get the hydrostatic part of the stress
       p = 0.5*bulk*(J - 1.0/J);
-      //p = bulk*log(J)/J;
 
       // compute the total stress (volumetric + deviatoric)
       pStress_new[idx] = Identity*p + Shear/J;
@@ -429,11 +430,11 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
       W = .5*shear*(pBBar_new.Trace() - 3.0);
-      double e = (U + W)*pVol_new[idx]/J;
+      double e = (U + W)*pvolume_new[idx]/J;
       se += e;
 
       // Compute local wave speed
-      double rho_cur = rho_0/J;
+      double rho_cur = rho_orig/J;
       c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
       Vector pVel = pVelocity[idx];
       WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
@@ -444,8 +445,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
-        p_q[idx] = artificialBulkViscosity(pDeformRate[idx].Trace(), c_bulk,
-                                           rho_cur, dx_ave);
+        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
       }
@@ -519,11 +519,11 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
   int dwi = matl->getDWIndex();
   double shear = d_initialData.Shear;
   double bulk  = d_initialData.Bulk;
-  double rho_0 = matl->getInitialDensity();
+  double rho_orig = matl->getInitialDensity();
 
   // Particle and grid data
   constParticleVariable<int>     pFailed;
-  constParticleVariable<double>  pMass, pFailureStrain;
+  constParticleVariable<double>  pmass, pFailureStrain;
   constParticleVariable<Point>   pX;
   constParticleVariable<Vector>  pSize;
   constParticleVariable<Matrix3> pDefGrad, pBeBar;
@@ -554,7 +554,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
 
     // Get particle info
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    old_dw->get(pMass,                    lb->pMassLabel,               pset);
+    old_dw->get(pmass,                    lb->pMassLabel,               pset);
     old_dw->get(pX,                       lb->pXLabel,                  pset);
     old_dw->get(pSize,                    lb->pSizeLabel,               pset);
     old_dw->get(pDefGrad,                 lb->pDeformationMeasureLabel, pset);
@@ -610,7 +610,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       pDefGrad_new[idx] = FF;
 
       // Get the deformed volume
-      pVol_new[idx]=(pMass[idx]/rho_0)*J;
+      pVol_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute Bbar
       Matrix3 pRelDefGradBar = pDefGradInc*pow(Jinc, -onethird);
