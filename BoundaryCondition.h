@@ -414,11 +414,6 @@ public:
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
-  void intrusionPressureBC(DataWarehouse* new_dw, 
-                          const Patch* patch,
-                           ArchesVariables* vars,
-                           ArchesConstVariables* constvars);
-
   void intrusionScalarBC(const Patch* patch,
                          CellInformation* cellinfo,
                          ArchesVariables* vars,

@@ -1859,47 +1859,6 @@ BoundaryCondition::intrusionEnergyExBC(const Patch* patch,
 }
 
 //______________________________________________________________________
-//
-void 
-BoundaryCondition::intrusionPressureBC(DataWarehouse* new_dw,
-                                       const Patch* patch,
-                                       ArchesVariables* vars,
-                                       ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-  IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
-  IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
-  ASSERTEQ(domLong,                   vars->pressCoeff.getWindow()->getLowIndex());
-  ASSERTEQ(domHing+IntVector(1,1,1),  vars->pressCoeff.getWindow()->getHighIndex());
-  ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
-  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
-
-
-  //__________________________________
-  // Move stencil7 data into CCVariable<double> arrays
-  // so fortran code can deal with it.  This sucks --Todd
-  CCVariable<double>AP, AE, AW, AN, AS, AT, AB;
-  
-  string direction = "copyInto";
-  CellIterator iter = patch->getExtraCellIterator__New();
-  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
-                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
-  //fortran call
-  fort_mmwallbc(idxLo, idxHi,
-                AE, AW, AN, AS,AT, AB,
-                vars->pressNonlinearSrc, vars->pressLinearSrc,
-                constvars->cellType, d_intrusionBC->d_cellTypeID);
-                
-  //__________________________________
-  //  This sucks --Todd
-  direction = "out";
-  copy_stencil7<CCVariable<Stencil7>, CCVariable<double> >(new_dw, patch, direction, iter,
-                vars->pressCoeff, AP, AE, AW, AN, AS, AT, AB);
-}
-//______________________________________________________________________
 // applies multimaterial bc's for scalars and pressure
 void
 BoundaryCondition::intrusionScalarBC( const Patch* patch,
