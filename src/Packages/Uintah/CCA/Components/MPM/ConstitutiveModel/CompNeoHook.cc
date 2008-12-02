@@ -152,15 +152,19 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
+  Matrix3 Shear,bElBar_new,deformationGradientInc;
+  double J,p,IEl,U,W,se=0.;
+  double c_dil=0.0;
+  double onethird = (1.0/3.0);
+  Matrix3 Identity;
+  Identity.Identity();
+  double shear = d_initialData.Shear;
+  double bulk  = d_initialData.Bulk;
+  double rho_orig = matl->getInitialDensity();
+
+
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    Matrix3 Shear,bElBar_new,deformationGradientInc;
-    double J,p,IEl,U,W,se=0.;
-    double c_dil=0.0;
-    Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-    double onethird = (1.0/3.0);
-    Matrix3 Identity;
-    Identity.Identity();
 
     Vector dx = patch->dCell();
 
@@ -169,8 +173,14 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     vector<Vector> d_S(interpolator->size());
     vector<double> S(interpolator->size());
 
+    Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
+
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
+    Ghost::GhostType  gac   = Ghost::AroundCells;
+
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
@@ -181,10 +191,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Vector> psize;
     ParticleVariable<double> pdTdt,p_q;
 
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel, getLevel(patches));
-
-    Ghost::GhostType  gac   = Ghost::AroundCells;
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
@@ -203,11 +209,6 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
     if(flag->d_with_color) {
       old_dw->get(pcolor,      lb->pColorLabel,  pset);
     }
-
-    double shear = d_initialData.Shear;
-    double bulk  = d_initialData.Bulk;
-
-    double rho_orig = matl->getInitialDensity();
 
     if(flag->d_doGridReset){
       constNCVariable<Vector> gvelocity;
@@ -286,9 +287,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
       W = .5*shear*(bElBar_new.Trace() - 3.0);
-
       double e = (U + W)*pvolume_new[idx]/J;
-
       se += e;
 
       Vector pvelocity_idx = pvelocity[idx];
