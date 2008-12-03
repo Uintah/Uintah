@@ -345,6 +345,15 @@ main( int argc, char* argv[], char *env[] )
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, 0, true );
 
+  // Uncomment the following to see what the environment is... this is useful to figure out
+  // what environment variable can be checked for (in Uintah/Core/Parallel/Parallel.cc)
+  // to automatically determine that sus is running under MPI (instead of having to
+  // be explicit with the "-mpi" arg):
+  //
+  // if( Uintah::Parallel::getMPIRank() == 0 ) {
+  //   show_env();
+  // }
+
   if( filename == "" ){
     usage("No input file specified", "", argv[0]);
   }
