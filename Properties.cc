@@ -209,7 +209,6 @@ Properties::problemSetup(const ProblemSpecP& params)
           iLabel = d_labelMap.insert(make_pair(name, tempLabel)).first;
         }
 
-        d_listDepVarNames.push_back(name);
         CCVariable<double>* tempVar = new CCVariable<double>;
         
         VarMap::iterator iVar = d_varMap.find(name);
@@ -298,10 +297,11 @@ Properties::computeProps(const ProcessorGroup* pc,
 
     //get dep vars from dw:
     VarMap varMap;
-    for (vector<string>::iterator iName = d_listDepVarNames.begin(); iName != d_listDepVarNames.end(); iName++){
+    vector<string> depVarNames;
+    for (LabelMap::iterator iLabel = d_labelMap.begin(); iLabel != d_labelMap.end(); iLabel++){
 
-      string currName = (*iName); 
-      LabelMap::iterator iLabel = d_labelMap.find(currName); 
+      string currName = iLabel->first; 
+      depVarNames.push_back(currName); //load names into a list for call to getState
     
       CCVariable<double>* tempVar = new CCVariable<double>;
       VarMap::iterator iVar = varMap.find(currName);
@@ -321,20 +321,22 @@ Properties::computeProps(const ProcessorGroup* pc,
     } 
 
     for (CellIterator iCell=patch->getCellIterator__New(); !iCell.done(); iCell++){
+      IntVector currCell = *iCell; 
 
-      //call getState(vector<double> indepVars, d_listDepVarNames)
-      // returns a vector (map?) 
+      //call getState(vector<double> indepVars, depVarNames)
+      // returns a vector (map?) how do we make sure that the vectors line up? 
 
       //loop over all dep vars:
-      for (vector<string>::iterator iName = d_listDepVarNames.begin(); iName != d_listDepVarNames.end(); iName++){
+      // here we loop over the vector to make sure that the names line up
+      // with the appropriate values from the call to getState.
+      for (vector<string>::iterator iName = depVarNames.begin(); iName != depVarNames.end(); iName++){
 
         //if this is a pointer copy this shouldn't be slow
         string currName = (*iName); 
-
-        LabelMap::iterator iLabel = d_labelMap.find(currName); 
         VarMap::iterator iVar = varMap.find(currName); 
 
         //set iVar to the value from the table
+        //iVar->second[currCell] = value from getState...not sure if I can reference the i,j,k location with this syntax.
      
       } //name/var loop 
     } //cell loop

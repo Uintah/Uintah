@@ -326,10 +326,6 @@ private:
 
       VarMap d_varMap;
       LabelMap d_labelMap;  
-
-      vector<string> d_listDepVarNames;
-      vector<CCVariable<double>* > d_depVars; 
-
     
 }; // end class Properties
 } // End namespace Uintah
