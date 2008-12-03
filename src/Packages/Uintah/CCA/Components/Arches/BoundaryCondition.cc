@@ -58,7 +58,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmenthalpywallbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmscalarwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
@@ -1961,13 +1960,13 @@ BoundaryCondition::mmscalarWallBC( const Patch* patch,
   IntVector idxLo = patch->getFortranCellLowIndex__New();
   IntVector idxHi = patch->getFortranCellHighIndex__New();
   //fortran call
-  fort_mmscalarwallbc(idxLo, idxHi,
+  fort_mmwallbc(idxLo, idxHi,
                       vars->scalarConvectCoeff[Arches::AE], vars->scalarConvectCoeff[Arches::AW],
                       vars->scalarConvectCoeff[Arches::AN], vars->scalarConvectCoeff[Arches::AS],
                       vars->scalarConvectCoeff[Arches::AT], vars->scalarConvectCoeff[Arches::AB],
                       vars->scalarNonlinearSrc, vars->scalarLinearSrc,
                       constvars->cellType, d_mmWallID);
-  fort_mmscalarwallbc(idxLo, idxHi,
+  fort_mmwallbc(idxLo, idxHi,
                       vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
                       vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
                       vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
