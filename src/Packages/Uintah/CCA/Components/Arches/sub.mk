@@ -105,7 +105,6 @@ $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmbcvelocity_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmbcvelocity_momex_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmbcenthalpy_energyex_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmcelltypeinit_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmenthalpywallbc_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmwallbc_trans_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/profscalar_fort.h
