@@ -9,8 +9,8 @@
 #include <cstdlib>
 
 #include <sgi_stl_warnings_off.h>
-#include <sstream>
-#include <iostream>
+#include   <sstream>
+#include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
@@ -130,7 +130,8 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   } else if(getenv("LAMWORLD") || getenv("LAMRANK")) {                       // LAM-MPI
     ::usingMPI=true;
   } else if(getenv("SLURM_PROCID") || getenv("SLURM_NPROCS")) {              // ALC's MPI (LLNL)
-
+    ::usingMPI=true;
+  } else if(getenv("MPIRUN_RANK")) {                                         // Hera's MPI (LLNL)
     ::usingMPI=true;
   } else if(getenv("OMPI_MCA_ns_nds_num_procs") || getenv("OMPI_MCA_pls")) { // Open MPI
     ::usingMPI=true;
