@@ -399,10 +399,6 @@ public:
                              ArchesVariables* vars,
                              ArchesConstVariables* constvars);
 
-  void intrusionVelocityBC(const Patch* patch,
-                           int index, CellInformation* cellinfo,
-                           ArchesVariables* vars,
-                           ArchesConstVariables* constvars);
 
   void intrusionMomExchangeBC(const Patch* patch,
                               int index, CellInformation* cellinfo,
