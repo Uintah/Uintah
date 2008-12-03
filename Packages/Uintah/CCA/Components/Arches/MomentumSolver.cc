@@ -934,15 +934,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                       cellinfo, &velocityVars,
                                                       &constVelocityVars);
 #endif
-          d_boundaryCondition->intrusionVelocityBC(pc, patch, index, 
-                                                   cellinfo, &velocityVars,
-                                                   &constVelocityVars);
         }*/
       }
     // apply multimaterial velocity bc
     // treats multimaterial wall as intrusion
       if (d_MAlab)
-               d_boundaryCondition->mmvelocityBC(patch, index, cellinfo,
+        d_boundaryCondition->mmvelocityBC(patch, index, cellinfo,
                                           &velocityVars, &constVelocityVars);
     
     // Modify Velocity Mass Source
