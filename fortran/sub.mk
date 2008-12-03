@@ -32,7 +32,6 @@ SRCS += \
 	$(SRCDIR)/mmbcvelocity.F \
 	$(SRCDIR)/mmbcvelocity_momex.F \
 	$(SRCDIR)/mmbcenthalpy_energyex.F \
-	$(SRCDIR)/mmenthalpywallbc.F \
 	$(SRCDIR)/mmcelltypeinit.F \
 	$(SRCDIR)/mmwallbc.F \
 	$(SRCDIR)/mmwallbc_trans.F \
