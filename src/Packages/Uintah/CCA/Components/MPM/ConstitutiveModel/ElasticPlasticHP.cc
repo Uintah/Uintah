@@ -71,11 +71,6 @@ ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   d_initialData.sigma_crit = 2.0e9; // default is Pa
   ps->get("critical_stress", d_initialData.sigma_crit);
 
-  d_doIsothermal = false;
-  d_isothermal = 1.0;
-  ps->get("isothermal", d_doIsothermal);
-  if (d_doIsothermal) d_isothermal = 0.0;
-
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
 
@@ -185,7 +180,6 @@ ElasticPlasticHP::ElasticPlasticHP(const ElasticPlasticHP* cm) :
 
   d_tol = cm->d_tol ;
   d_useModifiedEOS = cm->d_useModifiedEOS;
-  d_isothermal = cm->d_isothermal;
 
   d_initialMaterialTemperature = cm->d_initialMaterialTemperature ;
   d_checkTeplaFailureCriterion = cm->d_checkTeplaFailureCriterion;
@@ -275,7 +269,6 @@ void ElasticPlasticHP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("coeff_thermal_expansion", d_initialData.alpha);
   cm_ps->appendElement("taylor_quinney_coeff",d_initialData.Chi);
   cm_ps->appendElement("critical_stress", d_initialData.sigma_crit);
-  cm_ps->appendElement("isothermal", d_doIsothermal);
   cm_ps->appendElement("tolerance",d_tol);
   cm_ps->appendElement("useModifiedEOS",d_useModifiedEOS);
   cm_ps->appendElement("initial_material_temperature",
@@ -1207,12 +1200,12 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double Tdot_AV = de_s/state->specificHeat;
       pdTdt[idx] += Tdot_AV;
 
-      double dev_se = (tensorD(0,0)*tensorEta(0,0) +
-                       tensorD(1,1)*tensorEta(1,1) +
-                       tensorD(2,2)*tensorEta(2,2) +
-                  2.0*(tensorD(0,1)*tensorEta(0,1) + 
-                       tensorD(0,2)*tensorEta(0,2) +
-                       tensorD(1,2)*tensorEta(1,2)));
+      double dev_se = (tensorS(0,0)*tensorEta(0,0) +
+                       tensorS(1,1)*tensorEta(1,1) +
+                       tensorS(2,2)*tensorEta(2,2) +
+                  2.0*(tensorS(0,1)*tensorEta(0,1) + 
+                       tensorS(0,2)*tensorEta(0,2) +
+                       tensorS(1,2)*tensorEta(1,2)));
 
       // This has units (in MKS) of (N*m)/(kg*s) aka Watts/kg
       double edot = -(p + p_q[idx])*Vdot + dev_se*sp_vol;
@@ -1870,7 +1863,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
 
         // Calculate Tdot (internal plastic heating rate)
         double Tdot = state->yieldStress*state->plasticStrainRate*fac;
-        pdTdt[idx] = Tdot*d_isothermal;
+        pdTdt[idx] = Tdot;
 
         // No failure implemented for implcit time integration
         pLocalized_new[idx] = pLocalized[idx];
