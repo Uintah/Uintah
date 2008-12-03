@@ -188,6 +188,8 @@ static bool exiting = false;
 
 #define MAXTHREADS 4000
 
+#define WAIT_FOR_DEBUGGER { bool wait=true; char hostname[100]; gethostname(hostname,100); printf("%s:%d waiting for debugger\n",hostname,getpid()); while(wait); }
+
 namespace SCIRun {
 struct Thread_private {
   Thread_private(bool stopped);
@@ -684,6 +686,7 @@ void* addr = 0;
 #endif
 char* signam = Core_Thread_signal_name(sig, addr);
 fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
+//WAIT_FOR_DEBUGGER;
 Thread::niceAbort();
 
 action.sa_handler = (SIG_HANDLER_T)handle_abort_signals;
@@ -755,6 +758,7 @@ handle_quit(int sig, SigContext /*ctx*/)
   char* signam = Core_Thread_signal_name(sig, 0);
   int pid = getpid();
   fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
+  //WAIT_FOR_DEBUGGER;
   Thread::niceAbort(); // Enter the monitor
   control_c_sema.up();
 }
