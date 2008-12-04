@@ -2,7 +2,7 @@
 // File:          HelloServer_Component_Impl.hxx
 // Symbol:        HelloServer.Component-v1.0
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for HelloServer.Component
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -108,8 +108,8 @@ namespace HelloServer {
       /* in */::gov::cca::Services& services
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
   };  // end class Component_impl

@@ -1,0 +1,340 @@
+# filereaderIORHDRS dependencies.
+pde_IOR.h:                                                                    \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_IOR.h: pde_PDEreader_IOR.h
+
+pde_PDEreader_IOR.h:                                                          \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_PDEreader_IOR.h: sidl_header.h
+pde_PDEreader_IOR.h: gov_cca_Component_IOR.h
+pde_PDEreader_IOR.h: gov_cca_Port_IOR.h
+pde_PDEreader_IOR.h: pdeports_PDEdescriptionPort_IOR.h
+pde_PDEreader_IOR.h: sidl_BaseClass_IOR.h
+
+pdeports_FEMmatrixPort_IOR.h:                                                 \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_FEMmatrixPort_IOR.h: sidl_header.h
+pdeports_FEMmatrixPort_IOR.h: gov_cca_Port_IOR.h
+pdeports_FEMmatrixPort_IOR.h: sidl_BaseInterface_IOR.h
+
+pdeports_IOR.h:                                                               \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_IOR.h: pdeports_FEMmatrixPort_IOR.h
+pdeports_IOR.h: pdeports_LinSolverPort_IOR.h
+pdeports_IOR.h: pdeports_MeshPort_IOR.h
+pdeports_IOR.h: pdeports_PDEdescriptionPort_IOR.h
+pdeports_IOR.h: pdeports_ViewPort_IOR.h
+
+pdeports_LinSolverPort_IOR.h:                                                 \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_LinSolverPort_IOR.h: sidl_header.h
+pdeports_LinSolverPort_IOR.h: gov_cca_Port_IOR.h
+pdeports_LinSolverPort_IOR.h: sidl_BaseInterface_IOR.h
+
+pdeports_MeshPort_IOR.h:                                                      \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_MeshPort_IOR.h: sidl_header.h
+pdeports_MeshPort_IOR.h: gov_cca_Port_IOR.h
+pdeports_MeshPort_IOR.h: sidl_BaseInterface_IOR.h
+
+pdeports_PDEdescriptionPort_IOR.h:                                            \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_PDEdescriptionPort_IOR.h: sidl_header.h
+pdeports_PDEdescriptionPort_IOR.h: gov_cca_Port_IOR.h
+pdeports_PDEdescriptionPort_IOR.h: sidl_BaseInterface_IOR.h
+
+pdeports_ViewPort_IOR.h:                                                      \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_ViewPort_IOR.h: sidl_header.h
+pdeports_ViewPort_IOR.h: gov_cca_Port_IOR.h
+pdeports_ViewPort_IOR.h: sidl_BaseInterface_IOR.h
+
+
+# filereaderIORSRCS dependencies.
+pde_PDEreader_IOR.c:                                                          \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_PDEreader_IOR.c: sidlOps.h
+pde_PDEreader_IOR.c: pde_PDEreader_IOR.h
+pde_PDEreader_IOR.c: sidl_BaseClass_Impl.h
+pde_PDEreader_IOR.c: sidl_BaseClass.h
+pde_PDEreader_IOR.c: sidl_ClassInfo.h
+pde_PDEreader_IOR.c: sidl_ClassInfoI.h
+
+
+# filereaderSKELSRCS dependencies.
+pde_PDEreader_Skel.cxx:                                                       \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_PDEreader_Skel.cxx: pde_PDEreader_Impl.hxx
+pde_PDEreader_Skel.cxx: pde_PDEreader_IOR.h
+pde_PDEreader_Skel.cxx: sidl_BaseException.hxx
+pde_PDEreader_Skel.cxx: sidl_LangSpecificException.hxx
+pde_PDEreader_Skel.cxx: gov_cca_CCAException.hxx
+pde_PDEreader_Skel.cxx: gov_cca_Services.hxx
+pde_PDEreader_Skel.cxx: sidl_BaseInterface.hxx
+pde_PDEreader_Skel.cxx: sidl_ClassInfo.hxx
+pde_PDEreader_Skel.cxx: sidl_RuntimeException.hxx
+pde_PDEreader_Skel.cxx: sidl_String.h
+
+
+# filereaderSTUBHDRS dependencies.
+pde.hxx:                                                                      \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde.hxx: pde_PDEreader.hxx
+
+pde_PDEreader.hxx:                                                            \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_PDEreader.hxx: sidl_cxx.hxx
+pde_PDEreader.hxx: sidl_cxx.hxx
+pde_PDEreader.hxx: pde_PDEreader_IOR.h
+pde_PDEreader.hxx: gov_cca_Component.hxx
+pde_PDEreader.hxx: pdeports_PDEdescriptionPort.hxx
+pde_PDEreader.hxx: sidl_BaseClass.hxx
+pde_PDEreader.hxx: gov_cca_Services.hxx
+
+pdeports.hxx:                                                                 \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports.hxx: pdeports_FEMmatrixPort.hxx
+pdeports.hxx: pdeports_LinSolverPort.hxx
+pdeports.hxx: pdeports_MeshPort.hxx
+pdeports.hxx: pdeports_PDEdescriptionPort.hxx
+pdeports.hxx: pdeports_ViewPort.hxx
+
+pdeports_FEMmatrixPort.hxx:                                                   \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_FEMmatrixPort.hxx: sidl_cxx.hxx
+pdeports_FEMmatrixPort.hxx: sidl_cxx.hxx
+pdeports_FEMmatrixPort.hxx: pdeports_FEMmatrixPort_IOR.h
+pdeports_FEMmatrixPort.hxx: gov_cca_Port.hxx
+
+pdeports_LinSolverPort.hxx:                                                   \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_LinSolverPort.hxx: sidl_cxx.hxx
+pdeports_LinSolverPort.hxx: sidl_cxx.hxx
+pdeports_LinSolverPort.hxx: pdeports_LinSolverPort_IOR.h
+pdeports_LinSolverPort.hxx: gov_cca_Port.hxx
+
+pdeports_MeshPort.hxx:                                                        \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_MeshPort.hxx: sidl_cxx.hxx
+pdeports_MeshPort.hxx: sidl_cxx.hxx
+pdeports_MeshPort.hxx: pdeports_MeshPort_IOR.h
+pdeports_MeshPort.hxx: gov_cca_Port.hxx
+
+pdeports_PDEdescriptionPort.hxx:                                              \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_PDEdescriptionPort.hxx: sidl_cxx.hxx
+pdeports_PDEdescriptionPort.hxx: sidl_cxx.hxx
+pdeports_PDEdescriptionPort.hxx: pdeports_PDEdescriptionPort_IOR.h
+pdeports_PDEdescriptionPort.hxx: gov_cca_Port.hxx
+
+pdeports_ViewPort.hxx:                                                        \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_ViewPort.hxx: sidl_cxx.hxx
+pdeports_ViewPort.hxx: sidl_cxx.hxx
+pdeports_ViewPort.hxx: pdeports_ViewPort_IOR.h
+pdeports_ViewPort.hxx: gov_cca_Port.hxx
+
+
+# filereaderSTUBSRCS dependencies.
+pde_PDEreader.cxx:                                                            \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_PDEreader.cxx: pde_PDEreader.hxx
+pde_PDEreader.cxx: sidl_BaseInterface.hxx
+pde_PDEreader.cxx: sidl_BaseClass.hxx
+pde_PDEreader.cxx: sidl_BaseException.hxx
+pde_PDEreader.cxx: sidl_LangSpecificException.hxx
+pde_PDEreader.cxx: sidl_RuntimeException.hxx
+pde_PDEreader.cxx: sidl_CastException.hxx
+pde_PDEreader.cxx: sidl_rmi_Call.hxx
+pde_PDEreader.cxx: sidl_rmi_Return.hxx
+pde_PDEreader.cxx: sidl_rmi_Ticket.hxx
+pde_PDEreader.cxx: sidl_rmi_InstanceHandle.hxx
+pde_PDEreader.cxx: sidl_String.h
+pde_PDEreader.cxx: sidl_rmi_ConnectRegistry.h
+pde_PDEreader.cxx: babel_config.h
+pde_PDEreader.cxx: sidl_Loader.hxx
+pde_PDEreader.cxx: sidl_DLL.hxx
+pde_PDEreader.cxx: gov_cca_CCAException.hxx
+pde_PDEreader.cxx: gov_cca_Services.hxx
+pde_PDEreader.cxx: sidl_BaseInterface.hxx
+pde_PDEreader.cxx: sidl_ClassInfo.hxx
+pde_PDEreader.cxx: sidl_RuntimeException.hxx
+pde_PDEreader.cxx: sidl_BaseClass.h
+pde_PDEreader.cxx: sidl_ClassInfo.h
+pde_PDEreader.cxx: sidl_rmi_ProtocolFactory.h
+pde_PDEreader.cxx: sidl_rmi_InstanceRegistry.h
+pde_PDEreader.cxx: sidl_rmi_InstanceHandle.h
+pde_PDEreader.cxx: sidl_rmi_Invocation.h
+pde_PDEreader.cxx: sidl_rmi_Response.h
+pde_PDEreader.cxx: sidl_rmi_ServerRegistry.h
+pde_PDEreader.cxx: sidl_rmi_ConnectRegistry.h
+pde_PDEreader.cxx: sidl_io_Serializable.h
+pde_PDEreader.cxx: sidl_MemAllocException.h
+pde_PDEreader.cxx: sidl_NotImplementedException.h
+
+pdeports_FEMmatrixPort.cxx:                                                   \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_FEMmatrixPort.cxx: pdeports_FEMmatrixPort.hxx
+pdeports_FEMmatrixPort.cxx: sidl_BaseInterface.hxx
+pdeports_FEMmatrixPort.cxx: sidl_BaseClass.hxx
+pdeports_FEMmatrixPort.cxx: sidl_BaseException.hxx
+pdeports_FEMmatrixPort.cxx: sidl_LangSpecificException.hxx
+pdeports_FEMmatrixPort.cxx: sidl_RuntimeException.hxx
+pdeports_FEMmatrixPort.cxx: sidl_CastException.hxx
+pdeports_FEMmatrixPort.cxx: sidl_rmi_Call.hxx
+pdeports_FEMmatrixPort.cxx: sidl_rmi_Return.hxx
+pdeports_FEMmatrixPort.cxx: sidl_rmi_Ticket.hxx
+pdeports_FEMmatrixPort.cxx: sidl_rmi_InstanceHandle.hxx
+pdeports_FEMmatrixPort.cxx: sidl_String.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_FEMmatrixPort.cxx: babel_config.h
+pdeports_FEMmatrixPort.cxx: sidl_Loader.hxx
+pdeports_FEMmatrixPort.cxx: sidl_DLL.hxx
+pdeports_FEMmatrixPort.cxx: sidl_BaseInterface.hxx
+pdeports_FEMmatrixPort.cxx: sidl_ClassInfo.hxx
+pdeports_FEMmatrixPort.cxx: sidl_BaseClass.h
+pdeports_FEMmatrixPort.cxx: sidl_ClassInfo.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_ProtocolFactory.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_InstanceRegistry.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_InstanceHandle.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_Invocation.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_Response.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_ServerRegistry.h
+pdeports_FEMmatrixPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_FEMmatrixPort.cxx: sidl_io_Serializable.h
+pdeports_FEMmatrixPort.cxx: sidl_MemAllocException.h
+pdeports_FEMmatrixPort.cxx: sidl_NotImplementedException.h
+
+pdeports_LinSolverPort.cxx:                                                   \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_LinSolverPort.cxx: pdeports_LinSolverPort.hxx
+pdeports_LinSolverPort.cxx: sidl_BaseInterface.hxx
+pdeports_LinSolverPort.cxx: sidl_BaseClass.hxx
+pdeports_LinSolverPort.cxx: sidl_BaseException.hxx
+pdeports_LinSolverPort.cxx: sidl_LangSpecificException.hxx
+pdeports_LinSolverPort.cxx: sidl_RuntimeException.hxx
+pdeports_LinSolverPort.cxx: sidl_CastException.hxx
+pdeports_LinSolverPort.cxx: sidl_rmi_Call.hxx
+pdeports_LinSolverPort.cxx: sidl_rmi_Return.hxx
+pdeports_LinSolverPort.cxx: sidl_rmi_Ticket.hxx
+pdeports_LinSolverPort.cxx: sidl_rmi_InstanceHandle.hxx
+pdeports_LinSolverPort.cxx: sidl_String.h
+pdeports_LinSolverPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_LinSolverPort.cxx: babel_config.h
+pdeports_LinSolverPort.cxx: sidl_Loader.hxx
+pdeports_LinSolverPort.cxx: sidl_DLL.hxx
+pdeports_LinSolverPort.cxx: sidl_BaseInterface.hxx
+pdeports_LinSolverPort.cxx: sidl_ClassInfo.hxx
+pdeports_LinSolverPort.cxx: sidl_BaseClass.h
+pdeports_LinSolverPort.cxx: sidl_ClassInfo.h
+pdeports_LinSolverPort.cxx: sidl_rmi_ProtocolFactory.h
+pdeports_LinSolverPort.cxx: sidl_rmi_InstanceRegistry.h
+pdeports_LinSolverPort.cxx: sidl_rmi_InstanceHandle.h
+pdeports_LinSolverPort.cxx: sidl_rmi_Invocation.h
+pdeports_LinSolverPort.cxx: sidl_rmi_Response.h
+pdeports_LinSolverPort.cxx: sidl_rmi_ServerRegistry.h
+pdeports_LinSolverPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_LinSolverPort.cxx: sidl_io_Serializable.h
+pdeports_LinSolverPort.cxx: sidl_MemAllocException.h
+pdeports_LinSolverPort.cxx: sidl_NotImplementedException.h
+
+pdeports_MeshPort.cxx:                                                        \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_MeshPort.cxx: pdeports_MeshPort.hxx
+pdeports_MeshPort.cxx: sidl_BaseInterface.hxx
+pdeports_MeshPort.cxx: sidl_BaseClass.hxx
+pdeports_MeshPort.cxx: sidl_BaseException.hxx
+pdeports_MeshPort.cxx: sidl_LangSpecificException.hxx
+pdeports_MeshPort.cxx: sidl_RuntimeException.hxx
+pdeports_MeshPort.cxx: sidl_CastException.hxx
+pdeports_MeshPort.cxx: sidl_rmi_Call.hxx
+pdeports_MeshPort.cxx: sidl_rmi_Return.hxx
+pdeports_MeshPort.cxx: sidl_rmi_Ticket.hxx
+pdeports_MeshPort.cxx: sidl_rmi_InstanceHandle.hxx
+pdeports_MeshPort.cxx: sidl_String.h
+pdeports_MeshPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_MeshPort.cxx: babel_config.h
+pdeports_MeshPort.cxx: sidl_Loader.hxx
+pdeports_MeshPort.cxx: sidl_DLL.hxx
+pdeports_MeshPort.cxx: sidl_BaseInterface.hxx
+pdeports_MeshPort.cxx: sidl_ClassInfo.hxx
+pdeports_MeshPort.cxx: sidl_BaseClass.h
+pdeports_MeshPort.cxx: sidl_ClassInfo.h
+pdeports_MeshPort.cxx: sidl_rmi_ProtocolFactory.h
+pdeports_MeshPort.cxx: sidl_rmi_InstanceRegistry.h
+pdeports_MeshPort.cxx: sidl_rmi_InstanceHandle.h
+pdeports_MeshPort.cxx: sidl_rmi_Invocation.h
+pdeports_MeshPort.cxx: sidl_rmi_Response.h
+pdeports_MeshPort.cxx: sidl_rmi_ServerRegistry.h
+pdeports_MeshPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_MeshPort.cxx: sidl_io_Serializable.h
+pdeports_MeshPort.cxx: sidl_MemAllocException.h
+pdeports_MeshPort.cxx: sidl_NotImplementedException.h
+
+pdeports_PDEdescriptionPort.cxx:                                              \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_PDEdescriptionPort.cxx: pdeports_PDEdescriptionPort.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_BaseInterface.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_BaseClass.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_BaseException.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_LangSpecificException.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_RuntimeException.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_CastException.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_Call.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_Return.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_Ticket.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_InstanceHandle.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_String.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_PDEdescriptionPort.cxx: babel_config.h
+pdeports_PDEdescriptionPort.cxx: sidl_Loader.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_DLL.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_BaseInterface.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_ClassInfo.hxx
+pdeports_PDEdescriptionPort.cxx: sidl_BaseClass.h
+pdeports_PDEdescriptionPort.cxx: sidl_ClassInfo.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_ProtocolFactory.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_InstanceRegistry.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_InstanceHandle.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_Invocation.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_Response.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_ServerRegistry.h
+pdeports_PDEdescriptionPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_PDEdescriptionPort.cxx: sidl_io_Serializable.h
+pdeports_PDEdescriptionPort.cxx: sidl_MemAllocException.h
+pdeports_PDEdescriptionPort.cxx: sidl_NotImplementedException.h
+
+pdeports_ViewPort.cxx:                                                        \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/../ports/ports.sidl
+pdeports_ViewPort.cxx: pdeports_ViewPort.hxx
+pdeports_ViewPort.cxx: sidl_BaseInterface.hxx
+pdeports_ViewPort.cxx: sidl_BaseClass.hxx
+pdeports_ViewPort.cxx: sidl_BaseException.hxx
+pdeports_ViewPort.cxx: sidl_LangSpecificException.hxx
+pdeports_ViewPort.cxx: sidl_RuntimeException.hxx
+pdeports_ViewPort.cxx: sidl_CastException.hxx
+pdeports_ViewPort.cxx: sidl_rmi_Call.hxx
+pdeports_ViewPort.cxx: sidl_rmi_Return.hxx
+pdeports_ViewPort.cxx: sidl_rmi_Ticket.hxx
+pdeports_ViewPort.cxx: sidl_rmi_InstanceHandle.hxx
+pdeports_ViewPort.cxx: sidl_String.h
+pdeports_ViewPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_ViewPort.cxx: babel_config.h
+pdeports_ViewPort.cxx: sidl_Loader.hxx
+pdeports_ViewPort.cxx: sidl_DLL.hxx
+pdeports_ViewPort.cxx: sidl_BaseInterface.hxx
+pdeports_ViewPort.cxx: sidl_ClassInfo.hxx
+pdeports_ViewPort.cxx: sidl_BaseClass.h
+pdeports_ViewPort.cxx: sidl_ClassInfo.h
+pdeports_ViewPort.cxx: sidl_rmi_ProtocolFactory.h
+pdeports_ViewPort.cxx: sidl_rmi_InstanceRegistry.h
+pdeports_ViewPort.cxx: sidl_rmi_InstanceHandle.h
+pdeports_ViewPort.cxx: sidl_rmi_Invocation.h
+pdeports_ViewPort.cxx: sidl_rmi_Response.h
+pdeports_ViewPort.cxx: sidl_rmi_ServerRegistry.h
+pdeports_ViewPort.cxx: sidl_rmi_ConnectRegistry.h
+pdeports_ViewPort.cxx: sidl_io_Serializable.h
+pdeports_ViewPort.cxx: sidl_MemAllocException.h
+pdeports_ViewPort.cxx: sidl_NotImplementedException.h
+
+

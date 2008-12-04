@@ -2,7 +2,7 @@
 // File:          HelloClient_Component_Impl.cxx
 // Symbol:        HelloClient.Component-v1.0
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for HelloClient.Component
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -95,8 +95,8 @@ void
 HelloClient::Component_impl::setServices_impl (
   /* in */::gov::cca::Services& services ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(HelloClient.Component.setServices)
   svc = services;
@@ -113,8 +113,8 @@ void
 HelloClient::Component_impl::releaseServices_impl (
   /* in */::gov::cca::Services& services ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(HelloClient.Component.releaseServices)
   services.unregisterUsesPort("msgport-up");

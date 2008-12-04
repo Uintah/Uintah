@@ -2,7 +2,7 @@
 // File:          randomgens_RandNumGenerator_Impl.cxx
 // Symbol:        randomgens.RandNumGenerator-v1.0
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for randomgens.RandNumGenerator
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -78,6 +78,17 @@ void randomgens::RandNumGenerator_impl::_load() {
 
 // user defined non-static methods:
 /**
+ * Method:  getRandomNumber_pre[]
+ */
+void
+randomgens::RandNumGenerator_impl::getRandomNumber_pre_impl () 
+
+{
+  gov::cca::TypeMap evtMap = typemap.cloneEmpty();
+  topic.sendEvent("getRandomNumber_pre",evtMap);
+}
+
+/**
  * Method:  getRandomNumber[]
  */
 double
@@ -91,6 +102,55 @@ randomgens::RandNumGenerator_impl::getRandomNumber_impl ()
   return random_value / RAND_MAX;
 
   // DO-NOT-DELETE splicer.end(randomgens.RandNumGenerator.getRandomNumber)
+}
+
+/**
+ * Method:  getRandomNumber_post[]
+ */
+void
+randomgens::RandNumGenerator_impl::getRandomNumber_post_impl (
+  /* in */double _retval ) 
+{
+  gov::cca::TypeMap evtMap = typemap.cloneEmpty();
+  evtMap.putDouble("_retval",_retval);
+  topic.sendEvent("getRandomNumber_post",evtMap);
+}
+
+/**
+ *  Starts up a component presence in the calling framework.
+ * @param services the component instance's handle on the framework world.
+ * Contracts concerning Svc and setServices:
+ * 
+ * The component interaction with the CCA framework
+ * and Ports begins on the call to setServices by the framework.
+ * 
+ * This function is called exactly once for each instance created
+ * by the framework.
+ * 
+ * The argument Svc will never be nil/null.
+ * 
+ * Those uses ports which are automatically connected by the framework
+ * (so-called service-ports) may be obtained via getPort during
+ * setServices.
+ */
+void
+randomgens::RandNumGenerator_impl::setServices_pre_impl (
+  /* in */::gov::cca::Services& services ) 
+// throws:
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
+{
+  printf("setServices_pre is called\n");
+  services.registerUsesPort("evtSvcPublisher","cca.EventService",0);
+  gov::cca::Port evtPort = services.getPort("evtSvcPublisher");
+  sci::cca::ports::PublisherEventService eventSvc = 
+    babel_cast<sci::cca::ports::PublisherEventService>(evtPort);
+  if(eventSvc._is_nil()) {
+    std::cerr << "Unable to get event service from framework\n";
+    exit(1);
+  }
+  topic = eventSvc.getTopic("log.all");
+  typemap = services.createTypeMap();
 }
 
 /**
@@ -114,8 +174,8 @@ void
 randomgens::RandNumGenerator_impl::setServices_impl (
   /* in */::gov::cca::Services& services ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(randomgens.RandNumGenerator.setServices)
   // Insert-Code-Here {randomgens.RandNumGenerator.setServices} (setServices method)
@@ -142,6 +202,35 @@ randomgens::RandNumGenerator_impl::setServices_impl (
   }
   
   // DO-NOT-DELETE splicer.end(randomgens.RandNumGenerator.setServices)
+}
+
+/**
+ *  Starts up a component presence in the calling framework.
+ * @param services the component instance's handle on the framework world.
+ * Contracts concerning Svc and setServices:
+ * 
+ * The component interaction with the CCA framework
+ * and Ports begins on the call to setServices by the framework.
+ * 
+ * This function is called exactly once for each instance created
+ * by the framework.
+ * 
+ * The argument Svc will never be nil/null.
+ * 
+ * Those uses ports which are automatically connected by the framework
+ * (so-called service-ports) may be obtained via getPort during
+ * setServices.
+ */
+void
+randomgens::RandNumGenerator_impl::setServices_post_impl (
+  /* in */::gov::cca::Services& services ) 
+// throws:
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
+{
+  // DO-NOT-DELETE splicer.begin(randomgens.RandNumGenerator.setServices_post)
+  // Insert-Code-Here {randomgens.RandNumGenerator.setServices_post} (setServices_post)
+  // DO-NOT-DELETE splicer.end(randomgens.RandNumGenerator.setServices_post)
 }
 
 

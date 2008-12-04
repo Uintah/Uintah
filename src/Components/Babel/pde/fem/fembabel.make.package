@@ -1,0 +1,7 @@
+femBABEL_MAKEFILE_NAME = fembabel.make
+femSTUB_SRC_DIRS =                                                            \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/fem/glue/
+femIMPL_SRC_DIRS =                                                            \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/fem/
+femIOR_SRC_DIRS =                                                             \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/fem/glue/

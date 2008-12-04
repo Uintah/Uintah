@@ -2,7 +2,7 @@
 // File:          randomgens_RandNumGenerator_Impl.hxx
 // Symbol:        randomgens.RandNumGenerator-v1.0
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for randomgens.RandNumGenerator
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -46,6 +46,8 @@
 #include "sidl_RuntimeException.hxx"
 #endif
 
+#include "sci_cca.hxx"
+#include <iostream>
 
 // DO-NOT-DELETE splicer.begin(randomgens.RandNumGenerator._hincludes)
 // Insert-Code-Here {randomgens.RandNumGenerator._hincludes} (includes or arbitrary code)
@@ -67,6 +69,8 @@ namespace randomgens {
   // descendant Impl classes
   protected:
 
+    sci::cca::Topic topic;
+    gov::cca::TypeMap typemap;
     bool _wrapped;
 
     // DO-NOT-DELETE splicer.begin(randomgens.RandNumGenerator._implementation)
@@ -110,6 +114,20 @@ namespace randomgens {
      */
     double
     getRandomNumber_impl() ;
+    /**
+     * User Defined static method pre-hook
+     */
+    void
+    getRandomNumber_pre_impl() ;
+    /**
+     * user defined static method post-hook
+     */
+    void
+    getRandomNumber_post_impl (
+      /* in */double _retval
+    )
+    ;
+
 
     /**
      *  Starts up a component presence in the calling framework.
@@ -133,8 +151,62 @@ namespace randomgens {
       /* in */::gov::cca::Services& services
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
+    ;
+
+
+    /**
+     *  Starts up a component presence in the calling framework.
+     * @param services the component instance's handle on the framework world.
+     * Contracts concerning Svc and setServices:
+     * 
+     * The component interaction with the CCA framework
+     * and Ports begins on the call to setServices by the framework.
+     * 
+     * This function is called exactly once for each instance created
+     * by the framework.
+     * 
+     * The argument Svc will never be nil/null.
+     * 
+     * Those uses ports which are automatically connected by the framework
+     * (so-called service-ports) may be obtained via getPort during
+     * setServices.
+     */
+    void
+    setServices_pre_impl (
+      /* in */::gov::cca::Services& services
+    )
+    // throws:
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
+    ;
+
+
+    /**
+     *  Starts up a component presence in the calling framework.
+     * @param services the component instance's handle on the framework world.
+     * Contracts concerning Svc and setServices:
+     * 
+     * The component interaction with the CCA framework
+     * and Ports begins on the call to setServices by the framework.
+     * 
+     * This function is called exactly once for each instance created
+     * by the framework.
+     * 
+     * The argument Svc will never be nil/null.
+     * 
+     * Those uses ports which are automatically connected by the framework
+     * (so-called service-ports) may be obtained via getPort during
+     * setServices.
+     */
+    void
+    setServices_post_impl (
+      /* in */::gov::cca::Services& services
+    )
+    // throws:
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
   };  // end class RandNumGenerator_impl

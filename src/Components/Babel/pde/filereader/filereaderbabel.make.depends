@@ -1,0 +1,28 @@
+# filereaderIMPLHDRS dependencies.
+pde_PDEreader_Impl.hxx:                                                       \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_PDEreader_Impl.hxx: sidl_cxx.hxx
+pde_PDEreader_Impl.hxx: pde_PDEreader_IOR.h
+pde_PDEreader_Impl.hxx: gov_cca_CCAException.hxx
+pde_PDEreader_Impl.hxx: gov_cca_Component.hxx
+pde_PDEreader_Impl.hxx: gov_cca_Services.hxx
+pde_PDEreader_Impl.hxx: pde_PDEreader.hxx
+pde_PDEreader_Impl.hxx: pdeports_PDEdescriptionPort.hxx
+pde_PDEreader_Impl.hxx: sidl_BaseClass.hxx
+pde_PDEreader_Impl.hxx: sidl_BaseInterface.hxx
+pde_PDEreader_Impl.hxx: sidl_ClassInfo.hxx
+pde_PDEreader_Impl.hxx: sidl_RuntimeException.hxx
+
+
+# filereaderIMPLSRCS dependencies.
+pde_PDEreader_Impl.cxx:                                                       \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/filereader.sidl
+pde_PDEreader_Impl.cxx: pde_PDEreader_Impl.hxx
+pde_PDEreader_Impl.cxx: gov_cca_CCAException.hxx
+pde_PDEreader_Impl.cxx: gov_cca_Services.hxx
+pde_PDEreader_Impl.cxx: sidl_BaseInterface.hxx
+pde_PDEreader_Impl.cxx: sidl_ClassInfo.hxx
+pde_PDEreader_Impl.cxx: sidl_RuntimeException.hxx
+pde_PDEreader_Impl.cxx: sidl_NotImplementedException.hxx
+
+
