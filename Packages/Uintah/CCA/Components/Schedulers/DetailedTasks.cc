@@ -791,7 +791,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
     new_dep->toTasks.splice(new_dep->toTasks.begin(),matching_dep->toTasks); 
 
     //erase particle sends/recvs
-    if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable) {
+    if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
       PSPatchMatlGhost pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int) cond);
 
       if (req->var->getName() == "p.x")
@@ -869,7 +869,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
   //add communication for particle data
   // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
-  if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable) 
+  if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) 
   {
     PSPatchMatlGhost pmg=PSPatchMatlGhost(fromPatch, matl, new_dep->low, new_dep->high, (int) cond,1);
     
