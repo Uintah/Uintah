@@ -692,7 +692,9 @@ ProblemSpecReader::parseValidationFile()
       }
     }
   }
-  xmlFreeDoc(doc);
+  //freeing the xml doc here is causing crashes later.  I'm not sure why this is.  
+  //Perhaps freeing this doc also frees the child elements which are accessed later
+  //xmlFreeDoc(doc);
   dbg << "done parsing ups_spec.xml\n";
 }
 
