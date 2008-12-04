@@ -70,22 +70,6 @@ void integrators::MonteCarlo_impl::_load() {
 
 // user defined non-static methods:
 /**
- * Method:  integrate_pre[]
- */
-void
-integrators::MonteCarlo_impl::integrate_pre_impl (
-  /* in */double lowBound,
-  /* in */double upBound,
-  /* in */int32_t count ) 
-{
-  gov::cca::TypeMap evtMap = typemap.cloneEmpty();
-  evtMap.putDouble("lowBound",lowBound);
-  evtMap.putDouble("upBound",upBound);
-  evtMap.putInt("count",count);
-  topic.sendEvent("integrate_pre",evtMap);
-}
-
-/**
  * Method:  integrate[]
  */
 double
@@ -124,47 +108,6 @@ integrators::MonteCarlo_impl::integrate_impl (
 
 
   // DO-NOT-DELETE splicer.end(integrators.MonteCarlo.integrate)
-}
-
-/**
- * Method:  integrate_post[]
- */
-void
-integrators::MonteCarlo_impl::integrate_post_impl (
-  /* in */double lowBound,
-  /* in */double upBound,
-  /* in */int32_t count,
-  /* in */double _retval ) 
-{
-  gov::cca::TypeMap evtMap = typemap.cloneEmpty();
-  evtMap.putDouble("lowBound",lowBound);
-  evtMap.putDouble("upBound",upBound);
-  evtMap.putInt("count",count);
-  evtMap.putDouble("_retval",_retval);
-  topic.sendEvent("integrate_post",evtMap);
-}
-
-/**
- * Method:  setServices_pre[]
- */
-void
-integrators::MonteCarlo_impl::setServices_pre_impl (
-  /* in */::gov::cca::Services& services ) 
-// throws:
-//    ::gov::cca::CCAException
-//    ::sidl::RuntimeException
-{
-  printf("setServices_pre is called\n");
-  services.registerUsesPort("evtSvcPublisher","cca.EventService",0);
-  gov::cca::Port evtPort = services.getPort("evtSvcPublisher");
-  sci::cca::ports::PublisherEventService eventSvc = 
-    babel_cast<sci::cca::ports::PublisherEventService>(evtPort);
-  if(eventSvc._is_nil()) {
-    std::cerr << "Unable to get event service from framework\n";
-    exit(1);
-  }
-  topic = eventSvc.getTopic("log.all");
-  typemap = services.createTypeMap();
 }
 
 /**
@@ -213,36 +156,6 @@ integrators::MonteCarlo_impl::setServices_impl (
 }
 
 /**
- * Method:  setServices_post[]
- */
-void
-integrators::MonteCarlo_impl::setServices_post_impl (
-  /* in */::gov::cca::Services& services ) 
-// throws:
-//    ::gov::cca::CCAException
-//    ::sidl::RuntimeException
-{
-  // DO-NOT-DELETE splicer.begin(integrators.MonteCarlo.setServices_post)
-  // Insert-Code-Here {integrators.MonteCarlo.setServices_post} (setServices_post)
-  // DO-NOT-DELETE splicer.end(integrators.MonteCarlo.setServices_post)
-}
-
-/**
- * Method:  releaseServices_pre[]
- */
-void
-integrators::MonteCarlo_impl::releaseServices_pre_impl (
-  /* in */::gov::cca::Services& services ) 
-// throws:
-//    ::gov::cca::CCAException
-//    ::sidl::RuntimeException
-{
-  // DO-NOT-DELETE splicer.begin(integrators.MonteCarlo.releaseServices_pre)
-  // Insert-Code-Here {integrators.MonteCarlo.releaseServices_pre} (releaseServices_pre)
-  // DO-NOT-DELETE splicer.end(integrators.MonteCarlo.releaseServices_pre)
-}
-
-/**
  * Method:  releaseServices[]
  */
 void
@@ -264,21 +177,6 @@ integrators::MonteCarlo_impl::releaseServices_impl (
   throw ex;
   // DO-DELETE-WHEN-IMPLEMENTING exception.end(integrators.MonteCarlo.releaseServices)
   // DO-NOT-DELETE splicer.end(integrators.MonteCarlo.releaseServices)
-}
-
-/**
- * Method:  releaseServices_post[]
- */
-void
-integrators::MonteCarlo_impl::releaseServices_post_impl (
-  /* in */::gov::cca::Services& services ) 
-// throws:
-//    ::gov::cca::CCAException
-//    ::sidl::RuntimeException
-{
-  // DO-NOT-DELETE splicer.begin(integrators.MonteCarlo.releaseServices_post)
-  // Insert-Code-Here {integrators.MonteCarlo.releaseServices_post} (releaseServices_post)
-  // DO-NOT-DELETE splicer.end(integrators.MonteCarlo.releaseServices_post)
 }
 
 
