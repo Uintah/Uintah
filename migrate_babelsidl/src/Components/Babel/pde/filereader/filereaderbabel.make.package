@@ -1,0 +1,7 @@
+filereaderBABEL_MAKEFILE_NAME = filereaderbabel.make
+filereaderSTUB_SRC_DIRS =                                                     \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/glue/
+filereaderIMPL_SRC_DIRS =                                                     \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/
+filereaderIOR_SRC_DIRS =                                                      \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/filereader/glue/

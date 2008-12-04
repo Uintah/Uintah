@@ -1,0 +1,8 @@
+package pde version 0.1 {
+
+  class Tri implements-all pdeports.MeshPort, 
+  	                   gov.cca.Component 
+  {
+  }
+
+}

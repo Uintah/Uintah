@@ -2,7 +2,7 @@
 // File:          drivers_CXXDriver_Impl.cxx
 // Symbol:        drivers.CXXDriver-v1.0
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for drivers.CXXDriver
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -69,6 +69,17 @@ void drivers::CXXDriver_impl::_load() {
 
 // user defined non-static methods:
 /**
+ * Method:  go_pre[]
+ */
+void
+drivers::CXXDriver_impl::go_pre_impl () 
+
+{
+  gov::cca::TypeMap evtMap = typemap.cloneEmpty();
+  topic.sendEvent("go_pre",evtMap);
+}
+
+/**
  * Method:  go[]
  */
 int32_t
@@ -77,6 +88,7 @@ drivers::CXXDriver_impl::go_impl ()
 {
   // DO-NOT-DELETE splicer.begin(drivers.CXXDriver.go)
   // Insert-Code-Here {drivers.CXXDriver.go} (go method)
+  //go_pre(); 
 
   double value;
   int count = 100000;
@@ -107,14 +119,49 @@ drivers::CXXDriver_impl::go_impl ()
 }
 
 /**
+ * Method:  go_post[]
+ */
+void
+drivers::CXXDriver_impl::go_post_impl (
+  /* in */int32_t _retval ) 
+{
+  gov::cca::TypeMap evtMap = typemap.cloneEmpty();
+  evtMap.putInt("_retval",_retval);
+  topic.sendEvent("go_post",evtMap);
+}
+
+/**
+ * Method:  setServices_pre[]
+ */
+void
+drivers::CXXDriver_impl::setServices_pre_impl (
+  /* in */::gov::cca::Services& services ) 
+// throws:
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
+{
+  printf("setServices_pre is called\n");
+  services.registerUsesPort("evtSvcPublisher","cca.EventService",0);
+  gov::cca::Port evtPort = services.getPort("evtSvcPublisher");
+  sci::cca::ports::PublisherEventService eventSvc = 
+    babel_cast<sci::cca::ports::PublisherEventService>(evtPort);
+  if(eventSvc._is_nil()) {
+    std::cerr << "Unable to get event service from framework\n";
+    exit(1);
+  }
+  topic = eventSvc.getTopic("log.all");
+  typemap = services.createTypeMap();
+}
+
+/**
  * Method:  setServices[]
  */
 void
 drivers::CXXDriver_impl::setServices_impl (
   /* in */::gov::cca::Services& services ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(drivers.CXXDriver.setServices)
   // Insert-Code-Here {drivers.CXXDriver.setServices} (setServices method)
@@ -135,6 +182,21 @@ drivers::CXXDriver_impl::setServices_impl (
 				            frameworkServices.createTypeMap());
 
   // DO-NOT-DELETE splicer.end(drivers.CXXDriver.setServices)
+}
+
+/**
+ * Method:  setServices_post[]
+ */
+void
+drivers::CXXDriver_impl::setServices_post_impl (
+  /* in */::gov::cca::Services& services ) 
+// throws:
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
+{
+  // DO-NOT-DELETE splicer.begin(drivers.CXXDriver.setServices_post)
+  // Insert-Code-Here {drivers.CXXDriver.setServices_post} (setServices_post)
+  // DO-NOT-DELETE splicer.end(drivers.CXXDriver.setServices_post)
 }
 
 

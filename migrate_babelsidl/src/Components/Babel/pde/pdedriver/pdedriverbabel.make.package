@@ -1,0 +1,7 @@
+pdedriverBABEL_MAKEFILE_NAME = pdedriverbabel.make
+pdedriverSTUB_SRC_DIRS =                                                      \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/pdedriver/glue/
+pdedriverIMPL_SRC_DIRS =                                                      \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/pdedriver/
+pdedriverIOR_SRC_DIRS =                                                       \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/pdedriver/glue/

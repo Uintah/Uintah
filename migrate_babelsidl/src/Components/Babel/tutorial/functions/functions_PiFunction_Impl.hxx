@@ -2,7 +2,7 @@
 // File:          functions_PiFunction_Impl.hxx
 // Symbol:        functions.PiFunction-v1.0
 // Symbol Type:   class
-// Babel Version: 1.1.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for functions.PiFunction
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -46,6 +46,8 @@
 #include "sidl_RuntimeException.hxx"
 #endif
 
+#include "sci_cca.hxx"
+#include <iostream>
 
 // DO-NOT-DELETE splicer.begin(functions.PiFunction._hincludes)
 // Insert-Code-Here {functions.PiFunction._hincludes} (includes or arbitrary code)
@@ -67,6 +69,8 @@ namespace functions {
   // descendant Impl classes
   protected:
 
+    sci::cca::Topic topic;
+    gov::cca::TypeMap typemap;
     bool _wrapped;
 
     // DO-NOT-DELETE splicer.begin(functions.PiFunction._implementation)
@@ -115,11 +119,48 @@ namespace functions {
     ;
 
     /**
+     * User Defined static method pre-hook
+     */
+    void
+    init_pre_impl (
+      /* in array<string> */::sidl::array< ::std::string>& params
+    )
+    ;
+
+    /**
+     * user defined static method post-hook
+     */
+    void
+    init_post_impl (
+      /* in array<string> */::sidl::array< ::std::string>& params
+    )
+    ;
+
+    /**
      * user defined non-static method.
      */
     double
     evaluate_impl (
       /* in */double x
+    )
+    ;
+
+    /**
+     * User Defined static method pre-hook
+     */
+    void
+    evaluate_pre_impl (
+      /* in */double x
+    )
+    ;
+
+    /**
+     * user defined static method post-hook
+     */
+    void
+    evaluate_post_impl (
+      /* in */double x,
+      /* in */double _retval
     )
     ;
 
@@ -146,8 +187,62 @@ namespace functions {
       /* in */::gov::cca::Services& services
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
+    ;
+
+
+    /**
+     *  Starts up a component presence in the calling framework.
+     * @param services the component instance's handle on the framework world.
+     * Contracts concerning Svc and setServices:
+     * 
+     * The component interaction with the CCA framework
+     * and Ports begins on the call to setServices by the framework.
+     * 
+     * This function is called exactly once for each instance created
+     * by the framework.
+     * 
+     * The argument Svc will never be nil/null.
+     * 
+     * Those uses ports which are automatically connected by the framework
+     * (so-called service-ports) may be obtained via getPort during
+     * setServices.
+     */
+    void
+    setServices_pre_impl (
+      /* in */::gov::cca::Services& services
+    )
+    // throws:
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
+    ;
+
+
+    /**
+     *  Starts up a component presence in the calling framework.
+     * @param services the component instance's handle on the framework world.
+     * Contracts concerning Svc and setServices:
+     * 
+     * The component interaction with the CCA framework
+     * and Ports begins on the call to setServices by the framework.
+     * 
+     * This function is called exactly once for each instance created
+     * by the framework.
+     * 
+     * The argument Svc will never be nil/null.
+     * 
+     * Those uses ports which are automatically connected by the framework
+     * (so-called service-ports) may be obtained via getPort during
+     * setServices.
+     */
+    void
+    setServices_post_impl (
+      /* in */::gov::cca::Services& services
+    )
+    // throws:
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
   };  // end class PiFunction_impl

@@ -35,7 +35,8 @@ SUBDIRS := \
            $(SRCDIR)/xml \
            $(SRCDIR)/hello-server \
            $(SRCDIR)/hello-client \
-           $(SRCDIR)/tutorial
+           $(SRCDIR)/tutorial \
+           $(SRCDIR)/pde
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

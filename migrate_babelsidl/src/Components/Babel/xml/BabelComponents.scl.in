@@ -19,4 +19,19 @@
   <library uri="BUILDDIR/lib/libComponents_Babel_tutorial_randomgens.LIBEXT" scope="global" resolution="now" >
     <class name="randomgens.RandNumGenerator" desc="ior/impl" />
   </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_pde_pdedriver.LIBEXT" scope="global" resolution="now" >
+    <class name="pde.PDEdriver" desc="ior/impl" />  
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_pde_filereader.LIBEXT" scope="global" resolution="now" >
+    <class name="pde.PDEreader" desc="ior/impl" />  
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_pde_tri.LIBEXT" scope="global" resolution="now" >
+    <class name="pde.Tri" desc="ior/impl" />
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_pde_fem.LIBEXT" scope="global" resolution="now" >
+    <class name="pde.FEM" desc="ior/impl" />
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_pde_linsolver.LIBEXT" scope="global" resolution="now" >
+    <class name="pde.LinSolver" desc="ior/impl" />
+  </library>
 </scl>

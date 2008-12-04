@@ -1,0 +1,3 @@
+pdedriverclientBABEL_MAKEFILE_NAME = pdedriverclientbabel.make
+pdedriverclientSTUB_SRC_DIRS =                                                \
+  /Users/damevski/research/provenance/migrate_babelsidl/src/Components/Babel/pde/pdedriver/glue/
