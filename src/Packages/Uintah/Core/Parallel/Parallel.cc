@@ -232,10 +232,10 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 					 worldRank,worldSize);
 
      if(rootContext->myrank() == 0){
-       cerr << "Parallel: " << rootContext->size() 
+       cout << "Parallel: " << rootContext->size() 
 	    << " processors (using MPI)\n";
 #ifdef THREADED_MPI_AVAILABLE
-       cerr << "Parallel: MPI Level Required: " << required << ", provided: " 
+       cout << "Parallel: MPI Level Required: " << required << ", provided: " 
 	    << provided << "\n";
 #endif
      }
