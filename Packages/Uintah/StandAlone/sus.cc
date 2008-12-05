@@ -432,8 +432,8 @@ main( int argc, char* argv[], char *env[] )
     string time_string(ctime(&t));
     char name[256];
     gethostname(name, 256);
-    cerr << "Date:    " << time_string; // has its own newline
-    cerr << "Machine: " << name << endl;
+    cout << "Date:    " << time_string; // has its own newline
+    cout << "Machine: " << name << endl;
 
     // Run svn commands on Packages/Uintah 
     if (do_svnDiff || do_svnStat){
