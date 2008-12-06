@@ -425,7 +425,7 @@
     <axisymmetric              spec="OPTIONAL BOOLEAN" />
     <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
         <dynamic  spec="OPTIONAL BOOLEAN" />
-        <solver   spec="REQUIRED STRING 'petsc, simple'" />
+        <solver   spec="OPTIONAL STRING 'petsc, simple'" />
         <convergence_criteria_disp    spec="OPTIONAL DOUBLE 'positive'"/>
         <convergence_criteria_energy  spec="OPTIONAL DOUBLE 'positive'"/>
   </MPM>
