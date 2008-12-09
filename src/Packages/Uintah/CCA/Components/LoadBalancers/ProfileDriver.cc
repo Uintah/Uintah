@@ -77,6 +77,9 @@ void ProfileDriver::finalizeContributions()
 
 void ProfileDriver::getWeights(int l, const vector<Region> &regions, vector<double> &weights)
 {
+  if(regions.size()==0)
+    return;
+
   weights.resize(regions.size());
   vector<double> partial_weights(regions.size(),0);      
 
