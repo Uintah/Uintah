@@ -27,6 +27,7 @@ namespace Uintah {
       double mean;      /*< Mean failure strain */
       double std;       /*< Standard deviation of failure strain */
       std::string dist; /*< Failure strain distrinution */
+      bool failureByStress; /*<Failure by strain (default) or stress */
     };
 
     const VarLabel* pFailureStrainLabel;
