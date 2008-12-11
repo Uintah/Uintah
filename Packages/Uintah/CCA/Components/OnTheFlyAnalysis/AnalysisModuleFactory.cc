@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/pointExtract.h>
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/containerExtract.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
 #include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/vorticity.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -37,6 +38,8 @@ AnalysisModule* AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
       return (scinew lineExtract(module_ps, sharedState, dataArchiver));
     } else if (module == "pointExtract") {
       return (scinew pointExtract(module_ps,sharedState, dataArchiver));
+    } else if (module == "containerExtract") {
+      return (scinew containerExtract(module_ps,sharedState,dataArchiver));
     } else if (module == "vorticity") {
       return (scinew vorticity(module_ps,sharedState, dataArchiver));
     } else if (module == "flatPlate_heatFlux") {

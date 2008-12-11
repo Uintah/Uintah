@@ -6,11 +6,12 @@ SRCDIR   := Packages/Uintah/CCA/Components/OnTheFlyAnalysis
 
 SRCS     += \
 	$(SRCDIR)/AnalysisModuleFactory.cc \
-	$(SRCDIR)/AnalysisModule.cc \
-	$(SRCDIR)/lineExtract.cc \
-       $(SRCDIR)/flatPlate_heatFlux.cc\
-	$(SRCDIR)/pointExtract.cc \
-       $(SRCDIR)/vorticity.cc
+	$(SRCDIR)/AnalysisModule.cc	\
+	$(SRCDIR)/lineExtract.cc	\
+	$(SRCDIR)/flatPlate_heatFlux.cc	\
+	$(SRCDIR)/pointExtract.cc	\
+	$(SRCDIR)/containerExtract.cc	\
+	$(SRCDIR)/vorticity.cc
 
 PSELIBS := \
 	Core/Geometry                    \
