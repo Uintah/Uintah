@@ -81,6 +81,7 @@ void CNHDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("failure_strain_mean",d_epsf.mean);
   cm_ps->appendElement("failure_strain_std",d_epsf.std);
   cm_ps->appendElement("failure_strain_distrib",d_epsf.dist);
+  cm_ps->appendElement("failure_by_stress",d_epsf.failureByStress);
 
 }
 
@@ -117,9 +118,11 @@ CNHDamage::getFailureStrainData(ProblemSpecP& ps)
   d_epsf.mean = 10.0; // Mean failure strain
   d_epsf.std = 0.0;  // STD failure strain
   d_epsf.dist = "constant";
+  d_epsf.failureByStress = false; // failure by strain default
   ps->get("failure_strain_mean",    d_epsf.mean);
   ps->get("failure_strain_std",     d_epsf.std);
   ps->get("failure_strain_distrib", d_epsf.dist);
+  ps->get("failure_by_stress", d_epsf.failureByStress);
 }
 
 void 
@@ -128,6 +131,7 @@ CNHDamage::setFailureStrainData(const CNHDamage* cm)
   d_epsf.mean = cm->d_epsf.mean;
   d_epsf.std = cm->d_epsf.std;
   d_epsf.dist = cm->d_epsf.dist;
+  d_epsf.failureByStress = cm->d_epsf.failureByStress;
 }
 
 void 
@@ -479,11 +483,17 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
 
   // Compute Eulerian strain tensor
   Matrix3 ee = (Identity - bb.Inverse())*0.5;      
-      
-  // Compute the maximum principal strain
+
+  // Compute the maximum principal strain or stress
   Vector  eigval(0.0, 0.0, 0.0);
   Matrix3 eigvec(0.0);
-  ee.eigen(eigval, eigvec);
+
+  if (d_epsf.failureByStress) {
+      pStress_new.eigen(eigval, eigvec);
+  } else {			//failure by strain
+      ee.eigen(eigval, eigvec);
+  }
+
   double epsMax = Max(fabs(eigval[0]),fabs(eigval[2]));
 
   // Find if the particle has failed
