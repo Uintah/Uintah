@@ -55,7 +55,9 @@ namespace Uintah {
     struct CMData {
       double C_0;
       double Gamma_0;
-      double S_alpha;
+      double S_1;
+      double S_2;
+      double S_3;
     };	 
 
   private:
