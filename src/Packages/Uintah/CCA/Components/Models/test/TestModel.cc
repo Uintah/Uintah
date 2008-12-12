@@ -63,6 +63,12 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
     d_is_mpm_matl = false;
     d_matl = ice_matl;
   }   
+  
+  totalMassXLabel  = VarLabel::create( "totalMassExchanged",
+                                        sum_vartype::getTypeDescription() );
+
+  totalIntEngXLabel  = VarLabel::create("totalIntEngExchanged",
+                                        sum_vartype::getTypeDescription() );
 }
       
 void TestModel::scheduleInitialize(SchedulerP&,
@@ -107,6 +113,9 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
   t->requires( DW,  mi->temp_CCLabel,   matl0->thisMaterial(), gn); 
   t->requires( NDW, mi->sp_vol_CCLabel, matl0->thisMaterial(), gn);
   
+  t->computes(TestModel::totalMassXLabel);
+  t->computes(TestModel::totalIntEngXLabel);
+  
   t->requires( Task::OldDW, mi->delT_Label);
   sched->addTask(t, level->eachPatch(), mymatls);
 }
@@ -126,6 +135,10 @@ void TestModel::computeModelSources(const ProcessorGroup*,
   ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
+  
+  double totalMassX = 0.0;
+  double totalIntEngX = 0.0;
+  
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
@@ -180,8 +193,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     dw  ->  get(vel_0,    mi->vel_CCLabel,    m0, patch, gn, 0);    
     dw  ->  get(temp_0,   mi->temp_CCLabel,   m0, patch, gn, 0);    
     new_dw->get(sp_vol_0, mi->sp_vol_CCLabel, m0, patch, gn, 0);
-        
-    double tm = 0;
+    
     double trate = rate*dt;
     if(trate > 1){
       trate=1;
@@ -206,9 +218,11 @@ void TestModel::computeModelSources(const ProcessorGroup*,
       sp_vol_src_0[c] -= vol_sourcex;
       sp_vol_src_1[c] += vol_sourcex;
             
-      tm += massx;
+      totalMassX += massx;
+      totalIntEngX += energyx;
     }
-    cerr << "Total mass transferred: " << tm << '\n';
+    new_dw->put(sum_vartype(totalMassX),  TestModel::totalMassXLabel);
+    new_dw->put(sum_vartype(totalIntEngX),TestModel::totalIntEngXLabel);
   }
 }
 //______________________________________________________________________  
