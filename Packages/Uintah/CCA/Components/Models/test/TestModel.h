@@ -96,6 +96,9 @@ WARNING
     Material* d_matl;
     double rate;
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
+    
+    const VarLabel* totalMassXLabel;
+    const VarLabel* totalIntEngXLabel;
   };
 }
 
