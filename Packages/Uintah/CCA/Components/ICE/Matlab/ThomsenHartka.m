@@ -1,8 +1,13 @@
 %Thomsen & Hartka Equation of State for Water
 clc; clear all; close all;
 
-%Use the two known properties, run to calculate the third, and then run  
-%again to get all the other thermodynamic properties correct.
+%In the following, input the known values for two of the variables, and
+%a guess for the third.  Save and run the program.  Query the "_calc"
+%version of the unknown variable, e.g. r_calc, and replace the value of
+%the unknown with that value.  Now, if you run it again, you'll find
+%that the "_calc" versions of all variables are the same as those entered.
+%Additionally, all of the other variables will be computed with that
+%consistent thermodynamic state.
 r=999.9756494265155; %(kg·m-3)
 T=300.0;             %(K)
 P=10132500.0;        %(Pa)
