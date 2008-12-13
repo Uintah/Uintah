@@ -26,6 +26,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Labels      \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Util        \
+	Packages/Uintah/Core/GeometryPiece \
 	Packages/Uintah/Core/ProblemSpec 
 
 LIBS := $(XML_LIBRARY) 
