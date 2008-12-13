@@ -73,7 +73,7 @@ void CNHDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","cnh_damag");
+    cm_ps->setAttribute("type","cnh_damage");
   }
 
   CompNeoHook::outputProblemSpec(cm_ps,false);
