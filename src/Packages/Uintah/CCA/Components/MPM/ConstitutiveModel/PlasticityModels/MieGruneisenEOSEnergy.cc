@@ -96,9 +96,13 @@ MieGruneisenEOSEnergy::eval_dp_dJ(const MPMMaterial* matl,
   double Gamma_0 = d_const.Gamma_0;
 
   double J = detF;
-  double numer = rho_0*C_0*C_0*(1.0 + (S_1 - Gamma_0)*(1.0-J));
-  double denom = (1.0 - S_1*(1.0-J));
+
+  double eta = 1.0-J;
+  double denom = (1.0 - S_1*eta - S_2*eta*eta - S_3*eta*eta*eta);
+  double numer = -rho_0*C_0*C_0*((1.0 - Gamma_0*eta)*denom 
+       + 2.0*eta*(1.0 - Gamma_0*eta/2.0)*(S_1 + 2.0*S_2*eta + 3.0*S_3*eta*eta));
   double denom3 = (denom*denom*denom);
+
   if (denom3 == 0.0) {
     cout << "rh0_0 = " << rho_0 << " J = " << J 
            << " numer = " << numer << endl;
