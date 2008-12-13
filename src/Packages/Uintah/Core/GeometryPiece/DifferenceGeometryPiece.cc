@@ -1,3 +1,4 @@
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Malloc/Allocator.h>
@@ -5,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Box.h>
 
 #include <vector>
+#include <sstream>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -17,6 +19,14 @@ DifferenceGeometryPiece::DifferenceGeometryPiece(ProblemSpecP &ps)
   std::vector<GeometryPieceP> objs;
 
   GeometryPieceFactory::create(ps,objs);
+  
+  //__________________________________
+  // bulletproofing
+  if (objs.size() != 2){
+    std::ostringstream warn;
+    warn <<  "\nERROR:Input File:Geom_object:Difference:  You need two geom_objects in order to take the difference of them"; 
+    throw ProblemSetupException(warn.str(),__FILE__, __LINE__);  
+  }
 
   left_  = objs[0];
   right_ = objs[1];
