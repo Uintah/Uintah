@@ -50,6 +50,9 @@ SRCS     += \
 	$(SRCDIR)/ConstantMeltTemp.cc \
 	$(SRCDIR)/SCGMeltTemp.cc \
 	$(SRCDIR)/BPSMeltTemp.cc \
+	$(SRCDIR)/ViscoPlasticityModel.cc \
+	$(SRCDIR)/ViscoPlasticityModelFactory.cc \
+	$(SRCDIR)/SuvicI.cc \
 	$(SRCDIR)/KinematicHardeningModel.cc \
 	$(SRCDIR)/KinematicHardeningModelFactory.cc \
 	$(SRCDIR)/NoKinematicHardening.cc \
