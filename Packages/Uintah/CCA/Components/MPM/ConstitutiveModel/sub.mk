@@ -34,6 +34,7 @@ SRCS     += \
 	$(SRCDIR)/ElasticPlasticHP.cc		\
 	$(SRCDIR)/SmallStrainPlastic.cc		\
 	$(SRCDIR)/Water.cc			\
+	$(SRCDIR)/ViscoPlastic.cc		\
 	$(SRCDIR)/SoilFoam.cc
 
 SUBDIRS := $(SRCDIR)/PlasticityModels
