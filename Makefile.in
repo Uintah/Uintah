@@ -133,7 +133,7 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs svn_diff
 
 prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
 	@if test ! -f prereqs; then \
@@ -334,3 +334,34 @@ vc: prereqs $(VCSOLUTION) $(ALLTCLINDEXES)
 # since foreach inserts a space at the end of the line that VS can't have, remove it
 $(VCSOLUTION): $(ALLVCPROJECTS)
 	@echo -e "Microsoft Visual Studio Solution File, Format Version 8.00$(foreach project,$^,\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"$(basename $(notdir $(project)))\", \"$(project)\", \"{$($(project)_ID)}\"\n\tProjectSection(ProjectDependencies) = postProject$(foreach dep,$($(project)_PROJ_DEPS),\n\t\t{$($(dep)_ID)} = {$($(dep)_ID)}PPPPP)\n\tEndProjectSection\nEndProject)\nGlobal\n\tGlobalSection(SolutionConfiguration) = preSolution\n\t\t$(CONF_NAME) = $(CONF_NAME)\n\tEndGlobalSection\n\tGlobalSection(ProjectConfiguration) = postSolution$(foreach project,$^,\n\t\t{$($(project)_ID)}.$(CONF_NAME).ActiveCfg = $(CONF_NAME)|Win32\n\t\t{$($(project)_ID)}.$(CONF_NAME).Build.0 = $(CONF_NAME)|Win32PPPPP)\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityGlobals) = postSolution\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityAddIns) = postSolution\n\tEndGlobalSection\nEndGlobal" | sed 's,PPPPP ,,g' | sed 's,PPPPP,,g' > $@
+
+####################################################################################
+# Turn on/off "svn diff".  If on, then "svn diff" is run on the src tree every
+# time make is run.  The output of "svn diff" and "svn status" is saved in the file:
+# svn_diff.txt
+#
+diff_on :
+	@echo "Automatic SVN diff is now ON."
+	@touch .do_svn_diff
+
+diff_off :
+	@echo "Automatic SVN diff is now OFF."
+	@rm -f .do_svn_diff
+
+svn_diff :
+	@if test -f .do_svn_diff; then                                       \
+	  echo;                                                              \
+          echo "Saving 'svn diff' information (${OBJTOP_ABS}/svn_diff.txt)"; \
+          echo "  - To turn off automatic diffs, use 'make diff_off'.";      \
+	  touch svn_diff.txt;                                                \
+	  svn info ${SRCTOP} > svn_diff.txt;                                 \
+	  svn diff ${SRCTOP} >> svn_diff.txt;                                \
+	  echo;                                                              \
+	else                                                                 \
+	  echo;                                                              \
+          echo "Warning: SVN DIFF is turned off.  (Use 'make diff_on')";     \
+	  echo;                                                              \
+	fi
+#
+# End SVN Diff Stuff.
+####################################################################################
