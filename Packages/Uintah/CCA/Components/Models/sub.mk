@@ -6,7 +6,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCS    += \
        $(SRCDIR)/ModelFactory.cc
 
-
 RADIATION :=
 
 ifeq ($(BUILD_RADIATION),yes)
@@ -14,29 +13,46 @@ ifeq ($(BUILD_RADIATION),yes)
 endif
 
 SUBDIRS := $(SRCDIR)/FluidsBased \
-           $(SRCDIR)/HEChem \
-            $(RADIATION)
+           $(RADIATION)
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := \
+PSELIBS :=              \
         Core/Exceptions \
-        Core/Geometry \
-        Core/Thread \
-        Core/Util \
-        Packages/Uintah/CCA/Components/MPM \
-        Packages/Uintah/CCA/Ports \
-        Packages/Uintah/Core/Disclosure \
-        Packages/Uintah/Core/Exceptions \
-        Packages/Uintah/Core/Grid \
-        Packages/Uintah/Core/IO \
-        Packages/Uintah/Core/Util \
+        Core/Geometry   \
+        Core/Thread     \
+        Core/Util       \
+        Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/IO            \
+        Packages/Uintah/Core/Util          \
         Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/Core/Labels \
-        Packages/Uintah/Core/Parallel \
-        Packages/Uintah/Core/ProblemSpec \
-        Packages/Uintah/CCA/Components/ICE \
-        Packages/Uintah/CCA/Components/MPMICE
+        Packages/Uintah/Core/Labels        \
+        Packages/Uintah/Core/Parallel      \
+        Packages/Uintah/Core/ProblemSpec
+
+ifneq ($(BUILD_ICE),no)
+  PSELIBS += Packages/Uintah/CCA/Components/ICE
+endif
+
+ifneq ($(BUILD_MPM),no)
+  PSELIBS += Packages/Uintah/CCA/Components/MPM
+endif
+
+ifneq ($(BUILD_MPM),no) 
+  ifneq ($(BUILD_ICE),no) 
+    PSELIBS += Packages/Uintah/CCA/Components/MPMICE
+    SUBDIRS += $(SRCDIR)/HEChem
+  endif
+endif
+
+######################################################
+# Sub-dir recurse has to be after above to make sure
+# we include the right sub-dirs.
+#
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#
+######################################################
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
 

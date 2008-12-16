@@ -10,12 +10,16 @@
 #include <Packages/Uintah/CCA/Components/Models/FluidsBased/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/FluidsBased/TestModel.h>
 #include <Packages/Uintah/CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/Unsteady_Burn.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
-#include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
+
+#if !defined( NO_ICE )
+#  include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
+#  include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
+#  include <Packages/Uintah/CCA/Components/Models/HEChem/Unsteady_Burn.h>
+#  include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
+#  include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
+#  include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
+#endif
+
 #include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationDriver.h>
 #include <Core/Malloc/Allocator.h>
 #include <sci_defs/uintah_defs.h>
@@ -23,7 +27,7 @@
 #include <iostream>
 
 using namespace Uintah;
-
+using namespace std;
 
 ModelFactory::ModelFactory(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
@@ -32,22 +36,23 @@ ModelFactory::ModelFactory(const ProcessorGroup* myworld)
 
 ModelFactory::~ModelFactory()
 {
-  for (std::vector<ModelInterface*>::const_iterator it = d_models.begin();
-       it != d_models.end(); it++) 
+  for (vector<ModelInterface*>::const_iterator it = d_models.begin();
+       it != d_models.end(); it++) {
     delete *it;
-
+  }
 }
 
-std::vector<ModelInterface*> ModelFactory::getModels()
+vector<ModelInterface*> ModelFactory::getModels()
 {
   return d_models;
 }
 
-void ModelFactory::makeModels(const ProblemSpecP& restart_prob_spec,
-                              const ProblemSpecP& prob_spec,
-                              GridP&,
-                              SimulationStateP&,
-                              const bool doAMR)
+void
+ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
+                          const ProblemSpecP& prob_spec,
+                          GridP&,
+                          SimulationStateP&,
+                          const bool doAMR )
 {
   ProblemSpecP m = restart_prob_spec->findBlock("Models");
   if(!m)
@@ -59,14 +64,20 @@ void ModelFactory::makeModels(const ProblemSpecP& restart_prob_spec,
       throw ProblemSetupException("Model does not specify type=\"name\"", __FILE__, __LINE__);
     }
     
+#if !defined( NO_ICE ) && !defined( NO_MPM )
+    // ICE and MPM turned on
     if(type == "SimpleRxn")
       d_models.push_back(scinew SimpleRxn(d_myworld, model_ps));
     else if(type == "AdiabaticTable")
       d_models.push_back(scinew AdiabaticTable(d_myworld, model_ps,doAMR));
-    else if(type == "Test")
-      d_models.push_back(scinew TestModel(d_myworld, model_ps));
     else if(type == "Mixing")
       d_models.push_back(scinew Mixing(d_myworld, model_ps));
+    else if(type == "Test")
+      d_models.push_back(scinew TestModel(d_myworld, model_ps));
+    else if(type == "flameSheet_rxn")
+      d_models.push_back(scinew flameSheet_rxn(d_myworld, model_ps));
+    else if(type == "PassiveScalar")
+      d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
     else if(type == "Simple_Burn")
       d_models.push_back(scinew Simple_Burn(d_myworld, model_ps, prob_spec));
     else if(type == "Steady_Burn")
@@ -79,27 +90,25 @@ void ModelFactory::makeModels(const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew JWLpp(d_myworld, model_ps));
     else if(type == "LightTime")
       d_models.push_back(scinew LightTime(d_myworld, model_ps));
-    else if(type == "flameSheet_rxn")
-      d_models.push_back(scinew flameSheet_rxn(d_myworld, model_ps));
-    else if(type == "PassiveScalar")
-      d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
     else if(type == "Radiation")
-#ifndef NO_RADIATION
+#  if !defined( NO_RADIATION )
       d_models.push_back(scinew RadiationDriver(d_myworld, model_ps));
-#else
+#  else
       throw ProblemSetupException("Radiation not supported in this build", __FILE__, __LINE__);
-#endif
+#  endif
     else
-      throw ProblemSetupException("Unknown model: "+type, __FILE__, __LINE__);
+      throw ProblemSetupException( "Unknown model: " + type, __FILE__, __LINE__ );
+#else
+    // ICE and/or MPM turned off.
+    throw ProblemSetupException( type + " not supported in this build", __FILE__, __LINE__ );
+#endif
   }
 }
 
-
-void ModelFactory::outputProblemSpec(ProblemSpecP& models_ps)
+void
+ModelFactory::outputProblemSpec(ProblemSpecP& models_ps)
 {
-  for (std::vector<ModelInterface*>::const_iterator it = d_models.begin();
-       it != d_models.end(); it++) {
+  for (vector<ModelInterface*>::const_iterator it = d_models.begin(); it != d_models.end(); it++) {
     (*it)->outputProblemSpec(models_ps);
   }
-
 }
