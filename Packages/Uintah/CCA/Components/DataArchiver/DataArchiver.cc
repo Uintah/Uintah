@@ -1878,7 +1878,7 @@ DataArchiver::makeVersionedDir()
   // directory (000) can be created (because no exception is thrown
   // and thus no memory is allocated for exceptions).
   //
-  // If there is a real error, then we can throw an exception becuase
+  // If there is a real error, then we can throw an exception because
   // we don't care about the memory penalty.
 
   // The lab machines use a script that removes world readable permissions.
