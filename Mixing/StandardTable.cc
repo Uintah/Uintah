@@ -2,8 +2,8 @@
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
-#include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableFactory.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
