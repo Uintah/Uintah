@@ -1,6 +1,17 @@
 #include <TauProfilerForSCIRun.h>
 
 #include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
+
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
+#include <Packages/Uintah/CCA/Ports/OutputContext.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -8,19 +19,11 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/OutputContext.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
+#include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/ErrnoException.h>
@@ -438,6 +441,26 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
    }
 
    if (d_writeMeta) {
+
+     string svn_diff_file = string( sci_getenv("SCIRUN_OBJDIR") ) + "/svn_diff.txt";
+     if( !validFile( svn_diff_file ) ) {
+       cout << "\n";
+       cout << "WARNING: 'svn diff' file '" << svn_diff_file << "' does not appear to exist!\n";
+       cout << "\n";
+     } 
+     else {
+       string svn_diff_out = d_dir.getName() + "/svn_diff.txt";
+       string svn_diff_on = string( sci_getenv("SCIRUN_OBJDIR") ) + "/.do_svn_diff";
+       if( !validFile( svn_diff_on ) ) {
+         cout << "\n";
+         cout << "WARNING: Adding 'svn diff' file to UDA, but AUTO DIFF TEXT CREATION is OFF!\n";
+         cout << "         svn_diff.txt may be out of date!  Saving as 'possible_svn_diff.txt'.\n";
+         cout << "\n";
+         svn_diff_out = d_dir.getName() + "/possible_svn_diff.txt";
+       }
+       copyFile( svn_diff_file, svn_diff_out );
+     }
+
       // create index.xml 
       string inputname = d_dir.getName()+"/input.xml";
       params->output(inputname.c_str());
@@ -453,10 +476,10 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
          createIndexXML(d_checkpointsDir);
       }
    }
-   else
+   else {
       d_checkpointsDir = d_dir.getSubdir("checkpoints");
-
-}
+   }
+} // end initializeOutput()
 
 
 // to be called after problemSetup and initializeOutput get called
