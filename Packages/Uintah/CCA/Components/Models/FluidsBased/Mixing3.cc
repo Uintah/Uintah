@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/Mixing2.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/Mixing3.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -22,6 +22,7 @@
 #include <cantera/Cantera.h>
 #include <cantera/IdealGasMix.h>
 #include <cantera/zerodim.h>
+#include <cantera/equilibrium.h>
 #include <cstdio>
 
 // TODO:
@@ -33,15 +34,21 @@
 using namespace Uintah;
 using namespace std;
 
-Mixing2::Mixing2(const ProcessorGroup* myworld, ProblemSpecP& params)
+Mixing3::Mixing3(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
   mymatls = 0;
   gas = 0;
   reactor = 0;
+  params->require("dtemp", dtemp);
+  params->require("dpress", dpress);
+  params->require("dmf", dmf);
+  params->require("dtfactor", dtfactor);
+  nlook=0;
+  nmiss=0;
 }
 
-Mixing2::~Mixing2()
+Mixing3::~Mixing3()
 {
   if(mymatls && mymatls->removeReference())
     delete mymatls;
@@ -61,13 +68,13 @@ Mixing2::~Mixing2()
   delete reactor;
 }
 
-Mixing2::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
+Mixing3::Region::Region(GeometryPiece* piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("massFraction", initialMassFraction);
 }
 
-void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
+void Mixing3::problemSetup(GridP&, SimulationStateP& in_state,
 			   ModelSetup* setup)
 {
   sharedState = in_state;
@@ -77,7 +84,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   m[0] = matl->getDWIndex();
   mymatls = scinew MaterialSet();
   mymatls->addAll(m);
-  mymatls->addReference();   
+  mymatls->addReference();  
 
   // Parse the Cantera XML file
   string fname;
@@ -87,22 +94,11 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   try {
     gas = scinew IdealGasMix(fname, id);
     int nsp = gas->nSpecies();
-#if 0
-    cerr << "refPressure=" << gas->refPressure() << '\n';
-    gas->setState_TPY(200, 101325, "H2:1");
-#endif
     if(d_myworld->myrank() == 0){
 #if 0
-      int nel = gas->nElements();
       cerr.precision(17);
       cerr << "Using ideal gas " << id << "(from " << fname << ") with " << nel << " elements and " << nsp << " species\n";
       gas->setState_TPY(300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
-      cerr << *gas;
-#endif
-#if 0
-      
-      //equilibrate(*gas, UV);
-      gas->setState_TPY(300, 101325, "H2:1");
       cerr << *gas;
 #endif
     }
@@ -130,7 +126,7 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
   }
 
   if(streams.size() == 0)
-    throw ProblemSetupException("Mixing2 specified with no streams!", __FILE__, __LINE__);
+    throw ProblemSetupException("Mixing3 specified with no streams!", __FILE__, __LINE__);
 
   for (ProblemSpecP child = params->findBlock("stream"); child != 0;
        child = child->findNextBlock("stream")) {
@@ -163,66 +159,14 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
                                   __FILE__, __LINE__);
 
   }
-#if 0
-  try {
-    IdealGasMix* gas = scinew IdealGasMix("gri30.xml", "gri30");
-    IdealGasMix* gas2 = scinew IdealGasMix("gri30.xml", "gri30");
-    gas->setState_TPY(1300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
-    gas2->setState_TPY(1300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
-    cerr << *gas;
-    cerr << *gas2;
-    Reactor r;
-  
-    // specify the thermodynamic property and kinetics managers
-    r.setThermoMgr(*gas);
-    r.setKineticsMgr(*gas);
-
-    Reactor r2;
-    Reservoir env;
-  
-    // specify the thermodynamic property and kinetics managers
-    r2.setThermoMgr(*gas2);
-    r2.setKineticsMgr(*gas2);
-    env.setThermoMgr(*gas2);
-
-    // create a flexible, insulating wall between the reactor and the
-    // environment
-    Wall w;
-    w.install(r2,env);
-
-    // set the "Vdot coefficient" to a large value, in order to
-    // approach the constant-pressure limit; see the documentation 
-    // for class Reactor
-    w.setExpansionRateCoeff(1.e9);
-    w.setArea(1.0);
-
-    double dt=1e-5;
-    double max = 1.e-1;
-    ofstream out1("press0.dat");
-    ofstream out2("temp0.dat");
-    for(double t = 0;t<max;t+=dt){
-      if(t != 0)
-	r.advance(t);
-      if(t != 0)
-	r2.advance(t);
-      out1 << t << " " << gas->pressure() << " " << gas2->pressure() << '\n';
-      out2 << t << " " << gas->temperature() << " " << gas2->temperature() << '\n';
-    }
-  }
-  // handle exceptions thrown by Cantera
-  catch (CanteraError) {
-    showErrors(cout);
-    cout << " terminating... " << endl;
-  }
-#endif
 }
 
-void Mixing2::scheduleInitialize(SchedulerP& sched,
+void Mixing3::scheduleInitialize(SchedulerP& sched,
 				const LevelP& level,
 				const ModelInfo*)
 {
-  Task* t = scinew Task("Mixing2::initialize",
-			this, &Mixing2::initialize);
+  Task* t = scinew Task("Mixing3::initialize",
+			this, &Mixing3::initialize);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
     Stream* stream = *iter;
@@ -231,7 +175,7 @@ void Mixing2::scheduleInitialize(SchedulerP& sched,
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
-void Mixing2::initialize(const ProcessorGroup*, 
+void Mixing3::initialize(const ProcessorGroup*, 
 			const PatchSubset* patches,
 			const MaterialSubset* matls,
 			DataWarehouse*,
@@ -282,27 +226,23 @@ void Mixing2::initialize(const ProcessorGroup*,
   }
 }
       
-void Mixing2::scheduleComputeStableTimestep(SchedulerP&,
+void Mixing3::scheduleComputeStableTimestep(SchedulerP&,
 					   const LevelP&,
 					   const ModelInfo*)
 {
   // None necessary...
 }
-      
 
-void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
+void Mixing3::scheduleComputeModelSources(SchedulerP& sched,
 					       const LevelP& level,
 					       const ModelInfo* mi)
 {
-  Task* t = scinew Task("Mixing2::computeModelSources",this, 
-                        &Mixing2::computeModelSources, mi);
+  Task* t = scinew Task("Mixing3::computeModelSources", this, 
+                        &Mixing3::computeModelSources, mi);
   t->modifies(mi->modelEng_srcLabel);
-  t->requires(Task::OldDW, mi->rho_CCLabel,        Ghost::None);
-  t->requires(Task::OldDW, mi->press_CCLabel,      Ghost::None);
-  t->requires(Task::OldDW, mi->temp_CCLabel,       Ghost::None);
-  t->requires(Task::NewDW, mi->specific_heatLabel, Ghost::None);
-  t->requires(Task::NewDW, mi->gammaLabel,         Ghost::None);
-    
+  t->requires(Task::OldDW, mi->rho_CCLabel,   Ghost::None);
+  t->requires(Task::OldDW, mi->press_CCLabel, Ghost::None);
+  t->requires(Task::OldDW, mi->temp_CCLabel,  Ghost::None);
   t->requires(Task::OldDW, mi->delT_Label);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
@@ -314,7 +254,107 @@ void Mixing2::scheduleComputeModelSources(SchedulerP& sched,
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
-void Mixing2::computeModelSources(const ProcessorGroup*, 
+namespace Uintah {
+  struct M3Key {
+    M3Key(int nsp, int idt, int itemp, int ipress, int* imf, double dtemp = 0,
+	  double* mf=0)
+      : nsp(nsp), idt(idt), itemp(itemp), ipress(ipress), imf(imf), dtemp(dtemp),
+	mf(mf)
+    {
+      int h = idt + itemp<<3 + ipress<<5;
+      for(int i=0;i<nsp;i++)
+	h = (h<<1) | (h>>1) | imf[i];
+      if(h<0)
+	h=-h;
+      hash = h;
+      next = 0;
+    }
+    bool operator==(const M3Key& c) const {
+      if(idt != c.idt)
+	return false;
+      if(itemp != c.itemp)
+	return false;
+      if(ipress != c.ipress)
+	return false;
+      for(int i=0;i<nsp;i++){
+	if(imf[i] != c.imf[i])
+	  return false;
+      }
+      return true;
+    }
+
+    int nsp;
+    int idt;
+    int itemp;
+    int ipress;
+    int* imf;
+    int hash;
+    double dtemp;
+    double* mf;
+    M3Key* next;
+  };
+}
+
+double Mixing3::lookup(int nsp, int idt, int itemp, int ipress, int* imf,
+		     double* outmf)
+{
+  nlook++;
+  // Lookup in hash table
+  M3Key k(nsp, idt, itemp, ipress, imf);
+
+  // Create it if not found
+  M3Key* r = table.lookup(&k);
+  if(!r){
+    nmiss++;
+    double approx_dt = exp(idt/dtfactor);
+    int* imfcopy = scinew int[nsp];
+    for(int i=0;i<nsp;i++)
+      imfcopy[i] = imf[i];
+    double* newmf =scinew double[nsp];
+    for(int i=0;i<nsp;i++)
+      newmf[i] = imf[i]*dmf;
+    double temp = itemp*dtemp;
+    double press = ipress*dpress;
+
+    cerr << "dt=" << approx_dt << "(" << idt << "), t=" << temp << ", p=" << press << ", mf=";
+    for(int i=0;i<nsp;i++){
+      if(imf[i])
+	cerr << " " << gas->speciesName(i) << ":" << newmf[i];
+    }
+    cerr << " create\n";
+
+    double dtemp;
+    try {
+      gas->setState_TPY(temp, press, newmf);
+      Reactor r;
+      r.setThermoMgr(*gas);
+      r.setKineticsMgr(*gas);
+      r.initialize();
+      r.advance(approx_dt);
+      dtemp = gas->temperature()-temp;
+      gas->getMassFractions(newmf);
+    }   catch (CanteraError) {
+      showErrors(cerr);
+      cerr << "test failed." << endl;
+      throw InternalError("Cantera failed", __FILE__, __LINE__);
+    }
+    cerr << "After: t=" << gas->temperature() << ", p=" << gas->pressure() << ", mf=";
+    for(int i=0;i<nsp;i++){
+      if(newmf[i] > dmf)
+	cerr << " " << gas->speciesName(i) << ":" << newmf[i];
+    }
+
+    r = scinew M3Key(nsp, idt, itemp, ipress, imfcopy, dtemp, newmf);
+    table.insert(r);
+    double hitrate = (double)nmiss/(double)nlook;
+    cerr << "temp: " << temp << " += " << dtemp << ", hitrate=" << hitrate*100 << "%\n";
+  }
+  for(int i=0;i<nsp;i++)
+    outmf[i] = r->mf[i];
+  return r->dtemp;
+}
+
+void Mixing3::computeModelSources(const ProcessorGroup*, 
 		                    const PatchSubset* patches,
 		                    const MaterialSubset* matls,
 		                    DataWarehouse* old_dw,
@@ -327,19 +367,16 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       int matl = matls->get(m);
 
       constCCVariable<double> density;
-      old_dw->get(density,     mi->rho_CCLabel,        matl, patch, Ghost::None, 0);
       constCCVariable<double> pressure;
-      old_dw->get(pressure,    mi->press_CCLabel,      matl, patch, Ghost::None, 0);
       constCCVariable<double> temperature;
+      constCCVariable<double>cv;
+      old_dw->get(density,     mi->rho_CCLabel,        matl, patch, Ghost::None, 0);
+      old_dw->get(pressure,    mi->press_CCLabel,      matl, patch, Ghost::None, 0);
       old_dw->get(temperature, mi->temp_CCLabel,       matl, patch, Ghost::None, 0);
-      constCCVariable<double> gamma;
-      old_dw->get(gamma,       mi->gammaLabel,         matl, patch, Ghost::None, 0);      
-      constCCVariable<double> cv;
-      old_dw->get(cv,          mi->specific_heatLabel, matl, patch, Ghost::None, 0);
-        
+      new_dw->get(cv,          mi->specific_heatLabel, matl, patch, Ghost::None, 0);
+    
       CCVariable<double> energySource;
-      new_dw->getModifiable(energySource,   mi->modelEng_srcLabel,
-			    matl, patch);
+      new_dw->getModifiable(energySource, mi->modelEng_srcLabel,matl, patch);
 
       Vector dx = patch->dCell();
       double volume = dx.x()*dx.y()*dx.z();
@@ -352,6 +389,7 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
       StaticArray<constCCVariable<double> > mf(numSpecies);
       StaticArray<CCVariable<double> > mfsource(numSpecies);
       int index = 0;
+      int* imf = scinew int[numSpecies];
       double* tmp_mf =scinew double[numSpecies];
       double* new_mf =scinew double[numSpecies];
       for(vector<Stream*>::iterator iter = streams.begin();
@@ -365,82 +403,63 @@ void Mixing2::computeModelSources(const ProcessorGroup*,
 			       matl, patch, Ghost::None, 0);
       }
 
-      Reactor r;
+      double ldt = log(dt)*dtfactor;
+      int idt;
+      if(ldt > 0)
+	idt = (int)ldt;
+      else if(ldt == (int)ldt)
+	idt = -(int)(-ldt);
+      else
+	idt = -(int)(-ldt)-1;
+
+      double approx_dt = exp(idt/dtfactor);
+      double dtscale = dt/approx_dt;
+      if(dtscale < 1 || dtscale > 1.1)
+	throw InternalError("Approximation messed!", __FILE__, __LINE__);
+      cerr << "dtscale=" << dtscale << '\n';
+
       double etotal = 0;
       for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++){
 	IntVector idx = *iter;
 	double mass = density[idx]*volume;
 	
-	for(int i = 0; i< numSpecies; i++)
+	for(int i = 0; i< numSpecies; i++){
 	  tmp_mf[i] = mf[i][*iter];
-
-#if 0
-	double sum = 0;
-	for(int i=0;i<numSpecies;i++){
-	  //ASSERT(tmp_mf[i] >= 0 && tmp_mf[i] <= 1);
-	  if(tmp_mf[i] < -1.e-8)
-	    cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
-	  if(tmp_mf[i] > 1+1.e-8)
-	    cerr << "mf[" << i << "]=" << tmp_mf[i] << '\n';
-	  sum += tmp_mf[i];
+	  imf[i] = (int)(mf[i][*iter]/dmf+0.5);
 	}
-	if(sum < 1-1.e-8 || sum > 1+1.e-8){
-	  cerr << "mf sum" << idx << "=" << sum << '\n';
-	}
-#endif
 	
 	double temp = temperature[*iter];
 	double press = pressure[*iter];
-	gas->setState_TPY(temp, press, tmp_mf);
-#if 0
-	cerr << "Cp=" << gas->cp_mass() << '\n';
-	cerr << "Cv=" << gas->cv_mass() << '\n';
-	cerr << "gamma=" << gas->cp_mass()/gas->cv_mass() << '\n';
-#endif
-	
-	// create a reactor
-	  
-	// specify the thermodynamic property and kinetics managers
-	r.setThermoMgr(*gas);
-	r.setKineticsMgr(*gas);
-	r.initialize();
-	r.advance(dt);
-	double dtemp = gas->temperature()-temp;
-	double energyx = dtemp*cv[*iter]*mass;
+	int itemp = (int)(temp/dtemp+0.5);
+	int ipress = (int)(press/dpress+0.5);
+
+	double dtemp = lookup(numSpecies, idt, itemp, ipress, imf, new_mf);
+	dtemp *= dtscale;
+	double energyx = dtemp * cv[idx] * mass;
 	energySource[idx] += energyx;
 	etotal += energyx;
-	gas->getMassFractions(new_mf);
 	for(int i = 0; i< numSpecies; i++)
 	  mfsource[i][*iter] += new_mf[i]-tmp_mf[i];
       }
-      cerr << "Mixing2 total energy: " << etotal << ", release rate=" << etotal/dt << '\n';
-#if 0
-      {
-	static ofstream outt("temp.dat");
-	outt << sharedState->getElapsedTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
-	outt.flush();
-	static ofstream outp("press.dat");
-	outp << sharedState->getElapsedTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
-	outp.flush();
-      }
-#endif
+      cerr << "Mixing3 total energy: " << etotal << ", release rate=" << etotal/dt << '\n';
       delete[] tmp_mf;
       delete[] new_mf;
     }
   }
 }
 //______________________________________________________________________
-void Mixing2::scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                      const LevelP&,
-                                                      const MaterialSet*)
+//
+void Mixing3::computeSpecificHeat(CCVariable<double>&,
+                                    const Patch*,   
+                                    DataWarehouse*, 
+                                    const int)      
 {
-  // do nothing      
+  //do nothing
 }
 //______________________________________________________________________
 //
-void Mixing2::scheduleErrorEstimate(const LevelP&,
-                                    SchedulerP&)
+void Mixing3::scheduleErrorEstimate(const LevelP&,
+                                         SchedulerP&)
 {
   // Not implemented yet
 }
-

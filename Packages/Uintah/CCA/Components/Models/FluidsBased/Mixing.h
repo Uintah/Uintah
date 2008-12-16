@@ -6,7 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/CCA/Components/Models/test/MaterialProperties.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/MaterialProperties.h>
 
 namespace Uintah {
 

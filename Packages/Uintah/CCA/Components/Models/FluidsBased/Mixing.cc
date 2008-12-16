@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/Mixing.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/Mixing.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>

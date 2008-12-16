@@ -3,7 +3,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
-#include <Packages/Uintah/CCA/Components/Models/test/SimpleRxn.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
