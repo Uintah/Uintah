@@ -11,6 +11,7 @@
 #    3)  Does a level directory for each level exist
 #    4)  for each level directory does a pxxxx.xml file exist
 #    5)  for each level directory does a pxxxx.data file exist and is size > 0 
+#    6)  Does each pxxxxx.data file contain data (RAID stripes exist)
 #______________________________________________________________________
 
 set udas = ($argv)
@@ -42,11 +43,13 @@ foreach U ($udas[*]:q)
   echo "$U"
   cd $U
   
+  echo -n "Test 0:  Does index.xml exist?"
+
   set passed0 = true
   if ( ! -e index.xml ) then
     set passed0 = false
   endif
-  echo "Test 0:  Does index.xml exist?                                        $passed0"
+  echo "                                        $passed0"
   
   if ($passed0 == "false") then
     goto bottom
@@ -54,6 +57,7 @@ foreach U ($udas[*]:q)
   
   #__________________________________
   # Test 1:  does each timestep directory exist 
+  echo -n "Test 1:  Does each timestep in index.xml exist?"
   set timesteps = (`grep "timestep href=" index.xml | awk -F '[=/"]' '{print $3}'`)
  
   set passed1 = true
@@ -65,7 +69,7 @@ foreach U ($udas[*]:q)
     endif
   end
 
-  echo "Test 1:  Does each timestep in index.xml exist?                       $passed1"
+  echo "                       $passed1"
   if ( $passed1 == "false" ) then
     foreach T ($missingTimesteps[*])
       echo "          Missing directory:  $T"
@@ -73,6 +77,7 @@ foreach U ($udas[*]:q)
   endif
   #__________________________________
   #Test 2: 
+  echo -n "Test 2:  Do all timesteps.xml files exist?"
   set passed2 = true
   foreach T ($timesteps[*]:q)
     if ( -d $T ) then
@@ -84,10 +89,11 @@ foreach U ($udas[*]:q)
       
     endif
   end
-  echo "Test 2:  Do all timesteps.xml files exist?                            $passed2"
+  echo "                            $passed2"
   
   #__________________________________
   #Test 3:  does a level directory exist for each level
+  echo -n "Test 3:  Do all the level directories exist?"    
   set passed3 = true
   foreach T ($timesteps[*]:q)
     if( -d $T && -e $T/timestep.xml ) then
@@ -106,13 +112,20 @@ foreach U ($udas[*]:q)
       end
     endif
   end
-  echo "Test 3:  Do all the level directories exist:                          $passed3"    
+  echo "                          $passed3"    
   
   #__________________________________
   #Test 4:  do the pxxxx.xml files for each level
   #Test 5:  do the pxxxxx.data files exist
+  #Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)
+
+  echo "Test 4:  Do all of the pxxxx.xml  files exist and have size > 0?      "  
+  echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0?      "
+  echo "Test 6:  Does each pxxxxx.data file contain data (RAID stripes exist)?"
+  
   set passed4 = true
   set passed5 = true
+  set passed6 = true
   
   foreach T ($timesteps[*]:q)
     if ( -e $T/timestep.xml ) then
@@ -152,12 +165,32 @@ foreach U ($udas[*]:q)
             echo "            $here has 0 bytes"
             set passed5 = false
           endif
+
+          # Does each pxxxxx.data file contain data (RAID stripes exist)
+          @ middle = $bytes / 2
+          @ endoff = $bytes - 16
+          set first_bytes =  "`xxd -ps -l 16 $here`"
+          set middle_bytes = "`xxd -ps -l 16 -seek $middle $here`" 
+          set endoff_bytes = "`xxd -ps -l 16 -seek $endoff $here`"
+          #Ignore t00000 since most data is low-entropy (zero) on the first timestep.
+          #If middle and (first or last) are empty, stripe missing 
+          if ( $T != "t00000" \
+           && $middle_bytes == "00000000000000000000000000000000" \
+           &&($first_bytes  == "00000000000000000000000000000000" \
+           || $endoff_bytes == "00000000000000000000000000000000" )) then
+            set passed6 = false
+            echo "            $here is empty (possible missing RAID stripe)"
+          endif
+
+
+
         endif
       end
     endif
   end
-  echo "Test 4:  Do all of the pxxxx.xml  files exist and have size > 0:      $passed4"  
-  echo "Test 5:  Do all of the pxxxx.data files exist and have size > 0:      $passed5"
+  echo "                                                         Test 4:      $passed4"  
+  echo "                                                         Test 5:      $passed5"
+  echo "                                                         Test 6:      $passed6"
   
 bottom:  
   cd ..
