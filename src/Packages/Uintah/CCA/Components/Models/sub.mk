@@ -13,7 +13,7 @@ ifeq ($(BUILD_RADIATION),yes)
   RADIATION += $(SRCDIR)/Radiation   
 endif
 
-SUBDIRS := $(SRCDIR)/test \
+SUBDIRS := $(SRCDIR)/FluidsBased \
            $(SRCDIR)/HEChem \
             $(RADIATION)
 

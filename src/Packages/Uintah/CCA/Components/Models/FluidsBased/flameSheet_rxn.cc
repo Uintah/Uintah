@@ -1,7 +1,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
 #include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
-#include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>

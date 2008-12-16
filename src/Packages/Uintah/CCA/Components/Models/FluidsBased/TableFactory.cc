@@ -1,6 +1,6 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/TableFactory.h>
-#include <Packages/Uintah/CCA/Components/Models/test/ArchesTable.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableFactory.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/ArchesTable.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;

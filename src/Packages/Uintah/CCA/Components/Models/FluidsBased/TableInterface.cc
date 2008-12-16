@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/TableInterface.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableInterface.h>
 
 using namespace Uintah;
 

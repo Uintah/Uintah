@@ -1,5 +1,5 @@
 
-#include <Packages/Uintah/CCA/Components/Models/test/MaterialProperties.h>
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/MaterialProperties.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
