@@ -1135,7 +1135,7 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
   bool do_check = false;
-
+/*disabled because reload balancing currently does not work unless the grid is recreated
   if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
     d_lastLbTimestep = timestep;
     do_check = true;
@@ -1144,7 +1144,9 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     d_lastLbTime = time;
     do_check = true;
   }
-  else if ((time == 0 && d_collectParticles == true) || d_checkAfterRestart) {
+  else
+  */
+  if ((time == 0 && d_collectParticles == true) || d_checkAfterRestart) {
     // do AFTER initialization timestep too (no matter how much init regridding),
     // so we can compensate for new particles
     do_check = true;
