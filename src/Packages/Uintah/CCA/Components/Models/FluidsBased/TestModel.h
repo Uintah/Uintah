@@ -94,7 +94,7 @@ WARNING
     MPMICELabel* MIlb;
     MaterialSet* mymatls;
     Material* d_matl;
-    double rate;
+    double d_rate;
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
     
     const VarLabel* totalMassXLabel;
