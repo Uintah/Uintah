@@ -9,7 +9,6 @@ SRCS += \
 	$(SRCDIR)/InvalidCompressionMode.cc \
 	$(SRCDIR)/InvalidGrid.cc            \
 	$(SRCDIR)/InvalidValue.cc           \
-	$(SRCDIR)/MaxIteration.cc	    \
 	$(SRCDIR)/ParameterNotFound.cc      \
 	$(SRCDIR)/ProblemSetupException.cc  \
 	$(SRCDIR)/TypeMismatchException.cc  \
