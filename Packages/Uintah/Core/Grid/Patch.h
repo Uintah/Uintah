@@ -1207,7 +1207,7 @@ WARNING
       static string getFaceName(FaceType face);
 
       /**
-       * Sets the static pointer to the new grid
+       * Sets a pointer to the new grid
        */
       inline void setGrid(Grid* grid)
       {
