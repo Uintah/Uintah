@@ -30,11 +30,7 @@ TestModel::~TestModel()
     delete mymatls;
 }
 
-void TestModel::outputProblemSpec(ProblemSpecP& ps)
-{
-  ps = params;
 
-}
 
 //______________________________________________________________________
 void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
@@ -42,7 +38,7 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
 {
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-  params->require("rate", rate);
+  params->require("rate", d_rate);
 
   vector<int> m(2);
   m[0] = matl0->getDWIndex();
@@ -70,14 +66,29 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
   totalIntEngXLabel  = VarLabel::create("totalIntEngExchanged",
                                         sum_vartype::getTypeDescription() );
 }
-      
+
+//______________________________________________________________________
+void TestModel::outputProblemSpec(ProblemSpecP& ps)
+{
+  ProblemSpecP model_ps = ps->appendChild("Model");
+  model_ps->setAttribute("type","Test");
+  
+  model_ps->appendElement("fromMaterial",matl0->getName());
+  model_ps->appendElement("toMaterial",  matl1->getName());
+  
+  model_ps->appendElement("rate",     d_rate );
+
+}
+ 
+//______________________________________________________________________
 void TestModel::scheduleInitialize(SchedulerP&,
 				   const LevelP& level,
 				   const ModelInfo*)
 {
   // None necessary...
 }
-      
+
+//______________________________________________________________________     
 void TestModel::scheduleComputeStableTimestep(SchedulerP&,
 					      const LevelP&,
 					      const ModelInfo*)
@@ -194,7 +205,7 @@ void TestModel::computeModelSources(const ProcessorGroup*,
     dw  ->  get(temp_0,   mi->temp_CCLabel,   m0, patch, gn, 0);    
     new_dw->get(sp_vol_0, mi->sp_vol_CCLabel, m0, patch, gn, 0);
     
-    double trate = rate*dt;
+    double trate = d_rate*dt;
     if(trate > 1){
       trate=1;
     }
