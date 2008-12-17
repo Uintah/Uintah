@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 
@@ -51,9 +52,17 @@ SO2RateSrc::problemSetup(const ProblemSpecP& params)
   //Initialize
   setTableIndex(-1);
 
-  //warning
-  cout << "** WARNING! **\n";
-  cout << "   The SO2Rate Source term requires that carbon_balance_es be set to true! \n";
+  //__________________________________
+  //  bulletproofing
+  bool test;  
+  ProblemSpecP root      = db->getRootNode();
+  ProblemSpecP cfd_ps    = root->findBlock("CFD");
+  ProblemSpecP arches_ps = cfd_ps->findBlock("ARCHES");
+  ProblemSpecP BC_ps     = arches_ps->findBlock("BoundaryConditions");
+  BC_ps->getWithDefault("sulfur_balance_es", test, false); 
+  if (test == false){
+    throw ProblemSetupException("The SO2Rate Source term requires that sulfur_balance_es be set to true! \n",__FILE__, __LINE__);
+  }
 }
 //****************************************************************************
 // Schedule source computation
