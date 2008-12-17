@@ -31,7 +31,6 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
 #include <Core/Containers/StaticArray.h>
@@ -2500,38 +2499,53 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
       // ignore BP if a timestep restart has already been requested
       bool tsr = new_dw->timestepRestarted();
       
-      if(test_max_iter == d_max_iter_equilibration && !tsr) {
-	throw MaxIteration(c,count,n_passes, L_indx,
-                          "MaxIterations reached", __FILE__, __LINE__);
+      ostringstream message;
+      bool allTestsPassed = true;
+      if(test_max_iter == d_max_iter_equilibration && !tsr){
+        allTestsPassed = false;
+        message << "Max. iterations reached ";
       }
-
+      
       for (int m = 0; m < numMatls; m++) {
-        ASSERT(( vol_frac[m][c] > 0.0 ) ||
-               ( vol_frac[m][c] < 1.0));
+        ASSERT(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0));
       }
+      
       if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
-        throw MaxIteration(c,count,n_passes, L_indx,
-             "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
+        allTestsPassed = false;
+        message << " sum (volumeFractions) != 1 ";
       }
-       
-      if ( press_new[c] < 0.0 && !tsr ){ 
-        throw MaxIteration(c,count,n_passes, L_indx,
-             "MaxIteration reached press_new < 0", __FILE__, __LINE__);
+      
+      if ( press_new[c] < 0.0 && !tsr) {
+        allTestsPassed = false;
+        message << " Computed pressure is < 0 ";
       }
-
+      
       for (int m = 0; m < numMatls; m++){
-        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0 && !tsr) { 
-          cout << "m = " << m << endl;
-          throw MaxIteration(c,count,n_passes, L_indx,
-               "MaxIteration reached rho_micro < 0 || vol_frac < 0",
-                                                 __FILE__, __LINE__);
+        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0 && !tsr) {
+          allTestsPassed = false;
+          message <<" rho_micro < 0 || vol_frac < 0";
         }
+      }
+      if(allTestsPassed != true){  // throw an exception of there's a problem
+        ostringstream warn;
+        warn << "\nICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
+             << message.str()
+             <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
+             <<"\nCompute equilibration pressure task is rarely the problem \n \n";
+        for (int m = 0; m < numMatls; m++){
+          warn<< "\n matl: " << m << "\n"
+               << "   rho_micro:     " << rho_micro[m][c] << "\n"
+               << "   vol_fraction:  "<< vol_frac[m][c]   << "\n"
+               << "   Temperature:   "<< Temp[m][c]       << "\n";
+        }
+        warn << "press new:     "<< press_new[c]   << "\n";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__); 
       }
 
       if (switchDebug_equil_press) {
         n_iters_equil_press[c] = count;
       }
-    }     // end of cell interator
+    } // end of cell interator
 
     cout_norm << "max. iterations in any cell " << test_max_iter << 
                  " on patch "<<patch->getID()<<endl; 

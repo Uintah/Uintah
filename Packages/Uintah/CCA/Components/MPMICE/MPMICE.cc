@@ -23,7 +23,6 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
 #include <Core/Containers/StaticArray.h>
@@ -1692,9 +1691,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     Vector dx       = patch->dCell(); 
     double cell_vol = dx.x()*dx.y()*dx.z();
-    char warning[100];
-    static int n_passes = 0;
-    n_passes ++; 
 
     StaticArray<double> press_eos(numALLMatls);
     StaticArray<double> dp_drho(numALLMatls),dp_de(numALLMatls);
@@ -1931,36 +1927,48 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       // ignore BP if timestep restart has already been requested
       bool tsr = new_dw->timestepRestarted();
       
-      if(test_max_iter == d_ice->d_max_iter_equilibration && !tsr) 
-       throw MaxIteration(c,count,n_passes,L_indx,
-                         "MaxIterations reached", __FILE__, __LINE__);
-
+      ostringstream message;
+      bool allTestsPassed = true;
+      if(test_max_iter == d_ice->d_max_iter_equilibration && !tsr){
+        allTestsPassed = false;
+        message << "Max. iterations reached ";
+      }
+      
       for (int m = 0; m < numALLMatls; m++) {
-           ASSERT(( vol_frac[m][c] > 0.0 ) ||
-                  ( vol_frac[m][c] < 1.0));
+        ASSERT(( vol_frac[m][c] > 0.0 ) ||( vol_frac[m][c] < 1.0));
       }
+      
       if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
-         throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
+        allTestsPassed = false;
+        message << " sum (volumeFractions) != 1 ";
       }
+      
       if ( press_new[c] < 0.0 && !tsr) {
-         throw MaxIteration(c,count,n_passes, L_indx,
-                         "MaxIteration reached press_new < 0", __FILE__, __LINE__);
+        allTestsPassed = false;
+        message << " Computed pressure is < 0 ";
       }
-
-      for (int m = 0; m < numALLMatls; m++)
-      if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) {
-        int i = c.x(), j=c.y(), k=c.z();
-          sprintf(warning, 
-          " cell[%d][%d][%d], mat %d, iter %d, n_passes %d,Now exiting ",
-          i,j,k,m,count,n_passes);
-          cout << "r_m " << rho_micro[m][c] << endl;
-          cout << "v_f " << vol_frac[m][c]  << endl;
-          cout << "tmp " << Temp[m][c]      << endl;
-          cout << "p_n " << press_new[c]    << endl;
-          cout << "m_v " << mat_volume[m]       << endl;
-          d_ice->Message(1," calc_equilibration_press:", 
-              " rho_micro < 0 || vol_frac < 0", warning);
+      
+      for (int m = 0; m < numALLMatls; m++){
+        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0 && !tsr) {
+          allTestsPassed = false;
+          message <<" rho_micro < 0 || vol_frac < 0";
+        }
+      }
+      if(allTestsPassed != true){  // throw an exception of there's a problem
+        ostringstream warn;
+        warn << "\nMPMICE::ComputeEquilibrationPressure: Cell "<< c << ", L-"<<L_indx <<"\n"
+             << message.str()
+             <<"\nThis usually means that something much deeper has gone wrong with the simulation. "
+             <<"\nCompute equilibration pressure task is rarely the problem \n \n";
+        for (int m = 0; m < numALLMatls; m++){
+          warn<< "\n matl: " << m << "\n"
+               << "   rho_micro:     " << rho_micro[m][c] << "\n"
+               << "   vol_fraction:  "<< vol_frac[m][c]   << "\n"
+               << "   Temperature:   "<< Temp[m][c]       << "\n"
+               << "   Mat. volume:   "<< mat_volume[m]    << "\n";
+        }
+        warn << "press new:     "<< press_new[c]   << "\n";
+        throw InvalidValue(warn.str(), __FILE__, __LINE__); 
       }
     }     // end of cell interator
     if (cout_norm.active())
@@ -1970,9 +1978,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // Now change how rho_CC is defined to 
     // rho_CC = mass/cell_volume  NOT mass/mat_volume 
     for (int m = 0; m < numALLMatls; m++) {
-     if(ice_matl[m]){
-      rho_CC_new[m].copyData(rho_CC_old[m]);
-     }
+      if(ice_matl[m]){
+        rho_CC_new[m].copyData(rho_CC_old[m]);
+      }
     }
 
     //__________________________________

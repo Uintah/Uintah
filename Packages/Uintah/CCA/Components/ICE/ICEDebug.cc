@@ -1155,12 +1155,13 @@ void ICE::find_gnuplot_origin_And_dx(const string variableType,
   }
   
   if (test !=1) {
-    ostringstream desc;
-    desc << "\n GNUPLOT: you have more that one principal dir. specified \n" << 
+    ostringstream warn;
+    warn << "\n PrintDebug:GNUPLOT: you have more that one principal dir. specified \n" << 
          " or you haven't specified one.  Double check dbg_BeginIndex or \n" <<
          " dbg_EndIndex\n" <<
          "low "<< low << "high " << high <<endl;
-    Message(1, desc.str(),"","");
+    
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
   }
   // For face centered variables subtract dx/2 off the CC position
   double offset = 0.0;
@@ -1173,41 +1174,5 @@ void ICE::find_gnuplot_origin_And_dx(const string variableType,
   Vector pos = patch->cellPosition(low).asVector();
   *origin = pos[principalDir] - offset;
   // cout << " dx " << *dx  << " *origin " << *origin << " offset " << offset << endl;
-}
-
-/* 
- ======================================================================
- Function~  ICE::Message:
- Purpose~  Output an error message and stop the program if requested. 
- _______________________________________________________________________ */
-void    ICE::Message(
-        int     abort,          /* =1 then abort                            */
-        const string&    message1,   
-        const string&    message2,   
-        const string&    message3) 
-{        
-  cerr << "\n\n ______________________________________________\n";
-  cerr << message1 << "\n";
-  cerr << message2 << "\n";
-  cerr << message3 << "\n";
-  cerr << "\n\n ______________________________________________\n";
-  const char* exitMode = getenv("ICE_DEBUGGER_ON_EXIT");
-
-  if(!exitMode)
-    exitMode = "no";    //default exit mode
-  //______________________________
-  // Now aborting program
-  string mode(exitMode);
-  if(abort == 1) {
-    if(mode == "yes") {
-      string c;
-      cerr << "\n";
-      cerr << "<c> = cvd\n";
-      cin >> c;
-      system("date");
-      if(c == "c") system("cvd -P sus");
-    }
-    exit(1); 
-  }
 }
 
