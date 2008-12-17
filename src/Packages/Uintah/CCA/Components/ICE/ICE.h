@@ -768,9 +768,6 @@ namespace Uintah {
                                      IntVector&,
                                      double *,
                                      double *);
-                                                           
-      void Message(int abort, const string& message1, const string& message2,
-                 const string& message3);
 
       void readData(const Patch* patch, int include_GC, const string& filename,
                   const string& var_name, CCVariable<double>& q_CC);
