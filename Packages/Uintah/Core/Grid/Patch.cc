@@ -34,12 +34,12 @@ Patch::Patch(const Level* level,
 	     const IntVector& inLowIndex, const IntVector& inHighIndex, 
              unsigned int levelIndex,  int id)
   : d_lowIndex__New(inLowIndex), d_highIndex__New(inHighIndex), 
-    d_realPatch(0), d_level_index(-1), d_grid(0)
+    d_realPatch(0), d_level_index(-1),
 #ifndef DELETE_OLD_INTERFACE
     d_lowIndex(lowIndex),d_highIndex(highIndex),
     d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
 #endif
-    d_id( id ),d_arrayBCS(0)
+    d_grid(0),d_id( id ),d_arrayBCS(0)
 {
   
   if(d_id == -1){
