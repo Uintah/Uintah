@@ -193,8 +193,10 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_props->setCalcExtraScalars(d_calcExtraScalars);
 
-  if (d_calcExtraScalars) d_props->setExtraScalars(&d_extraScalars);
-
+  if (d_calcExtraScalars){
+    d_props->setExtraScalars(&d_extraScalars);
+  }
+  
   d_props->problemSetup(db);
   // read turbulence mode
   // read turbulence model
@@ -206,7 +208,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->setMMS(d_doMMS);
   d_boundaryCondition->setCalcExtraScalars(d_calcExtraScalars);
-  if (d_calcExtraScalars) d_boundaryCondition->setExtraScalars(&d_extraScalars);
+  if (d_calcExtraScalars){
+    d_boundaryCondition->setExtraScalars(&d_extraScalars);
+  }
   d_boundaryCondition->problemSetup(db);
 
   d_carbon_balance_es = d_boundaryCondition->getCarbonBalanceES();
@@ -215,28 +219,31 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_props->setSulfurBalanceES(d_sulfur_balance_es);
 
   db->require("turbulence_model", turbModel);
-  if (turbModel == "smagorinsky") 
+  if (turbModel == "smagorinsky"){ 
     d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  else  if (turbModel == "dynamicprocedure") 
+  }else  if (turbModel == "dynamicprocedure"){ 
     d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  else if (turbModel == "compdynamicprocedure")
+  }else if (turbModel == "compdynamicprocedure"){
     d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
-  else if (turbModel == "complocaldynamicprocedure") {
+  }else if (turbModel == "complocaldynamicprocedure") {
     d_initTurb = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition); 
     d_turbModel = scinew CompLocalDynamicProcedure(d_lab, d_MAlab, d_physicalConsts, d_boundaryCondition);
   }
-  else 
+  else {
     throw InvalidValue("Turbulence Model not supported" + turbModel, __FILE__, __LINE__);
+  }
+
 //  if (d_turbModel)
   d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
-  if (d_dynScalarModel)
+  if (d_dynScalarModel){
     d_turbModel->setCombustionSpecifics(d_calcScalar, d_calcEnthalpy,
                                         d_calcReactingScalar);
+  }
 
 #ifdef PetscFilter
     d_filter = scinew Filter(d_lab, d_boundaryCondition, d_myworld);

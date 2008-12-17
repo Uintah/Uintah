@@ -45,12 +45,15 @@ CO2RateSrc::problemSetup(const ProblemSpecP& params)
 
   //Initialize
   setTableIndex(-1);
-    
+      
   //__________________________________
   //  bulletproofing
   bool test;  
-  ProblemSpecP BC_ps = params->findBlock("BoundaryConditions");
-  BC_ps->getWithDefault("carbon_balance_es", test, false);
+  ProblemSpecP root      = db->getRootNode();
+  ProblemSpecP cfd_ps    = root->findBlock("CFD");
+  ProblemSpecP arches_ps = cfd_ps->findBlock("ARCHES");
+  ProblemSpecP BC_ps     = arches_ps->findBlock("BoundaryConditions");
+  BC_ps->getWithDefault("carbon_balance_es", test, false);  
   
   if (test == false){
     throw ProblemSetupException("The CO2Rate Source term requires that carbon_balance_es be set to true! \n",__FILE__, __LINE__);
