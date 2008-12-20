@@ -2070,7 +2070,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
  Function~  MPMICE::binaryPressureSearch-- 
  Purpose:   When the technique for find the equilibration pressure
             craps out then try this method.
- Reference:  See Jim.
+ Reference:  Se Numerical Methods by Robert W. Hornbeck.
 _____________________________________________________________________*/ 
 void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                             StaticArray<CCVariable<double> >& rho_micro, 
@@ -2091,40 +2091,40 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                             double & sum,
                             IntVector c )
 {
-   // Start over for this cell using a binary search
-//   cout << " cell " << c << " Starting binary pressure search "<< endl;
-   count = 0;
-   bool converged = false;
-   double c_2;
-   double Pleft=0., Pright=0., Ptemp=0., Pm=0.;
-   double rhoMicroR=0., rhoMicroL=0.;
-   StaticArray<double> vfR(numALLMatls);
-   StaticArray<double> vfL(numALLMatls);
-   Pm = press[c];
+  // Start over for this cell using a binary search
+//  cout << " cell " << c << " Starting binary pressure search "<< endl;
+  count = 0;
+  bool converged = false;
+  double c_2;
+  double Pleft=0., Pright=0., Ptemp=0., Pm=0.;
+  double rhoMicroR=0., rhoMicroL=0.;
+  StaticArray<double> vfR(numALLMatls);
+  StaticArray<double> vfL(numALLMatls);
+  Pm = press[c];
 
-   while ( count < d_ice->d_max_iter_equilibration && converged == false) {
-   count++;
-   sum = 0.;
-   for (int m = 0; m < numALLMatls; m++) {
-     Material* matl = d_sharedState->getMaterial( m );
-     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-     if(ice_matl){        // ICE
-       rho_micro[m][c] =
-         ice_matl->getEOS()->computeRhoMicro(Pm,gamma[m][c],
-                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
-     }
-     if(mpm_matl){        // MPM
-       rho_micro[m][c] =
-         mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                      Pm,press_ref,mpm_matl);
-     }
-     vol_frac[m][c] = rho_CC_new[m][c]/rho_micro[m][c];
-     sum += vol_frac[m][c];
-   }  // loop over matls
-   double residual = 1. - sum;
+  while ( count < d_ice->d_max_iter_equilibration && converged == false) {
+    count++;
+    sum = 0.;
+    for (int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+      if(ice_matl){        // ICE
+        rho_micro[m][c] =
+          ice_matl->getEOS()->computeRhoMicro(Pm,gamma[m][c],
+                                            cv[m][c],Temp[m][c],rho_micro[m][c]);
+      }
+      if(mpm_matl){        // MPM
+        rho_micro[m][c] =
+          mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                       Pm,press_ref,mpm_matl);
+      }
+      vol_frac[m][c] = rho_CC_new[m][c]/rho_micro[m][c];
+      sum += vol_frac[m][c];
+    }  // loop over matls
+    double residual = 1. - sum;
 
-   if(fabs(residual) <= convergence_crit){
+    if(fabs(residual) <= convergence_crit){
       converged = true;
       press_new[c] = Pm;
       //__________________________________
@@ -2148,62 +2148,60 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
                                   dp_drho[m],c_2,mpm_matl);
         }
         speedSound[m][c] = sqrt(c_2);     // Isentropic speed of sound
-     }
-   }
-   if(count == 1){
-    if(residual < 0){
-     Pleft  = press[c];
-     Pright = 3.*press[c];
-     Ptemp  = max(10.*press[c],press_ref);
+      }
     }
-    else{
-     Pleft  = DBL_EPSILON;
-     Pright = press[c];
+    // Initial guess
+    if(count == 1){
+      Pleft = DBL_EPSILON;
+      Pright=1.0/DBL_EPSILON;
+      Ptemp = .5*(Pleft + Pright);
     }
-   }
 
-   double sumR=0., sumL=0.;
-   for (int m = 0; m < numALLMatls; m++) {
-     Material* matl = d_sharedState->getMaterial( m );
-     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-     
-     if(ice_matl){        //  ICE
-       rhoMicroR = ice_matl->getEOS()->
-        computeRhoMicro(Pright,gamma[m][c],cv[m][c],Temp[m][c],rho_micro[m][c]);
-       rhoMicroL = ice_matl->getEOS()->
-        computeRhoMicro(Pleft, gamma[m][c],cv[m][c],Temp[m][c],rho_micro[m][c]);
-     }
-     if(mpm_matl){        //  MPM
-       rhoMicroR =
-         mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                      Pright,press_ref,mpm_matl);
-       rhoMicroL =
-         mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                      Pleft, press_ref,mpm_matl);
-     }
-     vfR[m] = rho_CC_new[m][c]/rhoMicroR;
-     vfL[m] = rho_CC_new[m][c]/rhoMicroL;
-     sumR+=vfR[m];
-     sumL+=vfL[m];
-   }  // all matls
-   
-   double prod = (1.- sumR)*(1. - sumL);
-   if(prod < 0.){
-     Ptemp = Pleft;
-     Pleft = .5*(Pleft + Pright);
-   }
-   else{
-     Pleft  = Pright;
-     Pright = Ptemp;
-     if(Pleft == Pright){
-        Pright = 4.*Pleft;
-     }
-     Ptemp = 2.*Ptemp;
-   }
-   Pm = .5*(Pleft + Pright);
-//   cout << setprecision(15);
-//   cout << "Pm = " << Pm << " 1.-sum " << residual << endl;
+    double sumR=0., sumL=0.;
+    for (int m = 0; m < numALLMatls; m++) {
+      Material* matl = d_sharedState->getMaterial( m );
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+
+      if(ice_matl){        //  ICE
+        rhoMicroR = ice_matl->getEOS()->
+         computeRhoMicro(Pright,gamma[m][c],cv[m][c],Temp[m][c],rho_micro[m][c]);
+        rhoMicroL = ice_matl->getEOS()->
+         computeRhoMicro(Pleft, gamma[m][c],cv[m][c],Temp[m][c],rho_micro[m][c]);
+      }
+      if(mpm_matl){        //  MPM
+        rhoMicroR =
+          mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                       Pright,press_ref,mpm_matl);
+        rhoMicroL =
+          mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
+                                       Pleft, press_ref,mpm_matl);
+      }
+      vfR[m] = rho_CC_new[m][c]/rhoMicroR;
+      vfL[m] = rho_CC_new[m][c]/rhoMicroL;
+      sumR += vfR[m];
+      sumL += vfL[m];
+      
+//      cout << "matl: " << m << " vol_frac_L: " << vfL[m] << " vol_frac_R: " << vfR[m] 
+//           << " rho_CC: " << rho_CC_new[m][c] << " rho_micro_L: " << rhoMicroL << " rhoMicroR: " << rhoMicroR << endl;
+    }  // all matls
+
+
+//    cout << "Pm = " << Pm << "\t P_L: " << Pleft << "\t P_R: " << Pright << "\t 1.-sum " << residual << " \t sumR: " << sumR << " \t sumL " << sumL << endl;
+
+    //__________________________________
+    //  come up with a new guess
+    double prod = (1.- sumR)*(1. - sumL);
+    if(prod < 0.){
+      Ptemp = Pleft;
+      Pleft = .5*(Pleft + Pright);
+    }else{
+      Pright = Pleft;
+      Pleft  = Ptemp;
+      Pleft  = 0.5 * (Pleft + Pright);
+    }
+    Pm = .5*(Pleft + Pright);
+ //   cout << setprecision(15);
   }   // end of converged
 }
 
