@@ -1145,13 +1145,13 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     do_check = true;
   }
   else
-  */
   if ((time == 0 && d_collectParticles == true) || d_checkAfterRestart) {
     // do AFTER initialization timestep too (no matter how much init regridding),
     // so we can compensate for new particles
     do_check = true;
     d_checkAfterRestart = false;
   }
+  */
 
   if (dbg.active() && d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
