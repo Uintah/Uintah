@@ -14,7 +14,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/ReactiveScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>

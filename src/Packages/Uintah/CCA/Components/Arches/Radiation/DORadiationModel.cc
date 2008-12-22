@@ -13,7 +13,6 @@
 #endif
 //#include <Packages/Uintah/CCA/Components/Arches/Mixing/Common.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Core/Containers/OffsetArray1.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Time.h>
 

@@ -1,7 +1,6 @@
 //----- RHSSolver.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/RHSSolver.h>
-#include <Core/Containers/Array1.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
@@ -9,7 +8,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
