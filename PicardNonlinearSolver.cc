@@ -25,7 +25,6 @@
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>

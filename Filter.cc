@@ -10,7 +10,6 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
