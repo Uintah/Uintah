@@ -1134,8 +1134,7 @@ bool DynamicLoadBalancer::needLoadBalance()
   double time = d_sharedState->getElapsedTime();
 
   bool do_check = false;
-//disabled because there is a bug when doing this that still needs to be fixed  
-#if 0
+  
   if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
     d_lastLbTimestep = timestep;
     do_check = true;
@@ -1151,7 +1150,6 @@ bool DynamicLoadBalancer::needLoadBalance()
     do_check = true;
     d_checkAfterRestart = false;
   }
-#endif
   return do_check;
 }
 
@@ -1161,7 +1159,8 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 {
   d_oldAssignment = d_processorAssignment;
   d_oldAssignmentBasePatch = d_assignmentBasePatch;
-  return d_lastChangedTimestep==d_sharedState->getCurrentTopLevelTimeStep();
+     
+  return d_lastChangedTimestep==(d_sharedState->getCurrentTopLevelTimeStep()-1);
 } 
 
 void
