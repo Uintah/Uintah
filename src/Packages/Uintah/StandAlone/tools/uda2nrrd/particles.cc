@@ -281,7 +281,15 @@ handleParticleData( QueryInfo & qinfo )
     if( data[ pos ] < min ) { min = data[ pos ]; }
   }
 
-  printf("%s (%d):  min/max: %f / %f\n", name.c_str(), (int)data.size(), min, max);
+  if( data.size() == 0 ) {
+    printf( "\n" );
+    printf( "ERROR?  Data size is 0 for %s....\n", name.c_str() );
+    printf( "        In other words, no particles were found for this variable.\n" );
+    printf( "\n" );
+  }
+  else {
+    printf("%s (%d):  min/max: %f / %f\n", name.c_str(), (int)data.size(), min, max);
+  }
 
   ParticleDataContainer result( name, floatArray, data.size() );
 
