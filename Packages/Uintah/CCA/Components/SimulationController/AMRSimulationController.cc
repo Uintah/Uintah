@@ -161,7 +161,6 @@ AMRSimulationController::run()
        
        if(regridded)
          d_sharedState->setRegridTimestep(true);
-
      }
 
      if(dbg_barrier.active()) {
@@ -191,41 +190,33 @@ AMRSimulationController::run()
        d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
        scheduleTime = Time::currentSeconds() - scheduleTime;
 
-       if(d_myworld->myrank() == 0){
+       if (d_myworld->myrank() == 0) {
          cout << "done schedule and data copy, time:" << scheduleTime << endl;
-       }
-     }
-#if 0
-       if (currentGrid != oldGrid) {
-         if (d_myworld->myrank() == 0) {
-           cout << "  REGRIDDING:";
-           //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-           for (int i = 0; i < currentGrid->numLevels(); i++) {
-             cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
-           }
-           cout << endl;
-           if (amrout.active()) {
-             amrout << "---------- NEW GRID ----------" << endl;
-             amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
-             for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
-               LevelP level = currentGrid->getLevel( levelIndex );
-               amrout << "  Level " << level->getID()
-                 << ", indx: "<< level->getIndex()
-                 << " has " << level->numPatches() << " patch(es)" << endl;
-               for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
-                 const Patch* patch = *patchIter;
-                 amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
-                   << ": box=" << patch->getExtraBox()
-                   << ", lowIndex=" << patch->getExtraCellLowIndex__New() << ", highIndex="
-                   << patch->getExtraCellHighIndex__New() << ")" << endl;
-               }
+         
+         //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+         for (int i = 0; i < currentGrid->numLevels(); i++) {
+           cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
+         }
+         cout << endl;
+         if (amrout.active()) {
+           amrout << "---------- NEW GRID ----------" << endl;
+           amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
+           for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+             LevelP level = currentGrid->getLevel( levelIndex );
+             amrout << "  Level " << level->getID()
+               << ", indx: "<< level->getIndex()
+               << " has " << level->numPatches() << " patch(es)" << endl;
+             for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+               const Patch* patch = *patchIter;
+               amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
+                 << ": box=" << patch->getExtraBox()
+                 << ", lowIndex=" << patch->getExtraCellLowIndex__New() << ", highIndex="
+                 << patch->getExtraCellHighIndex__New() << ")" << endl;
              }
            }
          }
-
        }
-#endif
-
+     }
 
      // Compute number of dataWarehouses - multiplies by the time refinement
      // ratio for each level you increase
