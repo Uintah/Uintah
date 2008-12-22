@@ -19,19 +19,12 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
 
 
 using namespace Uintah;
@@ -228,9 +221,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                   bool doing_EKT_now)
 {
   DataWarehouse* parent_old_dw;
-  if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
-  else parent_old_dw = old_dw;
-
+  if (timelabels->recursion){
+    parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
+  }else{
+    parent_old_dw = old_dw;
+  }
   delt_vartype delT;
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
@@ -782,9 +777,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         IntVector indexHigh = patch->getFortranCellHighIndex__New();
         
         // set density for the whole domain
-
-
-              // Store current cell
         double sue, suw, sun, sus, sut, sub;
         switch (index) {
         case Arches::XDIR:
@@ -908,9 +900,10 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         
       // add multimaterial momentum source term
 
-      if (d_MAlab)
+      if (d_MAlab){
         d_source->computemmMomentumSource(pc, patch, index, cellinfo,
                                           &velocityVars, &constVelocityVars);
+      }
 
       // Calculate the Velocity BCS
       //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
@@ -936,17 +929,17 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 #endif
         }*/
       }
-    // apply multimaterial velocity bc
-    // treats multimaterial wall as intrusion
-      if (d_MAlab)
+      // apply multimaterial velocity bc
+      // treats multimaterial wall as intrusion
+      if (d_MAlab){
         d_boundaryCondition->mmvelocityBC(patch, index, cellinfo,
                                           &velocityVars, &constVelocityVars);
-    
-    // Modify Velocity Mass Source
-    //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
-    //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
-    //           [u,v,w]VelNonLinSrcPBLM
-    //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
+      }
+      // Modify Velocity Mass Source
+      //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
+      //           [u,v,w]VelConvCoefPBLM, [u,v,w]VelLinSrcPBLM, 
+      //           [u,v,w]VelNonLinSrcPBLM
+      //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
       d_source->modifyVelMassSource(patch,index,
                                     &velocityVars, &constVelocityVars);
@@ -975,10 +968,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
       //MMS boundary conditions ~Setting the uncorrected velocities~
       if (d_doMMS) { 
-
         double time_shiftmms = 0.0;
         time_shiftmms = delta_t * timelabels->time_position_multiplier_before_average;
-
 
         d_boundaryCondition->mmsvelocityBC(patch, index, cellinfo, 
                                            &velocityVars, &constVelocityVars, 
@@ -987,46 +978,48 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
 
 
-  if (d_pressure_correction) {
-  int ioff, joff, koff;
-  IntVector idxLoU;
-  IntVector idxHiU;
-  switch(index) {
-  case Arches::XDIR:
-    idxLoU = patch->getSFCXFORTLowIndex();
-    idxHiU = patch->getSFCXFORTHighIndex();
-    ioff = 1; joff = 0; koff = 0;
-    fort_computevel(idxLoU, idxHiU, velocityVars.uVelRhoHat, 
-                    constVelocityVars.pressure,
-                    constVelocityVars.new_density, delta_t,
-                    ioff, joff, koff, cellinfo->dxpw);
-    break;
-  case Arches::YDIR:
-    idxLoU = patch->getSFCYFORTLowIndex();
-    idxHiU = patch->getSFCYFORTHighIndex();
-    ioff = 0; joff = 1; koff = 0;
-    fort_computevel(idxLoU, idxHiU, velocityVars.vVelRhoHat,
-                    constVelocityVars.pressure,
-                    constVelocityVars.new_density, delta_t,
-                    ioff, joff, koff, cellinfo->dyps);
+      if (d_pressure_correction) {
+        int ioff, joff, koff;
+        IntVector idxLoU;
+        IntVector idxHiU;
+        switch(index) {
+        case Arches::XDIR:
+          idxLoU = patch->getSFCXFORTLowIndex();
+          idxHiU = patch->getSFCXFORTHighIndex();
+          ioff = 1; joff = 0; koff = 0;
+          fort_computevel(idxLoU, idxHiU, velocityVars.uVelRhoHat, 
+                          constVelocityVars.pressure,
+                          constVelocityVars.new_density, delta_t,
+                          ioff, joff, koff, cellinfo->dxpw);
+          break;
+        case Arches::YDIR:
+          idxLoU = patch->getSFCYFORTLowIndex();
+          idxHiU = patch->getSFCYFORTHighIndex();
+          ioff = 0; joff = 1; koff = 0;
+          fort_computevel(idxLoU, idxHiU, velocityVars.vVelRhoHat,
+                          constVelocityVars.pressure,
+                          constVelocityVars.new_density, delta_t,
+                          ioff, joff, koff, cellinfo->dyps);
 
-    break;
-  case Arches::ZDIR:
-    idxLoU = patch->getSFCZFORTLowIndex();
-    idxHiU = patch->getSFCZFORTHighIndex();
-    ioff = 0; joff = 0; koff = 1;
-    fort_computevel(idxLoU, idxHiU, velocityVars.wVelRhoHat,
-                    constVelocityVars.pressure,
-                    constVelocityVars.new_density, delta_t,
-                    ioff, joff, koff, cellinfo->dzpb);
-    break;
-  default:
-    throw InvalidValue("Invalid index in MomentumSolver::addPressGrad", __FILE__, __LINE__);
-  }
-  }
-
-        
-    }
+          break;
+        case Arches::ZDIR:
+          idxLoU = patch->getSFCZFORTLowIndex();
+          idxHiU = patch->getSFCZFORTHighIndex();
+          ioff = 0; joff = 0; koff = 1;
+          fort_computevel(idxLoU, idxHiU, velocityVars.wVelRhoHat,
+                          constVelocityVars.pressure,
+                          constVelocityVars.new_density, delta_t,
+                          ioff, joff, koff, cellinfo->dzpb);
+          break;
+        default:
+          throw InvalidValue("Invalid index in MomentumSolver::addPressGrad", __FILE__, __LINE__);
+        }
+      }
+    }  // index loop
+    
+    
+    //__________________________________
+    //
     double time_shift = 0.0;
     if (d_boundaryCondition->getInletBC()) {
     time_shift = delta_t * timelabels->time_position_multiplier_before_average;
