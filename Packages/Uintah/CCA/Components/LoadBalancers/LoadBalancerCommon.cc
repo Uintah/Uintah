@@ -127,6 +127,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
   
 }
 
+
 bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
   if (state != check) {
