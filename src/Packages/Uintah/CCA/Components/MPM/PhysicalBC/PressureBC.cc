@@ -55,8 +55,6 @@ PressureBC::~PressureBC()
 
 void PressureBC::outputProblemSpec(ProblemSpecP& ps)
 {
-
-
 }
 
 // Get the type of this object for BC application
@@ -87,7 +85,7 @@ PressureBC::flagMaterialPoint(const Point& p,
 
   } else if (d_surfaceType == "cylinder") {
     // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
-    double tol = dxpp.length();
+    double tol = dxpp.minComponent();
     CylinderGeometryPiece* cgp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     GeometryPiece* outer = scinew CylinderGeometryPiece(cgp->top(), 
                                                      cgp->bottom(), 
