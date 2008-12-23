@@ -35,10 +35,8 @@ POSSIBLE REVISIONS
 
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 class ExtraScalarSolver; 
