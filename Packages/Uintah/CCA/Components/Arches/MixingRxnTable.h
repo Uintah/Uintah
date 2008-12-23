@@ -15,12 +15,10 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 // C++ includes
-#include <sgi_stl_warnings_off.h>
 #include     <vector>
 #include     <map>
 #include     <string>
 #include     <stdexcept>
-#include <sgi_stl_warnings_on.h>
 
 /***************************************************************************
 CLASS
