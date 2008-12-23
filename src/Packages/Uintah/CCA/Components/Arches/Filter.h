@@ -11,8 +11,6 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Core/Geometry/IntVector.h>
 
 #include <Core/Containers/Array1.h>
 

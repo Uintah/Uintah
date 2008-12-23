@@ -45,7 +45,6 @@ WARNING
 #include <Packages/Uintah/Core/Util/Handle.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

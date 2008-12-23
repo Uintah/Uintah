@@ -35,7 +35,6 @@ WARNING
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/NonlinearSolver.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
   using namespace SCIRun;
