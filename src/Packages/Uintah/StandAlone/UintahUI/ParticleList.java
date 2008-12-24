@@ -109,11 +109,18 @@ public class ParticleList extends Object {
       PrintWriter pw = new PrintWriter(fw);
 
       // Write the data
+      int nofParts = size();
+      pw.println("<?xml version='1.0' encoding='ISO-8859-1' ?>");
+      pw.println("<Uintah_Include>");
+      pw.println("<!--");
       pw.println("# RVE Size");
       pw.println(d_rveSize);
-      pw.println("# Particle List");
-      pw.println("# type  radius  thickness rotation  xCent  yCent  zCent  matCode");
-      int nofParts = size();
+      pw.println("Number of objects");
+      pw.println(nofParts);
+      pw.println("-->");
+      pw.println("<union>");
+      //pw.println("# Particle List");
+      //pw.println("# type  radius  thickness rotation  xCent  yCent  zCent  matCode");
       DecimalFormat df = new DecimalFormat("####0.0######");
       for (int ii = 0; ii < nofParts; ii++) {
         Particle part = getParticle(ii);
@@ -124,15 +131,22 @@ public class ParticleList extends Object {
         double yCent = part.getCenter().getY();
         double zCent = part.getCenter().getZ();
         int matCode = part.getMatCode();
-        pw.println("# Particle "+ii);
-        pw.println(partType+" "+
-                   df.format(radius)+" "+
-                   df.format(thickness)+" "+
-                   df.format(rotation)+" "+
-                   df.format(xCent)+" "+
-                   df.format(yCent)+" "+
-                   df.format(zCent)+" "+matCode);
+        pw.println("  <sphere label = \""+ii+"\">");
+        pw.println("    <origin>["+xCent+", "+yCent+", "+zCent+"]</origin>");
+        pw.println("    <radius>"+radius+"</radius>");
+        pw.println("  </sphere>");
+
+        //pw.println("# Particle "+ii);
+        //pw.println(partType+" "+
+        //           df.format(radius)+" "+
+        //           df.format(thickness)+" "+
+        //           df.format(rotation)+" "+
+        //           df.format(xCent)+" "+
+        //           df.format(yCent)+" "+
+        //           df.format(zCent)+" "+matCode);
       }
+      pw.println("</union>");
+      pw.println("</Uintah_Include>");
       pw.close();
       fw.close();
     } catch (Exception e) {
