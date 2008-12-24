@@ -5,6 +5,10 @@
  *   Biswajit Banerjee
  *   July 2005
  *
+ *  Original code works only for the first timestep, and all the materials.
+ *  Added -mat, -timesteplow, -timestephigh 
+ *     options by Jonah Lee, December 2008
+ *
  */
 
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -36,7 +40,17 @@ using namespace Uintah;
 
 // declarations
 void usage(const std::string& badarg, const std::string& progname);
-void printParticleID(DataArchive* da, const Box& box);
+void printParticleID(DataArchive* da, int mat, 
+const bool tslow_set, const bool tsup_set, 
+unsigned long & time_step_lower, unsigned long & time_step_upper,
+const Box& box);
+
+//borrowed from puda.h
+void findTimestep_loopLimits( const bool tslow_set, 
+                                const bool tsup_set,
+                                const std::vector<double> times,
+                                unsigned long & time_step_lower,
+                                unsigned long & time_step_upper );
 
 // Main
 int main(int argc, char** argv)
@@ -47,6 +61,13 @@ int main(int argc, char** argv)
   double xmin = 0.0, ymin = 0.0, zmin = 0.0;
   double xmax = 1.0, ymax = 1.0, zmax = 1.0;
   string filebase;
+
+  int mat = -1;
+  unsigned long time_step_lower = 0;
+  unsigned long time_step_upper = 1;
+  unsigned long time_step_inc = 1;
+  bool tslow_set = false;
+  bool tsup_set = false;;
 
   // set defaults for cout
   cout.setf(ios::scientific,ios::floatfield);
@@ -63,8 +84,25 @@ int main(int argc, char** argv)
       xmax = atof(argv[++i]);
       ymax = atof(argv[++i]);
       zmax = atof(argv[++i]);
+    } else if (s == "-mat") {
+      mat = atoi(argv[++i]);
+    } else if (s == "-timesteplow" ||
+               s == "-timeStepLow" ||
+               s == "-timestep_low") {
+      time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      tslow_set = true; 
+    } else if (s == "-timestephigh" ||
+               s == "-timeStepHigh" ||
+               s == "-timestep_high") {
+      time_step_upper = strtoul(argv[++i],(char**)NULL,10);
+      tsup_set = true;
+    } else if (s == "-timestepinc" ||
+               s == "-timestepInc" ||
+               s == "-timestep_inc") {
+      time_step_inc = strtoul(argv[++i],(char**)NULL,10);
     } 
   }
+
   filebase = argv[argc-1];
 
   if(filebase == "" || filebase == argv[0]){
@@ -81,7 +119,8 @@ int main(int argc, char** argv)
     Box box(lower, upper);
     
     // Get the particle IDs
-    printParticleID(da, box);
+    printParticleID(da, mat, tslow_set, tsup_set, time_step_lower, 
+         time_step_upper, box);
 
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
@@ -96,9 +135,12 @@ void usage(const std::string& badarg, const std::string& progname)
 {
   if(badarg != "") cerr << "Error parsing argument: " << badarg << endl;
 
-  cerr << "Usage: " << progname << " [options] <archive file>\n\n";
+  cerr << "Usage: " << progname << "[options] <archive file>\n\n";
   cerr << "Valid options are:\n";
-  cerr << "  -box <xmin> <ymin> <zmin> <xmax> <ymax> <zmax>\n";
+  cerr << "  -box <xmin> <ymin> <zmin> <xmax> <ymax> <zmax> (required)\n";
+  cerr << "  -mat <material id>\n";
+  cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
+  cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
   exit(1);
 }
 
@@ -107,7 +149,12 @@ void usage(const std::string& badarg, const std::string& progname)
 // Print particle IDs
 //
 ////////////////////////////////////////////////////////////////////////////
-void printParticleID(DataArchive* da, const Box& box)
+void printParticleID(DataArchive* da, int mat, 
+                    const bool tslow_set, 
+                    const bool tsup_set,
+                    unsigned long & time_step_lower,
+                    unsigned long & time_step_upper,
+                    const Box& box)
 {
   // Box
   cerr << "Selction box = " << box << endl;
@@ -128,16 +175,19 @@ void printParticleID(DataArchive* da, const Box& box)
   }
 
   // Now that the variable has been found, get the data for the
-  // first timestep from the archive
-  vector<int> timesteps;
+  // desired timesteps from the archive
+  vector<int> index;
   vector<double> times;
-  da->queryTimesteps(timesteps, times);
-  ASSERTEQ(timesteps.size(), times.size());
-      
-  // Get the data for the first timestep
-  int index = 0;
-  double time = times[index];
-  GridP grid = da->queryGrid(0);
+  da->queryTimesteps(index, times);
+  ASSERTEQ(index.size(), times.size());
+  findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, 
+    time_step_upper); 
+
+  // Loop thru all time steps
+  for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
+
+  double time = times[t];
+  GridP grid = da->queryGrid(t);
 
   // Loop thru all the levels
   for(int l=0;l<grid->numLevels();l++){
@@ -154,16 +204,17 @@ void printParticleID(DataArchive* da, const Box& box)
       std::string var = "p.x";
 
       // loop thru all the materials
-      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, index);
+      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
       ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
       for(; matlIter != matls.end(); matlIter++){
         int matl = *matlIter;
+        if (mat != -1 && matl != mat) continue;
 
         ParticleVariable<Point> point;
-        da->query(point, var, matl, patch, index);
+        da->query(point, var, matl, patch, t);
         ParticleSubset* pset = point.getParticleSubset();
         ParticleVariable<long64> pid;
-        da->query(pid, "p.particleID", matl, patch, index);
+        da->query(pid, "p.particleID", matl, patch, t);
         if(pset->numParticles() > 0){
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
@@ -179,5 +230,30 @@ void printParticleID(DataArchive* da, const Box& box)
       }
     } // end of patch loop
   } // end of level loop
+ } // end of time loop
 }
+
+void
+findTimestep_loopLimits( const bool tslow_set, 
+                                 const bool tsup_set,
+                                 const vector<double> times,
+                                 unsigned long & time_step_lower,
+                                 unsigned long & time_step_upper )
+{
+  if( !tslow_set ) {
+    time_step_lower = 0;
+  }
+  else if( time_step_lower >= times.size() ) {
+    cerr << "timesteplow must be between 0 and " << times.size()-1 << "\n";
+    abort();
+  }
+  if( !tsup_set ) {
+    time_step_upper = times.size() - 1;
+  }
+  else if( time_step_upper >= times.size() ) {
+    cerr << "timestephigh must be between 0 and " << times.size()-1 << "\n";
+    abort();
+  }
+}
+
 
