@@ -82,20 +82,6 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   ps->get("tolerance",d_tol);
   d_initialMaterialTemperature = 269.15;
   ps->get("initial_material_temperature",d_initialMaterialTemperature);
-  
-  
-
-//   d_yield = YieldConditionFactory::create(ps);
-//   if(!d_yield)cerr << "Yield condition disabled\n";
-
-//   d_yield = YieldConditionFactory::create(ps);
-//   if(!d_yield){
-//     ostringstream desc;
-//     desc << "An error occured in the YieldConditionFactory that has \n"
-//          << " slipped through the existing bullet proofing. Please tell \n"
-//          << " Biswajit.  "<< endl;
-//     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
-//   }
 
   d_stable = StabilityCheckFactory::create(ps);
   if(!d_stable) cerr << "Stability check disabled\n";
@@ -105,7 +91,7 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
     ostringstream desc;
     desc << "An error occured in the ViscoPlasticityModelFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
+         << " ffjhl.  "<< endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
@@ -115,7 +101,7 @@ ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
     ostringstream desc;
     desc << "An error occured in the EquationOfStateFactory that has \n"
          << " slipped through the existing bullet proofing. Please tell \n"
-         << " Biswajit.  "<< endl;
+         << " ffjhl.  "<< endl;
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
   
@@ -358,7 +344,6 @@ ViscoPlastic::initializeCMData(const Patch* patch,
     pPlasticTempInc[*iter] = 0.0;
   }
 
-  
 
   // Initialize the data for the plasticity model
   d_plastic->initializeInternalVars(pset, new_dw);
@@ -429,7 +414,6 @@ ViscoPlastic::addComputesAndRequires(Task* task,
     addSharedCRForHypoExplicit(task, matlset, patches);
   }
 
-cout << "addComputesAndRequires" << endl;
 
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
@@ -500,7 +484,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
   double alpha = d_initialData.alpha;
   double rho_0 = matl->getInitialDensity();
   double Tm = matl->getMeltTemperature();
-//  double sqrtTwo = sqrt(2.0);
+
   double totalStrainEnergy = 0.0;
   double epdot; //plastic strain rate (1/sec)
 
@@ -543,7 +527,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(px, lb->pXLabel, pset);
     old_dw->get(psize, lb->pSizeLabel, pset);
     old_dw->get(pMass, lb->pMassLabel, pset);
-//    old_dw->get(pVolume, lb->pVolumeLabel, pset);
 
     // Get the velocity from the grid and particle velocity
     constParticleVariable<Vector> pVelocity;
@@ -639,8 +622,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
                            pset);
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
-//    cout << "new_dw->allocateAndPut" << endl;
-
     // Get yield, drag, back stresses
     d_plastic->getInternalVars(pset, old_dw);
     d_plastic->allocateAndPutInternalVars(pset, new_dw);
@@ -648,14 +629,10 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
     // Loop thru particles
     ParticleSubset::iterator iter = pset->begin(); 
 
-//    cout << "ViscoPlastic.cc: *iter=" << *iter << endl;
-
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-      cout << "Viscoplastic.cc: idx=" << idx << endl;
-      //cerr << getpid() << " idx = " << idx << endl;
       // Calculate the velocity gradient (L) from the grid velocity
 
       interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx]);
@@ -689,8 +666,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
-
-      cout << "pMass " << pMass[idx] << endl;
 
       // Compute polar decomposition of F (F = VR)
       tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
