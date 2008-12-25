@@ -690,6 +690,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
+
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
       // Calculate the velocity gradient (L) from the grid velocity

@@ -509,7 +509,6 @@ SuvicI::computeStressIncTangent(double& epdot,
 bool 
 SuvicI::checkFailureMaxTensileStress(const Matrix3 pStress)
 {
-bool failed = false;
 double s1, s2, s3;
 
 pStress.getEigenValues(s1, s2, s3);

@@ -429,7 +429,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(FF, pFailureStrain[idx], 
                                            pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx]);
+                                           pStress_new[idx], idx);
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
@@ -471,7 +471,8 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
                                                 const double& pFailureStrain, 
                                                 const int& pFailed,
                                                 int& pFailed_new, 
-                                                Matrix3& pStress_new)
+                                                Matrix3& pStress_new,
+                                                const int idx)
 {
   Matrix3 Identity, zero(0.0); Identity.Identity();
 
@@ -494,13 +495,17 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
       ee.eigen(eigval, eigvec);
   }
 
-  double epsMax = Max(fabs(eigval[0]),fabs(eigval[2]));
+//change to maximum principal stress or strain;
+//now it distinguishes tension from compression
+//let ffjhl know if this causes a problem.
+//  double epsMax = Max(fabs(eigval[0]),fabs(eigval[2]));
+  double epsMax = Max(Max(eigval[0],eigval[1]), eigval[2]);
 
   // Find if the particle has failed
   pFailed_new = pFailed;
   if (epsMax > pFailureStrain) pFailed_new = 1;
   if (pFailed != pFailed_new) {
-     cout << "Particle has failed : eps = " << epsMax 
+     cout << "Particle " << idx << " has failed : eps = " << epsMax 
           << " eps_f = " << pFailureStrain << endl;
   }
 
@@ -641,7 +646,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(FF, pFailureStrain[idx], 
                                            pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx]);
+                                           pStress_new[idx], idx);
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));

@@ -151,7 +151,8 @@ namespace Uintah {
                                               const double& pFailureStrain, 
                                               const int& pFailed,
                                               int& pFailed_new, 
-                                              Matrix3& pStress_new);
+                                              Matrix3& pStress_new,
+                                              const int idx);
 
     // compute stress at each particle in the patch
     void computeStressTensorImplicit(const PatchSubset* patches,
