@@ -348,7 +348,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
                                            pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx]);
+                                           pStress_new[idx], idx);
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
@@ -556,7 +556,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
                                            pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx]);
+                                           pStress_new[idx],idx);
 
       // Compute the strain energy for all the particles
       double U = .5*bulk*(.5*(J*J - 1.0) - log(J));
