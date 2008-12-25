@@ -30,7 +30,7 @@ namespace Uintah {
     University of Alaska Fairbanks \n
     Copyright (C) 2008 University of Alaska Fairbanks
 
-    Borrowed from ViscoPlastic.h
+    Borrowed from ElasticPlastic.h
 
     The rate of deformation and stress is rotated to material configuration 
     before the updated values are calculated.  The left stretch and rotation 
@@ -43,7 +43,7 @@ namespace Uintah {
     2) Flow rule in the form of a Plasticity Model.
     3) Yield condition.
     4) Stability condition.
-    5) Damage model - not yet.
+    5) Damage model - after CNHDamage
 
     \warning Only SUVIC-I implemented. TODO-distill later for more general
     viscoplastic models; add newton-raphson local iteration
@@ -58,7 +58,16 @@ namespace Uintah {
       double Bulk;    /*< Bulk modulus */
       double Shear;   /*< Shear Modulus */
       double alpha;   /*< Coeff. of thermal expansion */
-    };   
+    };  
+
+    // Create datatype for failure criteria (only stress/strain now) 
+    struct FailureVariableData {
+      double mean;      /*< Mean failure variable */
+      double std;       /*< Standard deviation of failure variable */
+      std::string dist; /*< Failure variable distrinution */
+      bool failureByStress; /*<Failure by stress (default) */
+    };
+
 
     // Create datatype for storing state variable parameters
  
@@ -69,6 +78,9 @@ namespace Uintah {
     const VarLabel* pPlasticTempLabel;  
     const VarLabel* pPlasticTempIncLabel;  
     const VarLabel* pLocalizedLabel;  
+
+    const VarLabel* pFailureVariableLabel; //For failure criteria
+    const VarLabel* pFailureVariableLabel_preReloc;
 
     const VarLabel* pLeftStretchLabel_preReloc;  // For ViscoPlasticity
     const VarLabel* pRotationLabel_preReloc;  // For ViscoPlasticity
@@ -81,13 +93,16 @@ namespace Uintah {
   protected:
 
     CMData           d_initialData;
-    
+
+    FailureVariableData d_varf;
+
     double d_tol;
     double d_initialMaterialTemperature;
     bool   d_useModifiedEOS;
+
+    bool   d_checkFailure;
     bool   d_removeParticles;
     bool   d_setStressToZero;
-    bool   d_checkFailureMaxTensileStress;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
@@ -100,6 +115,10 @@ namespace Uintah {
     // copy constructor
     //ViscoPlastic(const ViscoPlastic &cm);
     ViscoPlastic& operator=(const ViscoPlastic &cm);
+
+    void getFailureVariableData(ProblemSpecP& ps);
+
+    void setFailureVariableData(const ViscoPlastic* cm);
 
   public:
 
@@ -271,6 +290,17 @@ namespace Uintah {
     virtual double getCompressibility();
 
   protected:
+
+    // Modify the stress if particle has failed
+    bool updateFailedParticlesAndModifyStress(const Matrix3& bb,
+                                              const double& pFailureVariable,
+                                              const int& pLocalized,
+                                              int& pLocalized_new,
+                                              Matrix3& pStress_new,
+                                              const int idx,
+                                              const double temp_new,
+                                              const double Tm_cur);
+
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute the updated left stretch and rotation tensors */
