@@ -77,7 +77,8 @@ using namespace Uintah;
 void printParticleVariable(DataArchive* da, 
 			   string particleVariable,
 			   unsigned long time_step_lower,
-			   unsigned long time_step_upper);
+			   unsigned long time_step_upper,
+                           int mat);
 
 /////////////////////////////////////////////////////////////////
 
@@ -111,7 +112,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -verbose            (prints status of output)\n";
   cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
-  cerr << "  -matl <int>         (only outputs data for matl (for -jim1 and -jim2 only))\n";
+  cerr << "  -matl <int>         (only outputs data for matl)\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
@@ -191,6 +192,8 @@ main(int argc, char** argv)
   }
 
   CommandLineFlags clf;
+
+  int mat = -1; //not part of clf
 
   // set defaults for cout.
   cout.setf(ios::scientific,ios::floatfield);
@@ -305,6 +308,8 @@ main(int argc, char** argv)
                s == "-matl") {
       clf.matl_jim = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
+      mat = clf.matl_jim;
+      cout << "mat= " << mat << endl;
     } else if (s == "-verbose") {
       clf.do_verbose = true;
     } else if (s == "-timesteplow" ||
@@ -398,7 +403,7 @@ main(int argc, char** argv)
 	abort();
       }
       printParticleVariable( da, clf.particleVariable,
-                             clf.time_step_lower, clf.time_step_upper );
+                             clf.time_step_lower, clf.time_step_upper, mat );
     }
 #if 0
     tecplot();
@@ -489,7 +494,8 @@ main(int argc, char** argv)
 	        for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		    matlIter != matls.end(); matlIter++){
 		  int matl = *matlIter;
-		  
+		  if (mat != -1 && matl != mat) continue;
+ 
 		  // dumps header and variable info to file
 		  ostringstream fnum, pnum, matnum; 
 		  string filename;
@@ -570,7 +576,7 @@ void
 printParticleVariable( DataArchive* da, 
                        string particleVariable,
                        unsigned long time_step_lower,
-                       unsigned long time_step_upper )
+                       unsigned long time_step_upper, int mat)
 {
   // Check if the particle variable is available
   vector<string> vars;
@@ -628,6 +634,7 @@ printParticleVariable( DataArchive* da,
 	    ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
 	    for(; matlIter != matls.end(); matlIter++){
 	      int matl = *matlIter;
+              if (mat != -1 && matl != mat) continue;
 
 	      // Find the name of the variable
 	      if (var == particleVariable) {
