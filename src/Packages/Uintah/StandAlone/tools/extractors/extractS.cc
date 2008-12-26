@@ -135,11 +135,13 @@ int main(int argc, char** argv)
 void usage(const std::string& badarg, const std::string& progname)
 {
   if(badarg != "") cerr << "Error parsing argument: " << badarg << endl;
-  cerr << "Usage: " << progname 
-       << " -m <material id>"
-       << " -p <particle id file>"
-       << " -uda <archive file>"
-       << " -o <output file>\n\n";
+  cerr << "\nPrints out a uintah data archive for particle stress data.\n";
+  cerr << "Usage:\n";
+  cerr << " -m <material id> (required)\n";
+  cerr << " -p <particle id file> (required, use selectpart to create this file)\n";
+  cerr << " -uda <archive file> (required)\n";
+  cerr << " -o <output file> (required)\n";
+  cerr << " -timefiles (optional, outputs one file per timestep instead per particle (default))\n\n";
   exit(1);
 }
 
