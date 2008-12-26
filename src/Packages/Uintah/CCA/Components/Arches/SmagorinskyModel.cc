@@ -428,23 +428,19 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 
     double small = 1.0e-10;
     double var_limit = 0.0;
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
+    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+      IntVector c = *iter;
 
-          // check variance bounds and normalize
-          var_limit = scalar[currCell] * (1.0 - scalar[currCell]);
+      // check variance bounds and normalize
+      var_limit = scalar[c] * (1.0 - scalar[c]);
 
-          if(scalarVar[currCell] < small){
-            scalarVar[currCell] = 0.0;
-          }
-          if(scalarVar[currCell] > var_limit){
-            scalarVar[currCell] = var_limit;
-          }
-          normalizedScalarVar[currCell] = scalarVar[currCell]/(var_limit+small);
-        }
+      if(scalarVar[c] < small){
+        scalarVar[c] = 0.0;
       }
+      if(scalarVar[c] > var_limit){
+        scalarVar[c] = var_limit;
+      }
+      normalizedScalarVar[c] = scalarVar[c]/(var_limit+small);
     }
 
     
@@ -656,33 +652,24 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
-    // compatible with fortran index
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
-    
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          IntVector currCell(colX, colY, colZ);
-          double scale = 0.5*(scalar[currCell]+
-                              scalar[IntVector(colX+1,colY,colZ)]);
-          double scalw = 0.5*(scalar[currCell]+
-                              scalar[IntVector(colX-1,colY,colZ)]);
-          double scaln = 0.5*(scalar[currCell]+
-                              scalar[IntVector(colX,colY+1,colZ)]);
-          double scals = 0.5*(scalar[currCell]+
-                              scalar[IntVector(colX,colY-1,colZ)]);
-          double scalt = 0.5*(scalar[currCell]+
-                              scalar[IntVector(colX,colY,colZ+1)]);
-          double scalb = 0.5*(scalar[currCell]+
-                              scalar[IntVector(colX,colY,colZ-1)]);
-          double dfdx = (scale-scalw)/cellinfo->sew[colX];
-          double dfdy = (scaln-scals)/cellinfo->sns[colY];
-          double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
-          scalarDiss[currCell] = viscosity[currCell]/d_turbPrNo*
-                                (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
-        }
-      }
+    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      int colX = c.x();
+      int colY = c.y();
+      int colZ = c.z();
+
+      double scale = 0.5*(scalar[c] + scalar[IntVector(colX+1,colY,colZ)]);
+      double scalw = 0.5*(scalar[c] + scalar[IntVector(colX-1,colY,colZ)]);
+      double scaln = 0.5*(scalar[c] + scalar[IntVector(colX,colY+1,colZ)]);
+      double scals = 0.5*(scalar[c] + scalar[IntVector(colX,colY-1,colZ)]);
+      double scalt = 0.5*(scalar[c] + scalar[IntVector(colX,colY,colZ+1)]);
+      double scalb = 0.5*(scalar[c] + scalar[IntVector(colX,colY,colZ-1)]);
+      
+      double dfdx = (scale-scalw)/cellinfo->sew[colX];
+      double dfdy = (scaln-scals)/cellinfo->sns[colY];
+      double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
+      scalarDiss[c] = viscosity[c]/d_turbPrNo*
+                            (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz); 
     }
 
     
@@ -696,6 +683,10 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     bool zplus =  patch->getBCType(Patch::zplus)  != Patch::Neighbor;
     int outlet_celltypeval = d_boundaryCondition->outletCellType();
     int pressure_celltypeval = d_boundaryCondition->pressureCellType();
+    
+    IntVector idxLo = patch->getFortranCellLowIndex__New();
+    IntVector idxHi = patch->getFortranCellHighIndex__New();
+    
     if (xminus) {
       int colX = idxLo.x();
       for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {

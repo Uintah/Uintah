@@ -578,31 +578,28 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 
     double reactscalar_clipped = 0.0;
     double epsilon = 1.0e-15;
-    // Get the patch bounds and the variable bounds
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
-    for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-        for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-          IntVector currCell(ii,jj,kk);
-          if (reactscalarVars.scalar[currCell] > 1.0) {
-            if (reactscalarVars.scalar[currCell] > 1.0 + epsilon) {
-              reactscalar_clipped = 1.0;
-              cout << "reactscalar got clipped to 1 at " << currCell << " , reactscalar value was " << reactscalarVars.scalar[currCell] << " , density guess was " << constReactscalarVars.density_guess[currCell] << endl;
-            }
-            reactscalarVars.scalar[currCell] = 1.0;
-          }  
-          else if (reactscalarVars.scalar[currCell] < 0.0) {
-            if (reactscalarVars.scalar[currCell] < - epsilon) {
-              reactscalar_clipped = 1.0;
-              cout << "reactscalar got clipped to 0 at " << currCell << " , reactscalar value was " << reactscalarVars.scalar[currCell] << " , density guess was " << constReactscalarVars.density_guess[currCell] << endl;
-              cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> in the <ARCHES> section of the input file, but it would only help for first time substep if RKSSP is used" << endl;
-            }
-            reactscalarVars.scalar[currCell] = 0.0;
-          }
+        
+        
+    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+      IntVector c = *iter;
+
+      if (reactscalarVars.scalar[c] > 1.0) {
+        if (reactscalarVars.scalar[c] > 1.0 + epsilon) {
+          reactscalar_clipped = 1.0;
+          cout << "reactscalar got clipped to 1 at " << c << " , reactscalar value was " << reactscalarVars.scalar[c] << " , density guess was " << constReactscalarVars.density_guess[c] << endl;
         }
+        reactscalarVars.scalar[c] = 1.0;
+      }  
+      else if (reactscalarVars.scalar[c] < 0.0) {
+        if (reactscalarVars.scalar[c] < - epsilon) {
+          reactscalar_clipped = 1.0;
+          cout << "reactscalar got clipped to 0 at " << c << " , reactscalar value was " << reactscalarVars.scalar[c] << " , density guess was " << constReactscalarVars.density_guess[c] << endl;
+          cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> in the <ARCHES> section of the input file, but it would only help for first time substep if RKSSP is used" << endl;
+        }
+        reactscalarVars.scalar[c] = 0.0;
       }
     }
+
     if (timelabels->recursion){
       new_dw->put(max_vartype(reactscalar_clipped), d_lab->d_ReactScalarClippedLabel);
     }
