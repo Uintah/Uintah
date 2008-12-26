@@ -561,29 +561,6 @@ public:
 
 private:
 
-  // GROUP:  Actual Computations (Private)  :
-  ////////////////////////////////////////////////////////////////////////
-  // Call Fortran to compute u velocity BC terms
-  void uVelocityBC(const Patch* patch,
-                   CellInformation* cellinfo,
-                   ArchesVariables* vars,
-                   ArchesConstVariables* constvars);
-                  
-
-  ////////////////////////////////////////////////////////////////////////
-  // Call Fortran to compute v velocity BC terms
-  void vVelocityBC(const Patch* patch,
-                   CellInformation* cellinfo,
-                   ArchesVariables* vars,
-                   ArchesConstVariables* constvars);
-
-  ////////////////////////////////////////////////////////////////////////
-  // Call Fortran to compute w velocity BC terms
-  void wVelocityBC(const Patch* patch,
-                   CellInformation* cellinfo,
-                   ArchesVariables* vars,
-                   ArchesConstVariables* constvars);
-
   ////////////////////////////////////////////////////////////////////////
   // Call Fortran to compute u velocity BC terms
   void intrusionuVelocityBC(const Patch* patch,

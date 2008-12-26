@@ -1203,26 +1203,8 @@ BoundaryCondition::velocityBC(const Patch* patch,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars) 
 {
-  // Call the fortran routines
-  uVelocityBC(patch, cellinfo, vars, constvars);
-  vVelocityBC(patch, cellinfo, vars, constvars);
-  wVelocityBC(patch, cellinfo, vars, constvars);
-}
-
-//****************************************************************************
-// call fortran routine to calculate the U Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::uVelocityBC(const Patch* patch,
-                               CellInformation* cellinfo,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* constvars)
-{
   int wall_celltypeval = wallCellType();
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getSFCXFORTLowIndex();
-  IntVector idxHi = patch->getSFCXFORTHighIndex();
-
+ 
   // computes momentum source term due to wall
   // uses total viscosity for wall source, not just molecular viscosity
   //double molViscosity = d_physicalConsts->getMolecularViscosity();
@@ -1232,7 +1214,11 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
+  
+  //__________________________________
+  //    X Dir
+  IntVector idxLo = patch->getSFCXFORTLowIndex();
+  IntVector idxHi = patch->getSFCXFORTHighIndex();
   fort_bcuvel(idxLo, idxHi,
               vars->uVelocityCoeff[Arches::AE],
               vars->uVelocityCoeff[Arches::AW], 
@@ -1253,31 +1239,10 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
               cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
               xminus, xplus, yminus, yplus, zminus, zplus);
 
-}
-
-//****************************************************************************
-// call fortran routine to calculate the V Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::vVelocityBC(const Patch* patch,
-                               CellInformation* cellinfo,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* constvars)
-{
-  int wall_celltypeval = wallCellType();
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getSFCYFORTLowIndex();
-  IntVector idxHi = patch->getSFCYFORTHighIndex();
-
-  // computes momentum source term due to wall
-  // uses total viscosity for wall source, not just molecular viscosity
-  //double molViscosity = d_physicalConsts->getMolecularViscosity();
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+  //__________________________________
+  //    Y Dir
+  idxLo = patch->getSFCYFORTLowIndex();
+  idxHi = patch->getSFCYFORTHighIndex();
 
   fort_bcvvel(idxLo, idxHi,
               vars->vVelocityCoeff[Arches::AE],
@@ -1299,31 +1264,10 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
               cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
               xminus, xplus, yminus, yplus, zminus, zplus);
 
-}
-
-//****************************************************************************
-// call fortran routine to calculate the W Velocity BC
-//****************************************************************************
-void 
-BoundaryCondition::wVelocityBC(const Patch* patch,
-                               CellInformation* cellinfo,
-                               ArchesVariables* vars,
-                               ArchesConstVariables* constvars)
-{
-  int wall_celltypeval = wallCellType();
-  // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getSFCZFORTLowIndex();
-  IntVector idxHi = patch->getSFCZFORTHighIndex();
-
-  // computes momentum source term due to wall
-  // uses total viscosity for wall source, not just molecular viscosity
-  //double molViscosity = d_physicalConsts->getMolecularViscosity();
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+  //__________________________________
+  //    Z Dir
+  idxLo = patch->getSFCZFORTLowIndex();
+  idxHi = patch->getSFCZFORTHighIndex();
 
   fort_bcwvel(idxLo, idxHi,
               vars->wVelocityCoeff[Arches::AE],
@@ -1344,11 +1288,7 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
               constvars->viscosity,
               cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
               xminus, xplus, yminus, yplus, zminus, zplus);
-
 }
-
-
-
 
 //______________________________________________________________________
 //  Set the boundary conditions on the pressure stencil.
