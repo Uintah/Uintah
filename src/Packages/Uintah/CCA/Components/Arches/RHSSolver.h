@@ -58,7 +58,6 @@ public:
   // Velocity Solve
   void calculateHatVelocity(const ProcessorGroup* ,
                             const Patch* patch,
-                            int index, 
                             double delta_t,
                             CellInformation* cellinfo,
                             ArchesVariables* vars,

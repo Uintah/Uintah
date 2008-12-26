@@ -56,132 +56,132 @@ Discretization::~Discretization()
 void 
 Discretization::calculateVelocityCoeff(const Patch* patch,
                                        double delta_t,
-                                       int index, bool lcentral,
+                                       bool lcentral,
                                        CellInformation* cellinfo,
                                        ArchesVariables* coeff_vars,
                                        ArchesConstVariables* coeff_constvars)
 {
-  if (index == Arches::XDIR) {
-  
-    // ignore faces that lie on the edge of the computational domain
-    // in the principal direction
-    IntVector oci(-1,0,0);  // one cell inward
-    IntVector idxLoU = patch->getExtraLowIndex(Patch::XFaceBased, oci);
-    IntVector idxHiU = patch->getExtraHighIndex(Patch::XFaceBased,oci)-IntVector(1,1,1);
+   // ignore faces that lie on the edge of the computational domain
+  // in the principal direction
 
-    // Calculate the coeffs
-    fort_uvelcoef(coeff_constvars->uVelocity,
-                  coeff_vars->uVelocityConvectCoeff[Arches::AE],
-                  coeff_vars->uVelocityConvectCoeff[Arches::AW],
-                  coeff_vars->uVelocityConvectCoeff[Arches::AN],
-                  coeff_vars->uVelocityConvectCoeff[Arches::AS],
-                  coeff_vars->uVelocityConvectCoeff[Arches::AT],
-                  coeff_vars->uVelocityConvectCoeff[Arches::AB],
-                  coeff_vars->uVelocityCoeff[Arches::AP],
-                  coeff_vars->uVelocityCoeff[Arches::AE],
-                  coeff_vars->uVelocityCoeff[Arches::AW],
-                  coeff_vars->uVelocityCoeff[Arches::AN],
-                  coeff_vars->uVelocityCoeff[Arches::AS],
-                  coeff_vars->uVelocityCoeff[Arches::AT],
-                  coeff_vars->uVelocityCoeff[Arches::AB],
-                  coeff_constvars->vVelocity, coeff_constvars->wVelocity,
-                  coeff_constvars->density, coeff_constvars->viscosity,
-                  delta_t, lcentral,
-                  cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-                  cellinfo->cnn, cellinfo->csn, cellinfo->css,
-                  cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-                  cellinfo->sewu, cellinfo->sew, cellinfo->sns,
-                  cellinfo->stb, cellinfo->dxepu, cellinfo->dxpwu,
-                  cellinfo->dxpw, cellinfo->dynp, cellinfo->dyps,
-                  cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1u,
-                  cellinfo->fac2u, cellinfo->fac3u, cellinfo->fac4u,
-                  cellinfo->iesdu, cellinfo->iwsdu, cellinfo->nfac,
-                  cellinfo->sfac, cellinfo->tfac, cellinfo->bfac,
-                  cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
-                  cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
-                  cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
-                  cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
-                  idxLoU, idxHiU);
+  //__________________________________
+  //  X DIR
+  IntVector oci(-1,0,0);  // one cell inward
+  IntVector idxLoU = patch->getExtraLowIndex(Patch::XFaceBased, oci);
+  IntVector idxHiU = patch->getExtraHighIndex(Patch::XFaceBased,oci)-IntVector(1,1,1);
 
-  } else if (index == Arches::YDIR) {
-  
-    IntVector oci(0,-1,0);  // one cell inward
-    IntVector idxLoV = patch->getExtraLowIndex(Patch::YFaceBased, oci);
-    IntVector idxHiV = patch->getExtraHighIndex(Patch::YFaceBased,oci)-IntVector(1,1,1);
+  // Calculate the coeffs
+  fort_uvelcoef(coeff_constvars->uVelocity,
+                coeff_vars->uVelocityConvectCoeff[Arches::AE],
+                coeff_vars->uVelocityConvectCoeff[Arches::AW],
+                coeff_vars->uVelocityConvectCoeff[Arches::AN],
+                coeff_vars->uVelocityConvectCoeff[Arches::AS],
+                coeff_vars->uVelocityConvectCoeff[Arches::AT],
+                coeff_vars->uVelocityConvectCoeff[Arches::AB],
+                coeff_vars->uVelocityCoeff[Arches::AP],
+                coeff_vars->uVelocityCoeff[Arches::AE],
+                coeff_vars->uVelocityCoeff[Arches::AW],
+                coeff_vars->uVelocityCoeff[Arches::AN],
+                coeff_vars->uVelocityCoeff[Arches::AS],
+                coeff_vars->uVelocityCoeff[Arches::AT],
+                coeff_vars->uVelocityCoeff[Arches::AB],
+                coeff_constvars->vVelocity, coeff_constvars->wVelocity,
+                coeff_constvars->density, coeff_constvars->viscosity,
+                delta_t, lcentral,
+                cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
+                cellinfo->cnn, cellinfo->csn, cellinfo->css,
+                cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+                cellinfo->sewu, cellinfo->sew, cellinfo->sns,
+                cellinfo->stb, cellinfo->dxepu, cellinfo->dxpwu,
+                cellinfo->dxpw, cellinfo->dynp, cellinfo->dyps,
+                cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1u,
+                cellinfo->fac2u, cellinfo->fac3u, cellinfo->fac4u,
+                cellinfo->iesdu, cellinfo->iwsdu, cellinfo->nfac,
+                cellinfo->sfac, cellinfo->tfac, cellinfo->bfac,
+                cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
+                cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
+                cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
+                cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
+                idxLoU, idxHiU);
 
-    // Calculate the coeffs
-    fort_vvelcoef(coeff_constvars->vVelocity,
-                  coeff_vars->vVelocityConvectCoeff[Arches::AE],
-                  coeff_vars->vVelocityConvectCoeff[Arches::AW],
-                  coeff_vars->vVelocityConvectCoeff[Arches::AN],
-                  coeff_vars->vVelocityConvectCoeff[Arches::AS],
-                  coeff_vars->vVelocityConvectCoeff[Arches::AT],
-                  coeff_vars->vVelocityConvectCoeff[Arches::AB],
-                  coeff_vars->vVelocityCoeff[Arches::AP],
-                  coeff_vars->vVelocityCoeff[Arches::AE],
-                  coeff_vars->vVelocityCoeff[Arches::AW],
-                  coeff_vars->vVelocityCoeff[Arches::AN],
-                  coeff_vars->vVelocityCoeff[Arches::AS],
-                  coeff_vars->vVelocityCoeff[Arches::AT],
-                  coeff_vars->vVelocityCoeff[Arches::AB],
-                  coeff_constvars->uVelocity, coeff_constvars->wVelocity,
-                  coeff_constvars->density, coeff_constvars->viscosity,
-                  delta_t,lcentral,
-                  cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-                  cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
-                  cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-                  cellinfo->sew, cellinfo->snsv, cellinfo->sns,
-                  cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
-                  cellinfo->dynpv, cellinfo->dypsv, cellinfo->dyps,
-                  cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1v,
-                  cellinfo->fac2v, cellinfo->fac3v, cellinfo->fac4v,
-                  cellinfo->jnsdv, cellinfo->jssdv, cellinfo->efac,
-                  cellinfo->wfac, cellinfo->tfac, cellinfo->bfac,
-                  cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
-                  cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
-                  cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
-                  cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
-                  idxLoV, idxHiV);
-  } else if (index == Arches::ZDIR) {
-  
-    IntVector oci(0,0,-1);  // one cell inward
-    IntVector idxLoW = patch->getExtraLowIndex(Patch::ZFaceBased, oci);
-    IntVector idxHiW = patch->getExtraHighIndex(Patch::ZFaceBased,oci)-IntVector(1,1,1);    
-  
-    // Calculate the coeffs
-    fort_wvelcoef(coeff_constvars->wVelocity,
-                  coeff_vars->wVelocityConvectCoeff[Arches::AE],
-                  coeff_vars->wVelocityConvectCoeff[Arches::AW],
-                  coeff_vars->wVelocityConvectCoeff[Arches::AN],
-                  coeff_vars->wVelocityConvectCoeff[Arches::AS],
-                  coeff_vars->wVelocityConvectCoeff[Arches::AT],
-                  coeff_vars->wVelocityConvectCoeff[Arches::AB],
-                  coeff_vars->wVelocityCoeff[Arches::AP],
-                  coeff_vars->wVelocityCoeff[Arches::AE],
-                  coeff_vars->wVelocityCoeff[Arches::AW],
-                  coeff_vars->wVelocityCoeff[Arches::AN],
-                  coeff_vars->wVelocityCoeff[Arches::AS],
-                  coeff_vars->wVelocityCoeff[Arches::AT],
-                  coeff_vars->wVelocityCoeff[Arches::AB],
-                  coeff_constvars->uVelocity, coeff_constvars->vVelocity,
-                  coeff_constvars->density, coeff_constvars->viscosity,
-                  delta_t,lcentral,
-                  cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-                  cellinfo->cnn, cellinfo->csn, cellinfo->css,
-                  cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
-                  cellinfo->sew, cellinfo->sns, cellinfo->stbw,
-                  cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
-                  cellinfo->dynp, cellinfo->dyps, cellinfo->dztpw,
-                  cellinfo->dzpbw, cellinfo->dzpb, cellinfo->fac1w,
-                  cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
-                  cellinfo->ktsdw, cellinfo->kbsdw, cellinfo->efac,
-                  cellinfo->wfac, cellinfo->nfac, cellinfo->sfac,
-                  cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
-                  cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
-                  cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
-                  cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
-                  idxLoW, idxHiW);
-  }
+  //__________________________________
+  //      Y DIR
+  oci = IntVector(0,-1,0);  // one cell inward
+  IntVector idxLoV = patch->getExtraLowIndex(Patch::YFaceBased, oci);
+  IntVector idxHiV = patch->getExtraHighIndex(Patch::YFaceBased,oci)-IntVector(1,1,1);
+
+  // Calculate the coeffs
+  fort_vvelcoef(coeff_constvars->vVelocity,
+                coeff_vars->vVelocityConvectCoeff[Arches::AE],
+                coeff_vars->vVelocityConvectCoeff[Arches::AW],
+                coeff_vars->vVelocityConvectCoeff[Arches::AN],
+                coeff_vars->vVelocityConvectCoeff[Arches::AS],
+                coeff_vars->vVelocityConvectCoeff[Arches::AT],
+                coeff_vars->vVelocityConvectCoeff[Arches::AB],
+                coeff_vars->vVelocityCoeff[Arches::AP],
+                coeff_vars->vVelocityCoeff[Arches::AE],
+                coeff_vars->vVelocityCoeff[Arches::AW],
+                coeff_vars->vVelocityCoeff[Arches::AN],
+                coeff_vars->vVelocityCoeff[Arches::AS],
+                coeff_vars->vVelocityCoeff[Arches::AT],
+                coeff_vars->vVelocityCoeff[Arches::AB],
+                coeff_constvars->uVelocity, coeff_constvars->wVelocity,
+                coeff_constvars->density, coeff_constvars->viscosity,
+                delta_t,lcentral,
+                cellinfo->cee, cellinfo->cwe, cellinfo->cww,
+                cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
+                cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+                cellinfo->sew, cellinfo->snsv, cellinfo->sns,
+                cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
+                cellinfo->dynpv, cellinfo->dypsv, cellinfo->dyps,
+                cellinfo->dztp, cellinfo->dzpb, cellinfo->fac1v,
+                cellinfo->fac2v, cellinfo->fac3v, cellinfo->fac4v,
+                cellinfo->jnsdv, cellinfo->jssdv, cellinfo->efac,
+                cellinfo->wfac, cellinfo->tfac, cellinfo->bfac,
+                cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
+                cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
+                cellinfo->fac1tb, cellinfo->fac2tb, cellinfo->fac3tb,
+                cellinfo->fac4tb, cellinfo->t_shift, cellinfo->b_shift,
+                idxLoV, idxHiV);
+  //__________________________________
+  //    Z DIR
+  oci = IntVector(0,0,-1);  // one cell inward
+  IntVector idxLoW = patch->getExtraLowIndex(Patch::ZFaceBased, oci);
+  IntVector idxHiW = patch->getExtraHighIndex(Patch::ZFaceBased,oci)-IntVector(1,1,1);    
+
+  // Calculate the coeffs
+  fort_wvelcoef(coeff_constvars->wVelocity,
+                coeff_vars->wVelocityConvectCoeff[Arches::AE],
+                coeff_vars->wVelocityConvectCoeff[Arches::AW],
+                coeff_vars->wVelocityConvectCoeff[Arches::AN],
+                coeff_vars->wVelocityConvectCoeff[Arches::AS],
+                coeff_vars->wVelocityConvectCoeff[Arches::AT],
+                coeff_vars->wVelocityConvectCoeff[Arches::AB],
+                coeff_vars->wVelocityCoeff[Arches::AP],
+                coeff_vars->wVelocityCoeff[Arches::AE],
+                coeff_vars->wVelocityCoeff[Arches::AW],
+                coeff_vars->wVelocityCoeff[Arches::AN],
+                coeff_vars->wVelocityCoeff[Arches::AS],
+                coeff_vars->wVelocityCoeff[Arches::AT],
+                coeff_vars->wVelocityCoeff[Arches::AB],
+                coeff_constvars->uVelocity, coeff_constvars->vVelocity,
+                coeff_constvars->density, coeff_constvars->viscosity,
+                delta_t,lcentral,
+                cellinfo->cee, cellinfo->cwe, cellinfo->cww,
+                cellinfo->cnn, cellinfo->csn, cellinfo->css,
+                cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
+                cellinfo->sew, cellinfo->sns, cellinfo->stbw,
+                cellinfo->stb, cellinfo->dxep, cellinfo->dxpw,
+                cellinfo->dynp, cellinfo->dyps, cellinfo->dztpw,
+                cellinfo->dzpbw, cellinfo->dzpb, cellinfo->fac1w,
+                cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
+                cellinfo->ktsdw, cellinfo->kbsdw, cellinfo->efac,
+                cellinfo->wfac, cellinfo->nfac, cellinfo->sfac,
+                cellinfo->fac1ew, cellinfo->fac2ew, cellinfo->fac3ew,
+                cellinfo->fac4ew, cellinfo->e_shift, cellinfo->w_shift,
+                cellinfo->fac1ns, cellinfo->fac2ns, cellinfo->fac3ns,
+                cellinfo->fac4ns, cellinfo->n_shift, cellinfo->s_shift,
+                idxLoW, idxHiW);
 }
 
 //****************************************************************************
@@ -332,34 +332,19 @@ Discretization::compute_Ap_stencilMatrix(CellIterator iter,
 //****************************************************************************
 void 
 Discretization::calculateVelDiagonal(const Patch* patch,
-                                     int index,
                                      ArchesVariables* coeff_vars)
 {
-  switch(index) {
-    case Arches::XDIR:
-    {
-    CellIterator iter = patch->getSFCXIterator__New();
-    compute_Ap_stencilMatrix<SFCXVariable<double> >(iter,coeff_vars->uVelocityCoeff,
-                                                         coeff_vars->uVelLinearSrc);
-    }
-    break;
-  case Arches::YDIR:
-    {
-    CellIterator iter = patch->getSFCYIterator__New();
-    compute_Ap_stencilMatrix<SFCYVariable<double> >(iter,coeff_vars->vVelocityCoeff,
-                                                         coeff_vars->vVelLinearSrc);
-    }
-    break;
-  case Arches::ZDIR:
-    {
-    CellIterator iter = patch->getSFCZIterator__New();
-    compute_Ap_stencilMatrix<SFCZVariable<double> >(iter,coeff_vars->wVelocityCoeff,
-                                                         coeff_vars->wVelLinearSrc);
-    }
-    break;
-  default:
-    throw InvalidValue("Invalid index in Discretization::calcVelDiagonal", __FILE__, __LINE__);
-  }
+  CellIterator iter = patch->getSFCXIterator__New();
+  compute_Ap_stencilMatrix<SFCXVariable<double> >(iter,coeff_vars->uVelocityCoeff,
+                                                       coeff_vars->uVelLinearSrc);
+
+  iter = patch->getSFCYIterator__New();
+  compute_Ap_stencilMatrix<SFCYVariable<double> >(iter,coeff_vars->vVelocityCoeff,
+                                                       coeff_vars->vVelLinearSrc);
+
+  iter = patch->getSFCZIterator__New();
+  compute_Ap_stencilMatrix<SFCZVariable<double> >(iter,coeff_vars->wVelocityCoeff,
+                                                       coeff_vars->wVelLinearSrc);
 }
 
 //****************************************************************************

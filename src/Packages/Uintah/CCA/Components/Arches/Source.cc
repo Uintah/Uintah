@@ -69,14 +69,14 @@ void
 Source::calculateVelocitySource(const ProcessorGroup* pc ,
                                 const Patch* patch,
                                 double delta_t,
-                                int index,
                                 CellInformation* cellinfo,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
   
   //get index component of gravity
-  double gravity = d_physicalConsts->getGravity(index);
+  Vector gravity = d_physicalConsts->getGravity();
+  double grav;
   // Get the patch and variable indices
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
@@ -84,90 +84,73 @@ Source::calculateVelocitySource(const ProcessorGroup* pc ,
   IntVector idxHiV = patch->getSFCYFORTHighIndex();
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  //__________________________________
+  //      X DIR  
+  // computes remaining diffusion term and also computes 
+  // source due to gravity...need to pass ipref, jpref and kpref
+  grav = gravity.x();
+  fort_uvelsrc(idxLoU, idxHiU, constvars->uVelocity, constvars->old_uVelocity,
+               vars->uVelNonlinearSrc, vars->uVelLinearSrc,
+               constvars->vVelocity, constvars->wVelocity, constvars->density,
+               constvars->viscosity, constvars->old_density,
+               constvars->denRefArray,
+               grav, delta_t,  cellinfo->ceeu, cellinfo->cweu, 
+               cellinfo->cwwu, cellinfo->cnn, cellinfo->csn, cellinfo->css,
+               cellinfo->ctt, cellinfo->cbt, cellinfo->cbb, cellinfo->sewu,
+               cellinfo->sew, cellinfo->sns, cellinfo->stb, cellinfo->dxpw,
+               cellinfo->fac1u, cellinfo->fac2u, cellinfo->fac3u,
+               cellinfo->fac4u, cellinfo->iesdu, cellinfo->iwsdu);
+
+
+  //__________________________________
+  //      Y DIR  
+  // computes remaining diffusion term and also computes 
+  // source due to gravity...need to pass ipref, jpref and kpref
+  grav = gravity.y();
+  fort_vvelsrc(idxLoV, idxHiV, constvars->vVelocity, constvars->old_vVelocity,
+               vars->vVelNonlinearSrc, vars->vVelLinearSrc,
+               constvars->uVelocity, constvars->wVelocity, constvars->density,
+               constvars->viscosity, constvars->old_density,
+               constvars->denRefArray,
+               grav, delta_t,
+               cellinfo->cee, cellinfo->cwe, cellinfo->cww,
+               cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
+               cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
+               cellinfo->sew, cellinfo->snsv, cellinfo->sns, cellinfo->stb,
+               cellinfo->dyps, cellinfo->fac1v, cellinfo->fac2v,
+               cellinfo->fac3v, cellinfo->fac4v, cellinfo->jnsdv,
+               cellinfo->jssdv); 
+
+        
+  //__________________________________
+  //      Z DIR
+  // computes remaining diffusion term and also computes 
+  // source due to gravity...need to pass ipref, jpref and kpref
+  grav = gravity.z();
+  fort_wvelsrc(idxLoW, idxHiW, constvars->wVelocity, constvars->old_wVelocity,
+               vars->wVelNonlinearSrc, vars->wVelLinearSrc,
+               constvars->uVelocity, constvars->vVelocity, constvars->density,
+               constvars->viscosity, constvars->old_density,
+               constvars->denRefArray,
+               grav, delta_t,
+               cellinfo->cee, cellinfo->cwe, cellinfo->cww,
+               cellinfo->cnn, cellinfo->csn, cellinfo->css,
+               cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
+               cellinfo->sew, cellinfo->sns, cellinfo->stbw,
+               cellinfo->stb, cellinfo->dzpb, cellinfo->fac1w,
+               cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
+               cellinfo->ktsdw, cellinfo->kbsdw); 
+
+  // ++ jeremy ++ 
+  if (d_boundaryCondition->getNumSourceBndry() > 0){        
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      vars->uVelNonlinearSrc[*iter] += vars->umomBoundarySrc[*iter];
+      vars->vVelNonlinearSrc[*iter] += vars->vmomBoundarySrc[*iter];
+      vars->wVelNonlinearSrc[*iter] += vars->wmomBoundarySrc[*iter];
+    }
+  }
+  // -- jeremy --
   
-  switch(index) {
-  case Arches::XDIR:
-  {
-    // computes remaining diffusion term and also computes 
-    // source due to gravity...need to pass ipref, jpref and kpref
-    fort_uvelsrc(idxLoU, idxHiU, constvars->uVelocity, constvars->old_uVelocity,
-                 vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-                 constvars->vVelocity, constvars->wVelocity, constvars->density,
-                 constvars->viscosity, constvars->old_density,
-                 constvars->denRefArray,
-                 gravity, delta_t,  cellinfo->ceeu, cellinfo->cweu, 
-                 cellinfo->cwwu, cellinfo->cnn, cellinfo->csn, cellinfo->css,
-                 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb, cellinfo->sewu,
-                 cellinfo->sew, cellinfo->sns, cellinfo->stb, cellinfo->dxpw,
-                 cellinfo->fac1u, cellinfo->fac2u, cellinfo->fac3u,
-                 cellinfo->fac4u, cellinfo->iesdu, cellinfo->iwsdu);
-
-    // ++ jeremy ++
-    if (d_boundaryCondition->getNumSourceBndry() > 0){        
-      for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-        vars->uVelNonlinearSrc[*iter] += vars->umomBoundarySrc[*iter];
-      }
-    }   
-    // -- jeremy -- 
-  }
-    break;
-  case Arches::YDIR:
-  {        
-    // computes remaining diffusion term and also computes 
-    // source due to gravity...need to pass ipref, jpref and kpref
-    fort_vvelsrc(idxLoV, idxHiV, constvars->vVelocity, constvars->old_vVelocity,
-                 vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-                 constvars->uVelocity, constvars->wVelocity, constvars->density,
-                 constvars->viscosity, constvars->old_density,
-                 constvars->denRefArray,
-                 gravity, delta_t,
-                 cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-                 cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
-                 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-                 cellinfo->sew, cellinfo->snsv, cellinfo->sns, cellinfo->stb,
-                 cellinfo->dyps, cellinfo->fac1v, cellinfo->fac2v,
-                 cellinfo->fac3v, cellinfo->fac4v, cellinfo->jnsdv,
-                 cellinfo->jssdv); 
-
-    // ++ jeremy ++
-    if (d_boundaryCondition->getNumSourceBndry() > 0){        
-      for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-         vars->vVelNonlinearSrc[*iter] += vars->vmomBoundarySrc[*iter];
-      }
-    }
-    //-- jeremy --         
-  }
-    break;
-  case Arches::ZDIR:
-  {
-    // computes remaining diffusion term and also computes 
-    // source due to gravity...need to pass ipref, jpref and kpref
-    fort_wvelsrc(idxLoW, idxHiW, constvars->wVelocity, constvars->old_wVelocity,
-                 vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-                 constvars->uVelocity, constvars->vVelocity, constvars->density,
-                 constvars->viscosity, constvars->old_density,
-                 constvars->denRefArray,
-                 gravity, delta_t,
-                 cellinfo->cee, cellinfo->cwe, cellinfo->cww,
-                 cellinfo->cnn, cellinfo->csn, cellinfo->css,
-                 cellinfo->cttw, cellinfo->cbtw, cellinfo->cbbw,
-                 cellinfo->sew, cellinfo->sns, cellinfo->stbw,
-                 cellinfo->stb, cellinfo->dzpb, cellinfo->fac1w,
-                 cellinfo->fac2w, cellinfo->fac3w, cellinfo->fac4w,
-                 cellinfo->ktsdw, cellinfo->kbsdw); 
-
-    // ++ jeremy ++ 
-    if (d_boundaryCondition->getNumSourceBndry() > 0){        
-      for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-        vars->wVelNonlinearSrc[*iter] += vars->wmomBoundarySrc[*iter];
-      }
-    }
-    // -- jeremy --
-  }
-    break;
-  default:
-    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
-  }
 }
 
 //****************************************************************************
@@ -430,38 +413,30 @@ Source::compute_massSource(CellIterator iter,
 //****************************************************************************
 void 
 Source::modifyVelMassSource(const Patch* patch,
-                            int index,
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars)
 {
-  switch(index) {
-  case Arches::XDIR:{
-    CellIterator iter = patch->getSFCXIterator();
-    
-    compute_massSource<SFCXVariable<double> >(iter, constvars->uVelocity, 
-                                              vars->uVelocityCoeff,
-                                              vars->uVelNonlinearSrc, 
-                                              vars->uVelocityConvectCoeff);
-    }break;
-  case Arches::YDIR:{
-    CellIterator iter = patch->getSFCYIterator();
-    
-    compute_massSource<SFCYVariable<double> >(iter, constvars->vVelocity, 
-                                              vars->vVelocityCoeff,
-                                              vars->vVelNonlinearSrc, 
-                                              vars->vVelocityConvectCoeff);  
-    }break;
-  case Arches::ZDIR:{
-    CellIterator iter = patch->getSFCZIterator();
-    
-    compute_massSource<SFCZVariable<double> >(iter, constvars->wVelocity, 
-                                              vars->wVelocityCoeff,
-                                              vars->wVelNonlinearSrc, 
-                                              vars->wVelocityConvectCoeff);
-    }break;
-  default:
-    throw InvalidValue("Invalid index in Source::modifyVelMassSource", __FILE__, __LINE__);
-  }
+  //__________________________________
+  //    X dir
+  CellIterator iter = patch->getSFCXIterator();
+  compute_massSource<SFCXVariable<double> >(iter, constvars->uVelocity, 
+                                            vars->uVelocityCoeff,
+                                            vars->uVelNonlinearSrc, 
+                                            vars->uVelocityConvectCoeff);
+  //__________________________________
+  //    Y dir
+  iter = patch->getSFCYIterator();
+  compute_massSource<SFCYVariable<double> >(iter, constvars->vVelocity, 
+                                            vars->vVelocityCoeff,
+                                            vars->vVelNonlinearSrc, 
+                                            vars->vVelocityConvectCoeff);  
+  //__________________________________
+  //    Z dir
+  iter = patch->getSFCZIterator();
+  compute_massSource<SFCZVariable<double> >(iter, constvars->wVelocity, 
+                                            vars->wVelocityCoeff,
+                                            vars->wVelNonlinearSrc, 
+                                            vars->wVelocityConvectCoeff);
 }
 
 
@@ -564,45 +539,34 @@ Source::modifyEnthalpyMassSource(const ProcessorGroup* ,
 void 
 Source::computemmMomentumSource(const ProcessorGroup*,
                                 const Patch* patch,
-                                int index,
                                 CellInformation*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
-  switch(index) {
-  case 1:           // X component
-  {
-    CellIterator iter = patch->getSFCXIterator__New(); 
-    for(; !iter.done();iter++) { 
-      IntVector c = *iter;
-      vars->uVelNonlinearSrc[c]  += constvars->mmuVelSu[c];
-      vars->uVelLinearSrc[c]     += constvars->mmuVelSp[c];
-    }
+  //__________________________________
+  //    X dir
+  CellIterator iter = patch->getSFCXIterator__New(); 
+  for(; !iter.done();iter++) { 
+    IntVector c = *iter;
+    vars->uVelNonlinearSrc[c]  += constvars->mmuVelSu[c];
+    vars->uVelLinearSrc[c]     += constvars->mmuVelSp[c];
   }
-  break;
-  case 2:           // Y component
-  {
-    CellIterator iter = patch->getSFCYIterator__New(); 
-    for(; !iter.done();iter++) { 
-      IntVector c = *iter;
-      vars->vVelNonlinearSrc[c]  += constvars->mmvVelSu[c];
-      vars->vVelLinearSrc[c]     += constvars->mmvVelSp[c];
-    }
+  //__________________________________
+  //    Y dir
+  iter = patch->getSFCYIterator__New(); 
+  for(; !iter.done();iter++) { 
+    IntVector c = *iter;
+    vars->vVelNonlinearSrc[c]  += constvars->mmvVelSu[c];
+    vars->vVelLinearSrc[c]     += constvars->mmvVelSp[c];
   }
-  break;
-  case 3:           // Z component
-  {
-    CellIterator iter = patch->getSFCZIterator__New(); 
-    for(; !iter.done();iter++) { 
-      IntVector c = *iter;
-      vars->wVelNonlinearSrc[c]  += constvars->mmwVelSu[c];
-      vars->wVelLinearSrc[c]     += constvars->mmwVelSp[c];
-    }
-  }
-  break;
-  default:
-    cerr << "Invalid Index value" << endl;
-  break;
+
+  //__________________________________
+  //    Z dir
+  iter = patch->getSFCZIterator__New(); 
+  for(; !iter.done();iter++) { 
+    IntVector c = *iter;
+    vars->wVelNonlinearSrc[c]  += constvars->mmwVelSu[c];
+    vars->wVelLinearSrc[c]     += constvars->mmwVelSp[c];
   }
 }
 
@@ -635,7 +599,6 @@ void
 Source::calculateVelMMSSource(const ProcessorGroup* ,
                               const Patch* patch,
                               double delta_t, double time,
-                              int index,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars)

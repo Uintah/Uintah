@@ -94,7 +94,6 @@ public:
   void calculateVelocitySource(const ProcessorGroup* pc,
                                const Patch* patch,
                                double delta_t, 
-                               int index,
                                CellInformation* cellinfo,
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars);
@@ -150,7 +149,6 @@ public:
                            StencilMatrix<T>& velConvectCoeff);
                            
   void modifyVelMassSource(const Patch* patch,
-                           int index,
                            ArchesVariables* vars,
                            ArchesConstVariables* constvars);
 
@@ -183,7 +181,6 @@ public:
   // Add multimaterial source term
   void computemmMomentumSource(const ProcessorGroup* pc,
                                const Patch* patch,
-                               int index,
                                CellInformation* cellinfo,
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars);
@@ -197,7 +194,6 @@ public:
   void calculateVelMMSSource(const ProcessorGroup* pc,
                                const Patch* patch,
                                double delta_t, double time,
-                               int index,
                                CellInformation* cellinfo,
                                ArchesVariables* vars,
                                ArchesConstVariables* constvars);
