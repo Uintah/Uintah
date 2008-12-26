@@ -43,6 +43,9 @@
         <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "all"   label = "Pressure"     var = "Dirichlet">
@@ -56,6 +59,9 @@
         </BCType>
         <BCType id = "all"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -98,11 +104,11 @@
        <Level>
            <Box label="1">
               <lower>        [0,0,0]             </lower>
-              <upper>        [0.15,0.02,0.02]    </upper>
+              <upper>        [0.15,0.02,0.002]    </upper>
               <extraCells>   [1,1,1]             </extraCells>
               <patches>      [1,2,1]             </patches>
            </Box>
-           <spacing>         [0.015,0.0005,0.02]  </spacing>
+           <spacing>         [0.002,0.001,0.002]  </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
