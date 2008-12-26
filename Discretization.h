@@ -84,7 +84,6 @@ public:
   // coefficients
   void calculateVelocityCoeff(const Patch* patch,
                               double delta_t,
-                              int index, 
                               bool lcentral,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
@@ -113,7 +112,6 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Documentation here
   void calculateVelDiagonal(const Patch* patch,
-                            int index,
                             ArchesVariables* vars);
 
   ////////////////////////////////////////////////////////////////////////

@@ -1199,26 +1199,14 @@ BoundaryCondition::setProfile(const ProcessorGroup*,
 //****************************************************************************
 void 
 BoundaryCondition::velocityBC(const Patch* patch,
-                              int index,
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars) 
 {
   // Call the fortran routines
-  switch(index) {
-  case 1:
-    uVelocityBC(patch, cellinfo, vars, constvars);
-    break;
-  case 2:
-    vVelocityBC(patch, cellinfo, vars, constvars);
-    break;
-  case 3:
-    wVelocityBC(patch, cellinfo, vars, constvars);
-    break;
-  default:
-    cerr << "Invalid Index value" << endl;
-    break;
-  }
+  uVelocityBC(patch, cellinfo, vars, constvars);
+  vVelocityBC(patch, cellinfo, vars, constvars);
+  wVelocityBC(patch, cellinfo, vars, constvars);
 }
 
 //****************************************************************************
@@ -1804,30 +1792,15 @@ BoundaryCondition::intrusionEnthalpyBC( const Patch* patch,
 // compute multimaterial wall bc
 void 
 BoundaryCondition::mmvelocityBC(const Patch* patch,
-                                int index, CellInformation*,
+                                CellInformation*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
-    // Call the fortran routines
-  switch(index) {
-  case 1:
-    mmuVelocityBC(patch,
-                  vars, constvars);
-    break;
-  case 2:
-    mmvVelocityBC(patch,
-                  vars, constvars);
-    break;
-  case 3:
-    mmwVelocityBC(patch,
-                  vars, constvars);
-    break;
-  default:
-    cerr << "Invalid Index value" << endl;
-    break;
+   mmuVelocityBC(patch,vars, constvars);
 
-  // add kumar's mmvelbc
-  }
+   mmvVelocityBC(patch,vars, constvars);
+
+   mmwVelocityBC(patch,vars, constvars);
 }
 //______________________________________________________________________
 //
@@ -3190,7 +3163,7 @@ BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
 //
 void 
 BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
-                                         int index, double delta_t,
+                                         double delta_t,
                                          CellInformation* cellinfo,
                                          ArchesVariables* vars,
                                          ArchesConstVariables* constvars)
@@ -3200,79 +3173,73 @@ BoundaryCondition::calculateVelRhoHat_mm(const Patch* patch,
   IntVector idxHi;
   // for explicit solver
   int ioff, joff, koff;
+  //__________________________________
+  //    X dir
+  idxLo = patch->getSFCXFORTLowIndex();
+  idxHi = patch->getSFCXFORTHighIndex();
+  ioff = 1; joff = 0; koff = 0;
 
-  switch (index) {
-  case Arches::XDIR:
-    idxLo = patch->getSFCXFORTLowIndex();
-    idxHi = patch->getSFCXFORTHighIndex();
-    ioff = 1; joff = 0; koff = 0;
+  fort_mm_explicit_vel(idxLo, idxHi, 
+                       vars->uVelRhoHat,
+                       constvars->uVelocity,
+                       vars->uVelocityCoeff[Arches::AE], 
+                       vars->uVelocityCoeff[Arches::AW], 
+                       vars->uVelocityCoeff[Arches::AN], 
+                       vars->uVelocityCoeff[Arches::AS], 
+                       vars->uVelocityCoeff[Arches::AT], 
+                       vars->uVelocityCoeff[Arches::AB], 
+                       vars->uVelocityCoeff[Arches::AP], 
+                       vars->uVelNonlinearSrc,
+                       constvars->new_density,
+                       cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+                       delta_t, ioff, joff, koff,
+                       constvars->cellType,
+                       d_mmWallID);
+  //__________________________________
+  //    Y dir
+  idxLo = patch->getSFCYFORTLowIndex();
+  idxHi = patch->getSFCYFORTHighIndex();
+  ioff = 0; joff = 1; koff = 0;
 
-    fort_mm_explicit_vel(idxLo, idxHi, 
-                         vars->uVelRhoHat,
-                         constvars->uVelocity,
-                         vars->uVelocityCoeff[Arches::AE], 
-                         vars->uVelocityCoeff[Arches::AW], 
-                         vars->uVelocityCoeff[Arches::AN], 
-                         vars->uVelocityCoeff[Arches::AS], 
-                         vars->uVelocityCoeff[Arches::AT], 
-                         vars->uVelocityCoeff[Arches::AB], 
-                         vars->uVelocityCoeff[Arches::AP], 
-                         vars->uVelNonlinearSrc,
-                         constvars->new_density,
-                         cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-                         delta_t, ioff, joff, koff,
-                         constvars->cellType,
-                         d_mmWallID);
-    break;
-  case Arches::YDIR:
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
-    ioff = 0; joff = 1; koff = 0;
+  fort_mm_explicit_vel(idxLo, idxHi, 
+                       vars->vVelRhoHat,
+                       constvars->vVelocity,
+                       vars->vVelocityCoeff[Arches::AE], 
+                       vars->vVelocityCoeff[Arches::AW], 
+                       vars->vVelocityCoeff[Arches::AN], 
+                       vars->vVelocityCoeff[Arches::AS], 
+                       vars->vVelocityCoeff[Arches::AT], 
+                       vars->vVelocityCoeff[Arches::AB], 
+                       vars->vVelocityCoeff[Arches::AP], 
+                       vars->vVelNonlinearSrc,
+                       constvars->new_density,
+                       cellinfo->sew, cellinfo->snsv, cellinfo->stb,
+                       delta_t, ioff, joff, koff,
+                       constvars->cellType,
+                       d_mmWallID);
 
-    fort_mm_explicit_vel(idxLo, idxHi, 
-                         vars->vVelRhoHat,
-                         constvars->vVelocity,
-                         vars->vVelocityCoeff[Arches::AE], 
-                         vars->vVelocityCoeff[Arches::AW], 
-                         vars->vVelocityCoeff[Arches::AN], 
-                         vars->vVelocityCoeff[Arches::AS], 
-                         vars->vVelocityCoeff[Arches::AT], 
-                         vars->vVelocityCoeff[Arches::AB], 
-                         vars->vVelocityCoeff[Arches::AP], 
-                         vars->vVelNonlinearSrc,
-                         constvars->new_density,
-                         cellinfo->sew, cellinfo->snsv, cellinfo->stb,
-                         delta_t, ioff, joff, koff,
-                         constvars->cellType,
-                         d_mmWallID);
+  //__________________________________
+  //     Z dir 
+  idxLo = patch->getSFCZFORTLowIndex();
+  idxHi = patch->getSFCZFORTHighIndex();
+  ioff = 0; joff = 0; koff = 1;
 
-    break;
-  case Arches::ZDIR:
-    idxLo = patch->getSFCZFORTLowIndex();
-    idxHi = patch->getSFCZFORTHighIndex();
-    ioff = 0; joff = 0; koff = 1;
-
-    fort_mm_explicit_vel(idxLo, idxHi, 
-                         vars->wVelRhoHat,
-                         constvars->wVelocity,
-                         vars->wVelocityCoeff[Arches::AE], 
-                         vars->wVelocityCoeff[Arches::AW], 
-                         vars->wVelocityCoeff[Arches::AN], 
-                         vars->wVelocityCoeff[Arches::AS], 
-                         vars->wVelocityCoeff[Arches::AT], 
-                         vars->wVelocityCoeff[Arches::AB], 
-                         vars->wVelocityCoeff[Arches::AP], 
-                         vars->wVelNonlinearSrc,
-                         constvars->new_density,
-                         cellinfo->sew, cellinfo->sns, cellinfo->stbw,
-                         delta_t, ioff, joff, koff,
-                         constvars->cellType,
-                         d_mmWallID);
-
-    break;
-  default:
-    throw InvalidValue("Invalid index in LinearSolver for velocity", __FILE__, __LINE__);
-  }
+  fort_mm_explicit_vel(idxLo, idxHi, 
+                       vars->wVelRhoHat,
+                       constvars->wVelocity,
+                       vars->wVelocityCoeff[Arches::AE], 
+                       vars->wVelocityCoeff[Arches::AW], 
+                       vars->wVelocityCoeff[Arches::AN], 
+                       vars->wVelocityCoeff[Arches::AS], 
+                       vars->wVelocityCoeff[Arches::AT], 
+                       vars->wVelocityCoeff[Arches::AB], 
+                       vars->wVelocityCoeff[Arches::AP], 
+                       vars->wVelNonlinearSrc,
+                       constvars->new_density,
+                       cellinfo->sew, cellinfo->sns, cellinfo->stbw,
+                       delta_t, ioff, joff, koff,
+                       constvars->cellType,
+                       d_mmWallID);
 }
 
 //****************************************************************************
@@ -5159,28 +5126,17 @@ BoundaryCondition::setInletFlowRates(const ProcessorGroup*,
 //****************************************************************************
 void 
 BoundaryCondition::mmsvelocityBC(const Patch* patch,
-                                 int index,
                                  CellInformation* cellinfo,
                                  ArchesVariables* vars,
                                  ArchesConstVariables* constvars,
                                  double time_shift,
                                  double dt)
 {
-  // Call the fortran routines
-  switch(index) {
-  case 1:
-    mmsuVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
-    break;
-  case 2:
-    mmsvVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
-    break;
-  case 3:
-    mmswVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
-    break;
-  default:
-    cerr << "Invalid Index value" << endl;
-    break;
-  }
+  mmsuVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
+
+  mmsvVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
+
+  mmswVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
 }
 
 //****************************************************************************
