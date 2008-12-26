@@ -103,7 +103,6 @@ public:
                                const PatchSet* patches,
                                const MaterialSet* matls,
                                const TimeIntegratorLabel* timelabels,
-                               int index,
                                bool extraProjection,
                                bool doing_EKT_now);
 
@@ -163,7 +162,6 @@ private:
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw,
                          const TimeIntegratorLabel* timelabels,
-                         int index,
                          bool extraProjection,
                          bool doing_EKT_now);
 
