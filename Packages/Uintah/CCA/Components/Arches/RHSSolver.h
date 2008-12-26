@@ -67,7 +67,6 @@ public:
   void calculateVelocity(const ProcessorGroup* ,
                          const Patch* patch,
                          double delta_t,
-                         int index,
                          CellInformation* cellinfo,
                          ArchesVariables* vars,
                          ArchesConstVariables* constvars);

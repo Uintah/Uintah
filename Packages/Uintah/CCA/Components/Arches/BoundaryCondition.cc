@@ -3127,7 +3127,6 @@ BoundaryCondition::calculateIntrusionVel(const Patch* patch,
 void
 BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
                                             double delta_t,
-                                            int index,
                                             CellInformation* cellinfo,
                                             ArchesVariables* vars,
                                             ArchesConstVariables* constvars)
@@ -3136,74 +3135,56 @@ BoundaryCondition::calculateVelocityPred_mm(const Patch* patch,
   IntVector idxLoU;
   IntVector idxHiU;
 
-  switch(index) {
+  //__________________________________
+  idxLoU = patch->getSFCXFORTLowIndex();
+  idxHiU = patch->getSFCXFORTHighIndex();
+  ioff = 1; joff = 0; koff = 0;
 
-  case Arches::XDIR:
+  fort_mm_computevel(
+                    vars->uVelRhoHat,
+                    constvars->pressure,
+                    constvars->density,
+                    constvars->voidFraction,
+                    cellinfo->dxpw,
+                    delta_t, 
+                    ioff, joff, koff,
+                    constvars->cellType,
+                    idxLoU, idxHiU,
+                    d_mmWallID);
 
-    idxLoU = patch->getSFCXFORTLowIndex();
-    idxHiU = patch->getSFCXFORTHighIndex();
-    ioff = 1; joff = 0; koff = 0;
+  //__________________________________
+  idxLoU = patch->getSFCYFORTLowIndex();
+  idxHiU = patch->getSFCYFORTHighIndex();
+  ioff = 0; joff = 1; koff = 0;
 
-    fort_mm_computevel(
-                      vars->uVelRhoHat,
-                      constvars->pressure,
-                      constvars->density,
-                      constvars->voidFraction,
-                      cellinfo->dxpw,
-                      delta_t, 
-                      ioff, joff, koff,
-                      constvars->cellType,
-                      idxLoU, idxHiU,
-                      d_mmWallID);
+  fort_mm_computevel(
+                    vars->vVelRhoHat,
+                    constvars->pressure,
+                    constvars->density,
+                    constvars->voidFraction,
+                    cellinfo->dyps,
+                    delta_t, 
+                    ioff, joff, koff,
+                    constvars->cellType,
+                    idxLoU, idxHiU,
+                    d_mmWallID);
 
-    break;
+  //__________________________________
+  idxLoU = patch->getSFCZFORTLowIndex();
+  idxHiU = patch->getSFCZFORTHighIndex();
 
-  case Arches::YDIR:
-
-    idxLoU = patch->getSFCYFORTLowIndex();
-    idxHiU = patch->getSFCYFORTHighIndex();
-    ioff = 0; joff = 1; koff = 0;
-
-    fort_mm_computevel(
-                      vars->vVelRhoHat,
-                      constvars->pressure,
-                      constvars->density,
-                      constvars->voidFraction,
-                      cellinfo->dyps,
-                      delta_t, 
-                      ioff, joff, koff,
-                      constvars->cellType,
-                      idxLoU, idxHiU,
-                      d_mmWallID);
-
-    break;
-
-  case Arches::ZDIR:
-
-    idxLoU = patch->getSFCZFORTLowIndex();
-    idxHiU = patch->getSFCZFORTHighIndex();
-
-    ioff = 0; joff = 0; koff = 1;
-
-    fort_mm_computevel(
-                      vars->wVelRhoHat,
-                      constvars->pressure,
-                      constvars->density,
-                      constvars->voidFraction,
-                      cellinfo->dzpb,
-                      delta_t, 
-                      ioff, joff, koff,
-                      constvars->cellType,
-                      idxLoU, idxHiU,
-                      d_mmWallID);
-
-    break;
-
-  default:
-
-    throw InvalidValue("Invalid index in Source::calcVelSrc", __FILE__, __LINE__);
-
-  }
+  ioff = 0; joff = 0; koff = 1;
+  fort_mm_computevel(
+                    vars->wVelRhoHat,
+                    constvars->pressure,
+                    constvars->density,
+                    constvars->voidFraction,
+                    cellinfo->dzpb,
+                    delta_t, 
+                    ioff, joff, koff,
+                    constvars->cellType,
+                    idxLoU, idxHiU,
+                    d_mmWallID);
 }
 //______________________________________________________________________
 //
@@ -3704,7 +3685,6 @@ BoundaryCondition::velRhoHatOutletPressureBC(const Patch* patch,
 //****************************************************************************
 void 
 BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
-                                                   const int index,
                                                    ArchesVariables* vars,
                                                    ArchesConstVariables* constvars)
 {
@@ -3722,57 +3702,32 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  if (xminus) {
-    int colX = idxLo.x();
-    int maxY = idxHi.y();
-    if (yplus) maxY++;
-    int maxZ = idxHi.z();
-    if (zplus) maxZ++;
-    for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
-      for (int colY = idxLo.y(); colY <= maxY; colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        IntVector xminusyminusCell(colX-1, colY-1, colZ);
-        IntVector xminuszminusCell(colX-1, colY, colZ-1);
-        if ((constvars->cellType[xminusCell] == pressure_celltypeval)||
-            (constvars->cellType[xminusCell] == outlet_celltypeval)) {
-          switch (index) {
-           case Arches::XDIR:
-           break;
-           case Arches::YDIR:
-             if (!(zplus && (colZ == maxZ)))
-               vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
-           break;
-           case Arches::ZDIR:
-             if (!(yplus && (colY == maxY)))
-               vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
-           break;
-           default:
-                throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-          }
-        }
-        else {
-          if ((constvars->cellType[xminusyminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[xminusyminusCell] == outlet_celltypeval)) {
+  for (int index = 1; index <= Arches::NDIM; ++index) {
+    if (xminus) {
+      int colX = idxLo.x();
+      int maxY = idxHi.y();
+      if (yplus){
+        maxY++;
+      }
+      int maxZ = idxHi.z();
+      if (zplus){
+         maxZ++;
+      }
+
+      for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
+        for (int colY = idxLo.y(); colY <= maxY; colY ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector xminusCell(colX-1, colY, colZ);
+          IntVector xminusyminusCell(colX-1, colY-1, colZ);
+          IntVector xminuszminusCell(colX-1, colY, colZ-1);
+          if ((constvars->cellType[xminusCell] == pressure_celltypeval)||
+              (constvars->cellType[xminusCell] == outlet_celltypeval)) {
             switch (index) {
              case Arches::XDIR:
              break;
              case Arches::YDIR:
                if (!(zplus && (colZ == maxZ)))
                  vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
-             break;
-             case Arches::ZDIR:
-             break;
-             default:
-                  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-            }
-          }
-          if ((constvars->cellType[xminuszminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[xminuszminusCell] == outlet_celltypeval)) {
-            switch (index) {
-             case Arches::XDIR:
-             break;
-             case Arches::YDIR:
              break;
              case Arches::ZDIR:
                if (!(yplus && (colY == maxY)))
@@ -3782,61 +3737,61 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
                   throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
+          else {
+            if ((constvars->cellType[xminusyminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[xminusyminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+                 if (!(zplus && (colZ == maxZ)))
+                   vars->vVelRhoHat[xminusCell] = vars->vVelRhoHat[currCell];
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+            if ((constvars->cellType[xminuszminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[xminuszminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+                 if (!(yplus && (colY == maxY)))
+                   vars->wVelRhoHat[xminusCell] = vars->wVelRhoHat[currCell];
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+          }
         }
       }
     }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    int maxY = idxHi.y();
-    if (yplus) maxY++;
-    int maxZ = idxHi.z();
-    if (zplus) maxZ++;
-    for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
-      for (int colY = idxLo.y(); colY <= maxY; colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        IntVector xplusyminusCell(colX+1, colY-1, colZ);
-        IntVector xpluszminusCell(colX+1, colY, colZ-1);
-        if ((constvars->cellType[xplusCell] == pressure_celltypeval)||
-            (constvars->cellType[xplusCell] == outlet_celltypeval)) {
-          switch (index) {
-           case Arches::XDIR:
-           break;
-           case Arches::YDIR:
-             if (!(zplus && (colZ == maxZ)))
-               vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
-           break;
-           case Arches::ZDIR:
-             if (!(yplus && (colY == maxY)))
-               vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
-           break;
-           default:
-                throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-          }
-        }
-        else {
-          if ((constvars->cellType[xplusyminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[xplusyminusCell] == outlet_celltypeval)) {
+    if (xplus) {
+      int colX = idxHi.x();
+      int maxY = idxHi.y();
+      if (yplus) maxY++;
+      int maxZ = idxHi.z();
+      if (zplus) maxZ++;
+      for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
+        for (int colY = idxLo.y(); colY <= maxY; colY ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector xplusCell(colX+1, colY, colZ);
+          IntVector xplusyminusCell(colX+1, colY-1, colZ);
+          IntVector xpluszminusCell(colX+1, colY, colZ-1);
+          if ((constvars->cellType[xplusCell] == pressure_celltypeval)||
+              (constvars->cellType[xplusCell] == outlet_celltypeval)) {
             switch (index) {
              case Arches::XDIR:
              break;
              case Arches::YDIR:
                if (!(zplus && (colZ == maxZ)))
                  vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
-             break;
-             case Arches::ZDIR:
-             break;
-             default:
-                  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-            }
-          }
-          if ((constvars->cellType[xpluszminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[xpluszminusCell] == outlet_celltypeval)) {
-            switch (index) {
-             case Arches::XDIR:
-             break;
-             case Arches::YDIR:
              break;
              case Arches::ZDIR:
                if (!(yplus && (colY == maxY)))
@@ -3846,59 +3801,59 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
                   throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
+          else {
+            if ((constvars->cellType[xplusyminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[xplusyminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+                 if (!(zplus && (colZ == maxZ)))
+                   vars->vVelRhoHat[xplusCell] = vars->vVelRhoHat[currCell];
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+            if ((constvars->cellType[xpluszminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[xpluszminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+                 if (!(yplus && (colY == maxY)))
+                   vars->wVelRhoHat[xplusCell] = vars->wVelRhoHat[currCell];
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+          }
         }
       }
     }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    int maxX = idxHi.x();
-    if (xplus) maxX++;
-    int maxZ = idxHi.z();
-    if (zplus) maxZ++;
-    for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
-      for (int colX = idxLo.x(); colX <= maxX; colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        IntVector yminusxminusCell(colX-1, colY-1, colZ);
-        IntVector yminuszminusCell(colX, colY-1, colZ-1);
-        if ((constvars->cellType[yminusCell] == pressure_celltypeval)||
-            (constvars->cellType[yminusCell] == outlet_celltypeval)) {
-          switch (index) {
-           case Arches::XDIR:
-             if (!(zplus && (colZ == maxZ)))
-               vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
-           break;
-           case Arches::YDIR:
-           break;
-           case Arches::ZDIR:
-             if (!(xplus && (colX == maxX)))
-               vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
-           break;
-           default:
-                throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-          }
-        }
-        else {
-          if ((constvars->cellType[yminusxminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[yminusxminusCell] == outlet_celltypeval)) {
+    if (yminus) {
+      int colY = idxLo.y();
+      int maxX = idxHi.x();
+      if (xplus) maxX++;
+      int maxZ = idxHi.z();
+      if (zplus) maxZ++;
+      for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
+        for (int colX = idxLo.x(); colX <= maxX; colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector yminusCell(colX, colY-1, colZ);
+          IntVector yminusxminusCell(colX-1, colY-1, colZ);
+          IntVector yminuszminusCell(colX, colY-1, colZ-1);
+          if ((constvars->cellType[yminusCell] == pressure_celltypeval)||
+              (constvars->cellType[yminusCell] == outlet_celltypeval)) {
             switch (index) {
              case Arches::XDIR:
                if (!(zplus && (colZ == maxZ)))
                  vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
-             break;
-             case Arches::YDIR:
-             break;
-             case Arches::ZDIR:
-             break;
-             default:
-                  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-            }
-          }
-          if ((constvars->cellType[yminuszminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[yminuszminusCell] == outlet_celltypeval)) {
-            switch (index) {
-             case Arches::XDIR:
              break;
              case Arches::YDIR:
              break;
@@ -3910,59 +3865,59 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
                   throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
-        }  
+          else {
+            if ((constvars->cellType[yminusxminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[yminusxminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+                 if (!(zplus && (colZ == maxZ)))
+                   vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+            if ((constvars->cellType[yminuszminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[yminuszminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+                 if (!(xplus && (colX == maxX)))
+                   vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+          }  
+        }
       }
     }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    int maxX = idxHi.x();
-    if (xplus) maxX++;
-    int maxZ = idxHi.z();
-    if (zplus) maxZ++;
-    for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
-      for (int colX = idxLo.x(); colX <= maxX; colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        IntVector yplusxminusCell(colX-1, colY+1, colZ);
-        IntVector ypluszminusCell(colX, colY+1, colZ-1);
-        if ((constvars->cellType[yplusCell] == pressure_celltypeval)||
-            (constvars->cellType[yplusCell] == outlet_celltypeval)) {
-          switch (index) {
-           case Arches::XDIR:
-             if (!(zplus && (colZ == maxZ)))
-               vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
-           break;
-           case Arches::YDIR:
-           break;
-           case Arches::ZDIR:
-             if (!(xplus && (colX == maxX)))
-               vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
-           break;
-           default:
-                throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-          }
-        }
-        else {
-          if ((constvars->cellType[yplusxminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[yplusxminusCell] == outlet_celltypeval)) {
+    if (yplus) {
+      int colY = idxHi.y();
+      int maxX = idxHi.x();
+      if (xplus) maxX++;
+      int maxZ = idxHi.z();
+      if (zplus) maxZ++;
+      for (int colZ = idxLo.z(); colZ <= maxZ; colZ ++) {
+        for (int colX = idxLo.x(); colX <= maxX; colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector yplusCell(colX, colY+1, colZ);
+          IntVector yplusxminusCell(colX-1, colY+1, colZ);
+          IntVector ypluszminusCell(colX, colY+1, colZ-1);
+          if ((constvars->cellType[yplusCell] == pressure_celltypeval)||
+              (constvars->cellType[yplusCell] == outlet_celltypeval)) {
             switch (index) {
              case Arches::XDIR:
                if (!(zplus && (colZ == maxZ)))
                  vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
-             break;
-             case Arches::YDIR:
-             break;
-             case Arches::ZDIR:
-             break;
-             default:
-                  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-            }
-          }
-          if ((constvars->cellType[ypluszminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[ypluszminusCell] == outlet_celltypeval)) {
-            switch (index) {
-             case Arches::XDIR:
              break;
              case Arches::YDIR:
              break;
@@ -3974,59 +3929,59 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
                   throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
+          else {
+            if ((constvars->cellType[yplusxminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[yplusxminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+                 if (!(zplus && (colZ == maxZ)))
+                   vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+            if ((constvars->cellType[ypluszminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[ypluszminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+                 if (!(xplus && (colX == maxX)))
+                   vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+          }
         }
       }
     }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    int maxX = idxHi.x();
-    if (xplus) maxX++;
-    int maxY = idxHi.y();
-    if (yplus) maxY++;
-    for (int colY = idxLo.y(); colY <= maxY; colY ++) {
-      for (int colX = idxLo.x(); colX <= maxX; colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        IntVector zminusxminusCell(colX-1, colY, colZ-1);
-        IntVector zminusyminusCell(colX, colY-1, colZ-1);
-        if ((constvars->cellType[zminusCell] == pressure_celltypeval)||
-            (constvars->cellType[zminusCell] == outlet_celltypeval)) {
-          switch (index) {
-           case Arches::XDIR:
-             if (!(yplus && (colY == maxY)))
-               vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
-           break;
-           case Arches::YDIR:
-             if (!(xplus && (colX == maxX)))
-               vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
-           break;
-           case Arches::ZDIR:
-           break;
-           default:
-                throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-          }
-        }
-        else {
-          if ((constvars->cellType[zminusxminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[zminusxminusCell] == outlet_celltypeval)) {
+    if (zminus) {
+      int colZ = idxLo.z();
+      int maxX = idxHi.x();
+      if (xplus) maxX++;
+      int maxY = idxHi.y();
+      if (yplus) maxY++;
+      for (int colY = idxLo.y(); colY <= maxY; colY ++) {
+        for (int colX = idxLo.x(); colX <= maxX; colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector zminusCell(colX, colY, colZ-1);
+          IntVector zminusxminusCell(colX-1, colY, colZ-1);
+          IntVector zminusyminusCell(colX, colY-1, colZ-1);
+          if ((constvars->cellType[zminusCell] == pressure_celltypeval)||
+              (constvars->cellType[zminusCell] == outlet_celltypeval)) {
             switch (index) {
              case Arches::XDIR:
                if (!(yplus && (colY == maxY)))
                  vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
-             break;
-             case Arches::YDIR:
-             break;
-             case Arches::ZDIR:
-             break;
-             default:
-                  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-            }
-          }
-          if ((constvars->cellType[zminusyminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[zminusyminusCell] == outlet_celltypeval)) {
-            switch (index) {
-             case Arches::XDIR:
              break;
              case Arches::YDIR:
                if (!(xplus && (colX == maxX)))
@@ -4038,59 +3993,59 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
                   throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
             }
           }
+          else {
+            if ((constvars->cellType[zminusxminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[zminusxminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+                 if (!(yplus && (colY == maxY)))
+                   vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+            if ((constvars->cellType[zminusyminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[zminusyminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+                 if (!(xplus && (colX == maxX)))
+                   vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+          }
         }
       }
     }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    int maxX = idxHi.x();
-    if (xplus) maxX++;
-    int maxY = idxHi.y();
-    if (yplus) maxY++;
-    for (int colY = idxLo.y(); colY <= maxY; colY ++) {
-      for (int colX = idxLo.x(); colX <= maxX; colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        IntVector zplusxminusCell(colX-1, colY, colZ+1);
-        IntVector zplusyminusCell(colX, colY-1, colZ+1);
-        if ((constvars->cellType[zplusCell] == pressure_celltypeval)||
-            (constvars->cellType[zplusCell] == outlet_celltypeval)) {
-          switch (index) {
-           case Arches::XDIR:
-             if (!(yplus && (colY == maxY)))
-               vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
-           break;
-           case Arches::YDIR:
-             if (!(xplus && (colX == maxX)))
-               vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
-           break;
-           case Arches::ZDIR:
-           break;
-           default:
-                throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-          }
-        }
-        else {
-          if ((constvars->cellType[zplusxminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[zplusxminusCell] == outlet_celltypeval)) {
+    if (zplus) {
+      int colZ = idxHi.z();
+      int maxX = idxHi.x();
+      if (xplus) maxX++;
+      int maxY = idxHi.y();
+      if (yplus) maxY++;
+      for (int colY = idxLo.y(); colY <= maxY; colY ++) {
+        for (int colX = idxLo.x(); colX <= maxX; colX ++) {
+          IntVector currCell(colX, colY, colZ);
+          IntVector zplusCell(colX, colY, colZ+1);
+          IntVector zplusxminusCell(colX-1, colY, colZ+1);
+          IntVector zplusyminusCell(colX, colY-1, colZ+1);
+          if ((constvars->cellType[zplusCell] == pressure_celltypeval)||
+              (constvars->cellType[zplusCell] == outlet_celltypeval)) {
             switch (index) {
              case Arches::XDIR:
                if (!(yplus && (colY == maxY)))
                  vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
-             break;
-             case Arches::YDIR:
-             break;
-             case Arches::ZDIR:
-             break;
-             default:
-                  throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
-            }
-          }
-          if ((constvars->cellType[zplusyminusCell] == pressure_celltypeval)
-              ||(constvars->cellType[zplusyminusCell] == outlet_celltypeval)) {
-            switch (index) {
-             case Arches::XDIR:
              break;
              case Arches::YDIR:
                if (!(xplus && (colX == maxX)))
@@ -4100,6 +4055,38 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
              break;
              default:
                   throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+            }
+          }
+          else {
+            if ((constvars->cellType[zplusxminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[zplusxminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+                 if (!(yplus && (colY == maxY)))
+                   vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
+               break;
+               case Arches::YDIR:
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
+            }
+            if ((constvars->cellType[zplusyminusCell] == pressure_celltypeval)
+                ||(constvars->cellType[zplusyminusCell] == outlet_celltypeval)) {
+              switch (index) {
+               case Arches::XDIR:
+               break;
+               case Arches::YDIR:
+                 if (!(xplus && (colX == maxX)))
+                   vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
+               break;
+               case Arches::ZDIR:
+               break;
+               default:
+                    throw InvalidValue("Invalid index in velocityPressureBC", __FILE__, __LINE__);
+              }
             }
           }
         }
@@ -4112,7 +4099,6 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
 //****************************************************************************
 void 
 BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
-                                                       const int index,
                                                        CellInformation* cellinfo,
                                                        const double delta_t,
                                                        ArchesVariables* vars,
@@ -4131,9 +4117,8 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
   bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  switch (index) {
-  case Arches::XDIR:
+  //__________________________________
+  //
   if (xminus) {
     int colX = idxLo.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -4174,8 +4159,8 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
       }
     }
   }
-  break;
-  case Arches::YDIR:
+  //__________________________________
+  //
   if (yminus) {
     int colY = idxLo.y();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -4217,8 +4202,8 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
       }
     }
   }
-  break;
-  case Arches::ZDIR:
+  //__________________________________
+  //
   if (zminus) {
     int colZ = idxLo.z();
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
@@ -4260,10 +4245,7 @@ BoundaryCondition::addPresGradVelocityOutletPressureBC(const Patch* patch,
       }
     }
   }
-  break;
-  default:
-   throw InvalidValue("Invalid index in addPresGradVelocityOutletBC", __FILE__, __LINE__);
-  }
+
 }
 //****************************************************************************
 // Schedule computation of mass balance for the outlet velocity correction

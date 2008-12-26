@@ -120,7 +120,7 @@ MomentumSolver::solve(SchedulerP& sched,
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
   sched_buildLinearMatrix(sched, patches, matls, timelabels,
-                          index, extraProjection, doing_EKT_now);
+                          extraProjection, doing_EKT_now);
     
 
 }
@@ -133,17 +133,20 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
                                         const TimeIntegratorLabel* timelabels,
-                                        int index,
                                         bool extraProjection,
                                         bool doing_EKT_now)
 {
   string taskname =  "MomentumSolver::BuildCoeff" +
                      timelabels->integrator_step_name;
-  if (extraProjection) taskname += "extraProjection";
-  if (doing_EKT_now) taskname += "EKTnow";
+  if (extraProjection){
+    taskname += "extraProjection";
+  }
+  if (doing_EKT_now){
+    taskname += "EKTnow";
+  }
   Task* tsk = scinew Task(taskname,
                           this, &MomentumSolver::buildLinearMatrix,
-                          timelabels, index, extraProjection, doing_EKT_now);
+                          timelabels, extraProjection, doing_EKT_now);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion){
@@ -155,9 +158,12 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gac = Ghost::AroundCells;
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
-  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel, gac, 1);
-  tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,gac, 1);
-
+  tsk->requires(Task::NewDW,   d_lab->d_cellTypeLabel,    gac, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_densityCPLabel,   gac, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_uVelRhoHatLabel,  gaf, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_vVelRhoHatLabel,  gaf, 1);
+  tsk->requires(Task::NewDW,   d_lab->d_wVelRhoHatLabel,  gaf, 1);
+  
   if ((extraProjection)||(doing_EKT_now)){
     tsk->requires(Task::NewDW, d_lab->d_pressureExtraProjectionLabel,gac, 1);
   }else{
@@ -168,40 +174,16 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,gac, 1);
   }
 
-  switch (index) {
-
-  case Arches::XDIR:
-    tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,  gaf, 1);
-    tsk->modifies(d_lab->d_uVelocitySPBCLabel);
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")){
-      tsk->computes(d_lab->d_uVelocityEKTLabel);
-    }
-
-    break;
-
-  case Arches::YDIR:
-    tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel,  gaf, 1);
-    tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")){
-      tsk->computes(d_lab->d_vVelocityEKTLabel);
-    }
-
-    break;
-
-  case Arches::ZDIR:
-    tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel,  gaf, 1);
-    tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-    if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")){
-      tsk->computes(d_lab->d_wVelocityEKTLabel);
-    }
-
-    break;
-
-  default:
-
-    throw InvalidValue("Invalid index in MomentumSolver", __FILE__, __LINE__);
-    
+  tsk->modifies(d_lab->d_uVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_vVelocitySPBCLabel);
+  tsk->modifies(d_lab->d_wVelocitySPBCLabel);
+  
+  if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")){
+    tsk->computes(d_lab->d_uVelocityEKTLabel);
+    tsk->computes(d_lab->d_vVelocityEKTLabel);
+    tsk->computes(d_lab->d_wVelocityEKTLabel);
   }
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -215,7 +197,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw,
                                   const TimeIntegratorLabel* timelabels,
-                                  int index,
                                   bool extraProjection,
                                   bool doing_EKT_now)
 {
@@ -262,38 +243,23 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       new_dw->get(constVelocityVars.voidFraction, d_lab->d_mmgasVolFracLabel,indx, patch, gac, 1);
     }
     
-    switch (index) {
-
-    case Arches::XDIR:
-      new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,indx, patch);
-      new_dw->copyOut(velocityVars.uVelRhoHat,       d_lab->d_uVelRhoHatLabel,   indx, patch);
-      break;
-    case Arches::YDIR:
-      new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,indx, patch);
-      new_dw->copyOut(velocityVars.vVelRhoHat,       d_lab->d_vVelRhoHatLabel,   indx, patch);
-
-      break;
-    case Arches::ZDIR:
-      new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,indx, patch);
-      new_dw->copyOut(velocityVars.wVelRhoHat,       d_lab->d_wVelRhoHatLabel,   indx, patch);
-      break;
-
-    default:
-      throw InvalidValue("Invalid index in MomentumSolver", __FILE__, __LINE__);
-    }
-
+    new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,indx, patch);
+    new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,indx, patch);
+    new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,indx, patch);  
     
-    // Actual compute operations
+    new_dw->copyOut(velocityVars.uVelRhoHat,       d_lab->d_uVelRhoHatLabel,   indx, patch);  
+    new_dw->copyOut(velocityVars.vVelRhoHat,       d_lab->d_vVelRhoHatLabel,   indx, patch);  
+    new_dw->copyOut(velocityVars.wVelRhoHat,       d_lab->d_wVelRhoHatLabel,   indx, patch);  
 
     if (d_MAlab) {
       d_boundaryCondition->calculateVelocityPred_mm(patch, 
-                                                    delta_t, index, cellinfo,
+                                                    delta_t, cellinfo,
                                                     &velocityVars,
                                                     &constVelocityVars);
 
     }else {
       d_rhsSolver->calculateVelocity(pc, patch, 
-                                      delta_t, index,
+                                      delta_t,
                                       cellinfo, &velocityVars,
                                       &constVelocityVars);
 
@@ -304,12 +270,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                    &constVelocityVars);*/
     }
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
-      d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, index, cellinfo,
+      d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,
                                                                 delta_t, &velocityVars,
                                                                 &constVelocityVars);
     }
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
-      d_boundaryCondition->velocityOutletPressureTangentBC(patch, index,
+      d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
                                             &velocityVars, &constVelocityVars);
     }
 
@@ -317,28 +283,12 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     SFCYVariable<double> vVel_EKT;
     SFCZVariable<double> wVel_EKT;
     if ((doing_EKT_now)&&(timelabels->integrator_step_name == "Predictor")){
-      switch (index) {
-
-      case Arches::XDIR:
-        new_dw->allocateAndPut(uVel_EKT, d_lab->d_uVelocityEKTLabel, indx, patch);
-        uVel_EKT.copyData(velocityVars.uVelRhoHat);
-        break;
-
-      case Arches::YDIR:
-        new_dw->allocateAndPut(vVel_EKT, d_lab->d_vVelocityEKTLabel, indx, patch);
-        vVel_EKT.copyData(velocityVars.vVelRhoHat);
-        break;
-
-      case Arches::ZDIR:
-        new_dw->allocateAndPut(wVel_EKT, d_lab->d_wVelocityEKTLabel, indx, patch);
-        wVel_EKT.copyData(velocityVars.wVelRhoHat);
-        break;
-
-      default:
-
-        throw InvalidValue("Invalid index in MomentumSolver EKT", __FILE__, __LINE__);
-
-      }
+      new_dw->allocateAndPut(uVel_EKT, d_lab->d_uVelocityEKTLabel, indx, patch);
+      new_dw->allocateAndPut(vVel_EKT, d_lab->d_vVelocityEKTLabel, indx, patch);
+      new_dw->allocateAndPut(wVel_EKT, d_lab->d_wVelocityEKTLabel, indx, patch);
+      uVel_EKT.copyData(velocityVars.uVelRhoHat);
+      vVel_EKT.copyData(velocityVars.vVelRhoHat);
+      wVel_EKT.copyData(velocityVars.wVelRhoHat);
     }
   }
 }
