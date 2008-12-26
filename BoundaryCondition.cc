@@ -1796,20 +1796,8 @@ BoundaryCondition::mmvelocityBC(const Patch* patch,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars)
 {
-   mmuVelocityBC(patch,vars, constvars);
-
-   mmvVelocityBC(patch,vars, constvars);
-
-   mmwVelocityBC(patch,vars, constvars);
-}
-//______________________________________________________________________
-//
-void 
-BoundaryCondition::mmuVelocityBC(const Patch* patch,
-                                 ArchesVariables* vars,
-                                 ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch and the variables
+  //__________________________________
+  //    X dir
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
   int ioff = 1;
@@ -1825,22 +1813,14 @@ BoundaryCondition::mmuVelocityBC(const Patch* patch,
                     vars->uVelocityCoeff[Arches::AB],
                     vars->uVelNonlinearSrc, vars->uVelLinearSrc,
                     constvars->cellType, d_mmWallID, ioff, joff, koff);
-}
-//______________________________________________________________________
-//
-void 
-BoundaryCondition::mmvVelocityBC(const Patch* patch,
-                                 ArchesVariables* vars,
-                                 ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCYFORTLowIndex();
-  IntVector idxHiU = patch->getSFCYFORTHighIndex();
+  //__________________________________
+  //    Y dir
+  idxLoU = patch->getSFCYFORTLowIndex();
+  idxHiU = patch->getSFCYFORTHighIndex();
   
-  int ioff = 0;
-  int joff = 1;
-  int koff = 0;
-
+  ioff = 0;
+  joff = 1;
+  koff = 0;
   fort_mmbcvelocity(idxLoU, idxHiU,
                     vars->vVelocityCoeff[Arches::AN],
                     vars->vVelocityCoeff[Arches::AS],
@@ -1850,22 +1830,15 @@ BoundaryCondition::mmvVelocityBC(const Patch* patch,
                     vars->vVelocityCoeff[Arches::AW],
                     vars->vVelNonlinearSrc, vars->vVelLinearSrc,
                     constvars->cellType, d_mmWallID, ioff, joff, koff);
-}
-//______________________________________________________________________
-//
-void 
-BoundaryCondition::mmwVelocityBC( const Patch* patch,
-                                  ArchesVariables* vars,
-                                  ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch and the variables
-  IntVector idxLoU = patch->getSFCZFORTLowIndex();
-  IntVector idxHiU = patch->getSFCZFORTHighIndex();
 
-  int ioff = 0;
-  int joff = 0;
-  int koff = 1;
+  //__________________________________
+  //    Z dir
+  idxLoU = patch->getSFCZFORTLowIndex();
+  idxHiU = patch->getSFCZFORTHighIndex();
 
+  ioff = 0;
+  joff = 0;
+  koff = 1;
   fort_mmbcvelocity(idxLoU, idxHiU,
                     vars->wVelocityCoeff[Arches::AT],
                     vars->wVelocityCoeff[Arches::AB],
@@ -1876,6 +1849,7 @@ BoundaryCondition::mmwVelocityBC( const Patch* patch,
                     vars->wVelNonlinearSrc, vars->wVelLinearSrc,
                     constvars->cellType, d_mmWallID, ioff, joff, koff);
 }
+
 //______________________________________________________________________
 //
 void 

@@ -621,25 +621,6 @@ private:
 
 
   ////////////////////////////////////////////////////////////////////////
-  // Call Fortran to compute u velocity BC terms
-  void mmuVelocityBC(const Patch* patch,
-                     ArchesVariables* vars,
-                     ArchesConstVariables* constvars);
-                  
-
-  ////////////////////////////////////////////////////////////////////////
-  // Call Fortran to compute v velocity BC terms
-  void mmvVelocityBC(const Patch* patch,
-                     ArchesVariables* vars,
-                     ArchesConstVariables* constvars);
-
-  ////////////////////////////////////////////////////////////////////////
-  // Call Fortran to compute w velocity BC terms
-  void mmwVelocityBC(const Patch* patch,
-                     ArchesVariables* vars,
-                     ArchesConstVariables* constvars);
-
-  ////////////////////////////////////////////////////////////////////////
   // Actually calculate pressure bcs
   void computePressureBC(const PatchSubset* patches,
                          const MaterialSubset* matls,
