@@ -664,123 +664,114 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
         }
       }
 
-      IntVector indexLow = patch->getFortranCellLowIndex__New();
-      IntVector indexHigh = patch->getFortranCellHighIndex__New();
-
-      // set density for the whole domain
+      
       double sue, suw, sun, sus, sut, sub;
-  
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector prevXCell(colX-1, colY, colZ);
-            IntVector prevYCell(colX, colY-1, colZ);
-            IntVector prevZCell(colX, colY, colZ-1);
-
-            sue = cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                         (stressTensor[0])[currCell];
-            suw = cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                         (stressTensor[0])[prevXCell];
-            sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                         ((stressTensor[1])[currCell]+
-                          (stressTensor[1])[prevXCell]+
-                          (stressTensor[1])[IntVector(colX,colY+1,colZ)]+
-                          (stressTensor[1])[IntVector(colX-1,colY+1,colZ)]);
-            sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                         ((stressTensor[1])[currCell]+
-                          (stressTensor[1])[prevXCell]+
-                          (stressTensor[1])[IntVector(colX,colY-1,colZ)]+
-                          (stressTensor[1])[IntVector(colX-1,colY-1,colZ)]);
-            sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-                         ((stressTensor[2])[currCell]+
-                          (stressTensor[2])[prevXCell]+
-                          (stressTensor[2])[IntVector(colX,colY,colZ+1)]+
-                          (stressTensor[2])[IntVector(colX-1,colY,colZ+1)]);
-            sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-                         ((stressTensor[2])[currCell]+
-                          (stressTensor[2])[prevXCell]+
-                          (stressTensor[2])[IntVector(colX,colY,colZ-1)]+
-                          (stressTensor[2])[IntVector(colX-1,colY,colZ-1)]);
-            velocityVars.uVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
-          }
-        }
-      }
       //__________________________________
-      //      Y dir
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector prevXCell(colX-1, colY, colZ);
-            IntVector prevYCell(colX, colY-1, colZ);
-            IntVector prevZCell(colX, colY, colZ-1);
+      //      u velocity
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        int colX = c.x();
+        int colY = c.y();
+        int colZ = c.z();
+        IntVector prevXCell(colX-1, colY, colZ);
 
-            sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-              ((stressTensor[3])[currCell]+
-               (stressTensor[3])[prevYCell]+
-               (stressTensor[3])[IntVector(colX+1,colY,colZ)]+
-               (stressTensor[3])[IntVector(colX+1,colY-1,colZ)]);
-            suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-              ((stressTensor[3])[currCell]+
-               (stressTensor[3])[prevYCell]+
-               (stressTensor[3])[IntVector(colX-1,colY,colZ)]+
-               (stressTensor[3])[IntVector(colX-1,colY-1,colZ)]);
-            sun = cellinfo->sew[colX]*cellinfo->stb[colZ]*
-              (stressTensor[4])[currCell];
-            sus = cellinfo->sew[colX]*cellinfo->stb[colZ]*
-              (stressTensor[4])[prevYCell];
-            sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-              ((stressTensor[5])[currCell]+
-               (stressTensor[5])[prevYCell]+
-               (stressTensor[5])[IntVector(colX,colY,colZ+1)]+
-               (stressTensor[5])[IntVector(colX,colY-1,colZ+1)]);
-            sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-              ((stressTensor[5])[currCell]+
-               (stressTensor[5])[prevYCell]+
-               (stressTensor[5])[IntVector(colX,colY,colZ-1)]+
-               (stressTensor[5])[IntVector(colX,colY-1,colZ-1)]);
-            velocityVars.vVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
-          }
-        }
+        sue = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     (stressTensor[0])[c];
+        suw = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     (stressTensor[0])[prevXCell];
+        sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[1])[c]+
+                      (stressTensor[1])[prevXCell]+
+                      (stressTensor[1])[IntVector(colX,colY+1,colZ)]+
+                      (stressTensor[1])[IntVector(colX-1,colY+1,colZ)]);
+        sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[1])[c]+
+                      (stressTensor[1])[prevXCell]+
+                      (stressTensor[1])[IntVector(colX,colY-1,colZ)]+
+                      (stressTensor[1])[IntVector(colX-1,colY-1,colZ)]);
+        sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                     ((stressTensor[2])[c]+
+                      (stressTensor[2])[prevXCell]+
+                      (stressTensor[2])[IntVector(colX,colY,colZ+1)]+
+                      (stressTensor[2])[IntVector(colX-1,colY,colZ+1)]);
+        sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                     ((stressTensor[2])[c]+
+                      (stressTensor[2])[prevXCell]+
+                      (stressTensor[2])[IntVector(colX,colY,colZ-1)]+
+                      (stressTensor[2])[IntVector(colX-1,colY,colZ-1)]);
+        velocityVars.uVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
       }
+    
       //__________________________________
-      //      Z dir
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector prevXCell(colX-1, colY, colZ);
-            IntVector prevYCell(colX, colY-1, colZ);
-            IntVector prevZCell(colX, colY, colZ-1);
+      //      v velocity
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        int colX = c.x();
+        int colY = c.y();
+        int colZ = c.z();
+        IntVector prevYCell(colX, colY-1, colZ);
 
-            sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                         ((stressTensor[6])[currCell]+
-                          (stressTensor[6])[prevZCell]+
-                          (stressTensor[6])[IntVector(colX+1,colY,colZ)]+
-                          (stressTensor[6])[IntVector(colX+1,colY,colZ-1)]);
-            suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                         ((stressTensor[6])[currCell]+
-                          (stressTensor[6])[prevZCell]+
-                          (stressTensor[6])[IntVector(colX-1,colY,colZ)]+
-                          (stressTensor[6])[IntVector(colX-1,colY,colZ-1)]);
-            sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                         ((stressTensor[7])[currCell]+
-                          (stressTensor[7])[prevZCell]+
-                          (stressTensor[7])[IntVector(colX,colY+1,colZ)]+
-                          (stressTensor[7])[IntVector(colX,colY+1,colZ-1)]);
-            sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                         ((stressTensor[7])[currCell]+
-                          (stressTensor[7])[prevZCell]+
-                          (stressTensor[7])[IntVector(colX,colY-1,colZ)]+
-                          (stressTensor[7])[IntVector(colX,colY-1,colZ-1)]);
-            sut = cellinfo->sew[colX]*cellinfo->sns[colY]*
-                         (stressTensor[8])[currCell];
-            sub = cellinfo->sew[colX]*cellinfo->sns[colY]*
-                         (stressTensor[8])[prevZCell];
-            velocityVars.wVelNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
-          }
-        }
+        sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                   ((stressTensor[3])[c]+
+                    (stressTensor[3])[prevYCell]+
+                    (stressTensor[3])[IntVector(colX+1,colY,colZ)]+
+                    (stressTensor[3])[IntVector(colX+1,colY-1,colZ)]);
+        suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                    ((stressTensor[3])[c]+
+                     (stressTensor[3])[prevYCell]+
+                     (stressTensor[3])[IntVector(colX-1,colY,colZ)]+
+                     (stressTensor[3])[IntVector(colX-1,colY-1,colZ)]);
+        sun = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     (stressTensor[4])[c];
+        sus = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     (stressTensor[4])[prevYCell];
+        sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                    ((stressTensor[5])[c]+
+                     (stressTensor[5])[prevYCell]+
+                     (stressTensor[5])[IntVector(colX,colY,colZ+1)]+
+                     (stressTensor[5])[IntVector(colX,colY-1,colZ+1)]);
+        sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                    ((stressTensor[5])[c]+
+                     (stressTensor[5])[prevYCell]+
+                     (stressTensor[5])[IntVector(colX,colY,colZ-1)]+
+                     (stressTensor[5])[IntVector(colX,colY-1,colZ-1)]);
+        velocityVars.vVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
+      }
+     
+      //__________________________________
+      //       w velocity
+      for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        int colX = c.x();
+        int colY = c.y();
+        int colZ = c.z();
+        IntVector prevZCell(colX, colY, colZ-1);
+
+        sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     ((stressTensor[6])[c]+
+                      (stressTensor[6])[prevZCell]+
+                      (stressTensor[6])[IntVector(colX+1,colY,colZ)]+
+                      (stressTensor[6])[IntVector(colX+1,colY,colZ-1)]);
+        suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     ((stressTensor[6])[c]+
+                      (stressTensor[6])[prevZCell]+
+                      (stressTensor[6])[IntVector(colX-1,colY,colZ)]+
+                      (stressTensor[6])[IntVector(colX-1,colY,colZ-1)]);
+        sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[7])[c]+
+                      (stressTensor[7])[prevZCell]+
+                      (stressTensor[7])[IntVector(colX,colY+1,colZ)]+
+                      (stressTensor[7])[IntVector(colX,colY+1,colZ-1)]);
+        sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[7])[c]+
+                      (stressTensor[7])[prevZCell]+
+                      (stressTensor[7])[IntVector(colX,colY-1,colZ)]+
+                      (stressTensor[7])[IntVector(colX,colY-1,colZ-1)]);
+        sut = cellinfo->sew[colX]*cellinfo->sns[colY]*
+                     (stressTensor[8])[c];
+        sub = cellinfo->sew[colX]*cellinfo->sns[colY]*
+                     (stressTensor[8])[prevZCell];
+        velocityVars.wVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
       }
     }
     //__________________________________
@@ -865,7 +856,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       IntVector idxLoU;
       IntVector idxHiU;
       //__________________________________
-      //    X dir
+      //    u velocity
       idxLoU = patch->getSFCXFORTLowIndex();
       idxHiU = patch->getSFCXFORTHighIndex();
       ioff = 1; joff = 0; koff = 0;
@@ -874,7 +865,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                       constVelocityVars.new_density, delta_t,
                       ioff, joff, koff, cellinfo->dxpw);
       //__________________________________
-      //    Y dir
+      //   v velocity
       idxLoU = patch->getSFCYFORTLowIndex();
       idxHiU = patch->getSFCYFORTHighIndex();
       ioff = 0; joff = 1; koff = 0;
@@ -884,7 +875,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                       ioff, joff, koff, cellinfo->dyps);
 
       //__________________________________
-      //    Z dir
+      //    w velocity
       idxLoU = patch->getSFCZFORTLowIndex();
       idxHiU = patch->getSFCZFORTHighIndex();
       ioff = 0; joff = 0; koff = 1;
@@ -1053,23 +1044,17 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     d_discretize->computeDivergence(pc, patch, new_dw, &velocityVars, &constVelocityVars,
                     d_filter_divergence_constraint,d_3d_periodic);
 
-    double factor_old, factor_new, factor_divide;
-    factor_old = timelabels->factor_old;
-    factor_new = timelabels->factor_new;
-    factor_divide = timelabels->factor_divide;
-    IntVector ixLow = patch->getFortranCellLowIndex__New();
-    IntVector ixHigh = patch->getFortranCellHighIndex__New();
+
+    //__________________________________
+    //  Jeremy,  should this be in computeDivergence?
+    double factor_old = timelabels->factor_old;
+    double factor_new = timelabels->factor_new;
+    double factor_divide = timelabels->factor_divide;
     
-    for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
-      for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
-        for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-              velocityVars.divergence[currCell] = (factor_old*old_divergence[currCell]+
-                                                   factor_new*velocityVars.divergence[currCell])/factor_divide;
-        }
-      }
+    for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+      const IntVector c = *iter;                                                                 
+      velocityVars.divergence[c] = (factor_old*old_divergence[c]+                              
+                                    factor_new*velocityVars.divergence[c])/factor_divide;      
     }
 //#endif
 
