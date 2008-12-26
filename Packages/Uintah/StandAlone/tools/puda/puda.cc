@@ -309,7 +309,7 @@ main(int argc, char** argv)
       clf.matl_jim = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
       mat = clf.matl_jim;
-      cout << "mat= " << mat << endl;
+
     } else if (s == "-verbose") {
       clf.do_verbose = true;
     } else if (s == "-timesteplow" ||
