@@ -242,7 +242,6 @@ void
 RHSSolver::calculateVelocity(const ProcessorGroup* ,
                              const Patch* patch,
                              double delta_t,
-                             int index,
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
                              ArchesConstVariables* constvars)
@@ -251,42 +250,31 @@ RHSSolver::calculateVelocity(const ProcessorGroup* ,
   int ioff, joff, koff;
   IntVector idxLoU;
   IntVector idxHiU;
-  IntVector domLoU;
-  IntVector domHiU;
-  switch(index) {
-  case Arches::XDIR:
-    idxLoU = patch->getSFCXFORTLowIndex();
-    idxHiU = patch->getSFCXFORTHighIndex();
-    ioff = 1; joff = 0; koff = 0;
+  
+  //__________________________________
+  idxLoU = patch->getSFCXFORTLowIndex();
+  idxHiU = patch->getSFCXFORTHighIndex();
+  ioff = 1; joff = 0; koff = 0;
 
-    fort_computevel(idxLoU, idxHiU, vars->uVelRhoHat, constvars->pressure,
-                    constvars->density, delta_t,
-                    ioff, joff, koff, cellinfo->dxpw);
-    break;
-  case Arches::YDIR:
-    idxLoU = patch->getSFCYFORTLowIndex();
-    idxHiU = patch->getSFCYFORTHighIndex();
-    ioff = 0; joff = 1; koff = 0;
+  fort_computevel(idxLoU, idxHiU, vars->uVelRhoHat, constvars->pressure,
+                  constvars->density, delta_t,
+                  ioff, joff, koff, cellinfo->dxpw);
+  //__________________________________
+  idxLoU = patch->getSFCYFORTLowIndex();
+  idxHiU = patch->getSFCYFORTHighIndex();
+  ioff = 0; joff = 1; koff = 0;
 
-    fort_computevel(idxLoU, idxHiU, vars->vVelRhoHat, constvars->pressure,
-                    constvars->density, delta_t,
-                    ioff, joff, koff, cellinfo->dyps);
+  fort_computevel(idxLoU, idxHiU, vars->vVelRhoHat, constvars->pressure,
+                  constvars->density, delta_t,
+                  ioff, joff, koff, cellinfo->dyps);
+  //__________________________________
+  idxLoU = patch->getSFCZFORTLowIndex();
+  idxHiU = patch->getSFCZFORTHighIndex();
+  ioff = 0; joff = 0; koff = 1;
 
-    break;
-  case Arches::ZDIR:
-    idxLoU = patch->getSFCZFORTLowIndex();
-    idxHiU = patch->getSFCZFORTHighIndex();
-    ioff = 0; joff = 0; koff = 1;
-
-    fort_computevel(idxLoU, idxHiU, vars->wVelRhoHat, constvars->pressure,
-                    constvars->density, delta_t,
-                    ioff, joff, koff, cellinfo->dzpb);
-
-    break;
-  default:
-    throw InvalidValue("Invalid index in RHSSolver::calculateVelocity", __FILE__, __LINE__);
-  }
-
+  fort_computevel(idxLoU, idxHiU, vars->wVelRhoHat, constvars->pressure,
+                  constvars->density, delta_t,
+                  ioff, joff, koff, cellinfo->dzpb);
 }
 
 

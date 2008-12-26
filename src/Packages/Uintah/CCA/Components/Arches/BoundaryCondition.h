@@ -458,7 +458,6 @@ public:
 
   void calculateVelocityPred_mm(const Patch* patch,
                                 double delta_t,
-                                int index,
                                 CellInformation* cellinfo,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars);
@@ -489,12 +488,10 @@ public:
                                  ArchesConstVariables* constvars);
 
   void velocityOutletPressureTangentBC(const Patch* patch,
-                                       const int index,
                                        ArchesVariables* vars,
                                        ArchesConstVariables* constvars);
 
   void addPresGradVelocityOutletPressureBC(const Patch* patch,
-                                           const int index,
                                            CellInformation* cellinfo,
                                            const double delta_t,
                                            ArchesVariables* vars,
