@@ -323,7 +323,6 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Actually compute velocity BC terms
   void velocityBC(const Patch* patch,
-                  int index,
                   CellInformation* cellinfo,
                   ArchesVariables* vars,
                   ArchesConstVariables* constvars);
@@ -331,7 +330,6 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Actually compute mms velocity BC terms
   void mmsvelocityBC(const Patch* patch,
-                     int index,
                      CellInformation* cellinfo,
                      ArchesVariables* vars,
                      ArchesConstVariables* constvars,
@@ -421,7 +419,7 @@ public:
 
   // compute multimaterial wall bc
   void mmvelocityBC(const Patch* patch,
-                    int index, CellInformation* cellinfo,
+                    CellInformation* cellinfo,
                     ArchesVariables* vars,
                     ArchesConstVariables* constvars);
 
@@ -450,7 +448,6 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Calculate uhat for multimaterial case (only for nonintrusion cells)
   void calculateVelRhoHat_mm(const Patch* patch,
-                             int index,
                              double delta_t,
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
