@@ -5053,6 +5053,7 @@ BoundaryCondition::mmsvelocityBC(const Patch* patch,
   mmswVelocityBC(patch, cellinfo, vars, constvars, time_shift, dt);
 }
 
+
 //****************************************************************************
 // call fortran routine to calculate the MMS U Velocity BC
 // Sets the uncorrected velocity values (velRhoHat)!  These should not be
@@ -5771,6 +5772,7 @@ BoundaryCondition::mmsscalarBC(const Patch* patch,
     }
   }
 }
+
 //****************************************************************************
 // Schedule  prefill
 //****************************************************************************

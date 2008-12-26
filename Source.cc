@@ -182,13 +182,10 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
                    cellinfo->sew, cellinfo->sns, cellinfo->stb);
 #endif
   }
-  for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-      for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-        IntVector currcell(ii,jj,kk);
-        vars->pressNonlinearSrc[currcell] -= constvars->filterdrhodt[currcell]/delta_t;
-      }
-    }
+  
+  for(CellIterator iter = patch->getCellIterator__New(); !iter.done(); iter++) {
+    IntVector c = *iter;
+    vars->pressNonlinearSrc[c] -= constvars->filterdrhodt[c]/delta_t;
   }
 }
 
@@ -296,20 +293,14 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
                                 ArchesVariables* vars,
                                 ArchesConstVariables* constvars) 
 {
-
-  // Get the patch and variable indices
-  IntVector indexLow = patch->getFortranCellLowIndex__New();
-  IntVector indexHigh = patch->getFortranCellHighIndex__New();
-  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-        vars->scalarNonlinearSrc[currCell] += vol*
-                                        constvars->reactscalarSRC[currCell]*
-                                        constvars->density[currCell];
-      }
-    }
+  for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    int i = c.x();
+    int j = c.y();
+    int k = c.z();
+    double vol = cellinfo->sew[i] * cellinfo->sns[j] * cellinfo->stb[k];
+    vars->scalarNonlinearSrc[c] += vol * constvars->reactscalarSRC[c]*
+                                         constvars->density[c];
   }
 }
 
@@ -496,9 +487,7 @@ Source::modifyScalarMassSource__new(const ProcessorGroup* ,
                  vars->scalarConvCoef[curr].n - vars->scalarConvCoef[curr].s + 
                  vars->scalarConvCoef[curr].t - vars->scalarConvCoef[curr].b;
     
-    vars->scalarNonlinearSrc[curr] += -smp*constvars->scalar[curr];  
-                                   
-
+    vars->scalarNonlinearSrc[curr] += -smp*constvars->scalar[curr];
   }
 }
 //______________________________________________________________________
