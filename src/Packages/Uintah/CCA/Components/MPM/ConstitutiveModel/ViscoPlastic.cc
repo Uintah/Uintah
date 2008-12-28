@@ -841,6 +841,25 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       double flowStress = d_plastic->computeFlowStress(idx,
 				pStress[idx], tensorR,implicitFlag);
 
+      //already localized; copy the old values to new
+      if (pLocalized[idx]==1) {
+
+         if (d_setStressToZero) {
+             pStress_new[idx] = zero;
+         } else {
+             pStress_new[idx] = pStress[idx];
+         }
+
+         pStrainRate_new[idx] =  pStrainRate[idx];
+         pPlasticStrain_new[idx] = pPlasticStrain[idx];
+         pLocalized_new[idx] = pLocalized[idx];
+         pFailureVariable_new[idx] = pFailureVariable[idx];
+         pPlasticTemperature_new[idx]=pPlasticTemperature[idx];
+         pPlasticTempInc_new[idx] = 0.0;
+         d_plastic->updateElastic(idx);
+      } else {
+
+
       // Elastic - Compute the deviatoric stress
 //       cout << "flowStress=" << flowStress << "\n";
       if (flowStress <= 0.0) {
@@ -931,11 +950,11 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
         if (isLocalized) {
           d_plastic->updateElastic(idx);
         } 
-
 // 	cout << "pStress= " << pStress_new[idx] << " \n";
 
-      }
-
+      } // end plastic
+   }  // end pLocalized
+   
       // Rotate the deformation rate back to the laboratory coordinates
       tensorD = (tensorR*tensorD)*(tensorR.Transpose());
 
@@ -957,15 +976,17 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
                        Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
 
       delete state;
-    }
+    } //end iterator
+
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
-  }
+  } //end patch
+
   // cout_CST << getpid() << "... Out" << endl;
-}
+} //end method
 
 void 
 ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
@@ -1232,24 +1253,29 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       double lambda = bulk - (2.0/3.0)*mu_cur;
       trialStress = oldStress + One*(lambda*incStrain.Trace()) + incStrain*(2.0*mu_cur);
       devTrialStress = trialStress - One*(trialStress.Trace()/3.0);
-      
-//       Calculate the equivalent stress
-//       double equivStress = sqrt((devTrialStress.NormSquared())*1.5);
 
 //       Calculate flow stress (strain driven problem)
       double flowStress = d_plastic->computeFlowStress(idx,
 	      				pStress[idx], Rotation, implicitFlag);
 
-//       Get the current porosity 
-//       double porosity = pPorosity[idx];
+      //already localized; copy the old values to new
+      if (pLocalized[idx]==1) {
 
-//       Evaluate yield condition
-//       double traceOfTrialStress = trialStress.Trace();
-//       double sig = flowStress;
-//       double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
-//                                               traceOfTrialStress, 
-//                                               porosity, sig);
-      
+         if (d_setStressToZero) {
+             pStress_new[idx] = Zero;
+         } else {
+             pStress_new[idx] = pStress[idx];
+         }
+
+         pStrainRate_new[idx] =  pStrainRate[idx];
+         pPlasticStrain_new[idx] = pPlasticStrain[idx];
+         pLocalized_new[idx] = pLocalized[idx];
+         pFailureVariable_new[idx] = pFailureVariable[idx];
+         pPlasticTemp_new[idx] = pPlasticTemp[idx];
+         pPlasticTempInc_new[idx] = 0.0;
+         d_plastic->updateElastic(idx);
+      } else {
+
 //       elastic - Compute the deviatoric stress
       if (flowStress <= 0.0) {
 
@@ -1315,7 +1341,8 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
           d_plastic->updateElastic(idx);
         } 
 	
-} // end if plastic or elastic
+      } // end if plastic or elastic
+   } //end pLocalized
 
 //       Compute the strain energy for the particles
       Matrix3 avgStress = (pStress_new[idx] + pStress[idx])*0.5;
@@ -1329,11 +1356,12 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       totalStrainEnergy += pStrainEnergy;                  
 
       delete state;
-    }
+    } //end iterator
+
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
-  }
-}
+  } //end patch
+}  //end method
 
 void 
 ViscoPlastic::addComputesAndRequires(Task* task,
@@ -1599,21 +1627,6 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate flow stress (strain driven problem) - Zero is fake Rotation
       double flowStress = d_plastic->computeFlowStress(idx,
 	      			 pStress[idx], Zero, implicitFlag);
-
-      // Get the current porosity 
-//       double porosity = pPorosity[idx];
-
-      // Evaluate yield condition
-//       double traceOfTrialStress = trialStress.Trace();
-//       double sig = flowStress;
-//       
-//       double porosity; //TODO - fake declaration....
-//       double Phi = d_yield->evalYieldCondition(equivStress, flowStress,
-//                                                traceOfTrialStress, 
-//                                                porosity, sig);
-      
-      //CSTir << " particle = " << idx << " Seqv = " << equivStress  
-      //      << " Sflow = " << flowStress << " Phi = " << Phi << endl;
 
       // Compute the deviatoric stress
       if (flowStress <= 0.0) {
