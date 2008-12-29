@@ -3224,7 +3224,7 @@ BoundaryCondition::scalarOutletPressureBC(const Patch* patch,
                                           
 {  
   int outlet_celltypeval = outletCellType();
-  int pressure_celltypeval = pressureCellType()
+  int pressure_celltypeval = pressureCellType();
   
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
