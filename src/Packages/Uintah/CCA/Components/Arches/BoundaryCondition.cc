@@ -65,7 +65,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
 
-
 //****************************************************************************
 // Constructor for BoundaryCondition
 //****************************************************************************
@@ -3222,96 +3221,31 @@ void
 BoundaryCondition::scalarOutletPressureBC(const Patch* patch,
                                           ArchesVariables* vars,
                                           ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector idxLo = patch->getFortranCellLowIndex__New();
-  IntVector idxHi = patch->getFortranCellHighIndex__New();
-
+                                          
+{  
   int outlet_celltypeval = outletCellType();
-  int pressure_celltypeval = pressureCellType();
-
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  if (xminus) {
-    int colX = idxLo.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xminusCell(colX-1, colY, colZ);
-        if ((constvars->cellType[xminusCell] == outlet_celltypeval)||
-            (constvars->cellType[xminusCell] == pressure_celltypeval))
-          vars->scalar[xminusCell]= vars->scalar[currCell];
-      }
-    }
-  }
-  if (xplus) {
-    int colX = idxHi.x();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector xplusCell(colX+1, colY, colZ);
-        if ((constvars->cellType[xplusCell] == outlet_celltypeval)||
-            (constvars->cellType[xplusCell] == pressure_celltypeval))
-          vars->scalar[xplusCell]= vars->scalar[currCell];
-      }
-    }
-  }
-  if (yminus) {
-    int colY = idxLo.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yminusCell(colX, colY-1, colZ);
-        if ((constvars->cellType[yminusCell] == outlet_celltypeval)||
-            (constvars->cellType[yminusCell] == pressure_celltypeval))
-          vars->scalar[yminusCell]= vars->scalar[currCell];
-      }
-    }
-  }
-  if (yplus) {
-    int colY = idxHi.y();
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector yplusCell(colX, colY+1, colZ);
-        if ((constvars->cellType[yplusCell] == outlet_celltypeval)||
-            (constvars->cellType[yplusCell] == pressure_celltypeval))
-          vars->scalar[yplusCell]= vars->scalar[currCell];
-      }
-    }
-  }
-  if (zminus) {
-    int colZ = idxLo.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zminusCell(colX, colY, colZ-1);
-        if ((constvars->cellType[zminusCell] == outlet_celltypeval)||
-            (constvars->cellType[zminusCell] == pressure_celltypeval))
-          vars->scalar[zminusCell]= vars->scalar[currCell];
-      }
-    }
-  }
-  if (zplus) {
-    int colZ = idxHi.z();
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        IntVector zplusCell(colX, colY, colZ+1);
-        if ((constvars->cellType[zplusCell] == outlet_celltypeval)||
-            (constvars->cellType[zplusCell] == pressure_celltypeval))
-          vars->scalar[zplusCell]= vars->scalar[currCell];
+  int pressure_celltypeval = pressureCellType()
+  
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+  
+  for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+    Patch::FaceType face = *itr;
+    IntVector offset = patch->faceDirection(face);
+    
+    for(CellIterator iter=patch->getFaceIterator__New(face, MEC); !iter.done();iter++) {
+      IntVector c = *iter;
+      IntVector intCell = c - offset;    // interiorCell
+      
+      if ((constvars->cellType[c] == outlet_celltypeval)||
+          (constvars->cellType[c] == pressure_celltypeval)){
+        vars->scalar[c]= vars->scalar[intCell];
       }
     }
   }
 }
-
-
 
 //****************************************************************************
 // Set the inlet rho hat velocity BC
