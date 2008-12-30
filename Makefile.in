@@ -341,7 +341,7 @@ $(VCSOLUTION): $(ALLVCPROJECTS)
 # svn_diff.txt
 #
 diff_on :
-	@echo "Automatic SVN diff is now ON."
+	@echo "Automatic SVN diff is now ON.  (You must now run 'make' to generate a diff.)"
 	@touch .do_svn_diff
 
 diff_off :
