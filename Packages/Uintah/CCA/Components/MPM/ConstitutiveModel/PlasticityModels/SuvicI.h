@@ -18,24 +18,29 @@ namespace Uintah {
 
     The yield criterion is given by
     
-    \f$<X_{ae}-R/K>\f$
+    \f$<(X_{ae}-R)/K>\f$
     
-    where \f$X_{ae}=\sqrt{ {3/2} (S_ij-B_ij)(S_ij)-B_ij)}\f$=equivalent effective stress \n
+    where \f$X_{ae}=\sqrt{ {3/2} (S_{ij}-B_{ij})(S_{ij}-B_{ij})}\f$=effective reduced stress \n
     \f$ R\f$ is the yield stress, \f$ K \f$ is the drag stress, \f$ B_{ij}\f$ the back stress \n
 
     The inelastic strain rate is given by
 
-    \f$\dot{\epsilon}}^i_{ij}=A<X_{ae}-R/K>^Nn_{ij}\exp(-Q/RT)\f$
+    \f$\dot{\epsilon}}^i_{ij}=A<(X_{ae}-R)/K>^N n_{ij}\exp(-Q/RT)\f$
 
-   Integration scheme is an adaptation of 
+    where \f$ n_{ij} = {3/2} (S_{ij}-B_{ij})/X_{ae}) \f$, \f$Q, R, T\f$
+    are the activation energy, Universal gas constant and the absolute temperature,
+    respectively.
 
-   A Tangent Modulus Method for Rate Dependent Solids, 
+    The integration scheme is an adaptation of 
+
+    A Tangent Modulus Method for Rate Dependent Solids, 
     D. Peirce, C.F. Shih and A. Needleman, Computers and  Structures
     pp. 875-887, 1984
 
-   Reference: Plane Strain Indentation of Snow At The Microscale
-   Jonah H. Lee, Proceedings of 10th International Conference on Advanced
-   Vehicle and Tire Technologies, Paper# DETC2008-49374,  August 2008, ASME,
+    See the following and the references therein for details: 
+    Plane Strain Indentation of Snow At The Microscale
+    Jonah H. Lee, Proceedings of 10th International Conference on Advanced
+    Vehicle and Tire Technologies, Paper# DETC2008-49374,  August 2008, ASME,
   */  
   /////////////////////////////////////////////////////////////////////////////
 

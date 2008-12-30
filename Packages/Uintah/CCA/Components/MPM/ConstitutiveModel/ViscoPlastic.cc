@@ -479,6 +479,7 @@ ViscoPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pPlasticTempLabel,     matlset, gnone);
   task->requires(Task::OldDW, pPlasticTempIncLabel,  matlset, gnone);
   task->requires(Task::OldDW, pFailureVariableLabel,  matlset, gnone);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,  matlset, gnone);
 
   task->computes(pLeftStretchLabel_preReloc,    matlset);
   task->computes(pRotationLabel_preReloc,       matlset);
@@ -607,6 +608,10 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 //      new_dw->get(GVelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
       new_dw->get(GVelocity,lb->GVelocityStarLabel, dwi, patch, gac, NGN);
     }
+
+   //Get ParticleID
+   constParticleVariable<long64> pParticleID;
+   old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
 
     // GET LOCAL DATA 
 
@@ -939,8 +944,8 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
         if (d_checkFailure && pLocalized[idx]==0)  {
              isLocalized=updateFailedParticlesAndModifyStress(tensorF_new,
-                             pFailureVariable[idx], pLocalized[idx], pLocalized_new[idx], 
-                                           tensorSig, idx, temp_new, Tm_cur);
+             pFailureVariable[idx], pLocalized[idx], pLocalized_new[idx], 
+             tensorSig, pParticleID[idx], temp_new, Tm_cur);
         }
 
           // Rotate the stress back to the laboratory coordinates
@@ -1035,6 +1040,9 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
                                  pPlasticTemp_new, pPlasticTempInc_new,
                                  pdTdt,  pFailureVariable_new;
 
+ constParticleVariable<long64> 	 pParticleID;
+
+
 //   Local variables
   Matrix3 DispGrad(0.0); // Displacement gradient
   Matrix3 DefGrad, incDefGrad, incFFt, incFFtInv, LeftStretch, Rotation; 
@@ -1077,6 +1085,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(psize,        lb->pSizeLabel,               pset);    
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
     old_dw->get(pStress,      lb->pStressLabel,             pset);
+    old_dw->get(pParticleID,  lb->pParticleIDLabel,         pset);
 
     // GET LOCAL DATA 
     old_dw->get(pLeftStretch,        pLeftStretchLabel,    pset);
@@ -1329,8 +1338,8 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
 
         if (d_checkFailure && pLocalized[idx]==0)  {
             isLocalized=updateFailedParticlesAndModifyStress(DefGrad,
-                                pFailureVariable[idx], pLocalized[idx], pLocalized_new[idx], 
-                                pStress_new[idx], idx, pPlasticTemp_new[idx], Tm_cur);
+            pFailureVariable[idx], pLocalized[idx], pLocalized_new[idx], 
+            pStress_new[idx], pParticleID[idx], pPlasticTemp_new[idx], Tm_cur);
         }
           // Rotate the stress back to the laboratory coordinates
           // Save the new data - no need for implicit
@@ -2968,7 +2977,7 @@ ViscoPlastic::updateFailedParticlesAndModifyStress(const Matrix3& FF,
                                                 const int& pLocalized,
                                                 int& pLocalized_new,
                                                 Matrix3& pStress_new,
-                                                const int idx,
+                                                const long64 particleID,
                                                 const double temp_new,
                                                 const double Tm_cur)
 {
@@ -3025,7 +3034,7 @@ if (!d_varf.failureByStress) {  //failure by strain only
   pLocalized_new = pLocalized;
   if (epsMax > pFailureVariable) pLocalized_new = 1;
   if (pLocalized != pLocalized_new) {
-     cout << "Particle " << idx << " has failed: current value = " << epsMax 
+     cout << "Particle " << particleID << " has failed: current value = " << epsMax 
           << ", max allowable  = " << pFailureVariable << endl;
      isLocalized = true;
 

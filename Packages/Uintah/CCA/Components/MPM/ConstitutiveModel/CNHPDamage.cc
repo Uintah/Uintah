@@ -179,6 +179,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
   ParticleVariable<double>       pVol_new, pdTdt, pPlasticStrain_new, p_q;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
   ParticleVariable<Matrix3>      pDeformRate;
+  constParticleVariable<long64>  pParticleID;
 
   // Local variables 
   double J = 0.0, p = 0.0, IEl = 0.0, U = 0.0, W = 0.0, c_dil=0.0;
@@ -217,6 +218,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);
+    old_dw->get(pParticleID,              lb->pParticleIDLabel,         pset);
 
     // Get Grid info
     new_dw->get(gVelocity,   lb->gVelocityStarLabel, dwi, patch, gac, NGN);
@@ -348,7 +350,7 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(defGrad, pFailureStrain[idx], 
                                            pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx], idx);
+                                           pStress_new[idx], pParticleID[idx]);
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
