@@ -2941,45 +2941,37 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 
-          IntVector currCell(colX, colY, colZ);
+          IntVector c(colX, colY, colZ);
 
           double mmsvalue = 0.0;
           double testvalue = 0.0;
 
           if (d_mms == "constantMMS"){
-
             mmsvalue = phi0;
-
-            if (d_mmsErrorType == "L2"){
-              snumeratordiff += ( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue );
-            }
-
-            sdenomexact += mmsvalue*mmsvalue;
-
-            smmsLnError[currCell] = pow(( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue )/
-                                        (mmsvalue*mmsvalue),1.0/2.0);
           }
           else if (d_mms == "almgrenMMS"){
+            // not filled in
           }
-
+          
+          // compute the L-2 or L-infinity error.
           if (d_mmsErrorType == "L2"){
-            snumeratordiff += ( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue );
+            snumeratordiff += ( scalar[c] - mmsvalue )*( scalar[c] - mmsvalue );
             
             sdenomexact += mmsvalue*mmsvalue;
             
-            smmsLnError[currCell] = pow(( scalar[currCell] - mmsvalue )*( scalar[currCell] - mmsvalue )/
+            smmsLnError[c] = pow(( scalar[c] - mmsvalue )*( scalar[c] - mmsvalue )/
                                         (mmsvalue*mmsvalue),1.0/2.0);
           }
           else if (d_mmsErrorType == "Linf"){
             
-            testvalue = Abs(scalar[currCell] - mmsvalue);
+            testvalue = Abs(scalar[c] - mmsvalue);
             
             if (testvalue > snumeratordiff)
               snumeratordiff = testvalue;
             
             sdenomexact = 1.0;
             
-            smmsLnError[currCell] = testvalue;
+            smmsLnError[c] = testvalue;
           }
         }
       }
@@ -2994,6 +2986,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       new_dw->put(max_vartype(sdenomexact),    timelabels->smmsExactSol);
     } 
 
+    //__________________________________
     // X-face Error Calculation
     double unumeratordiff = 0.0;
     double udenomexact = 0.0;
@@ -3011,9 +3004,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
           double testvalue = 0.0;
 
           if (d_mms == "constantMMS"){
-
             mmsvalue = cu;
-
           }
           else if (d_mms == "almgrenMMS"){
 
@@ -3063,6 +3054,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       new_dw->put(max_vartype(udenomexact),    timelabels->ummsExactSol);
     } 
 
+    //__________________________________
     // Y-face Error Calculation
     double vnumeratordiff = 0.0;
     double vdenomexact = 0.0;
@@ -3079,9 +3071,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
           double testvalue = 0.0;
 
           if (d_mms == "constantMMS"){
-
             mmsvalue = cv;
-
           }
           else if (d_mms == "almgrenMMS"){
 
@@ -3121,6 +3111,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       new_dw->put(max_vartype(vdenomexact),    timelabels->vmmsExactSol);
     }
 
+    //__________________________________
     // Z-face Error Calculation
     double wnumeratordiff = 0.0;
     double wdenomexact = 0.0;
@@ -3137,14 +3128,10 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
           double testvalue = 0.0;
 
           if (d_mms == "constantMMS"){
-
             mmsvalue = cw;
-
           }
           else if (d_mms == "almgrenMMS"){
-
             //nothing for now since sine-cos is in x-y plane
-
           }
           //__________________________________
           if (d_mmsErrorType == "L2"){
