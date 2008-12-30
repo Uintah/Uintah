@@ -297,7 +297,7 @@ namespace Uintah {
                                               const int& pLocalized,
                                               int& pLocalized_new,
                                               Matrix3& pStress_new,
-                                              const int idx,
+                                              const long64 particleID,
                                               const double temp_new,
                                               const double Tm_cur);
 

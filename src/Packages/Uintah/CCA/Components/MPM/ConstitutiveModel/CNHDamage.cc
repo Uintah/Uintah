@@ -242,6 +242,9 @@ CNHDamage::addComputesAndRequires(Task* task,
     task->computes(pDeformRateLabel_preReloc,          matlset);
   }
 
+  //for pParticleID
+  task->requires(Task::OldDW, lb->pParticleIDLabel,  matlset, gnone);
+
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, bElBarLabel,           matlset, gnone);
   task->requires(Task::OldDW, pFailureStrainLabel,   matlset, gnone);
@@ -315,6 +318,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>       pvolume_new, pdTdt, pFailureStrain_new,p_q;
     ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
     ParticleVariable<Matrix3>      pDeformRate;
+    constParticleVariable<long64>  pParticleID;
+
 
     old_dw->get(pmass,                    lb->pMassLabel,               pset);
     old_dw->get(pX,                       lb->pXLabel,                  pset);
@@ -325,6 +330,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
     old_dw->get(pErosion,                 lb->pErosionLabel,            pset);
+    old_dw->get(pParticleID, 		  lb->pParticleIDLabel,         pset);
 
     // Get Grid info
     new_dw->get(gVelocity,   lb->gVelocityStarLabel, dwi, patch, gac, NGN);
@@ -428,8 +434,8 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(FF, pFailureStrain[idx], 
-                                           pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx], idx);
+               pFailed[idx], pFailed_new[idx], 
+               pStress_new[idx], pParticleID[idx]);
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
@@ -472,7 +478,7 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
                                                 const int& pFailed,
                                                 int& pFailed_new, 
                                                 Matrix3& pStress_new,
-                                                const int idx)
+                                                const long64 particleID)
 {
   Matrix3 Identity, zero(0.0); Identity.Identity();
 
@@ -505,7 +511,7 @@ CNHDamage::updateFailedParticlesAndModifyStress(const Matrix3& FF,
   pFailed_new = pFailed;
   if (epsMax > pFailureStrain) pFailed_new = 1;
   if (pFailed != pFailed_new) {
-     cout << "Particle " << idx << " has failed : eps = " << epsMax 
+     cout << "Particle " << particleID << " has failed : eps = " << epsMax 
           << " eps_f = " << pFailureStrain << endl;
   }
 
@@ -547,6 +553,8 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<double>       pVol_new, pdTdt, pFailureStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
 
+  constParticleVariable<long64>   pParticleID;
+
   // Local variables 
   double  J = 0.0, p = 0.0, IEl = 0.0, U = 0.0, W = 0.0;
   Matrix3 Shear(0.0), pBBar_new(0.0), pDefGradInc(0.0);
@@ -576,6 +584,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(pBeBar,                   bElBarLabel,                  pset);
     old_dw->get(pFailed,                  pFailedLabel,                 pset);
     old_dw->get(pFailureStrain,           pFailureStrainLabel,          pset);
+    old_dw->get(pParticleID,  		  lb->pParticleIDLabel,         pset);
 
     // Get Grid info
     new_dw->get(gDisp, lb->dispNewLabel, dwi, patch, gac, 1);
@@ -646,7 +655,7 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       // Modify the stress if particle has failed
       updateFailedParticlesAndModifyStress(FF, pFailureStrain[idx], 
                                            pFailed[idx], pFailed_new[idx], 
-                                           pStress_new[idx], idx);
+                                   pStress_new[idx], pParticleID[idx]);
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(J*J - 1.0) - log(J));
