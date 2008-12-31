@@ -5,6 +5,6 @@ namespace Uintah {
 
   class DataArchive;
 
-  void varsummary( DataArchive * da, CommandLineFlags & clf );
+  void varsummary( DataArchive * da, CommandLineFlags & clf, int matl );
 
 }
