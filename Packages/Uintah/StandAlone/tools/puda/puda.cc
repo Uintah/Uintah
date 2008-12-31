@@ -113,6 +113,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
   cerr << "  -matl <int>         (only outputs data for matl)\n";
+  cerr << "  -mat <int>          (same as -matl)\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
@@ -305,7 +306,7 @@ main(int argc, char** argv)
     } else if (s == "-patch") {
       clf.do_patch = true;
     } else if (s == "-material" ||
-               s == "-matl") {
+               s == "-matl" || s == "-mat") {
       clf.matl_jim = strtoul(argv[++i],(char**)NULL,10);
       clf.do_material = true;
       mat = clf.matl_jim;
@@ -411,7 +412,7 @@ main(int argc, char** argv)
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
     if(clf.do_varsummary){
-      varsummary( da, clf );
+      varsummary( da, clf, mat );
     }
 
     if( clf.do_jim1 ){

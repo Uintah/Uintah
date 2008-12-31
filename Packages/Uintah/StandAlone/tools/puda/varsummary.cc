@@ -225,11 +225,11 @@ findMinMaxPV( DataArchive*          da,
 }
 
 void
-Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
+Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
 {
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(16);
-  
+ 
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
@@ -272,6 +272,7 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf )
           for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
               matlIter != matls.end(); matlIter++){
             int matl = *matlIter;
+            if (!matl == mat) continue;
             cout << "\t\t\tMaterial: " << matl << endl;
             switch(td->getType()){
               //__________________________________
