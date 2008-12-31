@@ -116,6 +116,8 @@ CorrugEdgeGeomPiece::getBoundingBox() const
 unsigned int 
 CorrugEdgeGeomPiece::createPoints()
 {
+  if (!d_points.empty())
+    d_points.clear();
   double lambda = d_wavelength;
   double a = d_amplitude;
   double L = 0.0; double W = 0.0; double T = d_thickness;
