@@ -19,6 +19,7 @@ else
       Packages/Uintah/Core/ProblemSpec \
       Packages/Uintah/CCA/Ports \
       Packages/Uintah/CCA/Components/ProblemSpecification \
+      Packages/Uintah/Core/GeometryPiece \
       Core/Exceptions \
       Core/Geometry 
 endif
@@ -45,6 +46,7 @@ else
      Packages/Uintah/Core/ProblemSpec \
      Packages/Uintah/CCA/Ports \
      Packages/Uintah/CCA/Components/ProblemSpecification \
+     Packages/Uintah/Core/GeometryPiece \
      Core/Exceptions \
      Core/Geometry
 endif
