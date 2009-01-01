@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -31,7 +32,7 @@ typedef unsigned char byte;
 
 // forwared function declarations
 void usage( char *prog_name );
-void parseArgs( int argc, char* argv[], string & infile, bool & binmode);
+//void parseArgs( int argc, char* argv[], string & infile, bool & binmode);
 GridP CreateGrid(ProblemSpecP ups);
 bool ReadImage(const char* szfile, int nsize, byte* pb);
 
@@ -57,6 +58,10 @@ in that file those points which lie within that patch.  These individual
 files may be ASCII or binary.  All of this is 
 done to prevent numerous procs from trying to access the same file, which is
 hard on file systems.
+
+Can create a cylinder out of the image data given the coordinates of the
+bottom and top, and the radius of the cylinder. The cylinder must be inside
+the image data. Note that the bounding box is not changed.
 */
 // function main : main entry point of application
 //
@@ -67,12 +72,52 @@ int main(int argc, char *argv[])
     Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
     Uintah::Parallel::initializeManager( argc, argv, "" );
 
-    // parse the command arguments
     string infile;
-    bool binmode;
+    bool binmode = false;
+    bool do_cylinder = false;
+    CylinderGeometryPiece* cylinder;
+
+    //default cylinder
+    double xb = 0.0, yb = 0.0, zb = 0.0; //coordinates of the bottom
+    double xt = 1.0, yt = 1.0, zt = 1.0; //coordinates of the top
+    double radius = 1.0;                 //radius of the cylinder
+
+    // parse the command arguments
+    for (int i=1; i<argc; i++){
+        string s=argv[i];
+        if (s == "-b" || s == "-B") {
+          binmode = true;
+        } else if (s == "-cyl") {
+            do_cylinder = true;
+            xb = atof(argv[++i]);
+            yb = atof(argv[++i]);
+            zb = atof(argv[++i]);
+            xt = atof(argv[++i]);
+            yt = atof(argv[++i]);
+            zt = atof(argv[++i]);
+            radius = atof(argv[++i]);
+        }
+    }
     
-    parseArgs( argc, argv, infile, binmode);
+    infile = argv[argc-1];
     
+    if( argc < 2 || argc > 10 ) usage( argv[0] );
+
+    if (do_cylinder) {
+        try {
+            Point bottom(xb,yb,zb);
+            Point top(xt,yt,zt);
+            cylinder = scinew CylinderGeometryPiece(top, bottom, radius);
+            fprintf(stderr, "Cylinder height, volume: %g, %g\n", cylinder->height(), cylinder->volume());
+        } catch (Exception& e) {
+            cerr << "Caught exception: " << e.message() << endl;
+            abort();
+        } catch(...){
+            cerr << "Caught unknown exception\n";
+            abort();
+        }
+    }
+
     // create the problemspec reader
     ProblemSpecInterface* reader = scinew ProblemSpecReader(infile);
     
@@ -84,7 +129,7 @@ int main(int argc, char *argv[])
     
     if(ups->getNodeName() != "Uintah_specification")
       throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
-    
+
     // Create the grid
     GridP grid = CreateGrid(ups);
 
@@ -285,6 +330,10 @@ int main(int argc, char *argv[])
                   x[0] = pt.x();
                   x[1] = pt.y();
                   x[2] = pt.z();
+                  
+                  //points outside the cylinder are ignored.
+                  if (do_cylinder && !cylinder->inside(pt)) continue;
+
                   // FIXME: should have way of specifying endiness
                   if(binmode) {
                     fwrite(x, sizeof(double), 3, dest);
@@ -342,25 +391,11 @@ GridP CreateGrid(ProblemSpecP ups)
 //
 void usage( char *prog_name )
 {
-  cout << "Usage: " << prog_name << " [-b] [-B] infile \n";
+  cout << "Usage: " << prog_name << " [-b] [-B] [-cyl <args>] infile \n";
+  cout << "-b,B: binary output \n";
+  cout << "-cyl: defines a cylinder within the geometry \n";
+  cout << "args = xbot ybot zbot xtop ytop ztop radius \n";
   exit( 1 );
-}
-
-//-----------------------------------------------------------------------------------------------
-// function parseArgs : parses the command line
-//
-void parseArgs( int argc, char *argv[], string & infile, bool & binmode)
-{
-  binmode = false;
-  infile = argv[argc-1];
-  
-  if( argc < 2) usage( argv[0] );
-  
-  if(string(argv[1])=="-b") {
-    binmode = true;
-    argc--;
-  }
-  if( argc > 2) usage( argv[0] );
 }
 
 //-----------------------------------------------------------------------------------------------
