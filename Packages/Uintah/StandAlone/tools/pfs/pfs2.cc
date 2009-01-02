@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
     }
     
     infile = argv[argc-1];
-    
-    if( argc < 2 || argc > 10 ) usage( argv[0] );
+
+    if( argc < 2 || argc > 11 ) usage( argv[0] );
 
     if (do_cylinder) {
         try {
