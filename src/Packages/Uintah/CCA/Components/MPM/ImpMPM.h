@@ -163,11 +163,20 @@ private:
   void scheduleInitializeHeatFluxBCs(const LevelP& level,
                                      SchedulerP&);
 
+  void scheduleInitializePressureBCs(const LevelP& level, SchedulerP&);
+
+
   void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
+                                       
+  void initializePressureBC(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
   void initializeHeatFluxBC(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -524,6 +533,8 @@ private:
   // stuff for not having to recompile the iterative scheduler every timstep
   SchedulerP d_subsched;
   bool d_recompileSubsched;
+  
+  MaterialSubset*  d_loadCurveIndex;
 
 };
       
