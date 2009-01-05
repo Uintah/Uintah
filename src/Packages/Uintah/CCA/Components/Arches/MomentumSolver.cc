@@ -246,22 +246,18 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,indx, patch);
     new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,indx, patch);
     new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,indx, patch);  
-    
+    // Huh?  -Todd
     new_dw->copyOut(velocityVars.uVelRhoHat,       d_lab->d_uVelRhoHatLabel,   indx, patch);  
     new_dw->copyOut(velocityVars.vVelRhoHat,       d_lab->d_vVelRhoHatLabel,   indx, patch);  
     new_dw->copyOut(velocityVars.wVelRhoHat,       d_lab->d_wVelRhoHatLabel,   indx, patch);  
 
     if (d_MAlab) {
-      d_boundaryCondition->calculateVelocityPred_mm(patch, 
-                                                    delta_t, cellinfo,
-                                                    &velocityVars,
-                                                    &constVelocityVars);
+      d_boundaryCondition->calculateVelocityPred_mm(patch, delta_t, 
+                                                    cellinfo,&velocityVars, &constVelocityVars);
 
     }else {
-      d_rhsSolver->calculateVelocity(pc, patch, 
-                                      delta_t,
-                                      cellinfo, &velocityVars,
-                                      &constVelocityVars);
+      d_rhsSolver->calculateVelocity(patch, delta_t,
+                                     cellinfo, &velocityVars,&constVelocityVars);
 
       /*if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->calculateIntrusionVel(pc, patch,
@@ -269,12 +265,13 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                    &velocityVars,
                                                    &constVelocityVars);*/
     }
+    
+    // boundary condition
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
       d_boundaryCondition->addPresGradVelocityOutletPressureBC(patch, cellinfo,
                                                                 delta_t, &velocityVars,
                                                                 &constVelocityVars);
-    }
-    if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC())){
+                                                                
       d_boundaryCondition->velocityOutletPressureTangentBC(patch, 
                                             &velocityVars, &constVelocityVars);
     }
