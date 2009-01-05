@@ -63,8 +63,7 @@ public:
                             ArchesVariables* vars,
                             ArchesConstVariables* constvars);
 
-  void calculateVelocity(const ProcessorGroup* ,
-                         const Patch* patch,
+  void calculateVelocity(const Patch* patch,
                          double delta_t,
                          CellInformation* cellinfo,
                          ArchesVariables* vars,
