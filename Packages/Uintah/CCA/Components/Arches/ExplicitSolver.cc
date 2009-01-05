@@ -2884,11 +2884,6 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       new_dw->allocateAndPut(wmmsLnError, d_lab->d_wmmsLnErrorLabel, indx, patch);
       new_dw->allocateAndPut(smmsLnError, d_lab->d_smmsLnErrorLabel, indx, patch);
       new_dw->allocateAndPut(gradpmmsLnError, d_lab->d_gradpmmsLnErrorLabel, indx, patch);
-      ummsLnError.initialize(0.0);
-      vmmsLnError.initialize(0.0);
-      wmmsLnError.initialize(0.0);
-      smmsLnError.initialize(0.0);
-      gradpmmsLnError.initialize(0.0);
     }
     else {
       new_dw->getModifiable(ummsLnError, d_lab->d_ummsLnErrorLabel,     indx, patch);
@@ -2896,13 +2891,14 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       new_dw->getModifiable(wmmsLnError, d_lab->d_wmmsLnErrorLabel,     indx, patch);
       new_dw->getModifiable(smmsLnError, d_lab->d_smmsLnErrorLabel,     indx, patch);
       new_dw->getModifiable(smmsLnError, d_lab->d_gradpmmsLnErrorLabel, indx, patch);
-      ummsLnError.initialize(0.0);
-      vmmsLnError.initialize(0.0);
-      wmmsLnError.initialize(0.0);
-      smmsLnError.initialize(0.0);
-      gradpmmsLnError.initialize(0.0);
-      
     }
+    
+    ummsLnError.initialize(0.0);
+    vmmsLnError.initialize(0.0);
+    wmmsLnError.initialize(0.0);
+    smmsLnError.initialize(0.0);
+    gradpmmsLnError.initialize(0.0);
+    
     Ghost::GhostType  gn = Ghost::None;
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
@@ -2930,185 +2926,137 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
 
     double pi = acos(-1.0);
 
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
-
-    // Cell Centered Error Calculation
+    //__________________________________
+    //  Scalar: Cell Centered Error Calculation
     double snumeratordiff = 0.0;
     double sdenomexact = 0.0;
 
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+    for(CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      IntVector c = *iter;
 
-          IntVector c(colX, colY, colZ);
+      double mmsvalue = 0.0;
+      double testvalue = 0.0;
 
-          double mmsvalue = 0.0;
-          double testvalue = 0.0;
+      if (d_mms == "constantMMS"){
+        mmsvalue = phi0;
+      }
+      else if (d_mms == "almgrenMMS"){
+        // not filled in
+      }
 
-          if (d_mms == "constantMMS"){
-            mmsvalue = phi0;
-          }
-          else if (d_mms == "almgrenMMS"){
-            // not filled in
-          }
-          
-          // compute the L-2 or L-infinity error.
-          if (d_mmsErrorType == "L2"){
-            snumeratordiff += ( scalar[c] - mmsvalue )*( scalar[c] - mmsvalue );
-            
-            sdenomexact += mmsvalue*mmsvalue;
-            
-            smmsLnError[c] = pow(( scalar[c] - mmsvalue )*( scalar[c] - mmsvalue )/
-                                        (mmsvalue*mmsvalue),1.0/2.0);
-          }
-          else if (d_mmsErrorType == "Linf"){
-            
-            testvalue = Abs(scalar[c] - mmsvalue);
-            
-            if (testvalue > snumeratordiff)
-              snumeratordiff = testvalue;
-            
-            sdenomexact = 1.0;
-            
-            smmsLnError[c] = testvalue;
-          }
+      // compute the L-2 or L-infinity error.
+      if (d_mmsErrorType == "L2"){
+        double diff = scalar[c] - mmsvalue;
+        snumeratordiff += diff * diff;
+        sdenomexact    += mmsvalue*mmsvalue;
+        smmsLnError[c]  = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
+      }
+      else if (d_mmsErrorType == "Linf"){
+
+        testvalue = Abs(scalar[c] - mmsvalue);
+
+        if (testvalue > snumeratordiff){
+          snumeratordiff = testvalue;
         }
+        sdenomexact = 1.0;
+        smmsLnError[c] = testvalue;
       }
     }
-
-    if (d_mmsErrorType == "L2"){
-      new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError); 
-      new_dw->put(sum_vartype(sdenomexact),    timelabels->smmsExactSol);
-    }
-    else if (d_mmsErrorType == "Linf"){
-      new_dw->put(max_vartype(snumeratordiff), timelabels->smmsLnError); 
-      new_dw->put(max_vartype(sdenomexact),    timelabels->smmsExactSol);
-    } 
+     
 
     //__________________________________
     // X-face Error Calculation
     double unumeratordiff = 0.0;
     double udenomexact = 0.0;
 
-    idxLo = patch->getSFCXFORTLowIndex();
-    idxHi = patch->getSFCXFORTHighIndex();
+    for (CellIterator iter=patch->getSFCXIterator__New(); !iter.done(); iter++){ 
 
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-          
-          IntVector currCell(colX, colY, colZ);
-          double mmsvalue = 0.0;
-          double mmsconvvalue = 0.0;
-          double testvalue = 0.0;
+      IntVector c = *iter; 
+      int colX = c.x();
+      int colY = c.y();
+      
+      double mmsvalue = 0.0;
+      double mmsconvvalue = 0.0;
+      double testvalue = 0.0;
 
-          if (d_mms == "constantMMS"){
-            mmsvalue = cu;
-          }
-          else if (d_mms == "almgrenMMS"){
+      if (d_mms == "constantMMS"){
+        mmsvalue = cu;
+      }
+      else if (d_mms == "almgrenMMS"){
 
-            mmsvalue = 1 - amp * cos(2.0*pi*(cellinfo->xu[colX] - time))
-              * sin(2.0*pi*(cellinfo->yy[colY] - time))*exp(-2.0*d_viscosity*time);
+        mmsvalue = 1 - amp * cos(2.0*pi*(cellinfo->xu[colX] - time))
+          * sin(2.0*pi*(cellinfo->yy[colY] - time))*exp(-2.0*d_viscosity*time);
 
-            mmsconvvalue = 2*(1-amp*cos(2*pi*(cellinfo->xu[colX]-time))*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time))*amp*sin(2*pi*(cellinfo->xu[colX]-time))*pi*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time)-2*amp*cos(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*pi*exp(-2*d_viscosity*time)*(1+amp*sin(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time));
+        mmsconvvalue = 2*(1-amp*cos(2*pi*(cellinfo->xu[colX]-time))*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time))*amp*sin(2*pi*(cellinfo->xu[colX]-time))*pi*sin(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time)-2*amp*cos(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*pi*exp(-2*d_viscosity*time)*(1+amp*sin(2*pi*(cellinfo->xu[colX]-time))*cos(2*pi*(cellinfo->yy[colY]-time))*exp(-2*d_viscosity*time));
 
-          }
+      }
 
-          if (d_mmsErrorType == "L2"){
-            unumeratordiff += ( uVelocity[currCell] - mmsvalue )*( uVelocity[currCell] - mmsvalue );
-            //unumeratordiff += ( uFmms[currCell] - mmsconvvalue )*( uFmms[currCell] - mmsconvvalue );
-            
-            udenomexact += mmsvalue*mmsvalue;
-            //udenomexact += mmsconvvalue*mmsconvvalue;
-            
-            ummsLnError[currCell] = pow(( uVelocity[currCell] - mmsvalue )*( uVelocity[currCell] - mmsvalue )/
-                                        (mmsvalue*mmsvalue),1.0/2.0);
-            //ummsLnError[currCell] = pow(( uFmms[currCell] - mmsconvvalue )*( uFmms[currCell] - mmsconvvalue )/
-            //                            (mmsconvvalue*mmsconvvalue),1.0/2.0);
+      if (d_mmsErrorType == "L2"){
+        double diff = uVelocity[c] - mmsvalue;
+        unumeratordiff += diff * diff;
+        //unumeratordiff += ( uFmms[c] - mmsconvvalue )*( uFmms[c] - mmsconvvalue );
 
-            //cout << " mmsvalue = " << mmsvalue << " computed = " << uVelocity[currCell] << endl;
+        udenomexact += mmsvalue*mmsvalue;
+        //udenomexact += mmsconvvalue*mmsconvvalue;
 
-          }
-          else if (d_mmsErrorType == "Linf"){
-            
-            testvalue = Abs(uVelocity[currCell] - mmsvalue);
-            
-            if (testvalue > unumeratordiff)
-              unumeratordiff = testvalue;
-            
-            udenomexact = 1.0;
+        ummsLnError[c] = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
+        //ummsLnError[c] = pow(( uFmms[c] - mmsconvvalue )*( uFmms[c] - mmsconvvalue )/
+        //                            (mmsconvvalue*mmsconvvalue),1.0/2.0);
 
-            ummsLnError[currCell] = testvalue;
-          }
+        //cout << " mmsvalue = " << mmsvalue << " computed = " << uVelocity[c] << endl;
+
+      }
+      else if (d_mmsErrorType == "Linf"){
+
+        testvalue = Abs(uVelocity[c] - mmsvalue);
+
+        if (testvalue > unumeratordiff){
+          unumeratordiff = testvalue;
         }
+        udenomexact = 1.0;
+        ummsLnError[c] = testvalue;
       }
     }
-
-    if (d_mmsErrorType == "L2"){
-      new_dw->put(sum_vartype(unumeratordiff), timelabels->ummsLnError); 
-      new_dw->put(sum_vartype(udenomexact),    timelabels->ummsExactSol);
-    }
-    else if (d_mmsErrorType == "Linf"){
-      new_dw->put(max_vartype(unumeratordiff), timelabels->ummsLnError); 
-      new_dw->put(max_vartype(udenomexact),    timelabels->ummsExactSol);
-    } 
 
     //__________________________________
     // Y-face Error Calculation
     double vnumeratordiff = 0.0;
     double vdenomexact = 0.0;
 
-    idxLo = patch->getSFCYFORTLowIndex();
-    idxHi = patch->getSFCYFORTHighIndex();
+    for (CellIterator iter=patch->getSFCYIterator__New(); !iter.done(); iter++){ 
 
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      IntVector c = *iter; 
+      int colX = c.x();
+      int colY = c.y();
 
-          IntVector currCell(colX, colY, colZ);
-          double mmsvalue = 0.0;
-          double testvalue = 0.0;
+      double mmsvalue = 0.0;
+      double testvalue = 0.0;
 
-          if (d_mms == "constantMMS"){
-            mmsvalue = cv;
-          }
-          else if (d_mms == "almgrenMMS"){
-
-            mmsvalue = 1 + amp * sin(2.0*pi*cellinfo->xx[colX] - time)
-              * cos(2.0*pi*cellinfo->yv[colY] - time) * exp(-2.0*d_viscosity*time);
-
-          }
-
-          if (d_mmsErrorType == "L2"){
-            //            vnumeratordiff += ( vVelocity[currCell] - mmsvalue )*( vVelocity[currCell] - mmsvalue );
-            
-            // vdenomexact += mmsvalue*mmsvalue;
-            
-            //vmmsLnError[currCell] = pow(( vVelocity[currCell] - mmsvalue )*( vVelocity[currCell] - mmsvalue )/
-            //                                        (mmsvalue*mmsvalue),1.0/2.0);
-          }
-          else if (d_mmsErrorType == "Linf"){
-            testvalue = Abs(vVelocity[currCell] - mmsvalue);
-            
-            if (testvalue > vnumeratordiff)
-              vnumeratordiff = testvalue;
-            
-            vdenomexact = 1.0;
-            
-            vmmsLnError[currCell] = testvalue;
-          }
-        }
+      if (d_mms == "constantMMS"){
+        mmsvalue = cv;
       }
-    }
+      else if (d_mms == "almgrenMMS"){
 
-    if (d_mmsErrorType == "L2") {
-      new_dw->put(sum_vartype(vnumeratordiff), timelabels->vmmsLnError); 
-      new_dw->put(sum_vartype(vdenomexact),    timelabels->vmmsExactSol);
-    }
-    else if (d_mmsErrorType == "Linf"){
-      new_dw->put(max_vartype(vnumeratordiff), timelabels->vmmsLnError); 
-      new_dw->put(max_vartype(vdenomexact),    timelabels->vmmsExactSol);
+        mmsvalue = 1 + amp * sin(2.0*pi*cellinfo->xx[colX] - time)
+          * cos(2.0*pi*cellinfo->yv[colY] - time) * exp(-2.0*d_viscosity*time);
+
+      }
+
+      if (d_mmsErrorType == "L2"){
+        // double diff = vVelocity[c] - mmsvalue;
+        // vnumeratordiff += diff * diff;
+        // vdenomexact += mmsvalue*mmsvalue;
+        //vmmsLnError[c] = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
+      }
+      else if (d_mmsErrorType == "Linf"){
+        testvalue = Abs(vVelocity[c] - mmsvalue);
+
+        if (testvalue > vnumeratordiff){
+          vnumeratordiff = testvalue;
+        }
+        vdenomexact = 1.0;
+        vmmsLnError[c] = testvalue;
+      }
     }
 
     //__________________________________
@@ -3116,52 +3064,60 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     double wnumeratordiff = 0.0;
     double wdenomexact = 0.0;
 
-    idxLo = patch->getSFCZFORTLowIndex();
-    idxHi = patch->getSFCZFORTHighIndex();
+    for (CellIterator iter=patch->getSFCZIterator__New(); !iter.done(); iter++){ 
 
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+      IntVector c = *iter; 
+      double mmsvalue  = 0.0;
+      double testvalue = 0.0;
 
-          IntVector currCell(colX, colY, colZ);
-          double mmsvalue = 0.0;
-          double testvalue = 0.0;
+      if (d_mms == "constantMMS"){
+        mmsvalue = cw;
+      }
+      else if (d_mms == "almgrenMMS"){
+        //nothing for now since sine-cos is in x-y plane
+      }
+      //__________________________________
+      if (d_mmsErrorType == "L2"){
+        double diff = wVelocity[c] - mmsvalue;
+        wnumeratordiff += diff * diff;
+        wdenomexact    += mmsvalue*mmsvalue;
+        wmmsLnError[c]  = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
 
-          if (d_mms == "constantMMS"){
-            mmsvalue = cw;
-          }
-          else if (d_mms == "almgrenMMS"){
-            //nothing for now since sine-cos is in x-y plane
-          }
-          //__________________________________
-          if (d_mmsErrorType == "L2"){
-            wnumeratordiff += ( wVelocity[currCell] - mmsvalue )*( wVelocity[currCell] - mmsvalue );
-            
-            wdenomexact += mmsvalue*mmsvalue;
-            
-            wmmsLnError[currCell] = pow(( wVelocity[currCell] - mmsvalue )*( wVelocity[currCell] - mmsvalue )/
-                                        (mmsvalue*mmsvalue),1.0/2.0);
-            
-          }
-          else if (d_mmsErrorType == "Linf"){
-            testvalue = Abs(wVelocity[currCell] - mmsvalue);
-            
-            if (testvalue > wnumeratordiff){
-              wnumeratordiff = testvalue;
-            }
-            wdenomexact = 1.0;
-            wmmsLnError[currCell] = testvalue;
-          }
+      }
+      else if (d_mmsErrorType == "Linf"){
+        testvalue = Abs(wVelocity[c] - mmsvalue);
+
+        if (testvalue > wnumeratordiff){
+          wnumeratordiff = testvalue;
         }
+        wdenomexact = 1.0;
+        wmmsLnError[c] = testvalue;
       }
     }
-    
+ 
+        
+    //__________________________________
+    //
     if (d_mmsErrorType == "L2"){
+      new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError); 
+      new_dw->put(sum_vartype(unumeratordiff), timelabels->ummsLnError);
+      new_dw->put(sum_vartype(vnumeratordiff), timelabels->vmmsLnError);
       new_dw->put(sum_vartype(wnumeratordiff), timelabels->wmmsLnError); 
+      
+      new_dw->put(sum_vartype(sdenomexact),    timelabels->smmsExactSol);
+      new_dw->put(sum_vartype(udenomexact),    timelabels->ummsExactSol);
+      new_dw->put(sum_vartype(vdenomexact),    timelabels->vmmsExactSol);
       new_dw->put(sum_vartype(wdenomexact),    timelabels->wmmsExactSol);
     }
     else if (d_mmsErrorType == "Linf"){
-      new_dw->put(max_vartype(wnumeratordiff), timelabels->wmmsLnError); 
+      new_dw->put(max_vartype(snumeratordiff), timelabels->smmsLnError); 
+      new_dw->put(max_vartype(unumeratordiff), timelabels->ummsLnError);
+      new_dw->put(max_vartype(vnumeratordiff), timelabels->vmmsLnError);
+      new_dw->put(max_vartype(wnumeratordiff), timelabels->wmmsLnError);
+      
+      new_dw->put(max_vartype(sdenomexact),    timelabels->smmsExactSol);
+      new_dw->put(max_vartype(udenomexact),    timelabels->ummsExactSol); 
+      new_dw->put(max_vartype(vdenomexact),    timelabels->vmmsExactSol);
       new_dw->put(max_vartype(wdenomexact),    timelabels->wmmsExactSol);
     }
   }
