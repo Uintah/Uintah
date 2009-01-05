@@ -20,6 +20,7 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
@@ -230,44 +231,59 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
 //****************************************************************************
 
 void 
-RHSSolver::calculateVelocity(const ProcessorGroup* ,
-                             const Patch* patch,
+RHSSolver::calculateVelocity(const Patch* patch,
                              double delta_t,
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
                              ArchesConstVariables* constvars)
 {
+  constCCVariable<double>& rho_CC   = constvars->density;
+  constCCVariable<double>& press_CC = constvars->pressure;
+  //__________________________________
+  //  X-Velocity
+  IntVector shift(-1,0,0);  // ignore outer edge/plane of computational domain
+  IntVector loPt =  patch->getExtraLowIndex( Patch::XFaceBased,shift);
+  IntVector hiPt =  patch->getExtraHighIndex(Patch::XFaceBased,shift);
+  CellIterator iter = CellIterator(loPt, hiPt);
   
-  int ioff, joff, koff;
-  IntVector idxLoU;
-  IntVector idxHiU;
+  for (; !iter.done(); iter++){
+    IntVector c = *iter;
+    int i = c.x();
+    IntVector adj = c + shift;
+    double rho_ave = 0.5 * (rho_CC[adj] + rho_CC[c]);
+    vars->uVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dxpw[i]/rho_ave + vars->uVelRhoHat[c];
+  }
+
+  //__________________________________
+  //  Y-Velocity
+  shift = IntVector(0,-1,0); // ignore outer edge/plane of computational domain
+  loPt =  patch->getExtraLowIndex( Patch::YFaceBased,shift);
+  hiPt =  patch->getExtraHighIndex(Patch::YFaceBased,shift);
+  iter = CellIterator(loPt, hiPt);
+  
+  for (; !iter.done(); iter++){
+    IntVector c = *iter;
+    IntVector adj = c + shift;
+    int j = c.y();
+    double rho_ave = 0.5 * (rho_CC[adj] + rho_CC[c]);
+    vars->vVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dyps[j]/rho_ave + vars->vVelRhoHat[c];
+  }
   
   //__________________________________
-  idxLoU = patch->getSFCXFORTLowIndex();
-  idxHiU = patch->getSFCXFORTHighIndex();
-  ioff = 1; joff = 0; koff = 0;
-
-  fort_computevel(idxLoU, idxHiU, vars->uVelRhoHat, constvars->pressure,
-                  constvars->density, delta_t,
-                  ioff, joff, koff, cellinfo->dxpw);
-  //__________________________________
-  idxLoU = patch->getSFCYFORTLowIndex();
-  idxHiU = patch->getSFCYFORTHighIndex();
-  ioff = 0; joff = 1; koff = 0;
-
-  fort_computevel(idxLoU, idxHiU, vars->vVelRhoHat, constvars->pressure,
-                  constvars->density, delta_t,
-                  ioff, joff, koff, cellinfo->dyps);
-  //__________________________________
-  idxLoU = patch->getSFCZFORTLowIndex();
-  idxHiU = patch->getSFCZFORTHighIndex();
-  ioff = 0; joff = 0; koff = 1;
-
-  fort_computevel(idxLoU, idxHiU, vars->wVelRhoHat, constvars->pressure,
-                  constvars->density, delta_t,
-                  ioff, joff, koff, cellinfo->dzpb);
+  //  Z-Velocity  
+  shift = IntVector(0,0,-1); // ignore outer edge/plan of computational domain
+  loPt =  patch->getExtraLowIndex( Patch::ZFaceBased,shift);
+  hiPt =  patch->getExtraHighIndex(Patch::ZFaceBased,shift);
+  iter = CellIterator(loPt, hiPt);
+  
+  for (; !iter.done(); iter++){
+    IntVector c = *iter;
+    IntVector adj = c + shift;
+    int k = c.z();
+    double rho_ave = 0.5 * (rho_CC[adj] + rho_CC[c]);
+    vars->wVelRhoHat[c] = delta_t*(press_CC[adj] - press_CC[c])/cellinfo->dzpb[k]/rho_ave + vars->wVelRhoHat[c];  
+  }
 }
-
 
 //****************************************************************************
 // Scalar Solve
