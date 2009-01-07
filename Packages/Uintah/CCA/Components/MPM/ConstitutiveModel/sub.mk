@@ -23,6 +23,7 @@ SRCS     += \
 	$(SRCDIR)/ViscoScram.cc               	\
 	$(SRCDIR)/ViscoSCRAMHotSpot.cc        	\
 	$(SRCDIR)/HypoElastic.cc              	\
+	$(SRCDIR)/HypoElasticFortran.cc        	\
 	$(SRCDIR)/HypoElasticImplicit.cc      	\
 	$(SRCDIR)/ViscoScramImplicit.cc      	\
 	$(SRCDIR)/MWViscoElastic.cc           	\
@@ -37,7 +38,9 @@ SRCS     += \
 	$(SRCDIR)/ViscoPlastic.cc		\
 	$(SRCDIR)/SoilFoam.cc
 
-SUBDIRS := $(SRCDIR)/PlasticityModels
+SUBDIRS := \
+	$(SRCDIR)/PlasticityModels \
+	$(SRCDIR)/fortran
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

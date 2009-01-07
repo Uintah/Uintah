@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
@@ -128,6 +129,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     }
   }
 
+  else if (mat_type == "hypo_elastic_fortran")
+    return(scinew HypoElasticFortran(child,flags));
+   
   else if (mat_type ==  "mw_visco_elastic")
     return(scinew MWViscoElastic(child,flags));
    
