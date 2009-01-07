@@ -1,5 +1,5 @@
 extern "C"{
- void hookechk_(double UI[], double UI[], double UI[]);
+ void hookechk_(double UI[], double UJ[], double UK[]);
 }
   
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
