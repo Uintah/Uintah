@@ -146,12 +146,13 @@ public:
   static PersistentTypeID type_id;
 
   //! Friend functions
-  SCISHARE friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  
 
 };
 
 
 //! Friend functions
+SCISHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 SCISHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 SCISHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 SCISHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
