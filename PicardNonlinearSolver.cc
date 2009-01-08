@@ -541,7 +541,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   // project velocities using the projection step
   for (int index = 1; index <= Arches::NDIM; ++index) {
     d_momSolver->solve(                      subsched, local_patches, local_matls,
-                                             d_timeIntegratorLabels[curr_level], index,
+                                             d_timeIntegratorLabels[curr_level],
                                                                     false, false);
   }
   if (d_pressure_correction){
