@@ -1130,11 +1130,14 @@ DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
 
 bool DynamicLoadBalancer::needLoadBalance()
 {
+  bool do_check = false;
+  
+  
+#if 0
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   double time = d_sharedState->getElapsedTime();
 
-  bool do_check = false;
-  
+ 
   if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
     d_lastLbTimestep = timestep;
     do_check = true;
@@ -1150,6 +1153,8 @@ bool DynamicLoadBalancer::needLoadBalance()
     do_check = true;
     d_checkAfterRestart = false;
   }
+#endif 
+
   return do_check;
 }
 
