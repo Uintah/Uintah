@@ -576,9 +576,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
         new_dw->allocateAndPut(scalar, d_lab->d_scalarEKTLabel, indx, patch);
       }else{
         new_dw->getModifiable(scalar, d_lab->d_scalarEKTLabel,  indx, patch);
-        new_dw->copyOut(scalar, d_lab->d_scalarSPLabel,indx, patch);
-                  
       }
+      new_dw->copyOut(scalar, d_lab->d_scalarSPLabel,indx, patch);
     }
   }
 }
