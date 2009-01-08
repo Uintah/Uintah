@@ -914,10 +914,13 @@ Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
 #if defined(HAVE_CBLAS)
   double ALPHA = 1.0;
   double BETA = 0.0;
+  double* m2_dataptr = const_cast<DenseMatrix&>(m2).get_data_pointer();
+  double* m1_dataptr = const_cast<DenseMatrix&>(m1).get_data_pointer();
+  double* out_dataptr = out.get_data_pointer();
   cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m1.nrows(),
-              m2.ncols(), m1.ncols(), ALPHA, m1.dataptr_, m1.ncols(),
-              m2.dataptr_, m2.ncols(), BETA,
-              out.dataptr_, out.ncols());
+              m2.ncols(), m1.ncols(), ALPHA, m1_dataptr, m1.ncols(),
+              m2_dataptr, m2.ncols(), BETA,
+              out_dataptr, out.ncols());
 #else
   int nr = out.nrows();
   int nc = out.ncols();
