@@ -336,11 +336,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
                                  false, d_EKTCorrection, doing_EKT_now);
                                  
-      for (int index = 1; index <= Arches::NDIM; ++index) {
-        d_momSolver->solve(sched, patches, matls,
-                         d_timeIntegratorLabels[curr_level], index,
-                         false, doing_EKT_now);
-      }
+      d_momSolver->solve(sched, patches, matls,
+                       d_timeIntegratorLabels[curr_level],
+                       false, doing_EKT_now);
       doing_EKT_now = false;
     }
 
@@ -457,11 +455,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                false, d_EKTCorrection, doing_EKT_now);
   
     // project velocities using the projection step
-    for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solve(sched, patches, matls,
-                         d_timeIntegratorLabels[curr_level], index,
-                         false, false);
-    }
+    d_momSolver->solve(sched, patches, matls,
+                       d_timeIntegratorLabels[curr_level],
+                       false, false);
 
     if (d_extraProjection) {
       d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
@@ -470,11 +466,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
                                  d_extraProjection, false, false);
                            
-      for (int index = 1; index <= Arches::NDIM; ++index) {
-        d_momSolver->solve(sched, patches, matls,
-                         d_timeIntegratorLabels[curr_level], index,
-                         d_extraProjection, false);
-      }
+      d_momSolver->solve(sched, patches, matls,
+                       d_timeIntegratorLabels[curr_level],
+                       d_extraProjection, false);
     }
 
     if (d_pressure_correction)
