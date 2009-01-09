@@ -23,7 +23,6 @@ using namespace std;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
 
 //****************************************************************************
 // Default constructor for RHSSolver
