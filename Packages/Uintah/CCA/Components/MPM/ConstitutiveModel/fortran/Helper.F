@@ -28,3 +28,13 @@
 
       RETURN
       END
+
+      SUBROUTINE FATERR(MES1, MES2)
+
+      CHARACTER*80 MES1
+      CHARACTER*80 MES2
+
+      PRINT*, MES1,' ', MES2
+
+      RETURN
+      END
