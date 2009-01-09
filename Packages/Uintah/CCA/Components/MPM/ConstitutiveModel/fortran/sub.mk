@@ -5,7 +5,8 @@
 SRCDIR   := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/fortran
 
 SRCS     += \
-	$(SRCDIR)/Hooke.F
+	$(SRCDIR)/Hooke.F	\
+	$(SRCDIR)/Helper.F
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Disclosure \
@@ -21,3 +22,6 @@ PSELIBS := Packages/Uintah/Core/Grid \
 	Core/Util
 
 #include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+#$(SRCDIR)/HookeChk.$(OBJEXT): $(SRCDIR)/HookeChk_fort.h
+

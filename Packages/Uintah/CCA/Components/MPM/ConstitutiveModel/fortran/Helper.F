@@ -1,0 +1,30 @@
+      SUBROUTINE BOMBED(MES)
+
+      CHARACTER*80 MES
+
+      PRINT*, MES
+
+      STOP
+
+      RETURN
+      END
+
+      SUBROUTINE LOGMES(MES)
+
+      CHARACTER*80 MES
+
+      PRINT*, MES
+
+      STOP
+
+      RETURN
+      END
+
+      SUBROUTINE TOKENS(MES)
+
+      CHARACTER*80 MES
+
+      PRINT*, MES
+
+      RETURN
+      END
