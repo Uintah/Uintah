@@ -67,7 +67,8 @@ public:
                          double delta_t,
                          CellInformation* cellinfo,
                          ArchesVariables* vars,
-                         ArchesConstVariables* constvars);
+                         constCCVariable<double>&,
+                         constCCVariable<double>&);
 
   ////////////////////////////////////////////////////////////////////////
   // Scalar Solve

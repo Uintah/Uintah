@@ -131,4 +131,3 @@ $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/scalsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/uvelsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/vvelsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/wvelsrc_fort.h
-$(SRCDIR)/MomentumSolver.$(OBJEXT): $(SRCDIR)/fortran/computeVel_fort.h

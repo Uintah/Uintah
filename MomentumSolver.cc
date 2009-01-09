@@ -24,12 +24,8 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-
-
 using namespace Uintah;
 using namespace std;
-#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
-
 
 //****************************************************************************
 // Default constructor for MomentumSolver
@@ -255,8 +251,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
                                                     cellinfo,&velocityVars, &constVelocityVars);
 
     }else {
-      d_rhsSolver->calculateVelocity(patch, delta_t,
-                                     cellinfo, &velocityVars,&constVelocityVars);
+      d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
+                                     constVelocityVars.density, constVelocityVars.pressure);
 
       /*if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->calculateIntrusionVel(pc, patch,
@@ -830,8 +826,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                  &constVelocityVars);
     }else {
       d_rhsSolver->calculateHatVelocity(pc,patch, delta_t,
-                                       cellinfo, &velocityVars,
-                                       &constVelocityVars);
+                                       cellinfo, &velocityVars, &constVelocityVars);
     }
 
 
@@ -848,37 +843,8 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
 
     if (d_pressure_correction) {
-      int ioff, joff, koff;
-      IntVector idxLoU;
-      IntVector idxHiU;
-      //__________________________________
-      //    u velocity
-      idxLoU = patch->getSFCXFORTLowIndex();
-      idxHiU = patch->getSFCXFORTHighIndex();
-      ioff = 1; joff = 0; koff = 0;
-      fort_computevel(idxLoU, idxHiU, velocityVars.uVelRhoHat, 
-                      constVelocityVars.pressure,
-                      constVelocityVars.new_density, delta_t,
-                      ioff, joff, koff, cellinfo->dxpw);
-      //__________________________________
-      //   v velocity
-      idxLoU = patch->getSFCYFORTLowIndex();
-      idxHiU = patch->getSFCYFORTHighIndex();
-      ioff = 0; joff = 1; koff = 0;
-      fort_computevel(idxLoU, idxHiU, velocityVars.vVelRhoHat,
-                      constVelocityVars.pressure,
-                      constVelocityVars.new_density, delta_t,
-                      ioff, joff, koff, cellinfo->dyps);
-
-      //__________________________________
-      //    w velocity
-      idxLoU = patch->getSFCZFORTLowIndex();
-      idxHiU = patch->getSFCZFORTHighIndex();
-      ioff = 0; joff = 0; koff = 1;
-      fort_computevel(idxLoU, idxHiU, velocityVars.wVelRhoHat,
-                      constVelocityVars.pressure,
-                      constVelocityVars.new_density, delta_t,
-                      ioff, joff, koff, cellinfo->dzpb);   
+      d_rhsSolver->calculateVelocity(patch, delta_t, cellinfo, &velocityVars,
+                                     constVelocityVars.new_density,constVelocityVars.pressure);
     }
     
     //__________________________________
