@@ -112,8 +112,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -verbose            (prints status of output)\n";
   cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
   cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
-  cerr << "  -matl <int>         (only outputs data for matl)\n";
-  cerr << "  -mat <int>          (same as -matl)\n";
+  cerr << "  -matl,mat <int>         (only outputs data for matl)\n";
   cerr << "*NOTE* to use -PTvar or -NVvar -rtdata must be used\n";
   cerr << "*NOTE* ptonly, patch, material, timesteplow, timestephigh "
        << "are used in conjuntion with -PTvar.\n\n";
