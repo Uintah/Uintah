@@ -16,7 +16,6 @@ SRCS += \
 	$(SRCDIR)/bcwvel.F \
 	$(SRCDIR)/cellg.F \
 	$(SRCDIR)/celltypeInit.F \
-	$(SRCDIR)/computeVel.F \
 	$(SRCDIR)/enthalpyradthinsrc.F \
 	$(SRCDIR)/explicit_scalar.F \
 	$(SRCDIR)/explicit_vel.F \
@@ -72,7 +71,6 @@ $(SRCDIR)/bcvvel.$(OBJEXT): $(SRCDIR)/bcvvel_fort.h
 $(SRCDIR)/bcwvel.$(OBJEXT): $(SRCDIR)/bcwvel_fort.h
 $(SRCDIR)/cellg.$(OBJEXT): $(SRCDIR)/cellg_fort.h
 $(SRCDIR)/celltypeInit.$(OBJEXT): $(SRCDIR)/celltypeInit_fort.h
-$(SRCDIR)/computeVel.$(OBJEXT): $(SRCDIR)/computeVel_fort.h
 $(SRCDIR)/enthalpyradthinsrc.$(OBJEXT): $(SRCDIR)/enthalpyradthinsrc_fort.h
 $(SRCDIR)/explicit_scalar.$(OBJEXT): $(SRCDIR)/explicit_scalar_fort.h
 $(SRCDIR)/explicit_vel.$(OBJEXT): $(SRCDIR)/explicit_vel_fort.h

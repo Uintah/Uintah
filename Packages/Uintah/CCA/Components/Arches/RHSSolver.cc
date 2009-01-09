@@ -235,10 +235,9 @@ RHSSolver::calculateVelocity(const Patch* patch,
                              double delta_t,
                              CellInformation* cellinfo,
                              ArchesVariables* vars,
-                             ArchesConstVariables* constvars)
+                             constCCVariable<double>& rho_CC,
+                             constCCVariable<double>& press_CC)
 {
-  constCCVariable<double>& rho_CC   = constvars->density;
-  constCCVariable<double>& press_CC = constvars->pressure;
   //__________________________________
   //  X-Velocity
   IntVector shift(-1,0,0);  // ignore outer edge/plane of computational domain
