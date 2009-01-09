@@ -13,6 +13,8 @@ C
 C---.----1----.----2----.----3----.----4----.----5----.----6----.----7-|--.----
       SUBROUTINE HOOKE_INCREMENTAL( NBLK, NINSV, DT, PROP,
      .                              SIGARG, D, SVARG, USM)
+C      SUBROUTINE HOOKE_INCREMENTAL( NBLK, NINSV, DT, PROP,
+C     .                              SIGARG, D, SVARG, USM)
 C PUBLIC: called by host code
 C         This is the main physics routine, called every timestep for
 C         every Hooke's Law element that is to be evaluated in rate form.
@@ -104,6 +106,9 @@ Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 *
 *  ...save values at beginning of step to local vars
 *
+      PRINT *, SIGARG(1,1)
+#if 0
+
 #ifdef MG_EOS
       RHON = SVARG(KRHO,IBLK)
       PRESN = SVARG(KPRES,IBLK) 
@@ -198,7 +203,7 @@ Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         SIGARG(IJ,IBLK) = STRESSP(IJ)
       ENDDO
       USM(IBLK) = PTHIRD*(PTWO*TWOG+THREEK)
-
+#endif
 
 
 C
@@ -279,8 +284,8 @@ C
 C     Derived constants
 C      call elaspar(ui(iprho),0,0,ui(1))
 
-      PRINT *, 'UI(IPB0) = ', UI(IPB0)
-      PRINT *, 'UI(IPG0) = ', UI(IPG0)
+C      PRINT *, 'UI(IPB0) = ', UI(IPB0)
+C      PRINT *, 'UI(IPG0) = ', UI(IPG0)
       IF(UI(IPB0).LE.PZERO)CALL BOMBED('B0.LE.0')
       IF(UI(IPG0).LE.PZERO)CALL BOMBED('G0.LE.0')
       RPOISSON = (PTHREE*UI(IPB0)-PTWO*UI(IPG0))/
