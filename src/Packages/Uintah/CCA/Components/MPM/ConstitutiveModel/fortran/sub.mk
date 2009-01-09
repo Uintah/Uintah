@@ -6,7 +6,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/fortran
 
 SRCS     += \
 	$(SRCDIR)/Hooke.F	\
-	$(SRCDIR)/Helper.F
+	$(SRCDIR)/HelperC.cc
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Disclosure \
