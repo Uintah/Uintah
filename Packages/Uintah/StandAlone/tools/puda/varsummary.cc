@@ -272,7 +272,7 @@ Uintah::varsummary( DataArchive* da, CommandLineFlags & clf, int mat )
           for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
               matlIter != matls.end(); matlIter++){
             int matl = *matlIter;
-            if (!matl == mat) continue;
+            if (mat != -1 && matl != mat) continue;
             cout << "\t\t\tMaterial: " << matl << endl;
             switch(td->getType()){
               //__________________________________
