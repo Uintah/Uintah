@@ -490,45 +490,30 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
           new_dw->get(scalarFlux[ii], d_lab->d_scalarFluxCompLabel, ii, patch, gac, 1);
         }
       }
-      IntVector indexLow = patch->getFortranCellLowIndex__New();
-      IntVector indexHigh = patch->getFortranCellHighIndex__New();
       
-      // set density for the whole domain
-      
-      
-      // Store current cell
       double sue, suw, sun, sus, sut, sub;
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-            IntVector currCell(colX, colY, colZ);
-            IntVector prevXCell(colX-1, colY, colZ);
-            IntVector prevYCell(colX, colY-1, colZ);
-            IntVector prevZCell(colX, colY, colZ-1);
-            IntVector nextXCell(colX+1, colY, colZ);
-            IntVector nextYCell(colX, colY+1, colZ);
-            IntVector nextZCell(colX, colY, colZ+1);
-            
-            sue = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-              ((scalarFlux[0])[currCell]+(scalarFlux[0])[nextXCell]);
-            suw = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-              ((scalarFlux[0])[prevXCell]+(scalarFlux[0])[currCell]);
-            sun = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-              ((scalarFlux[1])[currCell]+ (scalarFlux[1])[nextYCell]);
-            sus = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-              ((scalarFlux[1])[currCell]+(scalarFlux[1])[prevYCell]);
-            sut = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
-              ((scalarFlux[2])[currCell]+ (scalarFlux[2])[nextZCell]);
-            sub = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
-              ((scalarFlux[2])[currCell]+ (scalarFlux[2])[prevZCell]);
+      for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+        IntVector c = *iter;
+        int i = c.x();
+        int j = c.y();
+        int k = c.z();
+        
+        IntVector E(i+1, j, k);   IntVector W(i-1, j, k);
+        IntVector N(i, j+1, k);   IntVector S(i, j-1, k);
+        IntVector T(i, j, k+1);   IntVector B(i, j, k-1);
+        
+        sue = 0.5*cellinfo->sns[j]*cellinfo->stb[k]* (scalarFlux[0][c] + scalarFlux[0][E]);
+        suw = 0.5*cellinfo->sns[j]*cellinfo->stb[k]* (scalarFlux[0][W] + scalarFlux[0][c]);
+        sun = 0.5*cellinfo->sew[i]*cellinfo->stb[k]* (scalarFlux[1][c] + scalarFlux[1][N]);
+        sus = 0.5*cellinfo->sew[i]*cellinfo->stb[k]* (scalarFlux[1][c] + scalarFlux[1][S]);
+        sut = 0.5*cellinfo->sns[j]*cellinfo->sew[i]* (scalarFlux[2][c] + scalarFlux[2][T]);
+        sub = 0.5*cellinfo->sns[j]*cellinfo->sew[i]* (scalarFlux[2][c] + scalarFlux[2][B]);
 #if 1
-            scalarVars.scalarNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+        scalarVars.scalarNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
 #ifdef divergenceconstraint
-            scalarVars.scalarDiffNonlinearSrc[currCell] = suw-sue+sus-sun+sub-sut;
+        scalarVars.scalarDiffNonlinearSrc[c] = suw-sue+sus-sun+sub-sut;
 #endif
 #endif
-          }
-        }
       }
     }
     // Calculate the scalar boundary conditions
@@ -740,40 +725,34 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
                                  cellinfo);
     }
     
-    
+    //__________________________________
+    //  CLAMP
     double scalar_clipped = 0.0;
     double epsilon = 1.0e-15;
-    // Get the patch bounds and the variable bounds
-    IntVector idxLo = patch->getFortranCellLowIndex__New();
-    IntVector idxHi = patch->getFortranCellHighIndex__New();
-    for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
-      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-        for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-          IntVector currCell(ii,jj,kk);
 
-          if (scalarVars.scalar[currCell] > 1.0) {
-            if (scalarVars.scalar[currCell] > 1.0 + epsilon) {
-              scalar_clipped = 1.0;
-              cout << "scalar got clipped to 1 at " << currCell
-              << " , scalar value was " << scalarVars.scalar[currCell] 
-              << " , density guess was " 
-              << constScalarVars.density_guess[currCell] << endl;
-            }
-            scalarVars.scalar[currCell] = 1.0;
-          }  
-          else if (scalarVars.scalar[currCell] < 0.0) {
-            if (scalarVars.scalar[currCell] < - epsilon) {
-              scalar_clipped = 1.0;
-              cout << "scalar got clipped to 0 at " << currCell
-              << " , scalar value was " << scalarVars.scalar[currCell]
-              << " , density guess was " 
-              << constScalarVars.density_guess[currCell] << endl;
-              cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
-              << "in the <ARCHES> section of the input file, "
-              <<"but it would only help for first time substep if RKSSP is used" << endl;
-            }
-            scalarVars.scalar[currCell] = 0.0;
-          }
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      IntVector c = *iter;
+
+      if (scalarVars.scalar[c] > 1.0) {
+        if (scalarVars.scalar[c] > 1.0 + epsilon) {
+          scalar_clipped = 1.0;
+          cout << "scalar got clipped to 1 at " << c
+          << " , scalar value was " << scalarVars.scalar[c] 
+          << " , density guess was " 
+          << constScalarVars.density_guess[c] << endl;
+        }
+        scalarVars.scalar[c] = 1.0;
+      }  
+      else if (scalarVars.scalar[c] < 0.0) {
+        if (scalarVars.scalar[c] < - epsilon) {
+          scalar_clipped = 1.0;
+          cout << "scalar got clipped to 0 at " << c
+          << " , scalar value was " << scalarVars.scalar[c]
+          << " , density guess was " 
+          << constScalarVars.density_guess[c] << endl;
+          cout << "Try setting <scalarUnderflowCheck>true</scalarUnderflowCheck> "
+          << "in the <ARCHES> section of the input file, "
+          <<"but it would only help for first time substep if RKSSP is used" << endl;
         }
       }
     }
