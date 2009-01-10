@@ -539,11 +539,10 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
                                                              false, false, false);
   
   // project velocities using the projection step
-  for (int index = 1; index <= Arches::NDIM; ++index) {
     d_momSolver->solve(                      subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level],
                                                                     false, false);
-  }
+
   if (d_pressure_correction){
     sched_updatePressure(                    subsched, local_patches, local_matls,
                                              d_timeIntegratorLabels[curr_level]);
