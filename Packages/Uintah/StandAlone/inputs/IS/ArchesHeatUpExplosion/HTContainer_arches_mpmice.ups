@@ -16,7 +16,7 @@
             <SimulationComponent>
               <type> mpmice </type>
             </SimulationComponent>
-            <input_file> JP8_fire.ups</input_file>
+            <input_file> inputs/IS/ArchesHeatUpExplosion/JP8_fire.ups</input_file>
             
             <SwitchCriteria type = "Timestep">
                <timestep> 1 </timestep>
@@ -27,7 +27,7 @@
             <SimulationComponent>
               <type> impm </type>
             </SimulationComponent>
-            <input_file> HTContainer_heatup.ups</input_file>
+            <input_file> inputs/IS/ArchesHeatUpExplosion/HTContainer_heatup.ups</input_file>
             
             <SwitchCriteria type = "steadyBurn">
                <reactant_material>    1    </reactant_material>
@@ -51,7 +51,7 @@
             <SimulationComponent>
               <type> mpmice </type>
             </SimulationComponent>
-            <input_file> Explode_IS.ups</input_file>
+            <input_file> inputs/IS/ArchesHeatUpExplosion/Explode_IS.ups</input_file>
         </subcomponent>
 
         <carry_over var="press_CC" matls="0" />
@@ -85,7 +85,7 @@
     <delt_max>           1.0         </delt_max>
     <delt_init>          0.01        </delt_init>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <!--<max_Timesteps>         800         </max_Timesteps> -->
+    <max_Timesteps>         200         </max_Timesteps> 
   </Time>
 
   <!--____________________________________________________________________-->

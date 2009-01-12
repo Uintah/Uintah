@@ -115,18 +115,18 @@
       </Face>
     </BoundaryConditions>
     <!--____________________________________________________________________-->
-<!--
+
     <Level>
            <Box label = "3D">
               <lower>        [-0.1,-0.1,-0.1]   </lower>
               <upper>        [ 0.1, 0.1, 0.1]   </upper>
 
               <extraCells>   [1,1,1]            </extraCells>
-              <patches>      [1,1,1]            </patches>
-              <resolution>   [10,10,10]          </resolution>
+              <patches>      [2,2,2]            </patches>
+              <resolution>   [20,20,20]          </resolution>
            </Box>
     </Level>
--->
+<!--
     <Level>
            <Box label = "16mm res.">
               <lower>        [-0.48,-0.48,-0.48]   </lower>
@@ -158,5 +158,6 @@
               <resolution>   [120,120,144]          </resolution>
            </Box>
     </Level>
+-->
   </Grid>
 </Uintah_Include>

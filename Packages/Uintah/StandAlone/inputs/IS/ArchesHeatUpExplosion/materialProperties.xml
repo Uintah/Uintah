@@ -7,7 +7,7 @@
   <MaterialProperties>
     <MPM>
       <material name = "Steel Ring">    <!-- MATL 0 -->
-        <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
+        <include href="../../MPM/MaterialData/MatConst4340St.xml"/>
         <initial_material_temperature>  300.0 </initial_material_temperature>
         
         <constitutive_model type="elastic_plastic">
@@ -24,14 +24,14 @@
           <check_max_stress_failure>      false </check_max_stress_failure>
           <critical_stress>              12.0e9 </critical_stress>
 
-          <include href="inputs/MPM/MaterialData/IsoElastic4340St.xml"/>
-          <include href="inputs/MPM/MaterialData/MieGrunEOS4340St.xml"/>
-          <include href="inputs/MPM/MaterialData/ConstantShear.xml"/>
-          <include href="inputs/MPM/MaterialData/ConstantTm.xml"/>
-          <include href="inputs/MPM/MaterialData/JCPlastic4340St.xml"/>
-          <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
-          <include href="inputs/MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
-          <include href="inputs/MPM/MaterialData/JCDamage4340St.xml"/>
+          <include href="../../MPM/MaterialData/IsoElastic4340St.xml"/>
+          <include href="../../MPM/MaterialData/MieGrunEOS4340St.xml"/>
+          <include href="../../MPM/MaterialData/ConstantShear.xml"/>
+          <include href="../../MPM/MaterialData/ConstantTm.xml"/>
+          <include href="../../MPM/MaterialData/JCPlastic4340St.xml"/>
+          <include href="../../MPM/MaterialData/VonMisesYield.xml"/>
+          <include href="../../MPM/MaterialData/DruckerBeckerStabilityCheck.xml"/>
+          <include href="../../MPM/MaterialData/JCDamage4340St.xml"/>
           <specific_heat_model type="steel_Cp"> </specific_heat_model>
 
           <initial_mean_porosity>         0.005 </initial_mean_porosity>
@@ -67,10 +67,10 @@
       </material>
 
       <material  name = "reactant">    <!-- MATL 1 -->
-        <include href="inputs/MPM/MaterialData/MatConstPBX9501.xml"/>
+        <include href="../../MPM/MaterialData/MatConstPBX9501.xml"/>
         <constitutive_model type = "visco_scram">
-          <include href="inputs/MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
-          <include href="inputs/MPM/MaterialData/TimeTempPBX9501.xml"/>
+          <include href="../../MPM/MaterialData/ViscoSCRAMPBX9501.xml"/>
+          <include href="../../MPM/MaterialData/TimeTempPBX9501.xml"/>
           <randomize_parameters>          false </randomize_parameters>
           <use_time_temperature_equation> false </use_time_temperature_equation>
           <useObjectiveRate>              false </useObjectiveRate>
