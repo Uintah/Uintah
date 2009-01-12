@@ -126,7 +126,7 @@ namespace Uintah {
     void finalizeContributions(const GridP currentGrid) { d_costProfiler.finalizeContributions(currentGrid);}
     //initializes the regions in the new level that are not in the old level
     void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {
-            d_costProfiler.initializeWeights(oldgrid,newgrid); }
+            if(d_profile) d_costProfiler.initializeWeights(oldgrid,newgrid); }
     //resets the profiler counters to zero
     void resetCostProfiler() {d_costProfiler.reset();}
 
