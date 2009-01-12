@@ -1133,7 +1133,7 @@ bool DynamicLoadBalancer::needLoadBalance()
   bool do_check = false;
   
   
-#if 0
+#if 1
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   double time = d_sharedState->getElapsedTime();
 
@@ -1164,7 +1164,7 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 {
   d_oldAssignment = d_processorAssignment;
   d_oldAssignmentBasePatch = d_assignmentBasePatch;
-     
+
   return d_lastChangedTimestep==(d_sharedState->getCurrentTopLevelTimeStep()-1);
 } 
 
@@ -1522,6 +1522,22 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
   if(changed)
     d_lastChangedTimestep=d_sharedState->getCurrentTopLevelTimeStep();
 
+#if 0
+  if(d_myworld->myrank()==0 && changed && d_processorAssignment.size()==d_oldAssignment.size())
+  {
+    for (unsigned int i = 0; i < d_processorAssignment.size(); i++)
+    {
+      if(d_processorAssignment[i]!=d_oldAssignment[i])
+      {
+        cout << "Patch: " << d_assignmentBasePatch+i << " moved from: " <<  d_oldAssignment[i] << " to " << d_processorAssignment[i] << endl;
+      }
+      else
+      {
+        cout << "Patch: " << d_assignmentBasePatch+i << " stayed on: " << d_processorAssignment[i] << endl;
+      }
+    }
+  }
+#endif
   return changed;
 }
 
