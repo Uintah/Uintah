@@ -284,7 +284,7 @@ void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
       double USM=9e99;
       double dt = delT;
       cout << "before the call" << endl;
-      hooke_incremental_(1, 0, dt, UI, sigarg, Darray, svarg, USM);
+//      hooke_incremental_(1, 0, dt, UI, sigarg, Darray, svarg, USM);
       cout << "after the call" << endl;
 
       pstress_new[idx](0,0) = sigarg[0];
