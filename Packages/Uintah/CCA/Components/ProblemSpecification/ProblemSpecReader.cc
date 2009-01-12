@@ -1077,8 +1077,21 @@ ProblemSpecReader::readInputFile( bool validate /* = false */ )
   }
   
   xmlDocPtr doc; /* the resulting document tree */
-  
+
   doc = xmlReadFile(d_upsFilename.c_str(), 0, XML_PARSE_PEDANTIC);
+
+  // For some input files included in the various xml files, we want to 
+  // strip off the leading '/' since the d_upsFilename has it added even 
+  // if it is a relative location.  If after stripping it off we can load
+  // the document we carry on.
+  if (doc == 0) {
+    if (d_upsFilename[0] == '/') {
+      string d_upsFilename_new = 
+        string(d_upsFilename,1,d_upsFilename.length()-1);
+      d_upsFilename = d_upsFilename_new;
+      doc = xmlReadFile(d_upsFilename.c_str(), 0, XML_PARSE_PEDANTIC);
+    }
+  }
   
   /* check if parsing suceeded */
   if (doc == 0) {
@@ -1100,6 +1113,7 @@ ProblemSpecReader::readInputFile( bool validate /* = false */ )
         cout.flush();
       }
     }
+
     throw ProblemSetupException("Error reading file: "+d_upsFilename, __FILE__, __LINE__);
   }
     
