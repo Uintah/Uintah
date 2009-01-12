@@ -123,155 +123,157 @@ void Thread::setDefaultAbortMode(const char* abortMode)
 
 Thread::~Thread()
 {
-    if(runner_){
-        runner_->my_thread_=0;
-	if(runner_->delete_on_exit)
-	  delete runner_;
+  if(runner_) {
+    runner_->my_thread_=0;
+    if(runner_->delete_on_exit) {
+      delete runner_;
     }
-    free(const_cast<char *>(threadname_));
+  }
+  free(const_cast<char *>(threadname_));
 }
 
-Thread::Thread(ThreadGroup* g, const char* name)
+Thread::Thread( ThreadGroup * g, const char * name )
 {
-    group_=g;
-    g->addme(this);
-    threadname_=strdup(name);
-    daemon_=false;
-    detached_=false;
-    runner_=0;
-    cpu_=-1;
-    stacksize_ = Thread::DEFAULT_STACKSIZE;
+  g->addme( this );
+  group_      = g;
+  threadname_ = strdup(name);
+  daemon_     = false;
+  detached_   = false;
+  runner_     = 0;
+  cpu_        = -1;
+  stacksize_  = Thread::DEFAULT_STACKSIZE;
+  abortCleanupFunc_ = NULL;
 }
 
 void
 Thread::run_body()
 {
-    try {
-	runner_->run();
-    } catch(const ThreadError& e){
-	fprintf(stderr, "Caught unhandled Thread error:\n%s\n",
-		e.message());
-	Thread::niceAbort();
-    } catch(const Exception& e){
-	fprintf(stderr, "Caught unhandled exception:\n%s\n",e.message());
-        const char *trace = e.stackTrace();
-        if (trace)
-          fprintf(stderr, "Exception %s", trace);
-	Thread::niceAbort();
-    } catch(const std::string &e){
-      fprintf(stderr, "Caught unhandled string exception:\n%s\n", e.c_str());
-      Thread::niceAbort();
-    } catch(const char *&e){
-      fprintf(stderr, "Caught unhandled char exception:\n%s\n", e);
-      Thread::niceAbort();
+  try {
+    runner_->run();
+  } catch(const ThreadError& e) {
+    fprintf(stderr, "Caught unhandled Thread error:\n%s\n", e.message());
+    Thread::niceAbort();
+  } catch(const Exception& e) {
+    fprintf(stderr, "Caught unhandled exception:\n%s\n",e.message());
+    const char *trace = e.stackTrace();
+    if (trace) {
+      fprintf(stderr, "Exception %s", trace);
+    }
+    Thread::niceAbort();
+  } catch(const std::string &e) {
+    fprintf(stderr, "Caught unhandled string exception:\n%s\n", e.c_str());
+    Thread::niceAbort();
+  } catch(const char *&e) {
+    fprintf(stderr, "Caught unhandled char exception:\n%s\n", e);
+    Thread::niceAbort();
 #ifndef _MSC_VER 
     // catch these differently with MS compiler, we can get the whole stack trace, but it must be done with
     // an MS-specific exception handler in a different function
-    } catch(...){
-	fprintf(stderr, "Caught unhandled exception of unknown type\n");
-	Thread::niceAbort();
+  } catch(...) {
+    fprintf(stderr, "Caught unhandled exception of unknown type\n");
+    Thread::niceAbort();
 #endif
-    }
+  }
 }
 
-Thread::Thread(Runnable* runner, const char* name,
-	       ThreadGroup* group, ActiveState state,
-               unsigned long stacksize)
-    : runner_(runner),
-      threadname_(strdup(name)),
-      group_(group),
-      stacksize_(stacksize),
-      daemon_(false),
-      detached_(false),
-      cpu_(-1)
+Thread::Thread( Runnable* runner, const char* name,
+                ThreadGroup* group, ActiveState state,
+                unsigned long stacksize ) :
+  runner_(runner),
+  threadname_(strdup(name)),
+  group_(group),
+  stacksize_(stacksize),
+  daemon_(false),
+  detached_(false),
+  cpu_(-1)
 {
-    if(group_ == 0){
-        if(!ThreadGroup::s_default_group)
-	    Thread::initialize();
-        group_=ThreadGroup::s_default_group;
-    }
+  if(group_ == 0) {
+    if( !ThreadGroup::s_default_group )
+      Thread::initialize();
+    group_=ThreadGroup::s_default_group;
+  }
 
-    runner_->my_thread_=this;
-    group_->addme(this);
-    switch(state){
-    case Activated:
-	os_start(false);
-	activated_=true;
-	break;
-    case Stopped:
-	os_start(true);
-	activated_=true;
-	break;
-    case NotActivated:
-	activated_=false;
-	priv_=0;
-	break;
-    }
+  runner_->my_thread_=this;
+  group_->addme(this);
+  switch(state) {
+  case Activated:
+    os_start(false);
+    activated_=true;
+    break;
+  case Stopped:
+    os_start(true);
+    activated_=true;
+    break;
+  case NotActivated:
+    activated_=false;
+    priv_=0;
+    break;
+  }
 }
 
 void
 Thread::activate(bool stopped)
 {
-    if(activated_)
+  if(activated_) {
 	throw ThreadError("Thread is already activated");
-    activated_=true;
-    os_start(stopped);
+  }
+  activated_=true;
+  os_start(stopped);
 }
 
 ThreadGroup*
 Thread::getThreadGroup()
 {
-    return group_;
+  return group_;
 }
 
 Runnable*
 Thread::getRunnable()
 {
-    return runner_;
+  return runner_;
 }
 
 void
 Thread::setDaemon(bool to)
 {
-    daemon_=to;
-    checkExit();
+  daemon_=to;
+  checkExit();
 }
 
 bool
 Thread::isDaemon() const
 {
-    return daemon_;
+  return daemon_;
 }
 
 bool
 Thread::isDetached() const
 {
-    return detached_;
+  return detached_;
 }
 
 const char*
 Thread::getThreadName() const
 {
-    return threadname_;
+  return threadname_;
 }
 
 ThreadGroup*
 Thread::parallel(ParallelBase& helper, int nthreads,
 		 bool block, ThreadGroup* threadGroup)
 {
-  if (block && nthreads <= 1)
-  {
+  if (block && nthreads <= 1) {
     helper.run(0);
     return 0;
   }
 
   ThreadGroup* newgroup=new ThreadGroup("Parallel group", threadGroup);
-  if(!block){
+  if(!block) {
     // Extra synchronization to make sure that helper doesn't
     // get destroyed before the threads actually start
     helper.wait_=new Semaphore("Thread::parallel startup wait", 0);
   }
-  for(int i=0;i<nthreads;i++){
+  for(int i=0;i<nthreads;i++) {
     char buf[50];
     sprintf(buf, "Parallel thread %d of %d", i, nthreads);
     new Thread(new ParallelHelper(helper, i), buf,
@@ -279,11 +281,12 @@ Thread::parallel(ParallelBase& helper, int nthreads,
   }
   newgroup->gangSchedule();
   newgroup->resume();
-  if(block){
+  if(block) {
     newgroup->join();
     delete newgroup;
     return 0;
-  } else {
+  } 
+  else {
     helper.wait_->down(nthreads);
     delete helper.wait_;
     newgroup->detach();
@@ -396,6 +399,18 @@ Thread::couldBlockDone(int restore)
 {
   Thread_private* p=Thread::self()->priv_;
   pop_bstack(p, restore);
+}
+
+void
+Thread::setCleanupFunction( Thread::ptr2cleanupfunc func )
+{
+  abortCleanupFunc_ = func;
+}
+
+Thread::ptr2cleanupfunc
+Thread::getCleanupFunction()
+{
+  return abortCleanupFunc_;
 }
 
 unsigned long

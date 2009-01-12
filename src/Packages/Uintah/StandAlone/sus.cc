@@ -14,10 +14,11 @@
 
 #include <TauProfilerForSCIRun.h>
 
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/Core/Tracker/TrackerClient.h>
 
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
@@ -166,9 +167,14 @@ usage( const std::string & message,
   quit();
 }
 
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+void
+abortCleanupFunc()
+{
+  Uintah::Parallel::finalizeManager( Uintah::Parallel::Abort );
+}
+
 int
-main( int argc, char* argv[], char *env[] )
+main( int argc, char *argv[], char *env[] )
 {
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
@@ -176,6 +182,7 @@ main( int argc, char* argv[], char *env[] )
   // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
   // Can override this behavior with the environment variable SCI_SIGNALMODE
   Thread::setDefaultAbortMode("exit");
+  Thread::self()->setCleanupFunction( &abortCleanupFunc );
 
 #ifdef USE_TAU_PROFILING
 
@@ -644,9 +651,8 @@ main( int argc, char* argv[], char *env[] )
   /*
    * Finalize MPI
    */
-  Uintah::Parallel::finalizeManager(thrownException?
-				    Uintah::Parallel::Abort:
-				    Uintah::Parallel::NormalShutdown);
+  Uintah::Parallel::finalizeManager( thrownException ?
+                                        Uintah::Parallel::Abort : Uintah::Parallel::NormalShutdown);
 
   if (thrownException) {
     if( Uintah::Parallel::getMPIRank() == 0 ) {

@@ -648,51 +648,58 @@ handle_abort_signals(int sig)
 handle_abort_signals(int sig, SigContext ctx)
 #endif
 {
-struct sigaction action;
-sigemptyset(&action.sa_mask);
-action.sa_handler = SIG_DFL;
-action.sa_flags = 0;
-if (sigaction(sig, &action, NULL) == -1)
-  throw ThreadError(std::string("sigaction failed")
-    +strerror(errno));
+  struct sigaction action;
+  sigemptyset(&action.sa_mask);
+  action.sa_handler = SIG_DFL;
+  action.sa_flags = 0;
+  if (sigaction(sig, &action, NULL) == -1) {
+    throw ThreadError(std::string("sigaction failed") + strerror(errno));
+  }
 
-Thread* self = Thread::self();
-const char* tname = self?self->getThreadName():"idle or main";
+  Thread* self = Thread::self();
+  const char* tname = self?self->getThreadName():"idle or main";
 #if defined(__sgi)
 #  if defined(_LONGLONG)
-caddr_t addr = (caddr_t)ctx->sc_badvaddr;
+  caddr_t addr = (caddr_t)ctx->sc_badvaddr;
 #  else
-caddr_t addr = (caddr_t)ctx->sc_badvaddr.lo32;
+  caddr_t addr = (caddr_t)ctx->sc_badvaddr.lo32;
 #  endif
 #else
 #  if defined(PPC)
-void* addr = (void*)ctx.regs->dsisr;
+  void* addr = (void*)ctx.regs->dsisr;
 #  else
 #    if defined(_AIX)
-// Not sure if this is correct, but here it is.
-// On IMB SP2 sigcontext is defined in /usr/include/sys/context.h
+  // Not sure if this is correct, but here it is.
+  // On IMB SP2 sigcontext is defined in /usr/include/sys/context.h
 #      if defined(SCI_64BITS)
-void* addr = (void*)ctx.sc_jmpbuf.jmp_context.except;
+  void* addr = (void*)ctx.sc_jmpbuf.jmp_context.except;
 #      else
-void* addr = (void*)ctx.sc_jmpbuf.jmp_context.o_vaddr;
+  void* addr = (void*)ctx.sc_jmpbuf.jmp_context.o_vaddr;
 #      endif
 #    else
-//     void* addr = (void*)ctx.cr2;
-void* addr = 0;
+  //     void* addr = (void*)ctx.cr2;
+  void* addr = 0;
 #    endif
 #  endif
 #endif
-char* signam = Core_Thread_signal_name(sig, addr);
-fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
-//WAIT_FOR_DEBUGGER;
-Thread::niceAbort();
+  char* signam = Core_Thread_signal_name(sig, addr);
+  fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
 
-action.sa_handler = (SIG_HANDLER_T)handle_abort_signals;
-action.sa_flags = 0;
-if (sigaction(sig, &action, NULL) == -1)
-  throw ThreadError(std::string("sigaction failed")
-    +strerror(errno));
-}
+  Thread::ptr2cleanupfunc funcPtr = Thread::self()->getCleanupFunction();
+  if( funcPtr != NULL ) {
+    (*funcPtr)();
+  }
+
+  // WAIT_FOR_DEBUGGER;
+
+  Thread::niceAbort();
+  
+  action.sa_handler = (SIG_HANDLER_T)handle_abort_signals;
+  action.sa_flags = 0;
+  if (sigaction(sig, &action, NULL) == -1) {
+    throw ThreadError(std::string("sigaction failed") + strerror(errno));
+  }
+} // handle_abort_signals()
 
 
 void
