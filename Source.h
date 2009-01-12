@@ -91,8 +91,7 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Set source terms. Will need more parameters...like velocity and
   // scalars
-  void calculateVelocitySource(const ProcessorGroup* pc,
-                               const Patch* patch,
+  void calculateVelocitySource(const Patch* patch,
                                double delta_t, 
                                CellInformation* cellinfo,
                                ArchesVariables* vars,

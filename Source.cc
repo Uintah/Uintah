@@ -66,8 +66,7 @@ Source::problemSetup(const ProblemSpecP& params)
 // Velocity source calculation
 //****************************************************************************
 void 
-Source::calculateVelocitySource(const ProcessorGroup* pc ,
-                                const Patch* patch,
+Source::calculateVelocitySource(const Patch* patch,
                                 double delta_t,
                                 CellInformation* cellinfo,
                                 ArchesVariables* vars,
@@ -77,18 +76,17 @@ Source::calculateVelocitySource(const ProcessorGroup* pc ,
   //get index component of gravity
   Vector gravity = d_physicalConsts->getGravity();
   double grav;
-  // Get the patch and variable indices
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  
   //__________________________________
   //      X DIR  
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   grav = gravity.x();
+  
+  IntVector shift(-1,0,0);  // ignore outer edge/plane of computational domain
+  IntVector idxLoU =  patch->getExtraLowIndex( Patch::XFaceBased,shift);
+  IntVector idxHiU =  patch->getExtraHighIndex(Patch::XFaceBased,shift)-IntVector(1,1,1);
+  
   fort_uvelsrc(idxLoU, idxHiU, constvars->uVelocity, constvars->old_uVelocity,
                vars->uVelNonlinearSrc, vars->uVelLinearSrc,
                constvars->vVelocity, constvars->wVelocity, constvars->density,
@@ -107,6 +105,10 @@ Source::calculateVelocitySource(const ProcessorGroup* pc ,
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   grav = gravity.y();
+  shift = IntVector(0,-1,0);  // ignore outer edge/plane of computational domain
+  IntVector idxLoV =  patch->getExtraLowIndex( Patch::YFaceBased,shift);
+  IntVector idxHiV =  patch->getExtraHighIndex(Patch::YFaceBased,shift)-IntVector(1,1,1);
+  
   fort_vvelsrc(idxLoV, idxHiV, constvars->vVelocity, constvars->old_vVelocity,
                vars->vVelNonlinearSrc, vars->vVelLinearSrc,
                constvars->uVelocity, constvars->wVelocity, constvars->density,
@@ -127,6 +129,10 @@ Source::calculateVelocitySource(const ProcessorGroup* pc ,
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   grav = gravity.z();
+  shift = IntVector(0,0,-1);  // ignore outer edge/plane of computational domain
+  IntVector idxLoW =  patch->getExtraLowIndex( Patch::ZFaceBased,shift);
+  IntVector idxHiW =  patch->getExtraHighIndex(Patch::ZFaceBased,shift)-IntVector(1,1,1);
+  
   fort_wvelsrc(idxLoW, idxHiW, constvars->wVelocity, constvars->old_wVelocity,
                vars->wVelNonlinearSrc, vars->wVelLinearSrc,
                constvars->uVelocity, constvars->vVelocity, constvars->density,
