@@ -626,7 +626,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                          
     //__________________________________
     //  Compute the sources
-    d_source->calculateVelocitySource(pc, patch, 
+    d_source->calculateVelocitySource(patch, 
                                       delta_t,
                                       cellinfo, &velocityVars,
                                       &constVelocityVars);
