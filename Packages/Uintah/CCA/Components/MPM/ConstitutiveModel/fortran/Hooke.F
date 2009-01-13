@@ -13,8 +13,6 @@ C
 C---.----1----.----2----.----3----.----4----.----5----.----6----.----7-|--.----
       SUBROUTINE HOOKE_INCREMENTAL( NBLK, NINSV, DT, PROP,
      .                              SIGARG, D, SVARG, USM)
-C      SUBROUTINE HOOKE_INCREMENTAL( NBLK, NINSV, DT, PROP,
-C     .                              SIGARG, D, SVARG, USM)
 C PUBLIC: called by host code
 C         This is the main physics routine, called every timestep for
 C         every Hooke's Law element that is to be evaluated in rate form.
@@ -100,14 +98,13 @@ Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 *
 *  ...Pass mtl props to local vars
 *
-      THREEK=PTWO*PROP(IPB0)
+      THREEK=PTHREE*PROP(IPB0)
       TWOG=PTWO*PROP(IPG0)
 
 *
 *  ...save values at beginning of step to local vars
 *
       PRINT *, SIGARG(1,1)
-#if 0
 
 #ifdef MG_EOS
       RHON = SVARG(KRHO,IBLK)
@@ -203,8 +200,6 @@ Cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         SIGARG(IJ,IBLK) = STRESSP(IJ)
       ENDDO
       USM(IBLK) = PTHIRD*(PTWO*TWOG+THREEK)
-#endif
-
 
 C
       RETURN

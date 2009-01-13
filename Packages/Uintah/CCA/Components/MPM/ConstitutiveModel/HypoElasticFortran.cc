@@ -1,6 +1,6 @@
 extern "C"{
  void hookechk_(double UI[], double UJ[], double UK[]);
- void hooke_incremental_(int nblk, int ninsv, double dt, double UI[], double stress[], double D[], double svarg[], double USM);
+ void hooke_incremental_(int &nblk, int &ninsv, double &dt, double UI[], double stress[], double D[], double svarg[], double &USM);
 }
   
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
@@ -241,7 +241,6 @@ void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       Matrix3 D = (velGrad + velGrad.Transpose())*.5;
-//      Matrix3 DPrime = D - Identity*onethird*D.Trace();
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -262,9 +261,16 @@ void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_orig/J;
        
       // This is the (updated) Cauchy stress
-//                         (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
-//      pstress_new[idx] = pstress[idx] + 
-//                         (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
+#if 0
+      double onethird = 1./3.;
+      Matrix3 DPrime = D - Identity*onethird*D.Trace();
+      double G=UI[1];
+      double bulk=UI[0];
+      pstress_new[idx] = pstress[idx] + 
+                         (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
+
+      cout << pstress_new[idx] << endl;
+#endif
 
       double sigarg[6];
       sigarg[0]=pstress[idx](0,0);
@@ -283,9 +289,9 @@ void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
       double svarg[1];
       double USM=9e99;
       double dt = delT;
-      cout << "before the call" << endl;
-//      hooke_incremental_(1, 0, dt, UI, sigarg, Darray, svarg, USM);
-      cout << "after the call" << endl;
+      int nblk = 1;
+      int ninsv = 1;
+      //hooke_incremental_(nblk, ninsv, dt, UI, sigarg, Darray, svarg, USM);
 
       pstress_new[idx](0,0) = sigarg[0];
       pstress_new[idx](1,1) = sigarg[1];
@@ -297,7 +303,10 @@ void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
       pstress_new[idx](1,0) = sigarg[5];
       pstress_new[idx](0,1) = sigarg[5];
 
-      cout << "after the assignment" << endl;
+#if 0
+      cout << pstress_new[idx] << endl;
+#endif
+
       c_dil = sqrt(USM/rho_cur);
 
       // Compute the strain energy for all the particles
