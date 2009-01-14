@@ -56,8 +56,7 @@ public:
 
   ////////////////////////////////////////////////////////////////////////
   // Velocity Solve
-  void calculateHatVelocity(const ProcessorGroup* ,
-                            const Patch* patch,
+  void calculateHatVelocity(const Patch* patch,
                             double delta_t,
                             CellInformation* cellinfo,
                             ArchesVariables* vars,
@@ -107,6 +106,18 @@ public:
                           CellInformation* cellinfo,
                           double delta_t, 
                           bool doingMM, int intrusionVal);
+  template<class T> void
+  explicitUpdate_stencilMatrix(CellIterator iter, 
+                               IntVector shift,                         
+                               const T& source,                               
+                               const T& old_phi,                              
+                               T& new_phi,                              
+                               constCCVariable<double> density,         
+                               StencilMatrix<T>& A,
+                               const OffsetArray1<double>& sew,
+                               const OffsetArray1<double>& sns,
+                               const OffsetArray1<double>& stb,              
+                               double delta_t);              
 
   inline void setMMS(bool doMMS) {
     d_doMMS=doMMS;
