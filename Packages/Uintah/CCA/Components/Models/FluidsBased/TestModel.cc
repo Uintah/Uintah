@@ -21,6 +21,8 @@ TestModel::TestModel(const ProcessorGroup* myworld, ProblemSpecP& params)
 {
   mymatls = 0;
   MIlb  = scinew MPMICELabel();
+  totalMassXLabel = 0;
+  totalIntEngXLabel = 0;
 }
 
 TestModel::~TestModel()
@@ -28,6 +30,12 @@ TestModel::~TestModel()
   delete MIlb;
   if(mymatls && mymatls->removeReference())
     delete mymatls;
+
+  if(0!=totalMassXLabel)
+    VarLabel::destroy(totalMassXLabel);
+  
+  if(0!=totalIntEngXLabel)
+    VarLabel::destroy(totalIntEngXLabel);
 }
 
 
