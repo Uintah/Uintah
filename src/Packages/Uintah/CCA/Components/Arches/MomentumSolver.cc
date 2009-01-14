@@ -825,7 +825,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                                  cellinfo, &velocityVars,
                                                  &constVelocityVars);
     }else {
-      d_rhsSolver->calculateHatVelocity(pc,patch, delta_t,
+      d_rhsSolver->calculateHatVelocity(patch, delta_t,
                                        cellinfo, &velocityVars, &constVelocityVars);
     }
 

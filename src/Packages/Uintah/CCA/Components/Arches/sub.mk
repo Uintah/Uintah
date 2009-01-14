@@ -118,7 +118,6 @@ $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_fort.h
 $(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_fort.h
 $(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_scalar_fort.h
-$(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_vel_fort.h
 $(SRCDIR)/SmagorinskyModel.$(OBJEXT): $(SRCDIR)/fortran/scalarvarmodel_fort.h
 $(SRCDIR)/SmagorinskyModel.$(OBJEXT): $(SRCDIR)/fortran/smagmodel_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/add_mm_enth_src_fort.h

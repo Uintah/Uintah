@@ -8,7 +8,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -20,9 +19,7 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
 
 //****************************************************************************
 // Default constructor for RHSSolver
@@ -42,41 +39,30 @@ RHSSolver::~RHSSolver()
 // compute hat velocity for explicit projection
 //****************************************************************************
 void 
-RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
-                            const Patch* patch,
-                            double delta_t,
-                            CellInformation* cellinfo,
-                            ArchesVariables* vars,
-                            ArchesConstVariables* constvars)
+RHSSolver::calculateHatVelocity(const Patch* patch,
+                                double delta_t,
+                                CellInformation* cellinfo,
+                                ArchesVariables* vars,
+                                ArchesConstVariables* constvars)
 
 {
-  // Get the patch bounds and the variable bounds
-  IntVector idxLo;
-  IntVector idxHi;
-  // for explicit solver
-  int ioff, joff, koff;
   //__________________________________
   //    X dir
-  idxLo = patch->getSFCXFORTLowIndex();
-  idxHi = patch->getSFCXFORTHighIndex();
-  ioff = 1; joff = 0; koff = 0;
+  IntVector shift(-1,0,0);  // ignore outer edge/plane of computational domain
+  IntVector loPt =  patch->getExtraLowIndex( Patch::XFaceBased,shift);
+  IntVector hiPt =  patch->getExtraHighIndex(Patch::XFaceBased,shift);
+  CellIterator iter = CellIterator(loPt, hiPt);
+  
+  explicitUpdate_stencilMatrix<SFCXVariable<double> > (iter,  shift,                         
+                               vars->uVelNonlinearSrc,                  
+                               constvars->uVelocity,                    
+                               vars->uVelRhoHat,               
+                               constvars->new_density,         
+                               vars->uVelocityCoeff,                    
+                               cellinfo->sewu, cellinfo->sns, cellinfo->stb,          
+                               delta_t);
 
-  fort_explicit_vel(idxLo, idxHi, 
-                    vars->uVelRhoHat,
-                    constvars->uVelocity,
-                    vars->uVelocityCoeff[Arches::AE], 
-                    vars->uVelocityCoeff[Arches::AW], 
-                    vars->uVelocityCoeff[Arches::AN], 
-                    vars->uVelocityCoeff[Arches::AS], 
-                    vars->uVelocityCoeff[Arches::AT], 
-                    vars->uVelocityCoeff[Arches::AB], 
-                    vars->uVelocityCoeff[Arches::AP], 
-                    vars->uVelNonlinearSrc,
-                    constvars->new_density,
-                    cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-                    delta_t, ioff, joff, koff);
-
-
+                                                   
   //MMS conv and diff force term collection
   // Since the collection (along with velFmms allocation) 
   // is conditional on d_doMMS, 
@@ -84,54 +70,46 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
   // and hence the "verification" doesn't completely 
   // check the explicit update!
   if (d_doMMS) {
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+    for (; !iter.done(); iter++){
+      IntVector c = *iter;
+      int i = c.x();
+      int j = c.y();
+      int k = c.z();
 
-          IntVector currCell(colX, colY, colZ);
-          IntVector eastCell(colX+1, colY, colZ);
-          IntVector westCell(colX-1, colY, colZ);
-          IntVector northCell(colX, colY+1, colZ);
-          IntVector southCell(colX, colY-1, colZ);
-          IntVector topCell(colX, colY, colZ+1);
-          IntVector bottomCell(colX, colY, colZ-1);
+      IntVector E(i+1, j, k);    IntVector W(i-1, j, k);
+      IntVector N(i, j+1, k);    IntVector S(i, j-1, k);
+      IntVector T(i, j, k+1);    IntVector B(i, j, k-1);
 
-          vars->uFmms[currCell] = vars->uVelocityCoeff[Arches::AE][currCell]*constvars->uVelocity[eastCell] +
-            vars->uVelocityCoeff[Arches::AW][currCell]*constvars->uVelocity[westCell] +
-            vars->uVelocityCoeff[Arches::AN][currCell]*constvars->uVelocity[northCell] +
-            vars->uVelocityCoeff[Arches::AS][currCell]*constvars->uVelocity[southCell] +
-            vars->uVelocityCoeff[Arches::AT][currCell]*constvars->uVelocity[topCell] +
-            vars->uVelocityCoeff[Arches::AB][currCell]*constvars->uVelocity[bottomCell] - 
-            vars->uVelocityCoeff[Arches::AP][currCell]*constvars->uVelocity[currCell] +
-            vars->uVelNonlinearSrc[currCell] - 
-            0.5*(constvars->new_density[currCell] + constvars->new_density[westCell])*constvars->uVelocity[currCell];
+      vars->uFmms[c] = vars->uVelocityCoeff[Arches::AE][c]*constvars->uVelocity[E] +
+        vars->uVelocityCoeff[Arches::AW][c]*constvars->uVelocity[W] +
+        vars->uVelocityCoeff[Arches::AN][c]*constvars->uVelocity[N] +
+        vars->uVelocityCoeff[Arches::AS][c]*constvars->uVelocity[S] +
+        vars->uVelocityCoeff[Arches::AT][c]*constvars->uVelocity[T] +
+        vars->uVelocityCoeff[Arches::AB][c]*constvars->uVelocity[B] - 
+        vars->uVelocityCoeff[Arches::AP][c]*constvars->uVelocity[c] +
+        vars->uVelNonlinearSrc[c] - 
+        0.5*(constvars->new_density[c] + constvars->new_density[W])*constvars->uVelocity[c];
 
-          vars->uFmms[currCell] = vars->uFmms[currCell]/cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+      vars->uFmms[c] = vars->uFmms[c]/cellinfo->sew[i]*cellinfo->sns[j]*cellinfo->stb[k];
 
-        }
-      }
     }
   }
   //__________________________________
   //    Y dir
-  idxLo = patch->getSFCYFORTLowIndex();
-  idxHi = patch->getSFCYFORTHighIndex();
-  ioff = 0; joff = 1; koff = 0;
+  shift = IntVector(0,-1,0);  // ignore outer edge/plane of computational domain
+  loPt =  patch->getExtraLowIndex( Patch::YFaceBased,shift);
+  hiPt =  patch->getExtraHighIndex(Patch::YFaceBased,shift);
+  iter = CellIterator(loPt, hiPt);
+  
+  explicitUpdate_stencilMatrix<SFCYVariable<double> > (iter,  shift,                         
+                               vars->vVelNonlinearSrc,                  
+                               constvars->vVelocity,                    
+                               vars->vVelRhoHat,               
+                               constvars->new_density,         
+                               vars->vVelocityCoeff,                    
+                               cellinfo->sew, cellinfo->snsv, cellinfo->stb,          
+                               delta_t);
 
-  fort_explicit_vel(idxLo, idxHi, 
-                    vars->vVelRhoHat,
-                    constvars->vVelocity,
-                    vars->vVelocityCoeff[Arches::AE], 
-                    vars->vVelocityCoeff[Arches::AW], 
-                    vars->vVelocityCoeff[Arches::AN], 
-                    vars->vVelocityCoeff[Arches::AS], 
-                    vars->vVelocityCoeff[Arches::AT], 
-                    vars->vVelocityCoeff[Arches::AB], 
-                    vars->vVelocityCoeff[Arches::AP], 
-                    vars->vVelNonlinearSrc,
-                    constvars->new_density,
-                    cellinfo->sew, cellinfo->snsv, cellinfo->stb,
-                    delta_t, ioff, joff, koff);
 
   //MMS conv and diff force term collection
   // Since the collection (along with velFmms allocation) 
@@ -140,54 +118,43 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
   // and hence the "verification" doesn't completely 
   // check the explicit update!
   if (d_doMMS) {
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+    for (; !iter.done(); iter++){
+      IntVector c = *iter;
+      int i = c.x();
+      int j = c.y();
+      int k = c.z();
 
-          IntVector currCell(colX, colY, colZ);
-          IntVector eastCell(colX+1, colY, colZ);
-          IntVector westCell(colX-1, colY, colZ);
-          IntVector northCell(colX, colY+1, colZ);
-          IntVector southCell(colX, colY-1, colZ);
-          IntVector topCell(colX, colY, colZ+1);
-          IntVector bottomCell(colX, colY, colZ-1);
+      IntVector E(i+1, j, k);    IntVector W(i-1, j, k);
+      IntVector N(i, j+1, k);    IntVector S(i, j-1, k);
+      IntVector T(i, j, k+1);    IntVector B(i, j, k-1);
 
-          vars->vFmms[currCell] = vars->vVelocityCoeff[Arches::AE][currCell]*constvars->vVelocity[eastCell] +
-            vars->vVelocityCoeff[Arches::AW][currCell]*constvars->vVelocity[westCell] +
-            vars->vVelocityCoeff[Arches::AN][currCell]*constvars->vVelocity[northCell] +
-            vars->vVelocityCoeff[Arches::AS][currCell]*constvars->vVelocity[southCell] +
-            vars->vVelocityCoeff[Arches::AT][currCell]*constvars->vVelocity[topCell] +
-            vars->vVelocityCoeff[Arches::AB][currCell]*constvars->vVelocity[bottomCell] - 
-            vars->vVelocityCoeff[Arches::AP][currCell]*constvars->vVelocity[currCell] +
-            vars->vVelNonlinearSrc[currCell] - 
-            0.5*(constvars->new_density[currCell] + constvars->new_density[southCell])*constvars->vVelocity[currCell]/delta_t;
-
-
-        }
-      }
+      vars->vFmms[c] = vars->vVelocityCoeff[Arches::AE][c]*constvars->vVelocity[E] +
+        vars->vVelocityCoeff[Arches::AW][c]*constvars->vVelocity[W] +
+        vars->vVelocityCoeff[Arches::AN][c]*constvars->vVelocity[N] +
+        vars->vVelocityCoeff[Arches::AS][c]*constvars->vVelocity[S] +
+        vars->vVelocityCoeff[Arches::AT][c]*constvars->vVelocity[T] +
+        vars->vVelocityCoeff[Arches::AB][c]*constvars->vVelocity[B] - 
+        vars->vVelocityCoeff[Arches::AP][c]*constvars->vVelocity[c] +
+        vars->vVelNonlinearSrc[c] - 
+        0.5*(constvars->new_density[c] + constvars->new_density[S])*constvars->vVelocity[c]/delta_t;
     }
   }
 
   //__________________________________
-  //    Z dir
-  idxLo = patch->getSFCZFORTLowIndex();
-  idxHi = patch->getSFCZFORTHighIndex();
-  ioff = 0; joff = 0; koff = 1;
-
-  fort_explicit_vel(idxLo, idxHi, 
-                    vars->wVelRhoHat,
-                    constvars->wVelocity,
-                    vars->wVelocityCoeff[Arches::AE], 
-                    vars->wVelocityCoeff[Arches::AW], 
-                    vars->wVelocityCoeff[Arches::AN], 
-                    vars->wVelocityCoeff[Arches::AS], 
-                    vars->wVelocityCoeff[Arches::AT], 
-                    vars->wVelocityCoeff[Arches::AB], 
-                    vars->wVelocityCoeff[Arches::AP], 
-                    vars->wVelNonlinearSrc,
-                    constvars->new_density,
-                    cellinfo->sew, cellinfo->sns, cellinfo->stbw,
-                    delta_t, ioff, joff, koff);
+  //    Z dir       
+  shift = IntVector(0,0,-1);  // ignore outer edge/plane of computational domain
+  loPt =  patch->getExtraLowIndex( Patch::ZFaceBased,shift);
+  hiPt =  patch->getExtraHighIndex(Patch::ZFaceBased,shift);
+  iter = CellIterator(loPt, hiPt);
+  
+  explicitUpdate_stencilMatrix<SFCZVariable<double> > (iter,  shift,                         
+                               vars->wVelNonlinearSrc,                  
+                               constvars->wVelocity,                    
+                               vars->wVelRhoHat,               
+                               constvars->new_density,         
+                               vars->wVelocityCoeff,                    
+                               cellinfo->sew, cellinfo->sns, cellinfo->stbw,          
+                               delta_t);
 
   //MMS conv and diff force term collection
   // Since the collection (along with velFmms allocation) 
@@ -196,31 +163,25 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
   // and hence the "verification" doesn't completely 
   // check the explicit update!
   if (d_doMMS) {
-    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+    for (; !iter.done(); iter++){
+      IntVector c = *iter;
+      int i = c.x();
+      int j = c.y();
+      int k = c.z();
 
-          IntVector currCell(colX, colY, colZ);
-          IntVector eastCell(colX+1, colY, colZ);
-          IntVector westCell(colX-1, colY, colZ);
-          IntVector northCell(colX, colY+1, colZ);
-          IntVector southCell(colX, colY-1, colZ);
-          IntVector topCell(colX, colY, colZ+1);
-          IntVector bottomCell(colX, colY, colZ-1);
+      IntVector E(i+1, j, k);    IntVector W(i-1, j, k);
+      IntVector N(i, j+1, k);    IntVector S(i, j-1, k);
+      IntVector T(i, j, k+1);    IntVector B(i, j, k-1);
 
-          vars->wFmms[currCell] = vars->wVelocityCoeff[Arches::AE][currCell]*constvars->wVelocity[eastCell] +
-            vars->wVelocityCoeff[Arches::AW][currCell]*constvars->wVelocity[westCell] +
-            vars->wVelocityCoeff[Arches::AN][currCell]*constvars->wVelocity[northCell] +
-            vars->wVelocityCoeff[Arches::AS][currCell]*constvars->wVelocity[southCell] +
-            vars->wVelocityCoeff[Arches::AT][currCell]*constvars->wVelocity[topCell] +
-            vars->wVelocityCoeff[Arches::AB][currCell]*constvars->wVelocity[bottomCell] - 
-            vars->wVelocityCoeff[Arches::AP][currCell]*constvars->wVelocity[currCell] +
-            vars->wVelNonlinearSrc[currCell] - 
-            0.5*(constvars->new_density[currCell] + constvars->new_density[bottomCell])*constvars->wVelocity[currCell]/delta_t;
-
-
-        }
-      }
+      vars->wFmms[c] = vars->wVelocityCoeff[Arches::AE][c]*constvars->wVelocity[E] +
+        vars->wVelocityCoeff[Arches::AW][c]*constvars->wVelocity[W] +
+        vars->wVelocityCoeff[Arches::AN][c]*constvars->wVelocity[N] +
+        vars->wVelocityCoeff[Arches::AS][c]*constvars->wVelocity[S] +
+        vars->wVelocityCoeff[Arches::AT][c]*constvars->wVelocity[T] +
+        vars->wVelocityCoeff[Arches::AB][c]*constvars->wVelocity[B] - 
+        vars->wVelocityCoeff[Arches::AP][c]*constvars->wVelocity[c] +
+        vars->wVelNonlinearSrc[c] - 
+        0.5*(constvars->new_density[c] + constvars->new_density[B])*constvars->wVelocity[c]/delta_t;
     }
   }
 }
@@ -228,7 +189,6 @@ RHSSolver::calculateHatVelocity(const ProcessorGroup* /*pc*/,
 //****************************************************************************
 // compute velocity from hat velocity and pressure gradient
 //****************************************************************************
-
 void 
 RHSSolver::calculateVelocity(const Patch* patch,
                              double delta_t,
@@ -385,6 +345,44 @@ RHSSolver::explicitUpdate(CellIterator iter,
     } 
   } 
 }
+//______________________________________________________________________
+// Generic explicit solver
+// Solves Ax = b for an explicit scheme. 
+//  This will eventually be consolidated with the other explicitUpdate.
+template<class T> void
+RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter, 
+                                        IntVector shift,
+                                        const T& source, 
+                                        const T& old_phi,
+                                        T& new_phi,
+                                        constCCVariable<double> density,
+                                        StencilMatrix<T>& A,
+                                        const OffsetArray1<double>& sew,
+                                        const OffsetArray1<double>& sns,
+                                        const OffsetArray1<double>& stb,
+                                        double delta_t)
+{
+  for (; !iter.done(); iter++) {
+    IntVector c = *iter;                                                            
+    IntVector adj = c + shift;
+    int i = c.x();
+    int j = c.y();
+    int k = c.z();                                                 
+    double vol = sew[i]*sns[j]*stb[k];    
+    double apo = 0.5 * (density[c] + density[adj])*vol/delta_t;
+                                                   
+    double rhs = A[Arches::AE][c] * old_phi[c + IntVector(1,0,0)] +                             
+                 A[Arches::AW][c] * old_phi[c - IntVector(1,0,0)] +                             
+                 A[Arches::AN][c] * old_phi[c + IntVector(0,1,0)] +                             
+                 A[Arches::AS][c] * old_phi[c - IntVector(0,1,0)] +                             
+                 A[Arches::AT][c] * old_phi[c + IntVector(0,0,1)] +                             
+                 A[Arches::AB][c] * old_phi[c - IntVector(0,0,1)] +                             
+                 source[c] - A[Arches::AP][c] * old_phi[c];
+                 
+    new_phi[c] = rhs/apo;                                                           
+  } 
+}
+
 
 //****************************************************************************
 // Enthalpy Solve
