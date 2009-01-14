@@ -421,7 +421,6 @@ Discretization::calculateScalarFluxLimitedConvection(
                                         int boundary_limiter_type,
                                         bool central_limiter)
 {
-  cout << " here " << endl;
   Array3<double> x_flux;
   Array3<double> y_flux;
   Array3<double> z_flux;
