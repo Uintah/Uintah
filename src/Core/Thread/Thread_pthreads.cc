@@ -684,13 +684,14 @@ handle_abort_signals(int sig, SigContext ctx)
 #endif
   char* signam = Core_Thread_signal_name(sig, addr);
   fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
+  
+  // WAIT_FOR_DEBUGGER;
+
 
   Thread::ptr2cleanupfunc funcPtr = Thread::self()->getCleanupFunction();
   if( funcPtr != NULL ) {
     (*funcPtr)();
   }
-
-  // WAIT_FOR_DEBUGGER;
 
   Thread::niceAbort();
   
