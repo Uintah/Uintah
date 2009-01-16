@@ -288,6 +288,14 @@ Grid* BNRRegridder::regrid(Grid* oldGrid)
       times << endl;
     }
   }
+
+#if SCI_ASSERTION_LEVEL > 0
+  if(!verifyGrid(newGrid))
+  {
+    throw InternalError("Grid is not consistent across processes",__FILE__,__LINE__);
+  }
+#endif 
+
   return newGrid;
 }
 Grid* BNRRegridder::CreateGrid(Grid* oldGrid, vector<vector<Region> > &patch_sets )
@@ -846,3 +854,70 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
   }
 }
 
+bool BNRRegridder::verifyGrid(Grid *grid)
+{
+  vector<int> checksums;
+  vector<int> their_checksums;
+  vector<string> labels;
+
+  int num_levels=grid->numLevels();
+  their_checksums.resize(d_myworld->size());
+  MPI_Gather(&num_levels,1,MPI_INT,&their_checksums[0],1,MPI_INT,0,d_myworld->getComm());
+
+  if(d_myworld->myrank()==0)
+  {
+    for(int i=0;i<d_myworld->size();i++)
+    {
+      if(num_levels!=their_checksums[i])
+      {
+        cout << d_myworld->myrank() << " Error number of levels does not match on rank " << i << " my levels:" << num_levels << " their levels:" << their_checksums[i] << endl;
+        return false;
+      }
+    }
+  }
+  for(int i=0;i<num_levels;i++)
+  {
+    LevelP level=grid->getLevel(i);
+    checksums.push_back(level->numPatches());
+    char label[100];
+    sprintf(label,"Patchset on level %d",i);
+    labels.push_back(label);
+
+    IntVector Sum;
+    IntVector Diff;
+    int sum=0;
+    int diff=0;
+    for(int p=0;p<level->numPatches();p++)
+    {
+      const Patch* patch = level->getPatch(p); 
+      Sum=Abs(patch->getCellHighIndex__New())+Abs(patch->getCellLowIndex__New());
+      Diff=Abs(patch->getCellHighIndex__New())-Abs(patch->getCellLowIndex__New());
+      
+      sum+=Sum[0]*Sum[1]*Sum[2]*(p+1);
+      diff+=Diff[0]*Diff[1]*Diff[2]*(p+1000000);
+      //cout << d_myworld->myrank() << " patch:" << *patch << " sum:" << Sum[0]*Sum[1]*Sum[2]*(p+1) << " diff:" << Diff[0]*Diff[1]*Diff[2]*(p+1) << endl;
+    }
+    checksums[i]+=(sum+diff);
+  }
+
+  their_checksums.resize(checksums.size()*d_myworld->size());
+  MPI_Gather(&checksums[0],d_myworld->size(),MPI_INT,&their_checksums[0],d_myworld->size(),MPI_INT,0,d_myworld->getComm());
+  
+  if(d_myworld->myrank()==0)
+  {
+    for(int p=0;p<d_myworld->size();p++)
+    {
+      for(unsigned int i=0;i<checksums.size();i++)
+      {
+        if(checksums[i]!=their_checksums[p*d_myworld->size()+i])
+        {
+          cout << d_myworld->myrank() << " Error grid inconsistency: " << labels[i] << " does not match on rank:" << p << endl;
+          return false;
+        }
+      }
+    }
+  }
+  //if(d_myworld->myrank()==0)
+  //  cout << " GRIDS ARE CONSISTENT\n";
+  return true;
+}
