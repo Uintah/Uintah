@@ -60,6 +60,9 @@ WARNING
     void RunBR(vector<IntVector> &flags, vector<Region> &patches);
     void PostFixup(vector<Region> &patches);
     vector<IntVector> getMinPatchSize() {return d_minPatchSize;}
+
+    //! create and compare a checksum for the grid across all processors
+    bool verifyGrid(Grid *grid);
   protected:
     void problemSetup_BulletProofing(const int k);
     void AddSafetyLayer(const vector<Region> patches, set<IntVector> &coarse_flags,
