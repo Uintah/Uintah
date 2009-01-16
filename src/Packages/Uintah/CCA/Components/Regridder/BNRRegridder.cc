@@ -901,7 +901,7 @@ bool BNRRegridder::verifyGrid(Grid *grid)
   }
 
   their_checksums.resize(checksums.size()*d_myworld->size());
-  MPI_Gather(&checksums[0],d_myworld->size(),MPI_INT,&their_checksums[0],d_myworld->size(),MPI_INT,0,d_myworld->getComm());
+  MPI_Gather(&checksums[0],checksums.size(),MPI_INT,&their_checksums[0],checksums.size(),MPI_INT,0,d_myworld->getComm());
   
   if(d_myworld->myrank()==0)
   {
