@@ -236,7 +236,7 @@ namespace Uintah {
   {
     out.setf(ios::scientific,ios::floatfield);
     out.precision(4);
-    out << "(Patch " << r.getID() << ": box=" << r.getExtraBox()
+    out << "(Patch " << r.getID() 
         << ", lowIndex=" << r.getExtraCellLowIndex__New() << ", highIndex=" 
         << r.getExtraCellHighIndex__New() << ")";
     out.setf(ios::scientific ,ios::floatfield);
