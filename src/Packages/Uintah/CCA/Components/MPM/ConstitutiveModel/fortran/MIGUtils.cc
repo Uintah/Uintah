@@ -2,39 +2,33 @@
 #include <stdlib.h>
 
 extern "C"{
- int bombed_(char *mes);
- int logmes_(char *mes);
- int tokens_(char *mes);
- int faterr_(char *mes1, char *mes2);
+ void bombed_(char *mes);
+ void logmes_(char *mes);
+ void faterr_(char *mes1, char *mes2);
 }
 
 using namespace std;
 
-int bombed_(char *mes)
+void bombed_(char *mes)
 {
+  cerr <<  "Code bombed with the following message:" << endl;
   cerr <<  mes << endl;
   exit(1);
-  return 0;
+  return;
 }
 
-int logmes_(char *mes)
+void logmes_(char *mes)
 {
   cerr <<  mes << endl;
 
-  return 1;
+  return;
 }
 
-int tokens_(char *mes)
+void faterr_(char *mes1, char *mes2)
 {
-  cerr <<  mes << endl;
-
-  return 1;
-}
-
-int faterr_(char *mes1, char *mes2)
-{
-  cerr <<  mes1 << " " << mes2 << endl;
+  cerr << "Fatal error detected by " << mes1 << ":" << endl;
+  cerr <<  mes2 << endl;
   exit(1);
 
-  return 0;
+  return;
 }
