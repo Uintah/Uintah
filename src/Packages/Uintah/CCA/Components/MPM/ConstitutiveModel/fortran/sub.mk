@@ -6,22 +6,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/fortran
 
 SRCS     += \
 	$(SRCDIR)/Hooke.F	\
-	$(SRCDIR)/HelperC.cc
-
-PSELIBS := Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Disclosure \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/CCA/Components/ICE \
-	Core/Datatypes \
-	Core/Exceptions \
-	Core/Geometry \
-	Core/Math \
-	Core/Util
+	$(SRCDIR)/MIGUtils.cc
 
 #include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #$(SRCDIR)/HookeChk.$(OBJEXT): $(SRCDIR)/HookeChk_fort.h
-
