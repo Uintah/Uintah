@@ -856,6 +856,10 @@ void BNRRegridder::AddSafetyLayer(const vector<Region> patches, set<IntVector> &
 
 bool BNRRegridder::verifyGrid(Grid *grid)
 {
+  //if we are running in serial there is no reason to verify that each processor has the same grid.
+  if(d_myworld->size()==1)
+    return true;
+
   vector<int> checksums;
   vector<int> their_checksums;
   vector<string> labels;
