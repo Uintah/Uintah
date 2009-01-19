@@ -25,7 +25,8 @@ CLASS
     MixingRxnTable 
        
 GENERAL INFORMATION
-    MixingRxnTable.h - representation of reaction and mixing table data structure (typically an external file in a pre-specified format).
+    MixingRxnTable.h - representation of reaction and mixing table data 
+    structure (typically an external file in a pre-specified format).
 
     Author: Charles Reid (charles.reid@utah.edu)
     
@@ -39,15 +40,32 @@ KEYWORDS
     Mixing Table 
 
 DESCRIPTION
-    This MixingRxnTable class provides a representation of the mixing and reaction table inseide the Arches code (specifically, Properties.cc).  The MixingRxnTable class is a generic class that allows for child classes that each provide a specific representation of specific mixing and reaction table formats.  That way, we can use a standard table format, but leave ourselves the flexibility to move to other reaction and mixing table formats in the future.
+    This MixingRxnTable class provides a representation of the mixing 
+    and reaction table inside the Arches code (specifically, Properties.cc).  
+    The MixingRxnTable class is a generic class that allows for child classes 
+    that each provide a specific representation of specific mixing and 
+    reaction table formats.  That way, we can use a standard table format, 
+    but leave ourselves the flexibility to move to other reaction and mixing 
+    table formats in the future.
 
-    Tables can be created in any number of programs (DARS, Cantera, TabProps, etc.).  Implementing this table reader is part of an effort to convert our current table format to an HDF 5 B-Splined format, which is what TabProps creates (TabProps is a code written by Dr. James Sutherland).
+    Tables can be created in any number of programs (DARS, Cantera, TabProps, 
+    etc.).  Implementing this table reader is part of an effort to convert our 
+    current table format (which does not use a universal format) to an HDF5 
+    B-Splined format, which is what TabProps creates (TabProps is a code 
+    written by Dr. James Sutherland and is available through the CRSim software
+    SVN repository).
 
 PATTERNS
     None
 
 WARNINGS
-    For now, the MixingRxnTable object will be able to read several table formats (or, at least, it will not be the only method available for reading tables).  However, ultimately the MixingRxnTable object will be the only interface between Arches and tables, and will only interface with a single, common, uniform table format (HDF5).  However, the format of the MixingRxnTable is such that a new child class can easily be created if a different table format is decided upon.
+    For now, the MixingRxnTable object will be able to read several table formats 
+    (or, at least, it will not be the only method available for reading tables).  
+    However, ultimately the MixingRxnTable object will be the only interface 
+    between Arches and tables, and will only interface with a single, common, 
+    uniform table format (HDF5).  However, the format of the MixingRxnTable is 
+    such that a new child class can easily be created if a different table 
+    format is decided upon.
 
 NOTES
 

@@ -1,7 +1,4 @@
 //----- TabPropsTable.cc --------------------------------------------------
-//
-// See TabPropsTable.h for more information.
-//
 
 // includes for Arches
 #include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
@@ -26,11 +23,11 @@ using namespace SCIRun;
 
 INPUT FILE TAGS
 This code checks for the following tags/attributes in the input file:
-<Properties>
-    <TabPropsTable>
-        <table_file_name>THIS FIELD IS REQUIRED</table_file_name>
+    <Properties>
+        <TabPropsTable>
+            <table_file_name>THIS FIELD IS REQUIRED</table_file_name>
             <strict_mode>true/false (not required)</strict_mode>
-            <diagnostic_mode>true/false (not req)</diagnostic_mode>
+            <diagnostic_mode>true/false (not required)</diagnostic_mode>
         </TabPropsTable>
     </Properties>
 
@@ -40,17 +37,20 @@ This code checks for the following tags/attributes in the input file:
         ...
     </DataArchiver>
 
-This is used to construct the vector of user-requested dependent variables...
+This is used to construct the vector of user-requested dependent variables.
 
 WARNINGS
 The code will throw exceptions for the following reasons:
 - no <table_file_name> specified in the intput file (ProblemSpecP require() method throws the error)
-- the getState method is run without the problemSetup method being run
-         (the problemSetup sets the boolean b_table_isloaded to true when data is loaded from a table, and you can't getState without data)
-- if bool strictMode is true, and a dependent variable specified in the input file does not match the names of any of the dependent variables in the table
-- the getDepVars or getIndepVars methods are run on a TabPropsTable object which hasn't loaded data from a table yet (i.e. hasn't run problemSetup method yet) 
+- the getState method is run without the problemSetup method being run (b/c the problemSetup sets 
+  the boolean b_table_isloaded to true when a table is loaded, and you can't run getState without 
+  first loading a table)
+- if bool strictMode is true, and a dependent variable specified in the input file does not
+  match the names of any of the dependent variables in the table
+- the getDepVars or getIndepVars methods are run on a TabPropsTable object which hasn't loaded
+  a table yet (i.e. hasn't run problemSetup method yet) 
 
-*/
+***************************************************************************/
 
 
 
@@ -71,13 +71,13 @@ TabPropsTable::~TabPropsTable()
 //****************************************************************************
 // TabPropsTable problemSetup
 //
-// Obtain parameters from input file using Properties.cc and ProblemSpecP object
-// The problemSetup() method first retrieves relevant information from the input file
-// it then populates the list of independent and dependent variables contained inthe table,
-// and the list of user-requested dependent variables from the input file.
-// It then runs a verification routine to compare the dependent variables requested
-// by the user to the dependent variables contained in the table and ensure the former
-// is a subset of the latter.
+// Obtains parameters from the input file (via an instance of the ProblemSpecP 
+// class). Once the relevant info is obtained from the input file, a list of 
+// user-requested dependent variables, and a list of independent and dependent 
+// variables contained in the table, are all populated. A verification routine
+// is then run to compare the user-requested dependent variables to the 
+// dependent variables contained in the table.
+// 
 //****************************************************************************
 void
 TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
@@ -86,7 +86,7 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
 
   problemSetup notes:
   --------------------
-  input file: include <TabPropsTable> tags
+  input file: 
   <Properties>
   ...
     <TabPropsTable>
@@ -102,10 +102,14 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
   (it is up to the object to know what it needs to extract from the <Properties> tags)
   3. Run TabPropsTable.problemSetup(db)
 
-  why not have TabPropsTable extract relevant info itself?
-  does properties.cc even need the list of user-defined dependent variables?
+  with regard to the list of independent and dependent variables:
   properties.cc needs the list in CCVariable format (to interface w/ data warehouse)
   tabprops.cc needs the list in vector<string> format (to interface w/ TabProps)
+  Properties.cc extracts the list from the input file and adds it to a "table lookup list"
+  two different maps, to connect strings (the "regular" name) to VarLabel and CCVariable
+    VarMap d_varMap
+    LabelMap d_labelMap
+  in Properties::computeProps, iterate through the varMap and call getstate for each one
 
   TabPropsTable::problemSetup
   ---------------------------
@@ -113,17 +117,15 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
   */
 
   // Step 1 - create sub-ProblemSpecP object
-  // and Step 2 - obtain object parameters
   string tableFileName;
   ProblemSpecP db_tabpropstable = propertiesParameters->findBlock("TabPropsTable");
   
+  // Step 2 - obtain object parameters
   db_tabpropstable->require( "table_file_name", tableFileName );
   db_tabpropstable->getWithDefault( "strict_mode", b_strict_mode, false );
   db_tabpropstable->getWithDefault( "diagnostic_mode", b_diagnostic_mode, false );
 
-  // Step 3 - obtain user-defined input parameters
-
-  // Step 4 - Check for and deal with filename extension
+  // Step 3 - Check for and deal with filename extension
   // - if table file name has .h5 extension, remove it
   // - otherwise, assume it is an .h5 file but no extension was given
   string extension (tableFileName.end()-3,tableFileName.end());
@@ -141,9 +143,34 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
 //      }  -- Todd
 //__________________________________
 
+  // This causes a problem:
+  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc: In member function ‘virtual void Uintah::TabPropsTable::problemSetup(const Uintah::ProblemSpecP&)’:
+  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:137: error: ‘DIR’ was not declared in this scope
+  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:137: error: ‘check’ was not declared in this scope
+  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:137: error: ‘opendir’ was not declared in this scope
+  //   make: *** [Packages/Uintah/CCA/Components/Arches/TabPropsTable.o] Error 1
+  // ...is there something I'm misunderstanding?
 
-  // Step 5 - Load data into StateTable
+  // Step 4 - Check if tableFileName exists
+/*
+  DIR *check = opendir(tableFileName.c_str());
+  if ( check == NULL ) {
+    ostringstream warn;
+    warn << "ERROR:Arches:TabPropsTable  The table " << tableFileName << " does not exist. ";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+*/
+
+  // Step 5 - Load data from HDF5 file into StateTable
   statetbl.read_hdf5(tableFileName);
+
+  // Now TabPropsTable must obtain three lists:
+  // - user-defined dependent variables
+  // - all dependent variables in table
+  // - all independent variables in table
+  // 
+  // This is done so that TabPropsTable can check to see if user-defined dependent variables
+  // match table dependent variables (in verifyTable method)
 
   // Step 6 - get user-defined/user-requested dependent variables
   ProblemSpecP db_rootnode = propertiesParameters; // need a non-const instance of propertiesParameters
@@ -165,20 +192,16 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
     } 
   } 
 
-  // note: it's up to MixingRxn/TabPropsTable class to get list of user-requested dependent variables
-  // TabProps needs the list of variables in a string array format
-  // but Properties.cc needs the list of varibles in a CCVariable format
-  // so dealing with the user-requested vars as a string array should be dealt with in tabprops, not in properties
-
-
-  // Step 7 - read independent and dependent variables into memory
+  // Step 7 - read all of the independent and dependent variables in the table into memory
   allIndepVarNames = statetbl.get_indepvar_names();
   allDepVarNames   = statetbl.get_depvar_names();
 
-  // Step 8 - set is table loaded boolean to true
+  // Step 8 - set "is the table loaded?" boolean to true
   b_table_isloaded = true;
 
   // Step 9 - verify table
+  // diagnostic mode - checks variables requested saved in the input file to variables found in the table
+  // strict mode - if a dependent variable is requested saved in the input file, but NOT found in the table, throw error
   verifyTable( b_diagnostic_mode, b_strict_mode );
 
 }
@@ -186,42 +209,64 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
 //****************************************************************************
 // TabPropsTable getState 
 //
-//      allUserDepVarNames[] is a class variable
-//      problemSetup() method populates the allUserDepVarNames[] vector
+// This method calls the StateTable::query method. It passes independent 
+// variable values and user-requested dependent variables to StateTable::query
+// (which then performs a table lookup), and the values of the requested
+// dependent variables are returned in a map<string,double>.
+//
+// This method is called from Properties::computeProps
 //
 //****************************************************************************
-const vector<double>
-TabPropsTable::getState( const double * indepVarValues )
+map<string,double>
+TabPropsTable::getState( const double * indepVarValues, vector<string> userDepVarNames )
 {
   if( b_table_isloaded == false ) {
     throw InternalError("You requested a thermodynamic state, but you did not specify which table you wanted to use!!!",__FILE__,__LINE__);
   }
 
-  // for each dependent variable, query table
-  for( unsigned int i=0 ; i < allUserDepVarNames.size() ; i++) {
-    myQueryResults[i] = statetbl.query( allUserDepVarNames[i], &indepVarValues[i] );
+  map<string,double> returnValuesMap;
+  for( unsigned int i=0 ; i < userDepVarNames.size() ; i++) {
+    // obtain numerical value from table and put in myQueryResults
+    //myQueryResults[i] = statetbl.query( userDepVarNames[i], &indepVarValues[i] );
+    // put the string and the double into the map
+    //returnValuesMap.insert(make_pair(userDepVarNames[i],myQueryResults[i]));
+
+    // Put the string (passed to the function when it is called) and the double (obtained from the StateTable::query function)
+    //  into the depVarValuesMap
+    returnValuesMap.insert(make_pair(userDepVarNames[i],statetbl.query( userDepVarNames[i], &indepVarValues[i] ) ) );
   }
-  return myQueryResults;
+  return returnValuesMap;
 }
 
 //****************************************************************************
 // TabPropsTable verifyTable 
+//
+// Compares list of user-requested dependent variables (obtained from input file)
+// to list of dependent variables contained in the table.
+//
+// If strict mode is on, an exception will be thrown if any user-requested dependent
+// variables are not found in the table.
+// 
+// If diagnostic mode is on, each user-requested dependent variable will be listed
+// and a message will say whether that dependent variable was found in the table
+// or not.
+//
 //****************************************************************************
 void
 TabPropsTable::verifyTable(  bool diagnosticMode,
                              bool strictMode ) const
 {
-  // 4. for loop: for j in list of user-requested dependent variables,
-  //        for loop: for i in list of all dependent variables,
-  //            if userdefineddepvars[j] == alldepvars[i]
-  //                some_boolean = true;
+  // for j in list of user-requested dependent variables,
+  //  for i in list of all dependent variables,
+  //   if userdefineddepvars[j] == alldepvars[i]
+  //    some_boolean = true;
   // 
   int numNegativeResults = 0;
   bool toggle;
   std::vector<bool> myVerifyResults;
 
   for( unsigned int i=0; i < allUserDepVarNames.size(); i++) {
-    toggle = false; // toggle = "is this user-requested dep var in the table?"
+    toggle = false; // toggle = "is this user-requested dependent variable in the table?"
     
     for( unsigned int j=0; j < allDepVarNames.size(); j++) {
       if( allUserDepVarNames[i] == allDepVarNames[j] ) {
@@ -233,12 +278,18 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
       numNegativeResults += 1; 
     }
     myVerifyResults.push_back(toggle);
-  } // myVerifyResults - size of allUserDepVarNames (contains bool toggle)
+  } // myVerifyResults = size of allUserDepVarNames (contains bool toggle)
 
 //__________________________________
 // Should be using proc0cout instead of cout  --Todd
 //__________________________________
-  
+
+  // Using cout causes a problem:
+  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc: In member function ‘void Uintah::TabPropsTable::verifyTable(bool, bool) const’:
+  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:268: error: ‘proc0cout’ was not declared in this scope
+  //   make: *** [Packages/Uintah/CCA/Components/Arches/TabPropsTable.o] Error 1
+  // Am I missing a header file?
+
   cout << "Hello, this is the TabProps table reader module of the Arches code." << endl;
   cout << "I am checking the dependent variables requested in the input files against the dependent variables in the TabProps table." << endl;
 
@@ -263,7 +314,7 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
     if(strictMode == true) {
       throw InternalError( "You specified dependent variables in your input file that you wanted to save, "
                              "but some of them were not found in the table!!!",__FILE__,__LINE__);
-    }else if(strictMode == false) {
+    } else if(strictMode == false) {
        
       // if not strict mode, just print a warning
       cout << "WARNING!!!" << endl;
@@ -277,7 +328,7 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
   }  
   else if(numNegativeResults == 0) {
     //you're OK, either way (strict mode or not doesn't matter)
-    cout << "SUCCESS!" << endl;
+    cout << "Success!" << endl;
     cout << "All " << allUserDepVarNames.size() << " of the dependent variables you requested in your input file were found in the table." << endl;
   } 
 }
@@ -285,10 +336,13 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
 //****************************************************************************
 // TabPropsTable getDepVars
 //
-// only do once
-// subsequently see if bool iscached
-// if is not, srt it using statetable methods
-// if yes just grab a private mutable
+// This method will first check to see if the table is loaded; if it is, it
+// will return a reference to allDepVarNames, which is a private vector<string>
+// of the TabPropsTable class
+//
+// (If it is a reference to a private class variable, can the reciever of
+//  the reference vector<string> still access it?)
+//
 //****************************************************************************
 const vector<string> &
 TabPropsTable::getDepVars()
@@ -307,9 +361,12 @@ TabPropsTable::getDepVars()
 //****************************************************************************
 // TabPropsTable getIndepVars
 //
-// does the reference being passed still WORK for who it's being passed to?
-// (do they have the permission to see what's there?  to change it?)
-// (SHOULD THEY have permission to see it? change it?)
+// This method will first check to see if the table is loaded; if it is, it
+// will return a reference to allIndepVarNames, which is a private
+// vector<string> of the TabPropsTable class
+// 
+// (If it is a reference to a private class variable, can the reciever of
+//  the reference vector<string> still access it?)
 // 
 //****************************************************************************
 const vector<string> &
