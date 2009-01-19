@@ -79,7 +79,6 @@ public:
   
   // GROUP: Destructors :
   // Destructor
-  // putting virtual here messes things up for compile time
   ~TabPropsTable();
 
 
@@ -91,8 +90,7 @@ public:
 
   // GROUP: Actual Action Methods :
   // Actually obtain properties
-  const std::vector<double> getState( const double * indepVarValues);
-
+  std::map<string,double> getState( const double * indepVarValues, std::vector<string> userDepVarNames);
 
   // GROUP: Verify Methods :
   // Methods used in verifying the table
