@@ -94,7 +94,6 @@ namespace Uintah {
     virtual int getOldProcessorAssignment(const VarLabel* var,
 					  const Patch* patch, const int matl);
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
-    virtual bool needLoadBalance();
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
     /// call one of the assignPatches functions.
@@ -184,7 +183,7 @@ namespace Uintah {
     
     int d_lbTimestepInterval;
     int d_lastLbTimestep;
-    int d_lastChangedTimestep; 
+    
     bool d_do_AMR;
     ProblemSpecP d_pspec;
     

@@ -1111,18 +1111,9 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
             IntVector from_h;
 
             if (req->patches_dom == Task::OtherGridDomain && fromNeighbor->getLevel()->getIndex() > 0) {
-              
-              #if 0
               // DON'T send extra cells (unless they're on the domain boundary)
-                from_l = Max(fromNeighbor->getLowIndexWithDomainLayer(basis), l);
-                from_h = Min(fromNeighbor->getHighIndexWithDomainLayer(basis), h);
-              #else
-                //I'm not sure why this was originally coded to exclude extra cells but from what I can tell extra cells
-                //are needed.  These are needed because we are migrating data between processors, the extra cell data
-                //is valid data that is needed on the new processor - Justin
-                from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);
-                from_h = Min(fromNeighbor->getExtraHighIndex(basis, req->var->getBoundaryLayer()), h);
-              #endif
+              from_l = Max(fromNeighbor->getLowIndexWithDomainLayer(basis), l);
+              from_h = Min(fromNeighbor->getHighIndexWithDomainLayer(basis), h);
             }
             else {
               from_l = Max(fromNeighbor->getExtraLowIndex(basis, req->var->getBoundaryLayer()), l);

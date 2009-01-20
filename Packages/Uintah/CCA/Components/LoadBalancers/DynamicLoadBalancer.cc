@@ -36,7 +36,6 @@ DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
 {
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
-  d_lastChangedTimestep=-1;
   d_lbTimestepInterval = 0;
   d_lastLbTimestep = 0;
   d_checkAfterRestart = false;
@@ -1128,16 +1127,15 @@ DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
   return proc;
 }
 
-bool DynamicLoadBalancer::needLoadBalance()
+bool 
+DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
+				    const GridP& grid)
 {
-  bool do_check = false;
-  
-  
-#if 1
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   double time = d_sharedState->getElapsedTime();
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
- 
+  bool do_check = false;
+#if 0
   if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
     d_lastLbTimestep = timestep;
     do_check = true;
@@ -1146,26 +1144,27 @@ bool DynamicLoadBalancer::needLoadBalance()
     d_lastLbTime = time;
     do_check = true;
   }
-  else
-  if ((time == 0 && d_collectParticles == true) || d_checkAfterRestart) {
+  else if ((time == 0 && d_collectParticles == true) || d_checkAfterRestart) {
     // do AFTER initialization timestep too (no matter how much init regridding),
     // so we can compensate for new particles
     do_check = true;
     d_checkAfterRestart = false;
   }
-#endif 
+#endif
 
-  return do_check;
-}
+  if (dbg.active() && d_myworld->myrank() == 0)
+    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
 
-bool 
-DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
-				    const GridP& grid)
-{
-  d_oldAssignment = d_processorAssignment;
-  d_oldAssignmentBasePatch = d_assignmentBasePatch;
-
-  return d_lastChangedTimestep==(d_sharedState->getCurrentTopLevelTimeStep()-1);
+  // if it determines we need to re-load-balance, recompile
+  if (do_check && possiblyDynamicallyReallocate(grid, check)) {
+    doing << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
+    return true;
+  }
+  else {
+    d_oldAssignment = d_processorAssignment;
+    d_oldAssignmentBasePatch = d_assignmentBasePatch;
+    return false;
+  }
 } 
 
 void
@@ -1518,26 +1517,6 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, (changed || state == restart) ? regrid : check);
   d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
-
-  if(changed)
-    d_lastChangedTimestep=d_sharedState->getCurrentTopLevelTimeStep();
-
-#if 0
-  if(d_myworld->myrank()==0 && changed && d_processorAssignment.size()==d_oldAssignment.size())
-  {
-    for (unsigned int i = 0; i < d_processorAssignment.size(); i++)
-    {
-      if(d_processorAssignment[i]!=d_oldAssignment[i])
-      {
-        cout << "Patch: " << d_assignmentBasePatch+i << " moved from: " <<  d_oldAssignment[i] << " to " << d_processorAssignment[i] << endl;
-      }
-      else
-      {
-        cout << "Patch: " << d_assignmentBasePatch+i << " stayed on: " << d_processorAssignment[i] << endl;
-      }
-    }
-  }
-#endif
   return changed;
 }
 
