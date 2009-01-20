@@ -1135,7 +1135,7 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
   bool do_check = false;
-#if 0
+#if 1
   if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
     d_lastLbTimestep = timestep;
     do_check = true;
