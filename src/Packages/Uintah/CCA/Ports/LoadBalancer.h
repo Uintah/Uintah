@@ -78,9 +78,6 @@ WARNING
 					  const Patch* patch, const int)
       { return getPatchwiseProcessorAssignment(patch); }
 
-    //! Determines if the load balancer needs to load balance
-    virtual bool needLoadBalance()=0;
-
     //! Determines if the Load Balancer requests a taskgraph recompile.
     //! Only possible for Dynamic Load Balancers.
     virtual bool needRecompile(double, double, const GridP&)

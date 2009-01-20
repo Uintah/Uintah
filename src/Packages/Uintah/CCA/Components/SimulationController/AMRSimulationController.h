@@ -59,7 +59,7 @@ class Regridder;
       //! Set up, compile, and execute initial timestep
       void doInitialTimestep(GridP& grid, double& t);
 
-      bool doRegridding(GridP& grid);
+      bool doRegridding(GridP& grid, bool initialTimestep);
 
       void recompile(double t, double delt, GridP& currentGrid, int totalFine);
 
