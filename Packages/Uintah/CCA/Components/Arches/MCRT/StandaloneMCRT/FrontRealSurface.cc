@@ -1,0 +1,83 @@
+#include "FrontRealSurface.h"
+#include "Consts.h"
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
+// inline
+FrontRealSurface::FrontRealSurface(const int &iIndex,
+				   const int &jIndex,
+				   const int &kIndex,
+				   const int &Ncx){
+  
+  surfaceiIndex = iIndex;
+  surfacejIndex = jIndex;
+  surfacekIndex = kIndex;
+  // FrontBackNo = NoSurface;
+  surfaceIndex = iIndex + kIndex * Ncx;
+  
+}
+
+
+FrontRealSurface::FrontRealSurface(){
+}
+
+
+
+// n top -- n = 0 i + 1 j + 0 k  
+void
+FrontRealSurface::get_n(){
+  n[0] = 0;
+  n[1] = 1;
+  n[2] = 0;
+}
+
+
+// t1 top -- t1 = 1 i + 0 j + 0 k
+void
+FrontRealSurface::get_t1(){
+  t1[0] = 1;
+  t1[1] = 0;
+  t1[2] = 0;
+}
+
+
+
+// t2 top -- t2 = 0 i + 0 j + -1 k
+void
+FrontRealSurface::get_t2(){
+  t2[0] = 0;
+  t2[1] = 0;
+  t2[2] = -1;
+}
+
+
+// get private normal vector n, for class ray
+void
+FrontRealSurface::set_n(double *nn){
+  for ( int i = 0; i < 3; i ++ )
+    nn[i] = n[i];
+}
+
+
+void
+FrontRealSurface::get_limits(const double *X,
+			     const double *Y,
+			     const double *Z){
+  
+  // i, j, k is settled at the center of the VOLUME cell
+  xlow = X[surfaceiIndex];
+  xup = X[surfaceiIndex+1];
+  
+  ylow = Y[surfacejIndex];
+  yup = Y[surfacejIndex];
+
+  // note that for top surface, zlow = ztop
+  zlow = Z[surfacekIndex];
+  zup = Z[surfacekIndex+1];
+
+}
+
+FrontRealSurface::~FrontRealSurface(){
+}
