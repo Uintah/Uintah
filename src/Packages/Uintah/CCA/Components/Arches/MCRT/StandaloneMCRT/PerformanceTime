@@ -1,0 +1,93 @@
+----------------------------------------------
+Classic Black Cubic Box 
+------------------------------------------------------
+[u0481416@dualflame NoTableMCRT]$ ./NoTableMCRTwithTemplate
+sumQsurface = -0.750947
+sumQvolume = 0.751342
+ the heat balance difference = (sumQsurface + sumQvolume) = 0.00039496
+ Frac = -0.000525949
+ Lx = 1; Ly = 1 ; Lz = 1
+ Ncx = 10 ; Ncy = 10; Ncz = 10
+ ratioBCx = 1; ratioBCy = 1; ratioBCz = 1
+ time used up (S) = 7sec.
+ rayNoSurface  = 500; rayNoVol = 500
+---------------------------------------------------------------
+[u0481416@dualflame RMCRTEfficient]$ mpirun -np 1 ./RMCRTBenchmarkEfficient
+Please enter Lx, Ly, Lz ( full length of full domain in x, y, z direction)
+please enter Ncx, Ncy, Ncz ( number of cells in x, y, z direction)
+Please enter ratioBC = boundary cell/ center cell
+sumQsurface = -0.752501
+sumQvolume = 0.751527
+ the heat balance difference = (sumQsurface + sumQvolume) = -0.000973961
+ Frac = 0.0012943
+local_surfaceElementNo = 600
+ Lx = 1; Ly = 1 ; Lz = 1
+ rayNoSurface  = 500; rayNoVol = 500
+ Russian Roulette threshold number: RRthreshold = 0
+ Ncx = 10 ; Ncy = 10; Ncz = 10
+ ratioBCx = 1; ratioBCy = 1; ratioBCz = 1
+processor used np = 1
+ time used up (S) = 41.2724sec with a precision of 9.53674e-07sec.
+---------------------------------------------------------------------
+RMCRTtemplatewithRR.cc
+-------
+with StopLowerBound = 1E-4;
+rayNo = 1000
+[u0481416@dualflame NoTableMCRT]$ ./RMCRTtemplateRR
+sumQsurface = -0.750823
+sumQvolume = 0.751327
+ the heat balance difference = (sumQsurface + sumQvolume) = 0.00050404
+ Frac = -0.000671317
+ Lx = 1; Ly = 1 ; Lz = 1
+ Ncx = 10 ; Ncy = 10; Ncz = 10
+ ratioBCx = 1; ratioBCy = 1; ratioBCz = 1
+ time used up (S) = 13sec.
+--------------------
+rayNo = 500;
+sumQsurface = -0.751431
+sumQvolume = 0.751421
+ the heat balance difference = (sumQsurface + sumQvolume) = -1.08348e-05
+ Frac = 1.44189e-05
+ Lx = 1; Ly = 1 ; Lz = 1
+ Ncx = 10 ; Ncy = 10; Ncz = 10
+ ratioBCx = 1; ratioBCy = 1; ratioBCz = 1
+ time used up (S) = 6sec.
+----------
+From this case we see that RR didnot help much on saving time with StopLowerBound = 1E-4 ( previous one is 1e-10).
+mmmm
+
+==============================================================
+Cubic Box with nonblack surfaces
+----------------------------------------------
+RMCRTMPIByRegion.cc
+x = y = z = 1m, 10 by 10 by 10, 
+Results:
+sumQsurface = 55065.9
+sumQvolume = -55283.5
+ the heat balance difference = (sumQsurface + sumQvolume) = -217.677
+ processors used np = 4
+ time used up (S) = 3422.18
+rayNoSurface = rayNoVol = 1000.
+------------------------------------------------------
+sumQsurface = 55367
+sumQvolume = -55370.5
+ the heat balance difference = (sumQsurface + sumQvolume) = -3.43941
+ Frac = -6.21201e-05
+ Lx = 1; Ly = 1 ; Lz = 1
+ Ncx = 10 ; Ncy = 10; Ncz = 10
+ ratioBCx = 1; ratioBCy = 1; ratioBCz = 1
+ time used up (S) = 351sec.
+serial code. rayNoSurface = rayNoVol = 1000.
+----------------------------------------------
+RMCRTtemplatewithRR.cc
+-----
+[u0481416@dualflame NoTableMCRT]$ ./RMCRTtemplateRR
+sumQsurface = 55405.6
+sumQvolume = -55329.3
+ the heat balance difference = (sumQsurface + sumQvolume) = 76.3198
+ Frac = 0.00137748
+ Lx = 1; Ly = 1 ; Lz = 1
+ Ncx = 10 ; Ncy = 10; Ncz = 10
+ ratioBCx = 1; ratioBCy = 1; ratioBCz = 1
+ time used up (S) = 142sec.
+-----------------------------------------
