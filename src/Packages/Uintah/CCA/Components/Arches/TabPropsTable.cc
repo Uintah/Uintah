@@ -11,6 +11,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <dirent.h>
 
 using namespace std;
 using namespace Uintah;
@@ -132,35 +134,15 @@ TabPropsTable::problemSetup( const ProblemSpecP& propertiesParameters )
   if( extension == ".h5" || extension == ".H5" ) {
     tableFileName = tableFileName.substr( 0, tableFileName.size() - 3 );
   }
-//__________________________________
-//
-// Shouldn't you check if the tableFileName exists?  Something like
-//      DIR *check = opendir(tableFileName.c_str());
-//      if ( check == NULL){
-//        ostringstream warn;
-//        warn << "ERROR:Arches:TabPropsTable  The table << tableFileName<< does not exist. ";
-//        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-//      }  -- Todd
-//__________________________________
-
-  // This causes a problem:
-  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc: In member function ‘virtual void Uintah::TabPropsTable::problemSetup(const Uintah::ProblemSpecP&)’:
-  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:137: error: ‘DIR’ was not declared in this scope
-  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:137: error: ‘check’ was not declared in this scope
-  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:137: error: ‘opendir’ was not declared in this scope
-  //   make: *** [Packages/Uintah/CCA/Components/Arches/TabPropsTable.o] Error 1
-  // ...is there something I'm misunderstanding?
 
   // Step 4 - Check if tableFileName exists
-/*
   DIR *check = opendir(tableFileName.c_str());
   if ( check == NULL ) {
     ostringstream warn;
     warn << "ERROR:Arches:TabPropsTable  The table " << tableFileName << " does not exist. ";
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
-*/
-
+  
   // Step 5 - Load data from HDF5 file into StateTable
   statetbl.read_hdf5(tableFileName);
 
@@ -280,33 +262,23 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
     myVerifyResults.push_back(toggle);
   } // myVerifyResults = size of allUserDepVarNames (contains bool toggle)
 
-//__________________________________
-// Should be using proc0cout instead of cout  --Todd
-//__________________________________
-
-  // Using cout causes a problem:
-  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc: In member function ‘void Uintah::TabPropsTable::verifyTable(bool, bool) const’:
-  //   ../src42865/Packages/Uintah/CCA/Components/Arches/TabPropsTable.cc:268: error: ‘proc0cout’ was not declared in this scope
-  //   make: *** [Packages/Uintah/CCA/Components/Arches/TabPropsTable.o] Error 1
-  // Am I missing a header file?
-
-  cout << "Hello, this is the TabProps table reader module of the Arches code." << endl;
-  cout << "I am checking the dependent variables requested in the input files against the dependent variables in the TabProps table." << endl;
+  proc0cout << "Hello, this is the TabProps table reader module of the Arches code." << endl;
+  proc0cout << "I am checking the dependent variables requested in the input files against the dependent variables in the TabProps table." << endl;
 
   if(diagnosticMode == true){
     //print results
     for( unsigned int i=0; i < allUserDepVarNames.size(); i++) {
       if( myVerifyResults[i] == true ) {
-        cout << "----- The dependent variable " << allUserDepVarNames[i] << " was found in the table." << endl;
+        proc0cout << "----- The dependent variable " << allUserDepVarNames[i] << " was found in the table." << endl;
       } 
       else if(myVerifyResults[i] == false) {
-        cout << "XXXXX The dependent variable " << allUserDepVarNames[i] << " was NOT found in the table!!!" << endl;
+        proc0cout << "XXXXX The dependent variable " << allUserDepVarNames[i] << " was NOT found in the table!!!" << endl;
       }
     }
 
-    cout << endl;
-    cout << "==================================================================" << endl;
-    cout << endl;
+    proc0cout << endl;
+    proc0cout << "==================================================================" << endl;
+    proc0cout << endl;
   }
 
   if(numNegativeResults > 0){ // some of the dependent variables the user requested are NOT in the table
@@ -317,19 +289,19 @@ TabPropsTable::verifyTable(  bool diagnosticMode,
     } else if(strictMode == false) {
        
       // if not strict mode, just print a warning
-      cout << "WARNING!!!" << endl;
-      cout << "The table verification routine found " << numNegativeResults << " dependent variable(s) requested in your input file that were NOT found in the table." << endl;
-      cout << "Did you want one of the following dependent variables in the table?" << endl;
+      proc0cout << "WARNING!!!" << endl;
+      proc0cout << "The table verification routine found " << numNegativeResults << " dependent variable(s) requested in your input file that were NOT found in the table." << endl;
+      proc0cout << "Did you want one of the following dependent variables in the table?" << endl;
       for( unsigned int j=0; j < allDepVarNames.size(); j++) {
-        cout << allDepVarNames[j] << endl;
+        proc0cout << allDepVarNames[j] << endl;
       }
   
     }
   }  
   else if(numNegativeResults == 0) {
     //you're OK, either way (strict mode or not doesn't matter)
-    cout << "Success!" << endl;
-    cout << "All " << allUserDepVarNames.size() << " of the dependent variables you requested in your input file were found in the table." << endl;
+    proc0cout << "Success!" << endl;
+    proc0cout << "All " << allUserDepVarNames.size() << " of the dependent variables you requested in your input file were found in the table." << endl;
   } 
 }
 
