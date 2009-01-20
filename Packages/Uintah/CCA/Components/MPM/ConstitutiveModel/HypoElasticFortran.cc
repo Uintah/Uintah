@@ -1,38 +1,61 @@
-extern "C"{
- void hookechk_(double UI[], double UJ[], double UK[]);
- void hooke_incremental_(int &nblk, int &ninsv, double &dt, double UI[], double stress[], double D[], double svarg[], double &USM);
-}
-  
+
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
-#include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> 
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Core/Math/MinMax.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
+#include <Core/Math/MinMax.h>
+
+#include <sci_defs/uintah_defs.h>
+
 #include <fstream>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
+
+////////////////////////////////////////////////////////////////////////////////
+// The following functions are found in fortran/*.F
+
+extern "C"{
+
+#if defined( FORTRAN_UNDERSCORE_END )
+#  define HOOKECHK hookechk_
+#  define HOOKE_INCREMENTAL hooke_incremental_
+#elif defined( FORTRAN_UNDERSCORE_LINUX )
+#  define HOOKECHK hookechk_
+#  define HOOKE_INCREMENTAL hooke_incremental__
+#else // NONE
+#  define HOOKECHK hookechk
+#  define HOOKE_INCREMENTAL hooke_incremental
+#endif
+
+   void HOOKECHK( double UI[], double UJ[], double UK[] );
+   void HOOKE_INCREMENTAL( int &nblk, int &ninsv, double &dt, double UI[],
+                            double stress[], double D[], double svarg[], double &USM );
+}
+
+// End fortran functions.
+////////////////////////////////////////////////////////////////////////////////
+  
 
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElasticFortran::HypoElasticFortran(ProblemSpecP& ps,MPMFlags* Mflag)
-  : ConstitutiveModel(Mflag)
+HypoElasticFortran::HypoElasticFortran( ProblemSpecP& ps,MPMFlags* Mflag ) :
+  ConstitutiveModel(Mflag)
 {
   ps->require("G",d_initialData.G);
   ps->require("K",d_initialData.K);
@@ -40,7 +63,7 @@ HypoElasticFortran::HypoElasticFortran(ProblemSpecP& ps,MPMFlags* Mflag)
   double UI[2];
   UI[0]=d_initialData.K;
   UI[1]=d_initialData.G;
-  hookechk_(UI,UI,UI);
+  HOOKECHK(UI,UI,UI);
 }
 
 HypoElasticFortran::HypoElasticFortran(const HypoElasticFortran* cm) : ConstitutiveModel(cm)
@@ -53,8 +76,8 @@ HypoElasticFortran::~HypoElasticFortran()
 {
 }
 
-
-void HypoElasticFortran::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void
+HypoElasticFortran::outputProblemSpec( ProblemSpecP& ps,bool output_cm_tag )
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
@@ -66,14 +89,16 @@ void HypoElasticFortran::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("K",d_initialData.K);
 }
 
-HypoElasticFortran* HypoElasticFortran::clone()
+HypoElasticFortran*
+HypoElasticFortran::clone()
 {
   return scinew HypoElasticFortran(*this);
 }
 
-void HypoElasticFortran::initializeCMData(const Patch* patch,
-                                          const MPMMaterial* matl,
-                                          DataWarehouse* new_dw)
+void
+HypoElasticFortran::initializeCMData( const Patch* patch,
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* new_dw )
 {
   // Initialize the variables shared by all constitutive models
   // This method is defined in the ConstitutiveModel base class.
@@ -82,11 +107,11 @@ void HypoElasticFortran::initializeCMData(const Patch* patch,
   computeStableTimestep(patch, matl, new_dw);
 }
 
-
-void HypoElasticFortran::allocateCMDataAddRequires(Task* task,
-                                                   const MPMMaterial* matl,
-                                                   const PatchSet* patches,
-                                                   MPMLabel* lb) const
+void
+HypoElasticFortran::allocateCMDataAddRequires( Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches,
+                                               MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
@@ -96,13 +121,13 @@ void HypoElasticFortran::allocateCMDataAddRequires(Task* task,
   addSharedRForConvertExplicit(task, matlset, patches);
 }
 
-
-void HypoElasticFortran::allocateCMDataAdd(DataWarehouse* new_dw,
-                                           ParticleSubset* addset,
-                                           map<const VarLabel*, 
-                                           ParticleVariableBase*>* newState,
-                                           ParticleSubset* delset,
-                                           DataWarehouse* )
+void
+HypoElasticFortran::allocateCMDataAdd( DataWarehouse* new_dw,
+                                       ParticleSubset* addset,
+                                       map<const VarLabel*, 
+                                       ParticleVariableBase*>* newState,
+                                       ParticleSubset* delset,
+                                       DataWarehouse* )
 {
   // Copy the data common to all constitutive models from the particle to be 
   // deleted to the particle to be added. 
@@ -110,15 +135,17 @@ void HypoElasticFortran::allocateCMDataAdd(DataWarehouse* new_dw,
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
 }
 
-void HypoElasticFortran::addParticleState(std::vector<const VarLabel*>& from,
+void
+HypoElasticFortran::addParticleState(std::vector<const VarLabel*>& from,
                                           std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
 }
 
-void HypoElasticFortran::computeStableTimestep(const Patch* patch,
-                                               const MPMMaterial* matl,
-                                               DataWarehouse* new_dw)
+void
+HypoElasticFortran::computeStableTimestep( const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouse* new_dw )
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
@@ -151,10 +178,11 @@ void HypoElasticFortran::computeStableTimestep(const Patch* patch,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
 }
 
-void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw)
+void
+HypoElasticFortran::computeStressTensor( const PatchSubset* patches,
+                                         const MPMMaterial* matl,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw )
 {
   double rho_orig = matl->getInitialDensity();
   for(int p=0;p<patches->size();p++){
@@ -291,7 +319,7 @@ void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
       double dt = delT;
       int nblk = 1;
       int ninsv = 1;
-      //hooke_incremental_(nblk, ninsv, dt, UI, sigarg, Darray, svarg, USM);
+      HOOKE_INCREMENTAL(nblk, ninsv, dt, UI, sigarg, Darray, svarg, USM);
 
       pstress_new[idx](0,0) = sigarg[0];
       pstress_new[idx](1,1) = sigarg[1];
@@ -347,12 +375,13 @@ void HypoElasticFortran::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void HypoElasticFortran::carryForward(const PatchSubset* patches,
-                                      const MPMMaterial* matl,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw)
+void
+HypoElasticFortran::carryForward( const PatchSubset* patches,
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw )
 {
-  for(int p=0;p<patches->size();p++){
+  for(int p=0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -368,9 +397,10 @@ void HypoElasticFortran::carryForward(const PatchSubset* patches,
   }
 }
 
-void HypoElasticFortran::addComputesAndRequires(Task* task,
-                                                const MPMMaterial* matl,
-                                                const PatchSet* patches) const
+void
+HypoElasticFortran::addComputesAndRequires( Task* task,
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -379,16 +409,18 @@ void HypoElasticFortran::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
 }
 
-void HypoElasticFortran::addComputesAndRequires(Task*,
-                                                const MPMMaterial*,
-                                                const PatchSet*,
-                                                const bool ) const
+void
+HypoElasticFortran::addComputesAndRequires( Task*,
+                                            const MPMMaterial*,
+                                            const PatchSet*,
+                                            const bool ) const
 {
 }
 
-double HypoElasticFortran::computeRhoMicroCM(double pressure,
-                                             const double p_ref,
-                                             const MPMMaterial* matl)
+double
+HypoElasticFortran::computeRhoMicroCM( double pressure,
+                                       const double p_ref,
+                                       const MPMMaterial* matl )
 {
   double rho_orig = matl->getInitialDensity();
   //double p_ref=101325.0;
@@ -407,12 +439,12 @@ double HypoElasticFortran::computeRhoMicroCM(double pressure,
 #endif
 }
 
-void HypoElasticFortran::computePressEOSCM(double rho_cur, double& pressure,
-                                           double p_ref,
-                                           double& dp_drho,      double& tmp,
-                                           const MPMMaterial* matl)
+void
+HypoElasticFortran::computePressEOSCM( double rho_cur, double& pressure,
+                                       double p_ref,
+                                       double& dp_drho,      double& tmp,
+                                       const MPMMaterial* matl )
 {
-
   //double G = d_initialData.G;
   double bulk = d_initialData.K;
   double rho_orig = matl->getInitialDensity();
@@ -428,11 +460,9 @@ void HypoElasticFortran::computePressEOSCM(double rho_cur, double& pressure,
 #endif
 }
 
-double HypoElasticFortran::getCompressibility()
+double
+HypoElasticFortran::getCompressibility()
 {
   return 1.0/d_initialData.K;
 }
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
-#endif

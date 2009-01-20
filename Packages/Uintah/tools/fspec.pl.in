@@ -44,10 +44,15 @@ LINE: while(<FILE>){
     print OUT "#ifdef __cplusplus\n\n";
     print OUT "extern \"C\" ";
     print OUT "$ret ".&cname($fn)."(";
+
+    $spacing = "extern \"C\" "."$ret ".&cname($fn)."(";
+    # Replaces all letters (and numbers) with ' '.  Deletes any character that isn't a letter/number.
+    $spacing =~ tr/a-zA-Z0-9_("/ /;
+
     $sep="";
     foreach $a (@args) {
 	print OUT $sep;
-	$sep=",\n";
+	$sep=",\n$spacing";
 	($type, $tmpltype, $name) = &parsearg($a);
 	if(&simpletype($type)){
 	    print OUT "$type\* $name";
@@ -78,10 +83,11 @@ LINE: while(<FILE>){
     }
     print OUT ");\n\n";
     print OUT "static $ret fort_$fn(";
+
     $sep="";
     foreach $a (@args){
 	print OUT $sep;
-	$sep=",\n";
+	$sep=",\n$spacing";
 	($type, $tmpltype, $name) = &parsearg($a);
 	if($tmpltype ne ""){
 	    print OUT "$type<$tmpltype>& $name";
@@ -114,12 +120,17 @@ LINE: while(<FILE>){
     if($ret != "void"){
 	print OUT "return ";
     }
-    print OUT &cname($fn)."(";
+
+    $spacing = "   ".&cname($fn)."(";
+    # Replaces all letters (and numbers) with ' '.  Deletes any character that isn't a letter/number.
+    $spacing =~ tr/a-zA-Z0-9_("/ /;
+
+    print OUT &cname($fn)."( ";
     $sep="";
     foreach $a (@args) {
 	($type, $tmpltype, $name) = &parsearg($a);
 	print OUT $sep;
-	$sep=",\n";
+	$sep=",\n$spacing";
 	if(&simpletype($type)){
 	    print OUT "&$name";
 	} elsif(&knownvartype($type)){
@@ -149,11 +160,11 @@ LINE: while(<FILE>){
 	}
     }
 
-    print OUT ");\n";
+    print OUT " );\n";
     print OUT "}\n\n";
-    print OUT "#else /* !__cplusplus */\n";
+    print OUT "#else /* !__cplusplus */\n\n";
     # Emit fortran code
-    print OUT "C Assuming this is fortran code\n\n";
+    print OUT "C This is the FORTRAN code portion of the file:\n\n";
 
     $s="subroutine $fn(";
     $sep="";
@@ -272,7 +283,7 @@ sub parsearg {
 sub simpletype {
     my($type);
     $type = $_[0];
-    if($type eq "double" || $type eq "int" || $type eq "bool"){
+    if( $type eq "double" || $type eq "int" || $type eq "bool" || $type eq "char" ){
 	1;
     } else {
 	0;
@@ -347,6 +358,8 @@ sub ftype {
 	"integer";
     } elsif($type eq "bool") {
 	"logical*1"
+    } elsif($type eq "char") {
+	"character*80"
     } else {
 	"unknown ftype";
     }
@@ -371,23 +384,23 @@ sub cname {
 }
 
 print OUT "#ifndef PASS1\n";
-print OUT "#define PASS1(x) x/**/_low, x/**/_high, x\n";
-print OUT "#endif\n";
+print OUT "#  define PASS1(x) x/**/_low, x/**/_high, x\n";
+print OUT "#endif\n\n";
 print OUT "#ifndef PASS3\n";
 if($fortran_underscore){
-    print OUT "#define PASS3A(x) ";
+    print OUT "#  define PASS3A(x) ";
     foreach $v ("low_x", "low_y", "low_z"){
 	print OUT "x/**/_$v, ";
     }
     print OUT "\n";
-    print OUT "#define PASS3B(x) ";
+    print OUT "#  define PASS3B(x) ";
     foreach $v ("high_x", "high_y", "high_z"){
 	print OUT "x/**/_$v, ";
     }
     print OUT "x\n";
 } else {
-    print OUT "#define PASS3A(x) x/**/_low, x/**/_high, x\n";
-    print OUT "#define PASS3B(x) \n";
+    print OUT "#  define PASS3A(x) x/**/_low, x/**/_high, x\n";
+    print OUT "#  define PASS3B(x) \n";
 }
 print OUT "#endif\n";
 

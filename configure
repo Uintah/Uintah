@@ -780,6 +780,7 @@ LEX_LIB_FLAG
 ETAGS
 PERL
 FORTRAN_UNDERSCORE
+DEF_FORTRAN_UNDERSCORE
 G77
 SOFLAGS
 ASFLAGS
@@ -8168,6 +8169,7 @@ fi
 # Packages/Uintah/tools/fspec.pl.in file to generate the correct
 # cname of the fortran function.
 FORTRAN_UNDERSCORE=end
+DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
 
 CC_REALLY_IS=`type $CC | sed 's%^.* %%'`
 # Going to look for "as", "ld", etc in this dir:
@@ -9099,6 +9101,7 @@ echo "${ECHO_T}no" >&6; }
     # functions.  This var is used in fspec.pl.in in order not to
     # add the _ to the cname of the function.
     FORTRAN_UNDERSCORE=none
+    DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_NONE"
 
     # The IBM compilers don't use LDRUN_PREFIX.  By making it "-L"
     # the lib path will be repeated twice, but since the makefile
@@ -9245,10 +9248,12 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6; }
          # This flag is used by the genfspec.pl script in Uintah (generated
          # from fspec.pl.in).
          FORTRAN_UNDERSCORE=linux
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS -fbounds-check $extra_cflags"
          FORTRAN_UNDERSCORE=end
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -10068,10 +10073,12 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6; }
           # This flag is used by the genfspec.pl script in Uintah (generated
           # from fspec.pl.in).
           FORTRAN_UNDERSCORE=linux
+          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
           ;;
         *gfortran*)
           FFLAGS="$FFLAGS -fbounds-check $extra_cflags"
           FORTRAN_UNDERSCORE=linux
+          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
           ;;
         *)
           FFLAGS="$FFLAGS $extra_cflags"
@@ -10869,10 +10876,12 @@ echo "$as_me: WARNING: Turning off ALC/MCR's fortran underscore compatibility ha
          # This flag is used by the genfspec.pl script in Uintah (generated
          # from fspec.pl.in).
 	 FORTRAN_UNDERSCORE=linux
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS -fbounds-check $extra_cflags"
          FORTRAN_UNDERSCORE=end
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -11720,6 +11729,7 @@ fi
 echo $ECHO_N "checking fortran underscore policy... $ECHO_C" >&6; }
 { echo "$as_me:$LINENO: result: $FORTRAN_UNDERSCORE" >&5
 echo "${ECHO_T}$FORTRAN_UNDERSCORE" >&6; }
+
 
 
 
@@ -71623,6 +71633,7 @@ LEX_LIB_FLAG!$LEX_LIB_FLAG$ac_delim
 ETAGS!$ETAGS$ac_delim
 PERL!$PERL$ac_delim
 FORTRAN_UNDERSCORE!$FORTRAN_UNDERSCORE$ac_delim
+DEF_FORTRAN_UNDERSCORE!$DEF_FORTRAN_UNDERSCORE$ac_delim
 G77!$G77$ac_delim
 SOFLAGS!$SOFLAGS$ac_delim
 ASFLAGS!$ASFLAGS$ac_delim
@@ -71680,7 +71691,6 @@ BLT_LIB_FLAG!$BLT_LIB_FLAG$ac_delim
 BLT_LIB_DIR_FLAG!$BLT_LIB_DIR_FLAG$ac_delim
 INC_BLT_H!$INC_BLT_H$ac_delim
 TCL_PREFIX!$TCL_PREFIX$ac_delim
-TCL_VERSION!$TCL_VERSION$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -71722,6 +71732,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+TCL_VERSION!$TCL_VERSION$ac_delim
 TK_VERSION!$TK_VERSION$ac_delim
 XML2_LIB_FLAG!$XML2_LIB_FLAG$ac_delim
 XML2_LIB_DIR_FLAG!$XML2_LIB_DIR_FLAG$ac_delim
@@ -71818,7 +71829,6 @@ INC_PETSC_UNI_H!$INC_PETSC_UNI_H$ac_delim
 HAVE_PTOLEMY!$HAVE_PTOLEMY$ac_delim
 DEF_PTOLEMY!$DEF_PTOLEMY$ac_delim
 PTOLEMY_PATH!$PTOLEMY_PATH$ac_delim
-PTOLEMY_CLASSPATH!$PTOLEMY_CLASSPATH$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -71860,6 +71870,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+PTOLEMY_CLASSPATH!$PTOLEMY_CLASSPATH$ac_delim
 XALAN_PATH!$XALAN_PATH$ac_delim
 TAU_MAKEFILE!$TAU_MAKEFILE$ac_delim
 BABEL_BIN!$BABEL_BIN$ac_delim
@@ -71956,7 +71967,6 @@ VDT_LIB_FLAG!$VDT_LIB_FLAG$ac_delim
 VDT_LIB_DIR_FLAG!$VDT_LIB_DIR_FLAG$ac_delim
 HAVE_HYPRE!$HAVE_HYPRE$ac_delim
 DEF_HYPRE!$DEF_HYPRE$ac_delim
-INC_HYPRE_H!$INC_HYPRE_H$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -71998,6 +72008,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+INC_HYPRE_H!$INC_HYPRE_H$ac_delim
 HYPRE_LIB_FLAG!$HYPRE_LIB_FLAG$ac_delim
 HYPRE_LIB_DIR_FLAG!$HYPRE_LIB_DIR_FLAG$ac_delim
 BOOST_LIB_FLAG!$BOOST_LIB_FLAG$ac_delim
@@ -72036,7 +72047,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 36; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 37; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -13,13 +13,14 @@
 
 
 #include <cmath>
-#include "ConstitutiveModel.h"	
+
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <sgi_stl_warnings_off.h>
+
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
+
   class HypoElasticFortran : public ConstitutiveModel {
   public:
     struct CMData {
