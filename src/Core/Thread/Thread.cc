@@ -88,10 +88,11 @@
 
 // provide "C" interface to exitAll
 extern "C" { 
-void SCISHARE exit_all_threads(int rc) {
-  SCIRun::Thread::exitAll(rc);
+  void SCISHARE exit_all_threads(int rc) {
+    SCIRun::Thread::exitAll(rc);
+  }
 }
-}
+
 namespace SCIRun {
 
 class ParallelHelper : public Runnable {
@@ -295,6 +296,21 @@ Thread::parallel(ParallelBase& helper, int nthreads,
 }
 
 void
+Thread::handleCleanup()
+{
+  Thread::ptr2cleanupfunc funcPtr = Thread::self()->getCleanupFunction();
+  if( funcPtr != NULL ) {
+
+    printf( "Handling thread cleanup for thread '%s'.\n", threadname_ );
+
+    (*funcPtr)();
+
+    // handleCleanup() should only be called once, but just in case... 
+    Thread::self()->setCleanupFunction( NULL );
+  }
+}
+
+void
 Thread::niceAbort(void* context /* = 0 */)
 {
   fprintf(stderr, getStackTrace(context).c_str());
@@ -382,7 +398,7 @@ Thread::niceAbort(void* context /* = 0 */)
       fprintf(stderr, "Unrecognized option, exiting\n");
       smode = "exit";
     }
-  }
+  } // end for(;;)
 }
 
 int
