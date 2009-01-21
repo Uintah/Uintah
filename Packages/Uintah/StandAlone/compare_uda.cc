@@ -1030,9 +1030,11 @@ void buildPatchMap(LevelP level, const string& filebase,
         // in some cases, we can have overlapping patches, where an extra cell/node 
         // overlaps an interior cell/node of another patch.  We prefer the interior
         // one.  (if there are two overlapping interior ones (nodes or face centers only),
-        // they should have the same value.
-        IntVector in_low = patch->getNodeLowIndex__New();
-        IntVector in_high = patch->getNodeHighIndex__New();
+        // they should have the same value.  However, since this patchMap is also used 
+        // for cell centered variables give priority to the patch that has this index within 
+        // its interior cell centered variables
+        IntVector in_low = patch->getCellLowIndex__New();
+        IntVector in_high = patch->getCellHighIndex__New();
         IntVector pos = iter.getIndex();
         if (pos.x() >= in_low.x() && pos.y() >= in_low.y() && pos.z() >= in_low.z() &&
             pos.x() < in_high.x() && pos.y() < in_high.y() && pos.z() < in_high.z()) {
