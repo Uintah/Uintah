@@ -129,8 +129,8 @@ CylinderGeometryPiece::radialDirection(const Point& pt) const
   double height2 = axis.length();
   Vector pbot = pt-d_bottom;
   double tt = Dot(pbot,axis)/height2;
-  Vector projOnAxis = d_bottom*(1.0-tt) + d_top*tt;;
-  Vector normal = pt.asVector() - projOnAxis;
+  Vector projOnAxis = tt*axis/height2;
+  Vector normal = pbot - projOnAxis;
   return (normal/normal.length());
 }
 
