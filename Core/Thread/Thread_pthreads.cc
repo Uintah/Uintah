@@ -316,8 +316,9 @@ Thread_shutdown(Thread* thread)
   if (!priv->ismain) priv->delete_ready.down();
 
   // Allow this thread to run anywhere...
-  if (thread->cpu_ != -1)
+  if (thread->cpu_ != -1) {
     thread->migrate(-1);
+  }
 
   lock_scheduler();
   /* Remove it from the active queue */
@@ -341,16 +342,21 @@ Thread_shutdown(Thread* thread)
       break;
     }
   }
+
+  thread->handleCleanup();
+
   unlock_scheduler();
 
   bool wait_main = priv->ismain;
   delete thread;
-  if (pthread_setspecific(thread_key, 0) != 0)
+  if (pthread_setspecific(thread_key, 0) != 0) {
     fprintf(stderr, "Warning: pthread_setspecific failed");
+  }
   priv->thread = 0;
   delete priv;
-  if (done)
+  if (done) {
     Thread::exitAll(0);
+  }
   if (wait_main) {
     main_sema.down();
   }
@@ -361,10 +367,9 @@ Thread_shutdown(Thread* thread)
 void
 Thread::exit()
 {
-  Thread* self = Thread::self();
+  Thread * self = Thread::self();
   Thread_shutdown(self);
 }
-
 
 void
 Thread::checkExit()
@@ -469,8 +474,7 @@ run_threads(void* priv_v)
   TAU_REGISTER_THREAD();
 
   Thread_private* priv = (Thread_private*)priv_v;
-  if (pthread_setspecific(thread_key, priv->thread))
-  {
+  if (pthread_setspecific(thread_key, priv->thread)) {
     throw ThreadError("pthread_setspecific: Unknown error.");
   }
   priv->is_blocked = true;
@@ -578,23 +582,28 @@ Thread::detach()
 void
 Thread::exitAll(int code)
 {
-  if (getenv("SCIRUN_EXIT_CRASH_WORKAROUND"))
-  {
+  if (getenv("SCIRUN_EXIT_CRASH_WORKAROUND")) {
     raise(SIGKILL);
   }
   CleanupManager::call_callbacks();
-  if (initialized && !exiting){
+  if (initialized && !exiting) {
     exiting = true;
     lock_scheduler();
-    if (initialized){
+    if( initialized ){
       // Stop all of the other threads before we die, because
       // global destructors may destroy primitives that other
       // threads are using...
       Thread* me = Thread::self();
       for (int i = 0;i<numActive;i++){
-        Thread_private* t = active[i];
-        if (t->thread != me){
-          pthread_kill(t->threadid, SIGUSR2);
+        Thread_private * thread_priv = active[i];
+
+        // It seems like this is the correct place to call handleCleanup (on all the threads)...
+        // However, I haven't tested this feature in SCIRun itself... it does work for Uintah
+        // (which only has one (the main) thread).
+        thread_priv->thread->handleCleanup();
+
+        if (thread_priv->thread != me){
+          pthread_kill(thread_priv->threadid, SIGUSR2);
         }
       }
       // Wait for all threads to be in the signal handler
@@ -603,9 +612,9 @@ Thread::exitAll(int code)
       while(--numtries && !done){
         done = true;
         for (int i = 0;i<numActive;i++){
-          Thread_private* t = active[i];
-          if (t->thread != me){
-            if (!t->is_blocked)
+          Thread_private * thread_priv = active[i];
+          if (thread_priv->thread != me){
+            if (!thread_priv->is_blocked)
               done = false;
           }
         }
@@ -614,18 +623,20 @@ Thread::exitAll(int code)
       }
       if (!numtries){
         for (int i = 0;i<numActive;i++){
-          Thread_private* t = active[i];
-          if (t->thread != me && !t->is_blocked) {
+          Thread_private* thread_priv = active[i];
+          if ( thread_priv->thread != me && !thread_priv->is_blocked ) {
             fprintf(stderr, "Thread: %s is slow to stop, giving up\n",
-                    t->thread->getThreadName());
+                    thread_priv->thread->getThreadName());
             //sleep(1000);
           }
         }
       }
-    }
+    } // end if( initialized )
 
     // See Thread.h for why we are doing this.
-    if (Thread::getCallExit()) ::exit(code);
+    if (Thread::getCallExit()) {
+      ::exit(code);
+    }
   }
   else if ( !initialized ) {
     // This case happens if the thread library is not being used.
@@ -686,12 +697,6 @@ handle_abort_signals(int sig, SigContext ctx)
   fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
   
   // WAIT_FOR_DEBUGGER;
-
-
-  Thread::ptr2cleanupfunc funcPtr = Thread::self()->getCleanupFunction();
-  if( funcPtr != NULL ) {
-    (*funcPtr)();
-  }
 
   Thread::niceAbort();
   

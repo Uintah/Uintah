@@ -107,11 +107,25 @@ DESCRIPTION
     /////////////////////////////////////////////////////////////////////
     // Allows threaded code to specify a special routine to be called
     // when the thread dies (segfault/segbus).  (Note, this routine
-    // was motivated by the need for Uintah to tell MPI to shut itself
-    // down when there is a segfault.)  If you wish other threads in
-    // your program to continue to run even after one thread has
-    // segfault'd, then be VERY CAREFUL what your cleanup function does.
-    // 
+    // was motivated by (and implemented for) the need for Uintah to
+    // tell MPI to shut itself down when there is a segfault.)  If you
+    // wish other threads in your program to continue to run even
+    // after one thread has segfault'd, then be VERY CAREFUL what your
+    // cleanup function does.  If the cleanup function does not
+    // return, then make sure that it causes the program to exit,
+    // otherwise the system will hang.
+    //
+    // WARNING: This has not been tested on a highly threaded system.
+    // If you plan to use this in SCIRun (or another stand alone
+    // threaded code built using this thread library) you will need to
+    // verify that it really works.  The issue is with how exitAll())
+    // works.  I believe that all threads will eventaully call
+    // Thread::exit(), but I haven't verified this.  It is possible
+    // that only the first thread to die will call it and thus if
+    // there are multiple/different cleanup routines for multiple
+    // threads, it is possible that they won't actually call
+    // Thread::exit() (and thus won't call "handleCleanup()").
+    //
     typedef void(*ptr2cleanupfunc)();
 
     void            setCleanupFunction( ptr2cleanupfunc );
@@ -339,6 +353,9 @@ DESCRIPTION
     // This is a <i>function variable</i> (named 'abortCleanupFunc_') that is set
     // by the 'setCleanupFunction()' function.
     void (*abortCleanupFunc_)();
+
+    // Checks for the presence of an abortCleanupFunc_, and if so, calls it.
+    void handleCleanup();
 
 #ifdef _WIN32
     // in windows, we can't get around this with #define private public
