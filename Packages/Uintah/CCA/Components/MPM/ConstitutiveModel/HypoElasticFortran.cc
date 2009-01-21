@@ -82,7 +82,7 @@ HypoElasticFortran::outputProblemSpec( ProblemSpecP& ps,bool output_cm_tag )
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","hypo_elastic");
+    cm_ps->setAttribute("type","hypo_elastic_fortran");
   }
 
   cm_ps->appendElement("G",d_initialData.G);
