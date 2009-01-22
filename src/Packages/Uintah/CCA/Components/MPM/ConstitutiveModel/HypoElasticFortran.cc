@@ -304,16 +304,16 @@ HypoElasticFortran::computeStressTensor( const PatchSubset* patches,
       sigarg[0]=pstress[idx](0,0);
       sigarg[1]=pstress[idx](1,1);
       sigarg[2]=pstress[idx](2,2);
-      sigarg[3]=pstress[idx](2,1);
-      sigarg[4]=pstress[idx](2,0);
-      sigarg[5]=pstress[idx](1,0);
+      sigarg[3]=pstress[idx](0,1);
+      sigarg[4]=pstress[idx](1,2);
+      sigarg[5]=pstress[idx](2,0);
       double Darray[6];
       Darray[0]=D(0,0);
       Darray[1]=D(1,1);
       Darray[2]=D(2,2);
-      Darray[3]=D(1,2);
-      Darray[4]=D(0,2);
-      Darray[5]=D(0,1);
+      Darray[3]=D(0,1);
+      Darray[4]=D(1,2);
+      Darray[5]=D(2,0);
       double svarg[1];
       double USM=9e99;
       double dt = delT;
@@ -324,12 +324,12 @@ HypoElasticFortran::computeStressTensor( const PatchSubset* patches,
       pstress_new[idx](0,0) = sigarg[0];
       pstress_new[idx](1,1) = sigarg[1];
       pstress_new[idx](2,2) = sigarg[2];
-      pstress_new[idx](2,1) = sigarg[3];
-      pstress_new[idx](1,2) = sigarg[3];
-      pstress_new[idx](2,0) = sigarg[4];
-      pstress_new[idx](0,2) = sigarg[4];
-      pstress_new[idx](1,0) = sigarg[5];
-      pstress_new[idx](0,1) = sigarg[5];
+      pstress_new[idx](0,1) = sigarg[3];
+      pstress_new[idx](1,0) = sigarg[3];
+      pstress_new[idx](2,1) = sigarg[4];
+      pstress_new[idx](1,2) = sigarg[4];
+      pstress_new[idx](2,0) = sigarg[5];
+      pstress_new[idx](0,2) = sigarg[5];
 
 #if 0
       cout << pstress_new[idx] << endl;
