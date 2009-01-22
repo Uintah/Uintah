@@ -2787,7 +2787,7 @@ ExplicitSolver::sched_computeMMSError(SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gn, 0);
 
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel,   gn, 0);
-  tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel, gn, 0);
+  //tsk->requires(Task::NewDW, d_lab->d_pressurePSLabel, gn, 0);
 
   tsk->requires(Task::NewDW, d_lab->d_uFmmsLabel, gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_vFmmsLabel, gn, 0);
@@ -2863,7 +2863,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     constSFCZVariable<double> wFmms;
     
     constCCVariable<double> scalar;
-    constCCVariable<double> pressure;
+    //constCCVariable<double> pressure;
 
     SFCXVariable<double> ummsLnError;
     SFCYVariable<double> vmmsLnError;
@@ -2889,15 +2889,15 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     
     ummsLnError.initialize(0.0);
     vmmsLnError.initialize(0.0);
-    wmmsLnError.initialize(0.0);
-    smmsLnError.initialize(0.0);
-    gradpmmsLnError.initialize(0.0);
+    //wmmsLnError.initialize(0.0);
+    //smmsLnError.initialize(0.0);
+    //gradpmmsLnError.initialize(0.0);
     
     Ghost::GhostType  gn = Ghost::None;
     new_dw->get(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch, gn, 0);
     new_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
-    new_dw->get(pressure,  d_lab->d_pressurePSLabel,    indx, patch, gn, 0);
+    //new_dw->get(pressure,  d_lab->d_pressurePSLabel,    indx, patch, gn, 0);
     new_dw->get(scalar,    d_lab->d_scalarSPLabel,      indx, patch, gn, 0);
     new_dw->get(uFmms,     d_lab->d_uFmmsLabel,         indx, patch, gn, 0);
     new_dw->get(vFmms,     d_lab->d_vFmmsLabel,         indx, patch, gn, 0);
@@ -2988,17 +2988,8 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       if (d_mmsErrorType == "L2"){
         double diff = uVelocity[c] - mmsvalue;
         unumeratordiff += diff * diff;
-        //unumeratordiff += ( uFmms[c] - mmsconvvalue )*( uFmms[c] - mmsconvvalue );
-
-        udenomexact += mmsvalue*mmsvalue;
-        //udenomexact += mmsconvvalue*mmsconvvalue;
-
-        ummsLnError[c] = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
-        //ummsLnError[c] = pow(( uFmms[c] - mmsconvvalue )*( uFmms[c] - mmsconvvalue )/
-        //                            (mmsconvvalue*mmsconvvalue),1.0/2.0);
-
-        //cout << " mmsvalue = " << mmsvalue << " computed = " << uVelocity[c] << endl;
-
+        udenomexact    += mmsvalue*mmsvalue;
+        ummsLnError[c]  = diff*diff;
       }
       else if (d_mmsErrorType == "Linf"){
 
@@ -3031,16 +3022,16 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
       }
       else if (d_mms == "almgrenMMS"){
 
-        mmsvalue = 1 + amp * sin(2.0*pi*cellinfo->xx[colX] - time)
-          * cos(2.0*pi*cellinfo->yv[colY] - time) * exp(-2.0*d_viscosity*time);
+        mmsvalue = 1 + amp * sin(2.0*pi*(cellinfo->xx[colX] - time))
+          * cos(2.0*pi*(cellinfo->yv[colY] - time)) * exp(-2.0*d_viscosity*time);
 
       }
 
       if (d_mmsErrorType == "L2"){
-        // double diff = vVelocity[c] - mmsvalue;
-        // vnumeratordiff += diff * diff;
-        // vdenomexact += mmsvalue*mmsvalue;
-        //vmmsLnError[c] = pow(diff * diff/(mmsvalue*mmsvalue),1.0/2.0);
+        double diff = vVelocity[c] - mmsvalue;
+        vnumeratordiff += diff*diff;
+        vdenomexact    += mmsvalue*mmsvalue;
+        vmmsLnError[c]  = diff*diff;
       }
       else if (d_mmsErrorType == "Linf"){
         testvalue = Abs(vVelocity[c] - mmsvalue);
@@ -3095,6 +3086,7 @@ ExplicitSolver::computeMMSError(const ProcessorGroup*,
     if (d_mmsErrorType == "L2"){
       new_dw->put(sum_vartype(snumeratordiff), timelabels->smmsLnError); 
       new_dw->put(sum_vartype(unumeratordiff), timelabels->ummsLnError);
+      cout << "putting vnum =" << vnumeratordiff << "into vmmsLnError" << endl;
       new_dw->put(sum_vartype(vnumeratordiff), timelabels->vmmsLnError);
       new_dw->put(sum_vartype(wnumeratordiff), timelabels->wmmsLnError); 
       
