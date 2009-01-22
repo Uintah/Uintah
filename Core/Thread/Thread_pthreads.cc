@@ -835,9 +835,16 @@ install_signal_handlers()
 static void
 exit_handler()
 {
-  if (exiting)
+  Thread * self = Thread::self();
+
+  // Self appears to be able to be NULL if the program has already
+  // mostly shutdown before the atexit() function (this function)
+  // kicks in.
+
+  if( exiting || self == NULL ) {
     return;
-  Thread_shutdown(Thread::self());
+  }
+  Thread_shutdown( Thread::self() );
 }
 
 
