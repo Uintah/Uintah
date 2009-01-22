@@ -1020,8 +1020,6 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     }
 //#endif
 
-    
-  TAU_PROFILE_STOP(compute);
   }
 }
 
