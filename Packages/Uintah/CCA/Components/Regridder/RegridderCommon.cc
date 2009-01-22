@@ -427,15 +427,13 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
   // For 2D problems the cell Stability/dilation & minBoundaryCells must be 0 in that plane
   for(int dir = 0; dir <3; dir++){
     if(d_cellNum[k][dir] == 1 && 
-    (d_cellStabilityDilation[dir] != 0 || d_cellRegridDilation[dir] != 0 || d_cellDeletionDilation[dir] != 0 || d_minBoundaryCells[dir] != 0 || d_minBoundaryCells[dir] != 0 )){
+    (d_cellStabilityDilation[dir] != 0 || d_cellRegridDilation[dir] != 0 )){
     ostringstream msg;
     msg << "Problem Setup: Regridder: The problem you're running is 2D. \n"
-        << " You must specifify cell_stablity_dilation, cell_deletion_dilation & min_boundary_cells = 0 in that direction \n"
+        << " You must specifify cell_stablity_dilation in that direction \n"
         << "Grid Size " << d_cellNum[k] 
         << " cell_stablity_dilation " << d_cellStabilityDilation
-        << " cell_regrid_dilation " << d_cellRegridDilation
-        << " cell_deletion_dilation " << d_cellDeletionDilation
-        << " min_boundary_cells " << d_minBoundaryCells << endl;
+        << " cell_regrid_dilation " << d_cellRegridDilation<< endl;
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     
     }
