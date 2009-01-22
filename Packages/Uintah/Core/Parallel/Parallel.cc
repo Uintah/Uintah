@@ -263,6 +263,11 @@ Parallel::finalizeManager(Circumstances circumstances)
   // worldRank is not reset here as even after finalizeManager,
   // some things need to knoww their rank...
 
+
+  //only finalize if MPI is initialized
+  if(determinedIfUsingMPI==false)
+    return;
+
   if(::usingMPI){
     if(circumstances == Abort){
       int errorcode = 1;
@@ -285,6 +290,9 @@ Parallel::finalizeManager(Circumstances circumstances)
     delete rootContext;
     rootContext=0;
   }
+
+  //MPI can no longer be used
+  determinedIfUsingMPI=false;
 }
 
 ProcessorGroup*
