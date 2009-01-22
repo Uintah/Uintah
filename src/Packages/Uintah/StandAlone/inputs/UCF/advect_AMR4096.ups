@@ -204,8 +204,6 @@
         <max_levels>3</max_levels>
         <cell_refinement_ratio>    [[4,4,4]]   </cell_refinement_ratio>
         <cell_stability_dilation>   [1,1,1]    </cell_stability_dilation>   
-        <cell_deletion_dilation>   [1,1,1]     </cell_deletion_dilation>   
-        <min_boundary_cells>       [1,1,1]     </min_boundary_cells>
  
 
         <type>BNR</type>
