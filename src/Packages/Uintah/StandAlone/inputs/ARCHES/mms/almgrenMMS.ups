@@ -17,7 +17,7 @@
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
-    <timestep_multiplier>0.1</timestep_multiplier>
+    <timestep_multiplier>0.000001</timestep_multiplier>
   </Time>
 
   <DataArchiver>
@@ -26,21 +26,19 @@
 
     <save label = "totalKineticEnergy"/>
     <save label = "totalummsLnError"/>
+    <save label = "totalvmmsLnError"/>
     <save label = "totalummsExactSol"/>
+    <save label = "totalvmmsExactSol"/>
     <save label = "pressurePS"/>
     <save label = "scalarSP"/>
     <save label = "newCCUVelocity"/>  
     <save label = "newCCVVelocity"/>  
-    <save label = "newCCWVelocity"/>  
     <save label = "uVelocitySPBC"/>
     <save label = "vVelocitySPBC"/>
-    <save label = "wVelocitySPBC"/>
-    <save label = "densityCP"/>
-    <save label = "viscosityCTS"/>
     <save label = "continuityResidual"/>
     <save label = "velocityDivergence"/>
     <save label = "ummsLnError"/>
-    <!--save label = "test1"/-->
+    <save label = "vmmsLnError"/>
     <checkpoint cycle = "2" interval = "0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -65,7 +63,7 @@
       <doMMS>true</doMMS>
       <MMS>
         <whichMMS>almgrenMMS</whichMMS>
-        <mmsErrorType>Linf</mmsErrorType>
+        <mmsErrorType>L</mmsErrorType>
         <almgrenMMS>
           <!--Note: This viscosity needs to be set twice for now, both here
                     and in the PhysicalConstant section. -->
