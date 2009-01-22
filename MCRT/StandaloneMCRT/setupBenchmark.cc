@@ -1,8 +1,24 @@
    
-  //  ************************ benchmark case **********************
-  
+#include <math.h>
+#include <stdlib.h>
+
+//  ************************ benchmark case **********************
+
+void
+setupBenchmark( int Ncx, int Ncy, int Ncz, // number of cells in x, y, z directions
+                double * T_Vol, 
+                double * X, double * Y, double * Z,
+                double * kl_Vol, double * a_Vol, double * scatter_Vol,
+                int TopBottomNo, int FrontBackNo, int LeftRightNo,
+                double * a_top_surface,     double * a_bottom_surface, double * a_front_surface, double * a_back_surface, double * a_left_surface, double * a_right_surface,
+                double * rs_top_surface,    double * rs_bottom_surface, double * rs_front_surface, double * rs_back_surface, double * rs_left_surface, double * rs_right_surface,
+                double * rd_top_surface,    double * rd_bottom_surface, double * rd_front_surface, double * rd_back_surface, double * rd_left_surface, double * rd_right_surface,
+                double * alpha_top_surface, double * alpha_bottom_surface, double * alpha_front_surface, double * alpha_back_surface, double * alpha_left_surface, double * alpha_right_surface,
+                double * emiss_top_surface, double * emiss_bottom_surface, double * emiss_front_surface, double * emiss_back_surface, double * emiss_left_surface, double * emiss_right_surface,
+                double * T_top_surface,     double * T_bottom_surface, double * T_front_surface, double * T_back_surface, double * T_left_surface, double * T_right_surface)
+{
   // benchmark case
-    int fakeIndex = 0;
+  int fakeIndex = 0;
   double xx, yy, zz;
   for ( int k = 0; k < Ncz; k ++ ){
     for ( int j = 0; j < Ncy; j ++) {
@@ -13,9 +29,9 @@
 	yy = (Y[j] + Y[j+1])/2;
 	zz = (Z[k] + Z[k+1])/2;
 
-	kl_Vol[fakeIndex] = 0.9 * ( 1 - 2 * abs ( xx ) )
-	  * ( 1 - 2 * abs ( yy ) )
-	  * ( 1 - 2 * abs ( zz ) ) + 0.1;
+	kl_Vol[fakeIndex] = 0.9 * ( 1 - 2 * fabs ( xx ) )
+	  * ( 1 - 2 * fabs ( yy ) )
+	  * ( 1 - 2 * fabs ( zz ) ) + 0.1;
 	
 	a_Vol[fakeIndex] = 1;
 	scatter_Vol[fakeIndex] = 0;
@@ -96,5 +112,7 @@
         
     
   }
-  // *************************** end of benchmark case **********************   
+} // end setupBenchmark()
+
+
   

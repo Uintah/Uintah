@@ -31,7 +31,6 @@ ray::ray(const int &_VolElementNo,
 }
 
 ray::~ray(){
-  // delete obReal; // How to delete an object?? Is this right? 
 }
 
 
@@ -184,10 +183,11 @@ double ray::get_zemiss(){
 
 
 
-double ray::surfaceIntersect(const double *X,
-			     const double *Y,
-			     const double *Z,
-			     const int *VolFeature){
+bool
+ray::surfaceIntersect( const double *X,
+                       const double *Y,
+                       const double *Z,
+                       const int *VolFeature ) {
 
   // s[0] = sin(theta) cos(phi)
   // s[1] = sin(theta) sin(phi)
@@ -265,7 +265,7 @@ double ray::surfaceIntersect(const double *X,
 //       cout << "hitSurfaceiIndex = " << hitSurfaceiIndex << endl;
 //       cout << "hitSurfacejIndex = " << hitSurfacejIndex << endl;
 //       cout << "hitSurfacekIndex = " << hitSurfacekIndex << endl;
-      return 0;
+      return true;
 
     } // if hit
     
@@ -324,7 +324,7 @@ double ray::surfaceIntersect(const double *X,
 //       cout << "hitSurfaceiIndex = " << hitSurfaceiIndex << endl;
 //       cout << "hitSurfacejIndex = " << hitSurfacejIndex << endl;
 //       cout << "hitSurfacekIndex = " << hitSurfacekIndex << endl;      
-      return 0;
+      return true;
 
     } // if hit
     
@@ -385,7 +385,7 @@ double ray::surfaceIntersect(const double *X,
 //       cout << "hitSurfaceiIndex = " << hitSurfaceiIndex << endl;
 //       cout << "hitSurfacejIndex = " << hitSurfacejIndex << endl;
 //       cout << "hitSurfacekIndex = " << hitSurfacekIndex << endl;      
-      return 0;
+      return true;
 
     } // if hit
     
@@ -445,7 +445,7 @@ double ray::surfaceIntersect(const double *X,
 //       cout << "hitSurfaceiIndex = " << hitSurfaceiIndex << endl;
 //       cout << "hitSurfacejIndex = " << hitSurfacejIndex << endl;
 //       cout << "hitSurfacekIndex = " << hitSurfacekIndex << endl;      
-      return 0;
+      return true;
 
     } // if hit
     
@@ -505,7 +505,7 @@ double ray::surfaceIntersect(const double *X,
  //      cout << "hitSurfaceiIndex = " << hitSurfaceiIndex << endl;
 //       cout << "hitSurfacejIndex = " << hitSurfacejIndex << endl;
 //       cout << "hitSurfacekIndex = " << hitSurfacekIndex << endl;      
-      return 0;
+      return true;
 
     } // if hit
     
@@ -566,7 +566,7 @@ double ray::surfaceIntersect(const double *X,
 //       cout << "hitSurfaceiIndex = " << hitSurfaceiIndex << endl;
 //       cout << "hitSurfacejIndex = " << hitSurfacejIndex << endl;
 //       cout << "hitSurfacekIndex = " << hitSurfacekIndex << endl;      
-      return 0;
+      return true;
 
     } // if hit
     
@@ -575,9 +575,9 @@ double ray::surfaceIntersect(const double *X,
 
 
   cerr << " No surfaces hit!" << endl;
-  return 1; // return 1 if no surfaces hit, error
+  return false; // no surface hit
   
-}
+} // end surfaceIntersect()
 
 
 
@@ -605,9 +605,9 @@ void ray::TravelInMediumInten(const double *kl_Vol,
 			      double &PathSurfaceLeft) {
   
 
-  if ( surfaceIntersect(X, Y, Z, VolFeature) ) {
-    cout << " didnot find the intersection surface" << endl;
-    exit(1); // terminate the program
+  if ( !surfaceIntersect(X, Y, Z, VolFeature) ) {
+    cout << "Error: did not find the intersection surface.\n";
+    exit(1);
   }
 
   length = ray_length();
@@ -670,12 +670,11 @@ void ray::TravelInMediumInten(const double *kl_Vol,
       obVirtual.get_s(rng, sIncoming, directionVector);
       
       // update on xhit, yhit, zhit, and ray_length
-      if (!surfaceIntersect(X, Y, Z, VolFeature)) {
+      if( surfaceIntersect(X, Y, Z, VolFeature) ) {
 	length = ray_length();
       }
       else {
-	cerr << " error @ not getting hit point coordinates after scattering! "
-	     << endl;
+	cerr << " error @ not getting hit point coordinates after scattering!\n";
 	exit(1); // terminate program
       }
 

@@ -81,8 +81,22 @@ double MeshSize(int &Nchalf, double &Lhalf, double &ratio){
   return dcenter;
 }
 
+extern void
+setupBenchmark( int Ncx, int Ncy, int Ncz, // number of cells in x, y, z directions
+                double * T_Vol, 
+                double * X, double * Y, double * Z,
+                double * kl_Vol, double * a_Vol, double * scatter_Vol,
+                int TopBottomNo, int FrontBackNo, int LeftRightNo,
+                double * a_top_surface,     double * a_bottom_surface, double * a_front_surface, double * a_back_surface, double * a_left_surface, double * a_right_surface,
+                double * rs_top_surface,    double * rs_bottom_surface, double * rs_front_surface, double * rs_back_surface, double * rs_left_surface, double * rs_right_surface,
+                double * rd_top_surface,    double * rd_bottom_surface, double * rd_front_surface, double * rd_back_surface, double * rd_left_surface, double * rd_right_surface,
+                double * alpha_top_surface, double * alpha_bottom_surface, double * alpha_front_surface, double * alpha_back_surface, double * alpha_left_surface, double * alpha_right_surface,
+                double * emiss_top_surface, double * emiss_bottom_surface, double * emiss_front_surface, double * emiss_back_surface, double * emiss_left_surface, double * emiss_right_surface,
+                double * T_top_surface,     double * T_bottom_surface, double * T_front_surface, double * T_back_surface, double * T_left_surface, double * T_right_surface);
 
-int main(int argc, char *argv[]){
+
+int
+main(int argc, char *argv[]){
 
   
 //   int my_rank; // rank of process
@@ -616,7 +630,18 @@ int main(int argc, char *argv[]){
      }
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-   #include "inputBenchmark.cc"
+   setupBenchmark( Ncx, Ncy, Ncz, // number of cells in x, y, z directions
+                   T_Vol, 
+                   X,  Y,  Z,
+                   kl_Vol,  a_Vol,  scatter_Vol,
+                   TopBottomNo, FrontBackNo, LeftRightNo,
+                   a_top_surface,      a_bottom_surface,  a_front_surface,  a_back_surface,  a_left_surface,  a_right_surface,
+                   rs_top_surface,     rs_bottom_surface,  rs_front_surface,  rs_back_surface,  rs_left_surface,  rs_right_surface,
+                   rd_top_surface,     rd_bottom_surface,  rd_front_surface,  rd_back_surface,  rd_left_surface,  rd_right_surface,
+                   alpha_top_surface,  alpha_bottom_surface,  alpha_front_surface,  alpha_back_surface,  alpha_left_surface,  alpha_right_surface,
+                   emiss_top_surface,  emiss_bottom_surface,  emiss_front_surface,  emiss_back_surface,  emiss_left_surface,  emiss_right_surface,
+                   T_top_surface,      T_bottom_surface,  T_front_surface,  T_back_surface,  T_left_surface,  T_right_surface);
+
    // #include "inputBenchmarkSurf.cc"
    // #include "inputNonblackSurf.cc"
    // #include "inputScattering.cc"   
@@ -632,7 +657,8 @@ int main(int argc, char *argv[]){
 
    IntenFrac = 1e-10; //1e-20; // the percentage of Intensity left
    
-   srand48 ( time ( NULL )); // for drand48()
+   //   srand48 ( time ( NULL )); // Set the random number seed for drand48
+   srand48 ( 12345 ); // for drand48()
    
 
    ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
