@@ -844,7 +844,7 @@ exit_handler()
   if( exiting || self == NULL ) {
     return;
   }
-  Thread_shutdown( Thread::self() );
+  Thread_shutdown( self );
 }
 
 
