@@ -1,47 +1,18 @@
-CXX =  g++ -g
-CXX_OBJS = RMCRT.o RNG.o Surface.o RealSurface.o TopRealSurface.o BottomRealSurface.o FrontRealSurface.o BackRealSurface.o LeftRealSurface.o RightRealSurface.o VirtualSurface.o ray.o VolElement.o MakeTableFunction.o
 
-NoTableMCRT:		$(CXX_OBJS) 
-		        $(CXX) $(CXX_OBJS) -o NoTableMCRT
+CXX = g++
+# CFLAGS = -g
+CFLAGS = -pg -O3
 
-RMCRT.o:		RMCRT.cc
-			$(CXX) -c RMCRT.cc
+CXX_OBJS = RMCRT.o RNG.o Surface.o RealSurface.o TopRealSurface.o BottomRealSurface.o \
+	   FrontRealSurface.o BackRealSurface.o LeftRealSurface.o RightRealSurface.o \
+	   VirtualSurface.o ray.o VolElement.o MakeTableFunction.o \
+	   setupBenchmark.o
 
-RNG.o:		RNG.cc
-		$(CXX) -c RNG.cc
+NoTableMCRT : $(CXX_OBJS) 
+	$(CXX) $(CFLAGS) $(CXX_OBJS) -o NoTableMCRT
 
-Surface.o:	Surface.cc
-		$(CXX) -c Surface.cc
+.cc.o:
+	$(CXX) $(CFLAGS) -c $< -o $@
 
-RealSurface.o:	RealSurface.cc
-		$(CXX) -c RealSurface.cc
-
-TopRealSurface.o:	TopRealSurface.cc
-			$(CXX) -c TopRealSurface.cc
-
-BottomRealSurface.o:	BottomRealSurface.cc
-			$(CXX) -c BottomRealSurface.cc
-
-FrontRealSurface.o:	FrontRealSurface.cc
-			$(CXX) -c FrontRealSurface.cc
-
-BackRealSurface.o:	BackRealSurface.cc
-			$(CXX) -c BackRealSurface.cc
-
-LeftRealSurface.o:	LeftRealSurface.cc
-			$(CXX) -c LeftRealSurface.cc
-
-RightRealSurface.o:	RightRealSurface.cc
-			$(CXX) -c RightRealSurface.cc
-
-VirtualSurface.o:	VirtualSurface.cc
-			$(CXX) -c VirtualSurface.cc
-
-ray.o:			ray.cc
-			$(CXX) -c ray.cc
-
-VolElement.o:		VolElement.cc
-			$(CXX) -c VolElement.cc
-
-MakeTableFunction.o:	MakeTableFunction.cc
-			$(CXX) -c MakeTableFunction.cc
+clean:
+	rm -f *.o NoTableMCRT gmon.out

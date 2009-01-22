@@ -52,11 +52,11 @@ public:
   void update_emissP();
 
   // checking which surfaces the ray get intersection in
-  double surfaceIntersect(const double *X,
-			  const double *Y,
-			  const double *Z,
-			  const int *VolFeature);
-			  
+  // Returns true if a surface was hit.
+  bool surfaceIntersect( const double *X,
+                         const double *Y,
+                         const double *Z,
+                         const int *VolFeature );
  
   void get_directionS(double *s);
   double ray_length();
