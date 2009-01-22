@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
   bool thrownException = false;
   
-  Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
 
   string new_uda_dir;
   try {
