@@ -420,6 +420,8 @@
     <maximum_particle_velocity spec="OPTIONAL DOUBLE 'positive'"/>
     <artificial_damping_coeff  spec="OPTIONAL DOUBLE 'positive'"/>
     <artificial_viscosity      spec="OPTIONAL BOOLEAN" />
+    <artificial_viscosity_coeff1    spec="OPTIONAL DOUBLE" />
+    <artificial_viscosity_coeff2    spec="OPTIONAL DOUBLE" />
     <accumulate_strain_energy  spec="OPTIONAL BOOLEAN" />
     <use_load_curves           spec="OPTIONAL BOOLEAN" />
     <axisymmetric              spec="OPTIONAL BOOLEAN" />
