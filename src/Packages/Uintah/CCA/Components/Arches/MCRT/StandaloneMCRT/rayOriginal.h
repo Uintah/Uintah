@@ -45,7 +45,10 @@ public:
 		     
   
   void set_emissS_vol(double *sVol);
-  
+    double disMin, disX, disY, disZ;
+  double xx[2], yy[2], zz[2];
+  double sign[3], inv_directionVector[3];
+
   // Travelling Ray's Emission Point
    // set hit point as next emission point,
   // and set hit point surface as new emission point surface
@@ -124,11 +127,6 @@ private:
   double directionVector[3];
   double length;
   int surfaceFlag;
-
-  double disMin, disX, disY, disZ;
-  double xx[2], yy[2], zz[2];
-  double sign[3], inv_directionVector[3];
- 
 };
 
 #endif
