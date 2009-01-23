@@ -23,7 +23,7 @@
 
 use XML::Simple;
 use Data::Dumper;
-$xml = new XML::Simple(forcearray => 1);
+$xml = new XML::Simple(forcearray => 1, suppressempty => "");
 $tstFile = $ARGV[0];
 $testNum = $ARGV[1];
 
