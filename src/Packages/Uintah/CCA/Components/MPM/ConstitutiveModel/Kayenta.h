@@ -10,7 +10,6 @@
 #ifndef __KAYENTA_H__
 #define __KAYENTA_H__
 
-
 #include <cmath>
 #include "ConstitutiveModel.h"	
 #include <Packages/Uintah/Core/Math/Matrix3.h>
@@ -26,6 +25,10 @@ namespace Uintah {
       double G;
       double K;
     };
+    vector<string> ISVNames;
+    vector<const VarLabel*> ISVLabels;
+    vector<const VarLabel*> ISVLabels_preReloc;
+    int d_NINSV;
 
   private:
     friend const TypeDescription* fun_getTypeDescription(CMData*);
@@ -34,6 +37,10 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
     Kayenta& operator=(const Kayenta &cm);
+
+    void getInputParameters(ProblemSpecP& ps);
+
+    void initializeLocalMPMLabels();
 
   public:
     // constructors
