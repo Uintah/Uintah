@@ -23,6 +23,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
 // The following functions are found in fortran/*.F
@@ -56,59 +57,16 @@ using namespace SCIRun;
 Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
-  ps->require("B0",UI[0]);              // initial bulk modulus (stress)
-  ps->getWithDefault("B1",UI[1],0.0);   // nonlinear bulk mod param (stress)
-  ps->getWithDefault("B2",UI[2],0.0);   // nonlinear bulk mod param (stress)
-  ps->getWithDefault("B3",UI[3],0.0);   // nonlinear bulk mod param (stress)
-  ps->getWithDefault("B4",UI[4],0.0);   // nonlinear bulk mod param (dim. less)
+  // Read model parameters from the input file
+  getInputParameters(ps);
 
-  ps->require("G0",UI[5]);              // initial shear modulus (stress)
-  ps->getWithDefault("G1",UI[6],0.0);   // nonlinear shear mod param (dim. less)
-  ps->getWithDefault("G2",UI[7],0.0);   // nonlinear shear mod param (1/stress)
-  ps->getWithDefault("G3",UI[8],0.0);   // nonlinear shear mod param (stress)
-  ps->getWithDefault("G4",UI[9],0.0);   // nonlinear shear mod param (dim. less)
-
-  ps->getWithDefault("RJS",UI[10],0.0); // joint spacing (iso. joint set) 
-                                        // (length)
-  ps->getWithDefault("RKS",UI[11],0.0); // joint shear stiffness (iso. case)                                            // (stress/length)
-  ps->getWithDefault("RKN",UI[12],0.0); // joint normal stiffness (iso. case) 
-                                        // (stress/length)
-
-  ps->getWithDefault("A1",UI[13],0.0);  // meridional yld prof param (stress)
-  ps->getWithDefault("A2",UI[14],0.0);  // meridional yld prof param (1/stress)
-  ps->getWithDefault("A3",UI[15],0.0);  // meridional yld prof param (stress)
-  ps->getWithDefault("A4",UI[16],0.0);  // meridional yld prof param (dim. less)
-
-  ps->getWithDefault("P0",UI[17],0.0);  // init hydrostatic crush press (stress)
-  ps->getWithDefault("P1",UI[18],0.0);  // crush curve parameter (1/stress)
-  ps->getWithDefault("P2",UI[19],0.0);  // crush curve parameter (1/stress^2)
-  ps->getWithDefault("P3",UI[20],0.0);  // crush curve parameter (strain)
-
-  ps->getWithDefault("CR",UI[21],0.0);  // cap curvature parameter (dim. less)
-  ps->getWithDefault("RK",UI[22],0.0);  // TXE/TXC strength ratio (dim. less)
-  ps->getWithDefault("RN",UI[23],0.0);  // TXE/TXC strength ratio (stress)
-  ps->getWithDefault("HC",UI[24],0.0);  // kinematic hardening modulus (stress)
-
-  ps->getWithDefault("CTI1",UI[25],0.0);// Tension I1 cut-off (stress)
-  ps->getWithDefault("CTPS",UI[26],0.0);// Tension prin. stress cut-off (stress)
-
-  ps->getWithDefault("T1",UI[27],0.0);  // rate dep. primary relax. time (time)
-  ps->getWithDefault("T2",UI[28],0.0);  // rate dep. nonlinear param (1/time)
-  ps->getWithDefault("T3",UI[29],0.0);  // rate dep. nonlinear param (dim. less)
-  ps->getWithDefault("T4",UI[30],0.0);  // not used (1/time)
-  ps->getWithDefault("T5",UI[31],0.0);  // not used (stress)
-  ps->getWithDefault("T6",UI[32],0.0);  // rate dep. nonlinear param (time)
-  ps->getWithDefault("T7",UI[33],0.0);  // rate dep. nonlinear param (1/stress)
-
-  ps->getWithDefault("J3TYPE",UI[34],0.0);// octahedral profile shape option
-                                          // (dim. less)
-  ps->getWithDefault("A2PF",UI[35],0.0);// flow potential analog of A2
-  ps->getWithDefault("A4PF",UI[36],0.0);// flow potential analog of A4
-  ps->getWithDefault("CRPF",UI[37],0.0);// flow potential analog of CR
-  ps->getWithDefault("RKPF",UI[38],0.0);// flow potential analog of RK
-  ps->getWithDefault("SUBX",UI[39],0.0);// subcycle control exponent (dim. less)
-
+  // Check that model parameters are valid and allow model to change if needed
   GEOCHK(UI,UI,UI);
+
+  //Create VarLabels for GeoModel internal state variables (ISVs)
+  d_NINSV=37;
+  initializeLocalMPMLabels();
+
 }
 
 Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
@@ -227,6 +185,10 @@ void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
                                std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
+  for(int i=1;i<=d_NINSV;i++){
+    from.push_back(ISVLabels[i]);
+    to.push_back(ISVLabels_preReloc[i]);
+  }
 }
 
 void Kayenta::computeStableTimestep(const Patch* patch,
@@ -248,8 +210,8 @@ void Kayenta::computeStableTimestep(const Patch* patch,
   double c_dil = 0.0;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
-  double G = d_initialData.G;
-  double bulk = d_initialData.K;
+  double bulk = UI[0];
+  double G = UI[5];
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      particleIndex idx = *iter;
 
@@ -543,4 +505,111 @@ void Kayenta::computePressEOSCM(double rho_cur, double& pressure,
 double Kayenta::getCompressibility()
 {
   return 1.0/d_initialData.K;
+}
+
+void
+Kayenta::getInputParameters(ProblemSpecP& ps)
+{
+  ps->require("B0",UI[0]);              // initial bulk modulus (stress)
+  ps->getWithDefault("B1",UI[1],0.0);   // nonlinear bulk mod param (stress)
+  ps->getWithDefault("B2",UI[2],0.0);   // nonlinear bulk mod param (stress)
+  ps->getWithDefault("B3",UI[3],0.0);   // nonlinear bulk mod param (stress)
+  ps->getWithDefault("B4",UI[4],0.0);   // nonlinear bulk mod param (dim. less)
+
+  ps->require("G0",UI[5]);              // initial shear modulus (stress)
+  ps->getWithDefault("G1",UI[6],0.0);   // nonlinear shear mod param (dim. less)
+  ps->getWithDefault("G2",UI[7],0.0);   // nonlinear shear mod param (1/stress)
+  ps->getWithDefault("G3",UI[8],0.0);   // nonlinear shear mod param (stress)
+  ps->getWithDefault("G4",UI[9],0.0);   // nonlinear shear mod param (dim. less)
+
+  ps->getWithDefault("RJS",UI[10],0.0); // joint spacing (iso. joint set) 
+                                        // (length)
+  ps->getWithDefault("RKS",UI[11],0.0); // joint shear stiffness (iso. case)                                            // (stress/length)
+  ps->getWithDefault("RKN",UI[12],0.0); // joint normal stiffness (iso. case) 
+                                        // (stress/length)
+
+  ps->getWithDefault("A1",UI[13],0.0);  // meridional yld prof param (stress)
+  ps->getWithDefault("A2",UI[14],0.0);  // meridional yld prof param (1/stress)
+  ps->getWithDefault("A3",UI[15],0.0);  // meridional yld prof param (stress)
+  ps->getWithDefault("A4",UI[16],0.0);  // meridional yld prof param (dim. less)
+
+  ps->getWithDefault("P0",UI[17],0.0);  // init hydrostatic crush press (stress)
+  ps->getWithDefault("P1",UI[18],0.0);  // crush curve parameter (1/stress)
+  ps->getWithDefault("P2",UI[19],0.0);  // crush curve parameter (1/stress^2)
+  ps->getWithDefault("P3",UI[20],0.0);  // crush curve parameter (strain)
+
+  ps->getWithDefault("CR",UI[21],0.0);  // cap curvature parameter (dim. less)
+  ps->getWithDefault("RK",UI[22],0.0);  // TXE/TXC strength ratio (dim. less)
+  ps->getWithDefault("RN",UI[23],0.0);  // TXE/TXC strength ratio (stress)
+  ps->getWithDefault("HC",UI[24],0.0);  // kinematic hardening modulus (stress)
+
+  ps->getWithDefault("CTI1",UI[25],0.0);// Tension I1 cut-off (stress)
+  ps->getWithDefault("CTPS",UI[26],0.0);// Tension prin. stress cut-off (stress)
+
+  ps->getWithDefault("T1",UI[27],0.0);  // rate dep. primary relax. time (time)
+  ps->getWithDefault("T2",UI[28],0.0);  // rate dep. nonlinear param (1/time)
+  ps->getWithDefault("T3",UI[29],0.0);  // rate dep. nonlinear param (dim. less)
+  ps->getWithDefault("T4",UI[30],0.0);  // not used (1/time)
+  ps->getWithDefault("T5",UI[31],0.0);  // not used (stress)
+  ps->getWithDefault("T6",UI[32],0.0);  // rate dep. nonlinear param (time)
+  ps->getWithDefault("T7",UI[33],0.0);  // rate dep. nonlinear param (1/stress)
+
+  ps->getWithDefault("J3TYPE",UI[34],0.0);// octahedral profile shape option
+                                          // (dim. less)
+  ps->getWithDefault("A2PF",UI[35],0.0);// flow potential analog of A2
+  ps->getWithDefault("A4PF",UI[36],0.0);// flow potential analog of A4
+  ps->getWithDefault("CRPF",UI[37],0.0);// flow potential analog of CR
+  ps->getWithDefault("RKPF",UI[38],0.0);// flow potential analog of RK
+  ps->getWithDefault("SUBX",UI[39],0.0);// subcycle control exponent (dim. less)
+
+}
+
+void
+Kayenta::initializeLocalMPMLabels()
+{
+  ISVNames.resize(d_NINSV);
+  
+  ISVNames[1] ="KAPPA";
+  ISVNames[2] ="INDEX";
+  ISVNames[3] ="EQDOT";
+  ISVNames[4] ="I1";
+  ISVNames[5] ="ROOTJ2";
+  ISVNames[6] ="ALXX";
+  ISVNames[7] ="ALYY";
+  ISVNames[8] ="ALZZ";
+  ISVNames[9] ="ALXY";
+  ISVNames[10]="ALYZ";
+  ISVNames[11]="ALXZ";
+  ISVNames[12]="GFUN";
+  ISVNames[13]="EQPS";
+  ISVNames[14]="EQPV";
+  ISVNames[15]="EL0";
+  ISVNames[16]="HK";
+  ISVNames[17]="EVOL";
+  ISVNames[18]="BACKRN";
+  ISVNames[19]="CRACK";
+  ISVNames[20]="SHEAR";
+  ISVNames[21]="YIELD";
+  ISVNames[22]="LODE";
+  ISVNames[23]="QSSIGXX";
+  ISVNames[24]="QSSIGYY";
+  ISVNames[25]="QSSIGZZ";
+  ISVNames[26]="QSSIGXY";
+  ISVNames[27]="QSSIGYZ";
+  ISVNames[28]="QSSIGXZ";
+  ISVNames[29]="DSCP";
+  ISVNames[30]="QSEL";
+  ISVNames[31]="QSBSXX";
+  ISVNames[32]="QSBSYY";
+  ISVNames[33]="QSBSZZ";
+  ISVNames[34]="QSBSXY";
+  ISVNames[35]="QSBSYZ";
+  ISVNames[36]="QSBSXZ";
+
+  for(int i=1;i<=d_NINSV;i++){
+    ISVLabels.push_back(VarLabel::create(ISVNames[i],
+                          ParticleVariable<double>::getTypeDescription()));
+    ISVLabels_preReloc.push_back(VarLabel::create(ISVNames[i]+"+",
+                          ParticleVariable<double>::getTypeDescription()));
+  }
 }
