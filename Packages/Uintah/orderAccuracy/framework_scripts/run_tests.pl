@@ -33,7 +33,7 @@ use XML::Simple;
 use Data::Dumper;
 use Cwd;
 # create object
-$xml = new XML::Simple(forcearray => 1);
+$xml = new XML::Simple(forcearray => 1, suppressempty => "");
 $tstFile           = $ARGV[0];
 $config_files_path = $ARGV[1];
 
@@ -62,15 +62,21 @@ foreach $e (@{$data->{Test}}){
   $test_title[$i]     =$e->{Title}->[0];          # test title
   $sus_cmd[$i]        =$e->{sus_cmd}->[0];        # sus command
   $compUtil_cmd[$i]   =$e->{compare_cmd}->[0];    # comparison utility command
+  
+  #print Dumper($e->{compare_cmd}->[0]);         debugging
   $i++;     
 }
 $num_of_tests=$i;
 
 #__________________________________
-# make a symbolic link to the compareUtil
-my @stripped_cmd = split(/ /,$compUtil_cmd[0]);  # remove command options
-my $cmd = `which $stripped_cmd[0]`;
-system("ln -s $cmd");
+# make a symbolic link to the compareUtils
+for ($i=0;$i<$num_of_tests;$i++){
+   if( $compUtil_cmd[$i] ne ''){
+    my @stripped_cmd = split(/ /,$compUtil_cmd[$i]);  # remove command options
+    my $cmd = `which $stripped_cmd[0]`;
+    system("ln -fs $cmd");
+  }
+}
 
 #__________________________________
 # Read in all of the replacement patterns 
@@ -191,7 +197,7 @@ for ($i=0;$i<$num_of_tests;$i++){
 
   #__________________________________
   # execute comparison
-  if($compUtil_cmd[$i]){
+  if($compUtil_cmd[$i] ne ''){
     print "\nLaunching: analyze_results.pl $tstFile test $i\n";
     @args = ("analyze_results.pl","$tstFile", "$i");
     system("@args")==0 or die("ERROR(run_tests.pl): \t\tFailed running: (@args)\n");

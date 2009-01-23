@@ -41,7 +41,7 @@ use XML::Simple;
 use Data::Dumper;
 use Cwd;
 
-my $simple = XML::Simple->new(ForceArray=>1);
+my $simple = XML::Simple->new(ForceArray=>1, suppressempty => "");
 
 if( $#ARGV == -1){
   print "\n\nmasterScript.pl <path to orderAccuracy directory> \n";
