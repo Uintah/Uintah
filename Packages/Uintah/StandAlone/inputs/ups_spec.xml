@@ -389,10 +389,34 @@
       <Refinement_Criteria_Thresholds   spec="OPTIONAL NO_DATA" /> 
     </ICE>
     <Regridder                          spec="OPTIONAL NO_DATA" >
-      <max_levels                       spec="REQUIRED INTEGER 'POSITIVE'" />
+      <!--Generic Required Regridder Options --> 
+      <max_levels                       spec="REQUIRED INTEGER 'positive'" />
       <cell_refinement_ratio            spec="REQUIRED STRING" />
-      <lattice_refinement_ratio         spec="REQUIRED STRING" />
-      <cell_stability_dilation          spec="REQUIRED VECTOR" />
+      <type                             spec="REQUIRED STRING 'BNR, Hierarchical'" />   
+      
+      <!--Generic Optional Regridder Options --> 
+      <min_timestep_interval            spec="OPTIONAL INTEGER" />   
+      <max_timestep_interval            spec="OPTIONAL INTEGER" />   
+      <dynamic_dilation                 spec="OPTIONAL BOOLEAN" />   
+      <amr_overhead_low                 spec="OPTIONAL DOUBLE '0,1'" />   
+      <amr_overhead_high                spec="OPTIONAL DOUBLE '0,1'" />   
+      <cell_stability_dilation          spec="OPTIONAL VECTOR" />
+      <cell_regrid_dilation             spec="OPTIONAL VECTOR" />
+      <dynamic_dilation                 spec="OPTIONAL BOOLEAN" />
+      <max_dilation                     spec="OPTIONAL BOOLEAN" />
+      <!-- no longer used
+      !-->
+
+      <!--Required BNR Regridder Options-->
+      <min_patch_size                   spec="OPTIONAL STRING" />
+      <!--Optional BNR Regridder Options-->
+      <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" />   
+      <patch_combine_tolerance          spec="OPTIONAL DOUBLE '0,1'" />   
+      <patch_ratio_to_target            spec="OPTIONAL DOUBLE '0,1'" />   
+      <patches_per_level_per_proc       spec="OPTIONAL DOUBLE '0,1'" />   
+
+      <!--Required Hierarchical Regridder-->
+      <lattice_refinement_ratio         spec="OPTIONAL STRING" />
     </Regridder>
   </AMR>
 
