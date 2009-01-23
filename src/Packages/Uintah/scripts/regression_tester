@@ -85,7 +85,6 @@ do_mpmice=0
 do_mpmice_amr=0
 do_models=0
 do_impm=0
-do_is=0
 do_smpm=0
 do_arches=0
 do_mpmarches=0
@@ -115,7 +114,6 @@ usage () {
     echo "  -mi            run the mpmice tests"
     echo "  -mpmice_amr    run the mpmice amr tests"
     echo "  -im            run the implicit mpm tests"
-    echo "  -is            run the integrated simulation tests"
     echo "  -dbg           use the dbg TestData"
     echo "  -opt           use the opt TestData"
     echo "  -nompi         do not use mpi"
@@ -143,7 +141,6 @@ for arg in $*; do
             do_models=1
             do_arches=1
             do_mpmarches=1
-            do_is=1
             do_examples=1;;
         -arches)
             echo "Scheduling the arches tests . . ."
@@ -185,11 +182,6 @@ for arg in $*; do
         -im)
             echo "Scheduling the implicit mpm tests . . ."
             do_impm=1
-            MPI_RUN="yes";;
-        -is)
-            echo "Scheduling the integrated simulation tests . . ."
-            do_is=1
-            MPI_OPTIONS="mpirun -np 8"
             MPI_RUN="yes";;
         -clean)
             echo "Removing *.out *.compare and *.uda files . . ."
@@ -233,14 +225,12 @@ ice_test_cases="advect rieman_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2
 ice_amr_test_cases="hotBlob_AMR advect2matAMR"
 mpmice_test_cases="massX guni2dRT SteadyBurn_2dRT TBurner_2dRT TRWnoz testConvertMPMICEAdd advect_2L_MI"
 mpmice_amr_test_cases="advect_2L_MI"
-mpmice_amr_test_cases_bad="advect_2L_MI explode2D_amr"
 model_test_cases="HePlume JP8_Radiation"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
 arches_test_cases="constantMMS almgrenMMS periodic methane_explicit_table methane8patch"
 mpmarches_test_cases="mpmpipe_test methaneFireWContainer"
 examples_test_cases="poisson1"
-is_test_cases="HTContainer_arches_mpmice"
 
 # Check if the applications sus and compare_uda are available
 
@@ -265,12 +255,7 @@ REMOVE () {
 }
 
 num_proc () {
-    out=`grep -m1 patches $in_file`
-    if [ $? -eq 0 ]; then
-        numproc=`echo $out | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
-    else
-        numproc=0
-    fi
+    numproc=`grep -m1 patches $in_file | tr -d "<patches>/[]" | awk '{split($0,patch,","); print patch[1]*patch[2]*patch[3]}'`
 #   echo "number of patches" $numproc
 }
 
@@ -312,18 +297,14 @@ run_test () {
     num_proc
     opts=""
   
-    if [ -z MPI_OPTIONS ]; then 
-        if test $numproc -gt 1; then
-            MPI="mpirun -np $numproc"
-            opts="$opts -mpi"
-        elif test $MPI_RUN == "yes"; then
-            MPI="mpirun -np $numproc"
-            opts="$opts -mpi"
-        else
-            MPI=""
-        fi
+    if test $numproc -gt 1; then
+        MPI="mpirun -np $numproc"
+        opts="$opts -mpi"
+    elif test $MPI_RUN == "yes"; then
+        MPI="mpirun -np $numproc"
+        opts="$opts -mpi"
     else
-        MPI=$MPI_OPTIONS
+        MPI=""
     fi
 
     mem_check
@@ -415,8 +396,9 @@ run_restart () {
 }
 
 input_file () {
+
    in_file=`find -L $1 -name "$2.ups"`
-   if [ -z in_file ]; then
+   if [ -z $in_file ]; then
        return 1
    else
        return 0
@@ -558,12 +540,6 @@ fi
 if test "$do_examples" -eq 1; then
     CASE=Examples
     run_case examples
-    rt_value=$?
-fi
-
-if test "$do_is" -eq 1; then
-    CASE=IS/ArchesHeatUpExplosion
-    run_case is
     rt_value=$?
 fi
 if test "$do_remove" -eq 1; then
