@@ -1,47 +1,48 @@
+SRCDIR = ../../src/Packages/Uintah/CCA/Components/Arches/MCRT/StandaloneMCRT/
 CXX =  g++ -g
 CXX_OBJS = RMCRTtemplatewithRR.o RNG.o Surface.o RealSurface.o TopRealSurface.o BottomRealSurface.o FrontRealSurface.o BackRealSurface.o LeftRealSurface.o RightRealSurface.o VirtualSurface.o ray.o VolElement.o MakeTableFunction.o
 
-RMCRTtemplateRR:	$(CXX_OBJS) 
+RMCRTtemplateRR:	$(CXX_OBJS)
 		        $(CXX) $(CXX_OBJS) -o RMCRTtemplateRR
 
-RMCRTtemplatewithRR.o:		RMCRTtemplatewithRR.cc
-				$(CXX) -c RMCRTtemplatewithRR.cc
+RMCRTtemplatewithRR.o:	$(SRCDIR)RMCRTtemplatewithRR.cc
+			$(CXX) -c $(SRCDIR)RMCRTtemplatewithRR.cc
 
-RNG.o:		RNG.cc
-		$(CXX) -c RNG.cc
+RNG.o:		$(SRCDIR)RNG.cc
+		$(CXX) -c $(SRCDIR)RNG.cc
 
-Surface.o:	Surface.cc
-		$(CXX) -c Surface.cc
+Surface.o:	$(SRCDIR)Surface.cc
+		$(CXX) -c $(SRCDIR)Surface.cc
 
-RealSurface.o:	RealSurface.cc
-		$(CXX) -c RealSurface.cc
+RealSurface.o:	$(SRCDIR)RealSurface.cc
+		$(CXX) -c $(SRCDIR)RealSurface.cc
 
-TopRealSurface.o:	TopRealSurface.cc
-			$(CXX) -c TopRealSurface.cc
+TopRealSurface.o:	$(SRCDIR)TopRealSurface.cc
+			$(CXX) -c $(SRCDIR)TopRealSurface.cc
 
-BottomRealSurface.o:	BottomRealSurface.cc
-			$(CXX) -c BottomRealSurface.cc
+BottomRealSurface.o:	$(SRCDIR)BottomRealSurface.cc
+			$(CXX) -c $(SRCDIR)BottomRealSurface.cc
 
-FrontRealSurface.o:	FrontRealSurface.cc
-			$(CXX) -c FrontRealSurface.cc
+FrontRealSurface.o:	$(SRCDIR)FrontRealSurface.cc
+			$(CXX) -c $(SRCDIR)FrontRealSurface.cc
 
-BackRealSurface.o:	BackRealSurface.cc
-			$(CXX) -c BackRealSurface.cc
+BackRealSurface.o:	$(SRCDIR)BackRealSurface.cc
+			$(CXX) -c $(SRCDIR)BackRealSurface.cc
 
-LeftRealSurface.o:	LeftRealSurface.cc
-			$(CXX) -c LeftRealSurface.cc
+LeftRealSurface.o:	$(SRCDIR)LeftRealSurface.cc
+			$(CXX) -c $(SRCDIR)LeftRealSurface.cc
 
-RightRealSurface.o:	RightRealSurface.cc
-			$(CXX) -c RightRealSurface.cc
+RightRealSurface.o:	$(SRCDIR)RightRealSurface.cc
+			$(CXX) -c $(SRCDIR)RightRealSurface.cc
 
-VirtualSurface.o:	VirtualSurface.cc
-			$(CXX) -c VirtualSurface.cc
+VirtualSurface.o:	$(SRCDIR)VirtualSurface.cc
+			$(CXX) -c $(SRCDIR)VirtualSurface.cc
 
-ray.o:			ray.cc
-			$(CXX) -c ray.cc
+ray.o:			$(SRCDIR)ray.cc
+			$(CXX) -c $(SRCDIR)ray.cc
 
-VolElement.o:		VolElement.cc
-			$(CXX) -c VolElement.cc
+VolElement.o:		$(SRCDIR)VolElement.cc
+			$(CXX) -c $(SRCDIR)VolElement.cc
 
-MakeTableFunction.o:	MakeTableFunction.cc
-			$(CXX) -c MakeTableFunction.cc
+MakeTableFunction.o:	$(SRCDIR)MakeTableFunction.cc
+			$(CXX) -c $(SRCDIR)MakeTableFunction.cc
