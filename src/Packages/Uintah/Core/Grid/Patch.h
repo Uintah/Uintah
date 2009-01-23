@@ -1294,24 +1294,22 @@ WARNING
        * including extra cells
        */
       inline bool containsPointInExtraCells(const Point& p) const {
-        IntVector l(getExtraNodeLowIndex__New());
-        IntVector h(getExtraNodeHighIndex__New());
-        Point lp = getNodePosition(l);
-        Point hp = getNodePosition(h);
-        return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
-          && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+        IntVector l(getExtraCellLowIndex__New());
+        IntVector h(getExtraCellHighIndex__New());
+        IntVector c=getLevel()->getCellIndex(p);          
+        return c.x() >= l.x() && c.y() >= l.y() && c.z() >= l.z()
+          && c.x() < h.x() && c.y() < h.y() && c.z() < h.z();
       }
       /**
        * Returns true if the point p is contained within the patch
        * excluding extra cells
        */
       inline bool containsPoint__New(const Point& p) const {
-        IntVector l(getNodeLowIndex__New());
-        IntVector h(getNodeHighIndex__New());
-        Point lp = getNodePosition(l);
-        Point hp = getNodePosition(h);
-        return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
-          && p.x() < hp.x() && p.y() < hp.y() && p.z() < hp.z();
+        IntVector l(getCellLowIndex__New());
+        IntVector h(getCellHighIndex__New());
+        IntVector c=getLevel()->getCellIndex(p);          
+        return c.x() >= l.x() && c.y() >= l.y() && c.z() >= l.z()
+          && c.x() < h.x() && c.y() < h.y() && c.z() < h.z();
       }
       //Above for Fracture *************************************************
 
@@ -2014,7 +2012,8 @@ WARNING
        */
       inline bool containsPoint(const Point& p) const {
         IntVector l(getNodeLowIndex());
-        IntVector h(getNodeHighIndex());
+        //subtract 1 because the plus face is not inclusive
+        IntVector h(getNodeHighIndex()-IntVector(1,1,1));
         Point lp = nodePosition(l);
         Point hp = nodePosition(h);
         return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
@@ -2027,7 +2026,8 @@ WARNING
        */
       inline bool containsPointInRealCells(const Point& p) const {
         IntVector l(getInteriorNodeLowIndex());
-        IntVector h(d_inHighIndex);
+        //subtract 1 because the plus face is not inclusive
+        IntVector h(d_inHighIndex-IntVector(1,1,1));
         Point lp = nodePosition(l);
         Point hp = nodePosition(h);
         return p.x() >= lp.x() && p.y() >= lp.y() && p.z() >= lp.z()
