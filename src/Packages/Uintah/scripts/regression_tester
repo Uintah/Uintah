@@ -321,6 +321,7 @@ run_test () {
         run_test_return=0
     else
         echo; echo "FAILURE running sus . . ."
+	cat $n.out
 #        cd ..
         continue
         run_test_return=1
@@ -357,6 +358,7 @@ compare_results () {
     else
         echo; echo "FAILURE running compare_uda . . ."
 #        cd ..
+	cat $n.compare
         return 1
     fi
 }
