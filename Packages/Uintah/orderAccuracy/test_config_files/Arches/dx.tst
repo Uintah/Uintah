@@ -13,6 +13,7 @@
     <Title>16</Title>
     <sus_cmd>mpirun -np 1 sus -arches </sus_cmd>
     <Study>Res.Study</Study>
+    <compare_cmd>arches_mms.m -pDir 1 </compare_cmd>
     <x>16</x>
     <replace_lines>
        <delt_init>   2.0e-5             </delt_init>
@@ -24,6 +25,7 @@
     <Title>32</Title>
     <sus_cmd>mpirun -np 1 sus -arches </sus_cmd>
     <Study>Res.Study</Study>
+    <compare_cmd>arches_mms.m -pDir 1 </compare_cmd>
     <x>32</x>
     <replace_lines>
       <delt_init>    1.0e-5             </delt_init>
@@ -35,6 +37,7 @@
     <Title>64</Title>
     <sus_cmd>mpirun -np 1 sus -arches </sus_cmd>
     <Study>Res.Study</Study>
+    <compare_cmd>arches_mms.m -pDir 1 </compare_cmd>
     <x>64</x>
     <replace_lines>
       <delt_init>    5.0e-6             </delt_init>
@@ -45,6 +48,7 @@
     <Title>128</Title>
     <sus_cmd>mpirun -np 1 sus -arches </sus_cmd>
     <Study>Res.Study</Study>
+    <compare_cmd>arches_mms.m -pDir 1 </compare_cmd>
     <x>128</x>
     <replace_lines>
       <delt_init>    2.5e-6             </delt_init>
@@ -56,6 +60,7 @@
     <Title>256</Title>
     <sus_cmd>mpirun -np 1 sus -arches </sus_cmd>
     <Study>Res.Study</Study>
+    <compare_cmd>arches_mms.m -pDir 1 </compare_cmd>
     <x>256</x>
     <replace_lines>
       <delt_init>    1.25e-6             </delt_init>
@@ -66,6 +71,7 @@
     <Title>512</Title>
     <sus_cmd>mpirun -np 1 sus -arches </sus_cmd>
     <Study>Res.Study</Study>
+    <compare_cmd>arches_mms.m -pDir 1 </compare_cmd>
     <x>512</x>
     <replace_lines>
       <delt_init>    6.25e-7             </delt_init>

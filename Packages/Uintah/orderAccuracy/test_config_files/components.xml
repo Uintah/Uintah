@@ -1,7 +1,7 @@
 <config>  
  <!-- spaces are not allowed in component names -->
- <!--<component>ICE</component>-->
- <component>Arches</component>
+ <component>ICE</component>
+ <!--<component>Arches</component>-->
  <!--<component>MPM</component> -->
  <!--<component>MPMICE</component>-->
  <sus_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone</sus_path>
