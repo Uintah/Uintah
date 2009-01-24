@@ -68,7 +68,7 @@ exact  = load(c1);
 
 last = min(ts,length(error(:,2)));
 
-LnError = error(:,2)/exact(:,2)
+LnError = sqrt(error(:,2))/sqrt(exact(:,2))
 
 % write LnError to a file
 nargv = length(output_file);
