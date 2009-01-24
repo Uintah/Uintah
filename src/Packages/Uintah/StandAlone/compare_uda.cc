@@ -36,7 +36,6 @@
 #include <algorithm>
 #include <iomanip>
 #include <cmath>
-
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
@@ -991,19 +990,20 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 // The same doesn't work if you used cells because nodes can go beyond
 // cells (when there is no neighbor on the greater side).
 void buildPatchMap(LevelP level, const string& filebase,
-                   Array3<const Patch*>& patchMap, double time)
+                   Array3<const Patch*>& patchMap, double time, Patch::VariableBasis basis)
 {
   const PatchSet* allPatches = level->allPatches();
   const PatchSubset* patches = allPatches->getUnion();
   if (patches->size() == 0)
     return;
 
-  IntVector low = patches->get(0)->getExtraNodeLowIndex__New();
-  IntVector high = patches->get(0)->getExtraNodeHighIndex__New();
+  IntVector bl=IntVector(0,0,0);
+  IntVector low = patches->get(0)->getExtraLowIndex(basis,bl);
+  IntVector high = patches->get(0)->getExtraHighIndex(basis,bl);
 
   for (int i = 1; i < patches->size(); i++) {
-    low = Min(low, patches->get(i)->getExtraNodeLowIndex__New());
-    high = Max(high, patches->get(i)->getExtraNodeHighIndex__New());
+    low = Min(low, patches->get(i)->getExtraLowIndex(basis,bl));
+    high = Max(high, patches->get(i)->getExtraHighIndex(basis,bl));
   }
   
   patchMap.resize(low, high);
@@ -1013,10 +1013,10 @@ void buildPatchMap(LevelP level, const string& filebase,
   for(iter = level->patchesBegin();
       iter != level->patchesEnd(); iter++) {
     const Patch* patch = *iter;
-    ASSERT(Min(patch->getExtraNodeLowIndex__New(), low) == low);
-    ASSERT(Max(patch->getExtraNodeHighIndex__New(), high) == high);
-    patchMap.rewindow(patch->getExtraNodeLowIndex__New(),
-                      patch->getExtraNodeHighIndex__New());
+    ASSERT(Min(patch->getExtraLowIndex(basis,bl), low) == low);
+    ASSERT(Max(patch->getExtraHighIndex(basis,bl), high) == high);
+    patchMap.rewindow(patch->getExtraLowIndex(basis,bl),
+                      patch->getExtraHighIndex(basis,bl));
     for (Array3<const Patch*>::iterator iter = patchMap.begin();
          iter != patchMap.end(); iter++) {
       if (*iter != 0) {
@@ -1033,8 +1033,8 @@ void buildPatchMap(LevelP level, const string& filebase,
         // they should have the same value.  However, since this patchMap is also used 
         // for cell centered variables give priority to the patch that has this index within 
         // its interior cell centered variables
-        IntVector in_low = patch->getCellLowIndex__New();
-        IntVector in_high = patch->getCellHighIndex__New();
+        IntVector in_low = patch->getLowIndex(basis);
+        IntVector in_high = patch->getHighIndex(basis);
         IntVector pos = iter.getIndex();
         if (pos.x() >= in_low.x() && pos.y() >= in_low.y() && pos.z() >= in_low.z() &&
             pos.x() < in_high.x() && pos.y() < in_high.y() && pos.z() < in_high.z()) {
@@ -1042,7 +1042,10 @@ void buildPatchMap(LevelP level, const string& filebase,
         }
       }
       else
+      {
+        IntVector pos = iter.getIndex();
         *iter = patch;
+      }
     }
   }
   patchMap.rewindow(low, high);
@@ -1452,6 +1455,8 @@ main(int argc, char** argv)
           continue;
         }
         
+        Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
+        
         for(int l=0;l<grid->numLevels();l++){
           LevelP level = grid->getLevel(l);
           LevelP level2 = grid2->getLevel(l);
@@ -1482,8 +1487,8 @@ main(int argc, char** argv)
           Array3<const Patch*> patchMap;
           Array3<const Patch*> patch2Map;
           
-          buildPatchMap(level, filebase1, patchMap, time1);
-          buildPatchMap(level2, filebase2, patch2Map, time2);
+          buildPatchMap(level, filebase1, patchMap, time1, basis);
+          buildPatchMap(level2, filebase2, patch2Map, time2, basis);
           
           for (Array3<const Patch*>::iterator nodePatchIter = patchMap.begin();
                nodePatchIter != patchMap.end(); nodePatchIter++) {
