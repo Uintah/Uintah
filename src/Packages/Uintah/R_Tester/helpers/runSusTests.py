@@ -438,10 +438,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   # set the command for sus, based on # of processors
   # the /usr/bin/time is to tell how long it took
   if np == 1:
-    command = "/usr/bin/time -p %s/sus" % (susdir)
+    command = "/usr/bin/time -p %s/sus -svnStat -svnDiff" % (susdir)
     mpimsg = ""
   else:
-    command = "/usr/bin/time -p %s %s %s/sus -mpi" % (MPIHEAD, int(np), susdir)
+    command = "/usr/bin/time -p %s %s %s/sus -svnStat -svnDiff -mpi" % (MPIHEAD, int(np), susdir)
     mpimsg = " (mpi %s proc)" % (int(np))
 
   time0 =time()  #timer
