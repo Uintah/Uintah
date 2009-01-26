@@ -94,6 +94,7 @@ PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/CCA/Components/Arches/fortran   \
         Packages/Uintah/CCA/Components/Arches/Mixing    \
+        Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT  \
         Packages/Uintah/CCA/Components/Arches/Radiation \
         Packages/Uintah/CCA/Components/Arches/TabProps  \
         Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
