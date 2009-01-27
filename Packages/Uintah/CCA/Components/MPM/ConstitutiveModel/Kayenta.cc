@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/Core/Math/Short27.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
+#include <Core/Containers/StaticArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
@@ -61,13 +62,13 @@ DEALINGS IN THE SOFTWARE.
 extern "C"{
 
 #if defined( FORTRAN_UNDERSCORE_END )
-#  define GEOCHK hookechk_
+#  define GEOCHK geochk_
 #  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geomaterial_calc_
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
-#  define GEOCHK hookechk_
+#  define GEOCHK geochk_
 #  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geomaterial_calc__
 #else // NONE
-#  define GEOCHK hookechk
+#  define GEOCHK geochk
 #  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geommaterial_calc_
 #endif
 
@@ -94,7 +95,7 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   GEOCHK(UI,UI,UI);
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
-  d_NINSV=37;
+  d_NINSV=36;
   initializeLocalMPMLabels();
 
 }
@@ -104,10 +105,17 @@ Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
   for(int i=0;i<40;i++){
     UI[i] = cm->UI[i];
   }
+
+  //Create VarLabels for GeoModel internal state variables (ISVs)
+  d_NINSV=36;
+  initializeLocalMPMLabels();
 }
 
 Kayenta::~Kayenta()
 {
+   for (unsigned int i = 0; i< ISVLabels.size();i++){
+     VarLabel::destroy(ISVLabels[i]);
+   }
 }
 
 void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -180,9 +188,20 @@ void Kayenta::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
 
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
+
+  for(int i=1;i<=d_NINSV;i++){
+    new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
+    ParticleSubset::iterator iter = pset->begin();
+    for(;iter != pset->end(); iter++){
+      ISVs[i][*iter] = 0.0;
+    }
+  }
+
   computeStableTimestep(patch, matl, new_dw);
 }
-
 
 void Kayenta::allocateCMDataAddRequires(Task* task,
                                         const MPMMaterial* matl,
@@ -195,6 +214,10 @@ void Kayenta::allocateCMDataAddRequires(Task* task,
   // for the particle convert operation
   // This method is defined in the ConstitutiveModel base class.
   addSharedRForConvertExplicit(task, matlset, patches);
+  // Add requires local to this model
+  for(int i=1;i<=d_NINSV;i++){
+    task->requires(Task::NewDW,ISVLabels_preReloc[i], matlset, Ghost::None);
+  }
 }
 
 
@@ -209,6 +232,20 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
   // deleted to the particle to be added. 
   // This method is defined in the ConstitutiveModel base class.
   copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
+
+  StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
+  StaticArray<constParticleVariable<double> > o_ISVs(d_NINSV+1);
+
+  for(int i=1;i<=d_NINSV;i++){
+    new_dw->allocateTemporary(ISVs[i], addset);
+    new_dw->get(o_ISVs[i],ISVLabels_preReloc[i], delset);
+
+    ParticleSubset::iterator o,n = addset->begin();
+    for (o=delset->begin(); o != delset->end(); o++, n++) {
+      ISVs[i][*n] = o_ISVs[i][*n];
+    }
+    (*newState)[ISVLabels[i]]=ISVs[i].clone();
+  }
 }
 
 void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
@@ -274,7 +311,6 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
     double c_dil=0.0,Jinc;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-//    double onethird = (1.0/3.0);
 
     Identity.Identity();
 
@@ -306,6 +342,11 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
+    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+    for(int i=1;i<=d_NINSV;i++){
+      old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
+    }
+
     new_dw->get(gvelocity,lb->gVelocityStarLabel, dwi,patch, gac, NGN);
 
     ParticleVariable<double> pdTdt,p_q;
@@ -317,9 +358,10 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
 
-    double UI[2];
-    UI[0] = d_initialData.K;
-    UI[1] = d_initialData.G;
+    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+    for(int i=1;i<=d_NINSV;i++){
+      new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
+    }
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -365,25 +407,17 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       // Compute the local sound speed
       double rho_cur = rho_orig/J;
        
-      // This is the (updated) Cauchy stress
-#if 0
-      double onethird = 1./3.;
-      Matrix3 DPrime = D - Identity*onethird*D.Trace();
-      double G=UI[1];
-      double bulk=UI[0];
-      pstress_new[idx] = pstress[idx] + 
-                         (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
-
-      cout << pstress_new[idx] << endl;
-#endif
-
+      // This is the previous timestep Cauchy stress
       double sigarg[6];
+
+      // NEED TO FIND R, and unrotate pstress: S=R^T*pstress*R
       sigarg[0]=pstress[idx](0,0);
       sigarg[1]=pstress[idx](1,1);
       sigarg[2]=pstress[idx](2,2);
       sigarg[3]=pstress[idx](0,1);
       sigarg[4]=pstress[idx](1,2);
       sigarg[5]=pstress[idx](2,0);
+      // NEED TO UNROTATE D: S=R^T*D*R
       double Darray[6];
       Darray[0]=D(0,0);
       Darray[1]=D(1,1);
@@ -399,6 +433,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       ISOTROPIC_GEOMATERIAL_CALC(nblk,ninsv,dt, UI, sigarg, Darray, svarg, USM);
 
+      // This is the Cauchy stress, still unrotated
       pstress_new[idx](0,0) = sigarg[0];
       pstress_new[idx](1,1) = sigarg[1];
       pstress_new[idx](2,2) = sigarg[2];
@@ -408,6 +443,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       pstress_new[idx](1,2) = sigarg[4];
       pstress_new[idx](2,0) = sigarg[5];
       pstress_new[idx](0,2) = sigarg[5];
+      // NEED TO ROTATE pstress_new: S=R*pstress_new*R^T
 
 #if 0
       cout << pstress_new[idx] << endl;
@@ -469,11 +505,35 @@ void Kayenta::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     // Carry forward the data local to this constitutive model 
+    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+
+    for(int i=1;i<=d_NINSV;i++){
+      old_dw->get(ISVs[i],ISVLabels[i], pset);
+      new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
+      ISVs_new[i].copyData(ISVs[i]);
+  }
+
+    // Don't affect the strain energy or timestep size
     new_dw->put(delt_vartype(1.e10), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }
 
+void Kayenta::addInitialComputesAndRequires(Task* task,
+                                            const MPMMaterial* matl,
+                                            const PatchSet* ) const
+{
+  // Add the computes and requires that are common to all explicit 
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  // Other constitutive model and input dependent computes and requires
+  for(int i=1;i<=d_NINSV;i++){
+    task->computes(ISVLabels_preReloc[i], matlset);
+  }
+}
 void Kayenta::addComputesAndRequires(Task* task,
                                      const MPMMaterial* matl,
                                      const PatchSet* patches) const
@@ -483,6 +543,12 @@ void Kayenta::addComputesAndRequires(Task* task,
   // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForHypoExplicit(task, matlset, patches);
+
+  // Computes and requires for internal state data
+  for(int i=1;i<=d_NINSV;i++){
+    task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
+    task->computes(             ISVLabels_preReloc[i], matlset);
+  }
 }
 
 void Kayenta::addComputesAndRequires(Task*,
@@ -499,15 +565,14 @@ double Kayenta::computeRhoMicroCM(double pressure,
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
   double rho_cur;
-  double bulk = d_initialData.K;
+  double bulk = UI[0];
 
   rho_cur = rho_orig/(1-p_gauge/bulk);
 
   return rho_cur;
 
 #if 1
-  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR Kayenta"
-       << endl;
+  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR Kayenta" << endl;
 #endif
 }
 
@@ -517,8 +582,7 @@ void Kayenta::computePressEOSCM(double rho_cur, double& pressure,
                                 const MPMMaterial* matl)
 {
 
-  //double G = d_initialData.G;
-  double bulk = d_initialData.K;
+  double bulk = UI[0];
   double rho_orig = matl->getInitialDensity();
 
   double p_g = bulk*(1.0 - rho_orig/rho_cur);
@@ -527,26 +591,27 @@ void Kayenta::computePressEOSCM(double rho_cur, double& pressure,
   tmp = bulk/rho_cur;  // speed of sound squared
 
 #if 1
-  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Kayenta"
-       << endl;
+  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR Kayenta" << endl;
 #endif
 }
 
 double Kayenta::getCompressibility()
 {
-  return 1.0/d_initialData.K;
+  return 1.0/UI[0];
 }
 
 void
 Kayenta::getInputParameters(ProblemSpecP& ps)
 {
   ps->require("B0",UI[0]);              // initial bulk modulus (stress)
+  cout << UI[0] << endl;
   ps->getWithDefault("B1",UI[1],0.0);   // nonlinear bulk mod param (stress)
   ps->getWithDefault("B2",UI[2],0.0);   // nonlinear bulk mod param (stress)
   ps->getWithDefault("B3",UI[3],0.0);   // nonlinear bulk mod param (stress)
   ps->getWithDefault("B4",UI[4],0.0);   // nonlinear bulk mod param (dim. less)
 
   ps->require("G0",UI[5]);              // initial shear modulus (stress)
+  cout << UI[5] << endl;
   ps->getWithDefault("G1",UI[6],0.0);   // nonlinear shear mod param (dim. less)
   ps->getWithDefault("G2",UI[7],0.0);   // nonlinear shear mod param (1/stress)
   ps->getWithDefault("G3",UI[8],0.0);   // nonlinear shear mod param (stress)
@@ -591,13 +656,32 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("CRPF",UI[37],0.0);// flow potential analog of CR
   ps->getWithDefault("RKPF",UI[38],0.0);// flow potential analog of RK
   ps->getWithDefault("SUBX",UI[39],0.0);// subcycle control exponent (dim. less)
-
+  ps->getWithDefault("DEJAVU",UI[40],0.0);//
+  ps->getWithDefault("FSPEED",UI[41],0.0);//
+  ps->getWithDefault("PEAKI1I",UI[42],0.0);//
+  ps->getWithDefault("STRENI", UI[43],0.0);//
+  ps->getWithDefault("FSLOPEI",UI[44],0.0);//
+  ps->getWithDefault("PEAKI1F",UI[45],0.0);//
+  ps->getWithDefault("STRENF", UI[46],0.0);//
+  ps->getWithDefault("JOBFAIL",UI[47],2.0);//
+  ps->getWithDefault("FSLOPEF",UI[48],0.0);//
+  ps->getWithDefault("FAILSTAT",UI[49],0.0);//
+  ps->getWithDefault("FREE01",UI[50],0.0);//
+  ps->getWithDefault("FREE02",UI[51],0.0);//
+  ps->getWithDefault("FREE03",UI[52],0.0);//
+  ps->getWithDefault("FREE04",UI[53],0.0);//
+  ps->getWithDefault("FREE05",UI[54],0.0);//
+  ps->getWithDefault("FREE06",UI[55],0.0);//
+  ps->getWithDefault("FREE07",UI[56],0.0);//
+  ps->getWithDefault("FREE08",UI[57],0.0);//
+  ps->getWithDefault("YSLOPEI",UI[58],0.0);//
+  ps->getWithDefault("YSLOPEF",UI[59],0.0);//
 }
 
 void
 Kayenta::initializeLocalMPMLabels()
 {
-  ISVNames.resize(d_NINSV);
+  ISVNames.resize(d_NINSV+1);
   
   ISVNames[1] ="KAPPA";
   ISVNames[2] ="INDEX";
