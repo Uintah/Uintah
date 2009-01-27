@@ -32,6 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef RNG_H
 #define RNG_H
 
+#include <cstdlib> // for drand48 function
+
 class RNG {
 public:
   RNG();
@@ -39,7 +41,7 @@ public:
   // double random1, random2;
   //  double rng[2];
   // double *RandomNumberGen();
-  void RandomNumberGen(double &random);
+  void RandomNumberGen(double &random) { random = drand48(); }
   //  double get_rng();
   
 // private:

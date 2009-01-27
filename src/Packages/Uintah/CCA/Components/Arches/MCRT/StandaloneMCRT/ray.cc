@@ -76,12 +76,6 @@ int ray::get_hitSurfaceIndex(){
 }
 
 
-
-int ray::get_surfaceFlag(){
-  return surfaceFlag;
-}
-
-
 void ray::update_emissP(){
   xemiss = xhit;
   yemiss = yhit;
