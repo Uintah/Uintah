@@ -92,7 +92,7 @@ public:
   double ray_length();
   // int get_emissSurfaceIndex();
   int get_hitSurfaceIndex();
-  int get_surfaceFlag();
+  int get_surfaceFlag() { return surfaceFlag; }
   
   void set_currentvIndex(const int &iIndex,
 			 const int &jIndex,
