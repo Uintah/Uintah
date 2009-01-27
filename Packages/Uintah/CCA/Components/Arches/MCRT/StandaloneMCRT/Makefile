@@ -1,18 +1,23 @@
 
 CXX = g++
-# CFLAGS = -g
-CFLAGS = -pg -O3
+# CFLAGS = -g -MD
+CFLAGS = -pg -O3 -MD
 
-CXX_OBJS = RMCRT.o RNG.o Surface.o RealSurface.o TopRealSurface.o BottomRealSurface.o \
-	   FrontRealSurface.o BackRealSurface.o LeftRealSurface.o RightRealSurface.o \
-	   VirtualSurface.o ray.o VolElement.o MakeTableFunction.o \
-	   setupBenchmark.o
+SRCS = RMCRT.cc RNG.cc Surface.cc RealSurface.cc TopRealSurface.cc BottomRealSurface.cc \
+	   FrontRealSurface.cc BackRealSurface.cc LeftRealSurface.cc RightRealSurface.cc \
+	   VirtualSurface.cc ray.cc VolElement.cc MakeTableFunction.cc \
+	   setupBenchmark.cc
 
-NoTableMCRT : $(CXX_OBJS) 
-	$(CXX) $(CFLAGS) $(CXX_OBJS) -o NoTableMCRT
+OBJS := $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS)))
 
-.cc.o:
+NoTableMCRT : $(OBJS) 
+	$(CXX) $(CFLAGS) $(OBJS) -o NoTableMCRT
+
+.cc.o: $<
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o NoTableMCRT gmon.out
+	rm -f *.o *.d NoTableMCRT gmon.out
+
+-include $(SRCS:.cc=.d)
+

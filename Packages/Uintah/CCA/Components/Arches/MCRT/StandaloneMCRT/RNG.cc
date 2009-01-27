@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 #include <ctime>
-#include <cstdlib> // for drand48 function
 
 
 RNG::RNG(){
@@ -43,11 +42,6 @@ RNG::RNG(){
 RNG::~RNG(){
 }
 
-void RNG::RandomNumberGen(double &random){
-  random = drand48();
-}
-
- 
 
 // double  *RNG::RandomNumberGen(){
  

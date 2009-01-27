@@ -132,7 +132,7 @@ public:
   void q_Q(const double *q_surface, const double *qdiv,
 	   const int &VolElementNo, const int &totalElementNo, char *_argv);
 
-  void vtkSurfaceTableMake( char *_argv, const int &xnop,
+  void vtkSurfaceTableMake( const char *_argv, const int &xnop,
 			    const int &ynop, const int &znop,
 			    const double *X, const double *Y,
 			    const double *Z,
@@ -141,7 +141,7 @@ public:
 			    const double *Q_surface);
   
 
-  void vtkVolTableMake(char *_argv, const int &xnop,
+  void vtkVolTableMake(const char *_argv, const int &xnop,
 		       const int &ynop, const int &znop,
 		       const double *X, const double *Y,
 		       const double *Z,

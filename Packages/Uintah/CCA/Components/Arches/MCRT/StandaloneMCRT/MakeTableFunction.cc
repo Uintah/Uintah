@@ -395,7 +395,7 @@ void MakeTableFunction::RealSurfaceProperty_Array(  int TopStartNo,
 
 
 
-void MakeTableFunction::vtkSurfaceTableMake( char *_argv, const int &xnop,
+void MakeTableFunction::vtkSurfaceTableMake( const char *_argv, const int &xnop,
 					     const int &ynop, const int &znop,
 					     const double *X, const double *Y,
 					     const double *Z,
@@ -639,7 +639,7 @@ void MakeTableFunction::vtkSurfaceTableMake( char *_argv, const int &xnop,
 }
 
 
-void MakeTableFunction::vtkVolTableMake(char *_argv, const int &xnop,
+void MakeTableFunction::vtkVolTableMake(const char *_argv, const int &xnop,
 					const int &ynop, const int &znop,
 					const double *X, const double *Y,
 					const double *Z,
