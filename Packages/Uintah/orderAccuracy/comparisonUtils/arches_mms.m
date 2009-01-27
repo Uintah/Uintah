@@ -11,8 +11,7 @@ format short e;
 function Usage
   printf('arches_mms.m <options>\n')                                                                    
   printf('options:\n')                                                                                       
-  printf('  -uda  <udaFileName> - name of the uda file \n')                                                  
-  printf('  -pDir <1,2,3>       - principal direction \n')                                                  
+  printf('  -uda  <udaFileName> - name of the uda file \n')                                                     
   printf('  -ts                 - Timestep to compute L2 error, default is the last timestep\n') 
   printf('  -o <fname>          - Dump the output (LnError) to a file\n')                                    
 end 
@@ -26,8 +25,7 @@ if (nargin == 0)
 endif
 
 %__________________________________
-% default user inputs
-pDir       = 1;
+% default user inputs;69
 ts          = 999;
 output_file = 'LnError';
 
@@ -39,8 +37,6 @@ for i = 1:2:nargin
 
   if ( strcmp(option,"-uda") )   
     uda = opt_value;
-  elseif (strcmp(option,"-pDir") ) 
-    pDir = str2num(opt_value);
   elseif (strcmp(option,"-ts") )
     ts = str2num(opt_value);                  
   elseif (strcmp(option,"-o") )  
@@ -50,30 +46,35 @@ end
 
 %________________________________
 % determine which files to read in.
-if(pDir == 1)
-  fname_error = 'totalummsLnError.dat';
-  fname_exact = 'totalummsExactSol.dat';
-elseif(pDir == 2)
-  fname_error = 'totalvmmsLnError.dat';
-  fname_exact = 'totalvmmsExactSol.dat';
-elseif(pDir == 3)
-  % to be filled in later
-end
+x_fname_error = 'totalummsLnError.dat';
+y_fname_error = 'totalvmmsLnError.dat';
+
+x_fname_exact = 'totalummsExactSol.dat';
+y_fname_exact = 'totalvmmsExactSol.dat';
+
 
 % import the data
-c0 = sprintf('%s/%s',uda,fname_error);
-c1 = sprintf('%s/%s',uda,fname_exact);
-error  = load(c0); 
-exact  = load(c1);
+x_c0 = sprintf('%s/%s',uda,x_fname_error);
+y_c0 = sprintf('%s/%s',uda,y_fname_error);
 
-last = min(ts,length(error(:,2)));
+x_c1 = sprintf('%s/%s',uda,x_fname_exact);
+y_c1 = sprintf('%s/%s',uda,y_fname_exact);
 
-LnError = sqrt(error(:,2))/sqrt(exact(:,2))
+x_error  = load(x_c0); 
+y_error  = load(y_c0); 
+
+x_exact  = load(x_c1);
+y_exact  = load(y_c1);
+
+last = min(ts,length(x_error(:,2)));
+
+x_LnError = sqrt(x_error(:,2))/sqrt(x_exact(:,2))
+y_LnError = sqrt(y_error(:,2))/sqrt(y_exact(:,2))
 
 % write LnError to a file
 nargv = length(output_file);
 if (nargv > 0)
   fid = fopen(output_file, 'w');
-  fprintf(fid,'%g\n',LnError(last));
+  fprintf(fid,'%g %g\n',x_LnError(last), y_LnError(last));
   fclose(fid);
 end
