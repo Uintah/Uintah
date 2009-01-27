@@ -262,7 +262,7 @@ if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_inp
 
   #__________________________________
   #  email homebrew whenever there is a change to a GS
-  if [ "$do_uda" = "true" -o "$do_mem" = "true" -o "$do_perf" = "true" -o "$do_input" = "true" -o "$do_checkpoint" = "true" ]; then
+  if [ "$do_uda" = "true" ]; then
     tail -1 $logfile > message
     mutt  -s "GoldStandard Change:$testname" john.schmidt@utah.edu < message
   fi
