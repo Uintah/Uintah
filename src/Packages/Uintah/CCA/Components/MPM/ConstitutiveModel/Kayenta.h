@@ -50,20 +50,13 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
   class Kayenta : public ConstitutiveModel {
   public:
-    double UI[40];
-    struct CMData {
-      double G;
-      double K;
-    };
+    double UI[60];
     vector<string> ISVNames;
     vector<const VarLabel*> ISVLabels;
     vector<const VarLabel*> ISVLabels_preReloc;
     int d_NINSV;
 
   private:
-    friend const TypeDescription* fun_getTypeDescription(CMData*);
-
-    CMData d_initialData;
     // Prevent copying of this class
     // copy constructor
     Kayenta& operator=(const Kayenta &cm);
@@ -120,6 +113,9 @@ namespace Uintah {
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw);
 
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
     virtual void addComputesAndRequires(Task* task,
 					const MPMMaterial* matl,
