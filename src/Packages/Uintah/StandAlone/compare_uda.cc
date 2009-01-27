@@ -561,6 +561,7 @@ compare(MaterialParticleVarData& data2, ParticleVariable<T>* value1,
       if (name_ != "p.particleID") {
         ASSERT(getParticleID(i) == data2.getParticleID(i));
       }
+      cerr << setprecision(16) << endl;
       cerr << "DIFFERENCE on particle id= " << getParticleID(i) << endl;
       IntVector origin((int)(getParticleID(i) >> 16) & 0xffff,
                        (int)(getParticleID(i) >> 32) & 0xffff,
@@ -1085,6 +1086,7 @@ void buildPatchMap(LevelP level, const string& filebase,
 int
 main(int argc, char** argv)
 {
+  Thread::setDefaultAbortMode("exit");
   double rel_tolerance = 1e-6; // Default 
   double abs_tolerance = 1e-9; //   values...
   string ignoreVar = "none";
