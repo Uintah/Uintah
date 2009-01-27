@@ -584,12 +584,20 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
    if (d_outputInterval > 0)
       d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
    else if (d_outputTimestepInterval > 0)
-      d_nextOutputTimestep = (timestep/d_outputTimestepInterval)*d_outputTimestepInterval+d_outputTimestepInterval+1;
+   {
+      d_nextOutputTimestep = (timestep/d_outputTimestepInterval)*d_outputTimestepInterval+1;
+      while(d_nextOutputTimestep<=timestep)
+        d_nextOutputTimestep+=d_outputTimestepInterval;
+   }
    
    if (d_checkpointInterval > 0)
       d_nextCheckpointTime = d_checkpointInterval * ceil(time / d_checkpointInterval);
    else if (d_checkpointTimestepInterval > 0)
-      d_nextCheckpointTimestep = (timestep/d_checkpointTimestepInterval)*d_checkpointTimestepInterval+d_checkpointTimestepInterval+1;
+   {
+      d_nextCheckpointTimestep = (timestep/d_checkpointTimestepInterval)*d_checkpointTimestepInterval+1;
+      while(d_nextCheckpointTimestep<=timestep)
+        d_nextCheckpointTimestep+=d_checkpointTimestepInterval;
+   }
    if (d_checkpointWalltimeInterval > 0) {
      d_nextCheckpointWalltime = d_checkpointWalltimeInterval + 
        (int)Time::currentSeconds();
