@@ -81,7 +81,7 @@ extern "C" GeneralDatabasePluginInfo* GetGeneralInfo()
 //
 // ****************************************************************************
 
-char *
+const char *
 udaReaderMTMDGeneralPluginInfo::GetName() const
 {
     return "udaReaderMTMD";
@@ -100,7 +100,7 @@ udaReaderMTMDGeneralPluginInfo::GetName() const
 //
 // ****************************************************************************
 
-char *
+const char *
 udaReaderMTMDGeneralPluginInfo::GetVersion() const
 {
     return "1.0";
@@ -119,7 +119,7 @@ udaReaderMTMDGeneralPluginInfo::GetVersion() const
 //
 // ****************************************************************************
 
-char *
+const char *
 udaReaderMTMDGeneralPluginInfo::GetID() const
 {
     return "udaReaderMTMD_1.0";
