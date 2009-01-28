@@ -43,6 +43,7 @@
 #include <Packages/Uintah/VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.h>
 
 #include <stdio.h>
+#include <cstring>
 #include <dlfcn.h>
 #include <string>
 
