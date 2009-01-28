@@ -58,8 +58,8 @@ foreach X ( $ts[*]:q)
 
 cat > gp << fin
 set terminal x11 1
-set terminal postscript color solid "Times-Roman" 12
-set output "plot.ps.ps"
+set terminal postscript color solid "Times-Roman" 18 size 8.88889 in, 6.68 in
+set output "plot.ps"
 
 #__________________________________
 # generate the  plot script
@@ -112,9 +112,9 @@ fin
   # plot it up
   gnuplot gp
   
-  convert plot.ps.ps $fname
-  mogrify -rotate 90 $fname
-  mogrify -geometry 700x500 $fname
+  convert plot.ps $fname
+#  mogrify -rotate 90 $fname
+#  mogrify -geometry 700x500 $fname
 
   @ timestep = $timestep + 1
 end
