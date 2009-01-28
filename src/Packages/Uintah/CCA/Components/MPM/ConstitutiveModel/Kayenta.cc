@@ -407,17 +407,31 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       // Compute the local sound speed
       double rho_cur = rho_orig/J;
        
-      // This is the previous timestep Cauchy stress
-      double sigarg[6];
+      // NEED TO FIND R
+      Matrix3 tensorR, tensorU;
+      double d_tol = 1.0e-10;
 
-      // NEED TO FIND R, and unrotate pstress: S=R^T*pstress*R
-      sigarg[0]=pstress[idx](0,0);
-      sigarg[1]=pstress[idx](1,1);
-      sigarg[2]=pstress[idx](2,2);
-      sigarg[3]=pstress[idx](0,1);
-      sigarg[4]=pstress[idx](1,2);
-      sigarg[5]=pstress[idx](2,0);
-      // NEED TO UNROTATE D: S=R^T*D*R
+      // Look into using Rebecca's PD algorithm
+      deformationGradient_new[idx].polarDecomposition(tensorU, tensorR,
+                                                      d_tol, true);
+
+      // This is the previous timestep Cauchy stress
+      // unrotated tensorSig=R^T*pstress*R
+      Matrix3 tensorSig = (tensorR.Transpose())*(pstress[idx]*tensorR);
+
+      // Load into 1-D array for the fortran code
+      double sigarg[6];
+      sigarg[0]=tensorSig(0,0);
+      sigarg[1]=tensorSig(1,1);
+      sigarg[2]=tensorSig(2,2);
+      sigarg[3]=tensorSig(0,1);
+      sigarg[4]=tensorSig(1,2);
+      sigarg[5]=tensorSig(2,0);
+
+      // UNROTATE D: S=R^T*D*R
+      D=(tensorR.Transpose())*(D*tensorR);
+
+      // Load into 1-D array for the fortran code
       double Darray[6];
       Darray[0]=D(0,0);
       Darray[1]=D(1,1);
@@ -425,25 +439,37 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       Darray[3]=D(0,1);
       Darray[4]=D(1,2);
       Darray[5]=D(2,0);
-      double svarg[1];
+      double svarg[d_NINSV];
       double USM=9e99;
       double dt = delT;
       int nblk = 1;
-      int ninsv = 1;
 
-      ISOTROPIC_GEOMATERIAL_CALC(nblk,ninsv,dt, UI, sigarg, Darray, svarg, USM);
+      // Load ISVs into a 1D array for fortran code
+      for(int i=1;i<=d_NINSV;i++){
+        svarg[i-1]=ISVs[i][idx];
+      }
+
+      ISOTROPIC_GEOMATERIAL_CALC(nblk, d_NINSV, dt, UI, sigarg,
+                                 Darray, svarg, USM);
+
+      // Unload ISVs from 1D array into ISVs_new 
+      for(int i=1;i<=d_NINSV;i++){
+        ISVs_new[i][idx]=svarg[i-1];
+      }
 
       // This is the Cauchy stress, still unrotated
-      pstress_new[idx](0,0) = sigarg[0];
-      pstress_new[idx](1,1) = sigarg[1];
-      pstress_new[idx](2,2) = sigarg[2];
-      pstress_new[idx](0,1) = sigarg[3];
-      pstress_new[idx](1,0) = sigarg[3];
-      pstress_new[idx](2,1) = sigarg[4];
-      pstress_new[idx](1,2) = sigarg[4];
-      pstress_new[idx](2,0) = sigarg[5];
-      pstress_new[idx](0,2) = sigarg[5];
-      // NEED TO ROTATE pstress_new: S=R*pstress_new*R^T
+      tensorSig(0,0) = sigarg[0];
+      tensorSig(1,1) = sigarg[1];
+      tensorSig(2,2) = sigarg[2];
+      tensorSig(0,1) = sigarg[3];
+      tensorSig(1,0) = sigarg[3];
+      tensorSig(2,1) = sigarg[4];
+      tensorSig(1,2) = sigarg[4];
+      tensorSig(2,0) = sigarg[5];
+      tensorSig(0,2) = sigarg[5];
+
+      // ROTATE pstress_new: S=R*tensorSig*R^T
+      pstress_new[idx] = (tensorR*tensorSig)*(tensorR.Transpose());
 
 #if 0
       cout << pstress_new[idx] << endl;
