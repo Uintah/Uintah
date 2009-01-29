@@ -65,7 +65,7 @@ using namespace Uintah;
 //using namespace TNT;
 //using namespace JAMA;
 
-using std::cout;
+using std::cerr;
 using std::endl;
 using std::ostream;
 using SCIRun::Vector;
@@ -139,7 +139,7 @@ Matrix3 Matrix3::Inverse() const
   det = this->Determinant();
   if ( det == 0.0 )
     {
-      cout << "Singular matrix in matrix inverse..." << endl;
+      cerr << "Singular matrix in matrix inverse..." << endl;
       exit(1);
     }
   else
@@ -435,6 +435,168 @@ std::vector<SCIRun::Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) c
   return basis_vectors;
 }
 
+void Matrix3::polarDecompositionRMB(Matrix3& U,
+                                    Matrix3& R) const
+{
+  Matrix3 F = *this;
+
+  // Get the rotation
+  F.polarRotationRMB(R);
+
+  // Stretch: U=R^T*F
+  U=R.Transpose()*F;
+}
+
+void Matrix3::polarRotationRMB(Matrix3& R) const
+{
+
+//     PURPOSE: This routine computes the tensor [R] from the polar
+//     decompositon (a special case of singular value decomposition),
+//
+//            F = RU = VR
+//
+//     for a 3x3 invertible matrix F. Here, R is an orthogonal matrix
+//     and U and V are symmetric positive definite matrices.
+//
+//     This routine determines only [R].
+//     After calling this routine, you can obtain [U] or [V] by
+//       [U] = [R]^T [F]          and        [V] = [F] [R]^T
+//     where "^T" denotes the transpose.
+//
+//     This routine is limited to 3x3 matrices specifically to
+//     optimize its performance. You will notice below that all matrix
+//     operations are written out long-hand because explicit
+//     (no do-loop) programming avoids concerns about some compilers
+//     not optimizing loop and other array operations as well as they
+//     could for small arrays.
+//
+//     This routine returns a proper rotation if det[F]>0,
+//     or an improper orthogonal tensor if det[F]<0.
+//
+//     This routine uses an iterative algorithm, but the iterations are
+//     continued until the error is minimized relative to machine
+//     precision. Therefore, this algorithm should be as accurate as
+//     any purely analytical method. In fact, this algorithm has been
+//     demonstrated to be MORE accurate than analytical solutions because
+//     it is less vulnerable to round-off errors.
+//
+//     Reference for scaling method:
+//     Brannon, R.M. (2004) "Rotation and Reflection" Sandia National
+//     Laboratories Technical Report SAND2004-XXXX (in process).
+//
+//     Reference for fixed point iterator:
+//     Bjorck, A. and Bowie, C. (1971) "An iterative algorithm for
+//     computing the best estimate of an orthogonal matrix." SIAM J.
+//     Numer. Anal., vol 8, pp. 358-364.
+
+// input
+// -----
+//    F: the 3x3 matrix to be decomposed into the form F=RU
+//
+// output
+// -----
+//    R: polar rotation tensor (3x3 orthogonal matrix)
+
+  Matrix3 F = *this;
+  Matrix3 I;
+  I.Identity();
+  double det = F.Determinant();
+  if ( det <= 0.0 ) {
+    cerr << "Singular matrix in polar decomposition..." << endl;
+    exit(1);
+  }
+
+//Step 1: Compute [C] = Transpose[F] . [F] (Save into E for now)
+  Matrix3 E = F.Transpose()*F;
+
+// Step 2: To guarantee convergence, scale [F] by multiplying it by
+//         Sqrt[3]/magnitude[F]. This is allowable because this routine
+//         finds ONLY the rotation tensor [R]. The rotation for any
+//         positive multiple of [F] is the same as the rotation for [F]
+//         Scaling [F] by a factor sqrt(3)/mag[F] requires replacing the
+//         previously computed [C] matrix by a factor 3/squareMag[F],
+//         where squareMag[F] is most efficiently computed by trace[C].
+//         Complete computation of [E]=(1/2)([C]-[I]) with [C] now
+//         being scaled.
+  double S=3.0/E.Trace();
+  E=(E-I)*S*0.5;
+
+// Step 3: Replace S with Sqrt(S) and set the first guess for [R] equal
+//         to the scaled [F] matrix,   [A]=Sqrt[3]F/magnitude[F]
+
+  S=sqrt(S);
+  Matrix3 A=F*S;
+
+// Step 4. Compute error of this first guess.
+//     The matrix [A] equals the rotation if and only if [E] equals [0]
+  double ERRZ = E(0,0)*E(0,0) + E(1,1)*E(1,1) + E(2,2)*E(2,2) 
+         + 2.0*(E(0,1)*E(0,1) + E(1,2)*E(1,2) + E(2,0)*E(2,0));
+
+// Step 5.  Check if scaling ALONE was sufficient to get the rotation.
+//     This occurs whenever the stretch tensor is isotropic.
+//     A number X is zero to machine precision if (X+1.0)-1.0 evaluates
+//     to zero. Typically, machine precision is around 1.e-16.
+  bool converged=false;
+
+  if(ERRZ+1.0 == 1.0){
+    converged=true;
+  }
+
+  Matrix3 X;
+  int num_iters=0;
+  while(converged==false){
+
+// Step 6: Improve the solution.
+//
+//     Compute a helper matrix, [X]=[A][I-E].
+//     Do *not* overwrite [A] at this point.
+    X=A*(I-E);
+
+    A=X;
+
+// Step 7: Using the improved solution compute the new
+//         error tensor, [E] = (1/2) (Transpose[A].[A]-[I])
+
+    E = (A.Transpose()*A-I)*.5;
+
+// Step 8: compute new error
+    double ERR  = E(0,0)*E(0,0) + E(1,1)*E(1,1) + E(2,2)*E(2,2) 
+           + 2.0*(E(0,1)*E(0,1) + E(1,2)*E(1,2) + E(2,0)*E(2,0));
+
+// Step 9:
+// If new error is smaller than old error, then keep on iterating.
+// If new error equals or exceeds old error, we have reached
+// machine precision accuracy.
+    if(ERR>=ERRZ){
+      converged = true;
+    }
+    ERRZ=ERR;
+
+    if(num_iters==200){
+      cerr << "Matrix3::polarRotationRMB not converging with Matrix:" << endl;
+      cerr << F << endl;
+      exit(1);
+    }
+    num_iters++;
+
+  }  // end while
+
+// Step 10:
+// zero out tiny values, load converged rotation into R;
+  double ONE=1.0;
+
+  R(0,0) = (ONE+A(0,0))-ONE;
+  R(1,0) = (ONE+A(1,0))-ONE;
+  R(2,1) = (ONE+A(2,0))-ONE;
+  R(0,1) = (ONE+A(0,1))-ONE;
+  R(1,1) = (ONE+A(1,1))-ONE;
+  R(2,1) = (ONE+A(2,1))-ONE;
+  R(0,2) = (ONE+A(0,2))-ONE;
+  R(1,2) = (ONE+A(1,0))-ONE;
+  R(2,2) = (ONE+A(2,2))-ONE;
+
+}
+
 // Polar decomposition of a non-singular square matrix
 // If rightFlag == true return right stretch and rotation
 // else return left stretch and rotation
@@ -446,7 +608,7 @@ void Matrix3::polarDecomposition(Matrix3& U,
   Matrix3 F = *this;
   double det = F.Determinant();
   if ( det <= 0.0 ) {
-    cout << "Singular matrix in polar decomposition..." << endl;
+    cerr << "Singular matrix in polar decomposition..." << endl;
     exit(1);
   }
   Matrix3 C = F.Transpose()*F;
