@@ -174,6 +174,11 @@ namespace Uintah {
                             double tolerance,
                             bool rightFlag) const;
 
+    UINTAHSHARE void polarDecompositionRMB(Matrix3& U,
+                                    Matrix3& R) const;
+
+    UINTAHSHARE void polarRotationRMB(Matrix3& R) const;
+
     // Returns number of real, unique eigen values and passes
     // back the values.  If it returns 1, the value is passed back
     // in e1.  If it returns 2, the values are passed back in e1
