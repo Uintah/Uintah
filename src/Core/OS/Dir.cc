@@ -39,6 +39,7 @@
 #include <cerrno>
 #include <cstring>
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
 
 #ifndef _WIN32
@@ -136,8 +137,12 @@ Dir::removeDir( const char * dirName )
       if( isDir ) {
         removeDir( fullpath.c_str() );
       } else {
-        Dir not_used;
-        not_used.remove( fullpath);
+        int rc = ::remove( fullpath.c_str() );
+        if (rc != 0) {
+          cout << "WARNING: remove() failed for '" << fullpath.c_str() 
+               << "'.  Return code is: " << rc << ", errno: " << errno << ": " << strerror(errno) << "\n";
+          return false;
+        }
       }
     }
     file = readdir(dir);
