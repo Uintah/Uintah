@@ -5,7 +5,7 @@
 <Uintah_specification>
   
   <Meta>
-    <title>Arches "2D" Periodic Box Almgren MMS </title>
+    <title>Arches "2D" Periodic Box Almgren MMS</title>
   </Meta>
 
   <SimulationComponent>
@@ -18,7 +18,7 @@
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
-    <timestep_multiplier>0.00000001</timestep_multiplier>
+    <timestep_multiplier>1e-7</timestep_multiplier>
   </Time>
 
   <DataArchiver>
@@ -68,7 +68,7 @@
         <almgrenMMS>
           <!--Note: This viscosity needs to be set twice for now, both here
                     and in the PhysicalConstant section. -->
-          <viscosity>0.0002</viscosity>
+          <viscosity>0.00001</viscosity>
           <amplitude>1.0</amplitude>
         </almgrenMMS>
       </MMS>
@@ -80,7 +80,6 @@
       <transport_mixture_fraction>true</transport_mixture_fraction>
       <transport_enthalpy>false</transport_enthalpy>
       <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
-      <transport_extra_scalars>true</transport_extra_scalars>
       
       <Turbulence>
         <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
@@ -111,25 +110,9 @@
         <gravity>[0,0,0]</gravity>
         <ref_point>[0,0,0]</ref_point>
         <pressure>0.0</pressure>
-        <viscosity>0.0002</viscosity>
+        <viscosity>0.00001</viscosity>
       </PhysicalConstants>
-
-      <ExtraScalars>
-        <scalar>
-          <name>test1</name>
-          <initial_value>.0</initial_value>
-          <convection_scheme>central-upwind</convection_scheme>
-          <diffusion>true</diffusion>
-          <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
-          <density_weighted>false</density_weighted>
-          <sources>
-            <source>
-              <name>zero_src</name>
-            </source>
-          </sources>
-        </scalar>
-      </ExtraScalars>
-  
+ 
       <ExplicitSolver>
         <timeIntegratorType>RK2SSP</timeIntegratorType> 
         <probe_data>false</probe_data>
@@ -139,7 +122,7 @@
           <parameters>
             <solver>cg</solver>
             <preconditioner>pfmg</preconditioner>
-            <res_tol>1.0e-10</res_tol>
+            <res_tol>1.0e-16</res_tol>
             <max_iter>75</max_iter>
           </parameters>
         </PressureSolver>
