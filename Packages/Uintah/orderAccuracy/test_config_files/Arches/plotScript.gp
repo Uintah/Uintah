@@ -10,15 +10,16 @@ set grid xtics ytics
 set output "orderAccuracy.png"
 
 # generate the x_curvefit
-f1(x) = a1*x**b1                # define the function to be fit
-a1 = 0.1; b1 = 0.01;            # initial guess for a1 and b1
+f1(x) = a1*x**b1               # define the function to be fit
+a1 = 0.1; b1 = -2.2 
+FIT_LIMIT=1e-6
 fit f1(x) 'L2norm.dat' using 1:2 via a1, b1
 
 # generate the y_curvefit
 f2(x) = a2*x**b2                # define the function to be fit
-a2 = 0.2; b2 = 0.01;            # initial guess for a2 and b2
+a2 = 0.1; b2 = -2.2      
+FIT_LIMIT=1e-6  
 fit f2(x) 'L2norm.dat' using 1:3 via a2, b2
-
 
 set label 'x_Error = a * (Spatial Resolution)^b' at screen 0.2,0.4
 set label 'a = %3.5g',a1      at screen 0.2,0.375
