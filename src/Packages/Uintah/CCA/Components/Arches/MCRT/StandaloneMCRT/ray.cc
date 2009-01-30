@@ -550,7 +550,7 @@ void ray::TravelInMediumInten(const double *kl_Vol,
 			      double &PathLeft,
 			      double &PathSurfaceLeft) {
   
-
+  SCATTER = 1;
   if ( !surfaceIntersect(X, Y, Z, VolFeature) ) {
     cout << "Error: did not find the intersection surface.\n";
     exit(1);
@@ -575,7 +575,7 @@ void ray::TravelInMediumInten(const double *kl_Vol,
   // and this is based on iIndex, jIndex, kIndex
   kl_m = kl_Vol[currentvIndex];
   scat_m = scatter_Vol[currentvIndex];
-
+  SCATTER = 0; // if SCATTER == 1, scattering happens; otherwise, no scattering happens.
    
   do {
       
@@ -603,7 +603,7 @@ void ray::TravelInMediumInten(const double *kl_Vol,
       // x = xemiss + Dist * s[i];
       // y = yemiss + Dist * s[j];
       // z = zemiss + Dist * s[k];
-
+      SCATTER = 1;
       xemiss = xemiss + scat_len * directionVector[0];
       yemiss = yemiss + scat_len * directionVector[1];
       zemiss = zemiss + scat_len * directionVector[2];
@@ -623,10 +623,10 @@ void ray::TravelInMediumInten(const double *kl_Vol,
 	cerr << " error @ not getting hit point coordinates after scattering!\n";
 	exit(1); // terminate program
       }
-
       
     }// else scatter happens
-        
+
+    
   } while ( ! vIndexUpdate );
   
   
