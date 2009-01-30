@@ -34,6 +34,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Packages/Uintah/testprograms/TestMatrix3
 
+PROGRAM := $(SRCDIR)/testmatrix3
 SRCS := $(SRCDIR)/testmatrix3.cc
 
 PSELIBS := \
@@ -49,5 +50,4 @@ PSELIBS := \
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
+include $(SCIRUN_SCRIPTS)/program.mk
