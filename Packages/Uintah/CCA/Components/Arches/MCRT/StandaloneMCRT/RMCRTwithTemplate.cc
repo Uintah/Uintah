@@ -183,6 +183,7 @@ void rayfromSurf(SurfaceType &obSurface,
     
     obRay.get_directionS(s);
     obRay.set_currentvIndex(iIndex, jIndex, kIndex);
+    obRay.dirChange = 1;
     
     do {
       
@@ -1329,6 +1330,7 @@ int main(int argc, char *argv[]){
 	      
 	      // only one criteria for now ( the left energy percentage )
 	      //   vectorIndex = 0;
+	      obRay.dirChange = 1;
 	      
 	      do {
 		

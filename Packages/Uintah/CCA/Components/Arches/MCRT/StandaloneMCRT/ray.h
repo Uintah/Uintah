@@ -125,7 +125,8 @@ public:
 
   ~ray();
   bool VIRTUAL; // when VIRTUAL == 1, hit on virtual surface
- 
+  bool dirChange;
+  
 private:
   int VolElementNo;
   int offset;
