@@ -227,15 +227,17 @@ ray::surfaceIntersect( const double *X,
   yy[1] = Y[jIndex+1];
   zz[0] = Z[kIndex];
   zz[1] = Z[kIndex+1];
-  
 
-  for ( int i = 0; i < 3; i ++) {
-
-    // to inverse is necessary to check 1/-0.0 = - inf, and 1/0.0 = +inf    
-    inv_directionVector[i] = 1/directionVector[i];
-    sign[i] = (inv_directionVector[i] > 0);
+  // if directionVector changes, then recalculate sign.
+  if (dirChange) {
+    for ( int i = 0; i < 3; i ++) {      
+      // to inverse is necessary to check 1/-0.0 = - inf, and 1/0.0 = +inf    
+      inv_directionVector[i] = 1/directionVector[i];
+      sign[i] = (inv_directionVector[i] > 0);
+    }
   }
 
+  
   disX = ( xx[sign[0]] - xemiss ) * inv_directionVector[0];
   disY = ( yy[sign[1]] - yemiss ) * inv_directionVector[1];
   if ( disX <= disY ) {
@@ -550,7 +552,7 @@ void ray::TravelInMediumInten(const double *kl_Vol,
 			      double &PathLeft,
 			      double &PathSurfaceLeft) {
   
-  SCATTER = 1;
+
   if ( !surfaceIntersect(X, Y, Z, VolFeature) ) {
     cout << "Error: did not find the intersection surface.\n";
     exit(1);
@@ -575,7 +577,7 @@ void ray::TravelInMediumInten(const double *kl_Vol,
   // and this is based on iIndex, jIndex, kIndex
   kl_m = kl_Vol[currentvIndex];
   scat_m = scatter_Vol[currentvIndex];
-  SCATTER = 0; // if SCATTER == 1, scattering happens; otherwise, no scattering happens.
+  dirChange = 0; 
    
   do {
       
@@ -603,7 +605,7 @@ void ray::TravelInMediumInten(const double *kl_Vol,
       // x = xemiss + Dist * s[i];
       // y = yemiss + Dist * s[j];
       // z = zemiss + Dist * s[k];
-      SCATTER = 1;
+      dirChange = 1;
       xemiss = xemiss + scat_len * directionVector[0];
       yemiss = yemiss + scat_len * directionVector[1];
       zemiss = zemiss + scat_len * directionVector[2];
@@ -661,7 +663,9 @@ void ray::hitRealSurfaceInten(const double *absorb_surface,
 
   // already done in scatter_medium function
   //  currentIndex = hitSurfaceIndex; // very important
-
+  
+  dirChange = 1;
+  
   alpha = absorb_surface[hitSurfaceIndex];
   rhos = rs_surface[hitSurfaceIndex];
   rhod = rd_surface[hitSurfaceIndex];

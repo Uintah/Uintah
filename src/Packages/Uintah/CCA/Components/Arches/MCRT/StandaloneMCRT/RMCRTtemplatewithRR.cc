@@ -178,6 +178,7 @@ void rayfromSurf(SurfaceType &obSurface,
     
     obRay.get_directionS(s);
     obRay.set_currentvIndex(iIndex, jIndex, kIndex);
+    obRay.dirChange = 1;
     
     do {
       
@@ -273,8 +274,8 @@ int main(int argc, char *argv[]){
   time (&time_start);
 
   int casePlates;
-  //  cout << " Please enter plates case " << endl;
-  //  cin >> casePlates;
+  cout << " Please enter plates case " << endl;
+  cin >> casePlates;
 
 //   // starting up MPI
 //   MPI_Init(&argc, &argv);
@@ -803,10 +804,10 @@ int main(int argc, char *argv[]){
 
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-    #include "inputBenchmark.cc"
+   // #include "inputBenchmark.cc"
    // #include "inputBenchmarkSurf.cc"
    // #include "inputNonblackSurf.cc"
-   // #include "inputScattering.cc"   
+    #include "inputScattering.cc"   
    
    RNG rng;
    VolElement obVol;
@@ -1322,6 +1323,8 @@ int main(int argc, char *argv[]){
 	      
 	      // only one criteria for now ( the left energy percentage )
 	      //   vectorIndex = 0;
+
+	      obRay.dirChange = 1;
 	      
 	      do {
 		weight = weight / traceProbability;
