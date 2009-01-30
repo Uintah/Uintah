@@ -71,6 +71,69 @@ Matrix3 randomMatrix();
 
 void displayEigen(Matrix3 M);
 
+int main()
+{
+
+  Suite test("m3test");
+
+//  Matrix3 testmat(1.0,1.5,0.0,
+//                  0.0,1.0,0.0,
+//                  0.0,0.0,1.0);
+
+  for(int i=0;i<1000;i++){
+
+    Matrix3 testmat(drand48(),drand48(),drand48(),
+                    drand48(),drand48(),drand48(),
+                    drand48(),drand48(),drand48());
+
+    cout << "testmat = " << endl;
+    cout << testmat << endl;
+
+    if(testmat.Determinant()<=0.0){
+      cout << "Skipping this singular test matrix" << endl;
+      cout << "Det(testmat) = " << testmat.Determinant() << endl;
+    } else{
+
+      Matrix3 R, U;
+
+      testmat.polarDecomposition(U,R,1e-10,true);
+
+      cout << "U = " << endl;
+      cout << U  << endl;
+
+      cout << "R = " << endl;
+      cout << R  << endl;
+
+      cout << "R^T*R = " << endl;
+      cout << R.Transpose()*R  << endl;
+
+      cout << "R*U = " << endl;
+      cout << R*U  << endl;
+
+
+      testmat.polarDecompositionRMB(U,R);
+//  testmat.polarRotationRMB(R);
+
+      cout << "U = " << endl;
+      cout << U  << endl;
+
+      cout << "R = " << endl;
+      cout << R  << endl;
+
+      cout << "R^T*R = " << endl;
+      cout << R.Transpose()*R  << endl;
+
+      cout << "R*U = " << endl;
+      cout << R*U  << endl;
+
+      cout << "Success!" << endl;
+   }
+  }
+
+  return 1;
+
+}
+
 SuiteTree* matrix3TestTree()
 {
   srand(getpid());  
