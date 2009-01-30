@@ -62,8 +62,6 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 using namespace Uintah;
-//using namespace TNT;
-//using namespace JAMA;
 
 using std::cerr;
 using std::endl;
@@ -509,6 +507,7 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
 //Step 1: Compute [C] = Transpose[F] . [F] (Save into E for now)
   Matrix3 E = F.Transpose()*F;
 
+
 // Step 2: To guarantee convergence, scale [F] by multiplying it by
 //         Sqrt[3]/magnitude[F]. This is allowable because this routine
 //         finds ONLY the rotation tensor [R]. The rotation for any
@@ -519,7 +518,7 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
 //         Complete computation of [E]=(1/2)([C]-[I]) with [C] now
 //         being scaled.
   double S=3.0/E.Trace();
-  E=(E-I)*S*0.5;
+  E=(E*S-I)*0.5;
 
 // Step 3: Replace S with Sqrt(S) and set the first guess for [R] equal
 //         to the scaled [F] matrix,   [A]=Sqrt[3]F/magnitude[F]
@@ -582,19 +581,8 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
   }  // end while
 
 // Step 10:
-// zero out tiny values, load converged rotation into R;
-  double ONE=1.0;
-
-  R(0,0) = (ONE+A(0,0))-ONE;
-  R(1,0) = (ONE+A(1,0))-ONE;
-  R(2,1) = (ONE+A(2,0))-ONE;
-  R(0,1) = (ONE+A(0,1))-ONE;
-  R(1,1) = (ONE+A(1,1))-ONE;
-  R(2,1) = (ONE+A(2,1))-ONE;
-  R(0,2) = (ONE+A(0,2))-ONE;
-  R(1,2) = (ONE+A(1,0))-ONE;
-  R(2,2) = (ONE+A(2,2))-ONE;
-
+// Load converged rotation into R;
+   R=A;
 }
 
 // Polar decomposition of a non-singular square matrix
