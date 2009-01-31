@@ -44,6 +44,7 @@ using namespace Uintah;
 
 void doMatrixSolvingTests(Suite& suite);
 void doEigenTests(Suite& suite);
+void doPolarDecompTests(Suite& suite);
 void doEigenPlaneTests(Suite& suite);
 
 void addSolveTests(Suite& suite, const string& test_name,
@@ -142,22 +143,16 @@ SuiteTree* matrix3TestTree()
   Suite* solvingTests = new Suite("Solving Ax=b");
   Suite* eigenTests = new Suite("Eigen values/vectors");
   Suite* eigenPlaneTests = new Suite("Eigen plane values");
-  doMatrixSolvingTests(*solvingTests);
+  Suite* polarDecompTests = new Suite("Polar Decomposition Tests");
 
+  doMatrixSolvingTests(*solvingTests);
   doEigenTests(*eigenTests);
   doEigenPlaneTests(*eigenPlaneTests);
+  doPolarDecompTests(*polarDecompTests);
   matrix3Tests->addSuite(solvingTests);
   matrix3Tests->addSuite(eigenTests);
   matrix3Tests->addSuite(eigenPlaneTests);
-
-  //Matrix3 matrix(1e-10, 0, 0, 0, 1e-10, 0, 0, 0, 1e-10);
-  //Matrix3 matrix(1e6, 0, 0, 0, 1e6, 0, 0, 0, 1e6);
-
-  /* Was doing some testing here
-  Matrix3 M = randomMatrix();
-  displayEigen(M);
-  displayEigen(M*.0001);
-  */
+  matrix3Tests->addSuite(polarDecompTests);
 
   return matrix3Tests;
 
@@ -302,6 +297,63 @@ void doEigenTests(Suite& suite)
     }
   }
   
+}
+
+void doPolarDecompTests(Suite& suite)
+{  
+
+  for(int i=0;i<1000;i++){
+
+    Matrix3 testmat(drand48(),drand48(),drand48(),
+                    drand48(),drand48(),drand48(),
+                    drand48(),drand48(),drand48());
+
+    cout << "testmat = " << endl;
+    cout << testmat << endl;
+
+    if(testmat.Determinant()<=0.0){
+      cout << "Skipping this singular test matrix" << endl;
+      cout << "Det(testmat) = " << testmat.Determinant() << endl;
+    } else{
+
+      Matrix3 R, U;
+
+      testmat.polarDecomposition(U,R,1e-10,true);
+
+      cout << "U = " << endl;
+      cout << U  << endl;
+
+      cout << "R = " << endl;
+      cout << R  << endl;
+
+      cout << "R^T*R = " << endl;
+      cout << R.Transpose()*R  << endl;
+
+      cout << "R*U = " << endl;
+      cout << R*U  << endl;
+
+
+      testmat.polarDecompositionRMB(U,R);
+//  testmat.polarRotationRMB(R);
+
+      cout << "U = " << endl;
+      cout << U  << endl;
+
+      cout << "R = " << endl;
+      cout << R  << endl;
+
+      cout << "R^T*R = " << endl;
+      cout << R.Transpose()*R  << endl;
+
+      cout << "R*U = " << endl;
+      cout << R*U  << endl;
+
+      cout << "Success!" << endl;
+   }
+  }
+
+
+
 }
 
 void doEigenPlaneTests(Suite& suite)
