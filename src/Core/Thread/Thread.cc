@@ -301,7 +301,7 @@ Thread::handleCleanup()
   Thread::ptr2cleanupfunc funcPtr = Thread::self()->getCleanupFunction();
   if( funcPtr != NULL ) {
 
-    printf( "Handling thread cleanup for thread '%s'.\n", threadname_ );
+    // printf( "Handling thread cleanup for thread '%s'.\n", threadname_ );
 
     (*funcPtr)();
 
