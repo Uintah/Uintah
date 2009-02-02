@@ -565,7 +565,7 @@ void Angio::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->CenterOfMassVelocityLabel);
+  t->computes(lb->TotalMomentumLabel);
   
 */
   sched->addTask(t, patches, matls);

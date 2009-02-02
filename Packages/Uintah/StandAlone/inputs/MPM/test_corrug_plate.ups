@@ -27,7 +27,7 @@
     <save label = "TotalMass"/>
     <save label = "StrainEnergy"/>
     <save label = "CenterOfMassPosition"/>
-    <save label = "CenterOfMassVelocity"/>
+    <save label = "TotalMomentum"/>
     <save label = "p.particleID"/>
     <save label = "p.x"/>
     <save label = "p.velocity"/>

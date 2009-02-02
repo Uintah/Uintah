@@ -249,7 +249,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->CenterOfMassVelocityLabel);
+  t->computes(lb->TotalMomentumLabel);
   
   // debugging scalar
   if(flags->d_with_color) {
@@ -287,7 +287,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
     Vector CMX(0.0,0.0,0.0);
-    Vector CMV(0.0,0.0,0.0);
+    Vector total_mom(0.0,0.0,0.0);
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
@@ -415,7 +415,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         thermal_energy += pTempNew[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-        CMV += pvelocitynew[idx]*pmass[idx];
+        total_mom += pvelocitynew[idx]*pmass[idx];
       }
       
       
@@ -436,7 +436,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
+    new_dw->put(sumvec_vartype(total_mom),   lb->TotalMomentumLabel);
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
 
     delete interpolator;

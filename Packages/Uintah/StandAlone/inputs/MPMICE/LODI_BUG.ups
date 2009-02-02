@@ -165,7 +165,7 @@
       <save label="p.velocity"/>
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
-      <save label="CenterOfMassVelocity"/>
+      <save label="TotalMomentum"/>
       <save label="eng_exch_error"/>
       <save label="mom_exch_error"/>
       <checkpoint interval="0.005" cycle="2"/>"

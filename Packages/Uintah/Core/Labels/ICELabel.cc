@@ -188,8 +188,8 @@ ICELabel::ICELabel()
   maxMach_zminusLabel = VarLabel::create( "maxMach_zminus",   max_variable);  
   maxMach_zplusLabel  = VarLabel::create( "maxMach_zplus",    max_variable); 
 
-  CenterOfMassVelocityLabel = 
-    VarLabel::create( "CenterOfMassVelocity",
+  TotalMomentumLabel = 
+    VarLabel::create( "TotalMomentum",
                                       sumvec_vartype::getTypeDescription());
   mom_exch_errorLabel = 
     VarLabel::create( "mom_exch_error",
@@ -366,7 +366,7 @@ ICELabel::~ICELabel()
     // Reduction Variables
     VarLabel::destroy(TotalMassLabel);
     VarLabel::destroy(KineticEnergyLabel);
-    VarLabel::destroy(CenterOfMassVelocityLabel);
+    VarLabel::destroy(TotalMomentumLabel);
     VarLabel::destroy(TotalIntEngLabel); 
     VarLabel::destroy(eng_exch_errorLabel);   
     VarLabel::destroy(mom_exch_errorLabel);  
