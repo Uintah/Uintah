@@ -126,7 +126,7 @@ public:
 protected:
   // DATA MEMBERS
         
-  int          timeSteps;
+  int timeSteps, currTimeStep, lastTimeStep;
   std::string  folder;
         
   void  * libHandle;
