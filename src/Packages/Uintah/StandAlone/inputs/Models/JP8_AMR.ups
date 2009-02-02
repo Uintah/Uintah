@@ -316,6 +316,7 @@
         <cell_refinement_ratio>    [[2,2,2]]         </cell_refinement_ratio>
         <lattice_refinement_ratio> [[5,5,5][2,2,2]]  </lattice_refinement_ratio>
         <cell_stability_dilation>   [2,2,2]           </cell_stability_dilation>   
+        <min_boundary_cells>       [1,1,1]           </min_boundary_cells>
       </Regridder>
 -->
     </AMR>    
