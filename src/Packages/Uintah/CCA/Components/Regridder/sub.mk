@@ -39,7 +39,8 @@ SRCS     += $(SRCDIR)/RegridderCommon.cc \
 	    $(SRCDIR)/HierarchicalRegridder.cc \
 			$(SRCDIR)/BNRTask.cc \
 	    $(SRCDIR)/BNRRegridder.cc \
-	    $(SRCDIR)/PatchFixer.cc 
+	    $(SRCDIR)/PatchFixer.cc  \
+	    $(SRCDIR)/TiledRegridder.cc
 			
 			
 
