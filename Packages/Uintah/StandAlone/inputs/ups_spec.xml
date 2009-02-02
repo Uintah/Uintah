@@ -392,7 +392,7 @@
       <!--Generic Required Regridder Options --> 
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
       <cell_refinement_ratio            spec="REQUIRED STRING" />
-      <type                             spec="REQUIRED STRING 'BNR, Hierarchical'" />   
+      <type                             spec="REQUIRED STRING 'BNR, Hierarchical, Tiled'" />   
       <min_boundary_cells               spec="REQUIRED VECTOR" />
       
       <!--Generic Optional Regridder Options --> 
@@ -406,8 +406,9 @@
       <dynamic_dilation                 spec="OPTIONAL BOOLEAN" />
       <max_dilation                     spec="OPTIONAL BOOLEAN" />
 
-      <!--Required BNR Regridder Options-->
+      <!--Required BNR Regridder & Tiled Regridder Options-->
       <min_patch_size                   spec="OPTIONAL STRING" />
+
       <!--Optional BNR Regridder Options-->
       <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" />   
       <patch_combine_tolerance          spec="OPTIONAL DOUBLE '0,1'" />   
