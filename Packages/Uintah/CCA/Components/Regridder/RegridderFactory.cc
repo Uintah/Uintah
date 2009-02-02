@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/CCA/Components/Regridder/RegridderFactory.h>
 #include <Packages/Uintah/CCA/Components/Regridder/HierarchicalRegridder.h>
 #include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
+#include <Packages/Uintah/CCA/Components/Regridder/TiledRegridder.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
@@ -56,6 +57,8 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
       regrid = scinew HierarchicalRegridder(world);
     } else if(regridder == "BNR") {
       regrid = scinew BNRRegridder(world);
+    } else if (regridder == "Tiled") {
+      regrid = scinew TiledRegridder(world);
     } else
       regrid = 0;
   }
