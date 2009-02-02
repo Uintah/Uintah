@@ -209,6 +209,9 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   // callDomainNesting = false;
   // patchInfoReq = true;
   // levelInfoReq = true;
+  
+  currTimeStep = -1;
+  lastTimeStep = -1;
 
   cout << "Out avtudaReaderFileFormat\n";
 }
@@ -372,6 +375,9 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
   // if (patchInfoVecPtr !=  NULL) // just a pre-cautionary measure
   // delete patchInfoVecPtr;    
+  
+  lastTimeStep = currTimeStep;
+  currTimeStep = timeState;
 
   levelPatchVecPtr = (*getTotalNumPatches)(folder, timeState);
   levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
@@ -1166,6 +1172,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
   //
 
   cout << "\nIn GetVar, timestate: " << timestate << "\n";
+  
+  if (currTimeStep != timestate) {
+    levelPatchVecPtr = (*getTotalNumPatches)(folder, timestate);
+    currTimeStep = timestate; 
+  }
 
   string varName(varname);
 
