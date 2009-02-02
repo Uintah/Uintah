@@ -43,50 +43,70 @@ DEALINGS IN THE SOFTWARE.
  *   University of Utah
  *   July 2001
  *
- *  Copyright (C) 2001 U of U
+ *  Copyright (C) 2009 U of U
  */
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/OS/Dir.h>
+#include <Core/Util/Environment.h>
+
+#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
+#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
+#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iomanip>
 
-
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 
-void usage(const std::string& badarg, const std::string& progname)
+void
+usage( const string & badarg, const string & progname )
 {
-    if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << '\n';
-    cerr << "Usage: " << progname << " [options] <uda dir 1> <uda dir 2> [<uda dir 3> ...]\n\n";
-    cerr << "There can be any number of udas on the command line.\n";
-    cerr << "Options:\n";
-    cerr << "\t-copy\t(Default) Copies timestep directories into the new uda directory\n"
-	 << "\t\twithout affecting the source uda directories.\n";
-    cerr << "\t-move\tMoves timestep directories from the source udas directories into\n"
-	 << "\t\tthe new uda directory and removes the source udas.\n"
-	 << "\t\tThis option can be faster if the source and destination are\n"
-	 << "\t\ton the same file system, but there may be data loss where the\n"
-	 << "\t\tudas overlap.\n\n";
-    cerr << "\t\t\t-move or -copy must be the first argument if specified.\n";
-    cerr << "\n\nAssuming <uda dir n> was created by restarting from <uda dir n-1> \n";
-    cerr << "with the -nocopy option (which is default for sus), this will create a\n";
-    cerr << "new uda directory that is a continuous version of these uda directories.\n\n"; 
-    exit(1);
+  cerr << "\n";
+  if(badarg != "") {
+    cerr << "Error parsing argument: " << badarg << '\n';
+  }
+  cerr << "Usage: " << progname << " [options] <uda dir 1> <uda dir 2> [<uda dir 3> ...]\n";
+  cerr << "    There can be any number of udas on the command line.\n";
+  cerr << "\n";
+  cerr << "    The " << progname << " program is used to merge N UDAs together into a single UDA.\n";
+  cerr << "    The N merged UDAs must all be restarts of a common UDA.  This tool is most commonly\n";
+  cerr << "    used in order to create a single UDA for visualization purposes.\n";
+  cerr << "\n";
+  cerr << "Options:\n";
+  cerr << "\t-copy\t(Default) Copies timestep directories into the new uda directory\n"
+       << "\t\twithout affecting the source uda directories.\n";
+  cerr << "\t-move\tMoves timestep directories from the source udas directories into\n"
+       << "\t\tthe new uda directory and removes the source udas.\n"
+       << "\t\tThis option can be faster if the source and destination are\n"
+       << "\t\ton the same file system, but there may be data loss where the\n"
+       << "\t\tudas overlap.\n";
+  cerr << "\n";
+  cerr << "\t\t\t-move or -copy must be the first argument if specified.\n";
+  cerr << "\n";
+  cerr << "Assuming <uda dir n> was created by restarting from <uda dir n-1>\n";
+  cerr << "with the -nocopy option (which is the default), this will create a\n";
+  cerr << "new uda directory that is a continuous version of these uda directories.\n"; 
+  cerr << "\n";
+  exit(1);
 }
 
-int main(int argc, char** argv)
+int
+main( int argc, char *argv[], char *env[] )
 {
+  // Pass the env into the sci env so it can be used there...
+  create_sci_environment( env, 0, true );
+
   bool move = false;
   int i = 1;
   for (i = 1; i < argc; i++) {
@@ -119,11 +139,16 @@ int main(int argc, char** argv)
     ProblemSpecP ups = reader->readInputFile();
     Uintah::Parallel::initializeManager(argc, argv, "");
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
+
+    UintahParallelComponent * comp = ComponentFactory::create( ups, world, false, "", udafile[0] );
+    SimulationInterface     * sim  = dynamic_cast<SimulationInterface*>( comp );
+
     DataArchiver out_uda(world);
+    out_uda.attachPort("sim", sim);
     out_uda.problemSetup(ups, NULL);
     out_uda.initializeOutput(ups);
     new_uda_dir = out_uda.getOutputLocation();
-    
+
     int timestep = 0;
     int prevTimestep = 0;
     int i;
@@ -178,10 +203,10 @@ int main(int argc, char** argv)
   }
   */
   
-  if (thrownException) {
-    usage("", argv[0]);
+  if( thrownException ) {
+    usage( "", argv[0] );
   }
 
-  cout << "Successfully created " << new_uda_dir << endl;
+  cout << "Successfully created " << new_uda_dir << "\n";
   return 0;
 }

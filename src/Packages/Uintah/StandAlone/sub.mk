@@ -272,21 +272,24 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/restart_merger.cc
 PROGRAM := Packages/Uintah/StandAlone/restart_merger
+
 ifeq ($(LARGESOS),yes)
-PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Packages/Uintah
 else
-PSELIBS := \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
+  PSELIBS := \
         Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/Core/Disclosure    \
+        Packages/Uintah/Core/Exceptions    \
+        Packages/Uintah/Core/GeometryPiece \
+        Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Parallel      \
+        Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Util          \
         Packages/Uintah/CCA/Components/DataArchiver         \
-        Packages/Uintah/Core/ProblemSpec                    \
+        Packages/Uintah/CCA/Components/Parent               \
         Packages/Uintah/CCA/Components/ProblemSpecification \
+        Packages/Uintah/CCA/Components/SimulationController \
+        Packages/Uintah/CCA/Ports          \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Thread      \
