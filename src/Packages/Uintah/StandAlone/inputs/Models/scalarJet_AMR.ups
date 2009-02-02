@@ -203,7 +203,7 @@
       <save label = "sp_vol_CC"/>
       <save label = "temp_CC"/>
       <!--
-      <save label = "CenterOfMassVelocity"/>
+      <save label = "TotalMomentum"/>
       <save label = "TotalMass"/>
       <save label = "TotalIntEng"/>
       <save label = "sum_scalar_f"/> 

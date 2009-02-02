@@ -60,7 +60,7 @@
       <save label="sum_scalar_f"/>
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
-      <save label="CenterOfMassVelocity"/>
+      <save label="TotalMomentum"/>
        <outputInitTimestep/>
    </DataArchiver>
 

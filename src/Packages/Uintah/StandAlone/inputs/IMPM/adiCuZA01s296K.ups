@@ -30,7 +30,7 @@
     <save label = "StrainEnergy"/>
     <save label = "AccStrainEnergy"/>
     <save label = "CenterOfMassPosition"/>
-    <save label = "CenterOfMassVelocity"/>
+    <save label = "TotalMomentum"/>
     <save label = "g.stressFS"/>
     -->
     <save label = "p.particleID"/>

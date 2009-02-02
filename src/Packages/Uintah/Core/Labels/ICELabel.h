@@ -156,7 +156,7 @@ namespace Uintah {
     
     // Reduction Variables
     const VarLabel*  TotalMassLabel;
-    const VarLabel*  CenterOfMassVelocityLabel;
+    const VarLabel*  TotalMomentumLabel;
     const VarLabel*  KineticEnergyLabel;
     const VarLabel*  TotalIntEngLabel;
     const VarLabel*  eng_exch_errorLabel;

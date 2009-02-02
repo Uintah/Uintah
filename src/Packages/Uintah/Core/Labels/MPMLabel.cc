@@ -348,7 +348,7 @@ MPMLabel::MPMLabel()
   CenterOfMassPositionLabel = VarLabel::create( "CenterOfMassPosition",
 				 sumvec_vartype::getTypeDescription() );
 
-  CenterOfMassVelocityLabel = VarLabel::create( "CenterOfMassVelocity",
+  TotalMomentumLabel = VarLabel::create( "TotalMomentum",
 				 sumvec_vartype::getTypeDescription() );
 
   // for assigning particle ids
@@ -669,7 +669,7 @@ MPMLabel::~MPMLabel()
       VarLabel::destroy(BndyTractionLabel[iside]);
   }
   VarLabel::destroy(CenterOfMassPositionLabel);
-  VarLabel::destroy(CenterOfMassVelocityLabel);
+  VarLabel::destroy(TotalMomentumLabel);
   VarLabel::destroy(pCellNAPIDLabel);
 
   VarLabel::destroy(gVelocityOldLabel);

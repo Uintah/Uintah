@@ -747,7 +747,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->CenterOfMassVelocityLabel);
+  t->computes(lb->TotalMomentumLabel);
   
   // debugging scalar
   if(flags->d_with_color) {

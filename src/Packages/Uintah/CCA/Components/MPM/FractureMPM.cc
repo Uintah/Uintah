@@ -981,7 +981,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->ThermalEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->CenterOfMassVelocityLabel);
+  t->computes(lb->TotalMomentumLabel);
 
   // debugging scalar
   if(flags->d_with_color) {
@@ -2860,7 +2860,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
     Vector CMX(0.0,0.0,0.0);
-    Vector CMV(0.0,0.0,0.0);
+    Vector totalMom(0.0,0.0,0.0);
     double ke=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
@@ -3051,7 +3051,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
 	ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-	CMV += pvelocitynew[idx]*pmass[idx];
+	totalMom += pvelocitynew[idx]*pmass[idx];
       }
 
       // Delete particles whose mass is too small (due to combustion)
@@ -3084,11 +3084,11 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
-    new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
+    new_dw->put(sumvec_vartype(CMX),         lb->CenterOfMassPositionLabel);
+    new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
     
     // cout << "Solid mass lost this timestep = " << massLost << endl;
-    // cout << "Solid momentum after advection = " << CMV << endl;
+    // cout << "Solid momentum after advection = " << totalMom << endl;
     
     // cout << "THERMAL ENERGY " << thermal_energy << endl;
     

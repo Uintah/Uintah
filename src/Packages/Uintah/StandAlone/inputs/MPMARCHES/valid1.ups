@@ -28,7 +28,7 @@
 	<save label = "KineticEnergy"/>
 	<save label = "TotalMass"/>
 	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
+	<save label = "TotalMomentum"/>
 	<save label = "p.particleID"/>
 	<save label = "p.x"/>
 	<save label = "p.temperature"/>

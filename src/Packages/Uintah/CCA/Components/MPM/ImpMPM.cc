@@ -1412,7 +1412,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 
   t->computes(lb->KineticEnergyLabel);
   t->computes(lb->CenterOfMassPositionLabel);
-  t->computes(lb->CenterOfMassVelocityLabel);
+  t->computes(lb->TotalMomentumLabel);
   t->computes(lb->ThermalEnergyLabel);
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -3505,7 +3505,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   
     // DON'T MOVE THESE!!!
     Vector CMX(0.0,0.0,0.0);
-    Vector CMV(0.0,0.0,0.0);
+    Vector totalMom(0.0,0.0,0.0);
     double ke=0;
     double thermal_energy = 0.0;
     //double thermal_energy2 = 0.0;
@@ -3624,7 +3624,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         //thermal_energy2 += potential_energy* pvolume[idx];
         ke += .5*pmass[idx]*pvelnew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
-        CMV += pvelnew[idx]*pmass[idx];
+        totalMom += pvelnew[idx]*pmass[idx];
       }
  
       if(mpm_matl->getIsRigid()) {
@@ -3650,7 +3650,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
-    new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
+    new_dw->put(sumvec_vartype(totalMom),    lb->TotalMomentumLabel);
     new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
 
     delete interpolator;

@@ -29,7 +29,7 @@
        <save label = "TotalMass"/>
        <save label = "StrainEnergy"/>
        <save label = "CenterOfMassPosition"/>
-       <save label = "CenterOfMassVelocity"/>
+       <save label = "TotalMomentum"/>
        <save label = "g.mass"/>
        <save label = "g.stressFS"/>
 -->

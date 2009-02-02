@@ -148,7 +148,7 @@ using std::vector;
       const VarLabel* BndyContactAreaLabel[6];
       const VarLabel* BndyContactCellAreaLabel[6];
       const VarLabel* CenterOfMassPositionLabel;
-      const VarLabel* CenterOfMassVelocityLabel;
+      const VarLabel* TotalMomentumLabel;
 
       const VarLabel* pCellNAPIDLabel;
 
