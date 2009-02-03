@@ -209,7 +209,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
       if(d_myworld->myrank()==0 && !(d_tileSize[l+1]==original_tile_size))
       {
-        cout << "Tile size on level:" << l << " changed from " << original_tile_size << " to " << d_tileSize[l+1] << endl;
+        cout << "Tile size on level:" << l+2 << " changed from " << original_tile_size << " to " << d_tileSize[l+1] << endl;
       }
       
       if(d_myworld->size()>1)
