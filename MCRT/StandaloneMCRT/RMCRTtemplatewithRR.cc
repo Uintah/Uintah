@@ -1455,7 +1455,7 @@ int main(int argc, char *argv[]){
   timeused = difftime (time_end,time_start);
   cout << " time used up (S) = " << timeused << "sec." << endl;
 
-  /*
+  
   delete[] T_Vol;
   delete[] kl_Vol;   
   delete[] scatter_Vol;
@@ -1545,7 +1545,7 @@ int main(int argc, char *argv[]){
   delete[] global_qsurface;
   delete[] global_Qsurface;
 
-  */
+  
   return 0;
 
 
