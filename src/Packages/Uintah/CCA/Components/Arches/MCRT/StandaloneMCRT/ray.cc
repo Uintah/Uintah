@@ -676,12 +676,8 @@ void ray::hitRealSurfaceInten(const double *absorb_surface,
   else ratio = rhod / ( rhos + rhod );
 
   // the left part! the carrying on part
-  // PathSurfaceLeft = 1 - alpha;
+  PathSurfaceLeft = 1 - alpha;
 
-  // Lamberian reflectance cosine law?
-  //
-  PathSurfaceLeft = (1 - alpha) * abs(directionVector[2]);
-  
   // check for the rest of the ray , if diffuse reflected or specular reflected
   if ( ratio <= 1   ) {
     
