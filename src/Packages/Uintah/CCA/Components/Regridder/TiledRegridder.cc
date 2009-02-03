@@ -83,6 +83,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
         //for each fine tile on the fine level
         //multipying by the refinement ratio places the coordinates in the finer level space, dividing by the tile size makes the iterator hit each tile only once
+        ASSERT( !((patch->getCellHighIndex__New()-patch->getCellLowIndex__New())*d_cellRefinementRatio[l] < d_tileSize[l+1]))  ;
         for (CellIterator ti(patch->getCellLowIndex__New()*d_cellRefinementRatio[l]/d_tileSize[l+1], patch->getCellHighIndex__New()*d_cellRefinementRatio[l]/d_tileSize[l+1]); !ti.done(); ti++)
         {
           //compute the starting cells of the tile
@@ -162,17 +163,23 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
           //if dimension is not equal to 1 and is smaller than the other dimensions
           if(d_minTileSize[l+1][d]>1 && (min_dim==-1 || d_tileSize[l+1][d]<d_tileSize[l+1][min_dim]))
           {
-            min_dim=d;
+            //don't allow tiles to be bigger than the coarser tile
+            if(d_tileSize[l+1][d]*2<=d_tileSize[l][d]*d_cellRefinementRatio[l][d])
+              min_dim=d;
           }
         }
-        //increase that dimension by the min_tile_size
-        //d_tileSize[l+1][min_dim]+=d_minTileSize[l+1][min_dim];
-        d_tileSize[l+1][min_dim]*=2;
-        if(d_myworld->myrank()==0)
+
+        if(min_dim!=-1)
         {
-            cout << " Increasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << endl;
+          //increase that dimension by the min_tile_size
+          //d_tileSize[l+1][min_dim]+=d_minTileSize[l+1][min_dim];
+          d_tileSize[l+1][min_dim]*=2;
+          if(d_myworld->myrank()==0)
+          {
+            cout << " Increasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << " coarser tile " << d_tileSize[l] << endl;
+          }
+          retry=true;
         }
-        retry=true;
       }
 
       if(retry)
