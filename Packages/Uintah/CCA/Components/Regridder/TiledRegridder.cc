@@ -67,6 +67,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //for each level fine to coarse 
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
   {
+    IntVector original_tile_size=d_tileSize[l+1];
     bool retry;
     do
     {
@@ -144,8 +145,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
           {
             d_tileSize[l+1][dims[d]]=new_size;
             
-            if(d_myworld->myrank()==0)
-              cout << " Decreasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << endl;
+            //if(d_myworld->myrank()==0)
+            //  cout << " Decreasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << endl;
 
             retry=true;
             break;
@@ -174,10 +175,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
           //increase that dimension by the min_tile_size
           //d_tileSize[l+1][min_dim]+=d_minTileSize[l+1][min_dim];
           d_tileSize[l+1][min_dim]*=2;
-          if(d_myworld->myrank()==0)
-          {
-            cout << " Increasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << " coarser tile " << d_tileSize[l] << endl;
-          }
+          //if(d_myworld->myrank()==0)
+          //  cout << " Increasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << " coarser tile " << d_tileSize[l] << endl;
           retry=true;
         }
       }
@@ -187,9 +186,10 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
         continue;
       }
 
-      //if tile size has changed
-        //continue
-
+      if(d_myworld->myrank()==0 && !(d_tileSize[l+1]==original_tile_size))
+      {
+        cout << "Tile size on level:" << l << " changed to " << d_tileSize[l+1] << endl;
+      }
       if(d_myworld->size()>1)
       {
         //compute the displacements and recieve counts for a gatherv
