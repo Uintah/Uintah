@@ -69,6 +69,9 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   {
     IntVector original_tile_size=d_tileSize[l+1];
     bool retry;
+    vector<IntVector> myoldtiles;
+    IntVector old_tile_size=IntVector(0,0,0);
+    int old_volume=INT_MAX;
     do
     {
       retry=false;
@@ -120,10 +123,19 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       {
         num_patches+=counts[p];
       }
-
-      if(num_patches<target_patches_)
+      
+      int volume=num_patches*d_tileSize[l+1][0]*d_tileSize[l+1][1]*d_tileSize[l+1][2];
+      
+      if(volume*.90>old_volume) //if increasing the tile size significantly increased the volume
+      {
+        //restore old tiles 
+        mytiles.swap(myoldtiles); 
+        d_tileSize[l+1]=old_tile_size;
+      }
+      else if(num_patches<target_patches_) //decrease tile size
       {
         //decrease tile size
+        old_tile_size=d_tileSize[l+1];
 
         //sort the current tile size largest to smallest
         int dims[3]={0,1,2};
@@ -156,6 +168,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       else if (num_patches>2*target_patches_)
       {
         //increase tile size
+        old_tile_size=d_tileSize[l+1];
         int min_dim=-1;
 
         //find the smallest non-1 dimension
@@ -183,6 +196,9 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
       if(retry)
       {
+        //save tiles in case we want to restore them later
+        old_volume=volume;
+        myoldtiles.swap(mytiles); 
         continue;
       }
 
@@ -190,6 +206,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       {
         cout << "Tile size on level:" << l << " changed to " << d_tileSize[l+1] << endl;
       }
+      
       if(d_myworld->size()>1)
       {
         //compute the displacements and recieve counts for a gatherv
