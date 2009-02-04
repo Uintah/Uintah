@@ -99,9 +99,9 @@ if ( $gpFile ne "") {
   $title = $gpData->{title}[0];
   $xlabel= $gpData->{xlabel}[0];
   $ylabel= $gpData->{ylabel}[0];
-  system("sed", "-i", "s/#title/set title '$title'/g", "$gpFile");
-  system("sed", "-i", "s/#xlabel/set xlabel '$xlabel'/g", "$gpFile");
-  system("sed", "-i", "s/#ylabel/set ylabel '$ylabel'/g", "$gpFile");
+  system("sed", "-i", "s/#title/set title \"$title\"/g", "$gpFile");
+  system("sed", "-i", "s/#xlabel/set xlabel \"$xlabel\"/g", "$gpFile");
+  system("sed", "-i", "s/#ylabel/set ylabel \"$ylabel\"/g", "$gpFile");
  
   print "Now plotting Analysis with $gpFile \n";
   `gnuplot $gpFile >&gp.out`;
