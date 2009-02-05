@@ -46,12 +46,12 @@ DEALINGS IN THE SOFTWARE.
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
   class Kayenta : public ConstitutiveModel {
   public:
     double UI[60];
-    vector<string> ISVNames;
     vector<const VarLabel*> ISVLabels;
     vector<const VarLabel*> ISVLabels_preReloc;
     int d_NINSV;
