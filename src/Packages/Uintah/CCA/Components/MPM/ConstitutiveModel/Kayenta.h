@@ -51,7 +51,7 @@ DEALINGS IN THE SOFTWARE.
 namespace Uintah {
   class Kayenta : public ConstitutiveModel {
   public:
-    double UI[60];
+    double UI[90];
     vector<const VarLabel*> ISVLabels;
     vector<const VarLabel*> ISVLabels_preReloc;
     int d_NINSV;

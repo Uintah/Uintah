@@ -30,18 +30,15 @@
 # 
 # Makefile fragment for this subdirectory
 
-#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
-
 SRCDIR   := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/fortran
 
-FFLAGS += -DNOEOSMOD
+FFLAGS += -DNOEOSMOD -DGEO_MBF_BETA
 
 SRCS     += \
 	$(SRCDIR)/Hooke.F	\
 	$(SRCDIR)/geochk.F	\
 	$(SRCDIR)/Isotropic_Geomaterial_init.F	\
 	$(SRCDIR)/Isotropic_Geomaterial_calcs.F	\
+	$(SRCDIR)/Isotropic_Geomaterial_calcNew.F	\
 	$(SRCDIR)/MIGUtilsF.F	\
 	$(SRCDIR)/MIGUtils.cc
-
-#$(SRCDIR)/HookeChk.$(OBJEXT): $(SRCDIR)/HookeChk_fort.h
