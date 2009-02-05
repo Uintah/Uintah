@@ -1874,31 +1874,31 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         // Get the load curve data
         constParticleVariable<int> pLoadCurveID;
         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
- 
+        
         if(do_PressureBCs){
-        // Iterate over the particles
-        ParticleSubset::iterator iter = pset->begin();
-        for(;iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          int loadCurveID = pLoadCurveID[idx]-1;
-          if (loadCurveID < 0) {
-            pExternalForce_new[idx] = pExternalForce[idx];
-          } else {
-            PressureBC* pbc = pbcP[loadCurveID];
-            double force = forceMagPerPart[loadCurveID];
-            pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+          // Iterate over the particles
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            int loadCurveID = pLoadCurveID[idx]-1;
+            if (loadCurveID < 0) {
+              pExternalForce_new[idx] = pExternalForce[idx];
+            } else {
+              PressureBC* pbc = pbcP[loadCurveID];
+              double force = forceMagPerPart[loadCurveID];
+              pExternalForce_new[idx] = pbc->getForceVector(px[idx], force);
+            }
           }
-        }
         } //end d0_PressureBCs
         
-//       if (flags->d_useLoadCurves) {
+        //       if (flags->d_useLoadCurves) {
         // Get the load curve data
-//         constParticleVariable<int> pLoadCurveID;
-//         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-      
+        //         constParticleVariable<int> pLoadCurveID;
+        //         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+        
         else if(do_NormalForceBCs){ 
-             
-            if (!forceMagPerPart.empty()) {
+          
+          if (!forceMagPerPart.empty()) {
             double mag = forceMagPerPart[0];
             //cout << "force mag = " << mag << endl;
             // Iterate over the particles
@@ -1908,46 +1908,56 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
                 // For particles with an existing external force, apply the
                 // new magnitude to the same direction.
                 if(pExternalForce[idx].length() > 1.e-7){
-                pExternalForce_new[idx] = mag*
+                  pExternalForce_new[idx] = mag*
                     (pExternalForce[idx]/pExternalForce[idx].length());
                 } else{
-                pExternalForce_new[idx] = Vector(0.,0.,0.);
+                  pExternalForce_new[idx] = Vector(0.,0.,0.);
                 }
             } //end pset for
-            } else {
-                ParticleSubset::iterator iter = pset->begin();
-                for(;iter != pset->end(); iter++){
-                    particleIndex idx = *iter;
-                    pExternalForce_new[idx] = pExternalForce[idx]
-                    *flags->d_forceIncrementFactor;
-                }
-            } 
-        } // if do_NormalForceBCs
-
-        else if (!heatFluxMagPerPart.empty()) {
-                   
-        //double mag = heatFluxMagPerPart[0];
-        //cout << "heat flux mag = " << mag << endl;
+          } else {
             ParticleSubset::iterator iter = pset->begin();
             for(;iter != pset->end(); iter++){
-                //input the theta calculation here.
-                particleIndex idx = *iter;
-                int loadCurveID = pLoadCurveID[idx]-1;
-                if (loadCurveID < 0) {
-                pExternalHeatFlux_new[idx] = 0.;
-                } else {
-                //              pExternalHeatFlux_new[idx] = mag;
-                pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
-                }
+              particleIndex idx = *iter;
+              pExternalForce_new[idx] = pExternalForce[idx]
+                *flags->d_forceIncrementFactor;
             }
+          } 
+        } // if do_NormalForceBCs
+        else {
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pExternalForce_new[idx] = pExternalForce[idx]
+              *flags->d_forceIncrementFactor;
+          }
         }
+        
+        if (!heatFluxMagPerPart.empty()) {
+          
+          //double mag = heatFluxMagPerPart[0];
+          //cout << "heat flux mag = " << mag << endl;
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            //input the theta calculation here.
+            particleIndex idx = *iter;
+            int loadCurveID = pLoadCurveID[idx]-1;
+            if (loadCurveID < 0) {
+              pExternalHeatFlux_new[idx] = 0.;
+            } else {
+              //              pExternalHeatFlux_new[idx] = mag;
+              pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
+            }
+          }
+        }
+
+        
         // Recycle the loadCurveIDs
         ParticleVariable<int> pLoadCurveID_new;
         new_dw->allocateAndPut(pLoadCurveID_new, 
-                            lb->pLoadCurveIDLabel_preReloc, pset);
+                               lb->pLoadCurveIDLabel_preReloc, pset);
         pLoadCurveID_new.copyData(pLoadCurveID);
-        } else { //not use pLoadCurve
-                                                                               
+      } else { //not use pLoadCurve
+        
         // Iterate over the particles
         ParticleSubset::iterator iter = pset->begin();
         for(;iter != pset->end(); iter++){
@@ -1957,7 +1967,7 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
         }
       }
-
+      
       // Prescribe an external heat rate to some particles
       ParticleVariable<double> pExtHeatRate;
       new_dw->allocateAndPut(pExtHeatRate, lb->pExternalHeatRateLabel,  pset);
@@ -1967,12 +1977,12 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         particleIndex idx = *iter;
         pExtHeatRate[idx]=0.0;
 #if 0
-      if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562 ||
-         px[idx].z()>.0562 || px[idx].z()<-.0562){
+        if(px[idx].x()*px[idx].x() + px[idx].y()*px[idx].y() > 0.0562*0.0562 ||
+           px[idx].z()>.0562 || px[idx].z()<-.0562){
           pExtHeatRate[idx]=0.001;
         }
 #endif
-
+        
       }
 
     } // matl loop
