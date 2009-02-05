@@ -88,21 +88,25 @@ using namespace SCIRun;
 Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
 {
+  // pre-initialize all of the user inputs to zero.
+  for(int i = 0; i<90; i++){
+     UI[i] = 0.;
+  }
   // Read model parameters from the input file
   getInputParameters(ps);
 
   // Check that model parameters are valid and allow model to change if needed
+
   GEOCHK(UI,UI,UI);
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
   d_NINSV=36;
   initializeLocalMPMLabels();
-
 }
 
 Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
 {
-  for(int i=0;i<40;i++){
+  for(int i=0;i<90;i++){
     UI[i] = cm->UI[i];
   }
 
@@ -680,7 +684,6 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("CRPF",UI[37],0.0);// flow potential analog of CR
   ps->getWithDefault("RKPF",UI[38],0.0);// flow potential analog of RK
   ps->getWithDefault("SUBX",UI[39],0.0);// subcycle control exponent (dim. less)
-#if 0
   ps->getWithDefault("DEJAVU",UI[40],0.0);//
   ps->getWithDefault("FSPEED",UI[41],0.0);//
   ps->getWithDefault("PEAKI1I",UI[42],0.0);//
@@ -701,7 +704,6 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("FREE08",UI[57],0.0);//
   ps->getWithDefault("YSLOPEI",UI[58],0.0);//
   ps->getWithDefault("YSLOPEF",UI[59],0.0);//
-#endif
 }
 
 void
