@@ -192,7 +192,7 @@ void Kayenta::initializeCMData(const Patch* patch,
 
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 
-  for(int i=1;i<=d_NINSV;i++){
+  for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end(); iter++){
@@ -215,7 +215,7 @@ void Kayenta::allocateCMDataAddRequires(Task* task,
   // This method is defined in the ConstitutiveModel base class.
   addSharedRForConvertExplicit(task, matlset, patches);
   // Add requires local to this model
-  for(int i=1;i<=d_NINSV;i++){
+  for(int i=0;i<d_NINSV;i++){
     task->requires(Task::NewDW,ISVLabels_preReloc[i], matlset, Ghost::None);
   }
 }
@@ -236,7 +236,7 @@ void Kayenta::allocateCMDataAdd(DataWarehouse* new_dw,
   StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
   StaticArray<constParticleVariable<double> > o_ISVs(d_NINSV+1);
 
-  for(int i=1;i<=d_NINSV;i++){
+  for(int i=0;i<d_NINSV;i++){
     new_dw->allocateTemporary(ISVs[i], addset);
     new_dw->get(o_ISVs[i],ISVLabels_preReloc[i], delset);
 
@@ -252,7 +252,7 @@ void Kayenta::addParticleState(std::vector<const VarLabel*>& from,
                                std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
-  for(int i=1;i<=d_NINSV;i++){
+  for(int i=0;i<d_NINSV;i++){
     from.push_back(ISVLabels[i]);
     to.push_back(ISVLabels_preReloc[i]);
   }
@@ -343,7 +343,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
-    for(int i=1;i<=d_NINSV;i++){
+    for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
 
@@ -359,7 +359,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
 
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
-    for(int i=1;i<=d_NINSV;i++){
+    for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
     }
 
@@ -445,15 +445,15 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       int nblk = 1;
 
       // Load ISVs into a 1D array for fortran code
-      for(int i=1;i<=d_NINSV;i++){
-        svarg[i-1]=ISVs[i][idx];
+      for(int i=0;i<d_NINSV;i++){
+        svarg[i]=ISVs[i][idx];
       }
 
       ISOTROPIC_GEOMATERIAL_CALC(nblk, d_NINSV, dt, UI, sigarg,
                                  Darray, svarg, USM);
 
       // Unload ISVs from 1D array into ISVs_new 
-      for(int i=1;i<=d_NINSV;i++){
+      for(int i=0;i<d_NINSV;i++){
         ISVs_new[i][idx]=svarg[i-1];
       }
 
@@ -534,7 +534,7 @@ void Kayenta::carryForward(const PatchSubset* patches,
     StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
 
-    for(int i=1;i<=d_NINSV;i++){
+    for(int i=1;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
       ISVs_new[i].copyData(ISVs[i]);
@@ -556,7 +556,7 @@ void Kayenta::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
 
   // Other constitutive model and input dependent computes and requires
-  for(int i=1;i<=d_NINSV;i++){
+  for(int i=0;i<d_NINSV;i++){
     task->computes(ISVLabels_preReloc[i], matlset);
   }
 }
@@ -571,7 +571,7 @@ void Kayenta::addComputesAndRequires(Task* task,
   addSharedCRForHypoExplicit(task, matlset, patches);
 
   // Computes and requires for internal state data
-  for(int i=1;i<=d_NINSV;i++){
+  for(int i=0;i<d_NINSV;i++){
     task->requires(Task::OldDW, ISVLabels[i],          matlset, Ghost::None);
     task->computes(             ISVLabels_preReloc[i], matlset);
   }
