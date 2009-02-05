@@ -886,7 +886,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
         cerr << "F_inc = " << tensorFinc << endl;
         cerr << "F_new = " << tensorF_new << endl;
         cerr << "J = " << J << endl;
-        throw ParameterNotFound("**ERROR**:ElasticPlastic", __FILE__, __LINE__);
+        throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -1502,7 +1502,7 @@ ElasticPlastic::computeDeltaGamma(const double& delT,
            << " dsigy/depdot = " << dsigy_depdot << " dsigy/dep= " << dsigy_dep 
            << " epdot = " << state->plasticStrainRate 
            << " ep = " << state->plasticStrain << endl;
-      throw ParameterNotFound("**ERROR**:ElasticPlastic: Found nan.", __FILE__, __LINE__);
+      throw InternalError("nans in computation",__FILE__,__LINE__);
     }
 
     // Update local plastic strain rate
@@ -1704,7 +1704,7 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:ElasticPlastic:Implicit", __FILE__, __LINE__);
+        throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
 
       // Calculate the current density and deformed volume
@@ -2054,7 +2054,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
       if (!(J > 0.0)) {
         cerr << getpid() 
              << "**ERROR** Negative Jacobian of deformation gradient" << endl;
-        throw ParameterNotFound("**ERROR**:ElasticPlastic:Implicit", __FILE__, __LINE__);
+        throw InternalError("Negative Jacobian",__FILE__,__LINE__);
       }
 
       // Calculate the current density and deformed volume
