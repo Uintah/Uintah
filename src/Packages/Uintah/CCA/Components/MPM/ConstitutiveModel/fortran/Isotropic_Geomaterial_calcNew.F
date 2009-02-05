@@ -28,12 +28,12 @@ C
 C
 C 
 C 
-#ifndef GEO_MBF_BETA
+#ifdef GEO_MBF_BETA
       SUBROUTINE ISOTROPIC_GEOMATERIAL_CALC( NBLK, NINSV, DT, PROP,
      $                                   SIGARG, D, SVARG, USM)
 
       CHARACTER*27 IAM
-      PARAMETER (IAM='Isotropic_Geomaterial_calcs')
+      PARAMETER (IAM='Isotropic_Geomaterial_calcNew')
 
       CALL LOGMES('This model is only available to licensees')
       CALL FATERR(IAM,'See Jim Guilkey for more information')
