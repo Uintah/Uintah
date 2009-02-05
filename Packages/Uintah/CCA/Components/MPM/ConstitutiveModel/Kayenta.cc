@@ -630,14 +630,12 @@ void
 Kayenta::getInputParameters(ProblemSpecP& ps)
 {
   ps->require("B0",UI[0]);              // initial bulk modulus (stress)
-  cout << UI[0] << endl;
   ps->getWithDefault("B1",UI[1],0.0);   // nonlinear bulk mod param (stress)
   ps->getWithDefault("B2",UI[2],0.0);   // nonlinear bulk mod param (stress)
   ps->getWithDefault("B3",UI[3],0.0);   // nonlinear bulk mod param (stress)
   ps->getWithDefault("B4",UI[4],0.0);   // nonlinear bulk mod param (dim. less)
 
   ps->require("G0",UI[5]);              // initial shear modulus (stress)
-  cout << UI[5] << endl;
   ps->getWithDefault("G1",UI[6],0.0);   // nonlinear shear mod param (dim. less)
   ps->getWithDefault("G2",UI[7],0.0);   // nonlinear shear mod param (1/stress)
   ps->getWithDefault("G3",UI[8],0.0);   // nonlinear shear mod param (stress)
@@ -682,6 +680,7 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("CRPF",UI[37],0.0);// flow potential analog of CR
   ps->getWithDefault("RKPF",UI[38],0.0);// flow potential analog of RK
   ps->getWithDefault("SUBX",UI[39],0.0);// subcycle control exponent (dim. less)
+#if 0
   ps->getWithDefault("DEJAVU",UI[40],0.0);//
   ps->getWithDefault("FSPEED",UI[41],0.0);//
   ps->getWithDefault("PEAKI1I",UI[42],0.0);//
@@ -689,7 +688,7 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("FSLOPEI",UI[44],0.0);//
   ps->getWithDefault("PEAKI1F",UI[45],0.0);//
   ps->getWithDefault("STRENF", UI[46],0.0);//
-  ps->getWithDefault("JOBFAIL",UI[47],2.0);//
+  ps->getWithDefault("JOBFAIL",UI[47],0.0);//
   ps->getWithDefault("FSLOPEF",UI[48],0.0);//
   ps->getWithDefault("FAILSTAT",UI[49],0.0);//
   ps->getWithDefault("FREE01",UI[50],0.0);//
@@ -702,51 +701,55 @@ Kayenta::getInputParameters(ProblemSpecP& ps)
   ps->getWithDefault("FREE08",UI[57],0.0);//
   ps->getWithDefault("YSLOPEI",UI[58],0.0);//
   ps->getWithDefault("YSLOPEF",UI[59],0.0);//
+#endif
 }
 
 void
 Kayenta::initializeLocalMPMLabels()
 {
-  ISVNames.resize(d_NINSV+1);
-  
-  ISVNames[1] ="KAPPA";
-  ISVNames[2] ="INDEX";
-  ISVNames[3] ="EQDOT";
-  ISVNames[4] ="I1";
-  ISVNames[5] ="ROOTJ2";
-  ISVNames[6] ="ALXX";
-  ISVNames[7] ="ALYY";
-  ISVNames[8] ="ALZZ";
-  ISVNames[9] ="ALXY";
-  ISVNames[10]="ALYZ";
-  ISVNames[11]="ALXZ";
-  ISVNames[12]="GFUN";
-  ISVNames[13]="EQPS";
-  ISVNames[14]="EQPV";
-  ISVNames[15]="EL0";
-  ISVNames[16]="HK";
-  ISVNames[17]="EVOL";
-  ISVNames[18]="BACKRN";
-  ISVNames[19]="CRACK";
-  ISVNames[20]="SHEAR";
-  ISVNames[21]="YIELD";
-  ISVNames[22]="LODE";
-  ISVNames[23]="QSSIGXX";
-  ISVNames[24]="QSSIGYY";
-  ISVNames[25]="QSSIGZZ";
-  ISVNames[26]="QSSIGXY";
-  ISVNames[27]="QSSIGYZ";
-  ISVNames[28]="QSSIGXZ";
-  ISVNames[29]="DSCP";
-  ISVNames[30]="QSEL";
-  ISVNames[31]="QSBSXX";
-  ISVNames[32]="QSBSYY";
-  ISVNames[33]="QSBSZZ";
-  ISVNames[34]="QSBSXY";
-  ISVNames[35]="QSBSYZ";
-  ISVNames[36]="QSBSXZ";
+  vector<string> ISVNames;
 
-  for(int i=1;i<=d_NINSV;i++){
+  ISVNames.push_back("KAPPA");
+  ISVNames.push_back("INDEX");
+  ISVNames.push_back("EQDOT");
+  ISVNames.push_back("I1");
+  ISVNames.push_back("ROOTJ2");
+  ISVNames.push_back("ALXX");
+  ISVNames.push_back("ALYY");
+  ISVNames.push_back("ALZZ");
+  ISVNames.push_back("ALXY");
+  ISVNames.push_back("ALYZ");
+  ISVNames.push_back("ALXZ");
+  ISVNames.push_back("GFUN");
+  ISVNames.push_back("EQPS");
+  ISVNames.push_back("EQPV");
+  ISVNames.push_back("EL0");
+  ISVNames.push_back("HK");
+  ISVNames.push_back("EVOL");
+  ISVNames.push_back("BACKRN");
+  ISVNames.push_back("CRACK");
+  ISVNames.push_back("SHEAR");
+  ISVNames.push_back("YIELD");
+  ISVNames.push_back("LODE");
+  ISVNames.push_back("QSSIGXX");
+  ISVNames.push_back("QSSIGYY");
+  ISVNames.push_back("QSSIGZZ");
+  ISVNames.push_back("QSSIGXY");
+  ISVNames.push_back("QSSIGYZ");
+  ISVNames.push_back("QSSIGXZ");
+  ISVNames.push_back("DSCP");
+  ISVNames.push_back("QSEL");
+  ISVNames.push_back("QSBSXX");
+  ISVNames.push_back("QSBSYY");
+  ISVNames.push_back("QSBSZZ");
+  ISVNames.push_back("QSBSXY");
+  ISVNames.push_back("QSBSYZ");
+  ISVNames.push_back("QSBSXZ");
+
+//    vector<const VarLabel*> ISVlabels;
+//    vector<const VarLabel*> ISVlabels_preReloc;
+
+  for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
                           ParticleVariable<double>::getTypeDescription()));
     ISVLabels_preReloc.push_back(VarLabel::create(ISVNames[i]+"+",
