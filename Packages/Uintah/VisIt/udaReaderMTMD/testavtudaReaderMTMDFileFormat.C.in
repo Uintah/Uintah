@@ -212,6 +212,12 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   
   currTimeStep = -1;
   lastTimeStep = -1;
+  
+  ccMesh = false;
+  ncMesh = false;
+  sfcxMesh = false;
+  sfcyMesh = false;
+  sfczMesh = false;
 
   cout << "Out avtudaReaderFileFormat\n";
 }
@@ -270,6 +276,12 @@ avtudaReaderMTMDFileFormat::FreeUpResources(void)
   currLevel = -1;
   currVar.assign("any_var");
   currMesh.assign("any_mesh");
+
+  // ccMesh = false;
+  // ncMesh = false;
+  // sfcxMesh = false;
+  // sfcyMesh = false;
+  // sfczMesh = false;
 
   // callDomainNesting = false;
 
@@ -431,11 +443,89 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
   for (int i = 0; i < udaVarsObj.size(); i++) {
     if (udaVarsObj[i].find("p.") == string::npos) {
+      char tmpArray[128];
       string varname = udaVarsObj[i];
       size_t found = varname.find("/");
 
       string vartype = varname.substr(found + 1);
       varname = varname.substr(0, found);
+
+      string mesh_for_this_var;
+
+      if (vartype.find("NC") != string::npos) {
+	cent = AVT_NODECENT;
+	mesh_for_this_var.assign("NC_Mesh"); 
+      }  
+      else if (vartype.find("CC") != string::npos) {  
+	cent = AVT_ZONECENT;
+	mesh_for_this_var.assign("CC_Mesh"); 
+      }
+      else if (vartype.find("SFC") != string::npos) { 
+	cent = AVT_ZONECENT;
+
+	if (vartype.find("SFCX") != string::npos)		
+	  mesh_for_this_var.assign("SFCX_Mesh");
+	else if (vartype.find("SFCY") != string::npos)		
+	  mesh_for_this_var.assign("SFCY_Mesh");
+	else if (vartype.find("SFCZ") != string::npos)		
+	  mesh_for_this_var.assign("SFCZ_Mesh");
+      }  
+
+      // mesh_for_this_var.append("mesh_");
+      // mesh_for_this_var.append(newVarname);
+
+      // cout << newVarname << " " << mesh_for_this_var << endl;
+
+      bool addMeshToMetadata = false;
+
+      if  ((vartype.find("NC") != string::npos) && ncMesh == false) {
+        ncMesh = true;
+	addMeshToMetadata = true;
+      }	
+      else if ((vartype.find("CC") != string::npos) && ccMesh == false) {
+        ccMesh = true;
+	addMeshToMetadata = true;
+      }
+      else if ((vartype.find("SFCX") != string::npos) && sfcxMesh == false) {
+        sfcxMesh = true;
+	addMeshToMetadata = true;
+      }	
+      else if ((vartype.find("SFCY") != string::npos) && sfcyMesh == false) {
+        sfcyMesh = true;
+	addMeshToMetadata = true;
+      }	
+      else if ((vartype.find("SFCZ") != string::npos) && sfczMesh == false) {
+        sfczMesh = true;
+        addMeshToMetadata = true;	   
+      }	   
+
+      if (addMeshToMetadata) {
+        strcpy(tmpArray, mesh_for_this_var.c_str());
+        avtMeshMetaData *mesh = new avtMeshMetaData;
+
+        mesh->name = tmpArray;
+        mesh->meshType = AVT_AMR_MESH;
+        mesh->topologicalDimension = 3;
+        mesh->spatialDimension = 3;
+
+        mesh->numBlocks = totalPatches;
+        mesh->blockTitle = "patches";
+        mesh->blockPieceName = "patch";
+        mesh->numGroups = numLevels;
+        mesh->groupTitle = "levels";
+        mesh->groupPieceName = "level";
+        mesh->blockNames = pieceNames;
+
+        mesh->hasSpatialExtents = true; 
+        mesh->minSpatialExtents[0] = minMaxArr[0];
+        mesh->maxSpatialExtents[0] = minMaxArr[3];
+        mesh->minSpatialExtents[1] = minMaxArr[1];
+        mesh->maxSpatialExtents[1] = minMaxArr[4];
+        mesh->minSpatialExtents[2] = minMaxArr[2];
+        mesh->maxSpatialExtents[2] = minMaxArr[5];
+
+        md->Add(mesh); 
+      }
 
       varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
       varMatls& varMatlsObj = *(varMatlsPtr); 
@@ -452,12 +542,12 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 	newVarname.append("/");
 	newVarname.append(buffer);
 
-	string mesh_for_this_var;
+	// string mesh_for_this_var;
 
-	mt = AVT_AMR_MESH;
-	topological_dimension = 3;
+	// mt = AVT_AMR_MESH;
+	// topological_dimension = 3;
 
-	if (vartype.find("NC") != string::npos) {
+	/*if (vartype.find("NC") != string::npos) {
 	  cent = AVT_NODECENT;
 	  mesh_for_this_var.assign("NC"); 
 	}  
@@ -477,16 +567,16 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 	}  
 
 	mesh_for_this_var.append("mesh_");
-	mesh_for_this_var.append(newVarname);
+	mesh_for_this_var.append(newVarname);*/
 
-	cout << newVarname << " " << mesh_for_this_var << endl;
+	// cout << newVarname << " " << mesh_for_this_var << endl;
 
 	/*AddMeshToMetaData(md, mesh_for_this_var, mt, extents, totalPatches, 1,
 	  3, topological_dimension);*/
 
-	strcpy(buffer, mesh_for_this_var.c_str());
+	// strcpy(buffer, mesh_for_this_var.c_str());
 
-	avtMeshMetaData *mesh = new avtMeshMetaData;
+	/*avtMeshMetaData *mesh = new avtMeshMetaData;
 
 	mesh->name = buffer;
 	mesh->meshType = AVT_AMR_MESH;
@@ -511,7 +601,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
 	mesh->blockNames = pieceNames;
 
-	md->Add(mesh); 
+	md->Add(mesh); */
 
 	if (vartype.find("Vector") != string::npos) 
 	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
@@ -522,6 +612,12 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
       }
     }   
   }
+  
+  ccMesh = false;
+  ncMesh = false;
+  sfcxMesh = false;
+  sfcyMesh = false;
+  sfczMesh = false;
 
   md->AddGroupInformation(numLevels, totalPatches, groupIds);
   md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
@@ -828,6 +924,11 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
   vtkDataSet *
 avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshname)
 {
+  if (currTimeStep != timestate) {
+    levelPatchVecPtr = (*getTotalNumPatches)(folder, timestate);
+    currTimeStep = timestate; 
+  }
+
   string meshName(meshname);
 
   if (meshName.find("mesh_particle") == string::npos) { // volume data

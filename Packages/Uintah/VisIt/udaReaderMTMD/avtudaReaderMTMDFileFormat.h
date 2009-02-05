@@ -141,7 +141,7 @@ protected:
         
   int         currLevel;
   std::string currVar, currMesh;
-  // bool callDomainNesting;
+  bool ccMesh, ncMesh, sfcxMesh, sfcyMesh, sfczMesh;
         
   int ncomps;
         
