@@ -30,13 +30,13 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 #include "VolElement.h"
-#include "RNG.h"
+#include "MersenneTwister.h"
 #include "Consts.h"
 
 using std::cout;
 using std::endl;
 
-class RNG;
+class MTRand;
 
 VolElement::VolElement(){ 
 }

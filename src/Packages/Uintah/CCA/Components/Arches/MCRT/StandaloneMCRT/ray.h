@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <cstdlib>
 
-#include "RNG.h"
+#include "MersenneTwister.h"
 #include "VirtualSurface.h"
 #include "RealSurface.h"
 #include "TopRealSurface.h"
@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include "LeftRealSurface.h"
 #include "RightRealSurface.h"
 
-class RNG;
+class MTRand;
 class VirtualSurface;
 class RealSurface;
 class TopRealSurface;
@@ -90,7 +90,7 @@ public:
  
   void get_directionS(double *s);
   double ray_length();
-  // int get_emissSurfaceIndex();
+ 
   int get_hitSurfaceIndex();
   int get_surfaceFlag() { return surfaceFlag; }
   
@@ -141,8 +141,11 @@ private:
   BackRealSurface obBack_ray;
   LeftRealSurface obLeft_ray;
   RightRealSurface obRight_ray;
-  
-  RNG rng;  
+
+  // Question: If another object MTrng is created here,
+  // it wont follow the same seed , seeded in the main function, right?
+  // then this will affect the randomness?? 
+  MTRand MTrng;  
   double dotProduct(const double *s1, const double *s2);
   void get_specular_s(double *spec_s);
   int Ncx, Ncy, Ncz, ghostX, ghostY, ghostTB;

@@ -29,10 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "ray.h"
-#include "RNG.h"
-#include "VirtualSurface.h"
 #include "Consts.h"
-#include "RealSurface.h"
 
 #include <cmath>
 #include <iostream>
@@ -150,46 +147,29 @@ void ray::set_emissP( const double &xlow, const double &xup,
 		      const double &ylow, const double &yup,
 		      const double &zlow, const double &zup){
   
-  double random1, random2, random3;
-  rng.RandomNumberGen(random1);
-  rng.RandomNumberGen(random2);
-  rng.RandomNumberGen(random3);
-  xemiss = xlow + ( xup - xlow ) * random1;
-  yemiss = ylow + ( yup - ylow ) * random2;
-  zemiss = zlow + ( zup - zlow ) * random3;
-    
-}
-
-void ray::set_emissS_vol(double *sVol){
-  double randomPhi, randomTheta;
-  rng.RandomNumberGen(randomPhi);
-  rng.RandomNumberGen(randomTheta);
-  double phi, theta;
-  phi = 2 * pi * randomPhi;
-  theta = acos( 1 - 2 * randomTheta); 
-  sVol[0] = sin(theta) * cos( phi ); // i 
-  sVol[1] = sin( theta ) * sin ( phi ) ;// j 
-  sVol[2] = 1 - 2 * randomTheta; // cos(theta), k 
-}
-
-
-
-// void ray::set_emissP_surf(const double &xlow, const double &xup,
-// 			  const double &ylow, const double &yup,
-// 			  const double &zlow, const double &zup){
-  
 //   double random1, random2, random3;
 //   rng.RandomNumberGen(random1);
 //   rng.RandomNumberGen(random2);
 //   rng.RandomNumberGen(random3);
+  xemiss = xlow + ( xup - xlow ) * MTrng.randExc();
+  yemiss = ylow + ( yup - ylow ) * MTrng.randExc();
+  zemiss = zlow + ( zup - zlow ) * MTrng.randExc();
+    
+}
 
-//   xemiss = xlow + (xup - xlow) * random1;
-//   yemiss = ylow + (yup - ylow) * random2;
-//   zemiss = zlow + (zup - zlow) * random3;
-// //   cout << "xemiss = " << xemiss << endl;
-// //   cout << "yemiss = " << yemiss << endl;
-// //   cout << "zemiss = " << zemiss << endl;
-// }
+void ray::set_emissS_vol(double *sVol){
+//   double randomPhi, randomTheta;
+//   rng.RandomNumberGen(randomPhi);
+//   rng.RandomNumberGen(randomTheta);
+  double phi, theta;
+  phi = 2 * pi * MTrng.randExc();
+  sVol[2] = 1 - 2 *  MTrng.randExc(); // cos(theta), k
+  
+  theta = acos(sVol[2]); 
+  sVol[0] = sin(theta) * cos( phi ); // i 
+  sVol[1] = sin( theta ) * sin ( phi ) ;// j 
+ 
+}
 
 
 double ray::get_xemiss(){
@@ -580,15 +560,13 @@ void ray::TravelInMediumInten(const double *kl_Vol,
    
   do {
       
-    rng.RandomNumberGen(random);
-    // the random number from drand48() could return [0,1)
+    // rng.RandomNumberGen(random);
+    // the random number from drand48() or MersenneTwister could return [0,1)
     // to avoid log(zero), now we use log(1-random)
     
-    // random number from Mersenee Twister can return either way,
-    // here we use (0,1]
-    
+ 
     // only use scattering coeff to get the scat_len.
-    scat_len = - log(random) / scat_m;
+    scat_len = - log( 1- MTrng.randExc() ) / scat_m;
 
     if ( scat_len >= length ) { // within this subregion scatter doesnot happen
       
@@ -618,7 +596,7 @@ void ray::TravelInMediumInten(const double *kl_Vol,
        for ( int i = 0; i < 3 ; i ++ ) sIncoming[i] = directionVector[i];
       
       // get a new direction vector s
-      obVirtual.get_s(rng, sIncoming, directionVector);
+      obVirtual.get_s(MTrng, sIncoming, directionVector);
       
       // update on xhit, yhit, zhit, and ray_length
       if( surfaceIntersect(X, Y, Z, VolFeature) ) {
@@ -657,7 +635,7 @@ void ray::hitRealSurfaceInten(const double *absorb_surface,
   // PathLength stores the left percentage, 1 - alpha
   // PathIndex stores the index of the surface
   
-  double alpha, rhos, rhod, ratio, random;
+  double alpha, rhos, rhod, ratio;
   double alpha_other, rhos_other, rhod_other;
   double spec_s[3];
 
@@ -673,7 +651,7 @@ void ray::hitRealSurfaceInten(const double *absorb_surface,
   rhos = rs_surface[hitSurfaceIndex];
   rhod = rd_surface[hitSurfaceIndex];
   //  cout << "hitSurfaceIndex inside = " << hitSurfaceIndex << endl;
-  rng.RandomNumberGen( random );
+  // rng.RandomNumberGen( random );
 
   if ( alpha == 1 ) ratio = 10; // black body
   else ratio = rhod / ( rhos + rhod );
@@ -684,11 +662,11 @@ void ray::hitRealSurfaceInten(const double *absorb_surface,
   // check for the rest of the ray , if diffuse reflected or specular reflected
   if ( ratio <= 1   ) {
     // cout << "random for reflection = " << random << endl;
-    if ( random <= ratio ) { // pure diffuse reflection
+    if ( MTrng.randExc() <= ratio ) { // pure diffuse reflection
       // cout << "diffuse" << endl;
       // check which surface, top , bottom, front, back, left or right
       // must follow this order
-      obReal->get_s(rng, directionVector);
+      obReal->get_s(MTrng, directionVector);
       //      cout << "ray line 732 " << endl;
     }
     else { // pure specular reflection
