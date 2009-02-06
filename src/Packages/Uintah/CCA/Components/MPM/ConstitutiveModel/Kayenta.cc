@@ -64,18 +64,24 @@ extern "C"{
 #if defined( FORTRAN_UNDERSCORE_END )
 #  define GEOCHK geochk_
 #  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geomaterial_calc_
+#  define GEORXV georxv_
 #elif defined( FORTRAN_UNDERSCORE_LINUX )
 #  define GEOCHK geochk_
+#  define GEORXV georxv_
 #  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geomaterial_calc__
 #else // NONE
 #  define GEOCHK geochk
 #  define ISOTROPIC_GEOMATERIAL_CALC isotropic_geommaterial_calc_
+#  define GEORXV georxv
 #endif
 
    void GEOCHK( double UI[], double UJ[], double UK[] );
    void ISOTROPIC_GEOMATERIAL_CALC( int &nblk, int &ninsv, double &dt,
                                     double UI[], double stress[], double D[],
                                     double svarg[], double &USM );
+   void GEORXV( double UI[], double UJ[], double UK[], int &nx, char* namea[],
+                char* keya[], double rinit[], double rdim[], int iadvct[], 
+                int itype[] );
 }
 
 // End fortran functions.
@@ -100,7 +106,19 @@ Kayenta::Kayenta(ProblemSpecP& ps,MPMFlags* Mflag)
   GEOCHK(UI,UI,UI);
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
-  d_NINSV=36;
+  int nx;
+  char* namea[5000];
+  char* keya[5000];
+  double rinit[100];
+  double rdim[700];
+  int iadvct[100];
+  int itype[100];
+  
+  GEORXV( UI, UI, UI, nx, namea, keya, rinit, rdim, iadvct, itype );
+
+  cout << "nx = " << nx << endl;
+  d_NINSV=nx;
+
   initializeLocalMPMLabels();
 }
 
@@ -111,7 +129,6 @@ Kayenta::Kayenta(const Kayenta* cm) : ConstitutiveModel(cm)
   }
 
   //Create VarLabels for GeoModel internal state variables (ISVs)
-  d_NINSV=36;
   initializeLocalMPMLabels();
 }
 
@@ -747,9 +764,8 @@ Kayenta::initializeLocalMPMLabels()
   ISVNames.push_back("QSBSXY");
   ISVNames.push_back("QSBSYZ");
   ISVNames.push_back("QSBSXZ");
-
-//    vector<const VarLabel*> ISVlabels;
-//    vector<const VarLabel*> ISVlabels_preReloc;
+  ISVNames.push_back("NONAME1");
+  ISVNames.push_back("NONAME2");
 
   for(int i=0;i<d_NINSV;i++){
     ISVLabels.push_back(VarLabel::create(ISVNames[i],
