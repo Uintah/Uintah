@@ -46,6 +46,11 @@ using namespace std;
 
 static DebugStream grid_dbg("GridDBG",false);
 
+int Product(const IntVector &i)
+{
+    return i[0]*i[1]*i[2];
+}
+
 TiledRegridder::TiledRegridder(const ProcessorGroup* pg) : RegridderCommon(pg)
 {
 
@@ -55,13 +60,47 @@ TiledRegridder::~TiledRegridder()
 {
 }
 
+
+void TiledRegridder::ComputeTiles(vector<IntVector> &tiles, const LevelP level, IntVector tile_size, IntVector cellRefinementRatio)
+{
+  DataWarehouse *dw=sched_->getLastDW();
+
+  const PatchSubset *ps=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
+  //for each patch I own
+  for(int p=0;p<ps->size();p++)
+  {
+    const Patch *patch=ps->get(p);
+    constCCVariable<int> flags;
+    dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
+
+    //for each fine tile on the fine level
+    //multipying by the refinement ratio places the coordinates in the finer level space, dividing by the tile size makes the iterator hit each tile only once
+    ASSERT( !((patch->getCellHighIndex__New()-patch->getCellLowIndex__New())*cellRefinementRatio < tile_size))  ;
+    for (CellIterator ti(patch->getCellLowIndex__New()*cellRefinementRatio/tile_size, patch->getCellHighIndex__New()*cellRefinementRatio/tile_size); !ti.done(); ti++)
+    {
+      //compute the starting cells of the tile
+      IntVector tile_start_fine=*ti*tile_size;
+      IntVector tile_start_coarse=tile_start_fine/cellRefinementRatio;
+
+      //for each coarse flag in tile
+      for(CellIterator ci(IntVector(0,0,0),tile_size/cellRefinementRatio); !ci.done(); ci++)
+      {
+        //if cell contains flag
+        if(flags[tile_start_coarse+*ci])
+        {
+          //add the tile to the finer level
+          tiles.push_back(tile_start_fine);
+          break;
+        }
+      }
+    }
+  }
+}
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
   MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
   TAU_PROFILE("TiledRegridder::regrid", " ", TAU_USER);
  
-  DataWarehouse *dw=sched_->getLastDW();
-
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
   
   //for each level fine to coarse 
@@ -78,38 +117,9 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       retry=false;
       vector<IntVector> mytiles;
       const LevelP level=oldGrid->getLevel(l);
-      const PatchSubset *ps=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
-      //for each patch I own
-      for(int p=0;p<ps->size();p++)
-      {
-        const Patch *patch=ps->get(p);
-        constCCVariable<int> flags;
-        dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
 
-        //for each fine tile on the fine level
-        //multipying by the refinement ratio places the coordinates in the finer level space, dividing by the tile size makes the iterator hit each tile only once
-        ASSERT( !((patch->getCellHighIndex__New()-patch->getCellLowIndex__New())*d_cellRefinementRatio[l] < d_tileSize[l+1]))  ;
-        for (CellIterator ti(patch->getCellLowIndex__New()*d_cellRefinementRatio[l]/d_tileSize[l+1], patch->getCellHighIndex__New()*d_cellRefinementRatio[l]/d_tileSize[l+1]); !ti.done(); ti++)
-        {
-          //compute the starting cells of the tile
-          IntVector tile_start_fine=*ti*d_tileSize[l+1];
-          IntVector tile_start_coarse=tile_start_fine/d_cellRefinementRatio[l];
-
-          //cout << " Searching tiles for flags on coarse level:" << l << " of size:" << d_tileSize[l+1]/d_cellRefinementRatio[l] << " starting at:" << tile_start_coarse << endl;
-          //for each coarse flag in tile
-          for(CellIterator ci(IntVector(0,0,0),d_tileSize[l+1]/d_cellRefinementRatio[l]); !ci.done(); ci++)
-          {
-            //if cell contains flag
-            if(flags[tile_start_coarse+*ci])
-            {
-              //add the tile to the finer level
-              mytiles.push_back(tile_start_fine);
-              break;
-            }
-          }
-        }
-      }
-
+      ComputeTiles(mytiles,level,d_tileSize[l+1],d_cellRefinementRatio[l]);
+      
       vector<unsigned int> counts(d_myworld->size());
       if(d_myworld->size()>1)
       {
@@ -127,7 +137,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       
       int volume=num_patches*d_tileSize[l+1][0]*d_tileSize[l+1][1]*d_tileSize[l+1][2];
       
-      if(volume*.90>old_volume) //if increasing the tile size significantly increased the volume
+      if(volume*.95>old_volume) //if increasing the tile size significantly increased the volume
       {
         //restore old tiles 
         mytiles.swap(myoldtiles); 

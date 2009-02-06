@@ -87,6 +87,8 @@ WARNING
     Grid* CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tiles );
     void CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles); 
     void OutputGridStats(Grid* newGrid);
+    void ComputeTiles(vector<IntVector> &tiles, const LevelP level, IntVector tile_size, IntVector cellRefinementRatio);
+      
 
     unsigned int target_patches_;   //Minimum number of patches the algorithm attempts to reach
    
