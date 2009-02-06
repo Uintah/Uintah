@@ -172,7 +172,8 @@ void rayfromSurf(SurfaceType &obSurface,
     
     
     // get ray's emission position, xemiss, yemiss, zemiss
-    obRay.set_emissP(obSurface.get_xlow(), obSurface.get_xup(),
+    obRay.set_emissP(MTrng,
+		     obSurface.get_xlow(), obSurface.get_xup(),
 		     obSurface.get_ylow(), obSurface.get_yup(),
 		     obSurface.get_zlow(), obSurface.get_zup());
     
@@ -188,7 +189,8 @@ void rayfromSurf(SurfaceType &obSurface,
       // checking scattering first
       // if hit on virtual surface, PathSurfaceLeft is updated.
       // else no update on PathSurfaceLeft.
-      obRay.TravelInMediumInten(kl_Vol, scatter_Vol,
+      obRay.TravelInMediumInten(MTrng,
+				kl_Vol, scatter_Vol,
 				X, Y, Z, VolFeature,
 				PathLeft, PathSurfaceLeft);
       
@@ -215,7 +217,8 @@ void rayfromSurf(SurfaceType &obSurface,
 // 	cout << "hitSurfaceIndex = " << hitSurfaceIndex << endl;
 	// PathSurfaceLeft is updated here
 	// and it comes into effect for next travelling step.
-	obRay.hitRealSurfaceInten(alpha_surface[hitSurfaceFlag],
+	obRay.hitRealSurfaceInten(MTrng,
+				  alpha_surface[hitSurfaceFlag],
 				  rs_surface[hitSurfaceFlag],
 				  rd_surface[hitSurfaceFlag],
 				  PathSurfaceLeft);
@@ -303,7 +306,7 @@ int main(int argc, char *argv[]){
   double dxcenter, dycenter, dzcenter; // center cells' size
   
 
-  // int TopStartNo, BottomStartNo, FrontStartNo, BackStartNo, LeftStartNo, RightStartNo; 
+  int BottomStartNo, FrontStartNo, BackStartNo, LeftStartNo, RightStartNo; 
   int VolElementNo, TopBottomNo, FrontBackNo, LeftRightNo;
   int surfaceElementNo;
   //  double EnergyAmount; // set as customer self-set-up later
@@ -355,7 +358,12 @@ int main(int argc, char *argv[]){
   FrontBackNo = Ncx * Ncz;
   LeftRightNo = Ncy * Ncz;
   surfaceElementNo = 2 * ( Ncx * Ncy + Ncx * Ncz + Ncy * Ncz );
-
+  BottomStartNo = TopBottomNo;
+  FrontStartNo = BottomStartNo + TopBottomNo;
+  BackStartNo = FrontStartNo + FrontBackNo;
+  LeftStartNo = BackStartNo + FrontBackNo;
+  RightStartNo = LeftStartNo + LeftRightNo;
+  
   int surfaceNo[6];
   surfaceNo[0] = TopBottomNo;
   surfaceNo[1] = TopBottomNo;
@@ -808,7 +816,7 @@ int main(int argc, char *argv[]){
    //   #include "inputNonblackSurf.cc"
    // #include "inputScattering.cc"   
      
-   MTRand MTrng(12345);
+   MTRand MTrng;
    VolElement obVol;
    
    double OutIntenVol, traceProbability, LeftIntenFrac, sumIncomInten, aveIncomInten;
@@ -943,7 +951,8 @@ int main(int argc, char *argv[]){
 	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
-
+	  
+	  MTrng.seed(surfaceIndex);
 	  TopRealSurface obTop(iIndex, jIndex, kIndex, Ncx);
 	  RealPointer = &obTop;
 
@@ -995,7 +1004,8 @@ int main(int argc, char *argv[]){
 	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
-
+	  
+	  MTrng.seed(surfaceIndex + BottomStartNo);
 	  BottomRealSurface obBottom(iIndex, jIndex, kIndex, Ncx);
 	  RealPointer = &obBottom;
 
@@ -1048,7 +1058,8 @@ int main(int argc, char *argv[]){
 	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
-
+	  
+	  MTrng.seed(surfaceIndex + FrontStartNo);
 	  FrontRealSurface obFront(iIndex, jIndex, kIndex, Ncx);
 	  RealPointer = &obFront;
 
@@ -1100,7 +1111,8 @@ int main(int argc, char *argv[]){
 	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
-
+	  
+	  MTrng.seed(surfaceIndex + BackStartNo);
 	  BackRealSurface obBack(iIndex, jIndex, kIndex, Ncx);
 	  RealPointer = &obBack;
 
@@ -1153,7 +1165,8 @@ int main(int argc, char *argv[]){
 	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
-
+	  
+	  MTrng.seed(surfaceIndex + LeftStartNo);
 	  LeftRealSurface obLeft(iIndex, jIndex, kIndex, Ncy);
 	  RealPointer = &obLeft;
 
@@ -1206,7 +1219,8 @@ int main(int argc, char *argv[]){
 	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
-
+	  
+	  MTrng.seed(surfaceIndex + RightStartNo);
 	  RightRealSurface obRight(iIndex, jIndex, kIndex, Ncy);
 	  RealPointer = &obRight;
 
@@ -1281,6 +1295,7 @@ int main(int argc, char *argv[]){
 
 	  if ( rayNo_Vol[VolIndex] != 0 ) {
 	    
+	    MTrng.seed(VolIndex);	    
 	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
 
 	    // VolIndex = obVol.get_VolIndex();
@@ -1305,14 +1320,15 @@ int main(int argc, char *argv[]){
 	      SurLeft = kl_Vol[VolIndex];
 	      
 	      // get emitting ray's direction vector s
-	      obRay.set_emissS_vol(s);
+	      obRay.set_emissS_vol(MTrng, s);
 	      obRay.get_directionS(s); // put s into directionVector ( private )
 	      obVol.get_limits(X, Y, Z);
 	      
 	      // VolIndex is the vIndex is
 	      // VoliIndex + VoljIndex * Ncx + VolkIndex * TopBottomNo
 	      
-	      obRay.set_emissP(obVol.get_xlow(), obVol.get_xup(),
+	      obRay.set_emissP(MTrng,
+			       obVol.get_xlow(), obVol.get_xup(),
 			       obVol.get_ylow(), obVol.get_yup(),
 			       obVol.get_zlow(), obVol.get_zup());
 	      
@@ -1330,7 +1346,8 @@ int main(int argc, char *argv[]){
 		
 		previousSum = currentSum;
 		
-		obRay.TravelInMediumInten(kl_Vol, scatter_Vol,
+		obRay.TravelInMediumInten(MTrng,
+					  kl_Vol, scatter_Vol,
 					  X, Y, Z, VolFeature,
 					  PathLeft, PathSurfaceLeft);
 		
@@ -1356,7 +1373,8 @@ int main(int argc, char *argv[]){
 		  
 		  // PathSurfaceLeft is updated here
 		  // and it comes into effect for next travelling step.
-		  obRay.hitRealSurfaceInten(alpha_surface[hitSurfaceFlag],
+		  obRay.hitRealSurfaceInten(MTrng,
+					    alpha_surface[hitSurfaceFlag],
 					    rs_surface[hitSurfaceFlag],
 					    rd_surface[hitSurfaceFlag],
 					    PathSurfaceLeft);

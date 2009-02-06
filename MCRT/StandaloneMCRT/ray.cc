@@ -143,9 +143,10 @@ void ray::get_specular_s(double *spec_s){
 
 
 // emission from control volume ( media ) and surface
-void ray::set_emissP( const double &xlow, const double &xup,
-		      const double &ylow, const double &yup,
-		      const double &zlow, const double &zup){
+void ray::set_emissP(MTRand &MTrng,
+		     const double &xlow, const double &xup,
+		     const double &ylow, const double &yup,
+		     const double &zlow, const double &zup){
   
 //   double random1, random2, random3;
 //   rng.RandomNumberGen(random1);
@@ -157,10 +158,9 @@ void ray::set_emissP( const double &xlow, const double &xup,
     
 }
 
-void ray::set_emissS_vol(double *sVol){
-//   double randomPhi, randomTheta;
-//   rng.RandomNumberGen(randomPhi);
-//   rng.RandomNumberGen(randomTheta);
+void ray::set_emissS_vol(MTRand &MTrng,
+			 double *sVol){
+
   double phi, theta;
   phi = 2 * pi * MTrng.randExc();
   sVol[2] = 1 - 2 *  MTrng.randExc(); // cos(theta), k
@@ -522,7 +522,8 @@ ray::surfaceIntersect( const double *X,
 // store path Index, Index's path length ( might not need to be stored),
 // left fraction
 
-void ray::TravelInMediumInten(const double *kl_Vol,
+void ray::TravelInMediumInten(MTRand &MTrng,
+			      const double *kl_Vol,
 			      const double *scatter_Vol,
 			      const double *X,
 			      const double *Y,
@@ -625,7 +626,8 @@ void ray::TravelInMediumInten(const double *kl_Vol,
 
 
 // For Intensity
-void ray::hitRealSurfaceInten(const double *absorb_surface,
+void ray::hitRealSurfaceInten(MTRand &MTrng,
+			      const double *absorb_surface,
 			      const double *rs_surface,
 			      const double *rd_surface,
 			      double &PathSurfaceLeft){
