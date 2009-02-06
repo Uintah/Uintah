@@ -116,7 +116,7 @@ double MeshSize(int &Nchalf, double &Lhalf, double &ratio){
 }
 
 
-
+// to see if SD will reduce as rayNo increases
 template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
 		 RealSurface *RealPointer,
@@ -135,38 +135,41 @@ void rayfromSurf(SurfaceType &obSurface,
 		 const double *X, const double *Y, const double *Z,
 		 const double *kl_Vol, const double *scatter_Vol,
 		 const int *VolFeature,
-		 const int &thisRayNo,
 		 const int &iIndex,
 		 const int &jIndex,
 		 const int &kIndex,
 		 const double &StopLowerBound,
+		 const double &varianceBound,
 		 double *netInten_surface[],
 		 double *s){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
   double PathLeft, PathSurfaceLeft, random, weight, traceProbability;
-  double OutIntenSur, sumIncomInten, aveIncomInten;
+  double OutIntenSur, sumIncomInten, aveIncomInten, var;
   int rayCounter, hitSurfaceFlag, hitSurfaceIndex;
   double SD;
-  
+  vector<double> IncomingIntenSur;
+   
   // get surface element's absorption coefficient
   alpha = alpha_surface[surfaceFlag][surfaceIndex];
   OutIntenSur = IntenArray_surface[surfaceFlag][surfaceIndex];
+  sumIncomInten = 0;
+  rayCounter = 0;
 
   
   // loop over ray numbers on each surface element
-  // do { // shoot another ray when SD is greater than varianceBound
-    SD = 0;
-    
-  double *IncomingIntenSur = new double[ thisRayNo ];
-  for ( rayCounter = 0; rayCounter < thisRayNo; rayCounter++ ) {
-    
+  do { // shoot another ray when SD is greater than varianceBound
+    SD = 0;    
     LeftIntenFrac = 1;
     traceProbability = 1;
     weight = 1;
     previousSum = 0;
     currentSum = 0;
-    IncomingIntenSur[rayCounter] = 0;
+    IncomingIntenSur.push_back(0);
+    
+    // the original 
+    //  IncomingIntenSur[rayCounter] = 0;
+    
     
     // set SurLeft = absorption coeff here is because the Intensity is
     // attenuated on the real surface by absorption.
@@ -203,24 +206,21 @@ void rayfromSurf(SurfaceType &obSurface,
       
       // the upper bound of the segment
       currentSum = previousSum + PathLeft;
+
+      // the original
+      // now the vector need to be pushed back .. mmmm
+      // then how to update the vector's value 
+       IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] + 
+ 	IntenArray_Vol[obRay.get_currentvIndex()] 
+ 	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+ 	* weight;
       
-      IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] + 
-	IntenArray_Vol[obRay.get_currentvIndex()] 
-	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
-	* weight;
-      
-//       cout << "previousSum = " << previousSum << endl;
-//       cout << "currentSum = " << currentSum << endl;
-      
-      // 	      	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
-      // 	      cout << "IntenArray_Vol = " << IntenArray_Vol[obRay.get_currentvIndex()] << endl;
-      
+
       if ( !obRay.VIRTUAL ) {
 	
 	hitSurfaceFlag = obRay.get_surfaceFlag();
 	hitSurfaceIndex = obRay.get_hitSurfaceIndex();
-// 	cout << "hitSurfaceFlag = " << hitSurfaceFlag << endl;
-// 	cout << "hitSurfaceIndex = " << hitSurfaceIndex << endl;
+
 	// PathSurfaceLeft is updated here
 	// and it comes into effect for next travelling step.
 	obRay.hitRealSurfaceInten(alpha_surface[hitSurfaceFlag],
@@ -228,14 +228,18 @@ void rayfromSurf(SurfaceType &obSurface,
 				  rd_surface[hitSurfaceFlag],
 				  PathSurfaceLeft);
 		
-	// 		cout << "obRay.get_surfaceFlag() = " << obRay.get_surfaceFlag() << endl;
-	// 		cout << "surfaceFlag = " << surfaceFlag << endl;
-	
-	IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
-	  IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
-	  exp ( -currentSum ) * SurLeft
-	  * weight;
-	//	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
+	// the original
+// 	      cout << "IncomingIntenSur[" << rayCounter << "] befoe update = " <<
+// 	IncomingIntenSur[rayCounter] << endl;
+      
+ 	IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
+ 	  IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
+ 	  exp ( -currentSum ) * SurLeft
+ 	  * weight;
+
+// 	      cout << "IncomingIntenSur[" << rayCounter << "] after update = " <<
+// 	IncomingIntenSur[rayCounter] << endl;
+      
       }
       
       
@@ -250,39 +254,41 @@ void rayfromSurf(SurfaceType &obSurface,
       rng.RandomNumberGen(random);
       traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
       
+
     }while (  random < traceProbability); // continue the path
+
+//       cout << "IncomingIntenSur[" << rayCounter << "] = " <<
+// 	IncomingIntenSur[rayCounter] << endl;
+      
+    sumIncomInten = sumIncomInten + IncomingIntenSur[rayCounter];
+
+    rayCounter ++;
+
+    aveIncomInten = sumIncomInten / rayCounter;
+
+    // get SD
+    for ( int i = 0; i < rayCounter; i ++){
+      var = IncomingIntenSur[i] - aveIncomInten;
+      SD = SD + var * var;
+     }
+
     
-    // } while( SD >= varianceBound ) // rayCounter loop
-  }  
-  
-  sumIncomInten = 0;
-  double var;
-  for ( int aaa = 0; aaa < thisRayNo; aaa ++ ) 
-    sumIncomInten = sumIncomInten + IncomingIntenSur[aaa];
-
-  aveIncomInten = sumIncomInten / thisRayNo;
-
-  // get SD
-  for ( int i = 0; i < thisRayNo; i ++){
-    var = IncomingIntenSur[i] - aveIncomInten;
-    SD = SD + var * var;
-  }
-
-  SD = sqrt( SD/ (thisRayNo-1));
-  cout << "surfaceflag = " << surfaceFlag <<
+    SD = sqrt( SD/ (rayCounter-1));
+    cout << "surfaceflag = " << surfaceFlag <<
     " ; surfaceIndex = " << surfaceIndex <<
-    " ; SD = " << SD << endl;
-  
-  delete[] IncomingIntenSur;
-  
+      " ; SD = " << SD << "; rayNo = " << rayCounter << endl;
 
-  
+    
+  } while( rayCounter == 1 || SD > varianceBound ); // rayCounter loop
+
+   
+  IncomingIntenSur.clear();
   netInten_surface[surfaceFlag][surfaceIndex] =
     OutIntenSur - aveIncomInten;
   
-  //	  cout << "netInten_surface = " << netInten_surface[surfaceFlag][surfaceIndex] << endl;
-  
 }
+  
+
 
 
 
@@ -296,8 +302,8 @@ int main(int argc, char *argv[]){
   time (&time_start);
 
   int casePlates;
-   cout << " Please enter plates case " << endl;
-   cin >> casePlates;
+  //  cout << " Please enter plates case " << endl;
+  //  cin >> casePlates;
 
 //   // starting up MPI
 //   MPI_Init(&argc, &argv);
@@ -335,7 +341,7 @@ int main(int argc, char *argv[]){
  
   varianceBound = 0.015; // set arbitrary
   rayNoSurface = 1;
-  rayNoVol = 1;  
+  rayNoVol = 0;  
   Ncx = 10;
   Ncy = 10;
   Ncz = 10;
@@ -778,7 +784,7 @@ int main(int argc, char *argv[]){
   Y[Ncyhalf] = 0;
   Z[Nczhalf] = 0;   
  
-  StopLowerBound = 1e-10;
+  StopLowerBound = 1e-20;
   
 // initial as all volume elements ray no zeros first.
   // initial volume ray numbers
@@ -786,7 +792,7 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1000; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
    // TopBottomNo = Ncx * Ncy;
 
 
@@ -796,10 +802,12 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 5000;
-       rayNo_bottom_surface[iSurface] = 5000;
+       rayNo_top_surface[iSurface] = 0;
+       rayNo_bottom_surface[iSurface] = 0;
      }
-
+   
+   rayNo_bottom_surface[0] = 1;
+   
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
@@ -818,10 +826,10 @@ int main(int argc, char *argv[]){
      }
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-   // #include "inputBenchmark.cc"
+    #include "inputBenchmark.cc"
    // #include "inputBenchmarkSurf.cc"
    // #include "inputNonblackSurf.cc"
-#include "inputScattering.cc"
+   //#include "inputScattering.cc"
    
    RNG rng;
    VolElement obVol;
@@ -979,11 +987,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,
 		      netInten_surface,
 		      s);
 	 
@@ -1031,11 +1039,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,		      
 		      netInten_surface,
 		      s);
 	}
@@ -1084,11 +1092,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,		      
 		      netInten_surface,
 		      s);
 	}
@@ -1136,11 +1144,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,		      
 		      netInten_surface,
 		      s);
 	}
@@ -1189,11 +1197,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,		      
 		      netInten_surface,
 		      s);
 	}
@@ -1242,11 +1250,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,		      
 		      netInten_surface,
 		      s);
 	}
