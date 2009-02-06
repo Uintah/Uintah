@@ -32,10 +32,10 @@ DEALINGS IN THE SOFTWARE.
 #define RealSurface_H
 
 #include "Surface.h"
-#include "RNG.h" // has to be included
+#include "MersenneTwister.h"
 
 
-class RNG;
+class MTRand;
 class ray;
 
 class RealSurface : public Surface {
@@ -43,7 +43,7 @@ public:
   
   RealSurface();
   
-  void get_s(RNG &rng, double *s);
+  void get_s(MTRand &MTrng, double *s);
   
   virtual void getTheta(const double &random);
   

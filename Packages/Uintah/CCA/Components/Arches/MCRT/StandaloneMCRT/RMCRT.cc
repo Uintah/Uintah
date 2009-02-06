@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
-#include "RNG.h"
 #include "Surface.h"
 #include "Consts.h"
 #include "RealSurface.h"
@@ -44,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ray.h"
 #include "VolElement.h"
 #include "MakeTableFunction.h"
+#include "MersenneTwister.h"
 
 #include <cmath>
 #include <iostream>
@@ -676,7 +676,7 @@ main(int argc, char *argv[]){
    // #include "inputNonblackSurf.cc"
    // #include "inputScattering.cc"   
 
-   RNG rng;
+   MTRand MTrng(12345);
    VolElement obVol;
    
    double OutIntenVol, OutIntenSur, IntenFrac, LeftIntenFrac, pathlen;
@@ -688,8 +688,6 @@ main(int argc, char *argv[]){
    IntenFrac = 1e-10; //1e-20; // the percentage of Intensity left
    
    //   srand48 ( time ( NULL )); // Set the random number seed for drand48
-   srand48 ( 12345 ); // for drand48()
-   
 
    ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
    
@@ -845,7 +843,7 @@ main(int argc, char *argv[]){
 	    
 	    // get emitting ray's direction vector s
 	    // should watch out, the s might have previous values
-	    RealPointer->get_s(rng, s);    
+	    RealPointer->get_s(MTrng, s);    
 	    RealPointer->get_limits(X, Y, Z);
 	    
 	    

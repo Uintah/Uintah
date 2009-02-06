@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
-#include "RNG.h"
 #include "Surface.h"
 #include "Consts.h"
 #include "RealSurface.h"
@@ -44,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ray.h"
 #include "VolElement.h"
 #include "MakeTableFunction.h"
+#include "MersenneTwister.h"
 
 #include <cmath>
 #include <iostream>
@@ -117,7 +117,7 @@ template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
 		 RealSurface *RealPointer,
 		 ray &obRay,
-		 RNG &rng,
+		 MTRand &MTrng,
 		 const int &surfaceFlag,
 		 const int &surfaceIndex,
 		 const double * const alpha_surface[],
@@ -148,13 +148,7 @@ void rayfromSurf(SurfaceType &obSurface,
   // get surface element's absorption coefficient
   alpha = alpha_surface[surfaceFlag][surfaceIndex];
   OutIntenSur = IntenArray_surface[surfaceFlag][surfaceIndex];
-  
-//   OutIntenSur = RealPointer->SurfaceIntensity(surfaceIndex,
-// 					      emiss_surface[surfaceFlag],
-// 					      T_surface[surfaceFlag],
-// 					      a_surface[surfaceFlag]);
-  //	  cout << "OutIntenSur = " << OutIntenSur << endl;
-  
+    
   double *IncomingIntenSur = new double[ thisRayNo ];
   
 	  // loop over ray numbers on each surface element
@@ -172,7 +166,7 @@ void rayfromSurf(SurfaceType &obSurface,
     
     // get emitting ray's direction vector s
     // should watch out, the s might have previous values
-    RealPointer->get_s(rng, s);    
+    RealPointer->get_s(MTrng, s);    
     RealPointer->get_limits(X, Y, Z);
     
     
@@ -809,7 +803,7 @@ int main(int argc, char *argv[]){
    // #include "inputNonblackSurf.cc"
 #include "inputScattering.cc"      
    
-   RNG rng;
+   MTRand MTrng(12345);
    VolElement obVol;
    
    double OutIntenVol, IntenFrac, LeftIntenFrac, sumIncomInten, aveIncomInten;
@@ -820,13 +814,13 @@ int main(int argc, char *argv[]){
 
    IntenFrac = 1e-10; //1e-20; // the percentage of Intensity left
    
-   srand48 ( time ( NULL )); // for drand48()
+   //  srand48 ( time ( NULL )); // for drand48()
    
 
    ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
    
    double theta, phi;
-   double random1, random2;
+   //   double random1, random2;
    double s[3];
   
    double sumQsurface = 0;
@@ -954,7 +948,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obTop,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1007,7 +1001,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obBottom,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1061,7 +1055,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obFront,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1114,7 +1108,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obBack,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1168,7 +1162,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obLeft,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1222,7 +1216,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obRight,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,

@@ -97,20 +97,20 @@ int RealSurface::get_surfacekIndex(){
 
 
 
-void RealSurface::get_s(RNG &rng, double *s){
-  
-  double random1, random2;
+void RealSurface::get_s(MTRand &MTrng, double *s){
+   
+  // double random1, random2;
   // use this pointer, so to get to 6 different surfaces
   this->get_n();
   this->get_t1();
   this->get_t2();
   
-  rng.RandomNumberGen(random1);
-  this->getTheta(random1);
+  // rng.RandomNumberGen(random1);
+  this->getTheta(MTrng.randExc()); 
 
-  rng.RandomNumberGen(random2);
+  // rng.RandomNumberGen(random2);
   // getPhi is inherited from Class Surface
-  this->getPhi(random2);
+  this->getPhi(MTrng.randExc());
 
 //   cout << "random1 = " << random1 << "; random2 = " << random2 << endl;
 //   cout << " theta = " << theta << "; phi = " << phi << endl;

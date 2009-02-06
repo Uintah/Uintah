@@ -46,17 +46,15 @@ void VirtualSurface::getTheta(const double &random){
     theta = acos( 1 - 2 * random);
 }
 
-// // get sIn
-// void VirtualSurface::get_sIn(double *sIncoming){
-//   for ( int i = 0; i < 3; i ++ )
-//     sIn[i] = sIncoming[i];
-// }
 
 // get_e1, sIn = sIn ( incoming direction vector)
 void VirtualSurface::get_e1(const double &random1,
 			    const double &random2,
 			    const double &random3,
 			    const double *sIn){
+
+  // av is an arbitrary vector
+  // e1 is then a unit vector
   // e1 =( av * sIn) / | av * sIn |
 
 //   double av[3];
@@ -90,25 +88,16 @@ void VirtualSurface::get_e2(const double *sIn){
 }
 
 
-void VirtualSurface::get_s(RNG &rng, const double *sIn, double *s){
+void VirtualSurface::get_s(MTRand &MTrng, const double *sIn, double *s){
 
-  double random1, random2, random3;
+   //  get_sIn(sIncoming);
   
-  //  get_sIn(sIncoming);
-  
-  // how to generate random numbers @ [-1, 1]
-  rng.RandomNumberGen(random1);
-  rng.RandomNumberGen(random2);
-  rng.RandomNumberGen(random3);
-  
-  get_e1(random1, random2, random3, sIn);
+  get_e1(MTrng.randExc(),MTrng.randExc(), MTrng.randExc(), sIn);
   get_e2(sIn);
 
-  rng.RandomNumberGen(random1);
-  this->getTheta(random1);
+  this->getTheta(MTrng.randExc());
 
-  rng.RandomNumberGen(random2);
-  getPhi(random2);
+  getPhi(MTrng.randExc());
 
   for ( int i = 0; i < 3; i ++ ) 
     s[i] = sin(theta) * ( cos(phi) * e1[i] + sin(phi) * e2[i] )
