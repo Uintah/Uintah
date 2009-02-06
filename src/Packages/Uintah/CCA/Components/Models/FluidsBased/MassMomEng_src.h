@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 
 namespace Uintah {
-  class MPMICELabel;
+  class ICELabel;
 
 /**************************************
 
@@ -119,13 +119,20 @@ WARNING
     MassMomEng_src& operator=(const MassMomEng_src&);
 
     ProblemSpecP params;
-    MPMICELabel* MIlb;
+    ICELabel* Ilb;
     MaterialSet* mymatls;
     Material* d_matl;
-    double d_rate;
+    
+    struct src{
+      Vector mom_src_rate;
+      double mass_src_rate;
+      double eng_src_rate;
+    };
+    src* d_src;
     
     const VarLabel* totalMass_srcLabel;
-    const VarLabel* totalIntEng_srcLabel;
+    const VarLabel* totalMom_srcLabel;
+    const VarLabel* totalEng_srcLabel;
   };
 }
 

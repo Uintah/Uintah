@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/CCA/Components/Models/FluidsBased/SimpleRxn.h>
 #include <Packages/Uintah/CCA/Components/Models/FluidsBased/TestModel.h>
 #include <Packages/Uintah/CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
-
+#include <Packages/Uintah/CCA/Components/Models/FluidsBased/MassMomEng_src.h>
 #if !defined( NO_ICE )
 #  include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
 #  include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
@@ -106,6 +106,8 @@ ModelFactory::makeModels( const ProblemSpecP& restart_prob_spec,
       d_models.push_back(scinew TestModel(d_myworld, model_ps));
     else if(type == "flameSheet_rxn")
       d_models.push_back(scinew flameSheet_rxn(d_myworld, model_ps));
+    else if(type == "mass_momentum_energy_src")
+      d_models.push_back(scinew MassMomEng_src(d_myworld, model_ps));
     else if(type == "PassiveScalar")
       d_models.push_back(scinew PassiveScalar(d_myworld, model_ps, doAMR));
     else if(type == "Simple_Burn")
