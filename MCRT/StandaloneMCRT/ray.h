@@ -65,13 +65,13 @@ public:
       const int &offset_);
 
   
-  void set_emissP_surf(const double &xlow, const double &xup,
-		       const double &ylow, const double &yup,
-		       const double &zlow, const double &zup);
+ //  void set_emissP_surf(const double &xlow, const double &xup,
+// 		       const double &ylow, const double &yup,
+// 		       const double &zlow, const double &zup);
 
-  void set_emissP_vol( const double &xlow, const double &xup,
-		       const double &ylow, const double &yup,
-		       const double &zlow, const double &zup);
+  void set_emissP( const double &xlow, const double &xup,
+		   const double &ylow, const double &yup,
+		   const double &zlow, const double &zup);
 		     
   
   void set_emissS_vol(double *sVol);

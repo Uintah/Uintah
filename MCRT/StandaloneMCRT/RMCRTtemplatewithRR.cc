@@ -172,9 +172,9 @@ void rayfromSurf(SurfaceType &obSurface,
     
     
     // get ray's emission position, xemiss, yemiss, zemiss
-    obRay.set_emissP_surf(obSurface.get_xlow(), obSurface.get_xup(),
-			  obSurface.get_ylow(), obSurface.get_yup(),
-			  obSurface.get_zlow(), obSurface.get_zup());
+    obRay.set_emissP(obSurface.get_xlow(), obSurface.get_xup(),
+		     obSurface.get_ylow(), obSurface.get_yup(),
+		     obSurface.get_zlow(), obSurface.get_zup());
     
     obRay.get_directionS(s);
     obRay.set_currentvIndex(iIndex, jIndex, kIndex);
@@ -1313,9 +1313,9 @@ int main(int argc, char *argv[]){
 	      // VolIndex is the vIndex is
 	      // VoliIndex + VoljIndex * Ncx + VolkIndex * TopBottomNo
 	      
-	      obRay.set_emissP_vol(obVol.get_xlow(), obVol.get_xup(),
-				   obVol.get_ylow(), obVol.get_yup(),
-				   obVol.get_zlow(), obVol.get_zup());
+	      obRay.set_emissP(obVol.get_xlow(), obVol.get_xup(),
+			       obVol.get_ylow(), obVol.get_yup(),
+			       obVol.get_zlow(), obVol.get_zup());
 	      
 	      obRay.set_currentvIndex(iVolIndex, jVolIndex, kVolIndex);
 	      
