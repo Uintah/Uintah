@@ -106,21 +106,55 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //for each level fine to coarse 
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
   {
+    const LevelP level=oldGrid->getLevel(l);
     IntVector original_tile_size=d_tileSize[l+1];
-    bool retry;
+    bool retry=true;
+
+    vector<IntVector> mytiles;
     vector<IntVector> myoldtiles;
-    vector<unsigned int> old_counts;
-    IntVector old_tile_size=IntVector(0,0,0);
-    int old_volume=INT_MAX;
+    vector<unsigned int> counts(d_myworld->size());
+    vector<unsigned int> old_counts(d_myworld->size());
+    IntVector old_tile_size=d_minTileSize[l+1];
+
+    //compute volume using minimum tile size
+    ComputeTiles(mytiles,level,d_minTileSize[l+1],d_cellRefinementRatio[l]);
+
+    if(d_myworld->size()>1)
+    {
+      unsigned int mycount=mytiles.size();
+
+      //gather the number of tiles on each processor
+      MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
+    }
+    else
+    {
+      counts[0]=mytiles.size();
+    }
+
+    //compute the number of patches
+    unsigned int num_patches=0;
+    for(unsigned int p=0;p<counts.size();p++)
+    {
+      num_patches+=counts[p];
+    }
+
+    //compute the volume 
+    int min_volume=num_patches*Product(d_minTileSize[l+1]);
     do
     {
       retry=false;
-      vector<IntVector> mytiles;
-      const LevelP level=oldGrid->getLevel(l);
 
+      //save tiles in case we want to restore them later
+      myoldtiles.swap(mytiles); 
+      old_counts.swap(counts);
+
+      //erase old tileset
+      mytiles.resize(0);
+
+      //compute tiles using the new tile size
+      //this could be computed form the minimum tile set instead
       ComputeTiles(mytiles,level,d_tileSize[l+1],d_cellRefinementRatio[l]);
-      
-      vector<unsigned int> counts(d_myworld->size());
+
       if(d_myworld->size()>1)
       {
         unsigned int mycount=mytiles.size();
@@ -128,16 +162,23 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
         //gather the number of tiles on each processor
         MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
       }
-      
+      else
+      {
+        counts[0]=mytiles.size();
+      }
+
+      //compute the number of patches
       unsigned int num_patches=0;
       for(unsigned int p=0;p<counts.size();p++)
       {
         num_patches+=counts[p];
       }
-      
-      int volume=num_patches*d_tileSize[l+1][0]*d_tileSize[l+1][1]*d_tileSize[l+1][2];
-      
-      if(volume*.95>old_volume) //if increasing the tile size significantly increased the volume
+
+      //compute the volume
+      int volume=num_patches*Product(d_tileSize[l+1]);
+
+      //volume huristic to decide if the new tile set is "good"
+      if(volume*.90>min_volume) //if increasing the tile size significantly increased the volume
       {
         //restore old tiles 
         mytiles.swap(myoldtiles); 
@@ -147,7 +188,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       else 
       {
         old_tile_size=d_tileSize[l+1];
-        
+
         if(num_patches<target_patches_) //decrease tile size
         {
           //decrease tile size
@@ -204,49 +245,39 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
             //  cout << " Increasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << " coarser tile " << d_tileSize[l] << endl;
             retry=true;
           }
-        }
-      }
-
-      if(retry)
-      {
-        //save tiles in case we want to restore them later
-        old_volume=volume;
-        myoldtiles.swap(mytiles); 
-        old_counts.swap(counts);
-
-        continue;
-      }
-
-      if(d_myworld->myrank()==0 && !(d_tileSize[l+1]==original_tile_size))
-      {
-        cout << "Tile size on level:" << l+2 << " changed from " << original_tile_size << " to " << d_tileSize[l+1] << endl;
-      }
-      
-      if(d_myworld->size()>1)
-      {
-        //compute the displacements and recieve counts for a gatherv
-        vector<int> displs(d_myworld->size());
-        vector<int> recvcounts(d_myworld->size());
-
-        int pos=0;
-        for(int p=0;p<d_myworld->size();p++)
-        {
-          displs[p]=pos;
-          recvcounts[p]=counts[p]*sizeof(IntVector);
-          pos+=recvcounts[p];
-        }
-
-        tiles[l+1].resize(pos/sizeof(IntVector));
-
-        //gatherv tiles
-        MPI_Allgatherv(&mytiles[0],recvcounts[d_myworld->myrank()],MPI_BYTE,&tiles[l+1][0],&recvcounts[0],&displs[0],MPI_BYTE,d_myworld->getComm());
-      }
-      else
-      {
-        tiles[l+1]=mytiles;
-      }
+        } // end else if(num_patches>2*target_patches_)
+      } //end else (volume*.90>min_volume)
     }
     while(retry);
+
+    if(d_myworld->myrank()==0 && !(d_tileSize[l+1]==original_tile_size))
+    {
+      cout << "Tile size on level:" << l+2 << " changed from " << original_tile_size << " to " << d_tileSize[l+1] << endl;
+    }
+
+    if(d_myworld->size()>1)
+    {
+      //compute the displacements and recieve counts for a gatherv
+      vector<int> displs(d_myworld->size());
+      vector<int> recvcounts(d_myworld->size());
+
+      int pos=0;
+      for(int p=0;p<d_myworld->size();p++)
+      {
+        displs[p]=pos;
+        recvcounts[p]=counts[p]*sizeof(IntVector);
+        pos+=recvcounts[p];
+      }
+
+      tiles[l+1].resize(pos/sizeof(IntVector));
+
+      //gatherv tiles
+      MPI_Allgatherv(&mytiles[0],recvcounts[d_myworld->myrank()],MPI_BYTE,&tiles[l+1][0],&recvcounts[0],&displs[0],MPI_BYTE,d_myworld->getComm());
+    }
+    else
+    {
+      tiles[l+1]=mytiles;
+    }
 
 
     if(l>0) 
