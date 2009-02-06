@@ -30,7 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
-#include "RNG.h"
 #include "Surface.h"
 #include "Consts.h"
 #include "RealSurface.h"
@@ -44,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ray.h"
 #include "VolElement.h"
 #include "MakeTableFunction.h"
-
+#include "MersenneTwister.h"
  
 #include <cmath>
 #include <iostream>
@@ -121,7 +120,7 @@ template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
 		 RealSurface *RealPointer,
 		 ray &obRay,
-		 RNG &rng,
+		 MTRand &MTrng,
 		 const int &surfaceFlag,
 		 const int &surfaceIndex,
 		 const double * const alpha_surface[],
@@ -144,7 +143,7 @@ void rayfromSurf(SurfaceType &obSurface,
 		 double *s){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
-  double PathLeft, PathSurfaceLeft, random, weight, traceProbability;
+  double PathLeft, PathSurfaceLeft, weight, traceProbability;
   double OutIntenSur, sumIncomInten, aveIncomInten, var;
   int rayCounter, hitSurfaceFlag, hitSurfaceIndex;
   double SD;
@@ -178,7 +177,7 @@ void rayfromSurf(SurfaceType &obSurface,
     
     // get emitting ray's direction vector s
     // should watch out, the s might have previous values
-    RealPointer->get_s(rng, s);    
+    RealPointer->get_s(MTrng, s);    
     RealPointer->get_limits(X, Y, Z);
     
     
@@ -251,11 +250,10 @@ void rayfromSurf(SurfaceType &obSurface,
       SurLeft = SurLeft * PathSurfaceLeft;
       
       LeftIntenFrac = exp( -currentSum) * SurLeft;
-      rng.RandomNumberGen(random);
       traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
       
 
-    }while (  random < traceProbability); // continue the path
+    }while ( MTrng.randExc() < traceProbability); // continue the path
 
 //       cout << "IncomingIntenSur[" << rayCounter << "] = " <<
 // 	IncomingIntenSur[rayCounter] << endl;
@@ -831,7 +829,8 @@ int main(int argc, char *argv[]){
    // #include "inputNonblackSurf.cc"
    //#include "inputScattering.cc"
    
-   RNG rng;
+     //  RNG rng;
+   MTRand MTrng(12345);   
    VolElement obVol;
    
    double OutIntenVol, traceProbability, LeftIntenFrac, sumIncomInten, aveIncomInten;
@@ -840,12 +839,11 @@ int main(int argc, char *argv[]){
    double SurLeft;
 
 
-   srand48 ( time ( NULL )); // for drand48()
+   //  srand48 ( time ( NULL )); // for drand48()
    
    ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
    
    double theta, phi;
-   double random1, random2;
    double s[3];
   
    double sumQsurface = 0;
@@ -973,7 +971,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obTop,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1025,7 +1023,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obBottom,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1078,7 +1076,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obFront,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1130,7 +1128,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obBack,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1183,7 +1181,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obLeft,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1236,7 +1234,7 @@ int main(int argc, char *argv[]){
 	  rayfromSurf(obRight,
 		      RealPointer,
 		      obRay,
-		      rng,
+		      MTrng,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1295,7 +1293,7 @@ int main(int argc, char *argv[]){
   if ( rayNoVol != 0 ) { // emitting ray from volume
     //    cout << "start from Vol" << endl;
     int rayCounter, VolIndex;
-    double SD;
+    double SD, var;
     
     for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
       for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {
@@ -1399,9 +1397,8 @@ int main(int argc, char *argv[]){
 		SurLeft = SurLeft * PathSurfaceLeft;		
 		LeftIntenFrac = exp(-currentSum) * SurLeft;
 		traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
-		rng.RandomNumberGen(random1);
-		
-	      }while ( random1 < traceProbability ); // continue the path
+	
+	      }while ( MTrng.randExc() < traceProbability ); // continue the path
 	      
 
 	    } // rayCounter loop
@@ -1419,7 +1416,6 @@ int main(int argc, char *argv[]){
 	    aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
 	    
 	    // get SD
-	    double var;
 	    for ( int i = 0; i < rayNo_Vol[VolIndex]; i ++){
 	      var = IncomingIntenVol[i] - aveIncomInten;
 	      SD = SD + var * var;
@@ -1488,7 +1484,7 @@ int main(int argc, char *argv[]){
   timeused = difftime (time_end,time_start);
   cout << " time used up (S) = " << timeused << "sec." << endl;
 
-  /*
+  
   delete[] T_Vol;
   delete[] kl_Vol;   
   delete[] scatter_Vol;
@@ -1578,7 +1574,7 @@ int main(int argc, char *argv[]){
   delete[] global_qsurface;
   delete[] global_Qsurface;
 
-  */
+  
   return 0;
 
 

@@ -2,7 +2,7 @@ CXX = g++
 # CFLAGS = -g -MD
 CFLAGS = -pg -O3 -MD
 
-SRCS = RMCRTRRSD.cc RNG.cc Surface.cc RealSurface.cc TopRealSurface.cc BottomRealSurface.cc \
+SRCS = RMCRTRRSD.cc Surface.cc RealSurface.cc TopRealSurface.cc BottomRealSurface.cc \
 	   FrontRealSurface.cc BackRealSurface.cc LeftRealSurface.cc RightRealSurface.cc \
 	   VirtualSurface.cc ray.cc VolElement.cc MakeTableFunction.cc \
 	
@@ -16,6 +16,6 @@ RMCRTRR : $(OBJS)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o *.d RMCRTRRSD gmon.out
+	rm -f *.o *.d vtk* RMCRTRRSD *.out
 
 -include $(SRCS:.cc=.d)

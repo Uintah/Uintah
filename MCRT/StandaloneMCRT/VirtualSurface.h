@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #define VirtualSurface_H
 
 #include "Surface.h"
-#include "RNG.h"
+#include "MersenneTwister.h"
 
-class RNG;
+class MTRand;
 
 class VirtualSurface : public Surface{
 public:
@@ -42,9 +42,6 @@ public:
   ~VirtualSurface();
   virtual void getTheta(const double &random);
 
-//   // get sIn
-//   void get_sIn(double *sIn);
-  
   //get e1-- e1
   void get_e1(const double &random1,
 	      const double &random2,
@@ -55,7 +52,7 @@ public:
   void get_e2(const double *sIn);
 
   // get scatter_s
-  void get_s(RNG &rng, const double *sIn, double *s);
+  void get_s(MTRand &MTrng, const double *sIn, double *s);
 private:
   double e1[3], e2[3];
 };
