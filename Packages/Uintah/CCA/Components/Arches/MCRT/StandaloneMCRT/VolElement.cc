@@ -30,13 +30,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 #include "VolElement.h"
-#include "MersenneTwister.h"
 #include "Consts.h"
 
 using std::cout;
 using std::endl;
 
-class MTRand;
 
 VolElement::VolElement(){ 
 }

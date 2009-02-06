@@ -162,7 +162,7 @@ main(int argc, char *argv[]){
   double dxcenter, dycenter, dzcenter; // center cells' size
   
 
-  // int TopStartNo, BottomStartNo, FrontStartNo, BackStartNo, LeftStartNo, RightStartNo; 
+  int BottomStartNo, FrontStartNo, BackStartNo, LeftStartNo, RightStartNo; 
   int VolElementNo, TopBottomNo, FrontBackNo, LeftRightNo;
   int surfaceElementNo;
   double EnergyAmount; // set as customer self-set-up later
@@ -213,7 +213,12 @@ main(int argc, char *argv[]){
   FrontBackNo = Ncx * Ncz;
   LeftRightNo = Ncy * Ncz;
   surfaceElementNo = 2 * ( Ncx * Ncy + Ncx * Ncz + Ncy * Ncz );
-
+  BottomStartNo = TopBottomNo;
+  FrontStartNo = BottomStartNo + TopBottomNo;
+  BackStartNo = FrontStartNo + FrontBackNo;
+  LeftStartNo = BackStartNo + FrontBackNo;
+  RightStartNo = LeftStartNo + LeftRightNo;
+  
   int surfaceNo[6];
   surfaceNo[0] = TopBottomNo;
   surfaceNo[1] = TopBottomNo;
@@ -676,7 +681,7 @@ main(int argc, char *argv[]){
    // #include "inputNonblackSurf.cc"
    // #include "inputScattering.cc"   
 
-   MTRand MTrng(12345);
+   MTRand MTrng;
    VolElement obVol;
    
    double OutIntenVol, OutIntenSur, IntenFrac, LeftIntenFrac, pathlen;
@@ -814,7 +819,8 @@ main(int argc, char *argv[]){
 	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
-
+	  
+	  MTrng.seed(surfaceIndex);
 	  TopRealSurface obTop(iIndex, jIndex, kIndex, Ncx);
 	  RealPointer = &obTop;
 
@@ -848,7 +854,8 @@ main(int argc, char *argv[]){
 	    
 	    
 	    // get ray's emission position, xemiss, yemiss, zemiss
-	    obRay.set_emissP(obTop.get_xlow(), obTop.get_xup(),
+	    obRay.set_emissP(MTrng,
+			     obTop.get_xlow(), obTop.get_xup(),
 			     obTop.get_ylow(), obTop.get_yup(),
 			     obTop.get_zlow(), obTop.get_zup());
 	    
@@ -862,7 +869,8 @@ main(int argc, char *argv[]){
 	      // checking scattering first
 	      // if hit on virtual surface, PathSurfaceLeft is updated.
 	      // else no update on PathSurfaceLeft.
-	      obRay.TravelInMediumInten(kl_Vol, scatter_Vol,
+	      obRay.TravelInMediumInten(MTrng,
+					kl_Vol, scatter_Vol,
 					X, Y, Z, VolFeature,
 					PathLeft, PathSurfaceLeft);
 	      
@@ -887,7 +895,8 @@ main(int argc, char *argv[]){
 		
 		// PathSurfaceLeft is updated here
 		// and it comes into effect for next travelling step.
-		obRay.hitRealSurfaceInten(alpha_surface[hitSurfaceFlag],
+		obRay.hitRealSurfaceInten(MTrng,
+					  alpha_surface[hitSurfaceFlag],
 					  rs_surface[hitSurfaceFlag],
 					  rd_surface[hitSurfaceFlag],
 					   PathSurfaceLeft);
@@ -973,6 +982,7 @@ main(int argc, char *argv[]){
 
 	  if ( rayNo_Vol[VolIndex] != 0 ) {
 	    
+	    MTrng.seed(VolIndex);	    
 	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
 
 	    // VolIndex = obVol.get_VolIndex();
@@ -993,14 +1003,15 @@ main(int argc, char *argv[]){
 	      SurLeft = kl_Vol[VolIndex];
 	      
 	      // get emitting ray's direction vector s
-	      obRay.set_emissS_vol(s);
+	      obRay.set_emissS_vol(MTrng, s);
 	      obRay.get_directionS(s); // put s into directionVector ( private )
 	      obVol.get_limits(X, Y, Z);
 	      
 	      // VolIndex is the vIndex is
 	      // VoliIndex + VoljIndex * Ncx + VolkIndex * TopBottomNo
 	      
-	      obRay.set_emissP(obVol.get_xlow(), obVol.get_xup(),
+	      obRay.set_emissP(MTrng,
+			       obVol.get_xlow(), obVol.get_xup(),
 			       obVol.get_ylow(), obVol.get_yup(),
 			       obVol.get_zlow(), obVol.get_zup());
 	      
@@ -1015,7 +1026,8 @@ main(int argc, char *argv[]){
 		
 		previousSum = currentSum;
 		
-		obRay.TravelInMediumInten(kl_Vol, scatter_Vol,
+		obRay.TravelInMediumInten(MTrng,
+					  kl_Vol, scatter_Vol,
 					  X, Y, Z, VolFeature,
 					  PathLeft, PathSurfaceLeft);
 		
@@ -1040,7 +1052,8 @@ main(int argc, char *argv[]){
 		  
 		  // PathSurfaceLeft is updated here
 		  // and it comes into effect for next travelling step.
-		  obRay.hitRealSurfaceInten(alpha_surface[hitSurfaceFlag],
+		  obRay.hitRealSurfaceInten(MTrng,
+					    alpha_surface[hitSurfaceFlag],
 					    rs_surface[hitSurfaceFlag],
 					    rd_surface[hitSurfaceFlag],
 					    PathSurfaceLeft);

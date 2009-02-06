@@ -69,12 +69,14 @@ public:
 // 		       const double &ylow, const double &yup,
 // 		       const double &zlow, const double &zup);
 
-  void set_emissP( const double &xlow, const double &xup,
+  void set_emissP( MTRand &MTrng,
+		   const double &xlow, const double &xup,
 		   const double &ylow, const double &yup,
 		   const double &zlow, const double &zup);
 		     
   
-  void set_emissS_vol(double *sVol);
+  void set_emissS_vol(MTRand &MTrng,
+		      double *sVol);
   
   // Travelling Ray's Emission Point
    // set hit point as next emission point,
@@ -107,12 +109,14 @@ public:
   double get_yemiss();
   double get_zemiss();
   
-  void hitRealSurfaceInten(const double *absorb_surface,
+  void hitRealSurfaceInten(MTRand &MTrng,
+			   const double *absorb_surface,
 			   const double *rs_surface,
 			   const double *rd_surface,
 			   double &PathSurfaceLeft);
   
-  void TravelInMediumInten(const double *kl_Vol,
+  void TravelInMediumInten(MTRand &MTrng,
+			   const double *kl_Vol,
 			   const double *scatter_Vol,			   
 			   const double *X,
 			   const double *Y,
@@ -145,7 +149,6 @@ private:
   // Question: If another object MTrng is created here,
   // it wont follow the same seed , seeded in the main function, right?
   // then this will affect the randomness?? 
-  MTRand MTrng;  
   double dotProduct(const double *s1, const double *s2);
   void get_specular_s(double *spec_s);
   int Ncx, Ncy, Ncz, ghostX, ghostY, ghostTB;
