@@ -680,16 +680,16 @@ void ray::hitRealSurfaceInten(const double *absorb_surface,
 
   // check for the rest of the ray , if diffuse reflected or specular reflected
   if ( ratio <= 1   ) {
-    
+    // cout << "random for reflection = " << random << endl;
     if ( random <= ratio ) { // pure diffuse reflection
-      //      cout << "diffuse" << endl;
+      // cout << "diffuse" << endl;
       // check which surface, top , bottom, front, back, left or right
       // must follow this order
       obReal->get_s(rng, directionVector);
       //      cout << "ray line 732 " << endl;
     }
     else { // pure specular reflection
-      //      cout << "specular " << endl;
+      //  cout << "specular " << endl;
       //     cout << "ray line 735 " << endl;
       get_specular_s(spec_s);
       get_directionS(spec_s);
