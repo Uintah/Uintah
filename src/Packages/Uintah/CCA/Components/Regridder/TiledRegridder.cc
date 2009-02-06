@@ -112,41 +112,33 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
     vector<IntVector> mytiles;
     vector<IntVector> myoldtiles;
-    vector<unsigned int> counts(d_myworld->size());
-    vector<unsigned int> old_counts(d_myworld->size());
     IntVector old_tile_size=d_minTileSize[l+1];
 
     //compute volume using minimum tile size
     ComputeTiles(mytiles,level,d_minTileSize[l+1],d_cellRefinementRatio[l]);
 
+    unsigned int num_patches=0;
     if(d_myworld->size()>1)
     {
       unsigned int mycount=mytiles.size();
-
-      //gather the number of tiles on each processor
-      MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
+  
+      //reduce the number of tiles on each processor
+      MPI_Allreduce(&mycount,&num_patches,1,MPI_UNSIGNED,MPI_SUM,d_myworld->getComm());
     }
     else
     {
-      counts[0]=mytiles.size();
-    }
-
-    //compute the number of patches
-    unsigned int num_patches=0;
-    for(unsigned int p=0;p<counts.size();p++)
-    {
-      num_patches+=counts[p];
+      num_patches=mytiles.size();
     }
 
     //compute the volume 
     int min_volume=num_patches*Product(d_minTileSize[l+1]);
+    
     do
     {
       retry=false;
 
       //save tiles in case we want to restore them later
       myoldtiles.swap(mytiles); 
-      old_counts.swap(counts);
 
       //erase old tileset
       mytiles.resize(0);
@@ -155,35 +147,28 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       //this could be computed form the minimum tile set instead
       ComputeTiles(mytiles,level,d_tileSize[l+1],d_cellRefinementRatio[l]);
 
+      unsigned int num_patches=0;
       if(d_myworld->size()>1)
       {
         unsigned int mycount=mytiles.size();
 
-        //gather the number of tiles on each processor
-        MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
+        //reduce the number of tiles on each processor
+        MPI_Allreduce(&mycount,&num_patches,1,MPI_UNSIGNED,MPI_SUM,d_myworld->getComm());
       }
       else
       {
-        counts[0]=mytiles.size();
-      }
-
-      //compute the number of patches
-      unsigned int num_patches=0;
-      for(unsigned int p=0;p<counts.size();p++)
-      {
-        num_patches+=counts[p];
+        num_patches=mytiles.size();
       }
 
       //compute the volume
       int volume=num_patches*Product(d_tileSize[l+1]);
 
       //volume huristic to decide if the new tile set is "good"
-      if(volume*.90>min_volume) //if increasing the tile size significantly increased the volume
+      if(volume*.95>min_volume) //if increasing the tile size significantly increased the volume
       {
         //restore old tiles 
         mytiles.swap(myoldtiles); 
         d_tileSize[l+1]=old_tile_size;
-        counts.swap(old_counts);
       }
       else 
       {
@@ -257,6 +242,13 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
     if(d_myworld->size()>1)
     {
+      unsigned int mycount=mytiles.size();
+      vector<unsigned int> counts(d_myworld->size());
+      
+      //gather the number of tiles on each processor
+      MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
+
+
       //compute the displacements and recieve counts for a gatherv
       vector<int> displs(d_myworld->size());
       vector<int> recvcounts(d_myworld->size());
@@ -282,7 +274,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
     if(l>0) 
     {
-      //add flags to the next level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
+      //add flags to the coarser level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
       CoarsenFlags(oldGrid,l,tiles[l+1]);
     }
   }
