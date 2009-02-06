@@ -145,10 +145,10 @@ void ray::get_specular_s(double *spec_s){
 
 
 
-// emission from control volume ( media )
-void ray::set_emissP_vol( const double &xlow, const double &xup,
-			  const double &ylow, const double &yup,
-			  const double &zlow, const double &zup){
+// emission from control volume ( media ) and surface
+void ray::set_emissP( const double &xlow, const double &xup,
+		      const double &ylow, const double &yup,
+		      const double &zlow, const double &zup){
   
   double random1, random2, random3;
   rng.RandomNumberGen(random1);
@@ -157,7 +157,6 @@ void ray::set_emissP_vol( const double &xlow, const double &xup,
   xemiss = xlow + ( xup - xlow ) * random1;
   yemiss = ylow + ( yup - ylow ) * random2;
   zemiss = zlow + ( zup - zlow ) * random3;
-  //  emissVolIndex = vIndex;
     
 }
 
@@ -175,22 +174,22 @@ void ray::set_emissS_vol(double *sVol){
 
 
 
-void ray::set_emissP_surf(const double &xlow, const double &xup,
-			  const double &ylow, const double &yup,
-			  const double &zlow, const double &zup){
+// void ray::set_emissP_surf(const double &xlow, const double &xup,
+// 			  const double &ylow, const double &yup,
+// 			  const double &zlow, const double &zup){
   
-  double random1, random2, random3;
-  rng.RandomNumberGen(random1);
-  rng.RandomNumberGen(random2);
-  rng.RandomNumberGen(random3);
+//   double random1, random2, random3;
+//   rng.RandomNumberGen(random1);
+//   rng.RandomNumberGen(random2);
+//   rng.RandomNumberGen(random3);
 
-  xemiss = xlow + (xup - xlow) * random1;
-  yemiss = ylow + (yup - ylow) * random2;
-  zemiss = zlow + (zup - zlow) * random3;
-//   cout << "xemiss = " << xemiss << endl;
-//   cout << "yemiss = " << yemiss << endl;
-//   cout << "zemiss = " << zemiss << endl;
-}
+//   xemiss = xlow + (xup - xlow) * random1;
+//   yemiss = ylow + (yup - ylow) * random2;
+//   zemiss = zlow + (zup - zlow) * random3;
+// //   cout << "xemiss = " << xemiss << endl;
+// //   cout << "yemiss = " << yemiss << endl;
+// //   cout << "zemiss = " << zemiss << endl;
+// }
 
 
 double ray::get_xemiss(){
@@ -581,11 +580,15 @@ void ray::TravelInMediumInten(const double *kl_Vol,
    
   do {
       
-    rng.RandomNumberGen(random); // the random number from drand48() could return [0,1)
-
+    rng.RandomNumberGen(random);
+    // the random number from drand48() could return [0,1)
     // to avoid log(zero), now we use log(1-random)
+    
+    // random number from Mersenee Twister can return either way,
+    // here we use (0,1]
+    
     // only use scattering coeff to get the scat_len.
-    scat_len = - log(1-random) / scat_m;
+    scat_len = - log(random) / scat_m;
 
     if ( scat_len >= length ) { // within this subregion scatter doesnot happen
       
