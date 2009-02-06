@@ -90,7 +90,7 @@ SphereGeometryPiece::inside(const Point& p) const
 {
   Vector diff = p - d_origin;
 
-  if (diff.length() > d_radius)
+  if (diff.length2() > d_radius*d_radius)
     return false;
   else 
     return true;
@@ -108,5 +108,3 @@ Box SphereGeometryPiece::getBoundingBox() const
     return Box(lo,hi);
 
 }
-
-
