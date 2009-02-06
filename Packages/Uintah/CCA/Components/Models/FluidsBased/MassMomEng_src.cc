@@ -78,9 +78,9 @@ void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup* )
 {
   d_matl = sharedState->parseAndLookupMaterial(params, "Material");
-  params->require("momentum_src_rate", d_src->mom_src_rate);
-  params->require("mass_src_rate",     d_src->mass_src_rate);
-  params->require("energy_src_rate",   d_src->eng_src_rate);
+  params->require("momentum_src", d_src->mom_src_rate);
+  params->require("mass_src",     d_src->mass_src_rate);
+  params->require("energy_src",   d_src->eng_src_rate);
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -91,7 +91,7 @@ void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
   totalMass_srcLabel  = VarLabel::create( "TotalMass_src",
                                         sum_vartype::getTypeDescription() );
   totalMom_srcLabel  = VarLabel::create("TotalMom_src",
-                                        sum_vartype::getTypeDescription() );
+                                        sumvec_vartype::getTypeDescription() );
   totalEng_srcLabel  = VarLabel::create("TotalEng_src",
                                         sum_vartype::getTypeDescription() );
 }
@@ -128,18 +128,24 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
 				                const LevelP& level,
 				                const ModelInfo* mi)
 {
+  if (level->hasFinerLevel()){
+    return;  
+  }
+  
   Task* t = scinew Task("MassMomEng_src::computeModelSources",this, 
                         &MassMomEng_src::computeModelSources, mi);
   t->modifies(mi->modelMass_srcLabel);
   t->modifies(mi->modelMom_srcLabel);
   t->modifies(mi->modelEng_srcLabel);
   t->modifies(mi->modelVol_srcLabel);
-  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,  Ghost::None,0);
+  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   Ghost::None,0);
+  t->requires(Task::NewDW, Ilb->vol_frac_CCLabel, Ghost::None,0);
   
   t->computes(MassMomEng_src::totalMass_srcLabel);
+  t->computes(MassMomEng_src::totalMom_srcLabel);
   t->computes(MassMomEng_src::totalEng_srcLabel);
   
-  t->requires( Task::OldDW, mi->delT_Label);
+  //t->requires( Task::OldDW, mi->delT_Label);
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
@@ -152,7 +158,7 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
 			                    const ModelInfo* mi)
 {
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label,getLevel(patches));
   double dt = delT;
 
   int indx = d_matl->getDWIndex();
@@ -169,15 +175,16 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
     CCVariable<double> mass_src;
     CCVariable<Vector> mom_src;
     CCVariable<double> eng_src;
-    CCVariable<double> sp_vol_src;
+    CCVariable<double> vol_src;
     constCCVariable<double> sp_vol_CC;
     constCCVariable<double> vol_frac;
     
     new_dw->getModifiable(mass_src,   mi->modelMass_srcLabel, indx, patch);
     new_dw->getModifiable(mom_src,    mi->modelMom_srcLabel,  indx, patch);
     new_dw->getModifiable(eng_src,    mi->modelEng_srcLabel,  indx, patch);
-    new_dw->getModifiable(sp_vol_src, mi->modelVol_srcLabel,  indx, patch);
+    new_dw->getModifiable(vol_src,    mi->modelVol_srcLabel,  indx, patch);
     new_dw->get(sp_vol_CC,            Ilb->sp_vol_CCLabel,    indx, patch, Ghost::None,0);
+    new_dw->get(vol_frac,             Ilb->vol_frac_CCLabel,  indx, patch, Ghost::None,0);
     
     //__________________________________
     //  Do some work
@@ -190,8 +197,7 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
         eng_src[c]  += usr_eng_src;
         mass_src[c] += usr_mass_src;
         mom_src[c]  += usr_mom_src;
-        sp_vol_src[c] += usr_mass_src * sp_vol_CC[c];  // volume src
-        
+        vol_src[c]  += usr_mass_src * sp_vol_CC[c];  // volume src
         totalMass_src += usr_mass_src;
         totalMom_src  += usr_mom_src;
         totalEng_src  += usr_eng_src;
