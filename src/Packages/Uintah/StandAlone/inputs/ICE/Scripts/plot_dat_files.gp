@@ -6,7 +6,7 @@
 #      <save label="TotalMass"/>
 #      <save label="KineticEnergy"/>
 #      <save label="TotalIntEng"/>
-#      <save label="CenterOfMassVelocity"/>
+#      <save label="TotalMomentum"/>
 #   and
 #      <debug label = "switchDebug_explicit_press"/> 
 #
@@ -14,7 +14,7 @@
 #_________________________________________________________________________
 #_________________________________
 #  rip out "[" "]" from center of mass
-!sed 's/\[//g' CenterOfMassVelocity.dat | sed 's/\]//g' >TotalMom.dat
+!sed 's/\[//g' TotalMomentum | sed 's/\]//g' >TotalMom.dat
 
 set ytics
 set xtics
