@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-
 #include <Packages/Uintah/CCA/Components/Models/FluidsBased/MassMomEng_src.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -38,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <iostream>
 
@@ -49,32 +48,39 @@ MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld, ProblemSpecP& para
   : ModelInterface(myworld), params(params)
 {
   mymatls = 0;
-  MIlb  = scinew MPMICELabel();
+  Ilb  = scinew ICELabel();
   totalMass_srcLabel = 0;
-  totalIntEng_srcLabel = 0;
+  totalEng_srcLabel = 0;
+  d_src = scinew src();
 }
 
 MassMomEng_src::~MassMomEng_src()
 {
-  delete MIlb;
-  if(mymatls && mymatls->removeReference())
+  delete Ilb;
+  delete d_src;
+  if(mymatls && mymatls->removeReference()){
     delete mymatls;
+  }
 
-  if(0!=totalMass_srcLabel)
+  if(0!=totalMass_srcLabel){
     VarLabel::destroy(totalMass_srcLabel);
-  
-  if(0!=totalIntEng_srcLabel)
-    VarLabel::destroy(totalIntEng_srcLabel);
+  }
+  if(0!=totalMom_srcLabel){
+    VarLabel::destroy(totalMom_srcLabel);
+  }
+  if(0!=totalEng_srcLabel){
+    VarLabel::destroy(totalEng_srcLabel);
+  }
 }
-
-
 
 //______________________________________________________________________
 void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup* )
 {
   d_matl = sharedState->parseAndLookupMaterial(params, "Material");
-  params->require("rate", d_rate);
+  params->require("momentum_src_rate", d_src->mom_src_rate);
+  params->require("mass_src_rate",     d_src->mass_src_rate);
+  params->require("energy_src_rate",   d_src->eng_src_rate);
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -84,8 +90,9 @@ void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
   
   totalMass_srcLabel  = VarLabel::create( "TotalMass_src",
                                         sum_vartype::getTypeDescription() );
-
-  totalIntEng_srcLabel  = VarLabel::create("TotalIntEng_src",
+  totalMom_srcLabel  = VarLabel::create("TotalMom_src",
+                                        sum_vartype::getTypeDescription() );
+  totalEng_srcLabel  = VarLabel::create("TotalEng_src",
                                         sum_vartype::getTypeDescription() );
 }
 
@@ -95,7 +102,9 @@ void MassMomEng_src::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","MassMomEng_src");
   model_ps->appendElement("Material",d_matl->getName());
-  model_ps->appendElement("rate",     d_rate );
+  model_ps->appendElement("momentum_src", d_src->mom_src_rate);
+  model_ps->appendElement("mass_src",     d_src->mass_src_rate);
+  model_ps->appendElement("energy_src",   d_src->eng_src_rate);
 }
  
 //______________________________________________________________________
@@ -125,9 +134,10 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
   t->modifies(mi->modelMom_srcLabel);
   t->modifies(mi->modelEng_srcLabel);
   t->modifies(mi->modelVol_srcLabel);
-
+  t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,  Ghost::None,0);
+  
   t->computes(MassMomEng_src::totalMass_srcLabel);
-  t->computes(MassMomEng_src::totalIntEng_srcLabel);
+  t->computes(MassMomEng_src::totalEng_srcLabel);
   
   t->requires( Task::OldDW, mi->delT_Label);
   sched->addTask(t, level->eachPatch(), mymatls);
@@ -147,27 +157,49 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
 
   int indx = d_matl->getDWIndex();
   double totalMass_src = 0.0;
-  double totalIntEng_src = 0.0;
+  double totalEng_src = 0.0;
+  Vector totalMom_src(0,0,0);
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
+    
+    Vector dx = patch->dCell();
+    double vol = dx.x()*dx.y()*dx.z();
+  
     CCVariable<double> mass_src;
     CCVariable<Vector> mom_src;
     CCVariable<double> eng_src;
     CCVariable<double> sp_vol_src;
+    constCCVariable<double> sp_vol_CC;
+    constCCVariable<double> vol_frac;
     
     new_dw->getModifiable(mass_src,   mi->modelMass_srcLabel, indx, patch);
     new_dw->getModifiable(mom_src,    mi->modelMom_srcLabel,  indx, patch);
     new_dw->getModifiable(eng_src,    mi->modelEng_srcLabel,  indx, patch);
     new_dw->getModifiable(sp_vol_src, mi->modelVol_srcLabel,  indx, patch);
-
+    new_dw->get(sp_vol_CC,            Ilb->sp_vol_CCLabel,    indx, patch, Ghost::None,0);
+    
     //__________________________________
     //  Do some work
+    double usr_eng_src  = d_src->eng_src_rate  * dt * vol;
+    double usr_mass_src = d_src->mass_src_rate * dt * vol;
+    Vector usr_mom_src  = d_src->mom_src_rate  * dt * vol;
     for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
+      if ( vol_frac[c] > 0.001) {
+        eng_src[c]  += usr_eng_src;
+        mass_src[c] += usr_mass_src;
+        mom_src[c]  += usr_mom_src;
+        sp_vol_src[c] += usr_mass_src * sp_vol_CC[c];  // volume src
+        
+        totalMass_src += usr_mass_src;
+        totalMom_src  += usr_mom_src;
+        totalEng_src  += usr_eng_src;
+      }
     }
-    new_dw->put(sum_vartype(totalMass_src),  MassMomEng_src::totalMass_srcLabel);
-    new_dw->put(sum_vartype(totalIntEng_src),MassMomEng_src::totalIntEng_srcLabel);
+    new_dw->put(sum_vartype(totalMass_src),    MassMomEng_src::totalMass_srcLabel);
+    new_dw->put(sumvec_vartype(totalMom_src),  MassMomEng_src::totalMom_srcLabel);
+    new_dw->put(sum_vartype(totalEng_src),     MassMomEng_src::totalEng_srcLabel);
   }
 }
 //______________________________________________________________________  
