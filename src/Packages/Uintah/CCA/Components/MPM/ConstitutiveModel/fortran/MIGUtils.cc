@@ -31,34 +31,49 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <stdlib.h>
 
-extern "C"{
- void bombed_(char *mes);
- void logmes_(char *mes);
- void faterr_(char *mes1, char *mes2);
-}
-
 using namespace std;
 
-void bombed_(char *mes)
+extern "C" {
+
+// These functions are called from fortran and thus need to be
+// compiled using "C" naming conventions for the symbols.
+
+void bombed_(char *mes, int len_mes)
 {
   cerr <<  "Code bombed with the following message:" << endl;
-  cerr <<  mes << endl;
+  for(int i=0;i<len_mes;i++){
+    putchar(mes[i]);
+  }
+  cerr << "\n";
   exit(1);
   return;
 }
 
-void logmes_(char *mes)
+void logmes_(char *mes, int len_mes)
 {
-  cerr <<  mes << endl;
+  for(int i=0;i<len_mes;i++){
+    putchar(mes[i]);
+  }
+  cerr << "\n";
 
   return;
 }
 
-void faterr_(char *mes1, char *mes2)
+void faterr_(char *mes1, char *mes2, int len_mes1, int len_mes2)
 {
-  cerr << "Fatal error detected by " << mes1 << ":" << endl;
-  cerr <<  mes2 << endl;
+  cerr << "FATAL ERROR DETECTED BY ";
+  for(int i=0;i<len_mes1;i++){
+    putchar(mes1[i]);
+  }
+  cerr << ":\n";
+
+  for(int i=0;i<len_mes2;i++){
+    putchar(mes2[i]);
+  }
+  cerr << "\n";
   exit(1);
 
   return;
 }
+
+} // end extern "C"
