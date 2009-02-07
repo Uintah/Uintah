@@ -14,7 +14,7 @@
 #_________________________________________________________________________
 #_________________________________
 #  rip out "[" "]" from center of mass
-!sed 's/\[//g' TotalMomentum | sed 's/\]//g' >TotalMom.dat
+!sed 's/\[//g' TotalMomentum.dat | sed 's/\]//g' >TotalMom.dat
 
 set ytics
 set xtics
