@@ -313,7 +313,7 @@ int main(int argc, char *argv[]){
   //  double sumIncomInten, aveIncomInten;  
   double StopLowerBound;
   
-  StopLowerBound = 1e-4;
+  StopLowerBound = 1e-3;
   rayNoSurface = 1;
   rayNoVol = 1;  
   Ncx = 10;
@@ -811,8 +811,8 @@ int main(int argc, char *argv[]){
 
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-    #include "inputBenchmark.cc"
-   // #include "inputBenchmarkSurf.cc"
+   // #include "inputBenchmark.cc"
+    #include "inputBenchmarkSurf.cc"
    //   #include "inputNonblackSurf.cc"
    // #include "inputScattering.cc"   
      

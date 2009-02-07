@@ -92,6 +92,7 @@ double ray::dotProduct(const double *s1, const double *s2){
 
 
 // inline
+// for surface elements
 void ray::set_currentvIndex(const int &iIndex_,
 			    const int &jIndex_,
 			    const int &kIndex_){
@@ -107,8 +108,29 @@ void ray::set_currentvIndex(const int &iIndex_,
 
 
 // inline
+// for control volumes
 void ray::set_currentvIndex(const int &VolIndex){
   currentvIndex = VolIndex;
+}
+
+
+void ray::set_futurevIndex(const int &iIndex_,
+			   const int &jIndex_,
+			   const int &kIndex_){
+
+  futureViIndex = iIndex_;
+  futureVjIndex = jIndex_;
+  futureVkIndex = kIndex_;  
+
+  futurevIndex = futureViIndex +
+    futureVjIndex * Ncx +
+    futureVkIndex * Ncx * Ncy;
+  
+}
+
+
+int ray::get_futurevIndex(){
+  return futurevIndex;
 }
 
 
@@ -116,9 +138,11 @@ void ray::update_vIndex(){
   iIndex = futureViIndex;
   jIndex = futureVjIndex;
   kIndex = futureVkIndex;
-  currentvIndex = iIndex +
-     jIndex * Ncx +
-     kIndex * Ncx * Ncy;
+  currentvIndex = futurevIndex;
+
+//   currentvIndex = iIndex +
+//      jIndex * Ncx +
+//      kIndex * Ncx * Ncy;
 }
 
 
@@ -148,10 +172,6 @@ void ray::set_emissP(MTRand &MTrng,
 		     const double &ylow, const double &yup,
 		     const double &zlow, const double &zup){
   
-//   double random1, random2, random3;
-//   rng.RandomNumberGen(random1);
-//   rng.RandomNumberGen(random2);
-//   rng.RandomNumberGen(random3);
   xemiss = xlow + ( xup - xlow ) * MTrng.randExc();
   yemiss = ylow + ( yup - ylow ) * MTrng.randExc();
   zemiss = zlow + ( zup - zlow ) * MTrng.randExc();
@@ -241,27 +261,30 @@ ray::surfaceIntersect( const double *X,
     // could possible hit on top surface
   if ( surfaceFlag == TOP ) {
 
-    xhit = directionVector[0] * disMin + xemiss;
-    yhit = directionVector[1] * disMin + yemiss;
-    zhit = Z[kIndex+1];
-    
-
     // hitSurfaceIndex's position indices
     hitSurfaceiIndex = iIndex;
     hitSurfacejIndex = jIndex;
     hitSurfacekIndex = kIndex + 1;
     
-    // jump ahead to get the direction of the ray when hit on top surface
+    xhit = directionVector[0] * disMin + xemiss;
+    yhit = directionVector[1] * disMin + yemiss;
+    zhit = Z[hitSurfacekIndex];
+        
+    // hit on top virtual surface
     if (VolFeature[hitSurfaceiIndex +
 		   hitSurfacejIndex * ghostX +
 		   hitSurfacekIndex *ghostTB +
 		   offset]){
-      //	cout << "hit on top virtual" << endl;
+
+      set_futurevIndex(hitSurfaceiIndex,
+		       hitSurfacejIndex,
+		       hitSurfacekIndex);
       
-      // update next step's volume index i, j, k, but note, not updating currentvIndex yet
-      futureViIndex = hitSurfaceiIndex;
-      futureVjIndex = hitSurfacejIndex;
-      futureVkIndex = hitSurfacekIndex;
+      // update next step's volume index i, j, k,
+      // but note, not updating currentvIndex yet
+//       futureViIndex = hitSurfaceiIndex;
+//       futureVjIndex = hitSurfacejIndex;
+//       futureVkIndex = hitSurfacekIndex;
       
       // make sure that if not hit on realsurface and called hitSurfaceIndex
       // will return error
@@ -271,9 +294,15 @@ ray::surfaceIntersect( const double *X,
     else{
       //	cout << "hit on top real " << endl;
       VIRTUAL = 0;
-      futureViIndex = iIndex;
-      futureVjIndex = jIndex;
-      futureVkIndex = kIndex;	
+      
+      set_futurevIndex(iIndex,
+		       jIndex,
+		       kIndex);
+      
+//       futureViIndex = iIndex;
+//       futureVjIndex = jIndex;
+//       futureVkIndex = kIndex;
+      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
       obReal = &obTop_ray;
     }
@@ -289,34 +318,43 @@ ray::surfaceIntersect( const double *X,
   
   // could possible hit on bottom surface
   if ( surfaceFlag == BOTTOM ) {
-    
-    xhit = directionVector[0] * disMin + xemiss;
-    yhit = directionVector[1] * disMin + yemiss;
-    zhit = Z[kIndex];
 
     // hitSurfaceIndex's position indices
     hitSurfaceiIndex = iIndex;
     hitSurfacejIndex = jIndex;
     hitSurfacekIndex = kIndex;
     
-    // jump ahead to get the direction of the ray when hit on top surface
+    xhit = directionVector[0] * disMin + xemiss;
+    yhit = directionVector[1] * disMin + yemiss;
+    zhit = Z[hitSurfacekIndex];
+
+    // hit on bottom virtual surface
     if (VolFeature[hitSurfaceiIndex +
 		   hitSurfacejIndex *ghostX +
 		   (hitSurfacekIndex-1) *ghostTB +
 		   offset]){
-      //	cout << "hit on bottom virtual " << endl;
       
-      futureViIndex = hitSurfaceiIndex;
-      futureVjIndex = hitSurfacejIndex;
-      futureVkIndex = hitSurfacekIndex-1;
+      set_futurevIndex(hitSurfaceiIndex,
+		       hitSurfacejIndex,
+		       hitSurfacekIndex-1);
+      
+//       futureViIndex = hitSurfaceiIndex;
+//       futureVjIndex = hitSurfacejIndex;
+//       futureVkIndex = hitSurfacekIndex-1;
+      
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
     else{
-      //	cout << "hit on bottom real " << endl;
-      futureViIndex = iIndex;
-      futureVjIndex = jIndex;
-      futureVkIndex = kIndex;	
+      
+      set_futurevIndex(iIndex,
+		       jIndex,
+		       kIndex);
+      
+//       futureViIndex = iIndex;
+//       futureVjIndex = jIndex;
+//       futureVkIndex = kIndex;
+      
       VIRTUAL = 0;
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
       obReal = &obBottom_ray;
@@ -333,34 +371,40 @@ ray::surfaceIntersect( const double *X,
 
   // could possible hit on front surface
   if ( surfaceFlag == FRONT ) {
-
-    xhit = directionVector[0] * disMin + xemiss;
-    yhit =  Y[jIndex];
-    zhit = directionVector[2] * disMin + zemiss;
     
     // hitSurfaceIndex's position indices
     hitSurfaceiIndex = iIndex;
     hitSurfacejIndex = jIndex;
     hitSurfacekIndex = kIndex;
     
-    // jump ahead to get the direction of the ray when hit on top surface
+    xhit = directionVector[0] * disMin + xemiss;
+    yhit =  Y[hitSurfacejIndex];
+    zhit = directionVector[2] * disMin + zemiss;
+       
+    // hit on front virtual surface
     if (VolFeature[hitSurfaceiIndex +
 		   (hitSurfacejIndex-1) *ghostX +
 		   hitSurfacekIndex *ghostTB +
 		   offset]){
-      //	cout << "hit on front virtual " << endl;
       
-      futureViIndex = hitSurfaceiIndex;
-      futureVjIndex = hitSurfacejIndex-1;
-      futureVkIndex = hitSurfacekIndex;	
+      set_futurevIndex(hitSurfaceiIndex,
+		       hitSurfacejIndex-1,
+		       hitSurfacekIndex);
+      
+//       futureViIndex = hitSurfaceiIndex;
+//       futureVjIndex = hitSurfacejIndex-1;
+//       futureVkIndex = hitSurfacekIndex;	
       hitSurfaceIndex = -1;	
       VIRTUAL =  1;
     }
     else{
-      //	cout << "hit on front real " << endl;
-      futureViIndex = iIndex;
-      futureVjIndex = jIndex;
-      futureVkIndex = kIndex;		
+      set_futurevIndex(iIndex,
+		       jIndex,
+		       kIndex);
+      
+//       futureViIndex = iIndex;
+//       futureVjIndex = jIndex;
+//       futureVkIndex = kIndex;		
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obFront_ray;
@@ -377,33 +421,41 @@ ray::surfaceIntersect( const double *X,
 
   // could possible hit on back surface
   if ( surfaceFlag == BACK ) {
-
-    xhit = directionVector[0] * disMin + xemiss;
-    yhit = Y[jIndex+1];
-    zhit = directionVector[2] * disMin + zemiss;
     
     // hitSurfaceIndex's position indices
     hitSurfaceiIndex = iIndex;
     hitSurfacejIndex = jIndex+1;
     hitSurfacekIndex = kIndex;
     
-    // jump ahead to get the direction of the ray when hit on top surface
+    xhit = directionVector[0] * disMin + xemiss;
+    yhit = Y[hitSurfacejIndex];
+    zhit = directionVector[2] * disMin + zemiss;
+        
+    // hit on back virtual surface
     if (VolFeature[hitSurfaceiIndex +
 		   hitSurfacejIndex *ghostX +
 		   hitSurfacekIndex *ghostTB +
 		   offset]){
-      //	cout << "hit on back virtual " << endl;
-      futureViIndex = hitSurfaceiIndex;
-      futureVjIndex = hitSurfacejIndex;
-      futureVkIndex = hitSurfacekIndex;
+
+      set_futurevIndex(hitSurfaceiIndex,
+		       hitSurfacejIndex,
+		       hitSurfacekIndex);
+      
+//       futureViIndex = hitSurfaceiIndex;
+//       futureVjIndex = hitSurfacejIndex;
+//       futureVkIndex = hitSurfacekIndex;
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
     else{
-      //	cout << "hit on back real " << endl;
-      futureViIndex = iIndex;
-      futureVjIndex = jIndex;
-      futureVkIndex = kIndex;		
+
+      set_futurevIndex(iIndex,
+		       jIndex,
+		       kIndex);
+      
+//       futureViIndex = iIndex;
+//       futureVjIndex = jIndex;
+//       futureVkIndex = kIndex;		
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obBack_ray;
@@ -419,33 +471,42 @@ ray::surfaceIntersect( const double *X,
    
   // could possible hit on left surface
   if ( surfaceFlag == LEFT ) {
-
-    xhit = X[iIndex];
-    yhit = directionVector[1] * disMin + yemiss;
-    zhit = directionVector[2] * disMin + zemiss;
     
     // hitSurfaceIndex's position indices
     hitSurfaceiIndex = iIndex;
     hitSurfacejIndex = jIndex;
     hitSurfacekIndex = kIndex;
     
-    // jump ahead to get the direction of the ray when hit on top surface
+    xhit = X[hitSurfaceiIndex];
+    yhit = directionVector[1] * disMin + yemiss;
+    zhit = directionVector[2] * disMin + zemiss;
+       
+    // hit on left virtual surface
     if (VolFeature[(hitSurfaceiIndex-1) +
 		   hitSurfacejIndex *ghostX +
 		   hitSurfacekIndex *ghostTB +
 		   offset]){
-      //	cout << " hit on left virtual " << endl;
-      futureViIndex = hitSurfaceiIndex-1;
-      futureVjIndex = hitSurfacejIndex;
-      futureVkIndex = hitSurfacekIndex;
+
+      set_futurevIndex(hitSurfaceiIndex-1,
+		       hitSurfacejIndex,
+		       hitSurfacekIndex);
+      
+//       futureViIndex = hitSurfaceiIndex-1;
+//       futureVjIndex = hitSurfacejIndex;
+//       futureVkIndex = hitSurfacekIndex;
+      
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
     else{
       //	cout << "hit on left real " << endl;
-      futureViIndex = iIndex;
-      futureVjIndex = jIndex;
-      futureVkIndex = kIndex;		
+      set_futurevIndex(iIndex,
+		       jIndex,
+		       kIndex);
+      
+//       futureViIndex = iIndex;
+//       futureVjIndex = jIndex;
+//       futureVkIndex = kIndex;		
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obLeft_ray;
@@ -462,33 +523,41 @@ ray::surfaceIntersect( const double *X,
   
   // could possible hit on right surface
   if ( surfaceFlag == RIGHT ) {
-
-    xhit = X[iIndex+1];
-    yhit = directionVector[1] * disMin + yemiss;
-    zhit = directionVector[2] * disMin + zemiss;
     
     // hitSurfaceIndex's position indices
     hitSurfaceiIndex = iIndex+1;
     hitSurfacejIndex = jIndex;
     hitSurfacekIndex = kIndex;
     
-    // jump ahead to get the direction of the ray when hit on top surface
+    xhit = X[hitSurfaceiIndex];
+    yhit = directionVector[1] * disMin + yemiss;
+    zhit = directionVector[2] * disMin + zemiss;
+    
+    // hit on right virtual surface
     if (VolFeature[hitSurfaceiIndex +
 		   hitSurfacejIndex *ghostX +
 		   hitSurfacekIndex *ghostTB +
 		   offset]){
-      //	cout << " hit on right virtual " << endl;
-      futureViIndex = hitSurfaceiIndex;
-      futureVjIndex = hitSurfacejIndex;
-      futureVkIndex = hitSurfacekIndex;
+
+      set_futurevIndex(hitSurfaceiIndex,
+		       hitSurfacejIndex,
+		       hitSurfacekIndex);
+      
+//       futureViIndex = hitSurfaceiIndex;
+//       futureVjIndex = hitSurfacejIndex;
+//       futureVkIndex = hitSurfacekIndex;
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
     else{
-      //	cout << " hit on right real " << endl;
-      futureViIndex = iIndex;
-      futureVjIndex = jIndex;
-      futureVkIndex = kIndex;		
+
+      set_futurevIndex(iIndex,
+		       jIndex,
+		       kIndex);
+      
+//       futureViIndex = iIndex;
+//       futureVjIndex = jIndex;
+//       futureVkIndex = kIndex;		
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obRight_ray;
