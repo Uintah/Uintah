@@ -830,8 +830,8 @@ int main(int argc, char *argv[]){
      }
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-   //  #include "inputBenchmark.cc"
-    #include "inputBenchmarkSurf.cc"
+     #include "inputBenchmark.cc"
+   //  #include "inputBenchmarkSurf.cc"
    // #include "inputNonblackSurf.cc"
    //#include "inputScattering.cc"
    

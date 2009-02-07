@@ -101,10 +101,16 @@ public:
 			 const int &kIndex);
   
   void set_currentvIndex(const int &VolIndex);
-  void update_vIndex();
   
+  void set_futurevIndex(const int &iIndex,
+			const int &jIndex,
+			const int &kIndex);
+			
   int get_currentvIndex();
+  int get_futurevIndex();
   
+  void update_vIndex();
+    
   double get_xemiss();
   double get_yemiss();
   double get_zemiss();
