@@ -131,30 +131,31 @@ void rayfromSurf(SurfaceType &obSurface,
 		 const double *X, const double *Y, const double *Z,
 		 const double *kl_Vol, const double *scatter_Vol,
 		 const int *VolFeature,
-		 const int * const rayNo_surface[],
 		 const int &thisRayNo,
 		 const int &iIndex,
 		 const int &jIndex,
 		 const int &kIndex,
-		 const double &IntenFrac,
+		 const double &StopLowerBound,
 		 double *netInten_surface[],
 		 double *s){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
-  double PathLeft, PathSurfaceLeft;
+  double PathLeft, PathSurfaceLeft, weight, traceProbability;
   double OutIntenSur, sumIncomInten, aveIncomInten;
   int rayCounter, hitSurfaceFlag, hitSurfaceIndex;
   
   // get surface element's absorption coefficient
   alpha = alpha_surface[surfaceFlag][surfaceIndex];
   OutIntenSur = IntenArray_surface[surfaceFlag][surfaceIndex];
-    
+   
   double *IncomingIntenSur = new double[ thisRayNo ];
   
 	  // loop over ray numbers on each surface element
   for ( rayCounter = 0; rayCounter < thisRayNo; rayCounter++ ) {
     
     LeftIntenFrac = 1;
+    traceProbability = 1;
+    weight = 1;
     previousSum = 0;
     currentSum = 0;
     IncomingIntenSur[rayCounter] = 0;
@@ -182,6 +183,7 @@ void rayfromSurf(SurfaceType &obSurface,
     
     do {
       
+      weight = weight / traceProbability;
       previousSum = currentSum;
       
       // checking scattering first
@@ -198,7 +200,8 @@ void rayfromSurf(SurfaceType &obSurface,
       
       IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] + 
 	IntenArray_Vol[obRay.get_currentvIndex()] 
-	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft;
+	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+	* weight;
       
 //       cout << "previousSum = " << previousSum << endl;
 //       cout << "currentSum = " << currentSum << endl;
@@ -225,7 +228,8 @@ void rayfromSurf(SurfaceType &obSurface,
 	
 	IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
 	  IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
-	  exp ( -currentSum ) * SurLeft;
+	  exp ( -currentSum ) * SurLeft
+	  * weight;
 	//	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
       }
       
@@ -238,9 +242,9 @@ void rayfromSurf(SurfaceType &obSurface,
       SurLeft = SurLeft * PathSurfaceLeft;
       
       LeftIntenFrac = exp( -currentSum) * SurLeft;
+      traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
       
-      
-    }while ( LeftIntenFrac >= IntenFrac);
+    }while (  MTrng.randExc() < traceProbability); // continue the path
     
   } // rayCounter loop
 	  
@@ -251,7 +255,7 @@ void rayfromSurf(SurfaceType &obSurface,
   //	  cout << "sumIncomInten = " << sumIncomInten << endl;
   delete[] IncomingIntenSur;
   
-  aveIncomInten = sumIncomInten / rayNo_surface[surfaceFlag][surfaceIndex];
+  aveIncomInten = sumIncomInten / thisRayNo;
   
   netInten_surface[surfaceFlag][surfaceIndex] =
     OutIntenSur - aveIncomInten;
@@ -272,8 +276,8 @@ int main(int argc, char *argv[]){
   time (&time_start);
 
   int casePlates;
-  cout << " Please enter plates case " << endl;
-  cin >> casePlates;
+  //  cout << " Please enter plates case " << endl;
+  //  cin >> casePlates;
 
 //   // starting up MPI
 //   MPI_Init(&argc, &argv);
@@ -305,10 +309,11 @@ int main(int argc, char *argv[]){
   int BottomStartNo, FrontStartNo, BackStartNo, LeftStartNo, RightStartNo; 
   int VolElementNo, TopBottomNo, FrontBackNo, LeftRightNo;
   int surfaceElementNo;
-  double EnergyAmount; // set as customer self-set-up later
+  //  double EnergyAmount; // set as customer self-set-up later
   //  double sumIncomInten, aveIncomInten;  
-
-
+  double StopLowerBound;
+  
+  StopLowerBound = 1e-3;
   rayNoSurface = 1;
   rayNoVol = 1;  
   Ncx = 10;
@@ -380,7 +385,7 @@ int main(int argc, char *argv[]){
 
   int offset;
   offset = (1) + (1) * (Ncx+2) + (1) * ghostTB;
- 
+   
   // top ghost cells
   ghostk = Ncz; // Npz - 1 
   for ( ghostj = -1; ghostj < Npy; ghostj ++ ){
@@ -439,14 +444,14 @@ int main(int argc, char *argv[]){
       for ( int i = 0; i < Ncx; i ++ )
 	VolFeature[i + j * (Ncx+2) + k * ghostTB + offset] = FLOW;
 
-  // for ( int k = -1; k < Npz; k ++ )
-//     for ( int j = -1; j < Npy; j ++ )
-//       for ( int i = -1; i < Npx; i ++ )
-// 	cout << "VolFeature[" << i << ", " << j << ", "
-// 	     << k << "] = " 
-// 	     << VolFeature[i + j * (Ncx+2) + k * ( Ncx+2) * (Ncy+2)]
-// 	     << "with index = " << i + j * (Ncx+2) + k * ( Ncx+2) * (Ncy+2)
-// 	     << endl;
+//  for ( int k = -1; k < Npz; k ++ )
+//      for ( int j = -1; j < Npy; j ++ )
+//        for ( int i = -1; i < Npx; i ++ )
+//  	cout << "VolFeature[" << i << ", " << j << ", "
+//  	     << k << "] = " 
+//  	     << VolFeature[i + j * (Ncx+2) + k * ( Ncx+2) * (Ncy+2) + offset]
+//  	     << "with index = " << i + j * (Ncx+2) + k * ( Ncx+2) * (Ncy+2) + offset
+//  	     << endl;
   
   // get coordinates arrays
   double *X = new double [Npx]; // i 
@@ -773,7 +778,7 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1000; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 500; 
    // TopBottomNo = Ncx * Ncy;
 
 
@@ -783,16 +788,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 1000;
-       rayNo_bottom_surface[iSurface] = 1000;
+       rayNo_top_surface[iSurface] = 500;
+       rayNo_bottom_surface[iSurface] = 500;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 1000;
-       rayNo_back_surface[iSurface] = 1000;
+       rayNo_front_surface[iSurface] = 500;
+       rayNo_back_surface[iSurface] = 500;
      }   
 
 
@@ -800,35 +805,32 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 1000;
-       rayNo_right_surface[iSurface] = 1000;
+       rayNo_left_surface[iSurface] = 500;
+       rayNo_right_surface[iSurface] = 500;
      }
 
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
    // #include "inputBenchmark.cc"
-   // #include "inputBenchmarkSurf.cc"
-   // #include "inputNonblackSurf.cc"
-#include "inputScattering.cc"      
-   
+    #include "inputBenchmarkSurf.cc"
+   //   #include "inputNonblackSurf.cc"
+   // #include "inputScattering.cc"   
+     
    MTRand MTrng;
    VolElement obVol;
    
-   double OutIntenVol, IntenFrac, LeftIntenFrac, sumIncomInten, aveIncomInten;
-   double PathLeft, PathSurfaceLeft;
+   double OutIntenVol, traceProbability, LeftIntenFrac, sumIncomInten, aveIncomInten;
+   double PathLeft, PathSurfaceLeft, weight;
    double previousSum, currentSum;
    double SurLeft;
 
 
-   IntenFrac = 1e-10; //1e-20; // the percentage of Intensity left
+   // srand48 ( time ( NULL )); // for drand48()
    
-   //  srand48 ( time ( NULL )); // for drand48()
-   
-
    ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
    
    double theta, phi;
-   //   double random1, random2;
+   double random1, random2;
    double s[3];
   
    double sumQsurface = 0;
@@ -971,12 +973,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      rayNo_surface,
 		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
-		      IntenFrac,
+		      StopLowerBound,
 		      netInten_surface,
 		      s);
 	 
@@ -1025,12 +1026,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      rayNo_surface,
 		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
-		      IntenFrac,
+		      StopLowerBound,
 		      netInten_surface,
 		      s);
 	}
@@ -1080,12 +1080,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      rayNo_surface,
 		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
-		      IntenFrac,
+		      StopLowerBound,
 		      netInten_surface,
 		      s);
 	}
@@ -1134,12 +1133,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      rayNo_surface,
 		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
-		      IntenFrac,
+		      StopLowerBound,
 		      netInten_surface,
 		      s);
 	}
@@ -1189,12 +1187,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      rayNo_surface,
 		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
-		      IntenFrac,
+		      StopLowerBound,
 		      netInten_surface,
 		      s);
 	}
@@ -1244,12 +1241,11 @@ int main(int argc, char *argv[]){
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      rayNo_surface,
 		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
-		      IntenFrac,
+		      StopLowerBound,
 		      netInten_surface,
 		      s);
 	}
@@ -1266,7 +1262,7 @@ int main(int argc, char *argv[]){
   // surface cell
  
   iSurface = 0;
-  for ( surfaceFlag = 0; surfaceFlag < 7; surfaceFlag ++ ) {
+  for ( surfaceFlag = 0; surfaceFlag < 6; surfaceFlag ++ ) {
     for ( surfaceIndex = 0; surfaceIndex < surfaceNo[surfaceFlag]; surfaceIndex ++) {
       global_qsurface[iSurface] = pi * netInten_surface[surfaceFlag][surfaceIndex];
       global_Qsurface[iSurface] = global_qsurface[iSurface] * ElementArea[surfaceFlag][surfaceIndex];
@@ -1276,7 +1272,7 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceScatteringCase", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceBenchmarkRay500RR1e-4", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
   
@@ -1314,6 +1310,8 @@ int main(int argc, char *argv[]){
 	    for ( rayCounter = 0; rayCounter < rayNo_Vol[VolIndex]; rayCounter ++) {
 	      
 	      LeftIntenFrac = 1;
+	      weight = 1;
+	      traceProbability = 1;
 	      previousSum = 0;
 	      currentSum = 0;
 	      IncomingIntenVol[rayCounter] = 0;
@@ -1340,9 +1338,11 @@ int main(int argc, char *argv[]){
 	      
 	      // only one criteria for now ( the left energy percentage )
 	      //   vectorIndex = 0;
+
 	      obRay.dirChange = 1;
 	      
 	      do {
+		weight = weight / traceProbability;
 		
 		previousSum = currentSum;
 		
@@ -1361,7 +1361,8 @@ int main(int argc, char *argv[]){
 		
 		IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] + 
 		  IntenArray_Vol[obRay.get_currentvIndex()]
-		  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft;
+		  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+		  * weight;
 		
 		// SurLeft to accout for the real surface absorption effect on intensity
 		
@@ -1380,7 +1381,8 @@ int main(int argc, char *argv[]){
 		  
 		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
 		    IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
-		    exp ( -currentSum ) * SurLeft;
+		    exp ( -currentSum ) * SurLeft
+		    * weight;
 		  
 		}
 		
@@ -1391,10 +1393,10 @@ int main(int argc, char *argv[]){
 		
 		SurLeft = SurLeft * PathSurfaceLeft;		
 		LeftIntenFrac = exp(-currentSum) * SurLeft;
-		
-	      }while ( LeftIntenFrac >= IntenFrac);
-	      
+		traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
 
+	      }while ( MTrng.randExc() < traceProbability ); // continue the path
+	      
 
 	    } // rayCounter loop
 	    
@@ -1434,7 +1436,7 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolScatteringCase",
+  obTable.vtkVolTableMake("vtkVolBenchmarkRay500RR1e-4",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
@@ -1468,8 +1470,8 @@ int main(int argc, char *argv[]){
   time (&time_end);
   timeused = difftime (time_end,time_start);
   cout << " time used up (S) = " << timeused << "sec." << endl;
+
   
-  /*
   delete[] T_Vol;
   delete[] kl_Vol;   
   delete[] scatter_Vol;
@@ -1558,8 +1560,8 @@ int main(int argc, char *argv[]){
   delete[] global_Qdiv;
   delete[] global_qsurface;
   delete[] global_Qsurface;
-  */
 
+  
   return 0;
 
 
