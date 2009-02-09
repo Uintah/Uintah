@@ -579,7 +579,7 @@ getPatchBBox(const string& input_uda_name, int timeStepNo, int levelNo, int patc
 }
 
 /////////////////////////////////////////////////////////////////////
-extern "C"
+/*extern "C"
 int*
 getTimeSteps(const string& input_uda_name) {
   DataArchive* archive = scinew DataArchive(input_uda_name);
@@ -593,7 +593,37 @@ getTimeSteps(const string& input_uda_name) {
   
   int* noTimeSteps = new int(index.size());
   return noTimeSteps;
+}*/ 
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+// int*
+typeDouble*
+getTimeSteps(const string& input_uda_name) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+  typeDouble* timeStepInfo = new typeDouble();
+  
+  // Get the times and indices.
+  vector<int> index;
+  vector<double> times;
+    
+  // query time info from dataarchive
+  archive->queryTimesteps(index, times);
+
+  int noIndex = index.size();
+  timeStepInfo->reserve(noIndex);
+
+  // (vector<double>)(*timeStepInfo) = times;  
+  for (int i = 0; i < noIndex; i++) {
+    timeStepInfo->push_back(times[i]);
+  }
+
+  return timeStepInfo;
+
+  // int* noTimeSteps = new int(index.size());
+  // return noTimeSteps;
 } 
+
 
 /////////////////////////////////////////////////////////////////////
 extern "C"
