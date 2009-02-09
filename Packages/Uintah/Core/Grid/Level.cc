@@ -852,54 +852,6 @@ bool Level::hasFinerLevel() const
   return getIndex() < grid->numLevels()-1;
 }
 
-IntVector Level::interpolateCellToCoarser(const IntVector& idx, Vector& weight) const
-{
-  IntVector i(idx-(d_refinementRatio-IntVector(1,1,1)));
-  weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-                  double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-                  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
-  return i/d_refinementRatio;
-}
-
-IntVector Level::interpolateXFaceToCoarser(const IntVector& idx, Vector& weight) const
-{
-  IntVector i(idx-(d_refinementRatio-IntVector(d_refinementRatio.x(),1,1)));
-  weight=Vector(double(i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-                double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-                double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
-  return i/d_refinementRatio;
-}
-
-IntVector Level::interpolateYFaceToCoarser(const IntVector& idx, Vector& weight) const
-{
-  IntVector i(idx-(d_refinementRatio-IntVector(1,d_refinementRatio.y(),1)));
-  weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-                  double(i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-                  double(0.5+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
-  return i/d_refinementRatio;
-}
-
-IntVector Level::interpolateZFaceToCoarser(const IntVector& idx, Vector& weight) const
-{
-  IntVector i(idx-(d_refinementRatio-IntVector(1,1,d_refinementRatio.z())));
-  weight=Vector(double(0.5+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-                double(0.5+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-                double(i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
-  return i/d_refinementRatio;
-}
-
-IntVector Level::interpolateToCoarser(const IntVector& idx, const IntVector& dir,
-                              Vector& weight) const
-{
-  IntVector d(IntVector(1,1,1)-dir);
-  IntVector i(idx-(d_refinementRatio-d-dir*d_refinementRatio));
-  Vector o(d.asVector()*0.5);
-  weight=Vector(double(o.x()+i.x()%d_refinementRatio.x())/double(d_refinementRatio.x()),
-                  double(o.y()+i.y()%d_refinementRatio.y())/double(d_refinementRatio.y()),
-                  double(o.z()+i.z()%d_refinementRatio.z())/double(d_refinementRatio.z()));
-  return i/d_refinementRatio;
-}
-
 IntVector Level::mapCellToCoarser(const IntVector& idx) const
 { 
   IntVector ratio = idx/d_refinementRatio;
