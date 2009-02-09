@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "Surface.h"
 #include "MersenneTwister.h"
-
+#include <cmath>
 
 class MTRand;
 class ray;
@@ -44,8 +44,6 @@ public:
   RealSurface();
   
   void get_s(MTRand &MTrng, double *s);
-  
-  virtual void getTheta(const double &random);
   
   virtual void set_n(double *nn) = 0;
 
@@ -58,16 +56,67 @@ public:
   virtual void get_t1() = 0;
   virtual void get_t2() = 0;
 
-  int get_surfaceIndex();
-  int get_surfaceiIndex();
-  int get_surfacejIndex();
-  int get_surfacekIndex();
-  double get_xlow();
-  double get_xup();
-  double get_ylow();
-  double get_yup();
-  double get_zlow();
-  double get_zup();
+  inline
+  void getTheta(const double &random){
+    theta = asin(sqrt(random));
+  }
+
+  inline
+  int get_surfaceIndex(){
+    return this->surfaceIndex;
+  }
+
+
+  inline
+  double get_xlow(){
+    return this->xlow;
+  }
+
+
+  inline
+  double get_xup(){
+    return this->xup;
+  }
+
+  inline
+  double get_ylow(){
+    return this->ylow;
+  }
+
+
+  inline
+  double get_yup(){
+    return this->yup;
+  }
+  
+  inline
+  double get_zlow(){
+    return this->zlow;
+  }
+
+
+  inline
+  double get_zup(){
+    return this->zup;
+  }
+  
+
+//   inline
+//   int get_surfaceiIndex(){
+//     return this->surfaceiIndex;
+//   }
+  
+
+//   inline
+//   int get_surfacejIndex(){
+//     return this->surfacejIndex;
+//   }
+
+//   inline
+//   int get_surfacekIndex(){
+//     return this->surfacekIndex;
+//   }
+  
   
   double SurfaceEmissFlux(const int &i,
 			  const double *emiss_surface,

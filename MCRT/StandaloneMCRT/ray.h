@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef ray_H
 #define ray_H
 
-#include <vector>
 #include <cstdlib>
+#include <cmath>
 
 #include "MersenneTwister.h"
 #include "VirtualSurface.h"
@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include "BackRealSurface.h"
 #include "LeftRealSurface.h"
 #include "RightRealSurface.h"
+
 
 class MTRand;
 class VirtualSurface;
@@ -56,7 +57,7 @@ class RightRealSurface;
 
 using namespace std;
 
-class ray {
+class ray{
 
 public:
 
@@ -65,24 +66,41 @@ public:
       const int &offset_);
 
   
- //  void set_emissP_surf(const double &xlow, const double &xup,
-// 		       const double &ylow, const double &yup,
-// 		       const double &zlow, const double &zup);
-
-  void set_emissP( MTRand &MTrng,
-		   const double &xlow, const double &xup,
-		   const double &ylow, const double &yup,
-		   const double &zlow, const double &zup);
-		     
+  inline
+  int get_hitSurfaceIndex(){
+    return hitSurfaceIndex;
+  }
   
+
+  inline
+  void set_emissP(MTRand &MTrng,
+		  const double &xlow, const double &xup,
+		  const double &ylow, const double &yup,
+		  const double &zlow, const double &zup){
+    
+    xemiss = xlow + ( xup - xlow ) * MTrng.randExc();
+    yemiss = ylow + ( yup - ylow ) * MTrng.randExc();
+    zemiss = zlow + ( zup - zlow ) * MTrng.randExc();
+    
+  }
+  
+  
+ 
   void set_emissS_vol(MTRand &MTrng,
 		      double *sVol);
+  
   
   // Travelling Ray's Emission Point
    // set hit point as next emission point,
   // and set hit point surface as new emission point surface
-  void update_emissP();
 
+  inline
+  void update_emissP(){
+    xemiss = xhit;
+    yemiss = yhit;
+    zemiss = zhit;
+  }
+  
   // checking which surfaces the ray get intersection in
   // Returns true if a surface was hit.
   bool surfaceIntersect( const double *X,
@@ -90,30 +108,103 @@ public:
                          const double *Z,
                          const int *VolFeature );
  
-  void get_directionS(double *s);
-  double ray_length();
- 
-  int get_hitSurfaceIndex();
-  int get_surfaceFlag() { return surfaceFlag; }
+  inline
+  void get_directionS(double *s){
+    for ( int i = 0; i < 3; i ++ )
+      directionVector[i] = s[i];    
+  }
   
-  void set_currentvIndex(const int &iIndex,
-			 const int &jIndex,
-			 const int &kIndex);
+
+  inline
+  double ray_length(){
+    length = sqrt ( ( xhit - xemiss ) * ( xhit - xemiss ) +
+		    ( yhit - yemiss ) * ( yhit - yemiss ) +
+		    ( zhit - zemiss ) * ( zhit - zemiss ) );
+    return length;
+  } 
+
   
-  void set_currentvIndex(const int &VolIndex);
+  inline
+  int get_surfaceFlag()
+  {
+    return surfaceFlag;
+  }
   
-  void set_futurevIndex(const int &iIndex,
-			const int &jIndex,
-			const int &kIndex);
-			
-  int get_currentvIndex();
-  int get_futurevIndex();
-  
-  void update_vIndex();
+
+  inline
+  void set_currentvIndex(const int &iIndex_,
+			 const int &jIndex_,
+			 const int &kIndex_){
+    iIndex = iIndex_;
+    jIndex = jIndex_;
+    kIndex = kIndex_;
     
-  double get_xemiss();
-  double get_yemiss();
-  double get_zemiss();
+    currentvIndex = iIndex +
+      jIndex * Ncx +
+      kIndex * Ncx * Ncy;
+    
+  }
+  
+
+  inline
+  void set_currentvIndex(const int &VolIndex){
+    currentvIndex = VolIndex;
+  }
+
+  
+  inline
+  void set_futurevIndex(const int &iIndex_,
+			const int &jIndex_,
+			const int &kIndex_){
+    
+    futureViIndex = iIndex_;
+    futureVjIndex = jIndex_;
+    futureVkIndex = kIndex_;  
+    
+    futurevIndex = futureViIndex +
+      futureVjIndex * Ncx +
+      futureVkIndex * Ncx * Ncy;
+    
+  }
+
+
+  inline
+  int get_currentvIndex(){
+    return currentvIndex;
+  }
+  
+
+  inline
+  int get_futurevIndex(){
+    return futurevIndex;
+  }
+
+  
+  inline
+  void update_vIndex(){
+    iIndex = futureViIndex;
+    jIndex = futureVjIndex;
+    kIndex = futureVkIndex;
+    currentvIndex = futurevIndex;
+
+  }
+  
+
+  inline
+  double get_xemiss(){
+    return xemiss;
+  }
+  
+  inline
+  double get_yemiss(){
+    return yemiss;
+  }
+
+
+  inline
+  double get_zemiss(){
+    return zemiss;
+  }
   
   void hitRealSurfaceInten(MTRand &MTrng,
 			   const double *absorb_surface,
@@ -141,6 +232,7 @@ private:
   int VolElementNo;
   int offset;
   int currentvIndex; // for volume index
+  int futurevIndex;
   int hitSurfaceIndex;
  
   VirtualSurface obVirtual;
@@ -151,12 +243,13 @@ private:
   BackRealSurface obBack_ray;
   LeftRealSurface obLeft_ray;
   RightRealSurface obRight_ray;
-
-  // Question: If another object MTrng is created here,
-  // it wont follow the same seed , seeded in the main function, right?
-  // then this will affect the randomness?? 
-  double dotProduct(const double *s1, const double *s2);
-  void get_specular_s(double *spec_s);
+  
+  inline
+  double dotProduct(const double *s1, const double *s2){
+    return s1[0] * s2[0] + s1[1] * s2[1] + s1[2] * s2[2];
+  }
+  
+  void get_specular_s(double *spec_s);  
   int Ncx, Ncy, Ncz, ghostX, ghostY, ghostTB;
   int iIndex, jIndex, kIndex;
   int futureViIndex, futureVjIndex, futureVkIndex;

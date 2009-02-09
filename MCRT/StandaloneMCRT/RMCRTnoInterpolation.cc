@@ -112,13 +112,12 @@ double MeshSize(int &Nchalf, double &Lhalf, double &ratio){
 }
 
 
-// linear interpolation of Temperature on cell faces.
+
 template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
 		 RealSurface *RealPointer,
 		 ray &obRay,
 		 MTRand &MTrng,
-		 VolElement &obVol,
 		 const int &surfaceFlag,
 		 const int &surfaceIndex,
 		 const double * const alpha_surface[],
@@ -131,7 +130,6 @@ void rayfromSurf(SurfaceType &obSurface,
 		 const double * const IntenArray_surface[],
 		 const double *X, const double *Y, const double *Z,
 		 const double *kl_Vol, const double *scatter_Vol,
-		 const double *T_Vol, const double *a_Vol,
 		 const int *VolFeature,
 		 const int &thisRayNo,
 		 const int &iIndex,
@@ -142,7 +140,7 @@ void rayfromSurf(SurfaceType &obSurface,
 		 double *s){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
-  double PathLeft, PathSurfaceLeft, weight, traceProbability, TVol_ave, aVol_ave;
+  double PathLeft, PathSurfaceLeft, weight, traceProbability;
   double OutIntenSur, sumIncomInten, aveIncomInten;
   int rayCounter, hitSurfaceFlag, hitSurfaceIndex;
   
@@ -200,11 +198,8 @@ void rayfromSurf(SurfaceType &obSurface,
       // the upper bound of the segment
       currentSum = previousSum + PathLeft;
       
-      TVol_ave = ( T_Vol[obRay.get_currentvIndex()] + T_Vol[obRay.get_futurevIndex()] )/2;
-      aVol_ave = (a_Vol[obRay.get_currentvIndex()] + a_Vol[obRay.get_futurevIndex()] ) /2;
-      
       IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] + 
-	obVol.VolumeIntensityBlack(TVol_ave, aVol_ave)
+	IntenArray_Vol[obRay.get_currentvIndex()] 
 	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
 	* weight;
       
@@ -318,7 +313,7 @@ int main(int argc, char *argv[]){
   //  double sumIncomInten, aveIncomInten;  
   double StopLowerBound;
   
-  StopLowerBound = 1e-4;
+  StopLowerBound = 1e-3;
   rayNoSurface = 1;
   rayNoVol = 1;  
   Ncx = 10;
@@ -449,7 +444,7 @@ int main(int argc, char *argv[]){
       for ( int i = 0; i < Ncx; i ++ )
 	VolFeature[i + j * (Ncx+2) + k * ghostTB + offset] = FLOW;
 
-
+  
   // get coordinates arrays
   double *X = new double [Npx]; // i 
   double *Y = new double [Npy]; // j 
@@ -785,16 +780,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 0;
-       rayNo_bottom_surface[iSurface] = 0;
+       rayNo_top_surface[iSurface] = 1000;
+       rayNo_bottom_surface[iSurface] = 1000;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 0;
-       rayNo_back_surface[iSurface] = 0;
+       rayNo_front_surface[iSurface] = 1000;
+       rayNo_back_surface[iSurface] = 1000;
      }   
 
 
@@ -802,13 +797,13 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 0;
-       rayNo_right_surface[iSurface] = 0;
+       rayNo_left_surface[iSurface] = 1000;
+       rayNo_right_surface[iSurface] = 1000;
      }
 
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-   // #include "inputBenchmark.cc"
+   //  #include "inputBenchmark.cc"
     #include "inputBenchmarkSurf.cc"
    //   #include "inputNonblackSurf.cc"
    // #include "inputScattering.cc"   
@@ -821,6 +816,9 @@ int main(int argc, char *argv[]){
    double previousSum, currentSum;
    double SurLeft;
 
+
+   // srand48 ( time ( NULL )); // for drand48()
+   
    ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
    
    double theta, phi;
@@ -856,8 +854,8 @@ int main(int argc, char *argv[]){
    
    // for Volume's  Intensity
    // for volume, use black intensity
-    for ( int i = 0; i < VolElementNo; i ++ )
-      IntenArray_Vol[i] = obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
+   for ( int i = 0; i < VolElementNo; i ++ )
+     IntenArray_Vol[i] = obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
    
    // top bottom surfaces intensity
    for ( int i = 0;  i < TopBottomNo; i ++ ) {
@@ -954,7 +952,6 @@ int main(int argc, char *argv[]){
 		      RealPointer,
 		      obRay,
 		      MTrng,
-		      obVol,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -967,7 +964,6 @@ int main(int argc, char *argv[]){
 		      IntenArray_surface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
-		      T_Vol, a_Vol, 
 		      VolFeature,
 		      thisRayNo,
 		      iIndex,
@@ -1009,7 +1005,6 @@ int main(int argc, char *argv[]){
 		      RealPointer,
 		      obRay,
 		      MTrng,
-		      obVol,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1022,7 +1017,6 @@ int main(int argc, char *argv[]){
 		      IntenArray_surface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
-		      T_Vol, a_Vol, 
 		      VolFeature,
 		      thisRayNo,
 		      iIndex,
@@ -1065,7 +1059,6 @@ int main(int argc, char *argv[]){
 		      RealPointer,
 		      obRay,
 		      MTrng,
-		      obVol,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1078,7 +1071,6 @@ int main(int argc, char *argv[]){
 		      IntenArray_surface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
-		      T_Vol, a_Vol,
 		      VolFeature,
 		      thisRayNo,
 		      iIndex,
@@ -1120,7 +1112,6 @@ int main(int argc, char *argv[]){
 		      RealPointer,
 		      obRay,
 		      MTrng,
-		      obVol,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1133,7 +1124,6 @@ int main(int argc, char *argv[]){
 		      IntenArray_surface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
-		      T_Vol, a_Vol,
 		      VolFeature,
 		      thisRayNo,
 		      iIndex,
@@ -1176,7 +1166,6 @@ int main(int argc, char *argv[]){
 		      RealPointer,
 		      obRay,
 		      MTrng,
-		      obVol,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1189,7 +1178,6 @@ int main(int argc, char *argv[]){
 		      IntenArray_surface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
-		      T_Vol, a_Vol,
 		      VolFeature,
 		      thisRayNo,
 		      iIndex,
@@ -1232,7 +1220,6 @@ int main(int argc, char *argv[]){
 		      RealPointer,
 		      obRay,
 		      MTrng,
-		      obVol,
 		      surfaceFlag,
 		      surfaceIndex,
 		      alpha_surface,
@@ -1245,7 +1232,6 @@ int main(int argc, char *argv[]){
 		      IntenArray_surface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
-		      T_Vol, a_Vol,
 		      VolFeature,
 		      thisRayNo,
 		      iIndex,
@@ -1292,7 +1278,6 @@ int main(int argc, char *argv[]){
   if ( rayNoVol != 0 ) { // emitting ray from volume
     //    cout << "start from Vol" << endl;
     int rayCounter, VolIndex;
-    double TVol_ave, aVol_ave;
     
     for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
       for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {
@@ -1302,10 +1287,11 @@ int main(int argc, char *argv[]){
 
 	  if ( rayNo_Vol[VolIndex] != 0 ) {
 	    
-	    MTrng.seed(VolIndex);
-	    // what happens that i have two different objects but the same name obVol?
+	    MTrng.seed(VolIndex);	    
 	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
 
+	    // VolIndex = obVol.get_VolIndex();
+	    
 	    OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
 	    
 // 	    OutIntenVol = obVol.VolumeIntensity(VolIndex,
@@ -1364,11 +1350,9 @@ int main(int argc, char *argv[]){
 		// the IntensityArray for volumes are black ones.
 		// use the previous SurLeft here.
 		// SurLeft is not updated yet.
-		TVol_ave = ( T_Vol[obRay.get_currentvIndex()] + T_Vol[obRay.get_futurevIndex()] )/2;
-		aVol_ave = (a_Vol[obRay.get_currentvIndex()] + a_Vol[obRay.get_futurevIndex()] ) /2;
 		
 		IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] + 
-		  obVol.VolumeIntensityBlack(TVol_ave, aVol_ave)
+		  IntenArray_Vol[obRay.get_currentvIndex()]
 		  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
 		  * weight;
 		
