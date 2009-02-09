@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 #include "RealSurface.h"
 #include "Consts.h"
 
-#include <cmath>
 #include <iostream>
 #include <cstdlib>
 
@@ -42,61 +41,6 @@ RealSurface::RealSurface(){
 }
 
 
-void RealSurface::getTheta(const double &random){
-  theta = asin(sqrt(random));
-}
-
-
-int RealSurface::get_surfaceIndex(){
-  return this->surfaceIndex;
-}
-
-
-double RealSurface::get_xlow(){
-  return this->xlow;
-}
-
-double RealSurface::get_xup(){
-  return this->xup;
-}
-
-
-double RealSurface::get_ylow(){
-  return this->ylow;
-}
-
-
-double RealSurface::get_yup(){
-  return this->yup;
-}
-
-
-double RealSurface::get_zlow(){
-  return this->zlow;
-}
-
-
-double RealSurface::get_zup(){
-  return this->zup;
-}
-
-
-int RealSurface::get_surfaceiIndex(){
-  return this->surfaceiIndex;
-}
-
-
-int RealSurface::get_surfacejIndex(){
-  return this->surfacejIndex;
-}
-
-
-int RealSurface::get_surfacekIndex(){
-  return this->surfacekIndex;
-}
-
-
-
 void RealSurface::get_s(MTRand &MTrng, double *s){
    
   // double random1, random2;
@@ -105,10 +49,8 @@ void RealSurface::get_s(MTRand &MTrng, double *s){
   this->get_t1();
   this->get_t2();
   
-  // rng.RandomNumberGen(random1);
   this->getTheta(MTrng.randExc()); 
 
-  // rng.RandomNumberGen(random2);
   // getPhi is inherited from Class Surface
   this->getPhi(MTrng.randExc());
 
@@ -118,12 +60,7 @@ void RealSurface::get_s(MTRand &MTrng, double *s){
   for ( int i = 0; i < 3; i ++ ) 
     s[i] = sin(theta) * ( cos(phi) * this->t1[i] + sin(phi) * this->t2[i] )
       + cos(theta) * this->n[i] ;
-  
-//   cout << "n = " << n[0] << "i + " << n[1] << "j+" << n[2] << "k" << endl;
-//   cout << "t1 = " << t1[0] << "i + " << t1[1] << "j+" << t1[2] << "k" << endl;
-//   cout << "t2 = " << t2[0] << "i + " << t2[1] << "j+" << t2[2] << "k" << endl;
-//   cout << "s = " << s[0] << "i + " << s[1] << "j + " << s[2] << "k" << endl;
-  
+    
 }
 
 
