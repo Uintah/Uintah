@@ -201,7 +201,8 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   fileOpened = true;
 
   // No. of timesteps
-  timeSteps = *((*getTimeSteps)(folder));
+  // timeSteps = *((*getTimeSteps)(folder));
+  timeStepInfo = ((*getTimeSteps)(folder));
 
   currLevel = -1;
   currVar.assign("any_var");
@@ -237,6 +238,7 @@ avtudaReaderMTMDFileFormat::~avtudaReaderMTMDFileFormat()
     delete patchInfoVecPtr;     
 }
 
+
 // ****************************************************************************
 //  Method: avtEMSTDFileFormat::GetNTimesteps
 //
@@ -251,7 +253,26 @@ avtudaReaderMTMDFileFormat::~avtudaReaderMTMDFileFormat()
   int
 avtudaReaderMTMDFileFormat::GetNTimesteps(void)
 {
-  return timeSteps;
+  // return timeSteps;
+  return timeStepInfo->size();
+}
+
+
+// ****************************************************************************
+// Method: avtudaReaderMTMDFileForma::GetTime
+//
+// Purpose: 
+//   Get the time.
+//
+// Programmer: sshankar 
+// Creation:   Fri Feb 6 15:31 MST 2009 
+//
+// ****************************************************************************
+
+double 
+avtudaReaderMTMDFileFormat::GetTime(int ts)
+{
+    return (*timeStepInfo)[ts];
 }
 
 
@@ -355,6 +376,7 @@ avtudaReaderMTMDFileFormat::RegisterVariableList(const char *prim_var_name,
   }
 }
 #endif
+
 
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData
@@ -678,6 +700,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
   cout << "Out PopulateDatabaseMetaData\n";
 }
 
+
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::GetLevelAndLocalPatchNumber
 //
@@ -712,6 +735,7 @@ avtudaReaderMTMDFileFormat::GetLevelAndLocalPatchNumber(int global_patch, int ti
   }
   local_patch = tmp;
 }
+
 
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::CalculateDomainNesting
@@ -898,6 +922,7 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
   cache->CacheVoidRef("any_mesh", AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
       timestate, -1, vr);
 }
+
 
 // ***************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::GetMesh
@@ -1240,6 +1265,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
   }
 }
 
+
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::GetVar
 //
@@ -1472,6 +1498,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
   return rv;
   //
 }
+
 
 // ****************************************************************************
 //  Method: avtudaReaderMTMDFileFormat::GetVectorVar
