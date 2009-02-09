@@ -46,6 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Exceptions/InternalError.h>
 
 #include <iostream> // debug only
@@ -365,7 +366,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   // get the overall range in all dimensions from all patches
   IntVector high(INT_MIN,INT_MIN,INT_MIN);
   IntVector low(INT_MAX,INT_MAX,INT_MAX);
- 
+
   vector<int> originalPatchCount(d_myworld->size(),0); //store how many patches each patch has originally
   for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
   {
@@ -380,7 +381,9 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     min_patch_size=min(min_patch_size,size);
     
     //create positions vector
-    int proc = (patch->getLevelIndex()*d_myworld->size())/level->numPatches();
+    int proc = patch->getLevelIndex()%d_myworld->size();   
+    ASSERTRANGE(proc,0,d_myworld->size());
+    
     if(d_myworld->myrank()==proc)
     {
       Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
