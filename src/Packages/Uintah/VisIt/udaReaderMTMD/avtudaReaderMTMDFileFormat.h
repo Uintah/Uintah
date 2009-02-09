@@ -113,6 +113,7 @@ public:
   // virtual void        GetTimes(std::vector<double> &);
   //
 
+  virtual double        GetTime(int);
   virtual int           GetNTimesteps(void);
 
   virtual const char    *GetType(void)   { return "udaReaderMTMD"; };
@@ -134,6 +135,7 @@ protected:
         
   levelPatchVec * levelPatchVecPtr;
   patchInfoVec  * patchInfoVecPtr;
+  typeDouble* timeStepInfo;
         
   double ***refMatrix; // scalars
   vecVal ***vecValMatrix;
@@ -147,7 +149,7 @@ protected:
         
   timeStep*        (*processData)(int, char[][128], int, bool, int, bool, int);
   udaVars*         (*getVarList)(const std::string&);
-  int*             (*getTimeSteps)(const std::string&);
+  typeDouble*      (*getTimeSteps)(const std::string&);
   double*          (*getBBox)(const std::string&, int, int);
   double*          (*getPatchBBox)(const std::string&, int, int, int);
   int*             (*getPatchIndex)(const std::string&, int, int, int, const std::string&);
