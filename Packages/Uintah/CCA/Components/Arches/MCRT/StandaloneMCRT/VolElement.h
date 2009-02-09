@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef VolElement_H
 #define VolElement_H
 
-class VolElement {
+class VolElement{
 public:
   VolElement();
   VolElement(const int &iIndex,
@@ -41,54 +41,88 @@ public:
 	     const int &Ncy_);
 
   // cell center numbre Nc
-  int get_VolIndex();
 
+  inline
+  int get_VolIndex(){    
+    return VolIndex;    
+  }
+
+  
+  inline
   void get_limits(const double *X,
 		  const double *Y,
-		  const double *Z);
+		  const double *Z) {
+    
+    xlow = X[VoliIndex];
+    xup = X[VoliIndex+1];
+    
+    ylow = Y[VoljIndex];
+    yup = Y[VoljIndex+1];
+    
+    zlow = Z[VolkIndex];
+    zup = Z[VolkIndex+1];
+        
+  }
 
-  double get_xlow();
-  double get_xup();
-  double get_ylow();
-  double get_yup();
-  double get_zlow();
-  double get_zup();
   
+  inline
+  double get_xlow(){
+    return xlow;
+  }
 
+
+  inline
+  double get_xup(){
+    return xup;
+  }
+  
+  inline
+  double get_ylow(){
+    return ylow;
+  }
+
+
+  inline
+  double get_yup(){
+    return yup;
+  }
+
+  inline
+  double get_zlow(){
+    return zlow;
+}
+
+
+  inline
+  double get_zup(){
+    return zup;
+  }
+    
+
+  double VolumeEmissFluxBlack(const int &vIndex,
+			      const double *T_Vol,
+			      const double *a_Vol);
+  
   double VolumeEmissFlux(const int &vIndex,
 			 const double *kl_Vol,
 			 const double *T_Vol,
 			 const double *a_Vol);
+
+  double VolumeIntensityBlack(const int &vIndex,
+			      const double *T_Vol,
+			      const double *a_Vol);
   
-  
+  double VolumeIntensityBlack(const double &TVol,
+			      const double &aVol);
+
   
   double VolumeIntensity(const int &vIndex,
 			 const double *kl_Vol,
 			 const double *T_Vol,
 			 const double *a_Vol);
   
-  
-  
-  
-  double VolumeEmissFluxBlack(const int &vIndex,
-			      const double *T_Vol,
-			      const double *a_Vol);
-  
-  
-  
-  double VolumeIntensityBlack(const int &vIndex,
-			      const double *T_Vol,
-			      const double *a_Vol);
-
-  
-  void VolSurfaces();
-  
   ~VolElement();
   
-  //private:
-  // assign these variables to be public
-
-
   
 private:
 

@@ -29,9 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "VirtualSurface.h"
-#include "Consts.h"
 
-#include <cmath>
 #include <iostream>
 #include <cstdlib>
 
@@ -41,10 +39,6 @@ VirtualSurface::VirtualSurface(){
 VirtualSurface::~VirtualSurface(){
 }
 
-void VirtualSurface::getTheta(const double &random){
-  if (isotropic)
-    theta = acos( 1 - 2 * random);
-}
 
 
 // get_e1, sIn = sIn ( incoming direction vector)

@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "Surface.h"
 #include "MersenneTwister.h"
+#include <cmath>
 
 class MTRand;
 
@@ -40,8 +41,14 @@ class VirtualSurface : public Surface{
 public:
   VirtualSurface();
   ~VirtualSurface();
-  virtual void getTheta(const double &random);
+  //  virtual void getTheta(const double &random);
 
+  inline
+  void getTheta(const double &random){
+    // if (isotropic)
+      theta = acos( 1 - 2 * random);
+  }
+  
   //get e1-- e1
   void get_e1(const double &random1,
 	      const double &random2,

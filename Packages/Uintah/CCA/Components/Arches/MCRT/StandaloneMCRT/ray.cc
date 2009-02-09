@@ -31,9 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ray.h"
 #include "Consts.h"
 
-#include <cmath>
 #include <iostream>
-#include <vector>
 #include <cstdlib>
 
 using namespace std;
@@ -62,125 +60,10 @@ ray::~ray(){
 
 
 
-int ray::get_currentvIndex(){
-  return currentvIndex;
-}
-
-
-
-int ray::get_hitSurfaceIndex(){
-  return hitSurfaceIndex;
-}
-
-
-void ray::update_emissP(){
-  xemiss = xhit;
-  yemiss = yhit;
-  zemiss = zhit;
-}
-
-double ray::dotProduct(const double *s1, const double *s2){
-  return s1[0] * s2[0] + s1[1] * s2[1] + s1[2] * s2[2];
-}
-
-
- void ray::get_directionS(double *s){
-   for ( int i = 0; i < 3; i ++ )
-     directionVector[i] = s[i];
-
- }
-
-
-// inline
-// for surface elements
-void ray::set_currentvIndex(const int &iIndex_,
-			    const int &jIndex_,
-			    const int &kIndex_){
-   iIndex = iIndex_;
-   jIndex = jIndex_;
-   kIndex = kIndex_;
-   
-   currentvIndex = iIndex +
-     jIndex * Ncx +
-     kIndex * Ncx * Ncy;
-   
- }
-
-
-// inline
-// for control volumes
-void ray::set_currentvIndex(const int &VolIndex){
-  currentvIndex = VolIndex;
-}
-
-
-void ray::set_futurevIndex(const int &iIndex_,
-			   const int &jIndex_,
-			   const int &kIndex_){
-
-  futureViIndex = iIndex_;
-  futureVjIndex = jIndex_;
-  futureVkIndex = kIndex_;  
-
-  futurevIndex = futureViIndex +
-    futureVjIndex * Ncx +
-    futureVkIndex * Ncx * Ncy;
   
-}
-
-
-int ray::get_futurevIndex(){
-  return futurevIndex;
-}
-
-
-void ray::update_vIndex(){
-  iIndex = futureViIndex;
-  jIndex = futureVjIndex;
-  kIndex = futureVkIndex;
-  currentvIndex = futurevIndex;
-
-//   currentvIndex = iIndex +
-//      jIndex * Ncx +
-//      kIndex * Ncx * Ncy;
-}
-
-
-double ray::ray_length(){
-  length = sqrt ( ( xhit - xemiss ) * ( xhit - xemiss ) +
-    ( yhit - yemiss ) * ( yhit - yemiss ) +
-    ( zhit - zemiss ) * ( zhit - zemiss ) );
-  return length;
-}
-
-
-void ray::get_specular_s(double *spec_s){
-  
-  double sum;
-  sum = dotProduct(directionVector, surface_n[surfaceFlag]);
-  for ( int i = 0; i < 3; i ++ ) { 
-    spec_s[i] = directionVector[i] - 2 * sum * ( * ( surface_n[surfaceFlag] + i ) );
-  }
-    
-}
-
-
-
-// emission from control volume ( media ) and surface
-void ray::set_emissP(MTRand &MTrng,
-		     const double &xlow, const double &xup,
-		     const double &ylow, const double &yup,
-		     const double &zlow, const double &zup){
-  
-  xemiss = xlow + ( xup - xlow ) * MTrng.randExc();
-  yemiss = ylow + ( yup - ylow ) * MTrng.randExc();
-  zemiss = zlow + ( zup - zlow ) * MTrng.randExc();
-    
-}
-
 void ray::set_emissS_vol(MTRand &MTrng,
 			 double *sVol){
-
+  
   double phi, theta;
   phi = 2 * pi * MTrng.randExc();
   sVol[2] = 1 - 2 *  MTrng.randExc(); // cos(theta), k
@@ -188,22 +71,20 @@ void ray::set_emissS_vol(MTRand &MTrng,
   theta = acos(sVol[2]); 
   sVol[0] = sin(theta) * cos( phi ); // i 
   sVol[1] = sin( theta ) * sin ( phi ) ;// j 
- 
+  
 }
 
 
-double ray::get_xemiss(){
-  return xemiss;
+  
+void ray::get_specular_s(double *spec_s){
+  
+  double sum;
+  sum = dotProduct(directionVector, surface_n[surfaceFlag]);
+  for ( int i = 0; i < 3; i ++ ) { 
+    spec_s[i] = directionVector[i] - 2 * sum * ( * ( surface_n[surfaceFlag] + i ) );
+  }
+  
 }
-
-double ray::get_yemiss(){
-  return yemiss;
-}
-
-double ray::get_zemiss(){
-  return zemiss;
-}
-
 
 
 bool
@@ -275,16 +156,13 @@ ray::surfaceIntersect( const double *X,
 		   hitSurfacejIndex * ghostX +
 		   hitSurfacekIndex *ghostTB +
 		   offset]){
-
-      set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
       
       // update next step's volume index i, j, k,
       // but note, not updating currentvIndex yet
-//       futureViIndex = hitSurfaceiIndex;
-//       futureVjIndex = hitSurfacejIndex;
-//       futureVkIndex = hitSurfacekIndex;
+      
+      set_futurevIndex(hitSurfaceiIndex,
+		       hitSurfacejIndex,
+		       hitSurfacekIndex);
       
       // make sure that if not hit on realsurface and called hitSurfaceIndex
       // will return error
@@ -298,10 +176,6 @@ ray::surfaceIntersect( const double *X,
       set_futurevIndex(iIndex,
 		       jIndex,
 		       kIndex);
-      
-//       futureViIndex = iIndex;
-//       futureVjIndex = jIndex;
-//       futureVkIndex = kIndex;
       
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
       obReal = &obTop_ray;
@@ -338,10 +212,6 @@ ray::surfaceIntersect( const double *X,
 		       hitSurfacejIndex,
 		       hitSurfacekIndex-1);
       
-//       futureViIndex = hitSurfaceiIndex;
-//       futureVjIndex = hitSurfacejIndex;
-//       futureVkIndex = hitSurfacekIndex-1;
-      
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
@@ -350,10 +220,6 @@ ray::surfaceIntersect( const double *X,
       set_futurevIndex(iIndex,
 		       jIndex,
 		       kIndex);
-      
-//       futureViIndex = iIndex;
-//       futureVjIndex = jIndex;
-//       futureVkIndex = kIndex;
       
       VIRTUAL = 0;
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
@@ -391,9 +257,6 @@ ray::surfaceIntersect( const double *X,
 		       hitSurfacejIndex-1,
 		       hitSurfacekIndex);
       
-//       futureViIndex = hitSurfaceiIndex;
-//       futureVjIndex = hitSurfacejIndex-1;
-//       futureVkIndex = hitSurfacekIndex;	
       hitSurfaceIndex = -1;	
       VIRTUAL =  1;
     }
@@ -401,10 +264,7 @@ ray::surfaceIntersect( const double *X,
       set_futurevIndex(iIndex,
 		       jIndex,
 		       kIndex);
-      
-//       futureViIndex = iIndex;
-//       futureVjIndex = jIndex;
-//       futureVkIndex = kIndex;		
+      	
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obFront_ray;
@@ -441,9 +301,6 @@ ray::surfaceIntersect( const double *X,
 		       hitSurfacejIndex,
 		       hitSurfacekIndex);
       
-//       futureViIndex = hitSurfaceiIndex;
-//       futureVjIndex = hitSurfacejIndex;
-//       futureVkIndex = hitSurfacekIndex;
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
@@ -452,10 +309,7 @@ ray::surfaceIntersect( const double *X,
       set_futurevIndex(iIndex,
 		       jIndex,
 		       kIndex);
-      
-//       futureViIndex = iIndex;
-//       futureVjIndex = jIndex;
-//       futureVkIndex = kIndex;		
+		
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obBack_ray;
@@ -491,10 +345,6 @@ ray::surfaceIntersect( const double *X,
 		       hitSurfacejIndex,
 		       hitSurfacekIndex);
       
-//       futureViIndex = hitSurfaceiIndex-1;
-//       futureVjIndex = hitSurfacejIndex;
-//       futureVkIndex = hitSurfacekIndex;
-      
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
@@ -503,10 +353,7 @@ ray::surfaceIntersect( const double *X,
       set_futurevIndex(iIndex,
 		       jIndex,
 		       kIndex);
-      
-//       futureViIndex = iIndex;
-//       futureVjIndex = jIndex;
-//       futureVkIndex = kIndex;		
+      		
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obLeft_ray;
@@ -543,9 +390,6 @@ ray::surfaceIntersect( const double *X,
 		       hitSurfacejIndex,
 		       hitSurfacekIndex);
       
-//       futureViIndex = hitSurfaceiIndex;
-//       futureVjIndex = hitSurfacejIndex;
-//       futureVkIndex = hitSurfacekIndex;
       hitSurfaceIndex = -1;		
       VIRTUAL =  1;
     }
@@ -554,10 +398,7 @@ ray::surfaceIntersect( const double *X,
       set_futurevIndex(iIndex,
 		       jIndex,
 		       kIndex);
-      
-//       futureViIndex = iIndex;
-//       futureVjIndex = jIndex;
-//       futureVkIndex = kIndex;		
+      		
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obRight_ray;

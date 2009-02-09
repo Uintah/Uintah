@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
 #include "Surface.h"
-#include "Consts.h"
 #include "RealSurface.h"
 #include "TopRealSurface.h"
 #include "BottomRealSurface.h"
@@ -44,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include "VolElement.h"
 #include "MakeTableFunction.h"
 #include "MersenneTwister.h"
+#include "Consts.h"
 
 #include <cmath>
 #include <iostream>
