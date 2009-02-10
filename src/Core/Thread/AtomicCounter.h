@@ -80,7 +80,7 @@ public:
   // Create an atomic counter with an initial value.  name should
   // be a static string which describes the primitive for debugging
   // purposes.
-  AtomicCounter(const char* name, int value);
+  AtomicCounter(const char* name, long long value);
 
   //////////
   // Destroy the atomic counter.
@@ -91,31 +91,31 @@ public:
   // a normal integer.  Note that multiple calls to this function
   // may return different values if other threads are manipulating
   // the counter.
-  operator int() const;
+  operator long long() const;
 
   //////////
   // Increment the counter and return the new value.
   // This does not return AtomicCounter& like a normal ++
   // operator would, because it would destroy atomicity
-  int operator++();
+  long long operator++();
     
   //////////
   //	Increment the counter and return the old value
-  int operator++(int);
+  long long operator++(int);
 
   //////////
   // Decrement the counter and return the new value
   // This does not return AtomicCounter& like a normal --
   // operator would, because it would destroy atomicity
-  int operator--();
+  long long operator--();
     
   //////////
   // Decrement the counter and return the old value
-  int operator--(int);
+  long long operator--(int);
 
   //////////
   // Set the counter to a new value
-  void set(int);
+  void set(long long);
 
 private:
   const char* name_;
