@@ -46,7 +46,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Exceptions/InternalError.h>
 
 #include <iostream> // debug only
@@ -366,7 +365,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   // get the overall range in all dimensions from all patches
   IntVector high(INT_MIN,INT_MIN,INT_MIN);
   IntVector low(INT_MAX,INT_MAX,INT_MAX);
-
+ 
   vector<int> originalPatchCount(d_myworld->size(),0); //store how many patches each patch has originally
   for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
   {
@@ -381,10 +380,12 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     min_patch_size=min(min_patch_size,size);
     
     //create positions vector
-    int proc = patch->getLevelIndex()%d_myworld->size();   
-    ASSERTRANGE(proc,0,d_myworld->size());
-    
-    if(d_myworld->myrank()==proc)
+    //place in long longs to avoid overflows with large numbers of patches and processors
+    long long pindex=patch->getLevelIndex();
+    long long num_patches=d_myworld->size();
+    int proc =  (pindex*num_patches) / level->numPatches();
+
+    if(d_myworld->myrank()==(int)proc)
     {
       Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
       for(int d=0;d<dim;d++)
@@ -460,8 +461,16 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
   }
   lbtimes[4]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
- 
-  /*
+
+#if 0
+  cout << "SFC order: ";
+  for (int i = 0; i < level->numPatches(); i++) 
+  {
+    cout << order[i] << " ";
+  }
+  cout << endl;
+#endif
+#if 0
   if(d_myworld->myrank()==0)
   {
     cout << "Warning checking SFC correctness\n";
@@ -477,7 +486,7 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
       }
     }
   }
-  */
+#endif
 }
 
 bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
@@ -530,7 +539,10 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
       const Patch* patch = *iter;
 
       //create positions vector
-      int proc = patch->getLevelIndex()%d_myworld->size();
+      //place in long longs to avoid overflows with large numbers of patches and processors
+      long long pindex=patch->getLevelIndex();
+      long long num_procs=d_myworld->size();
+      int proc = (pindex*num_procs)/level->numPatches();
       if(d_myworld->myrank()==proc)
       {
         Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
@@ -1375,6 +1387,7 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
         dbg << "L"  << l << " P " << p << " cost " << costs[l][p] << endl;
   }
 }
+
 bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
   MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
