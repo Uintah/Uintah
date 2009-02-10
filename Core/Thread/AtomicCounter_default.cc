@@ -45,7 +45,7 @@
 namespace SCIRun {
 struct AtomicCounter_private {
   Mutex lock;
-  int value;
+  long long value;
   AtomicCounter_private();
   ~AtomicCounter_private();
 };
@@ -74,7 +74,7 @@ AtomicCounter::AtomicCounter(const char* name)
   priv_=new AtomicCounter_private;
 }
 
-AtomicCounter::AtomicCounter(const char* name, int value)
+AtomicCounter::AtomicCounter(const char* name, long long value)
     : name_(name)
 {
   priv_=new AtomicCounter_private;
@@ -87,57 +87,57 @@ AtomicCounter::~AtomicCounter()
   priv_=0;
 }
 
-AtomicCounter::operator int() const
+AtomicCounter::operator long long() const
 {
     return priv_->value;
 }
 
-int
+long long
 AtomicCounter::operator++()
 {
   int oldstate = Thread::couldBlock(name_);
   priv_->lock.lock();
-  int ret=++priv_->value;
+  long long ret=++priv_->value;
   priv_->lock.unlock();
   Thread::couldBlockDone(oldstate);
   return ret;
 }
 
-int
+long long
 AtomicCounter::operator++(int)
 {
   int oldstate = Thread::couldBlock(name_);
   priv_->lock.lock();
-  int ret=priv_->value++;
+  long long ret=priv_->value++;
   priv_->lock.unlock();
   Thread::couldBlockDone(oldstate);
   return ret;
 }
 
-int
+long long
 AtomicCounter::operator--()
 {
   int oldstate = Thread::couldBlock(name_);
   priv_->lock.lock();
-  int ret=--priv_->value;	
+  long long ret=--priv_->value;	
   priv_->lock.unlock();
   Thread::couldBlockDone(oldstate);
   return ret;
 }
 
-int
+long long
 AtomicCounter::operator--(int)
 {
   int oldstate = Thread::couldBlock(name_);
   priv_->lock.lock();
-  int ret=priv_->value--;
+  long long ret=priv_->value--;
   priv_->lock.unlock();
   Thread::couldBlockDone(oldstate);
   return ret;
 } 
 
 void
-AtomicCounter::set(int v)
+AtomicCounter::set(long long v)
 {
   int oldstate=Thread::couldBlock(name_);
   priv_->lock.lock();
