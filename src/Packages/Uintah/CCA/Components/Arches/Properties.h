@@ -67,7 +67,10 @@ POSSIBLE REVISIONS
 ***************************************************************************/
 
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
+#include <Packages/Uintah/CCA/Components/Arches/TabPropsTable.h>
 #ifdef PetscFilter
 #include <Packages/Uintah/CCA/Components/Arches/Filter.h>
 #endif
@@ -79,6 +82,8 @@ POSSIBLE REVISIONS
 
 namespace Uintah {
 class MixingModel;
+class MixingRxnTable;
+class TabPropsTable;
 class TimeIntegratorLabel;
 class ExtraScalarSolver;
 class PhysicalConstants;
@@ -328,7 +333,11 @@ private:
       int d_numMixingVars;
       double d_opl;
       IntVector d_denRef;
+      
       MixingModel* d_mixingModel;
+      //MixingRxnTable* d_mixingRxnTable;
+      TabPropsTable* d_mixingRxnTable;
+
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
       bool d_3d_periodic;
@@ -346,14 +355,24 @@ private:
 
       const ProcessorGroup* d_myworld;
 
-
       // New Table Interface Stuff:
-      typedef map<string, const VarLabel* > LabelMap;
-      typedef map<string, CCVariable<double>* > VarMap;
+      typedef map< unsigned int, const VarLabel* > LabelMap;
+      typedef map< unsigned int, CCVariable<double>* > VarMap;
+      typedef map<unsigned int, bool> BoolMap;
 
-      VarMap d_varMap;
-      LabelMap d_labelMap;  
-    
+      // Dependent variable maps:
+      VarMap d_dvVarMap;
+      LabelMap d_dvLabelMap;
+
+      // Independent variable maps:
+      VarMap d_ivVarMap;
+      LabelMap d_ivLabelMap;
+      BoolMap d_ivBoolMap;
+
+      // string vectors to hold names
+      vector<string> indepVarNames;
+      vector<string> depVarNames;
+
 }; // end class Properties
 } // End namespace Uintah
 

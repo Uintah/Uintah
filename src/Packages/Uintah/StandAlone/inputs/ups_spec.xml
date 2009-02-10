@@ -127,7 +127,8 @@
 
      <!-- HACK: until we know what to do about checking the label names-->
       <save             spec="MULTIPLE NO_DATA"
-                        attribute1="label  OPTIONAL STRING"/>
+                        attribute1="label  OPTIONAL STRING"
+                        attribute2="table_lookup OPTIONAL BOOLEAN" />
 <!--
       <save             spec="MULTIPLE NO_DATA"
                         attribute1="label     REQUIRED STRING 
@@ -284,7 +285,7 @@
       <transport_mixture_fraction       spec="REQUIRED BOOLEAN" />
       <transport_enthalpy               spec="REQUIRED BOOLEAN" />
       <transport_reacting_scalar        spec="OPTIONAL BOOLEAN" />
-      <transport_extra_scalars           spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires an extra scalar block-->
+      <transport_extra_scalars          spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires an extra scalar block-->
       <model_mixture_fraction_variance  spec="REQUIRED BOOLEAN" />
       <set_initial_condition            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires init_cond_input_file-->
       <init_cond_input_file             spec="OPTIONAL STRING" /> <!-- Should be required if set_intial_condition is true-->
@@ -318,14 +319,27 @@
         <!-- going to leave complocal out based on the 'this model is a mess' comment-->
         <turbulentPrandtlNumber         spec="REQUIRED DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
       </Turbulence>
-      <Properties                       spec="REQUIRED NO_DATA" >
-        <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel'" />
+
+      <Properties                       spec="REQUIRED NO_DATA" >  
+        <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel,
+                                                               TabPropsTable'" />
+        <independent_variable           spec="REQUIRED STRING" 
+                                            attribute1="active OPTIONAL STRING 'yes, true, no, false'"
+                                            attribute2="name REQUIRED STRING"
+                                            attribute3="value OPTIONAL DOUBLE" /> <!-- default value for "active" is true, default value for "value" is 0; you can put as many independent variable tags as you want -->
         <ColdflowMixingModel            spec="REQUIRED NO_DATA" >
           <Stream                       spec="MULTIPLE NO_DATA" >
             <density                    spec="REQUIRED DOUBLE 'positive'" />
             <temperature                spec="REQUIRED DOUBLE" />
           </Stream>
         </ColdflowMixingModel>
+
+        <TabPropsTable                  spec="REQUIRED NO_DATA" >
+          <table_file_name              spec="REQUIRED STRING" />
+          <strict_mode                  spec="OPTIONAL BOOLEAN" />
+          <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
+        </TabPropsTable>
+
       </Properties>
 
       <BoundaryConditions               spec="REQUIRED NO_DATA" >
