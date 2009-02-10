@@ -172,7 +172,7 @@ class StateTable{
     return depVarNames_;
   }
 
-  /* @brief get the number of independent variables in the table */
+  /** @brief get the number of independent variables in the table */
   int get_ndim() const{ return numDim_; }
 
   // obtain iterators for the begin/end of the table

@@ -34,6 +34,8 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsTable_h
 
 // includes for Arches
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
@@ -42,6 +44,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+
 
 /***************************************************************************
 CLASS
@@ -106,64 +111,78 @@ public:
   // Constructs an instance of MixingRxnTable
   TabPropsTable();
 
-  
   // GROUP: Destructors :
   // Destructor
   ~TabPropsTable();
 
+  // GROUP: typedefs
+  // Table interface maps for getState
+  typedef map<unsigned int, CCVariable<double>* > VarMap;
+  typedef map<unsigned int, const VarLabel* > LabelMap;
+  typedef map<unsigned int, bool> BoolMap;
 
-  // GROUP: Problem Setup 
-  // Set up the problem specs (from the input file)
-  // Get table name, read table data into object
+
+  // GROUP: Problem Setup
+  // Get independent and dependent variable names from table and input file, verify they match
+  // (And if so, load table into StateTable object statetbl)
   void problemSetup( const ProblemSpecP& params );
 
 
-  // GROUP: Actual Action Methods :
-  // Actually obtain properties
-  std::map<string,double> getState( const double * indepVarValues, std::vector<string> userDepVarNames);
-
-  // GROUP: Verify Methods :
-  // Methods used in verifying the table
-  void verifyTable( bool diagnosticMode,
-                    bool strictMode ) const;
-
-
-  // GROUP: Get Methods :
-  // Get non-state space information from the table
+  // GROUP: Verification Methods
+  // Methods to verify table and input file match
   
+  // Compare dependent variables found in input file to dependent variables found in table file
+  void verifyDV( bool diagnosticMode, bool strictMode ) const;
+
+  // Compare independent variables found in input file to independent variables found in table file
+  void verifyIV( bool diagnosticMode, bool strictMode ) const;
+
+  // Run verification methods
+  void verifyTable( bool diagnosticMode, bool strictMode ) const;
+
+
+  // GROUP: Actual Action Methods
+  // Actually obtain properties
+  
+  // Table lookup for list of dependent variables
+  void getState(VarMap ivVar, VarMap dvVar, const Patch* patch);
+
   // Load list of dependent variables from the table
-  // returns a reference to private var allDepVarNames
-  // this may need to be changed to return reference to public variable instead`
-  const std::vector<std::string> & getDepVars();
+  // Return vector<string>& (reference to allDepVarNames())
+  const vector<string> & getDepVars();
 
   // Load list of independent variables from the table
-  // returns a reference to private var allIndepVarNames
-  // this may need to be changed to return reference to public variable instead
-  const std::vector<std::string> & getIndepVars();
+  // Return vector<string>& (reference to allIndepVarNames())
+  const vector<string> & getIndepVars();
 
 protected :
 
 private:
 
-    // create booleans to tell you if table has been loaded
-    bool b_table_isloaded;
-    // note: when you load the table, you also load the dep/indep vars list
-    bool b_diagnostic_mode;
-    bool b_strict_mode;
+  // boolean to tell you if table has been loaded
+  bool b_table_isloaded;
+  
+  // booleans for verification methods
+  bool b_diagnostic_mode;
+  bool b_strict_mode;
 
-    // create vectors to store independent, dependent, and user-requested dependent variables
-    std::vector<std::string> allIndepVarNames;
-    std::vector<std::string> allDepVarNames;
-    std::vector<std::string> allUserDepVarNames;
+  // vectors to store independent, dependent variable names from table file
+  vector<string> allIndepVarNames;
+  vector<string> allDepVarNames;
+
+  // vectors to store independent, dependent variable names from input file
+  vector<string> allUserDepVarNames;
+  vector<string> allUserIndepVarNames;
     
-    // create vector to store table query results
-    std::vector<double> myQueryResults;
+  // vector to store independent variable values for call to StateTable::query
+  // HOW TO INITIALIZE TO BE CORREC SIZE?
+  vector<double> indepVarValues;
 
-    // create a StateTable object to represent the table data
-    StateTable statetbl;
+  // StateTable object to represent the table data
+  StateTable statetbl;
 
-    // create string to hold filename (accessed by problemSetup, verifyTable)
-    std::string tableFileName;
+  // string to hold filename
+  string tableFileName;
 
 }; // end class TabPropsTable
   
