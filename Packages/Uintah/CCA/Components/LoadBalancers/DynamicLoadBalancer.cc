@@ -530,7 +530,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
       const Patch* patch = *iter;
 
       //create positions vector
-      int proc = (patch->getLevelIndex()*d_myworld->size())/level->numPatches();
+      int proc = patch->getLevelIndex()%d_myworld->size();
       if(d_myworld->myrank()==proc)
       {
         Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
@@ -1375,7 +1375,6 @@ void DynamicLoadBalancer::getCosts(const Grid* grid, const vector<vector<Region>
         dbg << "L"  << l << " P " << p << " cost " << costs[l][p] << endl;
   }
 }
-
 bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
   MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
