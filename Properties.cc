@@ -108,6 +108,12 @@ Properties::~Properties()
   {
     VarLabel::destroy((*iLabel).second); 
   } 
+  
+  for (LabelMap::iterator iLabel = d_ivLabelMap.begin(); 
+        iLabel != d_ivLabelMap.end(); ++iLabel) 
+  {
+    VarLabel::destroy((*iLabel).second); 
+  } 
 }
 
 //****************************************************************************
@@ -268,6 +274,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     
     // density - create/insert label into LabelMap
     LabelMap::iterator iLabel = d_dvLabelMap.insert(make_pair(depVarNames.size(), d_lab->d_densityCPLabel)).first;
+    d_lab->d_densityCPLabel->addReference();
 
     // density - create/insert CCVariable into VarMap
     CCVariable<double>* dvTempVar = new CCVariable<double>;
@@ -282,7 +289,7 @@ Properties::problemSetup(const ProblemSpecP& params)
       // VarLabel is already created (d_lab->d_tempINLabel)
       // LabelMap insert
       LabelMap::iterator iLabel = d_dvLabelMap.insert(make_pair(depVarNames.size(), d_lab->d_tempINLabel)).first;
-      
+      d_lab->d_tempINLabel->addReference();  
       // CCVariable create
       CCVariable<double>* dvTempVar = new CCVariable<double>;
       // VarMap insert
@@ -332,16 +339,19 @@ Properties::problemSetup(const ProblemSpecP& params)
           // (CCVariable names are consistent with Arches.cc)
           if(indepVarNames[i] == "MixtureFraction") {
             LabelMap::iterator iLabel = d_ivLabelMap.insert(make_pair(i, d_lab->d_scalarSPLabel)).first;
+            d_lab->d_scalarSPLabel->addReference();
             CCVariable<double>* scalar = new CCVariable<double>;
             VarMap::iterator iVar = d_ivVarMap.insert(make_pair(i, scalar)).first;
 
           } else if(indepVarNames[i] == "MixtureFractionVariance") {
             LabelMap::iterator iLabl = d_ivLabelMap.insert(make_pair(i, d_lab->d_scalarSPLabel)).first;
+            d_lab->d_scalarSPLabel->addReference();
             CCVariable<double>* scalarVar_new = new CCVariable<double>;
             VarMap::iterator iVar = d_ivVarMap.insert(make_pair(i, scalarVar_new)).first;
 
           } else if(indepVarNames[i] == "HeatLoss") {
             LabelMap::iterator iLabel = d_ivLabelMap.insert(make_pair(i, d_lab->d_heatLossLabel)).first;
+            d_lab->d_heatLossLabel->addReference();
             CCVariable<double>* heatLoss = new CCVariable<double>;
             VarMap::iterator iVar = d_ivVarMap.insert(make_pair(i, heatLoss)).first;
 
