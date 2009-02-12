@@ -187,7 +187,7 @@ void rayfromSurf(SurfaceType &obSurface,
 		     obSurface.get_ylow(), obSurface.get_yup(),
 		     obSurface.get_zlow(), obSurface.get_zup());
     
-    obRay.get_directionS(s);
+    obRay.set_directionS(s);
     obRay.set_currentvIndex(iIndex, jIndex, kIndex);
     obRay.dirChange = 1;
     
@@ -1339,7 +1339,7 @@ int main(int argc, char *argv[]){
 	      
 	      // get emitting ray's direction vector s
 	      obRay.set_emissS_vol(MTrng, s);
-	      obRay.get_directionS(s); // put s into directionVector ( private )
+	      obRay.set_directionS(s); // put s into directionVector ( private )
 	      obVol.get_limits(X, Y, Z);
 	      
 	      // VolIndex is the vIndex is
