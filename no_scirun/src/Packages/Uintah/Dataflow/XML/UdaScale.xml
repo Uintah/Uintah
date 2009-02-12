@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="UdaScale" category="Operators" optional="false">
+  <overview>
+    <authors>
+      <author>Kurt Zimmerman</author>
+    </authors>
+    <summary>
+      Scale the geometric size of the uda data
+
+    </summary>
+    <description>
+      <p>  Uda's which have a very small domains (or Geometric size) can cause problems for the SCIRun visualization tools because of precision errors.  This module allows you to scale the data and avoid such pitfalls</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>
