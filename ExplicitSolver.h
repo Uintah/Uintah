@@ -80,6 +80,7 @@ class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
 class EnthalpySolver;
+class RMCRTRadiationModel; 
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -465,6 +466,10 @@ private:
   bool d_carbon_balance_es;
   bool d_sulfur_balance_es;
   int d_numSourceBoundaries;
+
+  //RMCRT Stuff
+  bool d_standAloneRMCRT; 
+  RMCRTRadiationModel* d_RMCRTRadiationModel;  
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

@@ -64,7 +64,9 @@ RMCRTRadiationModel::sched_solve( const LevelP& level, SchedulerP& sched )
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::OldDW, d_lab->d_tempINLabel, gac, 1); // getting temperature w/1 ghost to use only (not to modify it)
-  tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gac, 1); // getting absorption coef w/1 ghost
+  //tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gac, 1); // getting absorption coef w/1 ghost
+
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials()); 
 
 }
 
@@ -95,7 +97,9 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     constCCVariable<double> absorpCoef; 
 
     old_dw->get( temperature, d_lab->d_tempINLabel, 0, patch, gac, 1 ); 
-    old_dw->get( absorpCoef, d_lab->d_absorpINLabel, 0, patch, gac, 1 );
+    //old_dw->get( absorpCoef, d_lab->d_absorpINLabel, 0, patch, gac, 1 );
+
+    cout << "GOING TO CALL STAND ALONE SOLVER!\n"; 
     
     obRMCRT.RMCRTsolver();
 
