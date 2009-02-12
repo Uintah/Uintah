@@ -109,12 +109,19 @@ public:
                          const int *VolFeature );
  
   inline
-  void get_directionS(double *s){
+  void set_directionS(const double *s){
     for ( int i = 0; i < 3; i ++ )
       directionVector[i] = s[i];    
   }
   
 
+   inline
+   void get_directionS(double *s){
+     for ( int i = 0; i < 3; i ++ )
+       s[i] = directionVector[i];
+   }
+
+  
   inline
   double ray_length(){
     length = sqrt ( ( xhit - xemiss ) * ( xhit - xemiss ) +
@@ -122,6 +129,12 @@ public:
 		    ( zhit - zemiss ) * ( zhit - zemiss ) );
     return length;
   } 
+
+
+  inline
+  double get_ray_length(){
+    return length;
+  }
 
   
   inline
@@ -205,6 +218,13 @@ public:
   double get_zemiss(){
     return zemiss;
   }
+
+
+  inline
+  double dotProduct(const double *s1, const double *s2){
+    return s1[0] * s2[0] + s1[1] * s2[1] + s1[2] * s2[2];
+  }
+
   
   void hitRealSurfaceInten(MTRand &MTrng,
 			   const double *absorb_surface,
@@ -243,11 +263,6 @@ private:
   BackRealSurface obBack_ray;
   LeftRealSurface obLeft_ray;
   RightRealSurface obRight_ray;
-  
-  inline
-  double dotProduct(const double *s1, const double *s2){
-    return s1[0] * s2[0] + s1[1] * s2[1] + s1[2] * s2[2];
-  }
   
   void get_specular_s(double *spec_s);  
   int Ncx, Ncy, Ncz, ghostX, ghostY, ghostTB;

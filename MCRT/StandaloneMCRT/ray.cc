@@ -585,7 +585,7 @@ void ray::hitRealSurfaceInten(MTRand &MTrng,
       //  cout << "specular " << endl;
       //     cout << "ray line 735 " << endl;
       get_specular_s(spec_s);
-      get_directionS(spec_s);
+      set_directionS(spec_s);
       
     }
     
