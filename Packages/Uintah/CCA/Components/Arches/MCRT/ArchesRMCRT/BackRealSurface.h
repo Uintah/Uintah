@@ -48,7 +48,7 @@ public:
 
 // n top -- n = 0 i + -1 j + 0 k
   inline 
-  void BackRealSurface::get_n(){
+  void get_n(){
     n[0] = 0;
     n[1] = -1;
     n[2] = 0;
@@ -57,7 +57,7 @@ public:
 
 // t1 top -- t1 = 1 i + 0 j + 0 k
   inline
-  void BackRealSurface::get_t1(){
+  void get_t1(){
     t1[0] = 1;
     t1[1] = 0;
     t1[2] = 0;
@@ -67,7 +67,7 @@ public:
 
 // t2 top -- t2 = 0 i + 0 j + 1 k
   inline
-  void BackRealSurface::get_t2(){
+  void get_t2(){
     t2[0] = 0;
     t2[1] = 0;
     t2[2] = 1;
@@ -75,14 +75,14 @@ public:
 
 
   inline
-  void BackRealSurface::set_n(double *nn){
+  void set_n(double *nn){
     for ( int i = 0; i < 3; i ++ )
       nn[i] = n[i];
   }
 
 
   inline 
-  void BackRealSurface::get_limits(const double *X,
+  void get_limits(const double *X,
 				   const double *Y,
 				   const double *Z){
     
