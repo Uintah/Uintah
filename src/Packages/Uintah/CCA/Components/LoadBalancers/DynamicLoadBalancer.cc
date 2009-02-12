@@ -383,8 +383,9 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, int* order)
     //place in long longs to avoid overflows with large numbers of patches and processors
     long long pindex=patch->getLevelIndex();
     long long num_patches=d_myworld->size();
-    int proc =  (pindex*num_patches) / level->numPatches();
+    long long proc = (pindex*num_patches) /(long long)level->numPatches();
 
+    ASSERTRANGE(proc,0,d_myworld->size());
     if(d_myworld->myrank()==(int)proc)
     {
       Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
@@ -542,7 +543,10 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
       //place in long longs to avoid overflows with large numbers of patches and processors
       long long pindex=patch->getLevelIndex();
       long long num_procs=d_myworld->size();
-      int proc = (pindex*num_procs)/level->numPatches();
+      long long proc = (pindex*num_procs)/(long long)level->numPatches();
+    
+      ASSERTRANGE(proc,0,d_myworld->size());
+      
       if(d_myworld->myrank()==proc)
       {
         Vector point=(patch->getCellLowIndex__New()+patch->getCellHighIndex__New()).asVector()/2.0;
