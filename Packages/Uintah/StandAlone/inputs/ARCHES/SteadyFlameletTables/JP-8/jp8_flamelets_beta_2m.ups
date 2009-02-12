@@ -10,6 +10,8 @@
         <title>Arches JP8 Plume Multi Patch Run with flamelets</title>
    </Meta>
 
+   <SimulationComponent type="arches" />
+
    <Time>
         <maxTime>120.0</maxTime>
         <initTime>0.0</initTime>

@@ -9,6 +9,8 @@
        <title>Punching of a plane circular shell</title>
    </Meta>    
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>             2.0e-3  </maxTime>
        <initTime>            0.0    </initTime>

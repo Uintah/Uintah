@@ -3,15 +3,12 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title></title>
+       <title>He Plume</title>
    </Meta>
     
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
-   <Solver>
-        <type> hypre </type>
-   </Solver>
+   <SimulationComponent type="ice" />
+
+   <Solver type="hypre" />
     <!--____________________________________________________________________-->
     <!-- This input file mimics the geometry described in                   -->
     <!-- "Large eddy simulation and experimental measurements of the        -->

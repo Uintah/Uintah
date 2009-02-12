@@ -123,9 +123,7 @@ GV_TaskGraph::inflate(string xmlDir)
       break;
     fclose(tstFile);
 
-    ProblemSpecReader psr(xmlFileName);
-
-    ProblemSpecP prob_spec = psr.readInputFile();
+    ProblemSpecP prob_spec = ProblemSpecReader().readInputFile( xmlFileName );
  
     docs.push_back(prob_spec);
 

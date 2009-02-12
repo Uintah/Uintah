@@ -6,6 +6,8 @@
        <title> Flow around a wedge using velocity input from x- </title>
    </Meta>
 
+   <SimulationComponent type="mpmice" />
+
 
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->

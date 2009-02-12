@@ -7,6 +7,8 @@
        <title>First angio problem</title>
    </Meta>
 
+   <SimulationComponent type="qwerty" />
+
    <Time>
        <maxTime>7.0</maxTime>
        <initTime>0.0</initTime>

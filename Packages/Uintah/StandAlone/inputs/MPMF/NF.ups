@@ -9,6 +9,8 @@
        <title>SIF calculation for polishing simulation</title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>400.0e-3</maxTime>
        <initTime>0.0</initTime>

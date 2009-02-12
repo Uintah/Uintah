@@ -8,9 +8,9 @@
    <Meta>
        <title>Advection test</title>
    </Meta>
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="ice" />
+
    <Solver>
         <type> hypreamr </type>
    </Solver>

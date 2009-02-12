@@ -8,14 +8,10 @@
   <!--____________________________________________________________________-->
   <!--         C O M P O N E N T   S W I T C H E R                        -->
   <!--____________________________________________________________________-->
-  <SimulationComponent>
-      <type>switcher</type>
-
+  <SimulationComponent type="switcher" >
 
         <subcomponent>
-            <SimulationComponent>
-              <type> mpmice </type>
-            </SimulationComponent>
+            <SimulationComponent type="mpmice" />
             <input_file> inputs/IS/ArchesHeatUpExplosion/JP8_fire.ups</input_file>
             
             <SwitchCriteria type = "Timestep">
@@ -24,9 +20,7 @@
         </subcomponent>
 
         <subcomponent>
-            <SimulationComponent>
-              <type> impm </type>
-            </SimulationComponent>
+            <SimulationComponent type="impm" />
             <input_file> inputs/IS/ArchesHeatUpExplosion/HTContainer_heatup.ups</input_file>
             
             <SwitchCriteria type = "steadyBurn">
@@ -48,9 +42,7 @@
         </subcomponent>
        
         <subcomponent>
-            <SimulationComponent>
-              <type> mpmice </type>
-            </SimulationComponent>
+            <SimulationComponent type="mpmice" />
             <input_file> inputs/IS/ArchesHeatUpExplosion/Explode_IS.ups</input_file>
         </subcomponent>
 

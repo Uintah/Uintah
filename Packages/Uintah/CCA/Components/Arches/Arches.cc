@@ -171,7 +171,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("doMMS", d_doMMS, false);
   if(d_doMMS) {
     ProblemSpecP db_mms = db->findBlock("MMS");
-    db_mms->getWithDefault("whichMMS", d_mms, "constantMMS");
+    if( !db_mms->getAttribute( "whichMMS", d_mms ) ) {
+      throw ProblemSetupException( "whichMMS not specified", __FILE__, __LINE__);      
+    }
     if (d_mms == "constantMMS") {
       ProblemSpecP db_mms0 = db_mms->findBlock("constantMMS");
       db_mms0->getWithDefault("cu",d_cu,0.0);
@@ -185,9 +187,9 @@ Arches::problemSetup(const ProblemSpecP& params,
       ProblemSpecP db_mms3 = db_mms->findBlock("almgrenMMS");
       db_mms3->require("amplitude",d_amp);
     }
-    else
-      throw InvalidValue("current MMS "
-           "not supported: " + d_mms, __FILE__, __LINE__);
+    else {
+      throw InvalidValue("current MMS not supported: " + d_mms, __FILE__, __LINE__);
+    }
   }
 
   // physical constant

@@ -9,6 +9,8 @@
        <title>Three point bending problem</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>.01</maxTime>
        <initTime>0.0</initTime>

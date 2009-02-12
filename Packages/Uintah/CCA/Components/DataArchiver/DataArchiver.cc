@@ -1,5 +1,5 @@
 /*
-
+  
 The MIT License
 
 Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
@@ -1521,8 +1521,7 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
 ProblemSpecP
 DataArchiver::loadDocument(string xmlName)
 {
-  ProblemSpecReader psr(xmlName);
-  return psr.readInputFile();
+  return ProblemSpecReader().readInputFile( xmlName );
 }
 
 const string

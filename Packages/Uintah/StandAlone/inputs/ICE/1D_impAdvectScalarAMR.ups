@@ -2,13 +2,13 @@
 
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
-   <SimulationComponent>  
-     <type> ice </type>
-   </SimulationComponent>
-   
+
    <Meta>
        <title></title>
    </Meta>
+
+   <SimulationComponent type="ice" />
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->

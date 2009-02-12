@@ -11,6 +11,8 @@
           no BndyForce_zminus is registerd.
         </info>
     </Meta>
+
+   <SimulationComponent type="mpm" />
     <Time>
         <maxTime>3.0</maxTime>
         <initTime>0.0</initTime>

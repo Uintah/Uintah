@@ -106,10 +106,9 @@ WARNING
         COMMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, 
         DOCUMENT_FRAGMENT_NODE, NOTATION_NODE};
      
-      inline ProblemSpec(const xmlNode* node, bool toplevel = false, bool doWrite=true){
+      inline ProblemSpec( const xmlNode* node, bool toplevel = false ) {
         d_node = const_cast<xmlNode*>(node); 
         d_documentNode = toplevel;
-        d_write = doWrite; 
       }
 
       inline virtual ~ProblemSpec() { if (d_documentNode) releaseDocument();}
@@ -342,14 +341,6 @@ WARNING
       }
 
       //////////
-      // setter and getter of d_write variable
-      void writeMessages(bool doWrite) {
-        d_write = doWrite;
-      }
-      bool doWriteMessages() const
-      { return d_write; }
-
-      //////////
       // to output the document
       //friend std::ostream& operator<<(std::ostream& out, const Uintah::ProblemSpecP pspec);
    private:
@@ -362,7 +353,6 @@ WARNING
       /////////
       // the node
       xmlNode* d_node;
-      bool d_write;
       bool d_documentNode;
    };
 

@@ -9,9 +9,7 @@
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
     
-   <SimulationComponent>
-        <type> mpmice </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpmice" />
     
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -25,8 +23,7 @@
        <timestep_multiplier>0.8         </timestep_multiplier>
    </Time>
    
-   <LoadBalancer>
-        <type>DLB</type>
+   <LoadBalancer type="DLB" >
         <timestepInterval>100</timestepInterval>
         <dynamicAlgorithm>particle3</dynamicAlgorithm>
         <cellFactor>4.5</cellFactor>
@@ -154,7 +151,7 @@
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
-      <checkpoint interval="0.005" cycle="2"/>"
+      <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

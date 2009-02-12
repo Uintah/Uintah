@@ -9,9 +9,8 @@
        <title>Advect a scalar through a 2 level grid</title>
    </Meta>
    
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+   <SimulationComponent type="ice" />
+
    <doAMR>true</doAMR>
 
     <!--____________________________________________________________________-->

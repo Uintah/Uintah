@@ -3,7 +3,7 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
   <Meta>
-       <title/>
+       <title>JP8-Switch</title>
   </Meta>
 
   <!--____________________________________________________________________-->
@@ -20,31 +20,21 @@
   <!--____________________________________________________________________-->
    
 
-   <SimulationComponent>
-       <type>switcher</type>
-       <subcomponent>
-           <SimulationComponent>
-               <type> rigidmpmice </type>
-           </SimulationComponent>
-           <input_file> JP8-switch.ups</input_file>
+   <SimulationComponent type="switcher" >
+       <subcomponent type="rigidmpmice" >
+          <input_file> JP8-switch.ups</input_file>
           <SwitchCriteria type = "Timestep">
               <timestep> 5 </timestep>
           </SwitchCriteria>
        </subcomponent>
-       <subcomponent>
-           <SimulationComponent>
-               <type> impm </type>
-           </SimulationComponent>
-           <input_file> ContainerHeatUp3D.ups</input_file>
+       <subcomponent type="impm" >
+          <input_file> ContainerHeatUp3D.ups</input_file>
           <SwitchCriteria type = "Timestep">
               <timestep> 10 </timestep>
           </SwitchCriteria>
            <init var = "p.acceleration" matls = "mpm_matls" />
        </subcomponent>
-       <subcomponent>
-           <SimulationComponent>
-               <type> mpmice </type>
-           </SimulationComponent>
+       <subcomponent type="mpmice" >
            <input_file> Explode_IS.ups</input_file>
        </subcomponent>
        <carry_over var="vol_frac_CC" />
@@ -406,8 +396,8 @@
   <!--____________________________________________________________________-->
   <MaterialProperties>
     <MPM>
-      <material name = "Steel Ring">    <!-- MATL 0 -->
-        <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
+      <material name = "Steel Ring"><include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>    <!-- MATL 0 -->
+        
         <constitutive_model type="elastic_plastic">
           <isothermal>                    false </isothermal>
           <tolerance>                  1.0e-15  </tolerance>
@@ -568,7 +558,7 @@
     </ICE>
 
     <exchange_properties> 
-         <exchange_coefficients>
+        <exchange_coefficients>
               <momentum>  [ 0, 1e15,
                                1e15]     </momentum>
 
@@ -649,9 +639,11 @@
         <!-- use the corresponding density AND temperature at the inlet    -->
         <!-- Also, if you use a co-flow, you muse set the coflow           -->
         <!-- temperature to 298.0 and the co-flow density to 1.1798322     -->
+<!--
         <table name="adiabatic" type="Arches">
           <include href="inputs/Models/JP8.xml"/>
         </table>
+-->
 
 
         <material>Atmosphere</material>

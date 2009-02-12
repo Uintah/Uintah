@@ -2,15 +2,13 @@
 <!-- @version: -->
 <Uintah_specification>
   <!-- The tuna can problem -->
-  <Solver>   hypre   </Solver>
+  <Solver type="hypre" />
   
   <Meta>
     <title> Exploding Container 2-D Using Steady Burn Model </title>
   </Meta>
 
-  <SimulationComponent>
-    <type> mpmice </type>
-  </SimulationComponent>
+  <SimulationComponent type="mpmice" />
 
   <!--____________________________________________________________________-->
   <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
@@ -384,6 +382,7 @@
         <gamma>                  1.63     </gamma>
         <isSurroundingMatl>      true     </isSurroundingMatl>
 
+<!--
         <geom_object>
           <difference label="Gas">
             <box>
@@ -401,6 +400,7 @@
           <density>         1.037341706242494   </density>
           <pressure>        101325.0            </pressure>
         </geom_object>
+-->
       </material>
     </ICE>
 

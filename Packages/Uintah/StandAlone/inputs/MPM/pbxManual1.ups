@@ -7,6 +7,8 @@
        <title>PBX Manual RVE #1</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>0.2</maxTime>
        <initTime>0.0</initTime>

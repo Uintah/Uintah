@@ -7,21 +7,16 @@
        <title>Colliding Disks</title>
    </Meta>
 
-   <SimulationComponent>
-       <type>switcher</type>
+   <SimulationComponent type="switcher" >
        <subcomponent>
-           <SimulationComponent>
-               <type> mpm </type>
-           </SimulationComponent>
+           <SimulationComponent type="mpm" />
            <input_file> inputs/MPM/disks_include1.ups</input_file>
            <SwitchCriteria type = "Timestep">
              <timestep> 5 </timestep>
            </SwitchCriteria>
        </subcomponent>
        <subcomponent>
-           <SimulationComponent>
-               <type> mpm </type>
-           </SimulationComponent>
+           <SimulationComponent type="mpm" />
            <input_file> inputs/MPM/disks_include1.ups</input_file>
        </subcomponent>
    </SimulationComponent>

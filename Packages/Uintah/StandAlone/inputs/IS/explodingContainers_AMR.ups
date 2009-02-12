@@ -4,9 +4,9 @@
    <Meta>
        <title></title>
    </Meta>
-   <SimulationComponent>
-     <type> mpmice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="mpmice" />
+
    <doAMR>true</doAMR>
    
    <LoadBalancer>

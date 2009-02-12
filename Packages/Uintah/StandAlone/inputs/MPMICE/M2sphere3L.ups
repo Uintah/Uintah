@@ -19,9 +19,7 @@
        <timestep_multiplier>0.8 </timestep_multiplier>
    </Time>
 
-   <SimulationComponent>
-        <type> mpmice </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpmice" />
    
    <LoadBalancer>
       <type>DLB</type>

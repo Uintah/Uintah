@@ -135,12 +135,11 @@ main( int argc, char *argv[], char *env[] )
 
   string new_uda_dir;
   try {
-    ProblemSpecInterface* reader = scinew ProblemSpecReader(ups_filename);
-    ProblemSpecP ups = reader->readInputFile();
+    ProblemSpecP ups = ProblemSpecReader().readInputFile( ups_filename );
     Uintah::Parallel::initializeManager(argc, argv, "");
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    UintahParallelComponent * comp = ComponentFactory::create( ups, world, false, "", udafile[0] );
+    UintahParallelComponent * comp = ComponentFactory::create( ups, world, false, udafile[0] );
     SimulationInterface     * sim  = dynamic_cast<SimulationInterface*>( comp );
 
     DataArchiver out_uda(world);

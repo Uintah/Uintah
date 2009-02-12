@@ -10,6 +10,8 @@
        <title>Cylinder Impact - Case D </title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>2</maxTime>
        <initTime>0.0</initTime>

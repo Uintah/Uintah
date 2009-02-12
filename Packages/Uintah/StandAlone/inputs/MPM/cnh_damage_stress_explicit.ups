@@ -5,6 +5,8 @@
        <title> uniaxial plane stress tension  - failure due to stress </title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>0.00002</maxTime>
        <initTime>0.0</initTime>

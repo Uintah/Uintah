@@ -5,6 +5,8 @@
    <Meta>
        <title>Test UPS file for Microchannel Array of PBX9501</title>
    </Meta>    
+
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->

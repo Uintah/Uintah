@@ -8,6 +8,8 @@
    <Meta>
        <title>Rayleigh Problem</title>
    </Meta>
+
+   <SimulationComponent type="ice" />
    
     <!--____________________________________________________________________-->
     <!-- The Rayliegh problem tests the viscous shear stress terms          -->

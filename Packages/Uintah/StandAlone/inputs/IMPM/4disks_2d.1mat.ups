@@ -6,9 +6,8 @@
    <Meta>
        <title>Compaction of cylinders</title>
    </Meta>
-   <SimulationComponent>
-        <type> impm </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>3.e-6</maxTime>
@@ -38,7 +37,7 @@
    </DataArchiver>
 
     <MPM>
-       <time_integrator>implicit</time_integrator>
+        <time_integrator>implicit</time_integrator>
         <dynamic>true</dynamic>
         <solver>petsc</solver>
         <convergence_criteria_disp>1.e-10</convergence_criteria_disp>

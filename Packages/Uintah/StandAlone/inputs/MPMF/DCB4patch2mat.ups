@@ -7,6 +7,8 @@
        <title>SIF calculation for DCB specimen with 4 patches and 2 mats</title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>0.8</maxTime>
        <initTime>0.0</initTime>

@@ -5,12 +5,12 @@
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
    <Meta>
        <title>PerformanceTest</title>
    </Meta>
+
+   <SimulationComponent type="ice" />
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -131,6 +131,7 @@
    <DataArchiver>
       <filebase>performanceTest.uda</filebase>
       <outputTimestepInterval>0</outputTimestepInterval>
+      <checkpoint cycle = "2" interval = "0.1"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->

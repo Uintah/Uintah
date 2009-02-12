@@ -9,9 +9,7 @@
        <title>Slender Bar Three Point Bending Problem</title>
    </Meta>
   
-  <SimulationComponent>
-         <type> mpm </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpm" />
 
    <Time>
        <maxTime>0.01</maxTime>
@@ -30,6 +28,7 @@
         <save label = "p.stress"/>
         <save label = "p.deformationMeasure"/>
         <save label = "p.externalforce" />
+        <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
    <MPM>

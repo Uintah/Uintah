@@ -8,9 +8,8 @@
    <Meta>
        <title>Rigid compression of a billet</title>
    </Meta>
-   <SimulationComponent>
-        <type> impm </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>1.0</maxTime>

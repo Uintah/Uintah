@@ -10,6 +10,8 @@
         <title>Arches Heptane Run with Radiation</title>
    </Meta>
 
+   <SimulationComponent type="arches" />
+
    <Time>
         <maxTime>10.0</maxTime>
         <initTime>0.0</initTime>
