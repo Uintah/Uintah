@@ -9,9 +9,8 @@
        <title>Advection test</title>
    </Meta>
    
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+   <SimulationComponent type="ice" />
+
    <doAMR>true</doAMR>
 
    <Scheduler>

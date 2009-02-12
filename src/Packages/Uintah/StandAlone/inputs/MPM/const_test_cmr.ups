@@ -7,9 +7,8 @@
        <title>Constitutive Model Tester</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpm </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>.5</maxTime>
        <initTime>0.0</initTime>

@@ -6,9 +6,8 @@
 	<title>MPMArches Helium in a Pipe test</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpmarches </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpmarches" />
+
    <Time>
 	<maxTime>2.0</maxTime>
 	<initTime>0.0</initTime>

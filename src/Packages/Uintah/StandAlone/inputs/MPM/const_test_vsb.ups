@@ -7,6 +7,8 @@
        <title>Tester for constitutive model for binder</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>.01</maxTime>
        <initTime>0.0</initTime>

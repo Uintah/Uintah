@@ -9,6 +9,8 @@
        <title>Reads in a triangulated surface</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>.001</maxTime>
        <initTime>0.0</initTime>

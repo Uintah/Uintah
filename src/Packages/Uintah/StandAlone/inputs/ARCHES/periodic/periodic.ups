@@ -5,9 +5,7 @@
   <title>Arches Periodic Box</title>
 </Meta>
 
-<SimulationComponent>
-  <type> arches </type>
-</SimulationComponent>
+<SimulationComponent type="arches" />
 
 <Time>
   <maxTime>     120.0   </maxTime>

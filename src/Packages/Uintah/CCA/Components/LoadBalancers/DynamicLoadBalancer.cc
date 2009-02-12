@@ -1217,7 +1217,8 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 } 
 
 void
-DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string tsurl, const GridP& grid)
+DynamicLoadBalancer::restartInitialize( DataArchive* archive, int time_index, ProblemSpecP& pspec,
+                                        string tsurl, const GridP& grid )
 {
   // here we need to grab the uda data to reassign patch dat  a to the 
   // processor that will get the data
@@ -1270,11 +1271,11 @@ DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, Pro
           
           string dataxml = dir + datafile;
           // open the datafiles
-          ProblemSpecReader psr(dataxml);
 
-          ProblemSpecP dataDoc = psr.readInputFile();
-          if (!dataDoc)
-            throw InternalError("Cannot open data file", __FILE__, __LINE__);
+          ProblemSpecP dataDoc = ProblemSpecReader().readInputFile( dataxml );
+          if( !dataDoc ) {
+            throw InternalError( string( "Cannot open data file: " ) + dataxml, __FILE__, __LINE__);
+          }
           for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
             if(r->getNodeName() == "Variable") {
               int patchid;
@@ -1287,7 +1288,6 @@ DynamicLoadBalancer::restartInitialize(DataArchive* archive, int time_index, Pro
               }
             }
           }            
-          
         }
       }
     }

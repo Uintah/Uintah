@@ -10,6 +10,8 @@
         <title>Arches Methane Run with P-1 Radiation</title>
    </Meta>
 
+   <SimulationComponent type="arches" />
+
    <Time>
         <maxTime>0.10</maxTime>
         <initTime>0.0</initTime>

@@ -12,9 +12,9 @@
    <Meta>
        <title>2D shock tube with 2 levels of refinement</title>
    </Meta>    
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="ice" />
+
    <doAMR>true</doAMR>
    <LoadBalancer>
      <type>DLB</type>

@@ -8,9 +8,7 @@
     <title>Arches "2D" Periodic Box Almgren MMS </title>
   </Meta>
 
-  <SimulationComponent>
-    <type> arches </type>
-  </SimulationComponent>
+  <SimulationComponent type="arches" />
 
   <Time>
     <maxTime>0.1</maxTime>
@@ -61,8 +59,7 @@
     <!-- ARCHES specification -->
     <ARCHES>
       <doMMS>true</doMMS>
-      <MMS>
-        <whichMMS>almgrenMMS</whichMMS>
+      <MMS whichMMS="almgrenMMS" >
         <mmsErrorType>L</mmsErrorType>
         <almgrenMMS>
           <!--Note: This viscosity needs to be set twice for now, both here
@@ -103,8 +100,10 @@
         </ColdflowMixingModel>
       </Properties>
 
+<!--
       <BoundaryConditions>
       </BoundaryConditions>
+-->
 
       <PhysicalConstants>
         <gravity>[0,0,0]</gravity>

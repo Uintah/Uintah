@@ -6,9 +6,8 @@
         <title>Arches Methane Plume Multi Patch Run with Radiation</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpmarches </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpmarches" />
+
    <Time>
         <maxTime>2.5</maxTime>
         <initTime>0.0</initTime>
@@ -98,6 +97,8 @@
 	   </MPM>
 
        </MaterialProperties>
+
+    <Grid>
 		<BoundaryConditions>
 
 		 <Face side = "x-">
@@ -151,10 +152,6 @@
                 </Face>                           
 
 	</BoundaryConditions>
-
-
-    <Grid>
-        <BoundaryConditions/>
         <Level>
             <Box label = "1">
                 <lower>[0,0,0]</lower>

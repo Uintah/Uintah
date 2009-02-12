@@ -2,15 +2,12 @@
 <!-- @version: -->
 <Uintah_specification>
    <Meta>
-       <title></title>
+       <title>LoadBalance without Regrid</title>
    </Meta>
-   <SimulationComponent>
-     <type> mpmice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="mpmice" />
+
    <doAMR>true</doAMR>
-   
-
-
 
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
@@ -177,8 +174,7 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
 
-      <Regridder>
-        <type> BNR </type>
+      <Regridder type="BNR" >
         <min_patch_size> [[8,8,1]] </min_patch_size>
         <max_levels>                  2       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
@@ -193,8 +189,7 @@
     </AMR> 
     
     
-    <LoadBalancer>
-      <type>DLB</type>
+    <LoadBalancer type="DLB" >
       <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
       <doSpaceCurve>         true            </doSpaceCurve>
       <timestepInterval>     1             </timestepInterval>

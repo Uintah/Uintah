@@ -7,9 +7,7 @@
        <title>Compaction of cylinders</title>
    </Meta>
 
-   <SimulationComponent> 
-      <type> mpm </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpm" />
 
    <Time>
        <maxTime>3.e-6</maxTime>

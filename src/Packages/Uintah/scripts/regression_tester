@@ -59,11 +59,17 @@ MPI_RUN="no"
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 
 if test ! -d "$INPUTS"; then
-   echo
-   echo "ERROR: can't find your 'inputs' directory..."
-   echo "       (Looked in $INPUTS)"
-   echo 
-   exit
+
+   INPUTS=./inputs
+   if test ! -d "$INPUTS"; then
+      echo ""
+      echo "ERROR: can't find your 'inputs' directory..."
+      echo "       Looked:"
+      echo "               $INPUTS"
+      echo "               ./inputs"
+      echo ""
+      exit
+   fi
 fi
 
 in_file=
@@ -114,8 +120,8 @@ usage () {
     echo "  -mi            run the mpmice tests"
     echo "  -mpmice_amr    run the mpmice amr tests"
     echo "  -im            run the implicit mpm tests"
-    echo "  -dbg           use the dbg TestData"
-    echo "  -opt           use the opt TestData"
+    echo "  -dbg           use the dbg (debug) TestData"
+    echo "  -opt           use the opt (optimized) TestData"
     echo "  -nompi         do not use mpi"
     echo "  -restart       restart and compare with the original uda.000"
     echo "  -mem           check for memory leaks"

@@ -6,9 +6,7 @@
 	<title>Arches Helium Plume Multi Patch Run</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpmarches </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpmarches" />
 
    <Time>
 	<maxTime>2.0</maxTime>

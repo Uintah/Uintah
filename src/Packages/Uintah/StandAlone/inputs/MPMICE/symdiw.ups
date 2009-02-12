@@ -5,6 +5,8 @@
    <Meta>
        <title>Symmetric DIW</title>
    </Meta>
+
+   <SimulationComponent type="mpmice" />
     
     
     <!--____________________________________________________________________-->

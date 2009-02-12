@@ -8,9 +8,8 @@
    <Meta>
        <title>Rigid compression of a billet</title>
    </Meta>
-   <SimulationComponent>
-        <type> impm </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>0.20</maxTime>
@@ -95,8 +94,8 @@
            <contact>
              <type>rigid</type>
              <materials>[0,1]</materials>
-              <stop_time>999999.9 </stop_time>
-              <direction>[1,1,1]</direction>
+             <stop_time>999999.9 </stop_time>
+             <direction>[1,1,1]</direction>
            </contact>
        </MPM>
 

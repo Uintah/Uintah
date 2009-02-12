@@ -5,9 +5,9 @@
    <Meta>
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
-   <SimulationComponent>
-        <type> mpmice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="mpmice" />
+
    <doAMR>true</doAMR>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -158,7 +158,7 @@
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
-      <Regridder>
+      <Regridder type="Hierarchical">
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[2,2,1]]         </cell_refinement_ratio>
         <lattice_refinement_ratio> [[5,5,1][2,2,1]]  </lattice_refinement_ratio>

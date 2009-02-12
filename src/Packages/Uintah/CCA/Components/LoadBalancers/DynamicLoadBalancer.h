@@ -146,7 +146,9 @@ namespace Uintah {
     //! Assigns the patches to the processors they ended up on in the previous
     //! Simulation.  Returns true if we need to re-load balance (if we have a 
     //! different number of procs than were saved to disk
-    virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, string, const GridP& grid);
+    virtual void restartInitialize( DataArchive* archive, int time_index,
+                                    ProblemSpecP& pspec,
+                                    string tsurl, const GridP& grid );
    
   //cost profiling functions
     //update the contribution for this patch

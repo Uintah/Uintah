@@ -7,9 +7,7 @@
        <title>Poisson3 test</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> poisson3 </type>
-   </SimulationComponent>
+   <SimulationComponent type="poisson3" />
     
    <Time>
        <maxTime>1.0</maxTime>

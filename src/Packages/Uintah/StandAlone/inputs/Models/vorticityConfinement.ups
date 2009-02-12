@@ -5,7 +5,8 @@
    <Meta>
        <title></title>
    </Meta>
-    
+
+   <SimulationComponent type="qwerty" />
     
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->

@@ -10,6 +10,8 @@
         <title>Arches Methane Plume Multi Patch Run with static tables+radiation </title>
    </Meta>
 
+   <SimulationComponent type="arches" />
+
    <Time>
         <maxTime>20.0</maxTime>
         <initTime>0.0</initTime>

@@ -6,6 +6,8 @@
   <Meta>
     <title>Pressurization of a container via burning w/o fracture</title>
   </Meta>&gt;  
+
+  <SimulationComponent type="qwerty" />
   <!--____________________________________________________________________-->
   <!--   T  I  M  E   V  A  R  I  A  B  L  E  S             -->
   <!--____________________________________________________________________-->

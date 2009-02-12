@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2004-2009 Scientific Computing and Imaging Institute,
    University of Utah.
 
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -48,6 +48,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <unistd.h>
 
 #include <libxml/tree.h>
 #include <libxml/parser.h>
@@ -59,6 +60,7 @@ using namespace SCIRun;
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 static DebugStream dbg( "ProblemSpecReader", false );
+static DebugStream inc_dbg( "ProblemSpecReaderIncludes", false );
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Utility Functions:
@@ -66,27 +68,49 @@ static DebugStream dbg( "ProblemSpecReader", false );
 // Prints out 2 spaces for each level of indentation.
 static
 void
-indent( ostream & out, unsigned int level )
+indent( ostream & out, unsigned int depth )
 {
-  for( unsigned int pos = 0; pos < level; pos++ ) {
+  // out << depth << " ";
+  for( unsigned int pos = 0; pos < depth; pos++ ) {
     out << "  ";
   }
 }
 
-// Coverts a vector of strings into a single " " separated string...
-static
 string
-toString( const vector<string> & vec )
+getErrorInfo( const xmlNode * node )
 {
-  string result;
-  for( unsigned int pos = 0; pos < vec.size(); pos++ ) {
-    result += vec[ pos ] + "\n";
+  if( node->_private == NULL ) {
+    cout << "Possible problem in getErrorInfo... name: " << node->name << "\n";
+    //throw ProblemSetupException( "ERROR: getErrorInfo()... _private shouldn't be NULL\n", __FILE__, __LINE__ );
+    node = node->parent; // In theory, this will only happen with 'text' nodes...
   }
-  return result;
+  string file = *(string*)(node->_private);
+
+  ostringstream error;
+  error << "See file: " << file << " (line #" << node->line << ")";;
+  
+  return error.str();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // The following section holds structures used in validating the problem spec file.
+
+namespace Uintah {
+
+///////////////////////////////////////////////////////////////////////
+// Currently all ProblemSpecReader's share the validation data...
+// (Pragmatically I use this to not parse the DW created files,
+//  and only parse the original .ups...)
+static Tag * uintahSpec_g = NULL;
+static Tag * commonTags_g = NULL;
+
+// This map is used to allow validation of Geom tags (in the .ups files) that
+// are 'name'd (or 'label'd) so they can be referenced again.  This is used
+// only for 'cylinder's and 'box's currently.
+map<string, Tag *> namedGeomPieces_g;
+
+//
+///////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////
 //
@@ -95,7 +119,7 @@ toString( const vector<string> & vec )
 
 // MULTIPLE = 0 or more occurrences
 enum need_e { OPTIONAL, REQUIRED, MULTIPLE, INVALID_NEED };
-// VECTORs are specified as [0.0,0.0,0.0]
+// VECTORs are specified as [0.0, 0.0, 0.0]
 enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, INVALID_TYPE, MULTIPLE_DOUBLES, MULTIPLE_INTEGERS };
 
 ostream &
@@ -179,10 +203,26 @@ getType( const string & typeStr )
   }
 }
 
-struct ProblemSpecReader::AttributeAndTagBase {
+/////////////////////////////////////////////////////////////////////////////////
+// Helper Structs:
+
+struct NeedAppliesTo {
+  string parentAttributeName_;   // Eg: The parent of this tag will have an attribute named "type" or "label".
+  vector< string > validValues_; //     the value of "type" might be 'hard_sphere_gas'.  If that value
+};                               //     is in the validValues_ array, then the 'need' of the tag applies.
+
+struct ChildRequirements {
+  enum Req { ONE_OF }; // Only one type of requirement right now, but perhaps others in the future...
+  Req              typeOfRequirement; 
+  vector< string > oneOfChildrenList;
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+
+struct AttributeAndTagBase {
 
   AttributeAndTagBase( const string & name, need_e need, type_e type, 
-                       const vector<string> & validValues, const Tag * parent ) :
+                       const vector<string> & validValues, /*const*/ Tag * parent ) :
     parent_( parent ),
     name_( name ), need_( need ), type_( type ),
     validValues_( validValues ),
@@ -191,7 +231,7 @@ struct ProblemSpecReader::AttributeAndTagBase {
   }
 
   AttributeAndTagBase( const string & name, need_e need, type_e type, 
-                       const string & validValues, const Tag * parent ) :
+                       const string & validValues, /*const*/ Tag * parent ) :
     parent_( parent ),
     name_( name ), need_( need ), type_( type ),
     occurrences_( 0 )
@@ -207,31 +247,52 @@ struct ProblemSpecReader::AttributeAndTagBase {
 
   virtual ~AttributeAndTagBase() {}
 
-  const Tag *    parent_;
+  Tag *          parent_; // was const... should be, but I need to be able to pass it into findAttribute()...
   string         name_;
   need_e         need_;
   type_e         type_;
   vector<string> validValues_;
   int            occurrences_;
 
+  NeedAppliesTo  needAppliesTo_;
+
+  // currentValue_ is used only when this is an attribute.  Unlike the other tags,
+  // its value can (and will) change during validation.  Its value is only 'valid'
+  // when validating the tag's (for which this attribute applies) children.  Once
+  // the validation moves past this tag (the tag for which this attribute applies)
+  // then this field is no longer valid.
+  string         currentValue_;
+
+  // currentChildrenTags_ is used to validate the number of children (in some cases).
+  // Its value changes as each tag is checked.  (It is valid while a given tag is 
+  // being validated, but overwritten the next time that type of tag is validated.)
+  vector< string > currentChildrenTags_;
+
   ///////////////////////////////////
 
   string getCompleteName() const;
 
-  virtual void print( bool /* recursively = false */, unsigned int level = 0, bool isTag = false ) { 
+  // 'node' is the gold standard node being validated against.
+  void   validateText(    const string & text,  xmlNode * node  ) const;
+  bool   validateString(  const string & value ) const;
+  bool   validateBoolean( const string & value ) const;
+  void   validateDouble(  double value         ) const;
+
+
+  virtual void print( bool /* recursively = false */, unsigned int depth = 0, bool isTag = false ) { 
 
     // Fill is used to pad the Tag names so they line up better...
-    if( level > 14 ) {
-      // Make sure the truncation is enough so that the below 30-level*2 doesn't underflow...
-      dbg << "WARNING... print truncating indention level to 14...\n";
-      level = 14;
+    if( depth > 14 ) {
+      // Make sure the truncation is enough so that the below 30-depth*2 doesn't underflow...
+      dbg << "WARNING... print truncating indention depth to 14...\n";
+      depth = 14;
     }
     string fill;
-    for( unsigned int pos = name_.size(); pos < (30-(level*2)); pos++ ) {
+    for( unsigned int pos = name_.size(); pos < (30-(depth*2)); pos++ ) {
       fill += " ";
     }
 
-    indent( dbg, level ); 
+    indent( dbg, depth ); 
     dbg << (isTag ? "<" : "- " ) 
          << name_
          << (isTag ? ">" : "" ) 
@@ -246,21 +307,23 @@ struct ProblemSpecReader::AttributeAndTagBase {
 
 };
 
-struct ProblemSpecReader::Attribute : public ProblemSpecReader::AttributeAndTagBase { 
+struct Attribute : public AttributeAndTagBase { 
 
-  Attribute( const string & name, need_e need, type_e type, const string & validValues, const Tag * parent ) :
+  Attribute( const string & name, need_e need, type_e type, const string & validValues, /*const*/ Tag * parent ) :
     AttributeAndTagBase( name, need, type, validValues, parent ) {}
 
-  virtual void print( bool recursively, unsigned int level, bool isTag = false ) {
-    AttributeAndTagBase::print( recursively, level, isTag );
+  virtual void print( bool recursively, unsigned int depth, bool isTag = false ) {
+    AttributeAndTagBase::print( recursively, depth, isTag );
     dbg << "\n";
   }
 };
 
-struct ProblemSpecReader::Tag : public ProblemSpecReader::AttributeAndTagBase {
+struct Tag : public AttributeAndTagBase {
 
-  vector<Attribute*> attributes_;
-  vector<Tag*>       subTags_;
+  vector< Attribute* > attributes_;
+  vector< Tag* >       subTags_;
+
+  vector< ChildRequirements * > childReqs_;
 
   // validValues is a _single_ string (it will be parsed as follows) that contains valid values
   // for the value of the tag.  The specification of valid values depends on the type of Tag:
@@ -270,10 +333,10 @@ struct ProblemSpecReader::Tag : public ProblemSpecReader::AttributeAndTagBase {
   //  BOOLEAN: validValues is not allowed... because it defaults to true/false.
   //  VECTOR: FIXME... does nothing yet...
   //
-  Tag( const string & name, need_e need, type_e type, const string & validValues, const Tag * parent ) :
+  Tag( const string & name, need_e need, type_e type, const string & validValues, /*const*/ Tag * parent ) :
     AttributeAndTagBase( name, need, type, validValues, parent ) {}
 
-  Tag( const Tag * tag, const Tag * parent, need_e need ) :
+  Tag( const Tag * tag, /*const*/ Tag * parent, need_e need ) :
        AttributeAndTagBase( tag->name_, tag->need_, tag->type_, tag->validValues_, parent ) {
 
     if( need == INVALID_NEED ) { 
@@ -287,26 +350,35 @@ struct ProblemSpecReader::Tag : public ProblemSpecReader::AttributeAndTagBase {
     attributes_ = tag->attributes_;
   }
 
-  virtual void print( bool recursively = false, unsigned int level = 0, bool isTag = true ) {
+  Attribute * findAttribute( const string & attrName );
+  Tag *       findSubTag( const string & tagName );
+  void        validateAttribute( xmlAttr * attr );
 
-    AttributeAndTagBase::print( recursively, level, isTag );
+  // User most likely should not use the 'depth' parameter.
+  // 'ps' is the ProblemSpec to be validated (the representation of the loaded .ups file).
+  void        validate( const ProblemSpec * ps, unsigned int depth = 0 );
+  void        parseXmlTag( const xmlNode * xmlTag );
+
+  virtual void print( bool recursively = false, unsigned int depth = 0, bool isTag = true ) {
+
+    AttributeAndTagBase::print( recursively, depth, isTag );
 
     dbg << "(parent: " << (parent_ ? parent_->name_ : "NULL") << ")\n";
 
     for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
-      attributes_[ pos ]->print( recursively, level+1 );
+      attributes_[ pos ]->print( recursively, depth+1 );
     }
 
     if( recursively ) {
       for( unsigned int pos = 0; pos < subTags_.size(); pos++ ) {
-        subTags_[pos]->print( recursively, level+1 );
+        subTags_[pos]->print( recursively, depth+1 );
       }
     }
   }
 };
 
 string
-ProblemSpecReader::AttributeAndTagBase::getCompleteName() const
+AttributeAndTagBase::getCompleteName() const
 {
   string      result = name_;
   const Tag * tag = parent_;
@@ -318,27 +390,23 @@ ProblemSpecReader::AttributeAndTagBase::getCompleteName() const
   return result;
 }
 
-ProblemSpecReader::Attribute *
-ProblemSpecReader::findAttribute( Tag * root, const string & attrName )
+Attribute *
+Tag::findAttribute( const string & attrName )
 {
-  vector<Attribute*> & attribs = root->attributes_;
-
-  for( unsigned int pos = 0; pos < attribs.size(); pos++ ) {
-    if( attribs[ pos ]->name_ == attrName ) {
-      return attribs[ pos ];
+  for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
+    if( attributes_[ pos ]->name_ == attrName ) {
+      return attributes_[ pos ];
     }
   }
   return NULL;
 }
 
-ProblemSpecReader::Tag *
-ProblemSpecReader::findSubTag( Tag * root, const string & tagName )
+Tag *
+Tag::findSubTag( const string & tagName )
 {
-  vector<Tag*> & tags = root->subTags_;
-
-  for( unsigned int pos = 0; pos < tags.size(); pos++ ) {
-    if( tags[ pos ]->name_ == tagName ) {
-      return tags[ pos ];
+  for( unsigned int pos = 0; pos < subTags_.size(); pos++ ) {
+    if( subTags_[ pos ]->name_ == tagName ) {
+      return subTags_[ pos ];
     }
   }
   return NULL;
@@ -347,16 +415,15 @@ ProblemSpecReader::findSubTag( Tag * root, const string & tagName )
 // Chops up 'validValues' (based on ','s) and verifies that 'value' is in the list.
 // (If validValues is empty, then 'value' is considered valid by definition.)
 bool
-ProblemSpecReader::validateString( const AttributeAndTagBase * tag, const string & value )
+AttributeAndTagBase::validateString( const string & value ) const
 {
-  const vector<string> & validValues = tag->validValues_;
-
-  if( validValues.size() == 0 ) {
+  // If no 'valid values' are set, then all values are valid.
+  if( validValues_.size() == 0 ) {
     return true;
   }
 
-  vector<string>::const_iterator iter = find( validValues.begin(), validValues.end(), value );
-  if( iter != validValues.end() ) {
+  vector<string>::const_iterator iter = find( validValues_.begin(), validValues_.end(), value );
+  if( iter != validValues_.end() ) {
     return true;
   } 
   else {
@@ -365,7 +432,7 @@ ProblemSpecReader::validateString( const AttributeAndTagBase * tag, const string
 }
 
 bool
-ProblemSpecReader::validateBoolean( const AttributeAndTagBase * tag, const string & value )
+AttributeAndTagBase::validateBoolean( const string & value ) const
 {
   if( value == "true" || value == "false" ) {
     return true;
@@ -377,41 +444,36 @@ ProblemSpecReader::validateBoolean( const AttributeAndTagBase * tag, const strin
 // for more info on 'validValues'. An empty validValues means anything is valid.
 // 
 void
-ProblemSpecReader::validateDouble( const AttributeAndTagBase * tag, double value )
+AttributeAndTagBase::validateDouble( double value ) const
 {
-  const vector<string> validValues = tag->validValues_;
-
-  if( validValues.size() == 0 ) {
+  if( validValues_.size() == 0 ) {
     return;
   }
 
-  if( validValues.size() == 1 ) {
-    if( validValues[0] == "positive" ) {
+  if( validValues_.size() == 1 ) {
+    if( validValues_[0] == "positive" ) {
       if( value < 0 ) {
-        string completeName = tag->getCompleteName();
         ostringstream error;
         error << setprecision(12);
-        error << "<" << completeName << ">: Specified value '" << value << "' is not 'positive' (as required).";
+        error << "<" << getCompleteName() << ">: Specified value '" << value << "' is not 'positive' (as required).";
         throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
       }
     }
   }
-  else if( validValues.size() == 2 ) {
+  else if( validValues_.size() == 2 ) {
     double max, min;
-    sscanf( validValues[0].c_str(), "%lf", &min );
-    sscanf( validValues[1].c_str(), "%lf", &max );
+    sscanf( validValues_[0].c_str(), "%lf", &min );
+    sscanf( validValues_[1].c_str(), "%lf", &max );
     if( value < min || value > max ) {
-      string completeName = tag->getCompleteName();
       ostringstream error;
       error << setprecision(12);
-      error << "<" << completeName << "> - " << "Specified value '" << value << "' is outside of valid range (" 
+      error << "<" << getCompleteName() << "> - " << "Specified value '" << value << "' is outside of valid range (" 
             << min << ", " << max << ")";
       throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
     }
   }
   else {
-    string completeName = tag->getCompleteName();
-    throw ProblemSetupException( completeName + " - Invalid 'validValues' string.", __FILE__, __LINE__ );
+    throw ProblemSetupException( getCompleteName() + " - Invalid 'validValues' string.", __FILE__, __LINE__ );
   }
 }
 
@@ -453,8 +515,8 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   }
 
   if( needType.size() != 2 ) {
-    // FIXME: Better error handling
-    throw ProblemSetupException( "Error: need/type did not parse correctly...", __FILE__, __LINE__ );
+    throw ProblemSetupException( string( "Error: need/type '" ) + concatStrings( needType ) + 
+                                 "'did not parse correctly...", __FILE__, __LINE__ );
   }
 
   need = getNeed( needType[ 0 ] );
@@ -463,12 +525,10 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   if( specs.size() == 2 ) {
     validValues = specs[1];
     if( type == NO_DATA ) {
-      // FIXME: handle error
       throw ProblemSetupException( "Error: type of Tag specified as 'NO_DATA', yet has a list of validValues: '" +
                                    validValues + "'", __FILE__, __LINE__ );
     }
     else if( type == BOOLEAN ) {
-      // FIXME: handle error
       throw ProblemSetupException( "Error: type of Tag specified as 'BOOLEAN', yet has list of validValues: '" +
                                    validValues + "'", __FILE__, __LINE__ );
     }
@@ -509,14 +569,17 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
 
   if( specs.size() == 2 ) {
     if( type == NO_DATA ) {
-      throw ProblemSetupException( "Error: type of Tag specified as NO_DATA, yet has a validValues component...", __FILE__, __LINE__ );
+      throw ProblemSetupException( "Error: type of Tag specified as NO_DATA, yet has a validValues '" +
+                                   concatStrings( specs ) +"' component...", __FILE__, __LINE__ );
     }
     validValues = specs[1];
   }
 }
 
+} // end namespace Uintah
+
 void
-ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
+Tag::parseXmlTag( const xmlNode * xmlTag )
 {
   string name = to_char_ptr( xmlTag->name );
   collapse( name );
@@ -531,7 +594,7 @@ ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
   else {
     if( name != "CommonTags" ) {
       if( xmlTag->properties == NULL ) {
-        Tag * tag = findSubTag( commonTags_, name );
+        Tag * tag = commonTags_g->findSubTag( name );
         if( tag ) {
           dbg << "Found common tag for " << name << "\n";
           hasSpecString = false;
@@ -542,12 +605,10 @@ ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
         }
       }
       else if( xmlTag->properties->children == NULL ) {
-        // FIXME... not sure what this case is...
         throw ProblemSetupException( "Error (b)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").",
                                      __FILE__, __LINE__ );
       }
       else if( string( "spec" ) != to_char_ptr( xmlTag->properties->name ) ) {
-        // FIXME... better error msg/handling
         throw ProblemSetupException( "Error (c)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").  " +
                                      "Found attribute '" + to_char_ptr( xmlTag->properties->name ) + "' instead.", __FILE__, __LINE__ );
       }
@@ -574,18 +635,18 @@ ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
 
   if( common ) {
     // Find this tag in the list of common tags... 
-    Tag * commonTag = findSubTag( commonTags_, name );
+    Tag * commonTag = commonTags_g->findSubTag( name );
     if( !commonTag ) {
       throw ProblemSetupException( "Error, commonTag <" + name + "> not found... was looking for a common tag " +
                                    "because spec string only had one entry.", __FILE__, __LINE__ );
     }
-    newTag = new Tag( commonTag, parent, need );
+    newTag = new Tag( commonTag, this, need );
   }
   else {
-    newTag = new Tag( name, need, type, validValues, parent );
+    newTag = new Tag( name, need, type, validValues, this );
   }
 
-  parent->subTags_.push_back( newTag );
+  subTags_.push_back( newTag );
 
   // Handle attributes... (if applicable)
   if( hasSpecString && xmlTag->properties->next != NULL ) {
@@ -609,8 +670,95 @@ ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
           newTag->attributes_.push_back( new Attribute( label, need, type, validValues, newTag ) );
         }
         else if( attrName.find( "children") == 0 ) {  // attribute string begins with "children"
-          // FIXME:
-          dbg << "WARNING: Code doesn't handle 'children' directives yet...\n";
+
+          string attrStr = to_char_ptr( child->children->content );
+          vector<string> strings;
+          vector<char> separators;
+
+          separators.push_back( ',' );
+          separators.push_back( '(' );
+          separators.push_back( ')' );
+          separators.push_back( ' ' );
+
+          strings = split_string( attrStr, separators );
+
+          if( strings[0] == "ONE_OF" ) {
+            ChildRequirements * chreq = new ChildRequirements();
+
+            chreq->typeOfRequirement = ChildRequirements::ONE_OF;
+
+            for( unsigned int pos = 1; pos < strings.size(); pos++ ) {
+              chreq->oneOfChildrenList.push_back( strings[ pos ] );
+            }
+            newTag->childReqs_.push_back( chreq );
+            
+          }
+          else if( strings[0] == "ALL_OR_NONE_OF" ) {
+            dbg << "WARNING: ALL_OR_NONE_OF not implemented...\n"; 
+          }
+          else {
+            throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  'children' tag does not support: " + 
+                                         strings[0] + "...", __FILE__, __LINE__ );
+          }
+        }
+        else if( attrName.find( "need_applies_to") == 0 ) {  // attribute string begins with "children"
+
+          string attrStr = to_char_ptr( child->children->content );
+          vector<string> strings;
+          vector<char> separators;
+
+          separators.push_back( ',' );
+          separators.push_back( ' ' );
+
+          strings = split_string( attrStr, separators );
+
+          if( strings.size() <= 1 ) {
+            throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  Not enough values for 'need_applies_to' field.\n" +
+                                         "Please fix 'ups_spec.xml'.\n", __FILE__, __LINE__ );
+          }
+          if( !findAttribute( strings[0] ) ) {
+            throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  Parent does not have attribute '" + strings[0] + "'",
+                                         __FILE__, __LINE__ );
+          }
+
+          newTag->needAppliesTo_.parentAttributeName_ = strings[0];
+
+          for( unsigned int pos = 1; pos < strings.size(); pos++ ) {
+
+            string value = strings[ pos ];
+
+            Attribute * attribute = findAttribute( newTag->needAppliesTo_.parentAttributeName_ );
+            if( !attribute ) {
+              throw ProblemSetupException( string( "Parent attribute '" ) + newTag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
+                                           getCompleteName() + "' does not exist!\n" + "The 'need_applies_to' field " +
+                                           "in the 'ups_spec.xml' is broken.  Please fix.",
+                                           __FILE__, __LINE__ );
+            }
+            if( attribute->need_ != REQUIRED ) {
+              ostringstream errorMsg;
+              errorMsg << "For 'need_applies_to' tag '" << newTag->getCompleteName() << "', parent's attribute '" 
+                       << newTag->needAppliesTo_.parentAttributeName_ << "'\nspecified for '"  
+                       << getCompleteName() << "' must be REQUIRED, but it is marked as '" 
+                       << attribute->need_ << "'.\nPlease fix 'ups_spec.xml'." ;
+              throw ProblemSetupException( errorMsg.str(), __FILE__, __LINE__ );
+            }
+
+            if( !attribute->validateString( value ) ) {
+              throw ProblemSetupException( value + " is not a valid value for attribute " + attribute->getCompleteName(),
+                                           __FILE__, __LINE__ );
+            }
+
+            newTag->needAppliesTo_.validValues_.push_back( value );
+          }
+
+          // DEBUG print:
+          dbg << "here: " << newTag->needAppliesTo_.validValues_.size() << "\n";
+
+          dbg << "need_applies_to: " << newTag->needAppliesTo_.parentAttributeName_ << " for " 
+               << concatStrings( newTag->needAppliesTo_.validValues_ ) << "\n";
+        }
+        else {
+          throw ProblemSetupException( "Invalid attribute (" + attrName + ").", __FILE__, __LINE__ );
         }
       }
     }
@@ -623,10 +771,10 @@ ProblemSpecReader::parseTag( Tag * parent, const xmlNode * xmlTag )
       string node = to_char_ptr( child->name );
       collapse( node );
 
-      parseTag( newTag, child );
+      newTag->parseXmlTag( child );
     }
   }
-}
+} // end parseXmlTag()
 
 void
 ProblemSpecReader::parseValidationFile()
@@ -640,17 +788,13 @@ ProblemSpecReader::parseValidationFile()
   doc = xmlReadFile( valFile.c_str(), 0, XML_PARSE_PEDANTIC );
   
   if (doc == 0) {
-    if(Parallel::getMPIRank() == 0){
-      cout << "\nWARNING: can't find '" << valFile << "'... .ups validation will not take place.\n\n";
-    }
-    return;
-    //throw ProblemSetupException( "Error opening " + valFile, __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error opening .ups validation specification file: " + valFile, __FILE__, __LINE__ );
   }
 
   xmlNode * root = xmlDocGetRootElement( doc );
 
-  uintahSpec_ = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL );
-  commonTags_ = new Tag( "CommonTags", REQUIRED, NO_DATA, "", NULL );
+  uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL );
+  commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", NULL );
 
   string tagName = to_char_ptr( root->name );
 
@@ -672,7 +816,7 @@ ProblemSpecReader::parseValidationFile()
         xmlNode * gc = child->children; // Grand Child
         while( gc != NULL ) {
           if( gc->type == XML_ELEMENT_NODE ) {
-            parseTag( commonTags_, gc );
+            commonTags_g->parseXmlTag( gc );
           }
           gc = gc->next;
         }
@@ -688,23 +832,27 @@ ProblemSpecReader::parseValidationFile()
     if( child->type == XML_ELEMENT_NODE ) {
       string tagName = to_char_ptr( child->name );
       if( tagName != "CommonTags" ) { // We've already handled the Common Tags...
-        parseTag( uintahSpec_, child );
+        uintahSpec_g->parseXmlTag( child );
       }
     }
   }
-  //freeing the xml doc here is causing crashes later.  I'm not sure why this is.  
-  //Perhaps freeing this doc also frees the child elements which are accessed later
-  //xmlFreeDoc(doc);
-  dbg << "done parsing ups_spec.xml\n";
-}
+
+  // Freeing the xml doc here is causing crashes later.  I'm not sure why this is.  
+  // Perhaps freeing this doc also frees the child elements which are accessed later
+  //
+  // xmlFreeDoc(doc);
+
+  dbg << "Done parsing ups_spec.xml\n";
+
+} // end parseValidationFile()
 
 void
-ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string & text )
+AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
 {
   string classType = "Attribute";
-  const string completeName = root->getCompleteName();
+  const string completeName = getCompleteName();
 
-  const Tag * testIfTag = dynamic_cast<const Tag*>( root );
+  const Tag * testIfTag = dynamic_cast<const Tag*>( this );
   if( testIfTag ) {
     classType == "Tag";
   }
@@ -712,24 +860,27 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
   // Verify that 'the text' of the node exists or doesn't exist as required... 
   //    <myTag>the text</myTag>
   //
-  if( root->type_ == NO_DATA ) {
+  if( type_ == NO_DATA ) {
     if( text != "" ) {
       throw ProblemSetupException( classType + " <" + completeName + "> should not have data (but has: '" + text +
-                                   "').  Please fix XML in .ups file or correct validation Tag list.",
+                                   "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                   getErrorInfo( node ),
                                    __FILE__, __LINE__ );
     }
+    return; // We're done... no text to validate.
   }
   else { // type != NO_DATA
     if( text == "" ) {
       stringstream error_stream;
       error_stream << classType << " <" << completeName << "> should have a value (of type: " 
-                   << root->type_ << ") but is empty. " << "Please fix XML in .ups file or\n"
-                   << "correct validation Tag list.";
+                   << type_ << ") but is empty. " << "Please fix XML in .ups file or\n"
+                   << "correct validation Tag list.\n"
+                   << getErrorInfo( node );
       throw ProblemSetupException( error_stream.str(), __FILE__, __LINE__ );
     }
   }
   
-  switch( root->type_ ) {
+  switch( type_ ) {
   case DOUBLE:
     {
       // WARNING: this sscanf isn't a sufficient test to validate that a double (and only
@@ -739,11 +890,12 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
       
       if( num != 1 ) {
         throw ProblemSetupException( classType + " <" + completeName + "> should have a double value (but has: '" + text +
-                                     "').  Please fix XML in .ups file or correct validation Tag list.",
+                                     "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                     getErrorInfo( node ),
                                      __FILE__, __LINE__ );
       } 
       else {
-        validateDouble( root, value );
+        validateDouble( value );
       }
     }
     break;
@@ -755,25 +907,28 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
       //cout << "VALUE is " << value << "\n";
       if( num != 1 ) {
         throw ProblemSetupException( classType + " <" + completeName + "> should have an integer value (but has: '" + text +
-                                     "').  Please fix XML in .ups file or correct validation Tag list.",
+                                     "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                     getErrorInfo( node ),
                                      __FILE__, __LINE__ );
       }
       else {
-        validateDouble( root, (double)value );
+        validateDouble( (double)value );
       }
     }
     break;
   case STRING:
-    if( !validateString( root, text ) ) {
+    if( !validateString( text ) ) {
       throw ProblemSetupException( "Invalid string value for " + classType + ": " + completeName + ". '" + 
-                                   text + "' not found in this list:\n" + toString( root->validValues_ ),
+                                   text + "' not found in this list:\n" + concatStrings( validValues_ ) + "\n" +
+                                   getErrorInfo( node ),
                                    __FILE__, __LINE__ );
     }
     break;
   case BOOLEAN:
-    if( !validateBoolean( root, text ) ) {
+    if( !validateBoolean( text ) ) {
       throw ProblemSetupException( "Invalid boolean string value for " + classType + " <" + completeName +
-                                   ">.  Value must be either 'true', or 'false', but '" + text + "' was found...",
+                                   ">.  Value must be either 'true', or 'false', but '" + text + "' was found...\n" +
+                                   getErrorInfo( node ),
                                    __FILE__, __LINE__ );
     }
     break;
@@ -783,7 +938,8 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
       int    num = sscanf( text.c_str(), "[%lf,%lf,%lf]", &val1, &val2, &val3 );
       if( num != 3 ) {
         throw ProblemSetupException( classType + " ('" + completeName + "') should have a Vector value (but has: '" +
-                                     text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                     text + "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                     getErrorInfo( node ),
                                      __FILE__, __LINE__ );
       }
     }
@@ -793,7 +949,8 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
       int loc = text.find( "." );
       if( loc != -1 ) {
         throw ProblemSetupException( classType + " ('" + completeName + "') should have a multiple integer values (but has: '" +
-                                     text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                     text + "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                     getErrorInfo( node ),
                                      __FILE__, __LINE__ );
       }
       char tokens[ text.length() + 1];
@@ -807,7 +964,8 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
 
         if( num != 1 ) {
           throw ProblemSetupException( classType + " ('" + completeName + "') should have a multiple double values (but has: '" +
-                                       text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                       text + "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                       getErrorInfo( node ),
                                        __FILE__, __LINE__ );
         } 
         token = strtok( NULL, "[,]" );
@@ -827,7 +985,8 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
 
         if( num != 1 ) {
           throw ProblemSetupException( classType + " ('" + completeName + "') should have a multiple double values (but has: '" +
-                                       text + "').  Please fix XML in .ups file or correct validation Tag list.",
+                                       text + "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                       getErrorInfo( node ),
                                        __FILE__, __LINE__ );
         } 
         token = strtok( NULL, "[,]" );
@@ -843,7 +1002,7 @@ ProblemSpecReader::validateText( const AttributeAndTagBase * root, const string 
 } // end validateText()
 
 void
-ProblemSpecReader::validateAttribute( Tag * root, xmlAttr * attr )
+Tag::validateAttribute( xmlAttr * attr )
 {
   if( attr == NULL ) {
     // This should never actually happen...
@@ -852,43 +1011,83 @@ ProblemSpecReader::validateAttribute( Tag * root, xmlAttr * attr )
 
   const string attrName = to_char_ptr( attr->name );
 
-  Attribute * attribute = findAttribute( root, attrName );
+  Attribute * attribute = findAttribute( attrName );
 
   if( !attribute ) {
-    // FIXME... better error message
-    throw ProblemSetupException( "Error, attribute ('" + attrName + "') not found...", __FILE__, __LINE__ );
+    string errorInfo = getErrorInfo( attr->parent );
+    throw ProblemSetupException( "Error, attribute ('" + attrName + "') not found for " + getCompleteName() + "\n" +
+                                 errorInfo, __FILE__, __LINE__ );
   }
 
   attribute->occurrences_++;
 
   const char * attrContent = to_char_ptr(attr->children->content);
-  validateText( attribute, attrContent );
-}
+  attribute->validateText( attrContent, (xmlNode*)attr );
+
+  // dbg << "currentValue_ of " << name_ << " is now " << attrContent << "\n";
+
+  attribute->currentValue_ = attrContent;
+
+  if( name_ == "cylinder" || name_ == "box" ) {
+    if( attributes_.size() == 1 && attributes_[0]->name_ == "label" ) {
+      namedGeomPieces_g[attrContent] = this;
+    }
+  }
+} // end validateAttribute()
 
 void
-ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int level /* = 0 */ )
+Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 {
+  string name = ps->getNodeName();
+
+  indent( inc_dbg, depth );
+  inc_dbg << name << "\t\t\t" << getErrorInfo( ps->getNode() ) << "\n";
+
   MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::validate");
-  if( !uintahSpec_ ) {
+  if( !uintahSpec_g ) {
     return;
   }
 
   if( dbg.active() ) {
     dbg << "ProblemSpec::validate - ";
-    indent( dbg, level ); dbg << ps->getNode()->name << "\n";
+    indent( dbg, depth ); dbg << name << "\n";
   }
 
   /////////////////////////////////////////////////////////////////////
   // Zero out the number of occurrences of all the sub tags and
   // attributes so occurrences in previous tags will not be counted
-  // against the current tag.
+  // against the current tag.  (Clean up all state tracking variables.)
   //
-  for( unsigned int pos = 0; pos < root->subTags_.size(); pos++ ) {
-    root->subTags_[ pos ]->occurrences_ = 0;
+  currentChildrenTags_.clear();
+
+  for( unsigned int pos = 0; pos < subTags_.size(); pos++ ) {
+    subTags_[ pos ]->occurrences_ = 0;
   }
-  for( unsigned int pos = 0; pos < root->attributes_.size(); pos++ ) {
-    root->attributes_[ pos ]->occurrences_ = 0;
+  for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
+    attributes_[ pos ]->occurrences_ = 0;
+    // Reset currentValue_
+    attributes_[ pos ]->currentValue_ = "";
   }
+  /////////////////////////////////////////////////////////////////////
+
+  // Validate elements (we also call them attributes).  We need to do it
+  // here (before the child tags) so that possible need_applies_to values
+  // can be set.
+
+  xmlAttr* attr = ps->getNode()->properties;
+
+  if( attributes_.size() == 0 && attr ) {
+    throw ProblemSetupException( "Tag " + getCompleteName() + " has an attribute ('" + to_char_ptr( attr->name ) + 
+                                 "'), but spec says there are none...\n" + getErrorInfo( attr->parent ), __FILE__, __LINE__ );
+  }
+
+  for (; attr != 0; attr = attr->next) {
+    if (attr->type == XML_ATTRIBUTE_NODE) {
+      validateAttribute( attr );
+    }
+    // else skip comments, blank lines, etc...
+  }
+
   /////////////////////////////////////////////////////////////////////
 
   // Run through all the nodes of the ProblemSpec (from the .ups file) to validate them:
@@ -896,22 +1095,26 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int le
   //     FYI, child->children would only be null for a tag like this <myTag></myTag>
   //     If it was: <myTag>  </myTag> then children is not null... it just filled with blanks.
 
-  int     numTextNodes = 0;
-  string  text = "";
+  int       numTextNodes = 0;
+  string    text = "";
+  xmlNode * textNode = ps->getNode(); // default to 'ps' in case a text node is not found...
 
   for( xmlNode *child = ps->getNode()->children; child != 0; child = child->next) {
 
     if (child->type == XML_TEXT_NODE) {
 
-      text = to_char_ptr( child->content );
-      collapse( text );
+      string tempText = to_char_ptr( child->content );
+      collapse( tempText );
 
-      if( text != "" ) {
-        if( numTextNodes == 1 ) {
+      if( tempText != "" ) {
+        if( numTextNodes >= 1 ) {
           throw ProblemSetupException( string( "Node has multiple text (non-tag) nodes in it, but should have only one!\n" ) +
-                                       "       The 2nd text node contains: '" + text + "'", __FILE__, __LINE__ );
+                                       "       The 2nd text node contains: '" + tempText + "'\n" +
+                                       getErrorInfo( child ), __FILE__, __LINE__ );
         }
         numTextNodes++;
+        textNode = child;
+        text = tempText;
       }
     }
     else if( child->type == XML_COMMENT_NODE ) {
@@ -922,55 +1125,75 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int le
                                    to_char_ptr( child->name ) + "'", __FILE__, __LINE__ );
     }
     else {
-      const char * tagName = to_char_ptr( child->name );
-      Tag *        tag = findSubTag( root, tagName );
+      // Handle sub tag
+      const char * childName = to_char_ptr( child->name );
+      Tag *        childTag  = findSubTag( childName );
 
-      if( !tag ) { 
-        throw ProblemSetupException( string( "Tag '" ) + tagName + "' not valid (for <" + root->getCompleteName() + 
-                                     ">).  Please fix XML in .ups file or correct validation Tag list.", __FILE__, __LINE__ );
+      if( !childTag ) {
+        throw ProblemSetupException( string( "Tag '" ) + childName + "' not valid (for <" + getCompleteName() + 
+                                     ">).  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                     getErrorInfo( child ), __FILE__, __LINE__ );
       }
 
-      tag->occurrences_++;
+      currentChildrenTags_.push_back( childTag->name_ );
 
-      if( tag->occurrences_ > 1 && tag->need_ != MULTIPLE ) {
-        throw ProblemSetupException( string( "Tag <" ) + tag->getCompleteName() +
-                                     "> occurred too many times.  Please fix XML in .ups file or correct validation Tag list.",
+      childTag->occurrences_++;
+
+      if( childTag->occurrences_ > 1 && childTag->need_ != MULTIPLE ) {
+        throw ProblemSetupException( string( "Tag <" ) + childTag->getCompleteName() +
+                                     "> occurred too many times.  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                     getErrorInfo( child ),
                                      __FILE__, __LINE__ );
       }
 
-      // Handle sub tag
-      ProblemSpec gcPs( child );
-      Tag * childTag = findSubTag( root, to_char_ptr( child->name ) );
+      // Verify that OPTIONAL parameters that have a 'need_applies_to' field are only used
+      // with the appropriate parent tag types...
+      dbg << "checking for optional tag, and if need_applies_to: " << childTag->name_ << ", '" << childTag->needAppliesTo_.parentAttributeName_ << "'\n";
 
-      if( childTag == NULL ) {
-        throw ProblemSetupException( "Error, childtag is null...", __FILE__, __LINE__ );
+      if( childTag->need_ == OPTIONAL && childTag->needAppliesTo_.parentAttributeName_ != "" ) {
+        
+        Attribute * attribute = childTag->parent_->findAttribute( childTag->needAppliesTo_.parentAttributeName_ );
+
+        if( !attribute ) {
+          throw ProblemSetupException( string( "Parent attribute '" + childTag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
+                                               childTag->parent_->getCompleteName() + "' does not exist!\n" + "The 'need_applies_to' field " +
+                                               "in the 'ups_spec.xml' is broken.  Please fix." ),
+                                       __FILE__, __LINE__ );
+        }
+        
+        if( attribute->currentValue_ == "" ) {
+          // If this tag has a "needAppliesTo_", then the parent's attribute must have a current value.
+          throw ProblemSetupException("this is an error\n", __FILE__, __LINE__); // FIXME fix error message...
+        }
+
+        dbg << "NEED_APPLIES_TO '" << childTag->parent_->getCompleteName() << " '" << childTag->needAppliesTo_.parentAttributeName_ 
+            << "' attribute, when the attribute's value is: '" << concatStrings( childTag->needAppliesTo_.validValues_ ) << "'\n";
+        dbg << "  We are currently looking at the " + childTag->getCompleteName() + " tag.\n";
+        
+        vector<string>::const_iterator iter = find( childTag->needAppliesTo_.validValues_.begin(), childTag->needAppliesTo_.validValues_.end(),
+                                                    attribute->currentValue_ );
+        if( iter == childTag->needAppliesTo_.validValues_.end() ) {
+          throw ProblemSetupException( string( "The OPTIONAL tag '" ) + childTag->getCompleteName() + "' is not a valid child for\n'"  +
+                                               childTag->parent_->getCompleteName() + " (" + attribute->name_ + ": " +
+                                               attribute->currentValue_ + ")'.  See the 'need_applies_to' field " +
+                                               "in the 'ups_spec.xml'.\n" +
+                                               getErrorInfo( child ),
+                                       __FILE__, __LINE__ );
+        }
       }
-      validate( childTag, &gcPs, level+1 );
+
+      ProblemSpec gcPs( child );
+      childTag->validate( &gcPs, depth+1 );
     }
     
-    validateText( root, text );
-
   } // end for child in d_node->children
   
-  // Validate elements
-  xmlAttr* attr = ps->getNode()->properties;
+  validateText( text, textNode );
 
-  if( root->attributes_.size() == 0 && attr ) {
-    // FIXME better error message.
-    throw ProblemSetupException( "Tag " + root->getCompleteName() + " has an element ('" + to_char_ptr( attr->name ) + 
-                                 "'), but spec says there are none...", __FILE__, __LINE__ );
-  }
-
-  for (; attr != 0; attr = attr->next) {
-    if (attr->type == XML_ATTRIBUTE_NODE) {
-      validateAttribute( root, attr );
-    }
-    // else skip comments, blank lines, etc...
-  }
 
   // Verify that all REQUIRED attributes were found:
-  for( unsigned int pos = 0; pos < root->attributes_.size(); pos++ ) {
-    Attribute * attr = root->attributes_[ pos ];
+  for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
+    Attribute * attr = attributes_[ pos ];
     if( attr->need_ == REQUIRED && attr->occurrences_ == 0 ) {
       throw ProblemSetupException( string( "Required attribute '" ) + attr->getCompleteName() +
                                    "' missing.  Please fix XML in .ups file or correct validation Attribute list.",
@@ -978,15 +1201,85 @@ ProblemSpecReader::validate( Tag * root, const ProblemSpec * ps, unsigned int le
     }
   }
 
+  /////////////////////////////////////////////////////////////////////
+  // Verify any child requirements that have been specified...
+
+  for( unsigned int pos = 0; pos < childReqs_.size(); pos++ ) {
+    ChildRequirements * chreq = childReqs_[ pos ];
+    if( chreq->typeOfRequirement == ChildRequirements::ONE_OF ) {
+      vector<string> children;
+      for( unsigned int pos = 0; pos < chreq->oneOfChildrenList.size() && children.size() < 2; pos++ ) {
+
+        vector<string>::const_iterator iter = find( currentChildrenTags_.begin(), currentChildrenTags_.end(),
+                                                    chreq->oneOfChildrenList[ pos ] );
+        if( iter != currentChildrenTags_.end() ) {
+          children.push_back( *iter );
+        }
+      }
+      if( children.size() >= 2 ) {
+        ostringstream error;
+        error << getCompleteName() + " tag has invalid set of children (should have only one of these): " << concatStrings( children );
+        throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
+      }
+    }
+    else {
+      throw ProblemSetupException( "Unknown ChildRequirements type...", __FILE__, __LINE__ );
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////
   // Verify that all REQUIRED tags were found:
-  for( unsigned int pos = 0; pos < root->subTags_.size(); pos++ ) {
-    Tag * tag = root->subTags_[ pos ];
+  for( unsigned int pos = 0; pos < subTags_.size(); pos++ ) {
+    Tag * tag = subTags_[ pos ];
     if( tag->need_ == REQUIRED && tag->occurrences_ == 0 ) {
-      //throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
-      //                             "' missing.  Please fix XML in .ups file or correct validation Tag list.",
-      //                             __FILE__, __LINE__ );
-      proc0cout << "ERROR: Required tag '" << tag->getCompleteName() 
-                << "' missing.  Please fix XML in .ups file or correct validation Tag list.\n";
+
+      xmlAttr* attr = ps->getNode()->properties;
+      if( attr != 0 ) {
+        const char * attrContent = to_char_ptr( attr->children->content );
+        if( namedGeomPieces_g[ attrContent ] ) {
+          // If this is a named geometry piece, then it won't (shouldn't) have child tags.
+          continue;
+        }
+      }
+
+      if( tag->needAppliesTo_.parentAttributeName_ != "" ) {
+        // Tag only applies to specific versions of the parent...
+        Attribute * attribute = tag->parent_->findAttribute( tag->needAppliesTo_.parentAttributeName_ );
+
+        dbg << "Need_applies_to '" << tag->parent_->getCompleteName() << " '" << tag->needAppliesTo_.parentAttributeName_ 
+            << "' attribute, when the attribute's value is: '" << concatStrings( tag->needAppliesTo_.validValues_ ) << "'\n";
+        dbg << "  We are currently looking at the " + tag->getCompleteName() + " tag.\n";
+
+        if( !attribute ) {
+          throw ProblemSetupException( string( "Parent attribute '" + tag->needAppliesTo_.parentAttributeName_ + "' specified for '"  +
+                                               tag->parent_->getCompleteName() + "' does not exist!\n" + "The 'need_applies_to' field " +
+                                               "in the 'ups_spec.xml' is broken.  Please fix." ),
+                                       __FILE__, __LINE__ );
+        }
+
+        dbg << "  Note, the value of the attribute at this point is '" << attribute->currentValue_ << "'.\n";
+
+        if( attribute->currentValue_ == "" ) {
+          // If this tag has a "needAppliesTo_", then the parent's attribute must have a current value.
+          throw ProblemSetupException("this is an error\n", __FILE__, __LINE__); // FIXME fix error message...
+        }
+        else {
+          vector<string>::const_iterator iter = find( tag->needAppliesTo_.validValues_.begin(), tag->needAppliesTo_.validValues_.end(),
+                                                      attribute->currentValue_ );
+
+          // template tag is 'lattice_refinement_ratio'.  it is required for Hierarchical (regridder)
+          // we are working on a currentValue_ of "BNR".  which is not found.
+
+          if( iter == tag->needAppliesTo_.validValues_.end() ) {
+            continue;  // Tag is required, but not for this 'version' of the parent tag, so we just skip it.
+          }
+        }
+      }
+
+      throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
+                                   "' missing.  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                   getErrorInfo( (xmlNode*)attr ),
+                                   __FILE__, __LINE__ );
     }
   }
 } // end validate()
@@ -1001,36 +1294,30 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
   // to only validate the initial .ups file.
   //
 
-  if( !uintahSpec_ ) {
+  if( !uintahSpec_g ) {
     parseValidationFile();
 
     if( dbg.active() ) {
       dbg << "-----------------------------------------------------------------\n";
       dbg << "-- uintah spec: \n";
       dbg << "\n";
-      uintahSpec_->print( true );
+      uintahSpec_g->print( true );
       dbg << "-----------------------------------------------------------------\n";
     }
 
     try {
-      validate( uintahSpec_, prob_spec.get_rep() );
+      dbg << "Now to validate the input file...\n";
+      uintahSpec_g->validate( prob_spec.get_rep() );
     }
     catch( ProblemSetupException & pse ) {
       if( Parallel::getMPIRank() == 0 ) {
         cout << "\n";
-        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
         cout << "!! WARNING: Your .ups file did not parse successfully...\n";
         cout << "!!          Soon this will be a fatal error... please\n";
         cout << "!!          fix your .ups file or update the ups_spec.xml\n";
         cout << "!!          specification.  Reason for failure is:\n";
         cout << "\n";
-        // Hack to cut the word 'exception' out of the error message...
-        string msg = pse.message();
-        msg = msg.substr( msg.find( "thrown:" ) + 8 );
-        cout << msg << "\n";
-        cout << "\n";
-        cout << "!!\n";
-        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n";
+        throw;
       }
     }
   }
@@ -1039,159 +1326,274 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-ProblemSpecReader::Tag * ProblemSpecReader::commonTags_ = NULL;
-ProblemSpecReader::Tag * ProblemSpecReader::uintahSpec_ = NULL;
-
-ProblemSpecReader::ProblemSpecReader( const string & upsFilename ) :
-  d_upsFilename( upsFilename )
+ProblemSpecReader::ProblemSpecReader()
 {
-  if( dbg.active() ) {
-    cout << "FYI: ProblemSpecReader debug stream is active!\n";
-  }
 }
 
 ProblemSpecReader::~ProblemSpecReader()
 {
+  for( unsigned int pos = 0; pos < d_upsFilename.size(); pos++ ) {
+    delete d_upsFilename[ pos ];
+  }
 }
 
-void 
-ProblemSpecReader::clean()
+string
+getPath( const string & filename )
 {
-  delete uintahSpec_;
-  delete commonTags_;
+  return filename.substr( 0, filename.rfind( "/" ) );
 }
+
+string
+validateFilename( const string & filename, const xmlNode * parent )
+{
+  string fullFilename;
+  string errorMsg;
+  bool   filenameIsBad = false;
+
+  if( filename[0] != '/') { // If not absolute path, make it one...
+          
+    if( parent ) {
+      fullFilename = getPath( *((string*)(parent->_private)) ) + "/" + filename;
+      inc_dbg << "1) filename: " << fullFilename << "\n";
+    }
+
+    if( !parent || !validFile( fullFilename ) ) { // Check to see if the file is relative to where the program was run... 
+
+      string newFilename;
+              
+      char buffer[2000];
+      char * str = getcwd( buffer, 2000 );
+      if( str == NULL ) {
+        proc0cout << "WARNING: Directory not returned by getcwd()...\n";
+      }
+      else {
+        newFilename = string(buffer) + "/" + filename;
+      }
+      if( !validFile( newFilename ) ) {
+        filenameIsBad = true;
+        errorMsg = "Couldn't find include file: '" + fullFilename + 
+                   "' or '" + newFilename + "'\n";
+      }
+      else {
+        fullFilename = newFilename;
+        inc_dbg << "2) filename: " << fullFilename << "\n";
+      }
+    }
+  }
+  else {
+    // Verify that the absolute path is valid:
+    fullFilename = filename;
+
+    if( !validFile( fullFilename ) ) {
+      filenameIsBad = true;
+    }
+  }
+
+  if( filenameIsBad ) {
+    if ( !getInfo( fullFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
+      stringstream error_stream;
+      
+      string directory = fullFilename.substr(0, fullFilename.rfind( "/" ) );
+          
+      if( !testFilesystem( directory, error_stream, Parallel::getMPIRank() ) ) {
+        cout << error_stream.str();
+        cout.flush();
+      }
+    }
+    string errorInfo = getErrorInfo( parent );
+    throw ProblemSetupException( errorMsg + errorInfo, __FILE__, __LINE__ );
+  }
+  else {
+    return fullFilename;
+  }
+
+} // end validateFilename()
+
+void
+printDoc( xmlNode * node, int depth )
+{
+  if( depth == 0 ) {
+    cout << "PRINTING DOC\n";
+  }
+
+  if( node == NULL ) {
+    return;
+  }
+
+  if( node->type == XML_ELEMENT_NODE ) {
+    string name = (char*)node->name;
+
+    indent( cout, depth );
+    cout << name << "\n";
+  }
+
+  xmlNode * child = node->children;
+
+  while( child != 0 ) {
+
+    if( child->type == XML_ELEMENT_NODE ) {
+      printDoc( child, depth+1 );
+    }
+    child = child->next;
+  }
+  if( depth == 0 ) {
+    cout << "DONE PRINTING DOC\n";
+  }
+
+} // end printDoc()
+
 
 ProblemSpecP
-ProblemSpecReader::readInputFile( bool validate /* = false */ )
+ProblemSpecReader::readInputFile( const string & filename, bool validate /* = false */ )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecRader::readInputFile");
-  if (d_xmlData != 0)
+  MALLOC_TRACE_TAG_SCOPE( "ProblemSpecReader::readInputFile" );
+  if( d_xmlData != 0 ) {
     return d_xmlData;
-
-  ProblemSpecP prob_spec;
+  }
   static bool initialized = false;
 
   if (!initialized) {
     LIBXML_TEST_VERSION;
     initialized = true;
   }
+
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::readInputFile");
   
-  xmlDocPtr doc; /* the resulting document tree */
+  string full_filename = validateFilename( filename, NULL );
 
-  doc = xmlReadFile(d_upsFilename.c_str(), 0, XML_PARSE_PEDANTIC);
-
-  // For some input files included in the various xml files, we want to 
-  // strip off the leading '/' since the d_upsFilename has it added even 
-  // if it is a relative location.  If after stripping it off we can load
-  // the document we carry on.
-  if (doc == 0) {
-    if (d_upsFilename[0] == '/') {
-      string d_upsFilename_new = 
-        string(d_upsFilename,1,d_upsFilename.length()-1);
-      d_upsFilename = d_upsFilename_new;
-      doc = xmlReadFile(d_upsFilename.c_str(), 0, XML_PARSE_PEDANTIC);
-    }
-  }
-  
-  /* check if parsing suceeded */
-  if (doc == 0) {
-    if ( !getInfo( d_upsFilename ) ) { // Stat'ing the file failed... so let's try testing the filesystem...
-      // Find the directory this file is in...
-      string directory = d_upsFilename;
-      int    index;
-      for( index = directory.length()-1; index >= 0; --index ) {
-        //strip off characters after last /
-        if (directory[index] == '/')
-          break;
-      }
-      directory = directory.substr(0,index+1);
-
-      stringstream error_stream;
-      
-      if( !testFilesystem( directory, error_stream, Parallel::getMPIRank() ) ) {
-        cout << error_stream.str();
-        cout.flush();
-      }
-    }
-
-    throw ProblemSetupException("Error reading file: "+d_upsFilename, __FILE__, __LINE__);
-  }
+  xmlDocPtr doc = xmlReadFile( full_filename.c_str(), 0, XML_PARSE_PEDANTIC );
     
   // you must free doc when you are done.
   // Add the parser contents to the ProblemSpecP
-  prob_spec = scinew ProblemSpec(xmlDocGetRootElement(doc), true);
 
-  resolveIncludes(prob_spec);
+  ProblemSpecP prob_spec = scinew ProblemSpec( xmlDocGetRootElement(doc), true );
+
+  string * strPtr = new string( full_filename );
+
+  d_upsFilename.push_back( strPtr );
+  prob_spec->getNode()->_private = (void*)strPtr;
+
+  resolveIncludes( prob_spec->getNode()->children, prob_spec->getNode() );
+
+  // cout << "------------------------------------------------------------------\n";
+  // printDoc( prob_spec->getNode(), 0 );
 
   if( validate ) {
     validateProblemSpec( prob_spec );
   }
 
   d_xmlData = prob_spec;
+
   return prob_spec;
+
+} // end readInputFile()
+
+string *
+ProblemSpecReader::findFileNamePtr( const string & filename )
+{
+//  cout << "this is " << this << "\n";
+
+  for( unsigned int pos = 0; pos < d_upsFilename.size(); pos++ ) {
+    if( *d_upsFilename[ pos ] == filename ) {
+//      cout << "findFileNamePtr addr: " << d_upsFilename[ pos ] << "\n";
+
+      return d_upsFilename[ pos ];
+    }
+  }
+//  cout << "findFileNamePtr(): did not find " << filename << "\n";
+  return NULL;
 }
 
 void
-ProblemSpecReader::resolveIncludes(ProblemSpecP params)
+ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth /* = 0 */ )
 {
-  // find the directory the current file was in, and if the includes are 
-  // not an absolute path, have them for relative to that directory
-  string directory = d_upsFilename;
+  while( child != NULL ) {
 
-  int index;
-  for( index = (int)directory.length()-1; index >= 0; --index ) {
-    //strip off characters after last /
-    if (directory[index] == '/')
-      break;
-  }
-  directory = directory.substr(0,index+1);
+    if( child->type == XML_ELEMENT_NODE ) {
+      string name1 = to_char_ptr(child->name);
+      indent( dbg, depth );
+      dbg << " - " << name1 << "\n";
 
-  ProblemSpecP child = params->getFirstChild();
-  while (child != 0) {
-    if (child->getNodeType() == XML_ELEMENT_NODE) {
-      string str = child->getNodeName();
-      // look for the include tag
-      if (str == "include") {
+      if( name1 == "include" ) {
+
+        ProblemSpec temp( child );
         map<string, string> attributes;
-        child->getAttributes(attributes);
-        string href = attributes["href"];
+        temp.getAttributes( attributes );
 
-        // not absolute path, append href to directory
-        if (href[0] != '/')
-          href = directory + href;
-        if (href == "")
-          throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
+        xmlNode * prevChild = child->prev;
         
-        // open the file, read it, and replace the index node
-        ProblemSpecReader *psr = scinew ProblemSpecReader(href);
-        ProblemSpecP include = psr->readInputFile();
-        delete psr;
+        string    filename;
+
+        if( child->_private ) {
+          filename = validateFilename( attributes["href"], child );
+        }
+        else {
+          filename = validateFilename( attributes["href"], parent );
+        }
+        
+        xmlDocPtr  doc     = xmlReadFile( filename.c_str(), 0, XML_PARSE_PEDANTIC );
+        xmlNode  * include = xmlDocGetRootElement(doc);
+
+        string * strPtr = new string( filename );
+
+        d_upsFilename.push_back( strPtr );
+
         // nodes to be substituted must be enclosed in a 
         // "Uintah_Include" node
 
-        if (include->getNodeName() == "Uintah_Include" || 
-            include->getNodeName() == "Uintah_specification") {
-          ProblemSpecP incChild = include->getFirstChild();
-          while (incChild != 0) {
-            //make include be created from same document that created params
-            ProblemSpecP newnode = child->importNode(incChild, true);
-            resolveIncludes(newnode);
-            xmlAddPrevSibling(child->getNode(), newnode->getNode());
-            incChild = incChild->getNextSibling();
+        string name = to_char_ptr( include->name );
+        if( name == "Uintah_Include" || name == "Uintah_specification" ) {
+          xmlNode * incChild = include->children;
+          while( incChild != 0 ) {
+
+            // Make include be created from same document that created params...
+            //ProblemSpecP newnode = tempParentPS.importNode( incChild, true );
+
+            xmlNode * newnode = xmlDocCopyNode( incChild, parent->doc, true );
+            if( prevChild == NULL ) {
+              prevChild = newnode;
+            }
+
+            // Record the newnode's real file info...
+            newnode->_private = strPtr;
+
+            xmlAddPrevSibling( child, newnode );
+            incChild = incChild->next;
           }
-          ProblemSpecP temp = child->getNextSibling();
-          params->removeChild(child);
-          child = temp;
-          continue;
+
+          // Remove the <include>
+          xmlUnlinkNode( child );
+          xmlFreeNode(   child );
+
+          // Once all the 'included' tags have been added to the parent, and the <include>
+          // has been removed, we need to start parsing at the first included tag.
+          child = prevChild;
         }
         else {
           throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
         }
       }
-      // recurse on child's children
-      resolveIncludes(child);
-    }
-    child = child->getNextSibling();
-  } // end while (child != 0)
+      else { // !"include"
+        if( child->_private == NULL ) {
+          child->_private = parent->_private;
+        }
+      }
+
+      if( child != NULL ) {
+        // Child can be NULL if an <include> is the last 'child'... as the <include> is
+        // removed from the tree above.
+
+        xmlNode * grandchild = child->children;
+
+        if( grandchild != NULL ) {
+          resolveIncludes( grandchild, child, depth+1 );
+        }
+      }
+    } // end if( child->getNodeType() == XML_ELEMENT_NODE ) {
+
+    child = child->next;
+
+  } // end while( child != NULL )
 
 } // end resolveIncludes()
+

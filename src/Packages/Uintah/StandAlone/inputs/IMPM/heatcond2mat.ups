@@ -9,9 +9,7 @@
        <title>Heat conduction problem</title>
    </Meta>
 
-   <SimulationComponent>
-         <type> impm </type>
-   </SimulationComponent>
+   <SimulationComponent type="impm" />
 
    <Time>
        <maxTime>1.</maxTime>

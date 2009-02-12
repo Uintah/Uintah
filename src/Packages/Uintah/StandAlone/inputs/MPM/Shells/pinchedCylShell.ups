@@ -9,6 +9,8 @@
        <title>Piching of a cylindrical shell</title>
    </Meta>    
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>             1.0e-2 </maxTime>
        <initTime>            0.0    </initTime>

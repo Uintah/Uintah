@@ -7,6 +7,8 @@
        <title>Crack propogation in a beam subjected to 3 point bending </title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>300e-6</maxTime>
        <initTime>0.0</initTime>

@@ -76,15 +76,14 @@ namespace Uintah {
 
 
     // direct component to add a new material
-    virtual void addMaterial(const ProblemSpecP& params, GridP& grid,
-                             SimulationStateP& state);
+    virtual void addMaterial( const ProblemSpecP& params, GridP& grid,
+                              SimulationStateP& state );
 
-    virtual void scheduleInitializeAddedMaterial(const LevelP& level,
-                                                 SchedulerP&);
+    virtual void scheduleInitializeAddedMaterial( const LevelP & level,
+                                                  SchedulerP   & scheduler );
 
-    virtual void addToTimestepXML(ProblemSpecP&);
-    virtual void readFromTimestepXML(const ProblemSpecP&,SimulationStateP& state);
-
+    virtual void addToTimestepXML( ProblemSpecP & spec );
+    virtual void readFromTimestepXML( const ProblemSpecP&, SimulationStateP& state );
 
     // AMR
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
@@ -122,6 +121,8 @@ namespace Uintah {
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+
+    ProblemSpecP d_problemSpec;
 
     switchState d_switchState;
 

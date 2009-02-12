@@ -4,10 +4,8 @@
    <Meta>
        <title>Pressurization of a container via burning w/o fracture</title>
    </Meta>
-   <SimulationComponent>
-        <type> mpmice </type>
-   </SimulationComponent>
 
+   <SimulationComponent type="mpmice" />
 
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->

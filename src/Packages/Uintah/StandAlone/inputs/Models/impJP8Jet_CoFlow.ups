@@ -5,12 +5,11 @@
    <Meta>
        <title></title>
    </Meta>
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
-   <Solver>
-        <type> hypre </type>
-   </Solver>
+
+   <SimulationComponent type="ice" />
+
+   <Solver type="hypre" />
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->

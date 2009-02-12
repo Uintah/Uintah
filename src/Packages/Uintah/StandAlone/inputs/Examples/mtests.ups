@@ -7,19 +7,14 @@
        <title>Multi tests</title>
    </Meta>
 
-   <SimulationComponent>
-       <type>switcher</type>
+   <SimulationComponent type="switcher" >
        <subcomponent>
-           <SimulationComponent>
-               <type> test </type>
-           </SimulationComponent>
-           <input_file> inputs/Examples/test.ups</input_file>
+           <SimulationComponent type=" test" />
+           <input_file> inputs/Examples/test.ups </input_file>
        </subcomponent>
        <subcomponent>
-           <SimulationComponent>
-               <type> test2 </type>
-           </SimulationComponent>
-           <input_file> inputs/Examples/test1.ups</input_file>
+           <SimulationComponent type=" test2" />
+           <input_file> inputs/Examples/test1.ups </input_file>
        </subcomponent>
    </SimulationComponent>
 

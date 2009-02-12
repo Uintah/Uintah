@@ -16,6 +16,8 @@
    <Meta>
        <title>shocktube validation with right end capped</title>
    </Meta>
+
+   <SimulationComponent type="ice" />
    
        
     <!--____________________________________________________________________-->

@@ -184,8 +184,7 @@ main( int argc, char *argv[] )
   }
   
   DataArchive* da1 = scinew DataArchive(udaFileName);
-  ProblemSpecReader psr( udaFileName + "/input.xml" );
-  ProblemSpecP docTop = psr.readInputFile();
+  ProblemSpecP docTop = ProblemSpecReader().readInputFile( udaFileName + "/input.xml" );
   double A;
   double dyVis;
   double p_ref;
