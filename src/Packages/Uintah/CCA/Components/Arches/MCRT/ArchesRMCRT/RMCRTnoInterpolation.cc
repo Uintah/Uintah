@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/Arch`esRMCRT/Surface.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
@@ -55,6 +55,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <sstream>
 
+using namespace Uintah; 
 using namespace std;
 
 // Parallel by Regions
@@ -81,9 +82,16 @@ using namespace std;
 
 // the ReverseMCRT.cc is the last updated program
 
+// Constructor
+RMCRTnoInterpolation::
+RMCRTnoInterpolation(){}
 
+//Destructor
+RMCRTnoInterpolation::
+~RMCRTnoInterpolation(){}
 
-void ToArray(int size, double *array, char *_argv){
+void RMCRTnoInterpolation::
+ToArray(int size, double *array, char *_argv){
 
   ifstream in(_argv); // open table
   if (!in){
@@ -98,7 +106,8 @@ void ToArray(int size, double *array, char *_argv){
 }
 
 
-double MeshSize(int &Nchalf, double &Lhalf, double &ratio){
+double RMCRTnoInterpolation::
+MeshSize(int &Nchalf, double &Lhalf, double &ratio){
   double dcenter;
   double pp;
   pp = pow(ratio,Nchalf);
@@ -268,7 +277,8 @@ void rayfromSurf(SurfaceType &obSurface,
 
 
 
-int RMCRTsolver(){
+int RMCRTnoInterpolation::
+RMCRTsolver(){
 
   
 //   int my_rank; // rank of process
