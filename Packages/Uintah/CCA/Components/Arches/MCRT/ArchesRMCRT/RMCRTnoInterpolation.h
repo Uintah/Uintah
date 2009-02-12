@@ -36,17 +36,15 @@ namespace Uintah {
 class RMCRTnoInterpolation {
 
 public:
-  RMCRTnoInterpolation::RMCRTnoInterpolation(){
-  };
+  RMCRTnoInterpolation();
 
-  RMCRTnoInterpolation::~RMCRTnoInterpolation(){
-  };
+  ~RMCRTnoInterpolation();
 
-  void RMCRTnoInterpolation::ToArray(int size, double *array, char *_argv);
+  void ToArray(int size, double *array, char *_argv);
  
-  double RMCRTnoInterpolation::MeshSize(int &Nchalf, double &Lhalf, double &ratio);
+  double MeshSize(int &Nchalf, double &Lhalf, double &ratio);
 
-  int RMCRTnoInterpolation::RMCRTsolver();
+  int RMCRTsolver();
   
   
 };

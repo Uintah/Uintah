@@ -22,10 +22,6 @@ public:
   // destructor
   ~RMCRTRadiationModel();
   
-
-
-private:
-
   //methods: 
   /** @brief Set any parameters from the input file, initialize constants, etc... */
   void problemSetup( const ProblemSpecP& params );
@@ -40,6 +36,10 @@ private:
               DataWarehouse* old_dw, 
               DataWarehouse* new_dw );
  
+
+private:
+
+
   // variables:
   int d_constNumRays;
   const ArchesLabel* d_lab; 

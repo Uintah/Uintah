@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
@@ -137,6 +138,13 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
       d_probePoints.push_back(prbPoint);
     }
   }
+
+  //RMCRT StandAlone solver:
+  db->getWithDefault("do_standalone_RMCRT",d_standAloneRMCRT, false);
+  if (d_standAloneRMCRT) {
+    d_RMCRTRadiationModel = scinew RMCRTRadiationModel(d_lab);
+    d_RMCRTRadiationModel->problemSetup(db);  
+  }  
 
   d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
                                           d_boundaryCondition,
@@ -337,6 +345,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                       d_EKTCorrection, doing_EKT_now);
       }
 
+
+
       if (d_enthalpySolve)
         d_enthalpySolver->solve(level, sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
@@ -371,6 +381,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                        false, doing_EKT_now);
       doing_EKT_now = false;
     }
+
+
 
     sched_getDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level],
@@ -426,6 +438,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                   d_timeIntegratorLabels[curr_level],
                                   true, false,
                                   d_EKTCorrection, doing_EKT_now);
+
+    if (d_standAloneRMCRT) { 
+      d_RMCRTRadiationModel->sched_solve( level, sched);  
+    }
+ 
+
     sched_computeDensityLag(sched, patches, matls,
                            d_timeIntegratorLabels[curr_level],
                            false);
