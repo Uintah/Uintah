@@ -200,36 +200,15 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         fine_level=oldGrid->getLevel(l+1);
      
       //get coarse level patches
-      const PatchSubset *cp=lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myrank());
+      const PatchSubset *patches=lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myrank());
       
-      //fine patch vector 
-      for(int p=0;p<cp->size();p++)
+      //for each patch
+      for(int p=0;p<patches->size();p++)
       {
-        vector<Region> cpq, fpq, difference;  
-        const Patch *patch=cp->get(p);
+        const Patch *patch=patches->get(p);
+        vector<Region> difference;
+        patch->getFinestRegionsOnPatch(difference);
 
-        Patch::selectType fp;
-
-        //only search for fine patches if the finer level exists
-        if(l<oldGrid->numLevels()-1)
-        {
-          patch->getFineLevelPatches(fp);
-        }
-        
-        //add coarse patch to cpq
-        cpq.push_back(Region(patch->getCellLowIndex__New(),
-                          patch->getCellHighIndex__New()));
-
-        //add overlapping fine patches to fpq
-        for(int p=0;p<fp.size();p++)
-        {
-          fpq.push_back(Region(fine_level->mapCellToCoarser(fp[p]->getCellLowIndex__New()),
-                            fine_level->mapCellToCoarser(fp[p]->getCellHighIndex__New())));
-        }
-
-        //compute region of coarse patches that do not contain fine patches
-        difference=Region::difference(cpq,fpq);
-      
         //get flags for coarse patch
         constCCVariable<int> flags;
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
