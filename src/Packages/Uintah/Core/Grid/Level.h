@@ -142,7 +142,7 @@ public:
   const LevelP& getFinerLevel() const;
   bool hasCoarserLevel() const;
   bool hasFinerLevel() const;
-  bool hasFinerCell(const IntVector& idx) const;
+
   IntVector mapNodeToCoarser(const IntVector& idx) const;
   IntVector mapNodeToFiner(const IntVector& idx) const;
   IntVector mapCellToCoarser(const IntVector& idx) const;
