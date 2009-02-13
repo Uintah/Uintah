@@ -382,7 +382,6 @@
         <gamma>                  1.63     </gamma>
         <isSurroundingMatl>      true     </isSurroundingMatl>
 
-<!--
         <geom_object>
           <difference label="Gas">
             <box>
@@ -400,7 +399,6 @@
           <density>         1.037341706242494   </density>
           <pressure>        101325.0            </pressure>
         </geom_object>
--->
       </material>
     </ICE>
 

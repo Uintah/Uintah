@@ -45,6 +45,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <list>
 
 #include <cstdio>
 #include <cstring>
@@ -109,6 +110,9 @@ static Tag * commonTags_g = NULL;
 // only for 'cylinder's and 'box's currently.
 map<string, Tag *> namedGeomPieces_g;
 
+list< Tag* >      needForwardDeclResolution;
+map<string, bool> forwardDeclMap;
+
 //
 ///////////////////////////////////////////////////////////////////////
 
@@ -120,7 +124,7 @@ map<string, Tag *> namedGeomPieces_g;
 // MULTIPLE = 0 or more occurrences
 enum need_e { OPTIONAL, REQUIRED, MULTIPLE, INVALID_NEED };
 // VECTORs are specified as [0.0, 0.0, 0.0]
-enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, INVALID_TYPE, MULTIPLE_DOUBLES, MULTIPLE_INTEGERS };
+enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, MULTIPLE_DOUBLES, MULTIPLE_INTEGERS, INVALID_TYPE };
 
 ostream &
 operator<<( ostream & out, const need_e & need )
@@ -220,6 +224,11 @@ struct ChildRequirements {
 /////////////////////////////////////////////////////////////////////////////////
 
 struct AttributeAndTagBase {
+
+  AttributeAndTagBase( const string & name, Tag * parent ) :
+    parent_( parent ), name_( name )
+  {
+  }
 
   AttributeAndTagBase( const string & name, need_e need, type_e type, 
                        const vector<string> & validValues, /*const*/ Tag * parent ) :
@@ -325,6 +334,8 @@ struct Tag : public AttributeAndTagBase {
 
   vector< ChildRequirements * > childReqs_;
 
+  bool                 forwardDeclaration_;
+
   // validValues is a _single_ string (it will be parsed as follows) that contains valid values
   // for the value of the tag.  The specification of valid values depends on the type of Tag:
   //
@@ -333,11 +344,16 @@ struct Tag : public AttributeAndTagBase {
   //  BOOLEAN: validValues is not allowed... because it defaults to true/false.
   //  VECTOR: FIXME... does nothing yet...
   //
+  Tag( const string & name, Tag * parent ) : 
+    AttributeAndTagBase( name, parent ), forwardDeclaration_( true ) {
+    cout << "forward declaration of " << name << "\n";
+  }
+
   Tag( const string & name, need_e need, type_e type, const string & validValues, /*const*/ Tag * parent ) :
-    AttributeAndTagBase( name, need, type, validValues, parent ) {}
+    AttributeAndTagBase( name, need, type, validValues, parent ), forwardDeclaration_( false ) {}
 
   Tag( const Tag * tag, /*const*/ Tag * parent, need_e need ) :
-       AttributeAndTagBase( tag->name_, tag->need_, tag->type_, tag->validValues_, parent ) {
+    AttributeAndTagBase( tag->name_, tag->need_, tag->type_, tag->validValues_, parent ), forwardDeclaration_( false ) {
 
     if( need == INVALID_NEED ) { 
       need_ = tag->need_;
@@ -358,6 +374,8 @@ struct Tag : public AttributeAndTagBase {
   // 'ps' is the ProblemSpec to be validated (the representation of the loaded .ups file).
   void        validate( const ProblemSpec * ps, unsigned int depth = 0 );
   void        parseXmlTag( const xmlNode * xmlTag );
+
+  void        update( Tag * tag );
 
   virtual void print( bool recursively = false, unsigned int depth = 0, bool isTag = true ) {
 
@@ -511,7 +529,7 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   if( needType.size() == 1 ) {
     // Only the 'need' is provided... grab it, and drop out.
     need = getNeed( needType[ 0 ] );
-    return false;
+    return false; // Must be a common tag...
   }
 
   if( needType.size() != 2 ) {
@@ -533,7 +551,7 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
                                    validValues + "'", __FILE__, __LINE__ );
     }
   }
-  return true;
+  return true; // Not a common tag...
 }
 
 void
@@ -579,6 +597,24 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
 } // end namespace Uintah
 
 void
+Tag::update( Tag * tag )
+{
+  forwardDeclaration_ = false;
+
+  need_          = tag->need_;
+  type_          = tag->type_; 
+
+  validValues_   = tag->validValues_;
+
+  subTags_       = tag->subTags_;
+  attributes_    = tag->attributes_;
+
+  childReqs_     = tag->childReqs_;
+
+  needAppliesTo_ = tag->needAppliesTo_;
+}
+
+void
 Tag::parseXmlTag( const xmlNode * xmlTag )
 {
   string name = to_char_ptr( xmlTag->name );
@@ -615,38 +651,80 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
     }
   }
 
-  need_e need = INVALID_NEED;
-  type_e type;
+  need_e need        = INVALID_NEED;
+  type_e type        = INVALID_TYPE;
+  bool   common      = true;
+  bool   forwardDecl = false;
   string validValues;
-  bool   common;
 
   if( hasSpecString ) {
     string specStr = to_char_ptr( xmlTag->properties->children->content );
-    common = !getNeedAndTypeAndValidValues( specStr, need, type, validValues );
-    if( need == INVALID_NEED ) {
-      cout << "The value of 'need' was invalid for: " << name << ".\n";
+
+    if( specStr == "FORWARD_DECLARATION" ) {
+      forwardDecl = true;
+    }
+    else {
+      common = !getNeedAndTypeAndValidValues( specStr, need, type, validValues );
+
+      map<string,bool>::iterator iter = forwardDeclMap.find( name );
+
+      if( iter != forwardDeclMap.end() ) {
+        // The current tag being worked on is referencing a forwardly
+        // declared tag.  All forwardly declared tags must be
+        // 'common', so mark it as such so that further below we will
+        // look for it in the list of common tags.
+        common = true;
+      }
+      if( need == INVALID_NEED ) {
+        cout << "1) The value of 'need' was invalid for: " << name << ".\n";
+      }
     }
   }
-  else {
-    common = true;
+
+  Tag  * newTag;
+  bool   updateForwardDecls = false;
+  Tag  * commonTag = NULL;
+
+  if( forwardDecl ) {
+    // Add tag to the list of forwardly declared tags that need to be resolved when the real definition is found.
+    forwardDeclMap[ name ] = true;
+    newTag = new Tag( name, this );
   }
-
-  Tag * newTag;
-
-  if( common ) {
+  else if( common ) {
     // Find this tag in the list of common tags... 
-    Tag * commonTag = commonTags_g->findSubTag( name );
+    commonTag = commonTags_g->findSubTag( name );
     if( !commonTag ) {
       throw ProblemSetupException( "Error, commonTag <" + name + "> not found... was looking for a common tag " +
                                    "because spec string only had one entry.", __FILE__, __LINE__ );
     }
+
+    bool storeTag = false;
+
+    if( commonTag->forwardDeclaration_ ) {
+      if( type != INVALID_TYPE ) {
+        cout << "found the real def of " << name << "\n";
+        updateForwardDecls = true;
+        commonTag->type_ = type;
+      }
+      else {
+        // add the new tag to a list of tags to be updated when we get the info we need
+        storeTag = true;
+      }
+    }
     newTag = new Tag( commonTag, this, need );
+
+    if( storeTag ) {
+      // Save newTag in the list of tags that must be fixed up later (when the forwardly declared tag has been defined).
+      needForwardDeclResolution.push_back( newTag );
+    }
   }
   else {
     newTag = new Tag( name, need, type, validValues, this );
   }
 
-  subTags_.push_back( newTag );
+  if( !updateForwardDecls ) {  // If we are updating a forward declaration, then our parent already knows about us. 
+    subTags_.push_back( newTag );
+  }
 
   // Handle attributes... (if applicable)
   if( hasSpecString && xmlTag->properties->next != NULL ) {
@@ -664,7 +742,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
           getLabelAndNeedAndTypeAndValidValues( specStr, label, need, type, validValues );
 
           if( need == INVALID_NEED ) {
-            cout << "The value of 'need' was invalid for: " << name << ".\n";
+            cout << "2) The value of 'need' was invalid for: " << name << ".\n";
           }
 
           newTag->attributes_.push_back( new Attribute( label, need, type, validValues, newTag ) );
@@ -774,6 +852,49 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
       newTag->parseXmlTag( child );
     }
   }
+
+  if( updateForwardDecls ) {
+    // This is the real definition of the tag, update the place holder (common) tag with the real data...
+    commonTag->update( newTag );
+
+    // Remove the tag's name from the map of tag names that records
+    // forwardly declared tags that need to be resolved.  (Warning,
+    // because the map only uses the 'local' name of a tag, if in the
+    // future someone tried to get fancy with the forward declaration
+    // infrastruction, they probably could easily break the code.)
+
+    map<string,bool>::iterator fdmIter = forwardDeclMap.find( name );
+    forwardDeclMap.erase( fdmIter );
+
+    // Now that we have the full definition of the tag (that was
+    // previously only forwardly declared), we can update any tags that 
+    // referred to it...
+
+    list<Tag*>::iterator iter = needForwardDeclResolution.begin();
+    while( iter != needForwardDeclResolution.end() ) {
+      Tag * fdtag = *iter;
+      if( fdtag->name_ == name ) {
+        // Update 'fdtag' which previously had just the (incomplete) forward dcl pointer...
+        
+        fdtag->attributes_  = commonTag->attributes_;
+        fdtag->subTags_     = commonTag->subTags_;
+
+        // Don't update 'need_' as it was already set with a potentially different value.
+        fdtag->type_        = commonTag->type_;
+        fdtag->validValues_ = commonTag->validValues_;
+
+        fdtag->childReqs_   = commonTag->childReqs_;
+
+        list<Tag*>::iterator temp = iter;
+        iter++;
+        needForwardDeclResolution.erase( temp );
+      }
+      else {
+        iter++;
+      }
+    }
+  }
+
 } // end parseXmlTag()
 
 void
@@ -841,6 +962,13 @@ ProblemSpecReader::parseValidationFile()
   // Perhaps freeing this doc also frees the child elements which are accessed later
   //
   // xmlFreeDoc(doc);
+
+  if( forwardDeclMap.size() > 0 ) {
+    string name = forwardDeclMap.begin()->first;
+
+    throw ProblemSetupException( string( "Forward declaration of '" ) + name +
+                                 "' was never resolved... Please fix ups_spec.xml.", __FILE__, __LINE__ );
+  }
 
   dbg << "Done parsing ups_spec.xml\n";
 

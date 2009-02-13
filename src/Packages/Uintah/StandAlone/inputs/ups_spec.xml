@@ -127,12 +127,15 @@
       <name                   spec="REQUIRED STRING" />
     </tri>
 
+    <difference               spec="FORWARD_DECLARATION" />
+
     <union                    spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
+      <difference             spec="MULTIPLE" />
     </union>
 
     <!-- FIXME: only can have 2 children, right? how to specify? -->
