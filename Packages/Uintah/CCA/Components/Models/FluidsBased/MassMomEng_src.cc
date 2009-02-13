@@ -77,7 +77,7 @@ MassMomEng_src::~MassMomEng_src()
 void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup* )
 {
-  d_matl = sharedState->parseAndLookupMaterial(params, "Material");
+  d_matl = sharedState->parseAndLookupMaterial(params, "material");
   params->require("momentum_src", d_src->mom_src_rate);
   params->require("mass_src",     d_src->mass_src_rate);
   params->require("energy_src",   d_src->eng_src_rate);
