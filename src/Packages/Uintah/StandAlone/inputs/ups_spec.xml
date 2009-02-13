@@ -479,7 +479,7 @@
                                           children1="ONE_OF(ColdflowMixingModel, NexStaticMixingTableo, TabPropsTable)" >
 
         <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel, NewStaticMixingTable, TabPropsTable'" />
-        <independent_variable           spec="MULTIPLE STRING" 
+        <independent_variable           spec="OPTIONAL NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
                                             attribute2="name   REQUIRED STRING"
                                             attribute3="value  OPTIONAL DOUBLE" /> <!-- Default value for "active" is true, default value for "value" is 0; 
