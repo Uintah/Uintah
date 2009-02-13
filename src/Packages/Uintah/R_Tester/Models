@@ -15,7 +15,7 @@ from helpers.runSusTests import runSusTests
 #       abs_tolerance=[double]  - absolute tolerance used in comparisons
 #       rel_tolerance=[double]  - relative tolerance used in comparisons
 #       exactComparison         - set absolute/relative tolerance = 0  for uda comparisons
-#       startFromCheckpoint     - start test from checkpoint. (/home/csafe-tester/CheckPoints/..../testname.uda.000)
+#       startFromCheckpoint     - start test from checkpoint. (/usr/local/home/csafe-tester/CheckPoints/..../testname.uda.000)
 
 TESTS = [   ("HePlume",       "HePlume.ups",     1.1, "Linux",  ["exactComparison"]), \
             ("HePlume",       "HePlume.ups",     1.1, "Darwin", ["doesTestRun"]), \
