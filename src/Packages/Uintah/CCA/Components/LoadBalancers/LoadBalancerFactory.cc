@@ -54,7 +54,7 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
   
   ProblemSpecP lb_ps = ps->findBlock("LoadBalancer");
   if (lb_ps)
-    lb_ps->get("type",loadbalancer);
+    lb_ps->getAttribute("type",loadbalancer);
 
   // Default settings
   if (Uintah::Parallel::usingMPI()) {
