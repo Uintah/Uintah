@@ -250,7 +250,7 @@ void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     }
     
     //compute regions in new level that are not in old
-    deque<Region> new_regions_q, dnew, dold(old_regions.begin(),old_regions.end());
+    vector<Region> new_regions_q, dnew, dold(old_regions.begin(),old_regions.end());
     
     //create dnew to contain a subset of the new patches
     for(int p=0; p<newgrid->getLevel(l)->numPatches(); p++) 

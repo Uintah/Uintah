@@ -188,10 +188,10 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
     double usr_mass_src = d_src->mass_src_rate * dt * vol;
     Vector usr_mom_src  = d_src->mom_src_rate  * dt * vol;
     
-    deque<Region> regions;
+    vector<Region> regions;
     patch->getFinestRegionsOnPatch(regions);
 
-    for(deque<Region>::iterator region=regions.begin();region!=regions.end();region++){
+    for(vector<Region>::iterator region=regions.begin();region!=regions.end();region++){
     
       for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
         IntVector c = *iter;

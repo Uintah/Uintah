@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Time.h> 
 #include <iostream>
 #include <sstream>
-#include <deque>
+#include <vector>
 
 using namespace std;
 using namespace Uintah;
@@ -202,10 +202,10 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
       //get coarse level patches
       const PatchSubset *cp=lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myrank());
       
-      //fine patch deque
+      //fine patch vector 
       for(int p=0;p<cp->size();p++)
       {
-        deque<Region> cpq, fpq, difference;  
+        vector<Region> cpq, fpq, difference;  
         const Patch *patch=cp->get(p);
 
         Patch::selectType fp;
@@ -235,7 +235,7 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
 
         //search non-overlapping
-        for(deque<Region>::iterator region=difference.begin();region!=difference.end();region++)
+        for(vector<Region>::iterator region=difference.begin();region!=difference.end();region++)
         {
           for (CellIterator ci(region->getLow(), region->getHigh()); !ci.done(); ci++)
           {
@@ -770,7 +770,7 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     if (patch->getLevel()->getIndex() > 0 && ((d_filterType == FILTER_STAR && ngc > 2) || ngc > 1)) {
       // if we go diagonally along a patch corner where there is no patch, we will need to initialize those cells
       // (see OnDemandDataWarehouse comment about dead cells)
-      deque<Region> b1, b2, difference;
+      vector<Region> b1, b2, difference;
       IntVector low = flaggedCells.getLowIndex(), high = flaggedCells.getHighIndex();
       b1.push_back(Region(low,high));
       Level::selectType n;

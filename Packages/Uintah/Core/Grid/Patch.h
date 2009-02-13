@@ -1790,12 +1790,12 @@ WARNING
       /*****end boundary condition ****/
 
       /**
-      * Returns a deque of Regions that
+      * Returns a vector of Regions that
       * do not have any overlapping finer level patches.
       * Use the following to iterate over the cells
       * that have no finer level overlapping cells.
       */
-     void  getFinestRegionsOnPatch(deque<Region>& difference) const;
+     void  getFinestRegionsOnPatch(vector<Region>& difference) const;
 
 
 

@@ -2166,23 +2166,23 @@ void Patch::initializeBoundaryConditions()
 }
 
 //__________________________________
-//  Returns a deque of Regions that
+//  Returns a vector of Regions that
 // do not have any overlapping finer level cells.
 // Use this if you want to iterate over the "finest" level cells
 // on coarse and fine levels.
 //
 //  usage:
-//  deque<Region> regions
+//  vector<Region> regions
 //  coarsePatch->getFinestRegionsOnPatch(regions)
 //
-//  for(deque<Region>::iterator region=regions.begin();region!=regions.end();region++){
+//  for(vector<Region>::iterator region=regions.begin();region!=regions.end();region++){
 //    for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
 //    }
 //  }
-void Patch::getFinestRegionsOnPatch(deque<Region>& difference) const
+void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
 {
   const Level* level = getLevel();
-  deque<Region> coarsePatch_q,finePatch_q;                                              
+  vector<Region> coarsePatch_q,finePatch_q;                                              
   IntVector zero(0,0,0);
   finePatch_q.push_back(Region(zero,zero));
   
