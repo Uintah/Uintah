@@ -291,7 +291,6 @@
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          815                 </specific_heat>
            <gamma>                  1.408                </gamma>
-           <speed_of_sound>         374.17              </speed_of_sound>
            <isSurroundingMatl>      true                </isSurroundingMatl>
 -->
 
@@ -300,7 +299,6 @@
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          716.0               </specific_heat>
            <gamma>                  1.4                 </gamma>
-           <speed_of_sound>         376.0               </speed_of_sound>
            <isSurroundingMatl>      true                </isSurroundingMatl>
 
            <geom_object>
