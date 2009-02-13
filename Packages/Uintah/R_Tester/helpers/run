@@ -31,7 +31,7 @@ if [ ! -d inputs ]; then
 fi
 
 if [ ! -d CheckPoints ]; then
-  ln -s /home/csafe/csafe-tester/CheckPoints CheckPoints
+  ln -s /usr/local/home/csafe-tester/CheckPoints CheckPoints
 fi
 
 # remove this in case it points to the wrong place
