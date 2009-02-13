@@ -127,11 +127,7 @@ void MassMomEng_src::scheduleComputeStableTimestep(SchedulerP&,
 void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
 				                const LevelP& level,
 				                const ModelInfo* mi)
-{
-  if (level->hasFinerLevel()){
-    return;  
-  }
-  
+{ 
   Task* t = scinew Task("MassMomEng_src::computeModelSources",this, 
                         &MassMomEng_src::computeModelSources, mi);
   t->modifies(mi->modelMass_srcLabel);
@@ -179,30 +175,38 @@ void MassMomEng_src::computeModelSources(const ProcessorGroup*,
     constCCVariable<double> sp_vol_CC;
     constCCVariable<double> vol_frac;
     
-    new_dw->getModifiable(mass_src,   mi->modelMass_srcLabel, indx, patch);
-    new_dw->getModifiable(mom_src,    mi->modelMom_srcLabel,  indx, patch);
-    new_dw->getModifiable(eng_src,    mi->modelEng_srcLabel,  indx, patch);
-    new_dw->getModifiable(vol_src,    mi->modelVol_srcLabel,  indx, patch);
-    new_dw->get(sp_vol_CC,            Ilb->sp_vol_CCLabel,    indx, patch, Ghost::None,0);
-    new_dw->get(vol_frac,             Ilb->vol_frac_CCLabel,  indx, patch, Ghost::None,0);
+    new_dw->getModifiable(mass_src, mi->modelMass_srcLabel, indx, patch);
+    new_dw->getModifiable(mom_src,  mi->modelMom_srcLabel,  indx, patch);
+    new_dw->getModifiable(eng_src,  mi->modelEng_srcLabel,  indx, patch);
+    new_dw->getModifiable(vol_src,  mi->modelVol_srcLabel,  indx, patch);
+    new_dw->get(sp_vol_CC,          Ilb->sp_vol_CCLabel,    indx, patch, Ghost::None,0);
+    new_dw->get(vol_frac,           Ilb->vol_frac_CCLabel,  indx, patch, Ghost::None,0);
     
     //__________________________________
     //  Do some work
     double usr_eng_src  = d_src->eng_src_rate  * dt * vol;
     double usr_mass_src = d_src->mass_src_rate * dt * vol;
     Vector usr_mom_src  = d_src->mom_src_rate  * dt * vol;
-    for(CellIterator iter = patch->getExtraCellIterator__New(); !iter.done(); iter++){
-      IntVector c = *iter;
-      if ( vol_frac[c] > 0.001) {
-        eng_src[c]  += usr_eng_src;
-        mass_src[c] += usr_mass_src;
-        mom_src[c]  += usr_mom_src;
-        vol_src[c]  += usr_mass_src * sp_vol_CC[c];  // volume src
-        totalMass_src += usr_mass_src;
-        totalMom_src  += usr_mom_src;
-        totalEng_src  += usr_eng_src;
+    
+    deque<Region> regions;
+    patch->getFinestRegionsOnPatch(regions);
+
+    for(deque<Region>::iterator region=regions.begin();region!=regions.end();region++){
+    
+      for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
+        IntVector c = *iter;
+        
+        if ( vol_frac[c] > 0.001) {
+          eng_src[c]  += usr_eng_src;
+          mass_src[c] += usr_mass_src;
+          mom_src[c]  += usr_mom_src;
+          vol_src[c]  += usr_mass_src * sp_vol_CC[c];  // volume src
+          totalMass_src += usr_mass_src;
+          totalMom_src  += usr_mom_src;
+          totalEng_src  += usr_eng_src;
+        }
       }
-    }
+    } // region
     new_dw->put(sum_vartype(totalMass_src),    MassMomEng_src::totalMass_srcLabel);
     new_dw->put(sumvec_vartype(totalMom_src),  MassMomEng_src::totalMom_srcLabel);
     new_dw->put(sum_vartype(totalEng_src),     MassMomEng_src::totalEng_srcLabel);
