@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <deque>
+#include <vector>
 
 using namespace Uintah;
 
@@ -57,29 +57,28 @@ Region::overlaps(const Region& otherregion) const
 }
 
 //static 
-deque<Region> Region::difference(const Region& b1, const Region& b2)
+vector<Region> Region::difference(const Region& b1, const Region& b2)
 {
-  deque<Region> set1, set2;
+  vector<Region> set1, set2;
   set1.push_back(b1);
   set2.push_back(b2);
   return difference(set1, set2);
 }
 
 //static 
-deque<Region> Region::difference(deque<Region>& region1, deque<Region>& region2)
+vector<Region> Region::difference(vector<Region>& region1, vector<Region>& region2)
 {
-  // use 2 deques, as inserting into a deque invalidates the iterators
-  deque<Region> searchSet(region1.begin(), region1.end());
-  deque<Region> remainingRegiones;
+  vector<Region> searchSet(region1);
+  vector<Region> remainingRegions;
+
   // loop over set2, as remainingRegiones will more than likely change
   for (unsigned i = 0; i < region2.size(); i++) {
-    for (deque<Region>::iterator iter = searchSet.begin(); iter != searchSet.end(); iter++) {
+    for (vector<Region>::iterator iter = searchSet.begin(); iter != searchSet.end(); iter++) {
       Region b1 = *iter;
       Region b2 = region2[i];
       if (b1.overlaps(b2)) {
         // divide the difference space into up to 6 regions, 2 in each dimension.
         // each pass, reduce the amount of space to take up.
-        // Add new regions to the front so we don't loop over them again for this region.
         Region intersection = b1.intersect(b2);
         Region leftoverSpace = b1;
         for (int dim = 0; dim < 3; dim++) {
@@ -87,27 +86,30 @@ deque<Region> Region::difference(deque<Region>& region1, deque<Region>& region2)
             Region tmp = leftoverSpace;
             tmp.d_lowIndex(dim) = b1.d_lowIndex(dim);
             tmp.d_highIndex(dim) = intersection.d_lowIndex(dim);
-            remainingRegiones.push_back(tmp);
+            if(tmp.getVolume()>0)
+              remainingRegions.push_back(tmp);
           }
           if (b1.d_highIndex(dim) > intersection.d_highIndex(dim)) {
             Region tmp = leftoverSpace;
             tmp.d_lowIndex(dim) = intersection.d_highIndex(dim);
             tmp.d_highIndex(dim) = b1.d_highIndex(dim);
-            remainingRegiones.push_back(tmp);              
+            if(tmp.getVolume()>0)
+              remainingRegions.push_back(tmp);              
           }
           leftoverSpace.d_lowIndex(dim) = intersection.d_lowIndex(dim);
           leftoverSpace.d_highIndex(dim) = intersection.d_highIndex(dim);
         }
       } 
       else {
-        remainingRegiones.push_back(b1);
+        remainingRegions.push_back(b1);
       }
     }
-    if (i+1 < region2.size()) {
-      searchSet = remainingRegiones;
-      remainingRegiones.clear();
-    }
+    
+    //update the search set to any remaining regions
+    searchSet = remainingRegions;
+    remainingRegions.clear();
   }
-  return remainingRegiones;
+  return searchSet;
+  //return remainingRegions;
 }
 

@@ -28,36 +28,21 @@
 # 
 # 
 # 
-SRCDIR := Packages/Uintah/testprograms
 
-SUBDIRS := \
-        $(SRCDIR)/TestSuite               \
-        $(SRCDIR)/TestFastMatrix          \
-        $(SRCDIR)/TestMatrix3             \
-        $(SRCDIR)/TestConsecutiveRangeSet \
-        $(SRCDIR)/TestRangeTree           \
-        $(SRCDIR)/TestBoxGrouper          \
-        $(SRCDIR)/BNRRegridder            \
-	$(SRCDIR)/IteratorTest            \
-	$(SRCDIR)/RegionTest            \
-	$(SRCDIR)/PatchBVH
+# Makefile fragment for this subdirectory
 
-#       $(SRCDIR)/SFCTest \
+SRCDIR := Packages/Uintah/testprograms/RegionTest
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PROGRAM := $(SRCDIR)/RunTests
-
-SRCS    = $(SRCDIR)/RunTests.cc
+PROGRAM := $(SRCDIR)/RegionTest
+SRCS    := $(SRCDIR)/RegionTest.cc
 
 PSELIBS := \
-        Packages/Uintah/testprograms/TestSuite               \
-        Packages/Uintah/testprograms/TestMatrix3             \
-        Packages/Uintah/Core/Util                            \
-        Packages/Uintah/testprograms/TestConsecutiveRangeSet \
-        Packages/Uintah/testprograms/TestRangeTree           \
-        Packages/Uintah/testprograms/TestBoxGrouper
+        Core/Exceptions                          \
+        Core/Geometry                            \
+        Packages/Uintah/Core/Grid                \
+        Packages/Uintah/Core/Util                
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
+
