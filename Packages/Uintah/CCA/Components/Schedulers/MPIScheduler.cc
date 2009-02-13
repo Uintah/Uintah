@@ -145,29 +145,7 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   if(params){
     params->get("useExternalReadyQueue", useExternalQueue_);
   }
-  
-  int compression_level=0;
-  unsigned int compression_threshold=50;
-  
-  if(params)
-  {
-    params->get("compressionLevel",compression_level);
-    params->get("compressionThreshold",compression_threshold);
-  
-    if(compression_level<0 || compression_level>9)
-      throw SCIRun::InternalError("Invalid Compression Level in Scheduler",__FILE__,__LINE__);
-  }
-
-  if(compression_level>0 && d_myworld->myrank()==0)
-  {
-    cout << "Using compression level " << compression_level << " with a threshold of " << compression_threshold << endl;
-  }
-    
-  PackBufferInfo::setCompressionLevel(compression_level);
-  PackBufferInfo::setCompressionThreshold(compression_threshold);
-  if(d_myworld->myrank()==0)
-    cout << "Compression Level:" << compression_level << " Compression Threshold:" << compression_threshold << endl;
-
+ 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
 }
