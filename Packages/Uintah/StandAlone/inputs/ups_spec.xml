@@ -705,10 +705,14 @@
     <cellFactor           spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
     <doCostProfiling      spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is this?  What is the default? -->
     <doSpaceCurve         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
-    <dynamicAlgorithm     spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles'" />
+    <dynamicAlgorithm     spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, Zoltan'" />
     <levelIndependent     spec="OPTIONAL BOOLEAN" /> <!-- FIXME: Is this optional? If so, what is default? -->
     <particleCost         spec="OPTIONAL INTEGER" /> <!-- FIXME: Is this optional? If so, what is default? Integer or double?  -->
     <timestepInterval     spec="REQUIRED DOUBLE 'positive'" />
+    <outputNthProc        spec="OPTIONAL INTEGER 'positive'"/>
+    <zoltanAlgorithm      spec="OPTIONAL STRING 'HSFC RIB RCB'" />
+    <zoltanIMBTol         spec="OPTIONAL DOUBLE 'positive'" />
+
   </LoadBalancer>
 
   <Multimaterial                                     spec="OPTIONAL NO_DATA" >
