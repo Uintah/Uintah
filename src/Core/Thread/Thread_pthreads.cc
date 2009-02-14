@@ -79,6 +79,7 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
+#include <Core/Util/Assert.h>
 #include <cerrno>
 extern "C" {
 #include <semaphore.h>
@@ -696,7 +697,7 @@ handle_abort_signals(int sig, SigContext ctx)
   char* signam = Core_Thread_signal_name(sig, addr);
   fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
   
-  // WAIT_FOR_DEBUGGER;
+  //WAIT_FOR_DEBUGGER;
 
   Thread::niceAbort();
   

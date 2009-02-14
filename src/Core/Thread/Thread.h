@@ -50,9 +50,6 @@
 #include <Core/Thread/Parallel3.h>
 #include <Core/Thread/share.h>
 
-#define WAIT_FOR_DEBUGGER { bool wait=true; char hostname[100]; gethostname(hostname,100); printf("%s:%d waiting for debugger\n",hostname,getpid()); while(wait); }
-
-
 namespace SCIRun {
 
   struct Thread_private;
