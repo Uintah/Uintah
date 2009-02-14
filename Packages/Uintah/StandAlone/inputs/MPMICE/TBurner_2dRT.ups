@@ -301,7 +301,6 @@
              <pressure>           3453662.625      </pressure>
            </geom_object>
 
-<!--
            <geom_object>
              <difference label="Low_Gas">
                <box>
@@ -319,7 +318,6 @@
 	     <density>            3.178466253        </density>
              <pressure>           3436437.375        </pressure>
            </geom_object>
--->
          </material>
       </ICE>       
 
