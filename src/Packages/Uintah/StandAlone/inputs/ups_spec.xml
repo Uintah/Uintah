@@ -705,15 +705,16 @@
     </VarTracker>
   </Scheduler>
 
-  <LoadBalancer           spec="OPTIONAL NO_DATA" 
-                            attribute1="type REQUIRED STRING 'DLB'" >
+  <LoadBalancer           spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'DLB'" >
+    <cellCost             spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
     <cellFactor           spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
-    <doCostProfiling      spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is this?  What is the default? -->
+    <doCostProfiling      spec="OPTIONAL BOOLEAN" /> <!-- use cost profiling instead of the cost model-->
     <doSpaceCurve         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
     <dynamicAlgorithm     spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, Zoltan'" />
     <levelIndependent     spec="OPTIONAL BOOLEAN" /> <!-- FIXME: Is this optional? If so, what is default? -->
-    <particleCost         spec="OPTIONAL INTEGER" /> <!-- FIXME: Is this optional? If so, what is default? Integer or double?  -->
-    <timestepInterval     spec="REQUIRED DOUBLE 'positive'" />
+    <particleCost         spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
+    <patchCost            spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
+    <timestepInterval     spec="REQUIRED INTEGER 'positive'" />
     <outputNthProc        spec="OPTIONAL INTEGER 'positive'"/>
     <zoltanAlgorithm      spec="OPTIONAL STRING 'HSFC RIB RCB'" />
     <zoltanIMBTol         spec="OPTIONAL DOUBLE 'positive'" />
