@@ -428,7 +428,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if do_performance_test == 1:
     inputxml = modUPS("", inputxml,["<outputInterval>0</outputInterval>",
                                     "<outputTimestepInterval>0</outputTimestepInterval>",
-                                    '<checkpoint interval="0"/>'])
+                                    '<checkpoint cycle="0" interval="0"/>'])
 
     # create a file in tmp/filename, copy it back
     system("cp %s ." % inputxml)
