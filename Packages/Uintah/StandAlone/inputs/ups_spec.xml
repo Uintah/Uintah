@@ -711,9 +711,11 @@
     <doCostProfiling      spec="OPTIONAL BOOLEAN" /> <!-- use cost profiling instead of the cost model-->
     <doSpaceCurve         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
     <dynamicAlgorithm     spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, Zoltan'" />
+    <gainThreshold        spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
     <levelIndependent     spec="OPTIONAL BOOLEAN" /> <!-- FIXME: Is this optional? If so, what is default? -->
     <particleCost         spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
     <patchCost            spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
+    <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" /> <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
     <timestepInterval     spec="REQUIRED INTEGER 'positive'" />
     <outputNthProc        spec="OPTIONAL INTEGER 'positive'"/>
     <zoltanAlgorithm      spec="OPTIONAL STRING 'HSFC RIB RCB'" />
