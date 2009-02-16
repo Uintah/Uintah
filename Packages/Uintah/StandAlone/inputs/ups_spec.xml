@@ -399,6 +399,7 @@
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN" />
       <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" /> <!-- Defaults to TRUE.  FIXME: is this correct? -->
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">
+        <outputEquations   spec="OPTIONAL BOOLEAN" />
         <max_outer_iterations           spec="REQUIRED INTEGER 'positive'"/>
         <outer_iteration_tolerance      spec="REQUIRED DOUBLE 'positive'"/>
         <iters_before_timestep_restart  spec="REQUIRED INTEGER 'positive'"/>
@@ -476,6 +477,7 @@
         <filterl                        spec="OPTIONAL DOUBLE 'positive'" />
         <!--dyn. smagorinsky -->
         <dynamicScalarModel             spec="OPTIONAL BOOLEAN" />
+        <filter_variance_limit_scalar   spec="OPTIONAL BOOLEAN" />
         <filter_cs_squared              spec="OPTIONAL BOOLEAN" />
         <!-- going to leave complocal out based on the 'this model is a mess' comment-->
         <turbulentPrandtlNumber         spec="REQUIRED DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
@@ -485,6 +487,7 @@
       <Properties                       spec="REQUIRED NO_DATA"
                                           children1="ONE_OF(ColdflowMixingModel, NexStaticMixingTableo, TabPropsTable)" >
 
+        <filter_drhodt   spec="OPTIONAL BOOLEAN" />
         <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel, NewStaticMixingTable, TabPropsTable'" />
         <independent_variable           spec="MULTIPLE NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
