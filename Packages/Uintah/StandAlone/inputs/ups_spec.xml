@@ -696,7 +696,7 @@
   </AMR>
 
   <Scheduler              spec="OPTIONAL NO_DATA">
-    <VarTracker           spec="REQUIRED NO_DATA">
+    <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
       <start_index        spec="REQUIRED VECTOR" />
