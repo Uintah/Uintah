@@ -488,6 +488,7 @@
                                           children1="ONE_OF(ColdflowMixingModel, NexStaticMixingTableo, TabPropsTable)" >
 
         <filter_drhodt   spec="OPTIONAL BOOLEAN" />
+        <first_order_drhodt   spec="OPTIONAL BOOLEAN" />
         <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel, NewStaticMixingTable, TabPropsTable'" />
         <independent_variable           spec="MULTIPLE NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
