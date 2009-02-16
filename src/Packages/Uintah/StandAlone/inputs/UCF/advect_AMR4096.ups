@@ -15,13 +15,10 @@
 
    <Scheduler>
      <small_messages>true</small_messages>
-     <compressionLevel>0</compressionLevel>
-     <compressionThreshold>0</compressionThreshold>
    </Scheduler>
 
 
-   <LoadBalancer>
-     <type>DLB</type>
+   <LoadBalancer type="DLB">
        <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
        <!--<dynamicAlgorithm>patchFactor</dynamicAlgorithm>-->
        <zoltanAlgorithm>HSFC</zoltanAlgorithm>
@@ -199,15 +196,13 @@
         </Refinement_Criteria_Thresholds>
       </ICE>
       
-      <Regridder>
+      <Regridder type="BNR">
         <max_levels>3</max_levels>
         <cell_refinement_ratio>    [[4,4,4]]   </cell_refinement_ratio>
         <cell_stability_dilation>   [1,1,1]    </cell_stability_dilation>   
         <min_boundary_cells>       [1,1,1]     </min_boundary_cells>
  
 
-        <type>BNR</type>
-        
         <patch_split_tolerance>     1          </patch_split_tolerance>
         <patch_combine_tolerance>   1          </patch_combine_tolerance>
         <patches_per_level_per_proc> 8         </patches_per_level_per_proc>

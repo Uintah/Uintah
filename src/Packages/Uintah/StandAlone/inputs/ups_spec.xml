@@ -642,6 +642,7 @@
   </DataAnalysis>
 
   <AMR                                  spec="OPTIONAL NO_DATA" >
+    <doMultiTaskgraphing                spec="OPTIONAL BOOLEAN" />
     <useLockStep                        spec="OPTIONAL BOOLEAN" /> <!-- defaults to FALSE.  FIXME: correct?  Is it optional? -->
     <ICE                                spec="OPTIONAL NO_DATA" >
       <orderOfInterpolation             spec="REQUIRED INTEGER 'positive'" />
@@ -696,6 +697,7 @@
   </AMR>
 
   <Scheduler              spec="OPTIONAL NO_DATA">
+    <small_messages       spec="OPTIONAL BOOLEAN" />
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />
@@ -704,6 +706,11 @@
       <var                spec="MULTIPLE NO_DATA"
                           attribute1="label REQUIRED STRING"
                           attribute2="dw    REQUIRED STRING 'NewDW, OldDW'" />
+                        <locations          spec="OPTIONAL NO_DATA"
+                          attribute1="before_comm OPTIONAL BOOLEAN"
+                          attribute2="before_exec OPTIONAL BOOLEAN"
+                          attribute3="after_exec OPTIONAL BOOLEAN" />
+                          
     </VarTracker>
   </Scheduler>
 
