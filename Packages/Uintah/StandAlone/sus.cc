@@ -196,10 +196,11 @@ abortCleanupFunc()
 {
   Uintah::Parallel::finalizeManager( Uintah::Parallel::Abort );
 }
-
+#include <iomanip>
 int
 main( int argc, char *argv[], char *env[] )
 {
+  cout << setprecision(24);
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
 
@@ -544,6 +545,8 @@ main( int argc, char *argv[], char *env[] )
     // Solver
     SolverInterface* solve = 0;
     solve = SolverFactory::create(ups, world, solver);
+    if(Uintah::Parallel::getMPIRank() == 0 && solve!=0)
+      cout << "Implicit Solver:" << solve->getName() << endl;
 
     //__________________________________
     // Component
