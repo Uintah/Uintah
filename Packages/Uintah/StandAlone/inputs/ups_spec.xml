@@ -489,6 +489,7 @@
 
         <filter_drhodt   spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt   spec="OPTIONAL BOOLEAN" />
+        <inverse_density_average   spec="OPTIONAL BOOLEAN" />
         <mixing_model                   spec="REQUIRED STRING 'coldFlowMixingModel, NewStaticMixingTable, TabPropsTable'" />
         <independent_variable           spec="MULTIPLE NO_DATA" 
                                             attribute1="active OPTIONAL STRING 'yes, true, no, false'"
@@ -517,7 +518,13 @@
       </Properties>
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > <!-- FIXME: is this really optional?  constantMMS.ups doesn't use them... -->
+        <carbon_balance                 spec="OPTIONAL BOOLEAN" />
+        <carbon_balance_es              spec="OPTIONAL BOOLEAN" />
+        <sulfur_balance                 spec="OPTIONAL BOOLEAN" />
+        <sulfur_balance_es              spec="OPTIONAL BOOLEAN" />
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
+          <ramping_inlet_flowrate       spec="OPTIONAL BOOLEAN" />
+          <SulfurMassFractionInFuel     spec="OPTIONAL DOUBLE '0,1'" />
           <Flow_rate                    spec="OPTIONAL DOUBLE" />
           <InletVelocity                spec="OPTIONAL DOUBLE" />
           <mixture_fraction             spec="REQUIRED DOUBLE" />
@@ -572,7 +579,7 @@
       </ExtraScalars>
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
-
+        <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
           <radiation                    spec="REQUIRED BOOLEAN" />
@@ -593,16 +600,21 @@
         </EnthalpySolver>
 
         <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
+        
+        <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
         <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
         </MixtureFractionSolver>
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
+          <pressure_correction          spec="OPTIONAL BOOLEAN" />
+          <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind'" />
         </MomentumSolver>
 
         <PressureSolver                 spec="REQUIRED NO_DATA" >
+          <do_only_last_projection      spec="OPTIONAL BOOLEAN" />
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <linear_solver                spec="REQUIRED STRING 'hypre, petsc'" />
           <parameters                   spec="REQUIRED NO_DATA" >
@@ -616,8 +628,11 @@
         <probe_data                     spec="REQUIRED BOOLEAN" />
         <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is default? -->
         <timeIntegratorType             spec="REQUIRED STRING 'RK2SSP, FE'" />
+        <turbModelCalcForAllRKSteps     spec="OPTIONAL BOOLEAN" />
+        <turbModelCalcFreq              spec="OPTIONAL INTEGER" />
       </ExplicitSolver>
 
+      <extraProjection                  spec="OPTIONAL BOOLEAN" />
     </ARCHES>
 
   </CFD>
