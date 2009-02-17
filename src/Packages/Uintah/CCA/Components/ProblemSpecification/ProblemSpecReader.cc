@@ -1585,8 +1585,6 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
     initialized = true;
   }
 
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::readInputFile");
-  
   string full_filename = validateFilename( filename, NULL );
 
   xmlDocPtr doc = xmlReadFile( full_filename.c_str(), 0, XML_PARSE_PEDANTIC );
