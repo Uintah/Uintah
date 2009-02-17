@@ -487,7 +487,9 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       // if real, the PathSurfaceLeft will be updated again later
       PathSurfaceLeft = 1;      
       vIndexUpdate = 1;
-      
+   //    cout << "directionVector in ray.cc = " << directionVector[0] <<
+// 	"; " << directionVector[1] << "; " <<
+// 	directionVector[2] << endl;
       }
     else { // scatter happens within the subregion
       
