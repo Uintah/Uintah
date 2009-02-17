@@ -330,7 +330,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     const ProblemSpecP params_root = params_non_constant->getRootNode();
     ProblemSpecP db_mmsblock=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
     
-    db_mmsblock->getWithDefault("whichMMS",d_mms,"constantMMS");
+    if(!db_mmsblock->getAttribute("whichMMS",d_mms))
+      d_mms="constantMMS";
 
     if (d_mms == "constantMMS") {
       ProblemSpecP db_whichmms = db_mmsblock->findBlock("constantMMS");

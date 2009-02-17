@@ -73,7 +73,9 @@ Source::problemSetup(const ProblemSpecP& params)
   const ProblemSpecP params_root = params_non_constant->getRootNode();
   ProblemSpecP db=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
 
-  db->getWithDefault("whichMMS", d_mms, "constantMMS");
+  if(!db->getAttribute("whichMMS", d_mms))
+    d_mms="constantMMS";
+
   if (d_mms == "constantMMS"){
     ProblemSpecP db_mms = db->findBlock("constantMMS");
     db_mms->getWithDefault("cu",cu,1.0);
