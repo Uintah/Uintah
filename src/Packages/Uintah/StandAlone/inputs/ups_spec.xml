@@ -399,7 +399,6 @@
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN" />
       <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" /> <!-- Defaults to TRUE.  FIXME: is this correct? -->
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">
-        <outputEquations   spec="OPTIONAL BOOLEAN" />
         <max_outer_iterations           spec="REQUIRED INTEGER 'positive'"/>
         <outer_iteration_tolerance      spec="REQUIRED DOUBLE 'positive'"/>
         <iters_before_timestep_restart  spec="REQUIRED INTEGER 'positive'"/>
@@ -413,6 +412,7 @@
           <npost                        spec="REQUIRED INTEGER" />
           <npre                         spec="REQUIRED INTEGER" />
           <preconditioner               spec="REQUIRED STRING 'none, pfmg'" />
+          <outputEquations              spec="OPTIONAL BOOLEAN" />
           <skip                         spec="REQUIRED INTEGER" />
           <solver                       spec="REQUIRED STRING 'amg, cg'" />   <!-- FIXME: What do these stand for: amg?  cg? -->
           <tolerance                    spec="REQUIRED DOUBLE" />
@@ -487,6 +487,7 @@
       <Properties                       spec="REQUIRED NO_DATA"
                                           children1="ONE_OF(ColdflowMixingModel, NexStaticMixingTableo, TabPropsTable)" >
 
+        <empirical_soot                 spec="OPTIONAL BOOLEAN" />
         <filter_drhodt   spec="OPTIONAL BOOLEAN" />
         <first_order_drhodt   spec="OPTIONAL BOOLEAN" />
         <inverse_density_average   spec="OPTIONAL BOOLEAN" />
@@ -504,9 +505,13 @@
         </ColdflowMixingModel>
 
         <NewStaticMixingTable           spec="OPTIONAL NO_DATA" >
+          <co_output                    spec="OPTIONAL BOOLEAN" />
           <inputfile                    spec="REQUIRED STRING" />
           <h_fuel                       spec="REQUIRED DOUBLE" />
           <h_air                        spec="REQUIRED DOUBLE" />
+          <soot_precursors              spec="OPTIONAL BOOLEAN" />
+          <sulfur_chem                  spec="OPTIONAL BOOLEAN" />
+          <tabulated_soot               spec="OPTIONAL BOOLEAN" />
         </NewStaticMixingTable>
 
         <TabPropsTable                  spec="OPTIONAL NO_DATA" >
@@ -564,9 +569,13 @@
 
       <ExtraScalars                     spec="OPTIONAL NO_DATA" >
         <scalar                         spec="REQUIRED NO_DATA" >
+          <carbon_balance               spec="OPTIONAL BOOLEAN" />
+          <clip_value                   spec="OPTIONAL DOUBLE" />
           <name                         spec="REQUIRED STRING" />
+          <noisy_clipping               spec="OPTIONAL BOOLEAN" />
           <initial_value                spec="REQUIRED DOUBLE" />
           <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
+          <PrecompTabSrcName            spec="OPTIONAL STRING" />
           <diffusion                    spec="REQUIRED BOOLEAN" />
           <turbulentPrandtlNumber       spec="REQUIRED DOUBLE" />
           <density_weighted             spec="REQUIRED BOOLEAN" />
@@ -575,6 +584,8 @@
               <name                     spec="REQUIRED STRING" />
             </source>
           </sources>
+          <sulfur_balance               spec="OPTIONAL BOOLEAN" />
+          <useforDensity                spec="OPTIONAL BOOLEAN" />
         </scalar>
       </ExtraScalars>
 
