@@ -1748,10 +1748,15 @@ int main(int argc, char *argv[]){
 		
 		costheta = abs ( obRay.dotProduct(surface_n[hitSurfaceFlag1st], ray_S) );
 		
-   	  	NetHeatFlux[hitSurfaceFlag1st] += 
+   	 //  	NetHeatFlux[hitSurfaceFlag1st] += 
+//   		  (VolFaceOutInten[hitSurfaceFlag1st] -
+// 		   VolFaceIncomingInten[hitSurfaceFlag1st] )*
+// 		  costheta; // * sqrt( 1- costheta * costheta);
+
+	 	NetHeatFlux[hitSurfaceFlag1st] += 
   		  (VolFaceOutInten[hitSurfaceFlag1st] -
-  		  VolFaceIncomingInten[hitSurfaceFlag1st] )*
-  		  costheta; // * sqrt( 1- costheta * costheta);
+		   IncomingIntenVol[rayCounter]/(exp(-to_face_length)) )*
+		  costheta; // * sqrt( 1- costheta * costheta);
 		
 	// 	NetHeatFlux[hitSurfaceFlag1st] +=
 // 		  (OutIntenVol - IncomingIntenVol[rayCounter]) * costheta
