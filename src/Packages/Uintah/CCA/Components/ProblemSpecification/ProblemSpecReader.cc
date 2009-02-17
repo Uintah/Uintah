@@ -366,6 +366,17 @@ struct Tag : public AttributeAndTagBase {
     attributes_ = tag->attributes_;
   }
 
+  ~Tag()
+  {
+    for(vector<Attribute* >::iterator iter=attributes_.begin();iter!=attributes_.end();iter++)
+      delete *iter;
+    
+    for(vector<Tag* >::iterator iter=subTags_.begin();iter!=subTags_.end();iter++)
+      delete *iter;
+    
+    for(vector<ChildRequirements* >::iterator iter=childReqs_.begin();iter!=childReqs_.end();iter++)
+      delete *iter;
+  }
   Attribute * findAttribute( const string & attrName );
   Tag *       findSubTag( const string & tagName );
   void        validateAttribute( xmlAttr * attr );
@@ -958,10 +969,7 @@ ProblemSpecReader::parseValidationFile()
     }
   }
 
-  // Freeing the xml doc here is causing crashes later.  I'm not sure why this is.  
-  // Perhaps freeing this doc also frees the child elements which are accessed later
-  //
-  // xmlFreeDoc(doc);
+  xmlFreeDoc(doc);
 
   if( forwardDeclMap.size() > 0 ) {
     string name = forwardDeclMap.begin()->first;
@@ -1463,6 +1471,7 @@ ProblemSpecReader::~ProblemSpecReader()
   for( unsigned int pos = 0; pos < d_upsFilename.size(); pos++ ) {
     delete d_upsFilename[ pos ];
   }
+  
 }
 
 string
