@@ -253,9 +253,9 @@ SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = fa
     else {
       string objdir(execname);
       if (execname[0] != '/') {
-	char cwd[MAXPATHLEN];
-	getcwd(cwd,MAXPATHLEN);
-	objdir = cwd+string("/")+objdir;
+        char cwd[MAXPATHLEN];
+        getcwd(cwd,MAXPATHLEN);
+        objdir = cwd+string("/")+objdir;
       }
       int pos = objdir.length()-1;
       while (pos >= 0 && objdir[pos] != '/') --pos;
@@ -266,15 +266,16 @@ SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = fa
   }
 
   if (!sci_getenv("SCIRUN_SRCDIR"))
-      sci_putenv("SCIRUN_SRCDIR", srcdir);
+    sci_putenv("SCIRUN_SRCDIR", srcdir);
   if (!sci_getenv("SCIRUN_THIRDPARTY_DIR"))
-      sci_putenv("SCIRUN_THIRDPARTY_DIR", thirdpartydir);
+    sci_putenv("SCIRUN_THIRDPARTY_DIR", thirdpartydir);
   if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
     sci_putenv("SCIRUN_LOAD_PACKAGE", packages);
   if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
     sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
-  sci_putenv("SCIRUN_ITCL_WIDGETS", 
-	     MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
+  char *tmp=MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS"));
+  sci_putenv("SCIRUN_ITCL_WIDGETS",tmp);
+  delete tmp;
 
   find_and_parse_scirunrc( beSilent );
 
