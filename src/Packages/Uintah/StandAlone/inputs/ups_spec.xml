@@ -253,26 +253,26 @@
                        walltimeStart    - Start check pointing after time much real time has elapsed (since beginning the simulation).
                        walltimeInterval - How much real time must pass before the next check point is written.
       -->
-      <checkpoint       spec="REQUIRED NO_DATA"
-                          children1="ONE_OF(interval, walltimeInterval, timestepInterval)"
-                          children2="ALL_OR_NONE_OF(walltimeStart, walltimeInterval)"
-                        attribute1="interval         OPTIONAL DOUBLE  'positive'"
-                        attribute2="cycle            REQUIRED INTEGER 'positive'"
-                        attribute3="timestepInterval OPTIONAL INTEGER 'positive'"
-                        attribute4="walltimeStart    OPTIONAL DOUBLE  'positive'"
-                        attribute5="walltimeInterval OPTIONAL DOUBLE  'positive'" />
-      <compression         spec="OPTIONAL STRING 'gzip'" />
-      <filebase         spec="REQUIRED STRING" />
-      <outputInterval   spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: only one of these should be allowed... -->
-      <outputInitTimestep spec="OPTIONAL BOOLEAN" />
+      <checkpoint             spec="REQUIRED NO_DATA"
+                                children1="ONE_OF(interval, walltimeInterval, timestepInterval)"
+                                children2="ALL_OR_NONE_OF(walltimeStart, walltimeInterval)"
+                                attribute1="interval         OPTIONAL DOUBLE  'positive'"
+                                attribute2="cycle            REQUIRED INTEGER 'positive'"
+                                attribute3="timestepInterval OPTIONAL INTEGER 'positive'"
+                                attribute4="walltimeStart    OPTIONAL DOUBLE  'positive'"
+                                attribute5="walltimeInterval OPTIONAL DOUBLE  'positive'" />
+      <compression            spec="OPTIONAL STRING 'gzip'" />
+      <filebase               spec="REQUIRED STRING" />
+      <outputInterval         spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: only one of these should be allowed... -->
+      <outputInitTimestep     spec="OPTIONAL BOOLEAN" />
       <outputTimestepInterval spec="OPTIONAL INTEGER 'positive'" />
 
      <!-- HACK: until we know what to do about checking the label names-->
-      <save             spec="MULTIPLE NO_DATA"
-                          attribute1="label        REQUIRED STRING"
-                          attribute2="levels       OPTIONAL STRING"
-                          attribute3="material     OPTIONAL STRING" 
-                          attribute4="table_lookup OPTIONAL BOOLEAN" /> <!-- FIXME: are these really STRINGs? and what are the valid values? -->
+      <save                   spec="MULTIPLE NO_DATA"
+                                attribute1="label        REQUIRED STRING"
+                                attribute2="levels       OPTIONAL STRING"
+                                attribute3="material     OPTIONAL STRING" 
+                                attribute4="table_lookup OPTIONAL BOOLEAN" /> <!-- FIXME: are these really STRINGs? and what are the valid values? -->
 <!--
                             'press_equil_CC, vol_frac_CC, sp_vol_CC, uvel_FC, vvel_FC, wvel_FC, uvel_FCME, vvel_FCME,
                              wvel_FCME, delP_Dilatate, delP_MassX, press_CC, mass_L_CC, mom_source_CC, mom_L_ME_CC, vel_CC, rho_CC, rhs, 
@@ -280,87 +280,87 @@
                              KineticEnergy, TotalIntEng, TotalMass, StrainEnergy, CenterOfMassPosition,
                              CenterOfMassVelocity, p.x, p.volume, p.stress, g.mass, g.stressFS'" />
 -->
-      <save_crack_geometry spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
-      <outputDoubleAsFloat spec="OPTIONAL NO_DATA" />
+      <save_crack_geometry    spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
+      <outputDoubleAsFloat    spec="OPTIONAL NO_DATA" />
   </DataArchiver>
 
-  <Debug                    spec="OPTIONAL NO_DATA" >
-    <dbg_timeStart          spec="REQUIRED DOUBLE" />
-    <dbg_timeStop           spec="REQUIRED DOUBLE" />
-    <dbg_outputInterval     spec="REQUIRED DOUBLE" />
-    <dbg_BeginIndex         spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
-    <dbg_EndIndex           spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
-    <dbg_Matls              spec="REQUIRED MULTIPLE_INTEGERS" />
-    <dbg_SigFigs            spec="OPTIONAL INTEGER '1, 20'" />
-    <dbg_Level              spec="OPTIONAL INTEGER '1, 20'" />
-    <dbg_SymmetryPlanes     spec="OPTIONAL INTEGER '1, 3'" />
-    <dbg_Sym_absolute_tol   spec="OPTIONAL DOUBLE  'positive'" />
-    <dbg_Sym_relative_tol   spec="OPTIONAL DOUBLE  'positive'" />
-    <dbg_Sym_cutoff_value   spec="OPTIONAL DOUBLE  'positive'" />
+  <Debug                      spec="OPTIONAL NO_DATA" >
+    <dbg_timeStart            spec="REQUIRED DOUBLE" />
+    <dbg_timeStop             spec="REQUIRED DOUBLE" />
+    <dbg_outputInterval       spec="REQUIRED DOUBLE" />
+    <dbg_BeginIndex           spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
+    <dbg_EndIndex             spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
+    <dbg_Matls                spec="REQUIRED MULTIPLE_INTEGERS" />
+    <dbg_SigFigs              spec="OPTIONAL INTEGER '1, 20'" />
+    <dbg_Level                spec="OPTIONAL INTEGER '1, 20'" />
+    <dbg_SymmetryPlanes       spec="OPTIONAL INTEGER '1, 3'" />
+    <dbg_Sym_absolute_tol     spec="OPTIONAL DOUBLE  'positive'" />
+    <dbg_Sym_relative_tol     spec="OPTIONAL DOUBLE  'positive'" />
+    <dbg_Sym_cutoff_value     spec="OPTIONAL DOUBLE  'positive'" />
     
-    <debug              spec="MULTIPLE NO_DATA"
-                        attribute1="label REQUIRED STRING 'switchTestConservation_abc, 
-                                                           switchDebug_Initialize, 
-                                                           switchDebug_equil_press, 
-                                                           switchDebug_PressDiffRF, 
-                                                           switchDebug_vel_FC, 
-                                                           switchDebug_Temp_FC, 
-                                                           switchDebug_Exchange_FC, 
-                                                           switchDebug_explicit_press, 
-                                                           switchDebug_setupMatrix, 
-                                                           switchDebug_setupRHS, 
-                                                           switchDebug_updatePressure, 
-                                                           switchDebug_computeDelP, 
-                                                           switchDebug_PressFC, 
-                                                           switchDebug_LagrangianValues, 
-                                                           switchDebug_LagrangianSpecificVol, 
-                                                           switchDebug_LagrangianTransportedVars, 
-                                                           switchDebug_MomentumExchange_CC, 
-                                                           switchDebug_Source_Sink, 
-                                                           switchDebug_advance_advect, 
-                                                           switchDebug_conserved_primitive, 
-                                                           switchDebug_AMR_refine, 
-                                                           switchDebug_AMR_refineInterface, 
-                                                           switchDebug_AMR_coarsen, 
-                                                           switchDebug_AMR_reflux,
-                                                           switchDebug_InterpolateNCToCC_0,
-                                                           switchDebug_InterpolateCCToNC,
-                                                           switchDebug_InterpolatePAndGradP'"/>
+    <debug                    spec="MULTIPLE NO_DATA"
+                                attribute1="label REQUIRED STRING 'switchTestConservation_abc,
+                                                                   switchDebug_Initialize,
+                                                                   switchDebug_equil_press,
+                                                                   switchDebug_PressDiffRF,
+                                                                   switchDebug_vel_FC,
+                                                                   switchDebug_Temp_FC,
+                                                                   switchDebug_Exchange_FC,
+                                                                   switchDebug_explicit_press,
+                                                                   switchDebug_setupMatrix,
+                                                                   switchDebug_setupRHS,
+                                                                   switchDebug_updatePressure,
+                                                                   switchDebug_computeDelP,
+                                                                   switchDebug_PressFC,
+                                                                   switchDebug_LagrangianValues,
+                                                                   switchDebug_LagrangianSpecificVol,
+                                                                   switchDebug_LagrangianTransportedVars,
+                                                                   switchDebug_MomentumExchange_CC,
+                                                                   switchDebug_Source_Sink,
+                                                                   switchDebug_advance_advect,
+                                                                   switchDebug_conserved_primitive,
+                                                                   switchDebug_AMR_refine,
+                                                                   switchDebug_AMR_refineInterface,
+                                                                   switchDebug_AMR_coarsen,
+                                                                   switchDebug_AMR_reflux,
+                                                                   switchDebug_InterpolateNCToCC_0,
+                                                                   switchDebug_InterpolateCCToNC,
+                                                                   switchDebug_InterpolatePAndGradP'" />
   </Debug>
 
-  <InitialConditions    spec="OPTIONAL NO_DATA">
-    <MPM                spec="OPTIONAL NO_DATA" />
-    <ARCHES             spec="OPTIONAL NO_DATA" />
+  <InitialConditions        spec="OPTIONAL NO_DATA">
+    <MPM                    spec="OPTIONAL NO_DATA" />
+    <ARCHES                 spec="OPTIONAL NO_DATA" />
   </InitialConditions>
 
-  <Grid                 spec="REQUIRED NO_DATA">
+  <Grid                     spec="REQUIRED NO_DATA">
 
-    <BoundaryConditions spec="OPTIONAL NO_DATA">
-      <LODI             spec="OPTIONAL NO_DATA">
-        <press_infinity spec="REQUIRED DOUBLE 'positive'" />
-        <sigma          spec="REQUIRED DOUBLE '0, 1'"/>
+    <BoundaryConditions     spec="OPTIONAL NO_DATA">
+      <LODI                 spec="OPTIONAL NO_DATA">
+        <press_infinity     spec="REQUIRED DOUBLE 'positive'" />
+        <sigma              spec="REQUIRED DOUBLE '0, 1'"/>
         <ice_material_index spec="REQUIRED INTEGER '0, 6'"/>
       </LODI>    
-      <SINE_BC          spec="OPTIONAL NO_DATA">
-        <omega          spec="REQUIRED DOUBLE 'positive'"/>
-        <A              spec="REQUIRED DOUBLE 'positive'"/>
+      <SINE_BC              spec="OPTIONAL NO_DATA">
+        <omega              spec="REQUIRED DOUBLE 'positive'"/>
+        <A                  spec="REQUIRED DOUBLE 'positive'"/>
       </SINE_BC>
       
-      <Face             spec="MULTIPLE NO_DATA"
-                          attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                          attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                          attribute3="inner_radius  OPTIONAL DOUBLE 'positive'"
-                          attribute4="origin        OPTIONAL MULTIPLE_DOUBLES"
-                          attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"
-                          attribute6="side          OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
-                          attribute7="radius        OPTIONAL DOUBLE 'positive'" >
-        <BCType         spec="MULTIPLE NO_DATA"
-                          attribute1="id        REQUIRED STRING '0,1,2,3,5,6,all'"
-                          attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine'"
-                          attribute3="label     REQUIRED STRING 'cumulativeEnergyReleased, Density, Phi, Pressure, scalar-f,
+      <Face                 spec="MULTIPLE NO_DATA"
+                              attribute1="annulus       OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
+                              attribute2="circle        OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
+                              attribute3="inner_radius  OPTIONAL DOUBLE 'positive'"
+                              attribute4="origin        OPTIONAL MULTIPLE_DOUBLES"
+                              attribute5="outer_radius  OPTIONAL DOUBLE 'positive'"
+                              attribute6="side          OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'"
+                              attribute7="radius        OPTIONAL DOUBLE 'positive'" >
+        <BCType             spec="MULTIPLE NO_DATA"
+                              attribute1="id        REQUIRED STRING '0,1,2,3,5,6,all'"
+                              attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine'"
+                              attribute3="label     REQUIRED STRING 'cumulativeEnergyReleased, Density, Phi, Pressure, scalar-f,
                                                                  SpecificVol, Symmetric, Temperature, Velocity'" >
-          <value        spec="OPTIONAL STRING" /> <!-- ERROR... it is required for some, but not for Dirichlet!!!
-                                                       also, type can be different for different labels... how to handle? --> 
+          <value            spec="OPTIONAL STRING" /> <!-- ERROR... it is required for some, but not for Dirichlet!!!
+                                                         also, type can be different for different labels... how to handle? --> 
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -534,14 +534,13 @@
           <InletVelocity                spec="OPTIONAL DOUBLE" />
           <mixture_fraction             spec="REQUIRED DOUBLE" />
           <Prefill                      spec="OPTIONAL NO_DATA"
-                                        attribute1="direction REQUIRED STRING 'X,Y,Z'">
+                                          attribute1="direction REQUIRED STRING 'X, Y, Z'" >
             <geom_object 		spec="REQUIRED NO_DATA">
-	      <box                    spec="MULTIPLE" />
-              <cone                   spec="MULTIPLE" />
-              <cylinder               spec="MULTIPLE" />
-              <sphere                 spec="MULTIPLE" />
+	      <box                      spec="MULTIPLE" />
+              <cone                     spec="MULTIPLE" />
+              <cylinder                 spec="MULTIPLE" />
+              <sphere                   spec="MULTIPLE" />
             </geom_object>
-
           </Prefill>
           <geom_object/>
         </FlowInlet>
@@ -740,31 +739,31 @@
       <start_index        spec="REQUIRED VECTOR" />
       <end_index          spec="REQUIRED VECTOR" />
       <var                spec="MULTIPLE NO_DATA"
-                          attribute1="label REQUIRED STRING"
-                          attribute2="dw    REQUIRED STRING 'NewDW, OldDW'" />
-                        <locations          spec="OPTIONAL NO_DATA"
-                          attribute1="before_comm OPTIONAL BOOLEAN"
-                          attribute2="before_exec OPTIONAL BOOLEAN"
-                          attribute3="after_exec OPTIONAL BOOLEAN" />
-                          
+                            attribute1="label REQUIRED STRING"
+                            attribute2="dw    REQUIRED STRING 'NewDW, OldDW'" />
+      <locations          spec="OPTIONAL NO_DATA"
+                            attribute1="before_comm OPTIONAL BOOLEAN"
+                            attribute2="before_exec OPTIONAL BOOLEAN"
+                            attribute3="after_exec  OPTIONAL BOOLEAN" />
     </VarTracker>
   </Scheduler>
 
-  <LoadBalancer           spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'DLB'" >
-    <cellCost             spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
-    <cellFactor           spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
-    <doCostProfiling      spec="OPTIONAL BOOLEAN" /> <!-- use cost profiling instead of the cost model-->
-    <doSpaceCurve         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
-    <dynamicAlgorithm     spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, Zoltan'" />
-    <gainThreshold        spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
-    <levelIndependent     spec="OPTIONAL BOOLEAN" /> <!-- FIXME: Is this optional? If so, what is default? -->
-    <particleCost         spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
-    <patchCost            spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
+  <LoadBalancer            spec="OPTIONAL NO_DATA" 
+                             attribute1="type REQUIRED STRING 'DLB'" >
+    <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
+    <cellFactor            spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
+    <doCostProfiling       spec="OPTIONAL BOOLEAN" /> <!-- use cost profiling instead of the cost model-->
+    <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
+    <dynamicAlgorithm      spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, Zoltan'" />
+    <gainThreshold         spec="OPTIONAL DOUBLE '0,1'" /> <!-- the percent improvement that a reloadbalance must have over an old load balance to be used-->
+    <levelIndependent      spec="OPTIONAL BOOLEAN" /> <!-- FIXME: Is this optional? If so, what is default? -->
+    <particleCost          spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per particle -->
+    <patchCost             spec="OPTIONAL DOUBLE 'positive'" /> <!-- The weight per patch -->
     <profileTimestepWindow spec="OPTIONAL INTEGER 'positive'" /> <!-- the number of timesteps that the profiled weight will take up 99% of the weight -->
-    <timestepInterval     spec="REQUIRED INTEGER 'positive'" />
-    <outputNthProc        spec="OPTIONAL INTEGER 'positive'"/>
-    <zoltanAlgorithm      spec="OPTIONAL STRING 'HSFC RIB RCB'" />
-    <zoltanIMBTol         spec="OPTIONAL DOUBLE 'positive'" />
+    <timestepInterval      spec="REQUIRED INTEGER 'positive'" />
+    <outputNthProc         spec="OPTIONAL INTEGER 'positive'"/>
+    <zoltanAlgorithm       spec="OPTIONAL STRING 'HSFC RIB RCB'" />
+    <zoltanIMBTol          spec="OPTIONAL DOUBLE 'positive'" />
 
   </LoadBalancer>
 

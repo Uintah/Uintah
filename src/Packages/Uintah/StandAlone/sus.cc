@@ -513,6 +513,7 @@ main( int argc, char *argv[], char *env[] )
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
+      ups = 0; // This cleans up memory held by the 'ups'.
       Uintah::Parallel::finalizeManager();
       Thread::exitAll( 0 );
     }
@@ -615,9 +616,12 @@ main( int argc, char *argv[], char *env[] )
       ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }
     
+    // This gives memory held by the 'ups' back before the simulation starts... Assuming
+    // no one else is holding on to it...
+    ups = 0;
+
     ctl->run();
     delete ctl;
-    
 
     sched->removeReference();
     delete sched;
