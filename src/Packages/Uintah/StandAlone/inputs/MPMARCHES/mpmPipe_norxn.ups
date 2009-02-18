@@ -264,16 +264,11 @@
 		    <ExtraScalars>
 		    	<CO2scalar>.1665</CO2scalar>
 		    </ExtraScalars>
-		    <prefill_direction>X</prefill_direction>
-		      <prefill_geom_object>
-                        <cylinder label="inner cylinder2">
-							<bottom>[-1., 1.5, 1.5]</bottom>
-                            <top>[1, 1.5, 1.5]</top>
-                            <radius>.5</radius>
-                        </cylinder>
-                        <!--cylinder label = "inner cylinder">
-                        </cylinder-->
-		      </prefill_geom_object>
+		    <Prefill direction="X">
+		      <geom_object>
+	                <cylinder label="inner cylinder"/>
+		      </geom_object>
+		    </Prefill>
 		</FlowInlet>
 
 		<PressureBC>
