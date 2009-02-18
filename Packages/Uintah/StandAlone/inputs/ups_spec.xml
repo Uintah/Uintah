@@ -601,9 +601,12 @@
           <radiation                    spec="REQUIRED BOOLEAN" />
           <radiationCalcFreq            spec="REQUIRED INTEGER" />
           <radCalcForAllRKSteps         spec="REQUIRED BOOLEAN" />
+          <radCalcForAllImplicitSteps   spec="OPTIONAL BOOLEAN" />
           <discrete_ordinates           spec="REQUIRED BOOLEAN" />
           <DORadiationModel             spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
+            <ordinates                  spec="OPTIONAL INTEGER" />
+            <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
             <linear_solver              spec="REQUIRED STRING 'hypre'" />
             <LinearSolver               spec="OPTIONAL NO_DATA" >
               <res_tol                  spec="REQUIRED DOUBLE" />
@@ -611,8 +614,8 @@
               <pctype                   spec="REQUIRED STRING 'jacobi'" />
               <max_iter                 spec="REQUIRED INTEGER" />
             </LinearSolver>
+            <spherical_harmonics        spec="OPTIONAL BOOLEAN" />
           </DORadiationModel>
-
         </EnthalpySolver>
 
         <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
