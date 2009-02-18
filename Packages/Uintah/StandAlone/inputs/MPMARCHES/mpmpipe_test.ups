@@ -204,11 +204,11 @@
 			<radius> .5 </radius>
 		      </cylinder>
 		    </geom_object>
-		    <prefill_direction>X</prefill_direction>
-		      <prefill_geom_object>
-                        <cylinder label = "inner cylinder">
-                        </cylinder>
-		      </prefill_geom_object>
+		    <Prefill direction="X">
+		      <geom_object>
+		        <cylinder label="inner cylinder"/>
+		      </geom_object>
+		    </Prefill>
 		</FlowInlet>
 
 		<WallBC>
