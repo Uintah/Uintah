@@ -63,13 +63,18 @@ namespace Uintah {
     ProblemSpecReader(const ProblemSpecReader&);
     ProblemSpecReader& operator=(const ProblemSpecReader&);
     
+    ////////////////////////////////////////////////////////////////////////////////
+    // Variables:
+
     // d_upsFilename[0] is the main file... but each subsequent string
     // is the name of an <include>d file.
     std::vector< std::string * > d_upsFilename;
 
     ProblemSpecP d_xmlData;
 
+    ////////////////////////////////////////////////////////////////////////////////
     // Functions:
+
     void         parseValidationFile();
     void         validateProblemSpec( ProblemSpecP & prob_spec );
     string *     findFileNamePtr( const std::string & filename );
