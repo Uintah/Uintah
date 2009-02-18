@@ -2178,29 +2178,37 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
     params->require("reacting_scalar", reactscalar);
     streamMixturefraction.d_rxnVars.push_back(reactscalar);
   }
-  std::string d_prefill_direction;
-  params->getWithDefault("prefill_direction",d_prefill_direction,"");
-  if (!(d_prefill_direction == "")) {
-    if (d_prefill_direction == "X") {
-      d_prefill_index = 1;
-      d_prefill = true;
-    }
-    else if (d_prefill_direction == "Y") {
-    d_prefill_index = 2;
-    d_prefill = true;
-    }
-    else if (d_prefill_direction == "Z") {
-    d_prefill_index = 3;
-    d_prefill = true;
-    }
-    else
-      throw InvalidValue("Wrong prefill direction.", __FILE__, __LINE__);
-  }
-  if (d_prefill) {
-    ProblemSpecP prefillGeomObjPS = params->findBlock("prefill_geom_object");
-    GeometryPieceFactory::create(prefillGeomObjPS, d_prefillGeomPiece);
-  }
  
+  //Prefill a geometry object with the flow inlet condition 
+  d_prefill = params->findBlock("Prefill"); 
+  if (params->findBlock("Prefill")){
+    ProblemSpecP db_prefill = params->findBlock("Prefill");
+    std::string prefill_direction = "null"; 
+    db_prefill->getAttribute("direction",prefill_direction); 
+    //get the direction
+    if (prefill_direction == "X") {
+      d_prefill_index = 1;
+    }
+    else if (prefill_direction == "Y") {
+      d_prefill_index = 2;
+    }
+    else if (prefill_direction == "Z") {
+      d_prefill_index = 3;
+    }
+    else {
+      throw InvalidValue("Wrong prefill direction. Please add the direction attribute to the <Prefill> tag.", __FILE__, __LINE__);
+    }
+    //get the object
+    ProblemSpecP prefillGeomObjPS = db_prefill->findBlock("geom_object");
+    if (prefillGeomObjPS)
+    {
+      GeometryPieceFactory::create(prefillGeomObjPS, d_prefillGeomPiece); 
+    } 
+    else 
+    { 
+      throw ProblemSetupException("Error! Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
+    }
+  }
 }
 
 
@@ -5867,6 +5875,7 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
                 Point p = patch->cellPosition(*iter);
                 if (piece->inside(p) && cellType[*iter] == d_flowfieldCellTypeVal) {
                   if (fi->d_prefill_index == 1) {
+                    cout << "PREFILLINGNNNNNNNNNNNNNNNNNNNNNNNNNNN!!!!" << endl;
                     Point p_shift = patch->cellPosition(*iter-IntVector(1,0,0));
                     if (piece->inside(p_shift))
                       uVelocity[*iter] = flow_rate/
