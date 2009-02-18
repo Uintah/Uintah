@@ -167,6 +167,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_pressureBoundary = false;
     d_outletBoundary = false;
     d_intrusionBoundary = false;
+    d_carbon_balance=false;
+    d_sulfur_balance=false;
+    d_carbon_balance_es=false;
+    d_sulfur_balance_es=false;
   }
   else
   {
