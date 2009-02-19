@@ -392,15 +392,15 @@ run_restart () {
 #        cd $results
 	echo $PWD
         uda_new=`echo $uda | tr -d "/"`
-
-        echo; echo "Running: $MPI sus $opts -restart -t 0 -copy $uda_new.000"
-        $MPI ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
+        uda_new=`ls -d -1 $uda_new* | tail -n1`
+        echo; echo "Running: $MPI sus $opts -restart -t 0 -copy $uda_new"
+        $MPI ../sus $opts -restart -t 0 -copy $uda_new &> $n.out_restart
         if [ $? -eq 0 ] ; then
             echo "Sus: going down successfully"
             echo
             echo "Comparing restart results"
-            echo "compare_uda $compare_uda_options $uda_new.000 $uda_new.001"
-            ../compare_uda $compare_uda_options $uda_new.000 $uda_new.001 &> $n.compare_restart
+            echo "compare_uda $compare_uda_options $goldStandard $uda_new"
+            ../compare_uda $compare_uda_options $goldStandard $uda_new &> $n.compare_restart
             if [ $? -eq 0 ]; then
                 echo "compare restart passed . . . "
 		run_restart_return=0
@@ -410,8 +410,8 @@ run_restart () {
             fi
             echo
             echo "Comparing restart results for checkpoints"
-            echo "compare_uda -skip_unknown_types $compare_uda_options $uda_new.000/checkpoints $uda_new.001/checkpoints"
-            ../compare_uda -skip_unknown_types $compare_uda_options $uda_new.000/checkpoints $uda_new.001/checkpoints &> $n.compare_restart_checkpoints
+            echo "compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda_new/checkpoints"
+            ../compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda_new/checkpoints &> $n.compare_restart_checkpoints
             if [ $? -eq 0 ]; then
                 echo "compare restart checkpoints passed . . ."
                 run_restart_checkpoints=0
