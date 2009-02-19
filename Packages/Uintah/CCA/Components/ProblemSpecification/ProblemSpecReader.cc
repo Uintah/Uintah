@@ -85,7 +85,7 @@ indent( ostream & out, unsigned int depth )
 {
   // out << depth << " ";
   for( unsigned int pos = 0; pos < depth; pos++ ) {
-    out << "  ";
+    out << "    ";
   }
 }
 
@@ -219,20 +219,14 @@ struct ChildRequirements : public RefCounted {
 struct AttributeAndTagBase :  public RefCounted {
 
   AttributeAndTagBase( const string & name, TagP parent ) :
-    parent_( parent ), name_( name )
-  {
-    // cout << "1) allocated: " << this << ", " << name_ << "\n";
-  }
+    parent_( parent ), name_( name ), occurrences_( 0 ) { }
 
   AttributeAndTagBase( const string & name, need_e need, type_e type, 
                        const vector<string> & validValues, /*const*/ TagP parent ) :
     parent_( parent ),
     name_( name ), need_( need ), type_( type ),
     validValues_( validValues ),
-    occurrences_( 0 )
-  {
-    // cout << "2) allocated: " << this << ", " << name_ << "\n";
-  }
+    occurrences_( 0 ) { }
 
   AttributeAndTagBase( const string & name, need_e need, type_e type, 
                        const string & validValues, /*const*/ TagP parent ) :
@@ -240,7 +234,6 @@ struct AttributeAndTagBase :  public RefCounted {
     name_( name ), need_( need ), type_( type ),
     occurrences_( 0 )
   {
-    // cout << "3) allocated: " << this << ", " << name_ << "\n";
     vector<char> separators;
     separators.push_back( ',' );
     separators.push_back( ' ' );
@@ -250,10 +243,7 @@ struct AttributeAndTagBase :  public RefCounted {
     }
   }
 
-  virtual ~AttributeAndTagBase() {
-    // cout << "deleting " << this << ", parent: " << parent_.get_rep() << " - " << name_ << "\n";
-    parent_ = 0;
-  }
+  virtual ~AttributeAndTagBase() {}
 
   TagP           parent_; // was const... should be, but I need to be able to pass it into findAttribute()...
   string         name_;
@@ -286,10 +276,7 @@ struct AttributeAndTagBase :  public RefCounted {
   bool   validateBoolean( const string & value ) const;
   void   validateDouble(  double value         ) const;
 
-  virtual void cleanUp( bool force = false ) {
-    // cout << "1) setting parent of " << this << " to 0.  Was: " << parent_.get_rep() << "\n";
-    parent_ = 0;
-  }
+  virtual void cleanUp( bool force = false ) = 0;
 
   virtual void print( bool /* recursively = false */, unsigned int depth = 0, bool isTag = false ) { 
 
@@ -314,7 +301,9 @@ struct AttributeAndTagBase :  public RefCounted {
       dbg << validValues_[pos] << " ";
     }
     dbg << (validValues_.size() == 0 ? "" : "'" )
-         << "(occur'd: " << occurrences_ << ") ";
+        << "(occur'd: " << occurrences_ << ") "
+        << "(rc: " << getReferenceCount() << ") "
+        << "(" << this << ") ";
   }
 
 };
@@ -329,6 +318,11 @@ struct Attribute : public AttributeAndTagBase {
     AttributeAndTagBase::print( recursively, depth, isTag );
     dbg << "\n";
   }
+
+  virtual void cleanUp( bool force = false ) {
+    parent_ = 0;
+  }
+
 };
 
 struct Tag : public AttributeAndTagBase {
@@ -351,14 +345,14 @@ struct Tag : public AttributeAndTagBase {
   //
   Tag( const string & name, TagP parent ) : 
     // This constructor is used only for creating a tag that is a forward declaration place holder tag.
-    AttributeAndTagBase( name, parent ), forwardDeclaration_( true ), isCommonTag_( false ) {
-  }
+    AttributeAndTagBase( name, parent ), forwardDeclaration_( true ), isCommonTag_( false ) {}
 
   Tag( const string & name, need_e need, type_e type, const string & validValues, /*const*/ TagP parent ) :
     AttributeAndTagBase( name, need, type, validValues, parent ), forwardDeclaration_( false ), isCommonTag_( false ) {}
 
   Tag( const TagP commonTag, /*const*/ TagP parent, need_e need ) :
-    AttributeAndTagBase( commonTag->name_, commonTag->need_, commonTag->type_, commonTag->validValues_, parent ), forwardDeclaration_( false ) {
+    AttributeAndTagBase( commonTag->name_, commonTag->need_, commonTag->type_, commonTag->validValues_, parent ),
+    forwardDeclaration_( false ) {
 
     if( need == INVALID_NEED ) { 
       need_ = commonTag->need_;
@@ -367,34 +361,39 @@ struct Tag : public AttributeAndTagBase {
       dbg << "Notice: need changed to " << need << "\n";
       need_ = need;
     }
-    subTags_    = commonTag->subTags_;
-    attributes_ = commonTag->attributes_;
-    isCommonTag_  = true;
+    subTags_     = commonTag->subTags_;
+    attributes_  = commonTag->attributes_;
+    isCommonTag_ = true;
   }
+
+  // CleanUp() is used to 'unlink' all the children from their parents so that the ReferenceCount will reach 0
+  // and the items will be deleted.  'force' is only used by the very top level as it doesn't have a parent_.
 
   virtual void cleanUp( bool force = false ) {
 
-    // cout << "2) setting parent of " << this << " to 0.  Was: " << parent_.get_rep() << ", " << name_ << "\n";
-
-    if( parent_ == 0 && !force ) return;
-
-    parent_ = 0;
     for( vector< AttributeP >::iterator iter = attributes_.begin(); iter != attributes_.end(); iter++ ) {
       (*iter)->cleanUp();
     }
 
     for( vector< TagP >::iterator iter = subTags_.begin(); iter != subTags_.end(); iter++ ) {
-      (*iter)->cleanUp();
+      if( (*iter)->parent_ != this ) {
+        (*iter) = 0;
+      }
+      else {
+        (*iter)->cleanUp();
+      }
     }
+    parent_ = 0;
   }
 
   ~Tag() {
     for( vector< AttributeP >::iterator iter = attributes_.begin(); iter != attributes_.end(); iter++ ) {
       *iter = 0;
     }
-
     for( vector< TagP >::iterator iter = subTags_.begin(); iter != subTags_.end(); iter++ ) {
-      *iter = 0;
+      if( *iter ) {
+        *iter = 0;
+      }
     }
 
     for( vector< ChildRequirementsP >::iterator iter = childReqs_.begin(); iter != childReqs_.end(); iter++ ) {
@@ -417,7 +416,10 @@ struct Tag : public AttributeAndTagBase {
 
     AttributeAndTagBase::print( recursively, depth, isTag );
 
-    dbg << "(parent: " << (parent_ ? parent_->name_ : "NULL") << ")\n";
+    dbg << "(parent: " << (parent_ ? parent_->name_ : "NULL") << " - " << parent_.get_rep() << ") " 
+        << "(common: " << isCommonTag_ << ")\n";
+
+    if( isCommonTag_ ) { return; }
 
     for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
       attributes_[ pos ]->print( recursively, depth+1 );
@@ -663,17 +665,26 @@ Tag::update( TagP tag )
 
   validValues_   = tag->validValues_;
 
+  needAppliesTo_ = tag->needAppliesTo_;
+
   subTags_       = tag->subTags_;
   attributes_    = tag->attributes_;
-
   childReqs_     = tag->childReqs_;
 
-  needAppliesTo_ = tag->needAppliesTo_;
+  // Re-parent the sub tags and attributes...
+  for( unsigned int pos = 0; pos < subTags_.size(); pos++ ) {
+    subTags_[ pos ]->parent_ = this;
+  }
+  for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
+    attributes_[ pos ]->parent_ = this;
+  }
 }
 
 void
 Tag::parseXmlTag( const xmlNode * xmlTag )
 {
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseXmlTag");
+
   string name = to_char_ptr( xmlTag->name );
   collapse( name );
 
@@ -733,7 +744,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         common = true;
       }
       if( need == INVALID_NEED ) {
-        cout << "1) The value of 'need' was invalid for: " << name << ".\n";
+        throw ProblemSetupException( "The value of 'need' was invalid for: " + name, __FILE__, __LINE__ );
       }
     }
   }
@@ -762,6 +773,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         // This is the real definition of a previously only forwardly declared tag.
         updateForwardDecls = true;
         commonTag->type_ = type;
+        commonTag->need_ = need;
       }
       else {
         // add the new tag to a list of tags to be updated when we get the info we need
@@ -799,9 +811,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
           getLabelAndNeedAndTypeAndValidValues( specStr, label, need, type, validValues );
 
           if( need == INVALID_NEED ) {
-            cout << "2) The value of 'need' was invalid for: " << name << ".\n";
+            throw ProblemSetupException("The value of 'need' was invalid for: " + name, __FILE__, __LINE__ );
           }
-
           newTag->attributes_.push_back( new Attribute( label, need, type, validValues, newTag ) );
         }
         else if( attrName.find( "children") == 0 ) {  // attribute string begins with "children"
@@ -914,6 +925,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
     // This is the real definition of the tag, update the place holder (common) tag with the real data...
     commonTag->update( newTag );
 
+    newTag = 0; // Give back the memory (or at least decrease the ref count).
+
     // Remove the tag's name from the map of tag names that records
     // forwardly declared tags that need to be resolved.  (Warning,
     // because the map only uses the 'local' name of a tag, if in the
@@ -934,6 +947,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         // Update 'fdtag' which previously had just the (incomplete) forward dcl pointer...
         
         fdtag->attributes_  = commonTag->attributes_;
+
         fdtag->subTags_     = commonTag->subTags_;
 
         // Don't update 'need_' as it was already set with a potentially different value.
@@ -957,6 +971,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 void
 ProblemSpecReader::parseValidationFile()
 {
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseValidationFile");
+
   dbg << "parsing ups_spec.xml\n";
 
   xmlDocPtr doc; /* the resulting document tree */
@@ -985,6 +1001,7 @@ ProblemSpecReader::parseValidationFile()
   // Find <CommonTags> (if it exists)
   bool commonTagsFound = false;
   for( xmlNode * child = root->children; child != 0; child = child->next) {
+
     if( child->type == XML_ELEMENT_NODE ) {
       string tagName = to_char_ptr( child->name );
     
@@ -1090,9 +1107,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
   case INTEGER:
     {
       int value;
-      // WARNING: this is probably not a sufficient check for an integer...
-      int     num = sscanf( text.c_str(), "%d", &value );
-      //cout << "VALUE is " << value << "\n";
+      int num = sscanf( text.c_str(), "%d", &value ); // WARNING: this is probably not a sufficient check for an integer...
       if( num != 1 ) {
         throw ProblemSetupException( classType + " <" + completeName + "> should have an integer value (but has: '" + text +
                                      "').  Please fix XML in .ups file or correct validation Tag list.\n" +
@@ -1490,7 +1505,10 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
       dbg << "-- uintah spec: \n";
       dbg << "\n";
       uintahSpec_g->print( true );
-      dbg << "-----------------------------------------------------------------\n";
+      dbg << "---done printing --------------------------------------------------------------\n";
+      dbg << "-- commont Tags: \n";
+      commonTags_g->print( true );
+      dbg << "---done printing --------------------------------------------------------------\n";
     }
   }
 
@@ -1510,12 +1528,12 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
     }
   }
 
+  namedGeomPieces_g.clear();
+
   commonTags_g->cleanUp( true );
-  // cout << "commonTags: " << commonTags_g.get_rep() << ", " << commonTags_g->getReferenceCount() << "\n";
   commonTags_g = 0; // Give back the memory.
 
   uintahSpec_g->cleanUp( true );
-  // cout << "uintahSpec_g: " << uintahSpec_g.get_rep() << ", " << uintahSpec_g->getReferenceCount() << "\n";
   uintahSpec_g = 0; // Give back the memory.
 }
 
@@ -1528,13 +1546,11 @@ ProblemSpecReader::ProblemSpecReader()
 
 ProblemSpecReader::~ProblemSpecReader()
 {
-  // cout << "here: " << d_xmlData->getReferenceCount() << "\n";
   d_xmlData = 0;
 
   for( unsigned int pos = 0; pos < d_upsFilename.size(); pos++ ) {
     delete d_upsFilename[ pos ];
   }
-  
 }
 
 string
@@ -1669,18 +1685,12 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
 
   ProblemSpecP prob_spec = scinew ProblemSpec( xmlDocGetRootElement(doc), true );
 
-  // cout << "1) here: " << prob_spec->getReferenceCount() << "\n";
-
   string * strPtr = new string( full_filename );
 
   d_upsFilename.push_back( strPtr );
   prob_spec->getNode()->_private = (void*)strPtr;
 
-  // cout << "2) here: " << prob_spec->getReferenceCount() << "\n";
-
   resolveIncludes( prob_spec->getNode()->children, prob_spec->getNode() );
-
-  // cout << "3) here: " << prob_spec->getReferenceCount() << "\n";
 
   // Debugging prints:
   //   cout << "------------------------------------------------------------------\n";
@@ -1690,11 +1700,7 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
     validateProblemSpec( prob_spec );
   }
 
-  // cout << "4) here: " << prob_spec->getReferenceCount() << "\n";
-
   d_xmlData = prob_spec;
-
-  // cout << "5) here: " << prob_spec->getReferenceCount() << "\n";
 
   return prob_spec;
 
@@ -1703,7 +1709,6 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
 string *
 ProblemSpecReader::findFileNamePtr( const string & filename )
 {
-
   for( unsigned int pos = 0; pos < d_upsFilename.size(); pos++ ) {
     if( *d_upsFilename[ pos ] == filename ) {
       return d_upsFilename[ pos ];
@@ -1715,6 +1720,8 @@ ProblemSpecReader::findFileNamePtr( const string & filename )
 void
 ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth /* = 0 */ )
 {
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::resolveIncludes");
+
   while( child != NULL ) {
 
     if( child->type == XML_ELEMENT_NODE ) {
@@ -1780,6 +1787,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
         else {
           throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
         }
+        xmlFreeDoc( doc );
       }
       else { // !"include"
         if( child->_private == NULL ) {
