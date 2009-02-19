@@ -351,7 +351,7 @@ compare_results () {
 
     echo "Comparing $uda results against '$goldStandard'"
         
-    echo   "Running command: ../compare_uda $compare_uda_options gs: $goldStandard ud: $uda"
+    echo   "Running command: ../compare_uda $compare_uda_options $goldStandard $uda"
     echo "../compare_uda $compare_uda_options  $goldStandard' $uda'" > $n.compare 2>&1
     ../compare_uda $compare_uda_options $goldStandard $uda >> $n.compare 2>&1
         
@@ -364,9 +364,9 @@ compare_results () {
         compare=false
     fi
     
-    echo; echo   "Running command: ../compare_uda $compare_uda_options gs: $goldStandard/checkpoints ud: $uda/checkpoints"
-    echo "../compare_uda $compare_uda_options  $goldStandard/checkpoints $uda/checkpoints" > $n.compare 2>&1
-    ../compare_uda $compare_uda_options $goldStandard/checkpoints $uda/checkpoints > $n.compare_checkpoints 2>&1
+    echo; echo   "Running command: ../compare_uda -skip_unknown_types  $goldStandard/checkpoints  $uda/checkpoints"
+    echo "../compare_uda -skip_unknown_types $compare_uda_options  $goldStandard/checkpoints $uda/checkpoints" > $n.compare 2>&1
+    ../compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda/checkpoints > $n.compare_checkpoints 2>&1
 
     if [ $? -eq 0 ]; then
         echo "Success running compare_uda on checkpoints . . ."
@@ -399,8 +399,8 @@ run_restart () {
             echo "Sus: going down successfully"
             echo
             echo "Comparing restart results"
-            echo "compare_uda $uda_new.000 $uda_new.001"
-            ../compare_uda $uda_new.000 $uda_new.001 &> $n.compare_restart
+            echo "compare_uda $compare_uda_options $uda_new.000 $uda_new.001"
+            ../compare_uda $compare_uda_options $uda_new.000 $uda_new.001 &> $n.compare_restart
             if [ $? -eq 0 ]; then
                 echo "compare restart passed . . . "
 		run_restart_return=0
@@ -410,8 +410,8 @@ run_restart () {
             fi
             echo
             echo "Comparing restart results for checkpoints"
-            echo "compare_uda $uda_new.000/checkpoints $uda_new.001/checkpoints"
-            ../compare_uda $uda_new.000/checkpoints $uda_new.001/checkpoints &> $n.compare_restart_checkpoints
+            echo "compare_uda -skip_unknown_types $compare_uda_options $uda_new.000/checkpoints $uda_new.001/checkpoints"
+            ../compare_uda -skip_unknown_types $compare_uda_options $uda_new.000/checkpoints $uda_new.001/checkpoints &> $n.compare_restart_checkpoints
             if [ $? -eq 0 ]; then
                 echo "compare restart checkpoints passed . . ."
                 run_restart_checkpoints=0
