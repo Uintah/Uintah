@@ -82,7 +82,6 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
     readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   int nproc = pg->size();
-  stasks_.resize(nproc);
   tasks_.resize(nproc);
 
   // Set up mappings for the initial send tasks
@@ -91,10 +90,12 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
     dwmap[i]=Task::InvalidDW;
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = Task::NoDW;
+  
+  stask_=scinew Task("send old data", Task::InitialSend);
+  stask_->setMapping(dwmap);
+
   for(int i=0;i<nproc;i++) {
-    stasks_[i]=scinew Task("send old data", Task::InitialSend);
-    stasks_[i]->setMapping(dwmap);
-    tasks_[i]=scinew DetailedTask(stasks_[i], 0, 0, this);
+    tasks_[i]=scinew DetailedTask(stask_, 0, 0, this);
     tasks_[i]->assignResource(i);
   }
 }
@@ -107,8 +108,7 @@ DetailedTasks::~DetailedTasks()
   for(int i=0;i<(int)tasks_.size();i++)
     delete tasks_[i];
 
-  for(int i=0;i<(int)stasks_.size();i++)
-    delete stasks_[i];
+  delete stask_;
 }
 
 DependencyBatch::~DependencyBatch()
