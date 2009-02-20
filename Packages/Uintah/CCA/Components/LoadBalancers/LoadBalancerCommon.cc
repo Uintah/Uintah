@@ -357,8 +357,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
 }
 
 bool
-LoadBalancerCommon::inNeighborhood(const PatchSubset* ps,
-           const MaterialSubset*)
+LoadBalancerCommon::inNeighborhood(const PatchSubset* ps) 
 {
   for(int i=0;i<ps->size();i++){
     const Patch* patch = ps->get(i);

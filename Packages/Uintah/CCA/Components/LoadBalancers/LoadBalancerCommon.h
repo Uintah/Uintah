@@ -87,7 +87,7 @@ namespace Uintah {
      virtual void createNeighborhood(const GridP& grid, const GridP& oldGrid);
 
      /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
-     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
+     virtual bool inNeighborhood(const PatchSubset*);
 
      /// Asks the load balancer if patch is in the neighborhood.
      virtual bool inNeighborhood(const Patch*);
