@@ -391,7 +391,7 @@ namespace Uintah {
     vector<DetailedReq*> initreqs_;
 #endif
     const TaskGraph* taskgraph_;
-    vector<Task*> stasks_;
+    Task* stask_;
     vector<DetailedTask*> localtasks_;
     vector<DependencyBatch*> batches_;
     DetailedDep* initreq_;
