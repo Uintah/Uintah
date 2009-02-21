@@ -156,8 +156,8 @@ public:
       jIndex * Ncx +
       kIndex * Ncx * Ncy;
     
-    if (directionVector[2] >  0 ) currentvIndex = 32779; //4189; //3789;
-    else currentvIndex = 31179;//3789; //4189;
+    //  if (directionVector[2] >  0 ) currentvIndex = 32779; //4189; //3789;
+    //   else currentvIndex = 31179;//3789; //4189;
      
   }
   
