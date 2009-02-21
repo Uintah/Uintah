@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
+// linear interpolation of Temperature on cell faces.
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
 #include "Surface.h"
@@ -321,9 +322,9 @@ int main(int argc, char *argv[]){
   StopLowerBound = 1e-4;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
+  Ncx = 20;
+  Ncy = 20;
+  Ncz = 20;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
@@ -785,16 +786,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 0;
-       rayNo_bottom_surface[iSurface] = 0;
+       rayNo_top_surface[iSurface] = 1000;
+       rayNo_bottom_surface[iSurface] = 1000;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 0;
-       rayNo_back_surface[iSurface] = 0;
+       rayNo_front_surface[iSurface] = 1000;
+       rayNo_back_surface[iSurface] = 1000;
      }   
 
 
@@ -802,14 +803,15 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 0;
-       rayNo_right_surface[iSurface] = 0;
+       rayNo_left_surface[iSurface] = 1000;
+       rayNo_right_surface[iSurface] = 1000;
      }
 
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
    // #include "inputBenchmark.cc"
-    #include "inputBenchmarkSurf.cc"
+   // #include "inputBenchmarkSurf.cc"
+   #include "inputUniform.cc"
    //   #include "inputNonblackSurf.cc"
    // #include "inputScattering.cc"   
      
