@@ -86,6 +86,10 @@ namespace Uintah {
      /// receive data from.
      virtual void createNeighborhood(const GridP& grid, const GridP& oldGrid);
 
+     const set<int>& getNeighborhoodProcessors()
+     {
+        return d_neighborProcessors;
+     }
      /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
      virtual bool inNeighborhood(const PatchSubset*);
 
@@ -132,6 +136,7 @@ namespace Uintah {
      SimulationStateP d_sharedState; ///< to keep track of timesteps
      Scheduler* d_scheduler; ///< store the scheduler to not have to keep passing it in
      std::set<const Patch*> d_neighbors; ///< the neighborhood.  \See createNeighborhood
+     std::set<int> d_neighborProcessors; //a list of processors that are in this processors neighborhood
      //! output on every nth processor.  This variable needs to be shared 
      //! with the DataArchiver as well, but we keep it here because the lb
      //! needs it to assign the processor resource.
