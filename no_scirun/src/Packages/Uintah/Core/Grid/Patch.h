@@ -1789,6 +1789,15 @@ WARNING
 
       /*****end boundary condition ****/
 
+      /**
+      * Returns a vector of Regions that
+      * do not have any overlapping finer level patches.
+      * Use the following to iterate over the cells
+      * that have no finer level overlapping cells.
+      */
+     void  getFinestRegionsOnPatch(vector<Region>& difference) const;
+
+
 
       /***This section is functions that have yet to be migrated to the new interface.
        * It also includes functions that may be removed from patch in the future*/

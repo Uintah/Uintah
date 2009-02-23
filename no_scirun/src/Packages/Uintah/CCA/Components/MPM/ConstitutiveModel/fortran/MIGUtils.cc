@@ -29,7 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstdio>
 
 using namespace std;
 

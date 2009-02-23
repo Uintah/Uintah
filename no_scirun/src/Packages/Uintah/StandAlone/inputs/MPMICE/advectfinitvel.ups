@@ -8,6 +8,8 @@
    <Meta>
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
+
+   <SimulationComponent type="mpmice" />
     
     
     <!--____________________________________________________________________-->

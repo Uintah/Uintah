@@ -93,7 +93,6 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
   ice_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
-  ice_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
   ice_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
   ice_ps->getWithDefault( "orderOf_CFI_Interpolation",   
                            d_orderOf_CFI_Interpolation, d_orderOfInterpolation);

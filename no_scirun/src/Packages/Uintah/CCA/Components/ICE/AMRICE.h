@@ -238,7 +238,6 @@ namespace Uintah {
     };
     vector<thresholdVar> d_thresholdVars;
     
-    bool d_regridderTest;
     int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
     int d_orderOf_CFI_Interpolation;    // order of interpolation at CFI.
   };

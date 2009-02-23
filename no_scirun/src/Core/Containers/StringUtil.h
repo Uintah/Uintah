@@ -76,6 +76,7 @@ SCISHARE string pathname(const string &path);
 
 // Split a string into multiple parts, separated by any of the separator characters.
 SCISHARE vector<string> split_string( const string & str, const vector<char> & separators );
+SCISHARE string         concatStrings( const vector<string> strings );
 
 /////////
 // C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.

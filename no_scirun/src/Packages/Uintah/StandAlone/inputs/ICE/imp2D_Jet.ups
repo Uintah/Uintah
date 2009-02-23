@@ -8,6 +8,8 @@
    <Meta>
        <title>ICE: 1 Matl. hot jet issuing into a domain.</title>
    </Meta>
+
+   <SimulationComponent type="ice" />
     
     
     <!--____________________________________________________________________-->

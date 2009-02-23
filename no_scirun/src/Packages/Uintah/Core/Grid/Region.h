@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sgi_stl_warnings_off.h>
 #include   <string>
-#include   <deque>
+#include   <vector>
 #include   <list>
 #include   <map>
 #include   <iosfwd>
@@ -156,8 +156,8 @@ WARNING
     }
 
     //O(p^2)
-    static deque<Region> difference(const Region& b1, const Region& b2);
-    static deque<Region> difference(deque<Region>& region1, deque<Region>& region22);
+    static vector<Region> difference(const Region& b1, const Region& b2);
+    static vector<Region> difference(vector<Region>& region1, vector<Region>& region2);
    
     class VolumeCompare {
       public:

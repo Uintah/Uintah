@@ -7,9 +7,8 @@
        <title>suvic explict 10-4 1/sec</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpm </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>1.0e-4</maxTime>
        <initTime>0.0</initTime>

@@ -105,16 +105,16 @@ main(int argc, char *argv[])
     
     parseArgs( argc, argv, infile, binmode);
     
-    ProblemSpecInterface* reader = scinew ProblemSpecReader(infile);
-    
     // Get the problem specification
-    ProblemSpecP ups = reader->readInputFile();
-    ups->writeMessages(true);
-    if(!ups)
+    ProblemSpecP ups = ProblemSpecReader().readInputFile( infile );
+
+    if( !ups ) {
       throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
+    }
     
-    if(ups->getNodeName() != "Uintah_specification")
+    if( ups->getNodeName() != "Uintah_specification" ) {
       throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
+    }
     
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     

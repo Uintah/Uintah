@@ -8,6 +8,8 @@
        <title>Wave equation test</title>
    </Meta>
 
+   <SimulationComponent type="wave" />
+
    <Time>
        <maxTime>0.4</maxTime>
        <initTime>0.0</initTime>

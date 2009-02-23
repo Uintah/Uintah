@@ -2,15 +2,13 @@
 <!-- @version: -->
 <Uintah_specification>
   <!-- The tuna can problem -->
-  <Solver>   hypre   </Solver>
+  <Solver type="hypre" />
   
   <Meta>
     <title> Exploding Container 2-D Using Steady Burn Model </title>
   </Meta>
 
-  <SimulationComponent>
-    <type> mpmice </type>
-  </SimulationComponent>
+  <SimulationComponent type="mpmice" />
 
   <!--____________________________________________________________________-->
   <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->

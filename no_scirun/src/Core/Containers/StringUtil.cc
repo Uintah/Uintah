@@ -132,6 +132,19 @@ is_separator( char ch, vector<char> separators )
   return false;
 }
 
+string
+concatStrings( const vector<string> strings )
+{
+  string result;
+  for( unsigned int pos = 0; pos < strings.size(); pos++ ) {
+    result += strings[pos];
+    if( pos != (strings.size()-1) ) {
+      result += ", ";
+    }
+  } 
+  return result;
+}
+
 vector<string>
 split_string(const std::string& str, const vector<char> & separators)
 {

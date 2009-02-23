@@ -7,9 +7,7 @@
 	<title>CSAFE JP8 Fire containing 10 cm. Diameter Cylinder</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpmarches </type>
-   </SimulationComponent> 
+   <SimulationComponent type="mpmarches" />
 
    <Time>
 	<maxTime>2.5</maxTime>

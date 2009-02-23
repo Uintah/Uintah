@@ -7,6 +7,8 @@
        <title>Compaction of grain with air void</title>
    </Meta>
 
+   <SimulationComponent type="mpmice" />
+
    <Time>
        <maxTime>0.6</maxTime>
        <initTime>0.0</initTime>

@@ -6,6 +6,8 @@
    <Meta>
        <title>Slice of a grain being compacted by  a piston</title>
    </Meta>
+
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->

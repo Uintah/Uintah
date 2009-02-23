@@ -9,6 +9,8 @@
        <title></title>
    </Meta>
 
+   <SimulationComponent type="ice" />
+
    <Time>
        <maxTime>10</maxTime>
        <initTime>0.0</initTime>

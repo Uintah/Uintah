@@ -1494,7 +1494,7 @@ main(int argc, char** argv)
           LevelP level2 = grid2->getLevel(l);
          
           //check patch coverage
-          deque<Region> region1, region2, difference1, difference2;
+          vector<Region> region1, region2, difference1, difference2;
 
           for(int i=0;i<level->numPatches();i++)
             {

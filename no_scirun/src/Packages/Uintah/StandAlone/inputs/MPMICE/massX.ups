@@ -5,12 +5,10 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title></title>
+       <title>massX</title>
    </Meta>
     
-   <SimulationComponent>
-        <type> mpmice </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpmice" />
     
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->

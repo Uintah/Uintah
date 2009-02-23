@@ -137,7 +137,7 @@ quit( const std::string & msg = "" )
       cerr << msg << "\n";
     }
   Uintah::Parallel::finalizeManager();
-  Thread::exitAll( 1 );
+  Thread::exitAll( 2 );
 }
 
 static
@@ -158,22 +158,16 @@ usage( const std::string & message,
 
   if( Uintah::Parallel::getMPIRank() == 0 )
     {
-      cerr << message << "\n";
-      if(badarg != "")
+      cerr << "\n";
+      if(badarg != "") {
 	cerr << "Error parsing argument: " << badarg << '\n';
+      }
+      cerr << "\n";
+      cerr << message << "\n";
+      cerr << "\n";
       cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
       cerr << "Valid options are:\n";
       cerr << "-h[elp]              : This usage information.\n";
-      cerr << "-mpm                 : option for explicit MPM\n";
-      cerr << "-impm                : option for implicit MPM\n";
-      cerr << "-mpmf                : option for Fracture\n";
-      cerr << "-rmpm                : option for rigid MPM\n";
-      cerr << "-smpm                : option for shell MPM\n";
-      cerr << "-smpmice             : option for shell MPM with ICE\n";
-      cerr << "-rmpmice             : option for rigid MPM with ICE\n";
-      cerr << "-angio               : option for discrete angio model\n";
-      cerr << "-ice                 : \n";
-      cerr << "-arches              : \n";
       cerr << "-AMR                 : use AMR simulation controller\n";
       cerr << "-nthreads <#>        : Only good with MixedScheduler\n";
       cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
@@ -202,10 +196,11 @@ abortCleanupFunc()
 {
   Uintah::Parallel::finalizeManager( Uintah::Parallel::Abort );
 }
-
+#include <iomanip>
 int
 main( int argc, char *argv[], char *env[] )
 {
+  cout << setprecision(24);
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
 
@@ -254,7 +249,6 @@ main( int argc, char *argv[], char *env[] )
 //bool   useScheduler3 = false;
   int    numThreads = 0;
   string filename;
-  string component;
   string solver;
   IntVector layout(1,1,1);
   bool   onlyValidateUps = false;
@@ -352,28 +346,25 @@ main( int argc, char *argv[], char *env[] )
     } else if(arg == "-TRACK") {
       track = true;
       track_or_die = true;
-    } else if (arg[0] == '-') {
-      // component name - must be the only remaining option with a hyphen
-      if (component.length() > 0) {
-        char errorMsg[256];
-        sprintf(errorMsg, "Cannot specify both -%s and %s", component.c_str(), arg.c_str());
-        usage(errorMsg, argv[i], argv[0]);
-      } else {
-        component = arg.substr(1, arg.length()); // strip off the -
-        if (component == "combine_patches")
-          combine_patches = true;
-        else if (component == "reduce_uda")
-          reduce_uda = true;
-      }
+    } else if(arg == "-combine_patches") {
+      combine_patches = true;
+    } else if( arg == "-arches"  || arg == "-ice"      || arg == "-impm"     || arg == "-mpm"  || arg == "-mpmarches"  ||
+               arg == "-mpmice"  || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" ||
+               arg == "-mpmf"    || arg == "-rmpm"     || arg == "-smpm"     || arg == "-smpmice"  ||
+               arg == "-rmpmice" || arg == "-angio" ) {
+      usage( string( "'" ) + arg + "' is deprecated.  Simulation component must be specified " +
+             "in the .ups file!", arg, argv[0] );
     } else {
-      if(filename!="") {
+      if( filename != "" ) {
         usage("", arg, argv[0]);
-      } else if( argv[i][0] == '-' ) { // Don't allow 'filename' to begin with '-'.
+      }
+      else if( argv[i][0] == '-' ) { // Don't allow 'filename' to begin with '-'.
         usage("Error!  It appears that the filename you specified begins with a '-'.\n"
               "        This is not allowed.  Most likely there is problem with your\n"
               "        command line.",
               argv[i], argv[0]);        
-      } else {
+      } 
+      else {
         filename = argv[i];
       }
     }
@@ -404,6 +395,7 @@ main( int argc, char *argv[], char *env[] )
         cout << "\n";
         cout << "Error: Tracking initialization failed... Good bye.\n";
         cout << "\n";
+        Uintah::Parallel::finalizeManager();
         Thread::exitAll( 1 );
       }
       else {
@@ -427,6 +419,7 @@ main( int argc, char *argv[], char *env[] )
       cout << "\n";
       cout << "Error: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
       cout << "\n";
+      Uintah::Parallel::finalizeManager();
       Thread::exitAll( 1 );
     }
   }
@@ -516,12 +509,13 @@ main( int argc, char *argv[], char *env[] )
 #endif
     //__________________________________
     // Read input file
-    ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
-    ProblemSpecP ups = reader->readInputFile( true /* validate */ );
+    ProblemSpecP ups = ProblemSpecReader().readInputFile( filename, true );
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
-      Thread::exitAll(1);      
+      ups = 0; // This cleans up memory held by the 'ups'.
+      Uintah::Parallel::finalizeManager();
+      Thread::exitAll( 0 );
     }
 
     //if the AMR block is defined default to turning amr on
@@ -552,11 +546,13 @@ main( int argc, char *argv[], char *env[] )
     // Solver
     SolverInterface* solve = 0;
     solve = SolverFactory::create(ups, world, solver);
+    if(Uintah::Parallel::getMPIRank() == 0 && solve!=0)
+      cout << "Implicit Solver:" << solve->getName() << endl;
 
     //__________________________________
     // Component
     // try to make it from the command line first, then look in ups file
-    UintahParallelComponent* comp = ComponentFactory::create(ups, world, do_AMR, component, udaDir);
+    UintahParallelComponent* comp = ComponentFactory::create(ups, world, do_AMR, udaDir);
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
 
     if (combine_patches || reduce_uda) {
@@ -620,9 +616,12 @@ main( int argc, char *argv[], char *env[] )
       ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }
     
+    // This gives memory held by the 'ups' back before the simulation starts... Assuming
+    // no one else is holding on to it...
+    ups = 0;
+
     ctl->run();
     delete ctl;
-    
 
     sched->removeReference();
     delete sched;
@@ -632,9 +631,12 @@ main( int argc, char *argv[], char *env[] )
     delete sim;
     delete solve;
     delete output;
-    ProblemSpecReader* n_reader = static_cast<ProblemSpecReader* >(reader);
-    n_reader->clean();
-    delete reader;
+
+    // FIXME: don't need anymore... clean up... qwerty
+    // ProblemSpecReader* n_reader = static_cast<ProblemSpecReader* >(reader);
+    // n_reader->clean();
+    // delete reader;
+
 #ifndef NO_ICE
     delete modelmaker;
 #endif
@@ -686,7 +688,7 @@ main( int argc, char *argv[], char *env[] )
 
   if (thrownException) {
     if( Uintah::Parallel::getMPIRank() == 0 ) {
-      cout << "\n\nAn exception was thrown... Goodbye.\n\n";
+      cout << "\n\nAN EXCEPTION WAS THROWN... Goodbye.\n\n";
     }
     Thread::exitAll(1);
   }
@@ -694,7 +696,10 @@ main( int argc, char *argv[], char *env[] )
   if( Uintah::Parallel::getMPIRank() == 0 ) {
     cout << "Sus: going down successfully\n";
   }
-}
+
+  return 0;
+
+} // end main()
 
 #if !defined(REDSTORM)
 extern "C" {

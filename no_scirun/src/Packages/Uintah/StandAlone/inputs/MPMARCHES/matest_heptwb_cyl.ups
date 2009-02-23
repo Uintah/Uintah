@@ -10,6 +10,8 @@
 	<title>MPMArches Methane Plume with MPM Box: Single Patch Run with Radiation</title>
    </Meta>
 
+   <SimulationComponent type="mpmarches" />
+
    <Time>
 	<maxTime>0.5</maxTime>
 	<initTime>0.0</initTime>

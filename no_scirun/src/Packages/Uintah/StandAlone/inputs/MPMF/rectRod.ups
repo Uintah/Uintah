@@ -7,6 +7,8 @@
        <title>SIF calculation for a rectangular rod with an elliptic crack under tension</title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>150.0e-6</maxTime>
        <initTime>0.0</initTime>

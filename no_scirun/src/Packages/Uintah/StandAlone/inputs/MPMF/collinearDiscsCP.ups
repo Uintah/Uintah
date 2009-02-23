@@ -7,6 +7,8 @@
        <title>Crack propagation in collinear discs under impact</title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>400.0e-6</maxTime>
        <initTime>0.0</initTime>

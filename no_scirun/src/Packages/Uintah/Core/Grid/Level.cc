@@ -913,33 +913,6 @@ IntVector Level::mapNodeToFiner(const IntVector& idx) const
 {
   return idx*grid->getLevel(d_index+1)->d_refinementRatio;
 }
-//__________________________________
-// Does a coarse level cell have a finer level cell above it.
-// Returns true if the course cell is either fully or partially
-// covered.
-bool Level::hasFinerCell(const IntVector& idx) const
-{
-  bool test = false;
-  if (hasFinerLevel()){ 
-  
-    IntVector fineStart = mapCellToFiner(idx);
-    IntVector f_r_Ratio = getFinerLevel()->getRefinementRatio();
-    
-    // for the coarse level cell iterate over the fine level cells 
-    for(CellIterator inside(IntVector(0,0,0),f_r_Ratio ); !inside.done(); inside++){
-      IntVector fineCell = fineStart + *inside;
-      
-      if(getFinerLevel()->containsCell(fineCell) ){
-        test = true;
-      }
-    }
-  }
-  return test;
-}
-
-
-
-
 
 // Stretched grid stuff
 void Level::getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const

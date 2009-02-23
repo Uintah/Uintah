@@ -9,6 +9,8 @@
        <title>Thick cylinder with internal pressure from MPM</title>
    </Meta>    
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>            0.005         </maxTime>
        <initTime>           0.0         </initTime>

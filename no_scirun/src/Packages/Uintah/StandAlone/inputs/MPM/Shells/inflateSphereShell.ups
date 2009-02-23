@@ -10,6 +10,8 @@
      <title>Inflation of a spherical shell</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
      <maxTime>             5.0e-2 </maxTime>
      <initTime>            0.0    </initTime>

@@ -5,6 +5,8 @@
        <title>First attempt Vocal Fold Air FSI using MPMICE</title>
    </Meta>
 
+   <SimulationComponent type="mpmice" />
+
    <Time>
         <maxTime>  1.0    </maxTime>
         <initTime> 0.0    </initTime>

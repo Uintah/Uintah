@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Time.h> 
 #include <iostream>
 #include <sstream>
-#include <deque>
+#include <vector>
 
 using namespace std;
 using namespace Uintah;
@@ -200,42 +200,21 @@ bool RegridderCommon::needsToReGrid(const GridP &oldGrid)
         fine_level=oldGrid->getLevel(l+1);
      
       //get coarse level patches
-      const PatchSubset *cp=lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myrank());
+      const PatchSubset *patches=lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myrank());
       
-      //fine patch deque
-      for(int p=0;p<cp->size();p++)
+      //for each patch
+      for(int p=0;p<patches->size();p++)
       {
-        deque<Region> cpq, fpq, difference;  
-        const Patch *patch=cp->get(p);
+        const Patch *patch=patches->get(p);
+        vector<Region> difference;
+        patch->getFinestRegionsOnPatch(difference);
 
-        Patch::selectType fp;
-
-        //only search for fine patches if the finer level exists
-        if(l<oldGrid->numLevels()-1)
-        {
-          patch->getFineLevelPatches(fp);
-        }
-        
-        //add coarse patch to cpq
-        cpq.push_back(Region(patch->getCellLowIndex__New(),
-                          patch->getCellHighIndex__New()));
-
-        //add overlapping fine patches to fpq
-        for(int p=0;p<fp.size();p++)
-        {
-          fpq.push_back(Region(fine_level->mapCellToCoarser(fp[p]->getCellLowIndex__New()),
-                            fine_level->mapCellToCoarser(fp[p]->getCellHighIndex__New())));
-        }
-
-        //compute region of coarse patches that do not contain fine patches
-        difference=Region::difference(cpq,fpq);
-      
         //get flags for coarse patch
         constCCVariable<int> flags;
         dw->get(flags, d_dilatedCellsStabilityLabel, 0, patch, Ghost::None, 0);
 
         //search non-overlapping
-        for(deque<Region>::iterator region=difference.begin();region!=difference.end();region++)
+        for(vector<Region>::iterator region=difference.begin();region!=difference.end();region++)
         {
           for (CellIterator ci(region->getLow(), region->getHigh()); !ci.done(); ci++)
           {
@@ -770,7 +749,7 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     if (patch->getLevel()->getIndex() > 0 && ((d_filterType == FILTER_STAR && ngc > 2) || ngc > 1)) {
       // if we go diagonally along a patch corner where there is no patch, we will need to initialize those cells
       // (see OnDemandDataWarehouse comment about dead cells)
-      deque<Region> b1, b2, difference;
+      vector<Region> b1, b2, difference;
       IntVector low = flaggedCells.getLowIndex(), high = flaggedCells.getHighIndex();
       b1.push_back(Region(low,high));
       Level::selectType n;

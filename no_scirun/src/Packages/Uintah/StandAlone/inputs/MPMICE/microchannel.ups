@@ -5,6 +5,8 @@
    <Meta>
        <title>Test UPS file for Microchannel Array of PBX9501</title>
    </Meta>    
+
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
@@ -427,7 +429,6 @@
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          716.0               </specific_heat>
            <gamma>                  1.4                 </gamma>
-           <speed_of_sound>         376.0               </speed_of_sound>
            <isSurroundingMatl>      true                </isSurroundingMatl>
 
            <geom_object>

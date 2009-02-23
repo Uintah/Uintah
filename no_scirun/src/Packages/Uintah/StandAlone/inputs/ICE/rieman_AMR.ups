@@ -8,9 +8,9 @@
    <Meta>
        <title>shock tube with 2 or 3 levels of refinement test</title>
    </Meta>    
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="ice" />
+
    <doAMR>true</doAMR>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
