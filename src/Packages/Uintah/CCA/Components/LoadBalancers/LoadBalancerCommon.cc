@@ -528,7 +528,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
     }
   }
 
-#if 1
+#if 0
   cout << d_myworld->myrank() << " np: ";
   for(set<int>::iterator iter=d_neighborProcessors.begin();iter!=d_neighborProcessors.end();iter++)
   {
