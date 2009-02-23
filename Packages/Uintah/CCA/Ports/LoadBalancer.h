@@ -44,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Packages/Uintah/CCA/Ports/uintahshare.h>
 
+#include <set>
 
 namespace Uintah {
 
@@ -127,6 +128,9 @@ WARNING
 
     //! Asks the Load Balancer if it is dynamic.
     virtual bool isDynamic() { return false; }
+
+    //! returns all processors in this processors neighborhood
+    virtual const set<int>& getNeighborhoodProcessors() = 0;
 
     //! Asks if a patch in the patch subset is in the neighborhood.
     virtual bool inNeighborhood(const PatchSubset*) = 0;
