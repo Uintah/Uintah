@@ -365,6 +365,8 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
     for(int i=0;i<patches->size();i++)
     {
       const Patch* patch=patches->get(i);
+      IntVector low=patch->getExtraCellLowIndex__New();
+      IntVector high=patch->getExtraCellHighIndex__New();
      
       Patch::selectType neighbors;
       //select patches on patch+ghost
@@ -383,6 +385,54 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         if(nproc>=0)
           d_neighborProcessors.insert(nproc);
       }
+
+      //add coarse neighbors
+      if(l>0)
+      {
+        const LevelP& coarseLevel = level->getCoarserLevel();
+
+        Patch::selectType coarse;
+        coarseLevel->selectPatches(level->mapCellToCoarser(low-ghost), level->mapCellToCoarser(high+ghost),coarse);
+
+        //for each selected patch
+        for(Patch::selectType::iterator iter=coarse.begin();iter!=coarse.end();iter++)
+        {
+          //add old owner to set
+          int oproc=getOldProcessorAssignment(0,*iter,0);
+          if(oproc>=0)
+            d_neighborProcessors.insert(oproc);
+
+          //add new owner to set
+          int nproc=getPatchwiseProcessorAssignment(*iter);
+          if(nproc>=0)
+            d_neighborProcessors.insert(nproc);
+        }
+      }
+
+      //add fine neighbors
+      if(l<grid->numLevels()-1)
+      {
+        const LevelP& fineLevel = level->getFinerLevel();
+
+        IntVector ec=level->getExtraCells();
+        Patch::selectType fine;
+        fineLevel->selectPatches(level->mapCellToFiner(low-ec), level->mapCellToFiner(high+ec),fine);
+
+        //for each selected patch
+        for(Patch::selectType::iterator iter=fine.begin();iter!=fine.end();iter++)
+        {
+          //add old owner to set
+          int oproc=getOldProcessorAssignment(0,*iter,0);
+          if(oproc>=0)
+            d_neighborProcessors.insert(oproc);
+
+          //add new owner to set
+          int nproc=getPatchwiseProcessorAssignment(*iter);
+          if(nproc>=0)
+            d_neighborProcessors.insert(nproc);
+        }
+      }
+
     }
 
     //with reduced output processors the communication neighbors are different so add those also
@@ -478,21 +528,18 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
     }
   }
 
-  //don't include self in neighborhood processors
-  d_neighborProcessors.erase(d_myworld->myrank());
-
-#if 0
+#if 1
   cout << d_myworld->myrank() << " np: ";
   for(set<int>::iterator iter=d_neighborProcessors.begin();iter!=d_neighborProcessors.end();iter++)
   {
     cout << *iter << " ";
   }
   cout << endl;
+#endif
 
   if (neiDebug.active())
     for (std::set<const Patch*>::iterator iter = d_neighbors.begin(); iter != d_neighbors.end(); iter++)
       cout << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc " << getPatchwiseProcessorAssignment(*iter) << endl;
-#endif
 
 }
 
