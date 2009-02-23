@@ -40,6 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 
 namespace Uintah {
+
 /**************************************
 
 CLASS
@@ -73,13 +74,13 @@ WARNING
    public:
       ProblemSpecInterface();
       virtual ~ProblemSpecInterface();
-      
-      virtual ProblemSpecP readInputFile( bool validate = false ) = 0;
+
+      virtual ProblemSpecP readInputFile( const std::string & filename, bool validate = false ) = 0;
       virtual std::string getInputFile() = 0;
       
    private:
-      ProblemSpecInterface(const ProblemSpecInterface&);
-      ProblemSpecInterface& operator=(const ProblemSpecInterface&);
+      ProblemSpecInterface( const ProblemSpecInterface & );
+      ProblemSpecInterface & operator=( const ProblemSpecInterface & );
    };
 } // End namespace Uintah
 

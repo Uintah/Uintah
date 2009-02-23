@@ -76,15 +76,21 @@ DataArchive::DataArchive(const std::string& filebase,
   d_processor(processor),
   d_numProcessors(numProcessors), d_lock("DataArchive lock")
 {
-
-  string index(filebase+"/index.xml");
-  
-  ProblemSpecReader psr(index.c_str());
-  if( verbose && processor == 0) {
-    cerr << "Parsing " << index << endl;
+  if( d_filebase == "" ) {
+    throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
   }
 
-  d_indexDoc = psr.readInputFile();
+  while( d_filebase[ d_filebase.length() - 1 ] == '/' ) {
+    // Remove '/' from the end of the filebase (if there is one).
+    d_filebase = d_filebase.substr( 0, filebase.length() - 1 );
+  }
+
+  string index = d_filebase + "/index.xml";
+  if( verbose && processor == 0) {
+    cerr << "Parsing " << index << "\n";
+  }
+
+  d_indexDoc = ProblemSpecReader().readInputFile( index );
 
   d_globalEndianness = "";
   d_globalNumBits = -1;
@@ -150,9 +156,7 @@ DataArchive::queryTimesteps( std::vector<int>& index,
             // This block if for earlier versions of the index.xml file that do not
             // contain time information as attributes of the timestep field.
 
-            ProblemSpecReader psr(ts.c_str());
-            
-            timestepDoc = psr.readInputFile();
+            timestepDoc = ProblemSpecReader().readInputFile( ts );
             
             ProblemSpecP time = timestepDoc->findBlock("Time");
             if(time == 0)
@@ -960,13 +964,12 @@ DataArchive::TimeData::init()
   //  cerr << "PatchHashMaps["<<time<<"]::init\n";
   // grab the data xml files from the timestep xml file
   if (d_tstop == 0) {
-    ProblemSpecReader psr(d_tsurl.c_str());
-    d_tstop = psr.readInputFile();
+    d_tstop = ProblemSpecReader().readInputFile( d_tsurl );
   }
 
-  //handle endianness and number of bits
+  // Handle endianness and number of bits
   string endianness = da->d_globalEndianness;
-  int numbits = da->d_globalNumBits;
+  int    numbits    = da->d_globalNumBits;
   DataArchive::queryEndiannessAndBits(d_tstop, endianness, numbits);
 
   static bool endian_warned = false;
@@ -1069,8 +1072,7 @@ void
 DataArchive::TimeData::parseFile(string urlIt, int levelNum, int basePatch)
 {
   // parse the file
-  ProblemSpecReader psr(urlIt);
-  ProblemSpecP top = psr.readInputFile();
+  ProblemSpecP top = ProblemSpecReader().readInputFile( urlIt );
   
   // materials are the same for all patches on a level - don't parse them for more than one file
   bool addMaterials = levelNum >= 0 && d_matlInfo[levelNum].size() == 0;

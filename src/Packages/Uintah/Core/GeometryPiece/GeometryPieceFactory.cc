@@ -199,7 +199,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       newGeomPiece = ShellGeometryFactory::create(child);
 
       if( newGeomPiece == NULL ) {
-        if (ps->doWriteMessages() && Parallel::getMPIRank() == 0) {
+        if( Parallel::getMPIRank() == 0 ) {
           cerr << "WARNING: Unknown Geometry Piece Type " << "(" << go_type << ")\n" ;
         }
         continue;    // restart loop to avoid accessing name of empty object

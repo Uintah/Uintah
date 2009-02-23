@@ -4,13 +4,10 @@
    <Meta>
        <title></title>
    </Meta>
-   <SimulationComponent>
-     <type> mpmice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="mpmice" />
+
    <doAMR>true</doAMR>
-   
-
-
 
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->

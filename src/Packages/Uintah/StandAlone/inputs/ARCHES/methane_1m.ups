@@ -5,9 +5,7 @@
         <title>Arches Methane Plume Multi Patch Run with Radiation</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> arches </type>
-   </SimulationComponent>
+   <SimulationComponent type="arches" />
 
    <Time>
         <maxTime>10.0</maxTime>

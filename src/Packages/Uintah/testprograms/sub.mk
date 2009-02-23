@@ -39,6 +39,7 @@ SUBDIRS := \
         $(SRCDIR)/TestBoxGrouper          \
         $(SRCDIR)/BNRRegridder            \
 	$(SRCDIR)/IteratorTest            \
+	$(SRCDIR)/RegionTest            \
 	$(SRCDIR)/PatchBVH
 
 #       $(SRCDIR)/SFCTest \

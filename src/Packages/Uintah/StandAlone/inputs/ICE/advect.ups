@@ -9,9 +9,8 @@
        <title>Advection test</title>
    </Meta>
    
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+   <SimulationComponent type="ice" />
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->

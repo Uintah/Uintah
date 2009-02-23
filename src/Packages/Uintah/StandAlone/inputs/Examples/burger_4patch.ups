@@ -7,6 +7,8 @@
        <title>Burger test</title>
    </Meta>
 
+   <SimulationComponent type="burger" />
+
    <Time>
        <maxTime>1</maxTime>
        <initTime>0.0</initTime>

@@ -6,6 +6,8 @@
    <Meta>
        <title>Piston compressing gas adiabatically</title>
    </Meta>
+
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -199,7 +201,7 @@
            <specific_heat>              716.0e-8        </specific_heat>
            <gamma>                      1.4             </gamma>           
            <geom_object> 
-                <box label = "">                       
+                <box>                       
                  <min>   [-0.01, -0.005, -0.005]        </min>      
                  <max>   [ 0.01,  0.0010, 0.005]      </max>    
                 </box>                                          
@@ -219,7 +221,7 @@
            <specific_heat>              716.0e-8        </specific_heat>
            <gamma>                      1.4             </gamma>           
            <geom_object>
-                    <box label = "">
+                    <box>
                      <min>   [-0.01, 0.0015, -0.005]     </min>
                      <max>   [ 0.01, 0.0025,  0.005]     </max>
                     </box>

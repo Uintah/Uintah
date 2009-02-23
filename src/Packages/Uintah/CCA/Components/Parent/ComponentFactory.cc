@@ -67,17 +67,26 @@ using std::endl;
 
 using namespace Uintah;
 
-UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const ProcessorGroup* world, 
-                                                  bool doAMR, string sim_comp, string uda)
+UintahParallelComponent *
+ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, 
+                          bool doAMR, string uda )
 {
-  if (sim_comp == "") {
-    ProblemSpecP sim_ps = ps->findBlock("SimulationComponent");
-    if (sim_ps)
-      sim_ps->get("type",sim_comp);
+  string sim_comp;
+
+  ProblemSpecP sim_ps = ps->findBlock("SimulationComponent");
+  if( sim_ps ) {
+    sim_ps->getAttribute( "type", sim_comp );
+  }
+  else {
+    // This is probably a <subcomponent>, so the name of the type of
+    // the component is in a different place:
+    ps->getAttribute( "type", sim_comp );
+  }
+  if( sim_comp == "" ) {
+    throw ProblemSetupException( "Could not determine the type of SimulationComponent...", __FILE__, __LINE__ );
   }
 
-  if (world->myrank() == 0)
-    cout << "Simulation Component: \t" << sim_comp << endl;
+  proc0cout << "Simulation Component: \t'" << sim_comp << "'\n";
 
 #ifndef NO_MPM
   if (sim_comp == "mpm" || sim_comp == "MPM") {
@@ -171,7 +180,7 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
     return scinew UdaReducer(world, uda);
   } 
 
-  throw ProblemSetupException("Unknown simulationComponent. Must specify -arches, -ice, -mpm, "
+  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -angio"
                               "\nMake sure that component is supported in this build", __FILE__, __LINE__);
 }

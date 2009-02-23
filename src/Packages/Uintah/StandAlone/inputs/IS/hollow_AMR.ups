@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- @version: -->
 <Uintah_specification>
+
    <Meta>
-       <title></title>
+       <title>hollow AMR</title>
    </Meta>
-   <SimulationComponent>
-     <type> mpmice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="mpmice" />
+
    <doAMR>true</doAMR>
-   
-
-
 
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
@@ -129,7 +127,7 @@
    <DataArchiver>
       <filebase>hollow_amr.uda</filebase>
       <outputInterval> .00001 </outputInterval>
-      <!--<outputTimestepInterval> 1 </outputTimestepInterval> -->
+      <!-- <outputTimestepInterval> 1 </outputTimestepInterval> -->
       <save label="press_CC"/>
       <save label="temp_CC"/>
       <save label="rho_CC"/>
@@ -178,8 +176,7 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
 
-      <Regridder>
-        <type> BNR </type>
+      <Regridder type="BNR">
         <min_patch_size> [[8,8,1]]   </min_patch_size>
         <max_levels>                  3       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
@@ -194,8 +191,7 @@
     </AMR> 
     
     
-    <LoadBalancer>
-      <type>DLB</type>
+    <LoadBalancer type="DLB">
       <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
       <doSpaceCurve>         true            </doSpaceCurve>
       <timestepInterval>     100             </timestepInterval>
@@ -234,7 +230,7 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <MPM>
-         <material name="Steel Ring">        
+         <material name="Steel Ring">
            <include href="inputs/MPM/MaterialData/MatConst4340St.xml"/>
            <constitutive_model type="elastic_plastic">
              <isothermal>                    false </isothermal>
@@ -312,7 +308,7 @@
                      <min>      [-0.01,  0.049,  -0.1]   </min>
                      <max>      [ 0.01,  0.0508, 0.1]    </max>
                   </box>
-                  <cylinder label="inner steel cylinder 2"> </cylinder>
+                  <cylinder label="inner steel cylinder 2" />
                </intersection>
                <res>                 [2,2,2]         </res>
                <velocity>            [0.0,0.0,0.0]   </velocity>

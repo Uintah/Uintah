@@ -31,6 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include "VolElement.h"
 #include "Consts.h"
 
+
 VolElement::VolElement(){ 
 }
 
@@ -114,7 +115,7 @@ double VolElement::VolumeIntensityBlack(const int &vIndex,
   Ts = T_Vol[vIndex] * T_Vol[vIndex];
   
   VolInten = SB * Ts * Ts * a_Vol[vIndex] / pi;  
-    
+
   return VolInten;
   
 }

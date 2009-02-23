@@ -4,9 +4,7 @@
       <title>Poisson1 test</title>
   </Meta>
 
-  <SimulationComponent>
-       <type> poisson1 </type>
-  </SimulationComponent>
+  <SimulationComponent type="poisson1" />
   <!--__________________________________-->
   <Time>
     <maxTime>       1.0       </maxTime>

@@ -20,21 +20,16 @@
   <!--____________________________________________________________________-->
    
 
-   <SimulationComponent>
-       <type>switcher</type>
+   <SimulationComponent type="switcher" >
        <subcomponent>
-           <SimulationComponent>
-               <type> rigidmpmice </type>
-           </SimulationComponent>
+           <SimulationComponent type="rigidmpmice" />
            <input_file> JP8_IS_1-2-3.ups</input_file>
           <SwitchCriteria type = "Timestep">
               <timestep> 5 </timestep>
           </SwitchCriteria>
        </subcomponent>
        <subcomponent>
-           <SimulationComponent>
-               <type> impm </type>
-           </SimulationComponent>
+           <SimulationComponent type="impm" />
            <input_file> ContainerHeatUp3D.ups</input_file>
           <SwitchCriteria type = "Timestep">
               <timestep> 10 </timestep>
@@ -42,9 +37,7 @@
            <init var = "p.acceleration" matls = "mpm_matls" />
        </subcomponent>
        <subcomponent>
-           <SimulationComponent>
-               <type> mpmice </type>
-           </SimulationComponent>
+           <SimulationComponent type="mpmice" />
            <input_file> Explode_IS.ups</input_file>
        </subcomponent>
        <carry_over var="press_CC" />

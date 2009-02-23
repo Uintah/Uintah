@@ -10,6 +10,8 @@
      <title>Inflation of a GUV</title>
    </Meta>
 
+   <SimulationComponent type="smpmice" />
+
    <Time>
      <maxTime>             5.0e-4  </maxTime>
      <initTime>            0.0     </initTime>

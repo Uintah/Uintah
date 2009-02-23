@@ -129,7 +129,7 @@ WARNING
     virtual bool isDynamic() { return false; }
 
     //! Asks if a patch in the patch subset is in the neighborhood.
-    virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*) = 0;
+    virtual bool inNeighborhood(const PatchSubset*) = 0;
 
     //! Asks the load balancer if patch is in the neighborhood.
     virtual bool inNeighborhood(const Patch*) = 0;

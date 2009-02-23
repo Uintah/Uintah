@@ -8,9 +8,8 @@
    <Meta>
        <title>Pipe Flow see Fundamental of Transport Phenomena pg 157</title>
    </Meta>
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+
+   <SimulationComponent type="ice" />
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -123,6 +122,7 @@
       <save label="delP_Dilatate"/>
       <save label="rho_CC"/>
       <save label="temp_CC"/>
+      <checkpoint timestepInterval="100" cycle="2"/>
    </DataArchiver>
 
     

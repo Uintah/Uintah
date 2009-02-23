@@ -7,6 +7,8 @@
        <title>Crack propagation in a thin tube with an inclined through-thickness crack under tension</title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>150.0e-6</maxTime>
        <initTime>0.0</initTime>

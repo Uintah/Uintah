@@ -158,49 +158,107 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_numInlets = 0;
   d_numSourceBoundaries = 0;
   int total_cellTypes = 0;
-  
-  db->getWithDefault("carbon_balance", d_carbon_balance, false);
-  db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
-  db->getWithDefault("carbon_balance_es", d_carbon_balance_es, false);
-  db->getWithDefault("sulfur_balance_es", d_sulfur_balance_es, false);
-  //--- instrusions with boundary sources -----
-  if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
-    for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");
-         intrusionbcs_db != 0; intrusionbcs_db = intrusionbcs_db->findNextBlock("IntrusionWithBCSource")){
-      d_sourceBoundaryInfo.push_back(scinew BCSourceInfo(d_calcVariance, d_reactingScalarSolve));
-
-      d_sourceBoundaryInfo[d_numSourceBoundaries]->problemSetup(intrusionbcs_db);
-      //compute the density and other properties for this inlet stream
-      d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_initEnthalpy = true;
-      d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_scalarDisp=0.0;
-      d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_mixVarVariance.push_back(0.0);
-      d_props->computeInletProperties(d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction,
-                                                                      d_sourceBoundaryInfo[d_numSourceBoundaries]->calcStream);
-      ++d_numSourceBoundaries;
-
-    }
-  }
  
+  if(db.get_rep()==0)
+  {
+    proc0cout << "No Boundary Conditions Specified\n";
+    d_inletBoundary = false;
+    d_wallBoundary = false;
+    d_pressureBoundary = false;
+    d_outletBoundary = false;
+    d_intrusionBoundary = false;
+    d_carbon_balance=false;
+    d_sulfur_balance=false;
+    d_carbon_balance_es=false;
+    d_sulfur_balance_es=false;
+  }
+  else
+  {
+    db->getWithDefault("carbon_balance", d_carbon_balance, false);
+    db->getWithDefault("sulfur_balance", d_sulfur_balance, false);
+    db->getWithDefault("carbon_balance_es", d_carbon_balance_es, false);
+    db->getWithDefault("sulfur_balance_es", d_sulfur_balance_es, false);
+    //--- instrusions with boundary sources -----
+    if (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource")){
+      for (ProblemSpecP intrusionbcs_db = db->findBlock("IntrusionWithBCSource");
+          intrusionbcs_db != 0; intrusionbcs_db = intrusionbcs_db->findNextBlock("IntrusionWithBCSource")){
+        d_sourceBoundaryInfo.push_back(scinew BCSourceInfo(d_calcVariance, d_reactingScalarSolve));
 
-  if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
-    d_inletBoundary = true;
-    for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
-         inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
-      d_flowInlets.push_back(scinew FlowInlet(total_cellTypes, d_calcVariance,
-                                              d_reactingScalarSolve));
-      d_flowInlets[d_numInlets]->problemSetup(inlet_db);
-      // compute density and other dependent properties
-      d_flowInlets[d_numInlets]->streamMixturefraction.d_initEnthalpy=true;
-      d_flowInlets[d_numInlets]->streamMixturefraction.d_scalarDisp=0.0;
-      d_props->computeInletProperties(
-                        d_flowInlets[d_numInlets]->streamMixturefraction,
-                        d_flowInlets[d_numInlets]->calcStream);
-      double f = d_flowInlets[d_numInlets]->streamMixturefraction.d_mixVars[0];
-      if (f > 0.0){
-        d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
+        d_sourceBoundaryInfo[d_numSourceBoundaries]->problemSetup(intrusionbcs_db);
+        //compute the density and other properties for this inlet stream
+        d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_initEnthalpy = true;
+        d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_scalarDisp=0.0;
+        d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction.d_mixVarVariance.push_back(0.0);
+        d_props->computeInletProperties(d_sourceBoundaryInfo[d_numSourceBoundaries]->streamMixturefraction,
+            d_sourceBoundaryInfo[d_numSourceBoundaries]->calcStream);
+        ++d_numSourceBoundaries;
+
       }
+    }
+
+
+    if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
+      d_inletBoundary = true;
+      for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
+          inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
+        d_flowInlets.push_back(scinew FlowInlet(total_cellTypes, d_calcVariance,
+              d_reactingScalarSolve));
+        d_flowInlets[d_numInlets]->problemSetup(inlet_db);
+        // compute density and other dependent properties
+        d_flowInlets[d_numInlets]->streamMixturefraction.d_initEnthalpy=true;
+        d_flowInlets[d_numInlets]->streamMixturefraction.d_scalarDisp=0.0;
+        d_props->computeInletProperties(
+            d_flowInlets[d_numInlets]->streamMixturefraction,
+            d_flowInlets[d_numInlets]->calcStream);
+        double f = d_flowInlets[d_numInlets]->streamMixturefraction.d_mixVars[0];
+        if (f > 0.0){
+          d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
+        }
+        if (d_calcExtraScalars) {
+          ProblemSpecP extra_scalar_db = inlet_db->findBlock("ExtraScalars");
+          for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+            double value;
+            string name = d_extraScalars->at(i)->getScalarName();
+            extra_scalar_db->require(name, value);
+            d_extraScalarBC* bc = scinew d_extraScalarBC;
+            bc->d_scalar_name = name;
+            bc->d_scalarBC_value = value;
+            bc->d_BC_ID = total_cellTypes;
+            d_extraScalarBCs.push_back(bc);
+          }
+        }
+        ++total_cellTypes;
+        ++d_numInlets;
+      }
+    }
+    else {
+      proc0cout << "Flow inlet boundary not specified" << endl;
+      d_inletBoundary = false;
+    }
+
+    if (ProblemSpecP wall_db = db->findBlock("WallBC")) {
+      d_wallBoundary = true;
+      d_wallBdry = scinew WallBdry(total_cellTypes);
+      d_wallBdry->problemSetup(wall_db);
+      ++total_cellTypes;
+    }
+    else {
+      proc0cout << "Wall boundary not specified"<<endl;
+      d_wallBoundary = false;
+    }
+
+    if (ProblemSpecP press_db = db->findBlock("PressureBC")) {
+      d_pressureBoundary = true;
+      d_pressureBC = scinew PressureInlet(total_cellTypes, d_calcVariance,
+          d_reactingScalarSolve);
+      d_pressureBC->problemSetup(press_db);
+      // compute density and other dependent properties
+      d_pressureBC->streamMixturefraction.d_initEnthalpy=true;
+      d_pressureBC->streamMixturefraction.d_scalarDisp=0.0;
+      d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
+          d_pressureBC->calcStream);
       if (d_calcExtraScalars) {
-        ProblemSpecP extra_scalar_db = inlet_db->findBlock("ExtraScalars");
+        ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
         for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
           double value;
           string name = d_extraScalars->at(i)->getScalarName();
@@ -213,94 +271,52 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         }
       }
       ++total_cellTypes;
-      ++d_numInlets;
     }
-  }
-  else {
-    proc0cout << "Flow inlet boundary not specified" << endl;
-    d_inletBoundary = false;
-  }
- 
-  if (ProblemSpecP wall_db = db->findBlock("WallBC")) {
-    d_wallBoundary = true;
-    d_wallBdry = scinew WallBdry(total_cellTypes);
-    d_wallBdry->problemSetup(wall_db);
-    ++total_cellTypes;
-  }
-  else {
-    proc0cout << "Wall boundary not specified"<<endl;
-    d_wallBoundary = false;
-  }
-  
-  if (ProblemSpecP press_db = db->findBlock("PressureBC")) {
-    d_pressureBoundary = true;
-    d_pressureBC = scinew PressureInlet(total_cellTypes, d_calcVariance,
-                                        d_reactingScalarSolve);
-    d_pressureBC->problemSetup(press_db);
-    // compute density and other dependent properties
-    d_pressureBC->streamMixturefraction.d_initEnthalpy=true;
-    d_pressureBC->streamMixturefraction.d_scalarDisp=0.0;
-    d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
-                                    d_pressureBC->calcStream);
-    if (d_calcExtraScalars) {
-      ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        double value;
-        string name = d_extraScalars->at(i)->getScalarName();
-        extra_scalar_db->require(name, value);
-        d_extraScalarBC* bc = scinew d_extraScalarBC;
-        bc->d_scalar_name = name;
-        bc->d_scalarBC_value = value;
-        bc->d_BC_ID = total_cellTypes;
-        d_extraScalarBCs.push_back(bc);
-      }
+    else {
+      proc0cout << "Pressure boundary not specified"<< endl;
+      d_pressureBoundary = false;
     }
-    ++total_cellTypes;
-  }
-  else {
-    proc0cout << "Pressure boundary not specified"<< endl;
-    d_pressureBoundary = false;
-  }
-  
-  if (ProblemSpecP outlet_db = db->findBlock("OutletBC")) {
-    d_outletBoundary = true;
-    d_outletBC = scinew FlowOutlet(total_cellTypes, d_calcVariance,
-                                   d_reactingScalarSolve);
-    d_outletBC->problemSetup(outlet_db);
-    // compute density and other dependent properties
-    d_outletBC->streamMixturefraction.d_initEnthalpy=true;
-    d_outletBC->streamMixturefraction.d_scalarDisp=0.0;
-    d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
-                                    d_outletBC->calcStream);
-    if (d_calcExtraScalars) {
-      ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        double value;
-        string name = d_extraScalars->at(i)->getScalarName();
-        extra_scalar_db->require(name, value);
-        d_extraScalarBC* bc = scinew d_extraScalarBC;
-        bc->d_scalar_name = name;
-        bc->d_scalarBC_value = value;
-        bc->d_BC_ID = total_cellTypes;
-        d_extraScalarBCs.push_back(bc);
-      }
-    }
-    ++total_cellTypes;
-  }
-  else {
-    proc0cout << "Outlet boundary not specified"<<endl;
-    d_outletBoundary = false;
-  }
 
-  if (ProblemSpecP intrusion_db = db->findBlock("intrusions")) {
-    d_intrusionBoundary = true;
-    d_intrusionBC = scinew IntrusionBdry(total_cellTypes);
-    d_intrusionBC->problemSetup(intrusion_db);
-    ++total_cellTypes;
-  }
-  else {
-    proc0cout << "Intrusion boundary not specified"<<endl;
-    d_intrusionBoundary = false;
+    if (ProblemSpecP outlet_db = db->findBlock("OutletBC")) {
+      d_outletBoundary = true;
+      d_outletBC = scinew FlowOutlet(total_cellTypes, d_calcVariance,
+          d_reactingScalarSolve);
+      d_outletBC->problemSetup(outlet_db);
+      // compute density and other dependent properties
+      d_outletBC->streamMixturefraction.d_initEnthalpy=true;
+      d_outletBC->streamMixturefraction.d_scalarDisp=0.0;
+      d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
+          d_outletBC->calcStream);
+      if (d_calcExtraScalars) {
+        ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");
+        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+          double value;
+          string name = d_extraScalars->at(i)->getScalarName();
+          extra_scalar_db->require(name, value);
+          d_extraScalarBC* bc = scinew d_extraScalarBC;
+          bc->d_scalar_name = name;
+          bc->d_scalarBC_value = value;
+          bc->d_BC_ID = total_cellTypes;
+          d_extraScalarBCs.push_back(bc);
+        }
+      }
+      ++total_cellTypes;
+    }
+    else {
+      proc0cout << "Outlet boundary not specified"<<endl;
+      d_outletBoundary = false;
+    }
+
+    if (ProblemSpecP intrusion_db = db->findBlock("intrusions")) {
+      d_intrusionBoundary = true;
+      d_intrusionBC = scinew IntrusionBdry(total_cellTypes);
+      d_intrusionBC->problemSetup(intrusion_db);
+      ++total_cellTypes;
+    }
+    else {
+      proc0cout << "Intrusion boundary not specified"<<endl;
+      d_intrusionBoundary = false;
+    }
   }
 
   d_mmWallID = -10; // invalid cell type
@@ -318,7 +334,8 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     const ProblemSpecP params_root = params_non_constant->getRootNode();
     ProblemSpecP db_mmsblock=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("MMS");
     
-    db_mmsblock->getWithDefault("whichMMS",d_mms,"constantMMS");
+    if(!db_mmsblock->getAttribute("whichMMS",d_mms))
+      d_mms="constantMMS";
 
     if (d_mms == "constantMMS") {
       ProblemSpecP db_whichmms = db_mmsblock->findBlock("constantMMS");
@@ -2165,29 +2182,37 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
     params->require("reacting_scalar", reactscalar);
     streamMixturefraction.d_rxnVars.push_back(reactscalar);
   }
-  std::string d_prefill_direction;
-  params->getWithDefault("prefill_direction",d_prefill_direction,"");
-  if (!(d_prefill_direction == "")) {
-    if (d_prefill_direction == "X") {
-      d_prefill_index = 1;
-      d_prefill = true;
-    }
-    else if (d_prefill_direction == "Y") {
-    d_prefill_index = 2;
-    d_prefill = true;
-    }
-    else if (d_prefill_direction == "Z") {
-    d_prefill_index = 3;
-    d_prefill = true;
-    }
-    else
-      throw InvalidValue("Wrong prefill direction.", __FILE__, __LINE__);
-  }
-  if (d_prefill) {
-    ProblemSpecP prefillGeomObjPS = params->findBlock("prefill_geom_object");
-    GeometryPieceFactory::create(prefillGeomObjPS, d_prefillGeomPiece);
-  }
  
+  //Prefill a geometry object with the flow inlet condition 
+  d_prefill = params->findBlock("Prefill"); 
+  if (params->findBlock("Prefill")){
+    ProblemSpecP db_prefill = params->findBlock("Prefill");
+    std::string prefill_direction = "null"; 
+    db_prefill->getAttribute("direction",prefill_direction); 
+    //get the direction
+    if (prefill_direction == "X") {
+      d_prefill_index = 1;
+    }
+    else if (prefill_direction == "Y") {
+      d_prefill_index = 2;
+    }
+    else if (prefill_direction == "Z") {
+      d_prefill_index = 3;
+    }
+    else {
+      throw InvalidValue("Wrong prefill direction. Please add the direction attribute to the <Prefill> tag.", __FILE__, __LINE__);
+    }
+    //get the object
+    ProblemSpecP prefillGeomObjPS = db_prefill->findBlock("geom_object");
+    if (prefillGeomObjPS)
+    {
+      GeometryPieceFactory::create(prefillGeomObjPS, d_prefillGeomPiece); 
+    } 
+    else 
+    { 
+      throw ProblemSetupException("Error! Must specify a geom_object in <Prefill> block.",__FILE__,__LINE__); 
+    }
+  }
 }
 
 
@@ -5854,6 +5879,7 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
                 Point p = patch->cellPosition(*iter);
                 if (piece->inside(p) && cellType[*iter] == d_flowfieldCellTypeVal) {
                   if (fi->d_prefill_index == 1) {
+                    cout << "PREFILLINGNNNNNNNNNNNNNNNNNNNNNNNNNNN!!!!" << endl;
                     Point p_shift = patch->cellPosition(*iter-IntVector(1,0,0));
                     if (piece->inside(p_shift))
                       uVelocity[*iter] = flow_rate/

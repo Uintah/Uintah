@@ -628,11 +628,13 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
     if(ps && ms){
       for(int p=0;p<ps->size();p++){
         const PatchSubset* pss = ps->getSubset(p);
-        for(int m=0;m<ms->size();m++){
-          const MaterialSubset* mss = ms->getSubset(m);
-          if(lb->inNeighborhood(pss, mss) && (pss->size() > 0 || task->getType() != Task::Output))
-            // don't make output tasks if there are no patches
+        // don't make output tasks if there are no patches
+        if(lb->inNeighborhood(pss) && (pss->size() > 0 || task->getType() != Task::Output))
+        {
+          for(int m=0;m<ms->size();m++){
+            const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
+          }
         }
       }
     } else if(!ps && !ms){

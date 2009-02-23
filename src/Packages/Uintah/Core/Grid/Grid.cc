@@ -926,7 +926,7 @@ bool Grid::isSimilar(const Grid& othergrid) const
  
   for(int i=numLevels()-1;i>=0;i--)
   {
-    deque<Region> r1, r2, difference;
+    vector<Region> r1, r2, difference;
     const Level* l1=getLevel(i).get_rep();
     const Level* l2=othergrid.getLevel(i).get_rep();
     int a1=0,a2=0;

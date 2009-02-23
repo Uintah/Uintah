@@ -48,7 +48,7 @@ namespace Uintah {
     // this function has a switch for all known components
     
     static UintahParallelComponent* create(ProblemSpecP& ps, const ProcessorGroup* world, 
-                                           bool doAMR, std::string component, std::string uda);
+                                           bool doAMR, std::string uda);
 
 
   };

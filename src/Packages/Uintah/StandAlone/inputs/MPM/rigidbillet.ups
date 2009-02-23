@@ -9,6 +9,8 @@
        <title>Rigid compression of a cylinder</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>0.2</maxTime>
        <initTime>0.0</initTime>

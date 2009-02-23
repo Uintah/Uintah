@@ -9,6 +9,8 @@
        <title>ve in a bar under tension</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
    <Time>
        <maxTime>5.0</maxTime>
        <initTime>0.0</initTime>

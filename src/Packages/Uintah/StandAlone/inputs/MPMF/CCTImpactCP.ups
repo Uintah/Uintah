@@ -7,6 +7,8 @@
        <title>Crack propogation in a CCT specimen under impact</title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>500e-6</maxTime>
        <initTime>0.0</initTime>

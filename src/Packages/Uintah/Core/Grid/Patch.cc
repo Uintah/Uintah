@@ -2164,3 +2164,45 @@ void Patch::initializeBoundaryConditions()
   for (unsigned int i = 0; i< 6; ++i)
     (*d_arrayBCS)[i] = 0;
 }
+
+//__________________________________
+//  Returns a vector of Regions that
+// do not have any overlapping finer level cells.
+// Use this if you want to iterate over the "finest" level cells
+// on coarse and fine levels.
+//
+//  usage:
+//  vector<Region> regions
+//  coarsePatch->getFinestRegionsOnPatch(regions)
+//
+//  for(vector<Region>::iterator region=regions.begin();region!=regions.end();region++){
+//    for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
+//    }
+//  }
+void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
+{
+  const Level* level = getLevel();
+  vector<Region> coarsePatch_q,finePatch_q;                                              
+  IntVector zero(0,0,0);
+  finePatch_q.push_back(Region(zero,zero));
+  
+  //only search for fine patches if the finer level exists
+  if(level->hasFinerLevel()){ 
+    Patch::selectType finePatches;
+    getFineLevelPatches(finePatches); 
+    const LevelP& fineLevel = getLevel()->getFinerLevel(); 
+    
+    //add overlapping fine patches to finePatch_q                                                       
+    for(int fp=0;fp<finePatches.size();fp++){
+      IntVector lo = fineLevel->mapCellToCoarser(finePatches[fp]->getCellLowIndex__New() );
+      IntVector hi = fineLevel->mapCellToCoarser(finePatches[fp]->getCellHighIndex__New());                              
+      finePatch_q.push_back(Region(lo, hi));                        
+    }                                                           
+  }                                                                                                   
+
+  //add coarse patch to coarsePatch_q                                                                 
+  coarsePatch_q.push_back(Region(getCellLowIndex__New(),getCellHighIndex__New()));                                                                                                                              
+
+  //compute region of coarse patches that do not contain fine patches                                 
+  difference=Region::difference(coarsePatch_q, finePatch_q);                                                                                 
+}

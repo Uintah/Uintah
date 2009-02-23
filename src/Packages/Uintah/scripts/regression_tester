@@ -59,11 +59,17 @@ MPI_RUN="no"
 INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
 
 if test ! -d "$INPUTS"; then
-   echo
-   echo "ERROR: can't find your 'inputs' directory..."
-   echo "       (Looked in $INPUTS)"
-   echo 
-   exit
+
+   INPUTS=./inputs
+   if test ! -d "$INPUTS"; then
+      echo ""
+      echo "ERROR: can't find your 'inputs' directory..."
+      echo "       Looked:"
+      echo "               $INPUTS"
+      echo "               ./inputs"
+      echo ""
+      exit
+   fi
 fi
 
 in_file=
@@ -114,8 +120,8 @@ usage () {
     echo "  -mi            run the mpmice tests"
     echo "  -mpmice_amr    run the mpmice amr tests"
     echo "  -im            run the implicit mpm tests"
-    echo "  -dbg           use the dbg TestData"
-    echo "  -opt           use the opt TestData"
+    echo "  -dbg           use the dbg (debug) TestData"
+    echo "  -opt           use the opt (optimized) TestData"
     echo "  -nompi         do not use mpi"
     echo "  -restart       restart and compare with the original uda.000"
     echo "  -mem           check for memory leaks"
@@ -336,29 +342,44 @@ run_test () {
 
 
 compare_results () {
-#    cd $results
-    
+
     # Inside of the component directory find the location of the 
     # gold standard uda and pass it to compare_uda
     
     uda_tmp=`echo $uda |tr "[/]" "[ ]"`  # eliminate "/" from $uda
     goldStandard=`find $test_dir/$DIR/$CASE/$n -maxdepth 3 -type d -name $uda_tmp`
+
     echo "Comparing $uda results against '$goldStandard'"
-    
-    echo "Running command: ../compare_uda $compare_uda_options gs: $goldStandard ud: $uda"
-    echo "../compare_uda $compare_uda_options  $goldStandard $uda" > $n.compare 2>&1
+        
+    echo   "Running command: ../compare_uda $compare_uda_options $goldStandard $uda"
+    echo "../compare_uda $compare_uda_options  $goldStandard' $uda'" > $n.compare 2>&1
     ../compare_uda $compare_uda_options $goldStandard $uda >> $n.compare 2>&1
-    
-#    compare=`grep "passed" $n.compare`
-  
+        
     if [ $? -eq 0 ]; then 
         echo "Sucess running compare_uda . . ."
-#        cd ..
+        compare=true
+    else
+        echo; echo "FAILURE running compare_uda . . ."   
+	cat $n.compare
+        compare=false
+    fi
+    
+    echo; echo   "Running command: ../compare_uda -skip_unknown_types  $goldStandard/checkpoints  $uda/checkpoints"
+    echo "../compare_uda -skip_unknown_types $compare_uda_options  $goldStandard/checkpoints $uda/checkpoints" > $n.compare 2>&1
+    ../compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda/checkpoints > $n.compare_checkpoints 2>&1
+
+    if [ $? -eq 0 ]; then
+        echo "Success running compare_uda on checkpoints . . ."
+        compare=true
+    else
+        echo; echo "FAILURE running compare_uda on checkpoints . . ."
+        cat $n.compare_checkpoints
+        compare=false
+    fi
+    
+    if [ $compare == true ] ; then
         return 0
     else
-        echo; echo "FAILURE running compare_uda . . ."
-#        cd ..
-	cat $n.compare
         return 1
     fi
 }
@@ -371,30 +392,39 @@ run_restart () {
 #        cd $results
 	echo $PWD
         uda_new=`echo $uda | tr -d "/"`
-
-        echo; echo "Running: $MPI sus $opts -restart -t 0 -copy $uda_new.000"
-        $MPI ../sus $opts -restart -t 0 -copy $uda_new.000 &> $n.out_restart
-        success=`grep "successfully" $n.out_restart`
-        if test -n "$success"; then 
-            echo $success
+        uda_new=`ls -d -1 $uda_new* | tail -n1`
+        echo; echo "Running: $MPI sus $opts -restart -t 0 -copy $uda_new"
+        $MPI ../sus $opts -restart -t 0 -copy $uda_new &> $n.out_restart
+        if [ $? -eq 0 ] ; then
+            echo "Sus: going down successfully"
+            echo
             echo "Comparing restart results"
-            echo "compare_uda $uda_new.000 $uda_new.001"
-            ../compare_uda $uda_new.000 $uda_new.001 &> $n.compare_restart
-            compare=`grep "passed" $n.compare_restart`
-            if test -n "$compare"; then
-                echo $compare
+            echo "compare_uda $compare_uda_options $goldStandard $uda_new"
+            ../compare_uda $compare_uda_options $goldStandard $uda_new &> $n.compare_restart
+            if [ $? -eq 0 ]; then
+                echo "compare restart passed . . . "
 		run_restart_return=0
             else
                 echo; echo "FAILURE running compare_uda on restart test . . ."
 		run_restart_return=1
             fi
+            echo
+            echo "Comparing restart results for checkpoints"
+            echo "compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda_new/checkpoints"
+            ../compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda_new/checkpoints &> $n.compare_restart_checkpoints
+            if [ $? -eq 0 ]; then
+                echo "compare restart checkpoints passed . . ."
+                run_restart_checkpoints=0
+            else
+                echo; echo "FAILURE running compare_uda on restart checkpoints"
+                run_restart_checkpoints=1
+            fi
         else
             echo; echo "FAILURE running sus . . ."
 	    run_restart_return=1
         fi
-#        cd ..
     fi
-    return $run_restart_return
+    return $run_restart_return && $run_restart_checkpoints
 }
 
 input_file () {

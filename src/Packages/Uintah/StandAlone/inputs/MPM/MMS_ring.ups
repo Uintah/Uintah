@@ -7,11 +7,13 @@
 	<title>MMS test problem for axisymmetric MPM</title>
    </Meta>
 
+   <SimulationComponent type="mpm" />
+
 <!--
 This is an axisymmetric version of the ring problem described by
 Wallstedt and Guilkey in JCP,"An evaluation of explicit time integration
 schemes for use with the generalized interpolation material point method ",
-Volume 227, pp.9628–9642 2008.
+Volume 227, pp.9628â9642 2008.
 
 Note:  In order to use this input file effectively, some changes
 must be made to the source tree.  Specifically, one must change

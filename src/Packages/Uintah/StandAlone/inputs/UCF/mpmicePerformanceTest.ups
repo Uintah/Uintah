@@ -8,9 +8,8 @@
    <Meta>
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
-   <SimulationComponent>
-        <type> mpmice </type>
-   </SimulationComponent>    
+
+   <SimulationComponent type="mpmice" />
     
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -132,6 +131,7 @@
    <DataArchiver>
       <filebase>performanceTest.uda</filebase>
       <outputTimestepInterval>0</outputTimestepInterval>
+      <checkpoint cycle = "2" interval = "0.1"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

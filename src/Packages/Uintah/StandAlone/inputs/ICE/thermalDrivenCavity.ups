@@ -5,6 +5,8 @@
    <Meta>
        <title>thermally driven cavity problem test</title>
    </Meta>
+
+   <SimulationComponent type="ice" />
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->

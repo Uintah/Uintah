@@ -7,6 +7,8 @@
        <title>Crack propagation in a cylinder with a radial elliptic crack under tension</title>
    </Meta>
 
+   <SimulationComponent type="mpmf" />
+
    <Time>
        <maxTime>200.0e-6</maxTime>
        <initTime>0.0</initTime>

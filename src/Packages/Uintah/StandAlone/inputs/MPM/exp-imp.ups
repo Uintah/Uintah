@@ -7,21 +7,16 @@
         <title>Compaction of cylinders using both impm and mpm</title>
    </Meta>
 
-   <SimulationComponent>
-       <type>switcher</type>
+   <SimulationComponent type="switcher" >
        <subcomponent>
-           <SimulationComponent>
-               <type> mpm </type>
-           </SimulationComponent>
+           <SimulationComponent type="mpm" />
            <input_file> inputs/MPM/4disks_2d.1mat.ups</input_file>
            <SwitchCriteria type = "Timestep">
              <timestep> 5 </timestep>
            </SwitchCriteria>
        </subcomponent>
        <subcomponent>
-           <SimulationComponent>
-               <type> impm </type>
-           </SimulationComponent>
+           <SimulationComponent type="impm" />
            <input_file> inputs/IMPM/4disks_2d.1mat.ups</input_file>
            <init var = "p.VolumeOld" matls="mpm_matls"/>
            <init var = "p.acceleration" matls="mpm_matls"/>

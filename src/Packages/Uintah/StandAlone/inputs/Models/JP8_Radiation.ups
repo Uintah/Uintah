@@ -3,14 +3,13 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title/>
+       <title>JP8 Radiation</title>
    </Meta>
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
-   <Solver>
-        <type> hypre </type>
-   </Solver>
+
+   <SimulationComponent type="ice" />
+
+   <Solver type="hypre" />
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -31,167 +30,167 @@
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "0" label = "Pressure"    var = "Dirichlet">
-                              <value> 101325   </value>
+          <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"    var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+          <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0" label = "Temperature" var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"     var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"    var = "Neumann">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
         <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
       </Face>  
       <Face side = "x+">
         <BCType id = "0" label = "Pressure"     var = "Dirichlet">
-                              <value> 101325   </value>
+          <value> 101325   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+          <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
         <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
       </Face>
       <Face circle = "y-" origin = "0.0 0.0 0.0" radius = "0.5">
         <BCType id = "0" label = "Pressure"     var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.0,1.0,0.0] </value>
+          <value> [0.0,1.0,0.0] </value>
         </BCType>
         <BCType id = "0" label = "Temperature"  var = "Dirichlet">
-                              <value> 298  </value>
+          <value> 298  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Dirichlet">
-                              <value>  0.656062 </value>
+          <value>  0.656062 </value>
         </BCType>
         <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Dirichlet">
-                              <value> 1.0</value>
+          <value> 1.0</value>
         </BCType>
         <BCType id = "0" label = "cumulativeEnergyReleased" var = "Dirichlet">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
       </Face>
       <Face side = "y-">
         <BCType id = "0" label = "Pressure"       var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.01,0.] </value>
+          <value> [0.,0.01,0.] </value>
         </BCType>
         <BCType id = "0" label = "Temperature"  var = "Dirichlet">
-                              <value> 298.0  </value>
+          <value> 298.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Dirichlet">
-                              <value>1.17982   </value>
+          <value>1.17982   </value>
         </BCType>
         <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Dirichlet">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
         <BCType id = "0" label = "cumulativeEnergyReleased" var = "Dirichlet">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0" label = "Pressure"       var = "Neumann">
-                              <value> 0.0   </value>
+          <value> 0.0   </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+          <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "0" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
+          <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "scalar-f"     var = "Neumann">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
         <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
-                              <value> 0.0</value>
+          <value> 0.0</value>
         </BCType>
       </Face>
 <!--
-      <Face side = "z-">
-        <BCType id = "0" label = "Pressure"     var = "Dirichlet">
-                              <value> 101325   </value>
-        </BCType>
-        <BCType id = "0" label = "Velocity"    var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0" label = "Temperature" var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0" label = "Density"     var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0" label = "scalar-f"    var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-        <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-      </Face>  
-     
-      <Face side = "z+">
-        <BCType id = "0" label = "Pressure"     var = "Dirichlet">
-                              <value> 101325   </value>
-        </BCType>
-        <BCType id = "0" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0" label = "scalar-f"     var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-        <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
-                              <value> 0.0</value>
-        </BCType>
-      </Face>
+          <Face side = "z-">
+            <BCType id = "0" label = "Pressure"     var = "Dirichlet">
+              <value> 101325   </value>
+            </BCType>
+            <BCType id = "0" label = "Velocity"    var = "Neumann">
+              <value> [0.,0.,0.] </value>
+            </BCType>
+            <BCType id = "0" label = "Temperature" var = "Neumann">
+              <value> 0.0  </value>
+            </BCType>
+            <BCType id = "0" label = "Density"     var = "Neumann">
+              <value> 0.0  </value>
+            </BCType>
+            <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+              <value> 0.0  </value>
+            </BCType>
+            <BCType id = "0" label = "scalar-f"    var = "Neumann">
+              <value> 0.0</value>
+            </BCType>
+            <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
+              <value> 0.0</value>
+            </BCType>
+          </Face>  
+          
+          <Face side = "z+">
+            <BCType id = "0" label = "Pressure"     var = "Dirichlet">
+              <value> 101325   </value>
+            </BCType>
+            <BCType id = "0" label = "Velocity"     var = "Neumann">
+              <value> [0.,0.,0.] </value>
+            </BCType>
+            <BCType id = "0" label = "Temperature"  var = "Neumann">
+              <value> 0.0  </value>
+            </BCType>
+            <BCType id = "0" label = "Density"      var = "Neumann">
+              <value> 0.0  </value>
+            </BCType>
+            <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+              <value> 0.0  </value>
+            </BCType>
+            <BCType id = "0" label = "scalar-f"     var = "Neumann">
+              <value> 0.0</value>
+            </BCType>
+            <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
+              <value> 0.0</value>
+            </BCType>
+          </Face>
 -->
       <Face side = "z-">
         <BCType id = "0"   label = "Symmetric" var = "symmetry">
@@ -348,24 +347,24 @@
       <Model type = "Radiation">
         <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
-        <calcFreq>                  5    </calcFreq>  <!-- CHANGE THIS -->
-        <!--<calcInterval>           0.005   </calcInterval> -->
-        <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
-        <useTableValues>            true </useTableValues>
+          <calcFreq>                  5    </calcFreq>  <!-- CHANGE THIS -->
+          <!--<calcInterval>           0.005   </calcInterval> -->
+          <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
+          <useTableValues>            true </useTableValues>
         
-        <DORadiationModel>
-          <ordinates>             2       </ordinates>
-          <opl>                   0.24    </opl>
-           <property_model>      radcoef  </property_model>
-           <spherical_harmonics> false    </spherical_harmonics>
-           <linear_solver>       hypre    </linear_solver>
-           <LinearSolver>
-             <solver>            gmres    </solver>
-             <preconditioner>    jacobi   </preconditioner>
-             <max_iter>          1000     </max_iter>
-             <tolerance>         1.0e-8   </tolerance>
-           </LinearSolver>
-        </DORadiationModel>
+          <DORadiationModel>
+            <ordinates>             2       </ordinates>
+            <opl>                   0.24    </opl>
+            <property_model>      radcoef  </property_model>
+            <spherical_harmonics> false    </spherical_harmonics>
+            <linear_solver>       hypre    </linear_solver>
+            <LinearSolver>
+              <solver>            gmres    </solver>
+              <preconditioner>    jacobi   </preconditioner>
+              <max_iter>          1000     </max_iter>
+              <tolerance>         1.0e-8   </tolerance>
+            </LinearSolver>
+          </DORadiationModel>
         </RadiationModel>
       </Model> 
      
