@@ -745,6 +745,7 @@ fi
 # Uintah/tools/fspec.pl.in file to generate the correct
 # cname of the fortran function.
 FORTRAN_UNDERSCORE=end
+DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
 
 CC_REALLY_IS=`type $CC | sed 's%^.* %%'`
 # Going to look for "as", "ld", etc in this dir:
@@ -1059,6 +1060,7 @@ case $host in
     # functions.  This var is used in fspec.pl.in in order not to
     # add the _ to the cname of the function.
     FORTRAN_UNDERSCORE=none
+    DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_NONE"
 
     # The IBM compilers don't use LDRUN_PREFIX.  By making it "-L"
     # the lib path will be repeated twice, but since the makefile
@@ -1147,10 +1149,12 @@ case $host in
          # This flag is used by the genfspec.pl script in Uintah (generated
          # from fspec.pl.in).
          FORTRAN_UNDERSCORE=linux
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS -fbounds-check $extra_cflags"   
          FORTRAN_UNDERSCORE=end
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
          ;;        
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -1238,10 +1242,12 @@ case $host in
           # This flag is used by the genfspec.pl script in Uintah (generated
           # from fspec.pl.in).
           FORTRAN_UNDERSCORE=linux
+          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
           ;;
         *gfortran*)
           FFLAGS="$FFLAGS -fbounds-check $extra_cflags"   
           FORTRAN_UNDERSCORE=linux
+          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
           ;;        
         *)
           FFLAGS="$FFLAGS $extra_cflags"
@@ -1337,10 +1343,12 @@ case $host in
          # This flag is used by the genfspec.pl script in Uintah (generated
          # from fspec.pl.in).
 	 FORTRAN_UNDERSCORE=linux
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS -fbounds-check $extra_cflags" 
          FORTRAN_UNDERSCORE=end
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
          ;;       
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -1551,6 +1559,7 @@ AC_MSG_CHECKING(fortran underscore policy)
 AC_MSG_RESULT($FORTRAN_UNDERSCORE)
 
 AC_SUBST(FORTRAN_UNDERSCORE)
+AC_SUBST(DEF_FORTRAN_UNDERSCORE)
 AC_SUBST(G77)
 AC_SUBST(CC)
 AC_SUBST(F77)
@@ -1755,7 +1764,7 @@ if test "$with_visit"; then
    sci_defs_files="$sci_defs_files Uintah/VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
-   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libPackages_Uintah_StandAlone_tools_uda2vis.so
+   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libUintah_StandAlone_tools_uda2vis.so
    VISIT_INSTALL_DIR=$with_visit
 fi
 
