@@ -50,11 +50,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Containers/HashTable.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
 #include   <list>
-#include <sgi_stl_warnings_on.h>
 
 #include <fcntl.h>
 

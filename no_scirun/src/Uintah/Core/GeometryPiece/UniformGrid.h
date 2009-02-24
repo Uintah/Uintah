@@ -38,10 +38,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Plane.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
-#include <sgi_stl_warnings_on.h>
 
 using std::vector;
 using std::list;

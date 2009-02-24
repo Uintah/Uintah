@@ -36,9 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

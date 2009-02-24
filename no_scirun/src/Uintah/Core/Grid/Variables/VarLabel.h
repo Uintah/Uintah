@@ -32,10 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_VarLabel_H
 #define UINTAH_HOMEBREW_VarLabel_H
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iosfwd>
-#include <sgi_stl_warnings_on.h>
 #include <Uintah/Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 

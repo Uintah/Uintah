@@ -48,13 +48,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Containers/StaticArray.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <limits>
 #include <numeric>
-#include <sgi_stl_warnings_on.h>
 using std::cerr;
 
 using namespace std;

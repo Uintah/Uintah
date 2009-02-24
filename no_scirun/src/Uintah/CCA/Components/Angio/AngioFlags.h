@@ -33,10 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Uintah/Core/Grid/ParticleInterpolator.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/CCA/Components/Angio/uintahshare.h>
 namespace Uintah {

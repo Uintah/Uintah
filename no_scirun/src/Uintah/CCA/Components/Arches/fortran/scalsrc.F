@@ -30,7 +30,7 @@ C
 C 
 c
 c
-#include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
 #include "param4.h"
       
 *     local variables

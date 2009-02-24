@@ -45,10 +45,8 @@
 #define Core_Exceptions_IllegalValue_h
 
 #include <Core/Exceptions/Exception.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   template <class T>

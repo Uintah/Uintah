@@ -66,11 +66,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Datatypes/Archive.h>
 #include <Uintah/Core/Disclosure/TypeUtils.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 using namespace SCIRun;

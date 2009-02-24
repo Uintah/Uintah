@@ -36,9 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Uintah/CCA/Ports/SchedulerP.h>
 #include <Core/OS/Dir.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/CCA/Ports/uintahshare.h>
 

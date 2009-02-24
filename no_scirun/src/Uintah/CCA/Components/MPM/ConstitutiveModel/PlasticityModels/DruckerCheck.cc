@@ -31,9 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include "DruckerCheck.h"
 #include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <cmath>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 
 using namespace Uintah;

@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdombc_fort.h>
+#include <Uintah/CCA/Components/Models/Radiation/fortran/m_rdombc_fort.h>
       integer I,J,K,IST,IEND,JST,JEND,KST,KEND
 
       double precision PI,PI1,SIG

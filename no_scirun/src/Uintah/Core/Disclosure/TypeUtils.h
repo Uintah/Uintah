@@ -110,9 +110,7 @@ UINTAHSHARE void fun_getSmallValue(Vector*);
 } // End namespace Uintah
    
 #include <Core/Datatypes/TypeName.h>
-#include <sgi_stl_warnings_off.h>
 #include   <string>
-#include <sgi_stl_warnings_on.h>
 
 #if !defined( REDSTORM )
 // typename.h redefines UINTAHSHARE

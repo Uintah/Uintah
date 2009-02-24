@@ -46,9 +46,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Datatypes/share.h>
 

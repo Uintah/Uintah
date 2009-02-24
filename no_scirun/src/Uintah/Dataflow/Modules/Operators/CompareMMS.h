@@ -74,12 +74,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 #include <iostream>
 #include <fstream>
-#include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
 #include   <cstdlib>
 
-#include <sgi_stl_warnings_on.h>
 
 #include <sci_values.h>
 

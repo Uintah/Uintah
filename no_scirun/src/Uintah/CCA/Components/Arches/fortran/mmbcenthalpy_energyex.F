@@ -33,7 +33,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
 #include "param4.h"
 
 

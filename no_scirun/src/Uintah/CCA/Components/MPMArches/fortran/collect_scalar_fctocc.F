@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_scalar_fctocc_fort.h>
+#include <Uintah/CCA/Components/MPMArches/fortran/collect_scalar_fctocc_fort.h>
 #include "param4.h"
 
 *     local variables

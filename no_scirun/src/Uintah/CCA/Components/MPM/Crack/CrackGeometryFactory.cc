@@ -39,11 +39,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/CCA/Components/MPM/Crack/PartialEllipticCrack.h>
 #include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 using std::cerr;
 
 using namespace Uintah;

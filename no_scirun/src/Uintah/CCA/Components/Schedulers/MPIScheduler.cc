@@ -51,12 +51,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include <sgi_stl_warnings_off.h>
 #include   <sstream>
 #include   <iomanip>
 #include   <map>
 #include   <cstring>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef USE_PERFEX_COUNTERS
 #  include <Uintah/CCA/Components/Schedulers/counters.h>

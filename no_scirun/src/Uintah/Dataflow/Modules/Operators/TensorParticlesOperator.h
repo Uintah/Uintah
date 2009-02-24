@@ -40,9 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::string;

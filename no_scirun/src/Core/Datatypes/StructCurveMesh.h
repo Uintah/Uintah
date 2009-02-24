@@ -62,10 +62,8 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <cfloat>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

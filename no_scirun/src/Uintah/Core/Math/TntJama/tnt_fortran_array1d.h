@@ -52,7 +52,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef TNT_FORTRAN_ARRAY1D_H
 #define TNT_FORTRAN_ARRAY1D_H
 
-#include <sgi_stl_warnings_off.h>
 /*#include <cstdlib>*/
 #include <iostream>
 
@@ -60,7 +59,6 @@ DEALINGS IN THE SOFTWARE.
 #include <cassert>
 #endif
 
-#include <sgi_stl_warnings_on.h>
 
 #include "tnt_i_refvec.h"
 

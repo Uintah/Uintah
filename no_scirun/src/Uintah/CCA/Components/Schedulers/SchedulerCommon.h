@@ -40,10 +40,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Grid/SimulationState.h>
 #include <Uintah/Core/Grid/SimulationStateP.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <iosfwd>
 #include   <set>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

@@ -31,9 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SimpleString_H
 #define UINTAH_HOMEBREW_SimpleString_H
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
    /**************************************

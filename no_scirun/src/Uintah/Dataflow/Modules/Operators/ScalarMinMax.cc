@@ -60,11 +60,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 using std::endl;
 using std::pair;

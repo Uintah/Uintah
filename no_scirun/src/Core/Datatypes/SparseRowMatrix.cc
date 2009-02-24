@@ -49,7 +49,6 @@
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <sgi_stl_warnings_off.h>  // Turned back on at end of file. 
 
 #include <iostream>
 #include <algorithm>
@@ -981,4 +980,3 @@ SparseRowMatrix::identity(int size)
 
 } // End namespace SCIRun
 
-#include <sgi_stl_warnings_on.h>  // Turned back on at end of file.

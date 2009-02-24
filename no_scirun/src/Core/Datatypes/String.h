@@ -47,9 +47,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/PropertyManager.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Datatypes/share.h>
 

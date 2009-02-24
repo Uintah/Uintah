@@ -31,9 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_TypeDescription_H
 #define UINTAH_HOMEBREW_TypeDescription_H
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 

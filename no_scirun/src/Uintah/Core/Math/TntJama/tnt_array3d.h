@@ -52,13 +52,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef TNT_ARRAY3D_H
 #define TNT_ARRAY3D_H
 
-#include <sgi_stl_warnings_off.h>
 /*#include <cstdlib>*/
 #include <iostream>
 #ifdef TNT_BOUNDS_CHECK
 #include <cassert>
 #endif
-#include <sgi_stl_warnings_on.h>
 
 #include "tnt_array1d.h"
 #include "tnt_array2d.h"

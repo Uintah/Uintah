@@ -49,6 +49,7 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
         $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
         $(SRCDIR)/String.cc                     \
+	$(SRCDIR)/FieldInterfaceAux.cc          \
         $(SRCDIR)/TypeName.cc                   
 
 
@@ -62,21 +63,7 @@ PSELIBS := \
         Core/Thread       \
         Core/Util         
 
-ifeq ($(BUILD_DATAFLOW),yes)
-  SRCS    += \
-	$(SRCDIR)/FieldInterfaceAux.cc          \
-        $(SRCDIR)/cd_templates.cc               \
-        $(SRCDIR)/cd_templates_fields_0.cc      \
-        $(SRCDIR)/cd_templates_fields_1.cc      \
-        $(SRCDIR)/cd_templates_fields_2.cc      \
-        $(SRCDIR)/cd_templates_fields_3.cc      \
-        $(SRCDIR)/cd_templates_fields_4.cc      \
-        $(SRCDIR)/cd_templates_fields_5.cc      \
-        $(SRCDIR)/cd_templates_fields_6.cc      \
-  PSELIBS += Core/GuiInterface
-endif
-
-LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
+LIBS := $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
         $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)             \
         $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 

@@ -54,9 +54,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Grid/Level.h>
 #include <Core/Containers/SuperBox.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {

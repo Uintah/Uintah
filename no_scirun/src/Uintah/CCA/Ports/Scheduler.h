@@ -39,13 +39,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Grid/GridP.h>
 #include <Uintah/Core/Grid/LevelP.h>
 #include <Uintah/Core/Grid/Task.h>
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <list>
 #include <string>
 #include <set>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/CCA/Ports/uintahshare.h>
 

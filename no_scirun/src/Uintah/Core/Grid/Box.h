@@ -33,10 +33,8 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_GRID_BOX_H
 
 #include <Core/Geometry/Point.h>
-#include <sgi_stl_warnings_off.h>
 #include <deque>
 #include   <iosfwd>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {

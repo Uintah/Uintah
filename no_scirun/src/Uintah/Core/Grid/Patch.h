@@ -49,12 +49,10 @@ DEALINGS IN THE SOFTWARE.
 
 #undef None
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <map>
 #include   <iosfwd>
 #include   <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Grid/uintahshare.h>
 

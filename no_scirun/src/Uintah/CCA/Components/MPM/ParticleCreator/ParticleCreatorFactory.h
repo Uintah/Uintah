@@ -33,9 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Uintah/Core/Grid/SimulationStateP.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

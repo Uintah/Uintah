@@ -46,10 +46,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
 #include <Uintah/Dataflow/Modules/Operators/OperatorThread.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 
 /*************************************************************

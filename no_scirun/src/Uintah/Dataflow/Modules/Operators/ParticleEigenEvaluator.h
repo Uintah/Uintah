@@ -35,9 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   using std::string;

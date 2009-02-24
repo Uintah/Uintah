@@ -33,9 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 // Headers
 #include <Core/Util/Assert.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 // Base class
 #include <Uintah/Core/Math/Tensor.h>

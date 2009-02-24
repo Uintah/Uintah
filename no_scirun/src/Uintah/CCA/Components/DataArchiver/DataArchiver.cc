@@ -62,7 +62,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <iomanip>
 #include   <cerrno>
 #include   <fstream>
@@ -75,7 +74,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <fcntl.h>
 #include   <cmath>
 #include   <cstring>
-#include <sgi_stl_warnings_on.h>
 
 #include <time.h>
 

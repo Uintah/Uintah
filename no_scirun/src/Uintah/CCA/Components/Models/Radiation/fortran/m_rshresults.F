@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rshresults_fort.h>
+#include <Uintah/CCA/Components/Models/Radiation/fortran/m_rshresults_fort.h>
       integer i,j,k
 
       double precision PI,SIG,aterm,bterm,lhs,rhs,error

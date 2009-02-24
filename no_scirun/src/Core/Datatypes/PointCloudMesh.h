@@ -51,10 +51,8 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Math/MusilRNG.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

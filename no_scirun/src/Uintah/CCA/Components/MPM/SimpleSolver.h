@@ -35,11 +35,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Grid/Variables/Array3.h>
 #include <Uintah/Core/Math/Sparse.h>
 #include <Uintah/CCA/Components/MPM/Solver.h>
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <set>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 using std::map;
 using std::set;

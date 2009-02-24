@@ -46,10 +46,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using namespace Uintah;

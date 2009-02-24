@@ -51,10 +51,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef TNT_FORTRAN_ARRAY3D_UTILS_H
 #define TNT_FORTRAN_ARRAY3D_UTILS_H
 
-#include <sgi_stl_warnings_off.h>
 /*#include <cstdlib>*/
 /*#include <cassert>*/
-#include <sgi_stl_warnings_on.h>
 
 namespace TNT
 {

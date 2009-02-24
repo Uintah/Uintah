@@ -43,9 +43,7 @@
 #ifndef SCI_Math_Expon_h
 #define SCI_Math_Expon_h 1
 
-#include <sgi_stl_warnings_off.h>
 #include <cmath>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

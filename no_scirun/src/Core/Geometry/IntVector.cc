@@ -31,9 +31,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Util/TypeDescription.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 using std::ostream;
 
 namespace SCIRun{

@@ -28,8 +28,8 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/ramping.h>
+#include <Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/ramping.h>
 
       RETURN
       END

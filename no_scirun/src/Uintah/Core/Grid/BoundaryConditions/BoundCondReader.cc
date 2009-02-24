@@ -46,7 +46,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <utility>
 #include   <typeinfo>
 #include   <sstream>
@@ -56,7 +55,6 @@ DEALINGS IN THE SOFTWARE.
 #include   <map>
 #include   <iterator>
 #include   <set>
-#include <sgi_stl_warnings_on.h>
 
 
 using namespace Uintah;

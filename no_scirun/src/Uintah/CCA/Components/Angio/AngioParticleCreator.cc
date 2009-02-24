@@ -42,10 +42,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Labels/AngioLabel.h>
 #include <Uintah/Core/Exceptions/ProblemSetupException.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using std::vector;

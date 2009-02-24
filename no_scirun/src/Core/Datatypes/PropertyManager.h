@@ -49,10 +49,8 @@
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/PersistentSTL.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <map>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Datatypes/share.h>
 

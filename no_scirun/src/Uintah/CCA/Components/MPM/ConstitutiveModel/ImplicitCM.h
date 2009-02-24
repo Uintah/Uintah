@@ -32,9 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __IMPLICIT_CM_H__
 
 #include <Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Uintah/Core/Math/Matrix3.h>
 #include <Uintah/Core/Math/Short27.h>
 #include <Core/Containers/StaticArray.h>

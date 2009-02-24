@@ -56,12 +56,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include "tnt_subscript.h"
 #include "tnt_vec.h"
-#include <sgi_stl_warnings_off.h>
 /*#include <cstdlib>*/
 /*#include <cassert>*/
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 namespace TNT
 {

@@ -41,9 +41,7 @@
 #ifndef Datatypes_FieldAlgo_h
 #define Datatypes_FieldAlgo_h
 
-#include <sgi_stl_warnings_off.h>
 #include <utility>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

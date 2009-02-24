@@ -68,9 +68,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <math.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #include <process.h>

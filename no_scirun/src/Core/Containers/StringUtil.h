@@ -43,10 +43,8 @@
 #ifndef SCI_Core_StringUtil_h
 #define SCI_Core_StringUtil_h 1
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Containers/share.h>
 

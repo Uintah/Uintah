@@ -35,10 +35,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/CCA/Ports/DataWarehouseP.h>
  
 #include <Uintah/Core/Grid/Task.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
-#include <sgi_stl_warnings_off.h>
 
 namespace Uintah {
   using std::vector;

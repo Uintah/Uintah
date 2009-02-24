@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radcoef_fort.h>
+#include <Uintah/CCA/Components/Models/Radiation/fortran/m_radcoef_fort.h>
 C***********************************************************************
 C	SUBROUTINE RADCOEF - calculates gas and soot absorption  
 C	coefficients for cartesian or cylindrical geometries.
