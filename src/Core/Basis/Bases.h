@@ -32,7 +32,7 @@
 #if !defined(Bases_h)
 #define Bases_h
 
-#include <Core/Basis/NoData.h>
+
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Basis/CrvQuadraticLgn.h>
@@ -52,7 +52,6 @@
 #include <Core/Basis/PrismCubicHmt.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Basis/HexTriquadraticLgn.h>
-#include <Core/Basis/HexTricubicHmt.h>
 #include <Core/Basis/HexTricubicHmtScaleFactors.h>
 #include <Core/Basis/HexTricubicHmtScaleFactorsEdges.h>
 
