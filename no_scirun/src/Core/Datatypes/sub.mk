@@ -44,7 +44,6 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
         $(SRCDIR)/Matrix.cc                     \
         $(SRCDIR)/MatrixOperations.cc           \
         $(SRCDIR)/Mesh.cc                       \
-        $(SRCDIR)/NrrdData.cc                   \
         $(SRCDIR)/PropertyManager.cc            \
         $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
@@ -52,6 +51,10 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
 	$(SRCDIR)/FieldInterfaceAux.cc          \
         $(SRCDIR)/TypeName.cc                   
 
+ifeq ($(HAVE_TEEM),yes)
+  SRCS += \
+        $(SRCDIR)/NrrdData.cc                   
+endif
 
 PSELIBS := \
         Core/Basis        \
@@ -69,5 +72,7 @@ LIBS := $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+ifeq ($(HAVE_TEEM),yes)
 INCLUDES += $(TEEM_INCLUDE)
+endif
 INCLUDES += $(BLAS_INCLUDE)
