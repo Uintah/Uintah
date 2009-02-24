@@ -45,7 +45,6 @@ PSELIBS := \
 	Uintah/Core/ProblemSpec \
 	Core/Containers                  \
 	Core/Util                        \
-	Core/XMLUtil                     \
 	Core/Exceptions
 
 LIBS 	:= $(XML2_LIBRARY)
