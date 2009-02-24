@@ -417,12 +417,7 @@ done
 if test -n "$5"; then
 
    found_framework=no
-   for lib in "" $5; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in $5; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -477,12 +472,7 @@ fi
 
 if test -n "$6"; then
 
-   for path in "" $6; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $6; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -600,14 +590,14 @@ eval $1_LIB_DIR='"$6"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -1066,48 +1056,26 @@ AC_DEFUN([SCI_ARG_VAR], [
 AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
 
   # This list is alphabetical.  Please keep it that way.
-  sci_required_audio=no
   sci_required_awk=no
-  sci_required_babel=no
   sci_required_blas=no
-  sci_required_ncurses=no
-  sci_required_crypto=no
-  sci_required_dataflow=yes
   sci_required_etags=no
   sci_required_exc=no 
   sci_required_fortran=no
   sci_required_hdf5=no
-  sci_required_glew=no
-  sci_required_globus=no
-  sci_required_glui=no
-  sci_required_glut=no
   sci_required_gmake=no 
   sci_required_gzopen=no
   sci_required_hypre=no
-  sci_required_java=no
   sci_required_jpeg=no
   sci_required_lapack=no
-  sci_required_mdsplus=no
   sci_required_mpi=no
-  sci_required_netsolve=no
-  sci_required_oogl=no
   sci_required_perl=no
   sci_required_petsc=no
-  sci_required_ptolemyII=no
-  sci_required_qt=no
-  sci_required_ruby=no
-  sci_required_ssl=no
   sci_required_tau=no
-  sci_required_tcl=yes
   sci_required_teem=no
   sci_required_thirdparty=no
   sci_required_tiff=no
   sci_required_tools=no
   sci_required_unipetc=no
-  sci_required_vdt=no
-  sci_required_vtk=no 
-
-  plume_checked=no
 
 ])
 ##
@@ -1129,17 +1097,6 @@ case $1 in
     sci_required_mpi=yes
     sci_required_perl=yes
     sci_required_tools=yes
-  ;;
-  rtrt)
-    sci_required_glut=yes
-    sci_required_glui=yes
-    sci_required_oogl=yes
-    sci_required_audio=yes 
-    sci_required_teem=yes
-  ;;
-  Ptolemy)
-  ;;
-  Kepler)
   ;;
   *)
     AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)
