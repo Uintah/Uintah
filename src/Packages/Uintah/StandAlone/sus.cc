@@ -200,7 +200,6 @@ abortCleanupFunc()
 int
 main( int argc, char *argv[], char *env[] )
 {
-  cout << setprecision(24);
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
 
