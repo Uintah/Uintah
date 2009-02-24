@@ -433,6 +433,7 @@ ray::surfaceIntersect( const double *X,
 // left fraction
 
 void ray::TravelInMediumInten(MTRand &MTrng,
+			      VirtualSurface &obVirtual,
 			      const double *kl_Vol,
 			      const double *scatter_Vol,
 			      const double *X,
