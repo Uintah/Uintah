@@ -67,11 +67,11 @@ make sus -j4
 --with-atlas=/usr/local/atlas \
 --with-tau=/usr/sci/projects/Uintah/tau/tau-2.15.1/i386_linux/lib/Makefile.tau-mpi-pdt
 
-mpirun -np 1 ./sus -amr -ice -solver hypreamr ../../../../src/Packages/Uintah/StandAlone/inputs/ICE/impAdvectAMR.ups 
+mpirun -np 1 ./sus -amr -ice -solver hypreamr ../../../../src/Uintah/StandAlone/inputs/ICE/impAdvectAMR.ups 
 
-mpirun -np 2 Packages/Uintah/StandAlone/sus -amr -ice -solver hypreamr ../src/Packages/Uintah/StandAlone/inputs/ICE/impAdvectAMR.ups 
+mpirun -np 2 Uintah/StandAlone/sus -amr -ice -solver hypreamr ../src/Uintah/StandAlone/inputs/ICE/impAdvectAMR.ups 
 
-2 -MD   -c ../src/Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.cc -o Packag
+2 -MD   -c ../src/Uintah/CCA/Components/Solvers/HypreDriverSStruct.cc -o Packag
 
 
 
