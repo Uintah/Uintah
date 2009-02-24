@@ -766,6 +766,7 @@ AWK
 ETAGS
 PERL
 FORTRAN_UNDERSCORE
+DEF_FORTRAN_UNDERSCORE
 G77
 SOFLAGS
 ASFLAGS
@@ -7050,6 +7051,7 @@ fi
 # Uintah/tools/fspec.pl.in file to generate the correct
 # cname of the fortran function.
 FORTRAN_UNDERSCORE=end
+DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
 
 CC_REALLY_IS=`type $CC | sed 's%^.* %%'`
 # Going to look for "as", "ld", etc in this dir:
@@ -7520,6 +7522,7 @@ case $host in
     # functions.  This var is used in fspec.pl.in in order not to
     # add the _ to the cname of the function.
     FORTRAN_UNDERSCORE=none
+    DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_NONE"
 
     # The IBM compilers don't use LDRUN_PREFIX.  By making it "-L"
     # the lib path will be repeated twice, but since the makefile
@@ -7666,10 +7669,12 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6; }
          # This flag is used by the genfspec.pl script in Uintah (generated
          # from fspec.pl.in).
          FORTRAN_UNDERSCORE=linux
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS -fbounds-check $extra_cflags"
          FORTRAN_UNDERSCORE=end
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -8489,10 +8494,12 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6; }
           # This flag is used by the genfspec.pl script in Uintah (generated
           # from fspec.pl.in).
           FORTRAN_UNDERSCORE=linux
+          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
           ;;
         *gfortran*)
           FFLAGS="$FFLAGS -fbounds-check $extra_cflags"
           FORTRAN_UNDERSCORE=linux
+          DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
           ;;
         *)
           FFLAGS="$FFLAGS $extra_cflags"
@@ -9290,10 +9297,12 @@ echo "$as_me: WARNING: Turning off ALC/MCR's fortran underscore compatibility ha
          # This flag is used by the genfspec.pl script in Uintah (generated
          # from fspec.pl.in).
 	 FORTRAN_UNDERSCORE=linux
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_LINUX"
          ;;
       *gfortran*)
          FFLAGS="$FFLAGS -fbounds-check $extra_cflags"
          FORTRAN_UNDERSCORE=end
+         DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -9868,6 +9877,7 @@ fi
 echo $ECHO_N "checking fortran underscore policy... $ECHO_C" >&6; }
 { echo "$as_me:$LINENO: result: $FORTRAN_UNDERSCORE" >&5
 echo "${ECHO_T}$FORTRAN_UNDERSCORE" >&6; }
+
 
 
 
@@ -11684,7 +11694,7 @@ echo "$as_me: error: Could not find xml2makefile in $with_visit/src/bin/... " >&
    sci_defs_files="$sci_defs_files Uintah/VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
-   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libPackages_Uintah_StandAlone_tools_uda2vis.so
+   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libUintah_StandAlone_tools_uda2vis.so
    VISIT_INSTALL_DIR=$with_visit
 fi
 
@@ -46082,6 +46092,7 @@ AWK!$AWK$ac_delim
 ETAGS!$ETAGS$ac_delim
 PERL!$PERL$ac_delim
 FORTRAN_UNDERSCORE!$FORTRAN_UNDERSCORE$ac_delim
+DEF_FORTRAN_UNDERSCORE!$DEF_FORTRAN_UNDERSCORE$ac_delim
 G77!$G77$ac_delim
 SOFLAGS!$SOFLAGS$ac_delim
 ASFLAGS!$ASFLAGS$ac_delim
@@ -46153,7 +46164,6 @@ DEF_LAPACK!$DEF_LAPACK$ac_delim
 LAPACK_LIB_FLAG!$LAPACK_LIB_FLAG$ac_delim
 LAPACK_LIB_DIR_FLAG!$LAPACK_LIB_DIR_FLAG$ac_delim
 HAVE_LAPACKMP!$HAVE_LAPACKMP$ac_delim
-LAPACKMP_LIB_FLAG!$LAPACKMP_LIB_FLAG$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -46195,6 +46205,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+LAPACKMP_LIB_FLAG!$LAPACKMP_LIB_FLAG$ac_delim
 LAPACKMP_LIB_DIR_FLAG!$LAPACKMP_LIB_DIR_FLAG$ac_delim
 HAVE_MPI!$HAVE_MPI$ac_delim
 DEF_MPI!$DEF_MPI$ac_delim
@@ -46246,7 +46257,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 49; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 50; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

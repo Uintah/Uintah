@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iomanip>
 #include <sstream>
 #include <cstdio>
+#include <cstdlib>
 #include <cassert>
 #include "GV_TaskGraph.h"
 #include <Core/Malloc/Allocator.h>

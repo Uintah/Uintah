@@ -42,8 +42,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sci_comp_warn_fixes.h>
-
 using namespace Uintah;
 //__________________________________
 //  To turn on normal output
@@ -210,7 +208,7 @@ namespace Uintah {
                           __FILE__, __LINE__);
     } // switch (solverType)
     cout_doing << "newHypreSolver() END (shouldn't be reached)" << "\n";
-    RETURN_0;
+    return 0;
   }
 //______________________________________________________________________
   SolverType
