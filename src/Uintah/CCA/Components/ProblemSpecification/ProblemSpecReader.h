@@ -37,8 +37,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/XMLUtil/XMLUtil.h>
-
 #include <string>
 #include <vector>
 

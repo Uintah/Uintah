@@ -685,7 +685,8 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseXmlTag");
 
-  string name = to_char_ptr( xmlTag->name );
+  //  string name = to_char_ptr( xmlTag->name );
+  string name = (const char *)( xmlTag->name );
   collapse( name );
 
   dbg << "Parse node: " << name << "\n";
@@ -712,9 +713,9 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         throw ProblemSetupException( "Error (b)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").",
                                      __FILE__, __LINE__ );
       }
-      else if( string( "spec" ) != to_char_ptr( xmlTag->properties->name ) ) {
+      else if( string( "spec" ) != (const char *)( xmlTag->properties->name ) ) {
         throw ProblemSetupException( "Error (c)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").  " +
-                                     "Found attribute '" + to_char_ptr( xmlTag->properties->name ) + "' instead.", __FILE__, __LINE__ );
+                                     "Found attribute '" + (const char *)( xmlTag->properties->name ) + "' instead.", __FILE__, __LINE__ );
       }
     }
   }
@@ -726,7 +727,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   string validValues;
 
   if( hasSpecString ) {
-    string specStr = to_char_ptr( xmlTag->properties->children->content );
+    string specStr = (const char *)( xmlTag->properties->children->content );
 
     if( specStr == "FORWARD_DECLARATION" ) {
       forwardDecl = true;
@@ -804,10 +805,10 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         type_e type;
         string label, validValues;
 
-        const string attrName = to_char_ptr( child->name );
+        const string attrName = (const char *)( child->name );
 
         if( attrName.find( "attribute") == 0 ) { // attribute string begins with "attribute"
-          string specStr = to_char_ptr( child->children->content );
+          string specStr = (const char *)( child->children->content );
           getLabelAndNeedAndTypeAndValidValues( specStr, label, need, type, validValues );
 
           if( need == INVALID_NEED ) {
@@ -817,7 +818,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         }
         else if( attrName.find( "children") == 0 ) {  // attribute string begins with "children"
 
-          string attrStr = to_char_ptr( child->children->content );
+          string attrStr = (const char *)( child->children->content );
           vector<string> strings;
           vector<char> separators;
 
@@ -849,7 +850,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         }
         else if( attrName.find( "need_applies_to") == 0 ) {  // attribute string begins with "children"
 
-          string attrStr = to_char_ptr( child->children->content );
+          string attrStr = (const char *)( child->children->content );
           vector<string> strings;
           vector<char> separators;
 
@@ -914,7 +915,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   for( xmlNode * child = xmlTag->children; child != 0; child = child->next) {
     if( child->type == XML_ELEMENT_NODE ) {
 
-      string node = to_char_ptr( child->name );
+      string node = (const char *)( child->name );
       collapse( node );
 
       newTag->parseXmlTag( child );
@@ -990,7 +991,8 @@ ProblemSpecReader::parseValidationFile()
   uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL );
   commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", NULL );
 
-  string tagName = to_char_ptr( root->name );
+  //  string tagName = to_char_ptr( root->name );
+  string tagName = (const char *)( root->name );
 
   if( tagName != "Uintah_specification" ) {
     throw ProblemSetupException( valFile + " does not appear to be valid... First tag should be\n" +
@@ -1003,7 +1005,7 @@ ProblemSpecReader::parseValidationFile()
   for( xmlNode * child = root->children; child != 0; child = child->next) {
 
     if( child->type == XML_ELEMENT_NODE ) {
-      string tagName = to_char_ptr( child->name );
+      string tagName = (const char *)( child->name );
     
       if( tagName == "CommonTags" ) {
         commonTagsFound = true;
@@ -1025,7 +1027,7 @@ ProblemSpecReader::parseValidationFile()
   // Parse <Uintah_specification>
   for( xmlNode * child = root->children; child != 0; child = child->next) {
     if( child->type == XML_ELEMENT_NODE ) {
-      string tagName = to_char_ptr( child->name );
+      string tagName = (const char *)( child->name );
       if( tagName != "CommonTags" ) { // We've already handled the Common Tags...
         uintahSpec_g->parseXmlTag( child );
       }
@@ -1211,7 +1213,8 @@ Tag::validateAttribute( xmlAttr * attr )
     throw ProblemSetupException( "Error... attr is NULL", __FILE__, __LINE__ );
   }
 
-  const string attrName = to_char_ptr( attr->name );
+  //  const string attrName = to_char_ptr( attr->name );
+  const string attrName = (const char *)( attr->name );
 
   AttributeP   attribute = findAttribute( attrName );
 
@@ -1223,7 +1226,7 @@ Tag::validateAttribute( xmlAttr * attr )
 
   attribute->occurrences_++;
 
-  const char * attrContent = to_char_ptr(attr->children->content);
+  const char * attrContent = (const char *)(attr->children->content);
   attribute->validateText( attrContent, (xmlNode*)attr );
 
   // dbg << "currentValue_ of " << name_ << " is now " << attrContent << "\n";
@@ -1279,7 +1282,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   xmlAttr* attr = ps->getNode()->properties;
 
   if( attributes_.size() == 0 && attr ) {
-    throw ProblemSetupException( "Tag " + getCompleteName() + " has an attribute ('" + to_char_ptr( attr->name ) + 
+    throw ProblemSetupException( "Tag " + getCompleteName() + " has an attribute ('" + (const char *)( attr->name ) + 
                                  "'), but spec says there are none...\n" + getErrorInfo( attr->parent ), __FILE__, __LINE__ );
   }
 
@@ -1305,7 +1308,8 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 
     if (child->type == XML_TEXT_NODE) {
 
-      string tempText = to_char_ptr( child->content );
+      //      string tempText = to_char_ptr( child->content );
+      string tempText = (const char *)( child->content );
       collapse( tempText );
 
       if( tempText != "" ) {
@@ -1324,11 +1328,11 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
     }
     else if( child->type != XML_ELEMENT_NODE ) {
       throw ProblemSetupException( string( "Node has an unknown type of child node... child node's name is '" ) +
-                                   to_char_ptr( child->name ) + "'", __FILE__, __LINE__ );
+                                   (const char *)( child->name ) + "'", __FILE__, __LINE__ );
     }
     else {
       // Handle sub tag
-      const char * childName = to_char_ptr( child->name );
+      const char * childName = (const char *)( child->name );
       TagP         childTag  = findSubTag( childName );
 
       if( !childTag ) {
@@ -1437,7 +1441,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 
       xmlAttr* attr = ps->getNode()->properties;
       if( attr != 0 ) {
-        const char * attrContent = to_char_ptr( attr->children->content );
+        const char * attrContent = (const char *)( attr->children->content );
         if( namedGeomPieces_g[ attrContent ] ) {
           // If this is a named geometry piece, then it won't (shouldn't) have child tags.
           continue;
@@ -1725,7 +1729,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
   while( child != NULL ) {
 
     if( child->type == XML_ELEMENT_NODE ) {
-      string name1 = to_char_ptr(child->name);
+      string name1 = (const char *)(child->name);
       indent( dbg, depth );
       dbg << " - " << name1 << "\n";
 
@@ -1756,7 +1760,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
         // nodes to be substituted must be enclosed in a 
         // "Uintah_Include" node
 
-        string name = to_char_ptr( include->name );
+        string name = (const char *)( include->name );
         if( name == "Uintah_Include" || name == "Uintah_specification" ) {
           xmlNode * incChild = include->children;
           while( incChild != 0 ) {
