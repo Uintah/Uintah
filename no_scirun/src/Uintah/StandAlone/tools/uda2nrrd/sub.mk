@@ -54,8 +54,8 @@ PROGRAM := $(SRCDIR)/uda2nrrd
         Core/Math         \
         Core/Persistent   \
         Core/Thread       \
-        Core/Util         \
-        Core/XMLUtil
+        Core/Util         
+
   endif
 
   SRCS := \

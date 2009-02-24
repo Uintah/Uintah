@@ -67,7 +67,6 @@ else
         Uintah/Core/DataArchive   \
 	Uintah/CCA/Ports          \
         Uintah/CCA/Components/ProblemSpecification \
-        Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \

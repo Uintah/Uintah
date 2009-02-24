@@ -82,7 +82,6 @@ ifeq ($(SET_AIX_LIB),yes)
         Core/OS           \
         Core/Persistent   \
         Core/Thread       \
-        Core/XMLUtil      \
         Uintah/Core/IO                          \
         Uintah/Core/Math                        \
         Uintah/Core/GeometryPiece               \
@@ -151,7 +150,6 @@ ifeq ($(SET_AIX_LIB),yes)
         $(BLAS_LIBRARY) \
         $(LAPACK_LIBRARY) \
         $(MPI_LIBRARY) \
-        $(X_LIBRARY) \
         $(M_LIBRARY)
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)      \
@@ -197,8 +195,8 @@ else
         Core/OS          \
         Core/Persistent  \
         Core/Thread      \
-        Core/Util        \
-        Core/XMLUtil     
+        Core/Util        
+
 endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) \
@@ -216,7 +214,6 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Uintah
 else
   PSELIBS := \
-        Core/XMLUtil  \
         Uintah/Core/Exceptions    \
         Uintah/Core/Grid          \
         Uintah/Core/Util          \
@@ -346,26 +343,26 @@ uintah: sus \
 link_inputs:
 	@( if ! test -L Uintah/StandAlone/inputs; then \
                echo "Creating link to inputs directory." ; \
-	       ln -sf $(SRCTOP_ABS)/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs; \
+	       ln -sf $(SRCTOP_ABS)/Uintah/StandAlone/inputs Uintah/StandAlone/inputs; \
 	   fi )
           
 link_orderAccuracy:
 	@( if ! test -L Uintah/StandAlone/orderAccuracy; then \
                echo "Creating link to orderAccuracy directory." ; \
-	       ln -sf $(SRCTOP_ABS)/Uintah/orderAccuracy Packages/Uintah/StandAlone; \
+	       ln -sf $(SRCTOP_ABS)/Uintah/orderAccuracy Uintah/StandAlone; \
 	   fi )          
           
 link_tools:
 	@( if ! test -L Uintah/StandAlone/puda; then \
                echo "Creating link to all the tools." ; \
-	       ln -sf $(OBJTOP_ABS)/Uintah/StandAlone/tools/puda/puda $(OBJTOP_ABS)/Packages/Uintah/StandAlone/puda; \
-              ln -sf $(OBJTOP_ABS)/Uintah/StandAlone/tools/extractors/lineextract $(OBJTOP_ABS)/Packages/Uintah/StandAlone/lineextract; \
-              ln -sf $(OBJTOP_ABS)/Uintah/StandAlone/tools/extractors/timeextract $(OBJTOP_ABS)/Packages/Uintah/StandAlone/timeextract; \
+	       ln -sf $(OBJTOP_ABS)/Uintah/StandAlone/tools/puda/puda $(OBJTOP_ABS)/Uintah/StandAlone/puda; \
+              ln -sf $(OBJTOP_ABS)/Uintah/StandAlone/tools/extractors/lineextract $(OBJTOP_ABS)/Uintah/StandAlone/lineextract; \
+              ln -sf $(OBJTOP_ABS)/Uintah/StandAlone/tools/extractors/timeextract $(OBJTOP_ABS)/Uintah/StandAlone/timeextract; \
 	   fi )
 link_regression_tester:
 	@( if ! test -L Uintah/StandAlone/run_RT; then \
                echo "Creating link to regression_tester script." ; \
-	       ln -sf $(SRCTOP_ABS)/Uintah/scripts/regression_tester Packages/Uintah/StandAlone/run_RT; \
+	       ln -sf $(SRCTOP_ABS)/Uintah/scripts/regression_tester Uintah/StandAlone/run_RT; \
 	   fi )
 
 # The REDSTORM portion of the following command somehow prevents Make, on Redstorm,
