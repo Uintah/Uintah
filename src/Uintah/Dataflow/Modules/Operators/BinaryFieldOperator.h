@@ -71,9 +71,7 @@ WARNING
 #include <Core/Geometry/BBox.h>
 #include <Uintah/Core/Disclosure/TypeUtils.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using namespace std;

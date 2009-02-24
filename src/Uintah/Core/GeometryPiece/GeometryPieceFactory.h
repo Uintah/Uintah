@@ -34,11 +34,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Uintah/Core/GeometryPiece/GeometryPiece.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <vector>
 #include   <map>
 #include   <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/GeometryPiece/GeometryPiece.h>
 namespace Uintah {

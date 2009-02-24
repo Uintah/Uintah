@@ -39,10 +39,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Uintah/Core/Exceptions/InvalidValue.h>
 #include <cmath>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #include <process.h>

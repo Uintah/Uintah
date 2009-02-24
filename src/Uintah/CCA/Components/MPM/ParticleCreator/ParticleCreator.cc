@@ -49,10 +49,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using std::vector;

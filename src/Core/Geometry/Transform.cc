@@ -45,10 +45,8 @@
 #include <Core/Geometry/Plane.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <cstring>
-#include <sgi_stl_warnings_on.h>
 #include <cstdio>
 
 using namespace SCIRun;

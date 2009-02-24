@@ -31,10 +31,8 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>

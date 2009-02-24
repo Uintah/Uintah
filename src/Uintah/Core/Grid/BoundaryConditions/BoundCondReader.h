@@ -31,11 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_BoundCondReader_H
 #define UINTAH_GRID_BoundCondReader_H
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Uintah/Core/Grid/BoundaryConditions/BCData.h>
 #include <Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>

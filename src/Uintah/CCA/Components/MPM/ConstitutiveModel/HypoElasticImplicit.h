@@ -46,9 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ConstitutiveModel.h"	
 #include "ImplicitCM.h"
 #include <Uintah/Core/Math/Matrix3.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <Uintah/CCA/Components/MPM/Solver.h>
 

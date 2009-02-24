@@ -47,11 +47,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <sgi_stl_warnings_on.h>
 
 // TODO:
 //  DONE Parse geometry from UPS file and fill in weights array properly

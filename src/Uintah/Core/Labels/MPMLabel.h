@@ -32,9 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_MPMLABEL_H
 
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Labels/uintahshare.h>
 

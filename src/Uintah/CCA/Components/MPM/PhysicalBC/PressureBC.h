@@ -36,9 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

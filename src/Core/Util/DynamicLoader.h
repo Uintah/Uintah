@@ -40,12 +40,10 @@
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Util/ProgressReporter.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <list>
 #include <string>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Util/share.h>
 

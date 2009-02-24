@@ -42,10 +42,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {

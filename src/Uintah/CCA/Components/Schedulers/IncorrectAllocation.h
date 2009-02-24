@@ -47,9 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Grid/Task.h>
 #include <Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Core/Exceptions/Exception.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

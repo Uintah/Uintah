@@ -44,13 +44,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
 #include <Uintah/Core/Math/Short27.h> //for Fracture
-#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using namespace Uintah;

@@ -45,11 +45,9 @@
 
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <vector>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
     

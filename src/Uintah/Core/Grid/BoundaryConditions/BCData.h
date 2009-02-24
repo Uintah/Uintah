@@ -31,11 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_BCData_H
 #define UINTAH_GRID_BCData_H
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Uintah/Core/Util/Handle.h>
 #include <Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
 

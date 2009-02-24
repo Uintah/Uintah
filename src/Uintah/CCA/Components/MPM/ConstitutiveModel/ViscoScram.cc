@@ -51,10 +51,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MinMax.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #include <process.h>

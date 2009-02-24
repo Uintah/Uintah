@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Vector.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/CCA/Components/ICE/uintahshare.h>
 namespace Uintah {

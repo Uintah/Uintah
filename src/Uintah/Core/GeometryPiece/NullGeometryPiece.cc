@@ -32,9 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

@@ -40,9 +40,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Uintah/Core/Grid/Variables/Array3.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   using std::cerr;

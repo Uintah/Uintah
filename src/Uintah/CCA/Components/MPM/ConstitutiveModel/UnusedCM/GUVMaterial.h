@@ -35,9 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include "ShellMaterial.h"
 #include <Uintah/Core/Math/Matrix3.h>
 #include <Uintah/Core/Parallel/ProcessorGroup.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

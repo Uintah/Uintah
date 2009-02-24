@@ -33,9 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_PackBufferInfo_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Uintah/Core/Parallel/BufferInfo.h>
 #include <Uintah/Core/Util/RefCounted.h>
 #include <Uintah/Core/Parallel/ProcessorGroup.h>

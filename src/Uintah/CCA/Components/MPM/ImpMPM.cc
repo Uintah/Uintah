@@ -84,7 +84,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Uintah/Core/Math/FastMatrix.h>
-#include <sgi_stl_warnings_off.h>
 #include <set>
 #include <map>
 #include <numeric>
@@ -92,7 +91,6 @@ DEALINGS IN THE SOFTWARE.
 #include <limits>
 #include <iostream>
 #include <fstream>
-#include <sgi_stl_warnings_on.h>
 #include <cmath>
 
 #ifdef _WIN32

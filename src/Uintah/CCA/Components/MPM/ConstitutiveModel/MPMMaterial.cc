@@ -50,11 +50,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/CCA/Ports/DataWarehouse.h>
 //#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <sgi_stl_warnings_off.h>
 #include   <iostream>
 #include   <string>
 #include   <list>
-#include <sgi_stl_warnings_on.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 
 

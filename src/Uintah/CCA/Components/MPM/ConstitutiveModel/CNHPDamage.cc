@@ -47,9 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #include <process.h>

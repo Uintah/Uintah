@@ -32,9 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __VISCO_PLASTICITY_MODEL_H__
 
 #include <Uintah/Core/Math/Matrix3.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 // #include <Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Uintah/CCA/Ports/DataWarehouse.h>

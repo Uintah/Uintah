@@ -52,14 +52,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef TNT_I_REFVEC_H
 #define TNT_I_REFVEC_H
 
-#include <sgi_stl_warnings_off.h>
 /*#include <cstdlib>*/
 #include <iostream>
 
 #ifdef TNT_BOUNDS_CHECK
 #include <cassert>
 #endif
-#include <sgi_stl_warnings_on.h>
 
 #ifndef NULL
 #define NULL 0

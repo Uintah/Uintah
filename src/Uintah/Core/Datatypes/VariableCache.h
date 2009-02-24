@@ -50,11 +50,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/Persistent.h>
 #include <Uintah/Core/Math/Matrix3.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
 #include <map>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {

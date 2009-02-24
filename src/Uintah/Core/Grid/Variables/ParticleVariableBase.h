@@ -38,9 +38,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Util/Assert.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Grid/uintahshare.h>
 

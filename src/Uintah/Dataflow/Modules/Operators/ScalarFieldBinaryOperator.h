@@ -79,10 +79,8 @@ WARNING
 #include "BinaryFieldOperator.h"
 #include "OperatorThread.h"
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::string;

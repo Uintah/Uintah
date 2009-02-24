@@ -44,9 +44,7 @@
 #define Core_Thread_WorkQueue_h
 
 #include <Core/Thread/AtomicCounter.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Thread/share.h>
 namespace SCIRun {

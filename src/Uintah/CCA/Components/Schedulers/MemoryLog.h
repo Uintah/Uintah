@@ -32,10 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_MemoryLog_h
 #define Uintah_MemoryLog_h
 
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   class Patch;

@@ -31,11 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Parallel_UintahParallelComponent_h
 #define Uintah_Parallel_UintahParallelComponent_h
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <map>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Parallel/uintahshare.h>
 namespace Uintah {

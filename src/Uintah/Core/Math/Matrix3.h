@@ -45,11 +45,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <vector>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Uintah/Core/Math/uintahshare.h>
 namespace Uintah {
@@ -715,9 +713,7 @@ namespace Uintah {
 
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 namespace SCIRun {
   class TypeDescription;
   class Piostream;

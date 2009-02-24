@@ -54,12 +54,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Core/Containers/StaticArray.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

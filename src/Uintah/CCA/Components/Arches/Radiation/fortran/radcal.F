@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
 C***********************************************************************
 C	SUBROUTINE RADCAL - calculates spectral gas and soot absorption  
 C	coefficients for cartesian or cylindrical geometries.

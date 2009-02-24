@@ -31,9 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_MPM_LOADCURVE_H
 #define UINTAH_MPM_LOADCURVE_H
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>

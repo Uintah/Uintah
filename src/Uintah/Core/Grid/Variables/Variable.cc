@@ -42,10 +42,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Endian.h>
 #include <Core/Util/SizeTypeConvert.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <sstream>
 #include   <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #include <zlib.h>
 #include <cmath>

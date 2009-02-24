@@ -44,10 +44,8 @@
 #ifndef SCIRun_Core_Util_ProgressReporter_h
 #define SCIRun_Core_Util_ProgressReporter_h
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 #include <Core/Util/Timer.h>
 #include <Core/Thread/AtomicCounter.h>
 

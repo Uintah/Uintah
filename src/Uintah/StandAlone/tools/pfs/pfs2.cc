@@ -49,11 +49,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 #include <cstdio>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace std;
