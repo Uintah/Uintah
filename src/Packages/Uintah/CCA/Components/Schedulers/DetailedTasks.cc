@@ -72,7 +72,7 @@ static string dbgScrubVar = "";
 static int dbgScrubPatch = -1;
 
 DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
-           DetailedTasks* first, const TaskGraph* taskgraph,
+           DetailedTasks* first, const TaskGraph* taskgraph,const set<int>& neighborhood_processors,
            bool mustConsiderInternalDependencies /*= false*/)
   : sc_(sc), d_myworld(pg), first(first), taskgraph_(taskgraph),
     mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
@@ -82,7 +82,6 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
     readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
   int nproc = pg->size();
-  tasks_.resize(nproc);
 
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
@@ -94,10 +93,16 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   stask_=scinew Task("send old data", Task::InitialSend);
   stask_->setMapping(dwmap);
 
-  for(int i=0;i<nproc;i++) {
-    tasks_[i]=scinew DetailedTask(stask_, 0, 0, this);
-    tasks_[i]->assignResource(i);
+  //create a send old detailed task for every processor in my neighborhood
+  for(set<int>::iterator iter=neighborhood_processors.begin();iter!=neighborhood_processors.end();iter++)
+  {
+    DetailedTask* newtask=scinew DetailedTask(stask_, 0, 0, this);
+    newtask->assignResource(*iter);
+    //use a map because the processors in this map are likely to be sparse
+    sendoldmap[*iter]=tasks_.size();
+    tasks_.push_back(newtask);
   }
+
 }
 
 DetailedTasks::~DetailedTasks()
@@ -950,8 +955,16 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 DetailedTask*
 DetailedTasks::getOldDWSendTask(int proc)
 {
-  // These are the first N tasks
-  return tasks_[proc];
+
+#if SCI_ASSERTION_LEVEL>0
+  //verify the map entry has been created
+  if(sendoldmap.find(proc)==sendoldmap.end())
+  {
+    cout << d_myworld->myrank() << " Error trying to get oldDWSendTask for processor: " << proc << " but it does not exist\n";
+    throw InternalError("oldDWSendTask does not exist",__FILE__,__LINE__);
+  }
+#endif 
+  return tasks_[sendoldmap[proc]];
 }
 
 void
