@@ -620,14 +620,17 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
 
   TAU_PROFILE_START(dttimer);
 
-  dts_ = scinew DetailedTasks(sc, d_myworld, first, this, useInternalDeps );
+  dts_ = scinew DetailedTasks(sc, d_myworld, first, this, lb->getNeighborhoodProcessors(), useInternalDeps );
+  
   for(int i=0;i<(int)sorted_tasks.size();i++){
+  
     Task* task = sorted_tasks[i];
     const PatchSet* ps = task->getPatchSet();
     const MaterialSet* ms = task->getMaterialSet();
     if(ps && ms){
       for(int p=0;p<ps->size();p++){
         const PatchSubset* pss = ps->getSubset(p);
+
         // don't make output tasks if there are no patches
         if(lb->inNeighborhood(pss) && (pss->size() > 0 || task->getType() != Task::Output))
         {
@@ -645,7 +648,8 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
   }
-
+  
+  
   if(dts_->numTasks() == 0)
     cerr << "WARNING: Compiling scheduler with no tasks\n";
 
@@ -1066,6 +1070,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
     if(patches && !patches->empty() && matls && !matls->empty()){
       for(int i=0;i<patches->size();i++){
         const Patch* patch = patches->get(i);
+
         Patch::selectType neighbors;
         IntVector low, high;
 
@@ -1137,8 +1142,11 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
           for (int j = 0; j < fromNeighbors.size(); j++) {
             const Patch* fromNeighbor = fromNeighbors[j];
 
-            if(!(lb->inNeighborhood(neighbor) || (neighbor != fromNeighbor && lb->inNeighborhood(fromNeighbor))))
+            //only add the requirments both patches are in my neighborhood, old logic kept here for reference
+            //if(!(lb->inNeighborhood(neighbor) || (neighbor != fromNeighbor && lb->inNeighborhood(fromNeighbor))))
+            if( !lb->inNeighborhood(neighbor) || !lb->inNeighborhood(fromNeighbor))
               continue;
+
             IntVector from_l;
             IntVector from_h;
 

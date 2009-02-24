@@ -285,7 +285,7 @@ namespace Uintah {
   class DetailedTasks {
   public:
     DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
-		  DetailedTasks* first, const TaskGraph* taskgraph,
+		  DetailedTasks* first, const TaskGraph* taskgraph, const set<int> &neighborhood_processors,
 		  bool mustConsiderInternalDependencies = false);
     ~DetailedTasks();
 
@@ -363,6 +363,7 @@ namespace Uintah {
       return sc_;
     }
   private:
+    map<int,int> sendoldmap;
     ParticleExchangeVar particleSends_;
     ParticleExchangeVar particleRecvs_;
 
