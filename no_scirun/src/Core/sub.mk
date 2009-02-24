@@ -38,53 +38,26 @@ SUBDIRS := \
 	$(SRCDIR)/Containers \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/GUI \
-	$(SRCDIR)/Comm \
-	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
-	$(SRCDIR)/Init \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \
 	$(SRCDIR)/OS \
 	$(SRCDIR)/Persistent \
-	$(SRCDIR)/Services \
-	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/Util \
-	$(SRCDIR)/ICom \
-	$(SRCDIR)/XMLUtil \
+#	$(SRCDIR)/ICom \
 #	$(SRCDIR)/2d \
 #	$(SRCDIR)/Util/Comm \
 #	$(SRCDIR)/Parts \
 #	$(SRCDIR)/PartsGui \
 #[INSERT NEW CATEGORY DIR HERE]
 
-ifeq ($(BUILD_DATAFLOW),yes)
-  SUBDIRS += \
-	$(SRCDIR)/Algorithms   \
-	$(SRCDIR)/Bundle       \
-	$(SRCDIR)/Geom         \
-	$(SRCDIR)/GuiInterface \
-	$(SRCDIR)/ImportExport \
-	$(SRCDIR)/TkExtensions \
-	$(SRCDIR)/Volume
-endif
 
-ifeq ($(BUILD_SCIJUMP),yes)
-  SUBDIRS += \
-	$(SRCDIR)/CCA \
-	$(SRCDIR)/Babel 
-endif
-
-ifeq ($(HAVE_GLOBUS),yes)
-  SUBDIRS += $(SRCDIR)/globus_threads
-endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
-LIBS := $(PLPLOT_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) \
-	$(TK_LIBRARY) $(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
+LIBS := $(THREAD_LIBRARY) \
 	$(Z_LIBRARY) $(M_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
