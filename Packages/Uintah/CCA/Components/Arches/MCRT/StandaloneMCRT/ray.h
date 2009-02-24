@@ -236,6 +236,7 @@ public:
 			   double &PathSurfaceLeft);
   
   void TravelInMediumInten(MTRand &MTrng,
+			   VirtualSurface &obVirtual,
 			   const double *kl_Vol,
 			   const double *scatter_Vol,			   
 			   const double *X,
@@ -258,7 +259,7 @@ private:
   int futurevIndex;
   int hitSurfaceIndex;
  
-  VirtualSurface obVirtual;
+  // VirtualSurface obVirtual;
   RealSurface *obReal;
   TopRealSurface obTop_ray;
   BottomRealSurface obBottom_ray;
@@ -271,6 +272,7 @@ private:
   int Ncx, Ncy, Ncz, ghostX, ghostY, ghostTB;
   int iIndex, jIndex, kIndex;
   int futureViIndex, futureVjIndex, futureVkIndex;
+  
   // basic data for a ray
   double xemiss, yemiss, zemiss;
   double xhit, yhit, zhit;

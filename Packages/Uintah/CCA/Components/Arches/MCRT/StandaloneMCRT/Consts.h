@@ -31,7 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 
 
-static const bool isotropic = true; // isotropic scattering, phase function = 1
+static const int ISOTROPIC = 0; // isotropic scattering, phase function = 1
+static const int LINEAR_SCATTER = 1;
+static const int EDDINGTON = 2;
 
 static const int TOP = 0;
 static const int BOTTOM = 1;

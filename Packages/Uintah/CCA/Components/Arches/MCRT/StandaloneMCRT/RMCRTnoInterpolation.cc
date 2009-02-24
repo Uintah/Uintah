@@ -116,6 +116,7 @@ double MeshSize(int &Nchalf, double &Lhalf, double &ratio){
 template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
 		 RealSurface *RealPointer,
+		 VirtualSurface &obVirtual,
 		 ray &obRay,
 		 MTRand &MTrng,
 		 const int &surfaceFlag,
@@ -189,7 +190,7 @@ void rayfromSurf(SurfaceType &obSurface,
       // checking scattering first
       // if hit on virtual surface, PathSurfaceLeft is updated.
       // else no update on PathSurfaceLeft.
-      obRay.TravelInMediumInten(MTrng,
+      obRay.TravelInMediumInten(MTrng, obVirtual,
 				kl_Vol, scatter_Vol,
 				X, Y, Z, VolFeature,
 				PathLeft, PathSurfaceLeft);
@@ -275,7 +276,7 @@ int main(int argc, char *argv[]){
   time_t time_start, time_end;
   time (&time_start);
 
-  int casePlates;
+  //  int casePlates;
   //  cout << " Please enter plates case " << endl;
   //  cin >> casePlates;
 
@@ -312,8 +313,18 @@ int main(int argc, char *argv[]){
   //  double EnergyAmount; // set as customer self-set-up later
   //  double sumIncomInten, aveIncomInten;  
   double StopLowerBound;
+  double linear_b, eddington_f, eddington_g;
+  int PhFunc;
+  double scat;
+
+ 
+  scat = 9.0;
+  linear_b = 1;
+  eddington_f = 0;
+  eddington_g = 0;
+  PhFunc = LINEAR_SCATTER;
   
-  StopLowerBound = 1e-3;
+  StopLowerBound = 1e-4;
   rayNoSurface = 1;
   rayNoVol = 1;  
   Ncx = 10;
@@ -770,7 +781,7 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1000; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1500; 
    // TopBottomNo = Ncx * Ncy;
 
 
@@ -780,16 +791,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 1000;
-       rayNo_bottom_surface[iSurface] = 1000;
+       rayNo_top_surface[iSurface] = 1500;
+       rayNo_bottom_surface[iSurface] = 1500;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 1000;
-       rayNo_back_surface[iSurface] = 1000;
+       rayNo_front_surface[iSurface] = 1500;
+       rayNo_back_surface[iSurface] = 1500;
      }   
 
 
@@ -797,30 +808,32 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 1000;
-       rayNo_right_surface[iSurface] = 1000;
+       rayNo_left_surface[iSurface] = 500;
+       rayNo_right_surface[iSurface] = 500;
      }
 
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
+   // when update anycases .cc, need to remove *.o, then recompile
+   // otherwise,the input.cc file wont get updated in the binary files
+   
    //  #include "inputBenchmark.cc"
-    #include "inputBenchmarkSurf.cc"
+   //  #include "inputBenchmarkSurf.cc"
    //   #include "inputNonblackSurf.cc"
-   // #include "inputScattering.cc"   
-     
+   //  #include "inputScattering.cc"   
+    #include "inputScatteringAniso.cc"
+   
    MTRand MTrng;
    VolElement obVol;
+   VirtualSurface obVirtual;
+   obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);   
+   ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
    
    double OutIntenVol, traceProbability, LeftIntenFrac, sumIncomInten, aveIncomInten;
    double PathLeft, PathSurfaceLeft, weight;
    double previousSum, currentSum;
    double SurLeft;
 
-
-   // srand48 ( time ( NULL )); // for drand48()
-   
-   ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
-   
    double theta, phi;
    double random1, random2;
    double s[3];
@@ -950,6 +963,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obTop,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1003,6 +1017,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obBottom,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1057,6 +1072,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obFront,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1110,6 +1126,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obBack,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1164,6 +1181,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obLeft,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1218,6 +1236,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obRight,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1338,7 +1357,7 @@ int main(int argc, char *argv[]){
 		
 		previousSum = currentSum;
 		
-		obRay.TravelInMediumInten(MTrng,
+		obRay.TravelInMediumInten(MTrng, obVirtual,
 					  kl_Vol, scatter_Vol,
 					  X, Y, Z, VolFeature,
 					  PathLeft, PathSurfaceLeft);

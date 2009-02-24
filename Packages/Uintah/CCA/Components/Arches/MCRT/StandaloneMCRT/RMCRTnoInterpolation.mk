@@ -9,8 +9,8 @@ SRCS = RMCRTnoInterpolation.cc Surface.cc RealSurface.cc TopRealSurface.cc Botto
 
 OBJS := $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS)))
 
-RMCRTRR : $(OBJS) 
-	$(CXX) $(CFLAGS) $(OBJS) -o RMCRTnoInterpolation
+RMCRTnoInterpolation : $(OBJS) 
+			$(CXX) $(CFLAGS) $(OBJS) -o RMCRTnoInterpolation
 
 .cc.o: $<
 	$(CXX) $(CFLAGS) -c $< -o $@
