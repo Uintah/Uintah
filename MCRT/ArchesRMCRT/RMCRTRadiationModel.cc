@@ -77,20 +77,15 @@ RMCRTRadiationModel::problemSetup( const ProblemSpecP& params )
   db_rad->require("const_num_rays", d_constNumRays);
 
   // if using russian roulette
-  if ( db_rad->findblock("russian_roulette") )
-    db_rad->require("russian_roulette", d_rr);
-  else
-    db_rad->getWithDefault("russian_roulette", d_rr, "false");
-  
-  if (d_rr)
-    db_rad->require("rr_threshold", d_StopLowerBound);
-  else
-    db_rad->getWithDefault("rr_threshold", d_StopLowerBound, "1e-4");
+  if ( db_rad->findBlock("russian_roulette")){
+    d_rr = true; 
+    db_rad->getWithDefault("rr_threshold", d_StopLowerBound, 1.e-4);
+  }
   
   // property model set up
   // radcoef requires opl 
   db_rad->require("opl",d_opl);
-  db_rad->getWithDefault("property_model",prop_model,"radcoef"); // have this in c++
+  db_rad->require("property_model", prop_model);
   
   if (prop_model == "radcoef"){  // have this in c++
     d_radcal     = false;
