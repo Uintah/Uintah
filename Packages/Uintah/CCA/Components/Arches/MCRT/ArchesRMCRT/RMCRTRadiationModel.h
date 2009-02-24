@@ -71,6 +71,10 @@ private:
   int d_constNumRays;
   double d_refTemp, d_uScale, d_refComp;
   bool d_radcal, d_wsgg, d_planckmean, d_patchmean, d_fssk, d_fsck;
+  bool d_rr; 
+  double d_StopLowerBound; 
+  double d_opl;
+  int d_ambda; 
   const ArchesLabel* d_lab; 
 
 }; // end class RMCRTRadiationModel
