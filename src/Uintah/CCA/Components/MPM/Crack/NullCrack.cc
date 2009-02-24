@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/NullCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/NullCrack.h>
 
 
 using namespace Uintah;

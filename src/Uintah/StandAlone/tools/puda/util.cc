@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
+#include <Uintah/StandAlone/tools/puda/util.h>
 #include <cstdlib>
 #include <iostream>
 

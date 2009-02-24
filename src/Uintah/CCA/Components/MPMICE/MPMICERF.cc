@@ -29,20 +29,20 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Components/MPMICE/MPMICE.h>
+#include <Uintah/CCA/Components/ICE/ICE.h>
+#include <Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Uintah/CCA/Components/ICE/BoundaryCond.h>
+#include <Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Labels/MPMICELabel.h>
 
 using namespace SCIRun;
 using namespace Uintah;

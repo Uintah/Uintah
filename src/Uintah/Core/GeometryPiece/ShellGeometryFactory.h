@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __SHELL_GEOM_FACTORY_H__
 #define __SHELL_GEOM_FACTORY_H__
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
   class GeometryPiece;

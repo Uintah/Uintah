@@ -30,11 +30,11 @@ DEALINGS IN THE SOFTWARE.
 
 //----- RadiationSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
 
 using namespace Uintah;
 using namespace std;

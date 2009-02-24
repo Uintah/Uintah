@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_flatPlate_heatFlux_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_flatPlate_heatFlux_h
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/CCA/Ports/Output.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
 
 #include <map>
 #include <vector>

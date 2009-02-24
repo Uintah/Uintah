@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "ConstitutiveModel.h"	
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModel.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/DamageModel.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMEquationOfState.h>
 #include <cmath>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
 
 namespace Uintah {
 

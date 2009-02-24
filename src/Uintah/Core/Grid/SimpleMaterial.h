@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_Core_Grid_SimpleMaterial_h
 #define Packages_Uintah_Core_Grid_SimpleMaterial_h
 
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/Material.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;

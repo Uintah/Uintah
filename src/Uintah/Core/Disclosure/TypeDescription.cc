@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>

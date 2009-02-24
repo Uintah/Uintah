@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_CONSTGRIDVARIABLE_H
 #define UINTAH_HOMEBREW_CONSTGRIDVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/GridVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/constVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/Core/Grid/Variables/GridVariable.h>
+#include <Uintah/Core/Grid/Variables/constVariable.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 

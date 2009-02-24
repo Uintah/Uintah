@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
+#include <Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 
 using namespace Uintah;
 using namespace std;

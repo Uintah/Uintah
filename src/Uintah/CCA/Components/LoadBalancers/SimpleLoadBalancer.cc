@@ -28,13 +28,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
+#include <Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>

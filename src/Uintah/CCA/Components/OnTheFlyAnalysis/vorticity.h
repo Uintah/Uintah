@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef Packages_Uintah_CCA_Components_ontheflyAnalysis_vorticity_h
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_vorticity_h
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <Uintah/CCA/Ports/Output.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
 
 #include <map>
 #include <vector>

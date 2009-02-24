@@ -28,18 +28,18 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/NullContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ApproachContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/CompositeContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
+#include <Uintah/CCA/Components/MPM/Contact/NullContact.h>
+#include <Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
+#include <Uintah/CCA/Components/MPM/Contact/FrictionContact.h>
+#include <Uintah/CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
+#include <Uintah/CCA/Components/MPM/Contact/ApproachContact.h>
+#include <Uintah/CCA/Components/MPM/Contact/CompositeContact.h>
+#include <Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <string>
 using std::cerr;
 

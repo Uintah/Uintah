@@ -29,17 +29,17 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Labels/MPMICELabel.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;

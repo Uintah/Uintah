@@ -34,12 +34,12 @@ DEALINGS IN THE SOFTWARE.
 #include <sci_defs/petsc_defs.h>
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/CCA/Components/MPM/PetscSolver.h>
+#include <Uintah/Core/Exceptions/UintahPetscError.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
 
 #include <vector>
 #include <iostream>

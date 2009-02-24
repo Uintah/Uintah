@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __GEOMETRY_PIECE_H__
 #define __GEOMETRY_PIECE_H__
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/Util/RefCounted.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;

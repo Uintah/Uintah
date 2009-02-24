@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __CONTACT_H__
 #define __CONTACT_H__
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
 #include <cmath>
 
 namespace Uintah {

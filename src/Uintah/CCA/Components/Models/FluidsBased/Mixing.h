@@ -32,11 +32,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_Mixing_h
 #define Packages_Uintah_CCA_Components_Examples_Mixing_h
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/MaterialProperties.h>
+#include <Uintah/CCA/Ports/ModelInterface.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/MaterialProperties.h>
 
 namespace Uintah {
 

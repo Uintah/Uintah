@@ -65,7 +65,7 @@ WARNING
       Works with Hypre Struct interface only.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
 
 namespace Uintah {
   

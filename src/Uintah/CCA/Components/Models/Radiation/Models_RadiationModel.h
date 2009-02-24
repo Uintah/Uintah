@@ -67,14 +67,14 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationConstVariables.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/CCA/Components/Models/Radiation/Models_CellInformation.h>
+#include <Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
+#include <Uintah/CCA/Components/Models/Radiation/RadiationConstVariables.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

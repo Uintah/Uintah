@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #define __CONTACT_MATERIAL_SPEC_H__
 
 #include <Core/Containers/StaticArray.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 

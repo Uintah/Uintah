@@ -28,13 +28,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Math/MiscMath.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
+#include <Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Math/MiscMath.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <typeinfo>

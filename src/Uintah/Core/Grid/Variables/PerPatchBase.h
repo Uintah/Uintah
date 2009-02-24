@@ -36,9 +36,9 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <sgi_stl_warnings_on.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
+#include <Uintah/Core/Grid/Variables/Variable.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;

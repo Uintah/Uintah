@@ -35,11 +35,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/GuiInterface/GuiVar.h>
 // needs to be included here so Array3 knows about swapbytes(Matrix3)
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Datatypes/VariableCache.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/Datatypes/VariableCache.h>
+#include <Uintah/Core/Grid/GridP.h>
 
 namespace Uintah {
 

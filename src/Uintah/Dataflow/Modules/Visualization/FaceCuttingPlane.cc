@@ -84,7 +84,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Util/NotFinished.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <iostream>
 #include <algorithm>
 

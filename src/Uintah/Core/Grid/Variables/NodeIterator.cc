@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
 
 
 namespace Uintah

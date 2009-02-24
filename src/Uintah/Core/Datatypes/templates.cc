@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Persistent/Persistent.h>
 #include <Containers/LockingHandle.h>
 
-#include <Packages/Uintah/Datatypes/Particles/ParticleGridReader.h>
+#include <Uintah/Datatypes/Particles/ParticleGridReader.h>
 
 using namespace SCIRun;
 using namespace Uintah;

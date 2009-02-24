@@ -63,14 +63,14 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Uintah/CCA/Components/Arches/ArchesConstVariables.h>
 
 
 namespace Uintah {

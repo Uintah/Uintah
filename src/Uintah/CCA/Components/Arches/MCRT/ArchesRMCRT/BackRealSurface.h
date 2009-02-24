@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef BackRealSurface_H
 #define BackRealSurface_H
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
 
 
 class BackRealSurface:public RealSurface{

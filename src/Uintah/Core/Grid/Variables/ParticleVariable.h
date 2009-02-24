@@ -38,18 +38,18 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/constGridVariable.h>
-#include <Packages/Uintah/CCA/Ports/InputContext.h>
-#include <Packages/Uintah/CCA/Ports/OutputContext.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleData.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/IO/SpecializedRunLengthEncoder.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariableBase.h>
+#include <Uintah/Core/Grid/Variables/constGridVariable.h>
+#include <Uintah/CCA/Ports/InputContext.h>
+#include <Uintah/CCA/Ports/OutputContext.h>
+#include <Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Uintah/Core/Grid/Variables/ParticleData.h>
+#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/IO/SpecializedRunLengthEncoder.h>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -58,7 +58,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 using std::cout;
 using std::endl;
 namespace Uintah {
@@ -637,7 +637,7 @@ template<class T>
 } // End namespace Uintah
 
 #ifdef __PGI
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable_special.cc>
+#include <Uintah/Core/Grid/Variables/ParticleVariable_special.cc>
 #endif
 
 #endif

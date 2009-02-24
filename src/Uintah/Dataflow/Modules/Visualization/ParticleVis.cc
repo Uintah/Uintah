@@ -60,13 +60,13 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geom/ColorMap.h>
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Math/MinMax.h>
-#include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
+#include <Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
-#include <Packages/Uintah/Core/Datatypes/PSet.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Uintah/Core/Datatypes/PSet.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 #include <cstdio>
 #include <iostream>
 using std::cerr;

@@ -28,13 +28,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/DynamicModel.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/CCA/Components/ICE/DynamicModel.h>
+#include <Uintah/CCA/Components/ICE/BoundaryCond.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/Core/Grid/Patch.h>
 
 using namespace Uintah;
 static DebugStream cout_doing("ICE_DOING_COUT", false);

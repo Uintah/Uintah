@@ -29,12 +29,12 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/puda/asci.h>
+#include <Uintah/StandAlone/tools/puda/asci.h>
 
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
+#include <Uintah/StandAlone/tools/puda/util.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/GridP.h>
 
 #include <vector>
 #include <iostream>

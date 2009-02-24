@@ -33,11 +33,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/petsc_defs.h>
 
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
 #include <vector>
 #include <string>
 #include <cmath>

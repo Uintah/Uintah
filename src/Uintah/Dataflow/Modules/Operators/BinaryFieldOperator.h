@@ -69,7 +69,7 @@ WARNING
 #include "OperatorThread.h"
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

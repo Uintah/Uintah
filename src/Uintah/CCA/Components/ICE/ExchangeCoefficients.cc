@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/ExchangeCoefficients.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/ICE/ExchangeCoefficients.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <sstream>

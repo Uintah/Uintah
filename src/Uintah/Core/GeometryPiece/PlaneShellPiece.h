@@ -31,17 +31,17 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __PLANE_SHELL_PIECE_H__
 #define __PLANE_SHELL_PIECE_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/ShellGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/ShellGeometryPiece.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 
 #include <cmath>
 #ifndef M_PI
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////

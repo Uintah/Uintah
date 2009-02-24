@@ -36,21 +36,21 @@ DEALINGS IN THE SOFTWARE.
 // fields.  The main purpose of this type of contact is to
 // ensure that one can get the same answer using prescribed
 // contact as can be gotten using "automatic" contact.
-#include <Packages/Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
+#include <Uintah/CCA/Components/MPM/Contact/SingleVelContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Labels/MPMLabel.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
 #include <Core/Containers/StaticArray.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

@@ -29,14 +29,14 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Examples/RegionDB.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/CCA/Components/Examples/RegionDB.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
 #include <iostream>
 
 using namespace Uintah;

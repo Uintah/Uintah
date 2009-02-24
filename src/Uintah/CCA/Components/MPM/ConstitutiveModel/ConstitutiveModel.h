@@ -31,21 +31,21 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __CONSTITUTIVE_MODEL_H__
 #define __CONSTITUTIVE_MODEL_H__
 
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Short27.h>
 #include <Core/Containers/StaticArray.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/LinearInterpolator.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Math/FastMatrix.h>
+#include <Uintah/CCA/Components/MPM/MPMFlags.h>
 
 
 namespace Uintah {

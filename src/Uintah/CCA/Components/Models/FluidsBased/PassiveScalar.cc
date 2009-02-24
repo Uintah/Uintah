@@ -29,26 +29,26 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ConservationTest.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/PassiveScalar.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Uintah/CCA/Components/ICE/ConservationTest.h>
+#include <Uintah/CCA/Components/ICE/BoundaryCond.h>
+#include <Uintah/CCA/Components/ICE/Diffusion.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/PassiveScalar.h>
+#include <Uintah/CCA/Components/Regridder/PerPatchVars.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
 
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>

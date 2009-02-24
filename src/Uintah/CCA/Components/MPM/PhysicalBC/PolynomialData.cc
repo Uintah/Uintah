@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PolynomialData.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/MPM/PhysicalBC/PolynomialData.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Point.h>
 #include <iostream>
 #include <fstream>

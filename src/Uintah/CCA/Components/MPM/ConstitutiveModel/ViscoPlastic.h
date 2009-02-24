@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __VISCO_PLASTIC_H__
 
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include "ImplicitCM.h"
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
@@ -40,11 +40,11 @@ DEALINGS IN THE SOFTWARE.
 /*#include "PlasticityModels/DamageModel.h"*/
 #include "PlasticityModels/MPMEquationOfState.h"
 #include <math.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/TangentModulusTensor.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
 

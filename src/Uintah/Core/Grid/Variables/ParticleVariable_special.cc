@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Core_Grid_ParticleVariable_special_cc
 #define Uintah_Core_Grid_ParticleVariable_special_cc
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Level.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 

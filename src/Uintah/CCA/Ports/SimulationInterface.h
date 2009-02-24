@@ -31,16 +31,16 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SimulationInterface_H
 #define UINTAH_HOMEBREW_SimulationInterface_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Util/Handle.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
 #include <Core/OS/Dir.h>
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <Uintah/CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 

@@ -52,7 +52,7 @@ DEALINGS IN THE SOFTWARE.
  * Simple interface to volume rendering stuff
  */
 
-#include <Packages/Uintah/Dataflow/Modules/Visualization/SubFieldHistogram.h>
+#include <Uintah/Dataflow/Modules/Visualization/SubFieldHistogram.h>
 
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/StringUtil.h>

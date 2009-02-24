@@ -63,9 +63,9 @@ WARNING
    none
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/NonlinearSolver.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/NonlinearSolver.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
 
 namespace Uintah {
   using namespace SCIRun;

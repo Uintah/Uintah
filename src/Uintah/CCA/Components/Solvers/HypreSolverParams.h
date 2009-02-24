@@ -59,7 +59,7 @@ WARNING
 
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
 
 namespace Uintah {
 

@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/testprograms/TestSuite/uintahshare.h>
+#include <Uintah/testprograms/TestSuite/uintahshare.h>
 
 using namespace std;
 

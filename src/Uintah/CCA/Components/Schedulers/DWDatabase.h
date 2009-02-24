@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_DWDatabase_H
 #define UINTAH_HOMEBREW_DWDatabase_H
 
-#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/Core/Grid/Variables/ScrubItem.h>
+#include <Uintah/Core/Grid/UnknownVariable.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/CCA/Components/Schedulers/MemoryLog.h>
+#include <Uintah/Core/Grid/Variables/VarLabelMatl.h>
+#include <Uintah/Core/Grid/Variables/ScrubItem.h>
 
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Parallel/Parallel.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>

@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #define __DRUCKER_CHECK_H__
 
 #include "StabilityCheck.h"	
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Math/FastMatrix.h>
+#include <Uintah/Core/Math/TangentModulusTensor.h>
 
 namespace Uintah {
 

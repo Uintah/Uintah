@@ -34,10 +34,10 @@ DEALINGS IN THE SOFTWARE.
 // Hypre SMG (geometric multigrid #1) solver.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

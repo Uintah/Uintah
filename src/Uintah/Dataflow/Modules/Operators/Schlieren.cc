@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/Schlieren.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Dataflow/Modules/Operators/Schlieren.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <cmath>
 

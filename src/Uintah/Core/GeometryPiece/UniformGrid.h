@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __UNIFORM_GRID_H__
 #define __UNIFORM_GRID_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Ray.h>
 #include <Core/Geometry/IntVector.h>
@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 using std::vector;
 using std::list;
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;

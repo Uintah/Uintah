@@ -34,7 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 /**************************************

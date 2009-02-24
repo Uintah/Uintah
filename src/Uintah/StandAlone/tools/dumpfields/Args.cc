@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/StandAlone/tools/dumpfields/Args.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/StandAlone/tools/dumpfields/Args.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <cfloat>
 #include <cstring>
 #include <climits>

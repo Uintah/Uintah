@@ -28,18 +28,18 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverPFMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSparseMSG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverCG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverHybrid.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSMG.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverPFMG.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverSparseMSG.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverCG.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverHybrid.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverFAC.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriverSStruct.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
 #include <sci_comp_warn_fixes.h>

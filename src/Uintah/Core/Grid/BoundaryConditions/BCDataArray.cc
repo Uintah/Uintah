@@ -28,16 +28,16 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SideBCData.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
+#include <Uintah/Core/Grid/BoundaryConditions/SideBCData.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

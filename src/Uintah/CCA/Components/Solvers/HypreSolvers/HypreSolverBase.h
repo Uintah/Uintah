@@ -71,9 +71,9 @@ WARNING
    in implicit [AMR] ICE.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolverParams.h>
+#include <Uintah/CCA/Components/Solvers/HypreTypes.h>
 
 namespace Uintah {
   

@@ -31,14 +31,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_MMS_BC_h
 #define Packages_Uintah_CCA_Components_Ice_CustomBCs_MMS_BC_h
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Labels/ICELabel.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
 #include <typeinfo>
 
 using namespace Uintah;

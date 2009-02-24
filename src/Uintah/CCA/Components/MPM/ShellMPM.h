@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SHELLMPM_H
 #define UINTAH_HOMEBREW_SHELLMPM_H
 
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
+#include <Uintah/CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;

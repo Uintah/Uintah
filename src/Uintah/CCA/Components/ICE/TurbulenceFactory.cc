@@ -29,11 +29,11 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/ICE/TurbulenceFactory.h>
-#include <Packages/Uintah/CCA/Components/ICE/SmagorinskyModel.h>
-#include <Packages/Uintah/CCA/Components/ICE/DynamicModel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/ICE/TurbulenceFactory.h>
+#include <Uintah/CCA/Components/ICE/SmagorinskyModel.h>
+#include <Uintah/CCA/Components/ICE/DynamicModel.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;

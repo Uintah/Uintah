@@ -30,8 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/TimestepSelector.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Dataflow/Modules/Selectors/TimestepSelector.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>

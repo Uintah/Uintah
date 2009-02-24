@@ -31,20 +31,20 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_DataWarehouse_H
 #define UINTAH_HOMEBREW_DataWarehouse_H
 
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Variables/constGridVariable.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatchBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/Core/Util/Handle.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Variables/constGridVariable.h>
+#include <Uintah/Core/Grid/Ghost.h>
+#include <Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariableBase.h>
+#include <Uintah/Core/Grid/Variables/ReductionVariableBase.h>
+#include <Uintah/Core/Grid/Variables/PerPatchBase.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/Variables/SoleVariableBase.h>
+#include <Uintah/Core/Grid/Variables/VarLabelMatl.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 
@@ -52,7 +52,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <Uintah/CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 

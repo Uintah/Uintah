@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;

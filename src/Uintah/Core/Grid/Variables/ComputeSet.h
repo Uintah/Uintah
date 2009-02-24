@@ -35,8 +35,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Util/constHandle.h>
+#include <Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/Util/constHandle.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <sstream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -529,7 +529,7 @@ namespace Uintah {
 // isn't needed on Ranger with pgCC version 7.1-2.)
 //
 //#if defined( __PGI ) && !defined( REDSTORM )
-//#  include <Packages/Uintah/Core/Grid/Variables/ComputeSet_special.cc>
+//#  include <Uintah/Core/Grid/Variables/ComputeSet_special.cc>
 //#endif
 
 

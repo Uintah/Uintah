@@ -29,19 +29,19 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Math/Matrix3.h> // Must be before include of Constant.h
+#include <Uintah/Core/Math/Matrix3.h> // Must be before include of Constant.h
 #include <Core/Basis/Constant.h>               // Must be before include of HexTrilinearLgn.h
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/MultiLevelField.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/build.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/build.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/update_mesh_handle.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/update_mesh_handle.h>
 
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 
 #include <map>
 

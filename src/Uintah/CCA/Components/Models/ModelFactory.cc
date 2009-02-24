@@ -29,28 +29,28 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/Mixing.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/AdiabaticTable.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/PassiveScalar.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/SimpleRxn.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TestModel.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/MassMomEng_src.h>
+#include <Uintah/CCA/Components/Models/ModelFactory.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/CCA/Ports/ModelInterface.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/Mixing.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/AdiabaticTable.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/PassiveScalar.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/SimpleRxn.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/TestModel.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/flameSheet_rxn.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/MassMomEng_src.h>
 #if !defined( NO_ICE )
-#  include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
-#  include <Packages/Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
-#  include <Packages/Uintah/CCA/Components/Models/HEChem/Unsteady_Burn.h>
-#  include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
-#  include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
-#  include <Packages/Uintah/CCA/Components/Models/HEChem/LightTime.h>
+#  include <Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
+#  include <Uintah/CCA/Components/Models/HEChem/Steady_Burn.h>
+#  include <Uintah/CCA/Components/Models/HEChem/Unsteady_Burn.h>
+#  include <Uintah/CCA/Components/Models/HEChem/IandG.h>
+#  include <Uintah/CCA/Components/Models/HEChem/JWLpp.h>
+#  include <Uintah/CCA/Components/Models/HEChem/LightTime.h>
 #endif
 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationDriver.h>
+#include <Uintah/CCA/Components/Models/Radiation/RadiationDriver.h>
 #include <Core/Malloc/Allocator.h>
 #include <sci_defs/uintah_defs.h>
 

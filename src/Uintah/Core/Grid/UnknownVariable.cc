@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/UnknownVariable.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
 #include <sstream>
 #include <iostream>
 

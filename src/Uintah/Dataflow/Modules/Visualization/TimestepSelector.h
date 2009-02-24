@@ -57,8 +57,8 @@ LOG
 #define TIMESTEPSELECTOR_H 1
 
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/Datatypes/ArchivePort.h>
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 #include <sgi_stl_warnings_off.h>

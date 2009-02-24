@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_CORE_TRACKER_TRACKERSERVER_H
 #define UINTAH_CORE_TRACKER_TRACKERSERVER_H
 
-#include <Packages/Uintah/Core/Tracker/Tracker.h>
+#include <Uintah/Core/Tracker/Tracker.h>
 
 #include <Core/Util/Socket.h>
 

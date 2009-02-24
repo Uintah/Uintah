@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Endian.h> // for other swapbytes() functions.
 namespace Uintah {

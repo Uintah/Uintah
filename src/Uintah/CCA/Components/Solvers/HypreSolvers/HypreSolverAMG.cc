@@ -35,10 +35,10 @@ DEALINGS IN THE SOFTWARE.
 //--------------------------------------------------------------------------
 
 #include <sci_defs/hypre_defs.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverAMG.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

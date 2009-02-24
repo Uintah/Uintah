@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/CCA/Components/ICE/Advection/SecondOrderBase.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Endian.h>

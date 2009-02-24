@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;

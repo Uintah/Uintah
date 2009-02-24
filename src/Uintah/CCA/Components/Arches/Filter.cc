@@ -31,18 +31,18 @@ DEALINGS IN THE SOFTWARE.
 //----- Filter.cc ----------------------------------------------
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/CCA/Components/Arches/Filter.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/Core/Exceptions/UintahPetscError.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Grid/SimulationState.h>
 
 // If I'm not mistaken, this #define replaces the CHKERRQ() from PETSc itself...                                           
 #undef CHKERRQ

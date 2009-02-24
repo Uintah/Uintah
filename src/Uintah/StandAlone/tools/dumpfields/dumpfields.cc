@@ -47,19 +47,19 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cassert>
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/Array3.h>

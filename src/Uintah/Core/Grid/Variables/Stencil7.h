@@ -32,11 +32,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_Core_Grid_Stencil7_h
 #define Packages_Uintah_Core_Grid_Stencil7_h
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
   class TypeDescription;
   struct UINTAHSHARE Stencil7 {

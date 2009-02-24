@@ -37,7 +37,7 @@ using namespace std;
 
 #include <Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;

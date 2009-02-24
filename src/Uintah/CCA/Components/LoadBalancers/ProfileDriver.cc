@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/ProfileDriver.h>
+#include <Uintah/CCA/Components/LoadBalancers/ProfileDriver.h>
 using namespace Uintah;
 using namespace SCIRun;
    

@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
 #include <sstream>
 #include <iostream>
@@ -121,5 +121,5 @@ const char* VariableNotFoundInGrid::message() const
 
 const char* VariableNotFoundInGrid::type() const
 {
-  return "Packages/Uintah::Exceptions::VariableNotFoundInGrid";
+  return "Uintah::Exceptions::VariableNotFoundInGrid";
 }

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/compare_mms/SineMMS.h>
+#include <Uintah/StandAlone/tools/compare_mms/SineMMS.h>
 
 #include <cmath>
 #include <iostream>

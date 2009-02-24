@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef  UINTAH_DATATYPES_PSet_H
 #define  UINTAH_DATATYPES_PSet_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
+#include <Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
 using std::vector;
 using namespace SCIRun;

@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
 using namespace SCIRun;

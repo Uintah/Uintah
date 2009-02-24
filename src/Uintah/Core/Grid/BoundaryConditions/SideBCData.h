@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_SideBCData_H
 #define UINTAH_GRID_SideBCData_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/Grid/Variables/GridIterator.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Uintah/Core/Grid/Variables/GridIterator.h>
 #include <vector>
 
 namespace Uintah {

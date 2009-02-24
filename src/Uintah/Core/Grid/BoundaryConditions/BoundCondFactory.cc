@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <sstream>

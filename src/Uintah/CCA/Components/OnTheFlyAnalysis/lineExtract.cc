@@ -28,19 +28,19 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
+#include <Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Uintah/CCA/Components/Regridder/PerPatchVars.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Containers/StaticArray.h>

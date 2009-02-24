@@ -33,12 +33,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Components_Arches_PressureSolver_h
 #define Uintah_Components_Arches_PressureSolver_h
 
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+#include <Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Grid/LevelP.h>
 
 
 namespace Uintah {

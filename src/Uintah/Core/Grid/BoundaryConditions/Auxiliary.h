@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_AuxiliaryBoundCond_H
 #define UINTAH_GRID_AuxiliaryBoundCond_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 

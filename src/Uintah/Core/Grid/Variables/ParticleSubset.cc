@@ -29,10 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/ProgressiveWarning.h>

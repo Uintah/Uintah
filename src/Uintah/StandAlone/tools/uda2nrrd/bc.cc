@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/bc.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/bc.h>
 
 using namespace SCIRun;
 

@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
+#include <Uintah/Core/Grid/LinearInterpolator.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;

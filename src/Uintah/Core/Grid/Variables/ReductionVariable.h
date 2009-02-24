@@ -31,14 +31,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ReductionVARIABLE_H
 #define UINTAH_HOMEBREW_ReductionVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariableBase.h>
-#include <Packages/Uintah/Core/Grid/Variables/DataItem.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Uintah/Core/Grid/Variables/ReductionVariableBase.h>
+#include <Uintah/Core/Grid/Variables/DataItem.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
+#include <Uintah/Core/Grid/Variables/Reductions.h>
 #include <Core/Util/Endian.h>
 
 #include <sgi_stl_warnings_off.h>

@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ScrubItem_H
 #define UINTAH_HOMEBREW_ScrubItem_H
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Patch.h>
 #include <Core/Containers/TrivialAllocator.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 

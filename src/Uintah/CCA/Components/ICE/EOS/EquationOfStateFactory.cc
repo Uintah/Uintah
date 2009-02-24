@@ -28,18 +28,18 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/IdealGas.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/HardSphereGas.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/JWL.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/TST.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/JWLC.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/Murnahan.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/Gruneisen.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/Tillotson.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/Thomsen_Hartka_water.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#include <Uintah/CCA/Components/ICE/EOS/IdealGas.h>
+#include <Uintah/CCA/Components/ICE/EOS/HardSphereGas.h>
+#include <Uintah/CCA/Components/ICE/EOS/JWL.h>
+#include <Uintah/CCA/Components/ICE/EOS/TST.h>
+#include <Uintah/CCA/Components/ICE/EOS/JWLC.h>
+#include <Uintah/CCA/Components/ICE/EOS/Murnahan.h>
+#include <Uintah/CCA/Components/ICE/EOS/Gruneisen.h>
+#include <Uintah/CCA/Components/ICE/EOS/Tillotson.h>
+#include <Uintah/CCA/Components/ICE/EOS/Thomsen_Hartka_water.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>

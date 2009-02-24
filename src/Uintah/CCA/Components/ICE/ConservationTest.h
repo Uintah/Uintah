@@ -31,16 +31,16 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _CONSERVATIONTEST_H
 #define _CONSERVATIONTEST_H
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Patch.h>
 
 namespace Uintah {
 /*______________________________________________________________________

@@ -32,13 +32,13 @@ DEALINGS IN THE SOFTWARE.
 
 #include <fstream> // work around compiler bug with RHEL 3
 
-#include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
+#include <Uintah/CCA/Components/Arches/HypreSolver.h>
 #include <Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include "_hypre_utilities.h"
 #include "HYPRE_struct_ls.h"

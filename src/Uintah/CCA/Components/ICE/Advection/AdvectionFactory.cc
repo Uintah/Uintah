@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/ICE/Advection/AdvectionFactory.h>
+#include <Uintah/CCA/Components/ICE/Advection/FirstOrderAdvector.h>
+#include <Uintah/CCA/Components/ICE/Advection/SecondOrderAdvector.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <map>
 #include <string>

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
 
 using namespace Uintah;
 
