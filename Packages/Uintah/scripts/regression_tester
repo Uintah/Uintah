@@ -147,7 +147,8 @@ for arg in $*; do
             do_models=1
             do_arches=1
             do_mpmarches=1
-            do_examples=1;;
+            do_examples=1
+            MPI_RUN="yes";;
         -arches)
             echo "Scheduling the arches tests . . ."
             do_arches=1
