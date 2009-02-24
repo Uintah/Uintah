@@ -81,8 +81,6 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
     readyQueueMutex_("DetailedTasks Ready Queue"),
     readyQueueSemaphore_("Number of Ready DetailedTasks", 0)
 {
-  int nproc = pg->size();
-
   // Set up mappings for the initial send tasks
   int dwmap[Task::TotalDWs];
   for(int i=0;i<Task::TotalDWs;i++)
