@@ -27,9 +27,9 @@
 #
 
 
-#Makefile fragment for the Packages/FieldConverters directory
+#Makefile fragment for the FieldConverters directory
 
-SRCDIR := Packages/Teem/StandAlone
+SRCDIR := Teem/StandAlone
 SUBDIRS := \
 	$(SRCDIR)/convert \
 

@@ -53,7 +53,7 @@ $(FILENAME)_LIBS:=$(patsubst -l%, %.lib, $(filter -l%,$(LIBS))) $(patsubst %,lib
 $(FILENAME)_PROJ_DEPS:=$(patsubst %,projects/lib%.dll.vcproj,$(subst /,_,$(PSELIBS)))
 
 # remove -L and -LIBPATH, and turn into semi-colon
-$(FILENAME)_LIBPATHS:=$(patsubst -LIBPATH:%,%;,$(filter -LIB%,$(LIBS) $(SCI_THIRDPARTY_LIBRARY)))
+$(FILENAME)_LIBPATHS:=$(patsubst -LIBPATH:%,%;,$(filter -LIB%,$(LIBS) ))
 
 # turn includes into semicolon-delimited form
 VC_INC_PATH:=$(subst ./,./../,$(shell echo $(INCLUDES) | sed 's, -I,;,g' | sed 's,-I,,g'))

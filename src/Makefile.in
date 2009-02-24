@@ -108,11 +108,6 @@ SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 # dependency is not invoked accept as needed.
 MAKEFILEDIRSTAG := $(addsuffix /.created, $(MAKEFILEDIRS)) 
 
-CREATETCLINDEX := $(OBJTOP)/createTclIndex
-TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
-TCL_VERSION    := @TCL_VERSION@
-ITCL_LIB_DIR   := @ITCL_LIB_DIR@
-
 ifeq ($(IS_WIN),yes)
   VCDIR=projects
   VCSOLUTION=SCIRun.sln
@@ -121,7 +116,6 @@ endif
 
 
 # etags generation
-TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
 C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
 CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
 HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
@@ -133,7 +127,7 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs svn_diff
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
 
 prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
 	@if test ! -f prereqs; then \
@@ -145,14 +139,6 @@ $(MAKEFILEDIRSTAG) :
 	@mkdir -p `dirname $@`
 	@echo "Dummy file indicating that $@ has been created..." > $@
 	@touch `dirname $@`
-
-$(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
-	@echo creating createTclIndex
-	-@sed -e 's,TCLSH,$(TCLSH),g' \
-	      -e 's,ITCL_INIT_DIR,$(ITCL_INIT_DIR),g' \
-              -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
-              $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
-	-@chmod a+x $(CREATETCLINDEX)
 
 packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
 	@echo creating packmaker
@@ -173,7 +159,6 @@ app: all
 	@mkdir -p $(SCIRUN_APP_DIR)/SCIRun.app/Contents/Thirdparty
 	@cp -rp $(OBJTOP)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS
 	@cp -rp $(SRCTOP)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/src
-	@cp -rp $(SCIRUN_THIRDPARTY_DIR)/* $(SCIRUN_APP_DIR)/SCIRun.app/Contents/Thirdparty
 	@cp -rp $(SRCTOP)/scripts/Info.plist $(SCIRUN_APP_DIR)/SCIRun.app
 	@echo Copying SCIRun
 	@mv $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun $(SCIRUN_APP_DIR)/SCIRun.app/Contents/MacOS/scirun-bin
@@ -193,23 +178,6 @@ $(LIBDIR):
 $(VCDIR):
 	mkdir -p $@
 
-# This rule must be after the includes, so that it will find $(SIDL_EXE)
-%_sidl.o: %_sidl.cc %_sidl.h
-
-%_sidl.cc: %.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -o $@ $<
-
-%_sidl.h: %.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -h -o $@ $<
-
-# Kwai bridge generator is similar to sidl, has to find $(KWAI_EXE) 
-%_bridge.o: %_bridge.cc %_bridge.h
-
-%_bridge.cc: %.sidl $(KWAI_EXE)
-	$(KWAI_EXE) -o $@ $<
-
-%_bridge.h: %.sidl $(KWAI_EXE)
-	$(KWAI_EXE) -h -o $@ $<
 
 # Make emacs etags file
 sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
@@ -266,7 +234,7 @@ endif
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
-	rm -f Packages/Uintah/VisIt/udaReaderMTMD/*
+	rm -f Uintah/VisIt/udaReaderMTMD/*
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -310,9 +278,9 @@ cleanrest::
 objs: $(CLEANOBJS)
 
 cleantau:
-	rm -f Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.$(OBJEXT)
-	rm -f Packages/Uintah/CCA/Components/Schedulers/ThreadPool.$(OBJEXT)
-	rm -f Packages/Uintah/StandAlone/sus.$(OBJEXT)
+	rm -f Uintah/CCA/Components/Schedulers/MPIScheduler.$(OBJEXT)
+	rm -f Uintah/CCA/Components/Schedulers/ThreadPool.$(OBJEXT)
+	rm -f Uintah/StandAlone/sus.$(OBJEXT)
 
 ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 # This includes all of the dependencies.  We prepend the absolute path
@@ -334,34 +302,3 @@ vc: prereqs $(VCSOLUTION) $(ALLTCLINDEXES)
 # since foreach inserts a space at the end of the line that VS can't have, remove it
 $(VCSOLUTION): $(ALLVCPROJECTS)
 	@echo -e "Microsoft Visual Studio Solution File, Format Version 8.00$(foreach project,$^,\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"$(basename $(notdir $(project)))\", \"$(project)\", \"{$($(project)_ID)}\"\n\tProjectSection(ProjectDependencies) = postProject$(foreach dep,$($(project)_PROJ_DEPS),\n\t\t{$($(dep)_ID)} = {$($(dep)_ID)}PPPPP)\n\tEndProjectSection\nEndProject)\nGlobal\n\tGlobalSection(SolutionConfiguration) = preSolution\n\t\t$(CONF_NAME) = $(CONF_NAME)\n\tEndGlobalSection\n\tGlobalSection(ProjectConfiguration) = postSolution$(foreach project,$^,\n\t\t{$($(project)_ID)}.$(CONF_NAME).ActiveCfg = $(CONF_NAME)|Win32\n\t\t{$($(project)_ID)}.$(CONF_NAME).Build.0 = $(CONF_NAME)|Win32PPPPP)\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityGlobals) = postSolution\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityAddIns) = postSolution\n\tEndGlobalSection\nEndGlobal" | sed 's,PPPPP ,,g' | sed 's,PPPPP,,g' > $@
-
-####################################################################################
-# Turn on/off "svn diff".  If on, then "svn diff" is run on the src tree every
-# time make is run.  The output of "svn diff" and "svn status" is saved in the file:
-# svn_diff.txt
-#
-diff_on :
-	@echo "Automatic SVN diff is now ON.  (You must now run 'make' to generate a diff.)"
-	@touch .do_svn_diff
-
-diff_off :
-	@echo "Automatic SVN diff is now OFF."
-	@rm -f .do_svn_diff
-
-svn_diff :
-	@if test -f .do_svn_diff; then                                       \
-	  echo;                                                              \
-          echo "Saving 'svn diff' information (${OBJTOP_ABS}/svn_diff.txt)"; \
-          echo "  - To turn off automatic diffs, use 'make diff_off'.";      \
-	  touch svn_diff.txt;                                                \
-	  svn info ${SRCTOP} > svn_diff.txt;                                 \
-	  svn diff ${SRCTOP} >> svn_diff.txt;                                \
-	  echo;                                                              \
-	else                                                                 \
-	  echo;                                                              \
-          echo "Warning: SVN DIFF is turned off.  (Use 'make diff_on')";     \
-	  echo;                                                              \
-	fi
-#
-# End SVN Diff Stuff.
-####################################################################################

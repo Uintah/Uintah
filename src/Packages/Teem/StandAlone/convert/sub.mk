@@ -29,10 +29,10 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Teem/StandAlone/convert
+SRCDIR := Teem/StandAlone/convert
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := Core Packages/Teem/Core
+PSELIBS := Core Teem/Core
 else
 PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Math Core/Thread Core/Geometry Core/Math Core/Util
 endif

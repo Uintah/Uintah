@@ -66,7 +66,6 @@ SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 CREATETCLINDEX := $(OBJTOP)/createTclIndex
 
 # etags generation
-TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
 C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
 CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
 HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
@@ -81,27 +80,10 @@ $(MAKEFILEDIRS):
 	@echo creating directory $@
 	@mkdir -p $@
 
-$(CREATETCLINDEX): $(SCIRUN_SCRIPTS)/createTclIndex.in $(OBJTOP)/Makefile
-	@echo creating createTclIndex
-	-@sed -e 's,ITCLSH,$(ITCLSH),g' \
-              -e 's,ITCL_INIT_DIR,$(ITCL_INIT_DIR),g' \
-	      -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
-              $(SCIRUN_SCRIPTS)/createTclIndex.in > $(CREATETCLINDEX)
-	-@chmod a+x $(CREATETCLINDEX)
-
 $(LIBDIR):
 	mkdir -p $(LIBDIR)
 
 $(ALLOBJS): $(ALLGEN)
-
-# This rule must be after the includes, so that it will find $(SIDL_EXE)
-%_sidl.o: %_sidl.cc %_sidl.h
-
-%_sidl.cc: %.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -o $@ $<
-
-%_sidl.h: %.sidl $(SIDL_EXE)
-	$(SIDL_EXE) -h -o $@ $<
 
 # Make emacs etags file
 sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
