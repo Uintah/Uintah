@@ -32,24 +32,24 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/SimulationController
+SRCDIR   := Uintah/CCA/Components/SimulationController
 
 SRCS     += $(SRCDIR)/SimulationController.cc \
             $(SRCDIR)/AMRSimulationController.cc 
 
 PSELIBS := \
-	Packages/Uintah/Core/DataArchive \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Tracker     \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/CCA/Components/DataArchiver    \
-	Packages/Uintah/CCA/Components/PatchCombiner   \
-	Packages/Uintah/CCA/Components/Regridder       \
-	Packages/Uintah/CCA/Ports        \
+	Uintah/Core/DataArchive \
+	Uintah/Core/Disclosure  \
+	Uintah/Core/Exceptions  \
+	Uintah/Core/Grid        \
+	Uintah/Core/Parallel    \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Tracker     \
+	Uintah/Core/Util        \
+	Uintah/CCA/Components/DataArchiver    \
+	Uintah/CCA/Components/PatchCombiner   \
+	Uintah/CCA/Components/Regridder       \
+	Uintah/CCA/Ports        \
 	Core/OS       \
 	Core/Geometry \
 	Core/Thread   \

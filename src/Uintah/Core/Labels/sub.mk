@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/Labels
+SRCDIR   := Uintah/Core/Labels
 
 SRCS     += \
 	$(SRCDIR)/ICELabel.cc \
@@ -44,13 +44,13 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Util \
 	Core/Geometry \
-	Packages/Uintah/Core/Disclosure \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Util \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/ProblemSpec \
+	Uintah/Core/Disclosure \
+	Uintah/Core/Exceptions \
+	Uintah/Core/Grid \
+	Uintah/Core/Parallel \
+	Uintah/Core/Util \
+	Uintah/Core/Math \
+	Uintah/Core/ProblemSpec \
 
 LIBS := $(MPI_LIBRARY)
 

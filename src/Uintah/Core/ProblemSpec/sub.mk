@@ -32,14 +32,14 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/ProblemSpec
+SRCDIR   := Uintah/Core/ProblemSpec
 
 SRCS     += \
 	$(SRCDIR)/ProblemSpec.cc 
 
 PSELIBS := \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Util       \
+	Uintah/Core/Exceptions \
+	Uintah/Core/Util       \
 	Core/Exceptions                 \
 	Core/Thread
 

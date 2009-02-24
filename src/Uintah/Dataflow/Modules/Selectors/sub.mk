@@ -32,7 +32,7 @@
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Dataflow/Modules/Selectors
+SRCDIR   := Uintah/Dataflow/Modules/Selectors
 
 SRCS     += \
 	$(SRCDIR)/TimestepSelector.cc       \
@@ -44,16 +44,16 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Packages/Uintah/Core/Datatypes     \
-	Packages/Uintah/Core/DataArchive   \
-	Packages/Uintah/CCA/Ports          \
-	Packages/Uintah/Core/Grid          \
-	Packages/Uintah/Core/Util          \
-	Packages/Uintah/Core/Math          \
-	Packages/Uintah/Core/Disclosure    \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Parallel      \
-	Packages/Uintah/Core/Exceptions    \
+	Uintah/Core/Datatypes     \
+	Uintah/Core/DataArchive   \
+	Uintah/CCA/Ports          \
+	Uintah/Core/Grid          \
+	Uintah/Core/Util          \
+	Uintah/Core/Math          \
+	Uintah/Core/Disclosure    \
+	Uintah/Core/ProblemSpec   \
+	Uintah/Core/Parallel      \
+	Uintah/Core/Exceptions    \
 	Dataflow/Network  \
 	Core/Basis        \
 	Core/Containers   \

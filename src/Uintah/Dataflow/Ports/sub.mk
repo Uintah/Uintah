@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/Dataflow/Ports
+SRCDIR := Uintah/Dataflow/Ports
 
 SRCS     += \
 	$(SRCDIR)/ArchivePort.cc \
@@ -52,8 +52,8 @@ PSELIBS := \
         Core/Persistent \
 	Core/Datatypes \
 	Core/GeomInterface \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Datatypes 
+	Uintah/Core/Grid \
+	Uintah/Core/Datatypes 
 
 LIBS := $(XML2_LIBRARY)
 

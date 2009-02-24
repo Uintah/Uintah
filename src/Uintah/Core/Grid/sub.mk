@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/Grid
+SRCDIR   := Uintah/Core/Grid
 
 SUBDIRS := \
         $(SRCDIR)/BoundaryConditions \
@@ -67,12 +67,12 @@ PSELIBS := \
         Core/Thread     \
         Core/Util       \
         Core/Containers \
-        Packages/Uintah/Core/Parallel    \
-        Packages/Uintah/Core/ProblemSpec \
-        Packages/Uintah/Core/Exceptions  \
-        Packages/Uintah/Core/Util        \
-        Packages/Uintah/Core/Math        \
-        Packages/Uintah/Core/Disclosure
+        Uintah/Core/Parallel    \
+        Uintah/Core/ProblemSpec \
+        Uintah/Core/Exceptions  \
+        Uintah/Core/Util        \
+        Uintah/Core/Math        \
+        Uintah/Core/Disclosure
 
 LIBS := $(MPI_LIBRARY) $(Z_LIBRARY)
 

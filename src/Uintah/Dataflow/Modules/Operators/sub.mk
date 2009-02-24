@@ -32,7 +32,7 @@
 
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Dataflow/Modules/Operators
+SRCDIR   := Uintah/Dataflow/Modules/Operators
 
 SRCS     += \
 	$(SRCDIR)/CompareMMS.cc \
@@ -56,16 +56,16 @@ SUBDIRS := $(SRCDIR)/MMS
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
-	Packages/Uintah/Core/Datatypes     \
-	Packages/Uintah/Core/DataArchive   \
-	Packages/Uintah/Core/Disclosure    \
-	Packages/Uintah/CCA/Ports          \
-	Packages/Uintah/Core/Grid          \
-	Packages/Uintah/Core/Math          \
-	Packages/Uintah/Core/Parallel      \
-	Packages/Uintah/Core/Util          \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Exceptions    \
+	Uintah/Core/Datatypes     \
+	Uintah/Core/DataArchive   \
+	Uintah/Core/Disclosure    \
+	Uintah/CCA/Ports          \
+	Uintah/Core/Grid          \
+	Uintah/Core/Math          \
+	Uintah/Core/Parallel      \
+	Uintah/Core/Util          \
+	Uintah/Core/ProblemSpec   \
+	Uintah/Core/Exceptions    \
 	Dataflow/Network   \
 	Core/Basis         \
 	Core/Containers    \

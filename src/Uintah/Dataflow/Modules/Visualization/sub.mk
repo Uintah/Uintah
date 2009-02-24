@@ -32,7 +32,7 @@
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 
-SRCDIR   := Packages/Uintah/Dataflow/Modules/Visualization
+SRCDIR   := Uintah/Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/GridVisualizer.cc \
@@ -67,16 +67,16 @@ PSELIBS := \
 	Core/Geometry                  \
 	Core/Util                      \
 	Core/Basis                     \
-	Packages/Uintah/Core/Grid          \
-	Packages/Uintah/Core/Math          \
-	Packages/Uintah/Core/Util          \
-	Packages/Uintah/Core/Disclosure    \
-	Packages/Uintah/CCA/Ports          \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Exceptions    \
-	Packages/Uintah/Core/Datatypes     \
-	Packages/Uintah/Core/DataArchive   \
-	Packages/Uintah/Dataflow/Modules/Selectors
+	Uintah/Core/Grid          \
+	Uintah/Core/Math          \
+	Uintah/Core/Util          \
+	Uintah/Core/Disclosure    \
+	Uintah/CCA/Ports          \
+	Uintah/Core/ProblemSpec   \
+	Uintah/Core/Exceptions    \
+	Uintah/Core/Datatypes     \
+	Uintah/Core/DataArchive   \
+	Uintah/Dataflow/Modules/Selectors
 
 
 LIBS := $(XML2_LIBRARY) $(M_LIBRARY)

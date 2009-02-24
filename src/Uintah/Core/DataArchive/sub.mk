@@ -32,19 +32,19 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/DataArchive
+SRCDIR   := Uintah/Core/DataArchive
 
 SRCS += $(SRCDIR)/DataArchive.cc 
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports    \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Util \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
+	Uintah/CCA/Ports    \
+	Uintah/Core/Parallel    \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Util \
+	Uintah/CCA/Components/ProblemSpecification \
+	Uintah/Core/Grid        \
+	Uintah/Core/Disclosure  \
+	Uintah/Core/Exceptions  \
 	Core/Thread                      \
 	Core/Exceptions                  \
 	Core/Geometry                    \

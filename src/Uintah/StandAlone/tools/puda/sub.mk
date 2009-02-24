@@ -28,8 +28,8 @@
 # 
 # 
 # 
-SRCDIR  := Packages/Uintah/StandAlone/tools/puda
-PROGRAM := Packages/Uintah/StandAlone/tools/puda/puda
+SRCDIR  := Uintah/StandAlone/tools/puda
+PROGRAM := Uintah/StandAlone/tools/puda/puda
 
 SRCS := \
 	$(SRCDIR)/asci.cc        \
@@ -42,19 +42,19 @@ SRCS := \
 	$(SRCDIR)/puda.cc
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Uintah
 else
   PSELIBS := \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/Core/DataArchive   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Util          \
+        Uintah/CCA/Components/ProblemSpecification \
+        Uintah/CCA/Ports          \
+        Uintah/Core/DataArchive   \
+        Uintah/Core/Disclosure    \
+        Uintah/Core/Exceptions    \
+        Uintah/Core/Grid          \
+        Uintah/Core/Math          \
+        Uintah/Core/Parallel      \
+        Uintah/Core/ProblemSpec   \
+        Uintah/Core/Util          \
         Core/Containers  \
         Core/Exceptions  \
         Core/Geometry    \

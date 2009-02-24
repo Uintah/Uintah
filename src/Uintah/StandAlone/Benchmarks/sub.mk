@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/Benchmarks
+SRCDIR := Uintah/StandAlone/Benchmarks
 
 ##############################################
 # No subdirectories yet, maybe in the future
@@ -49,16 +49,16 @@ SRCS    := $(SRCDIR)/SimpleMath.cc
 PROGRAM := $(SRCDIR)/SimpleMath
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
+        Uintah/Core/Exceptions    \
+        Uintah/Core/Grid          \
+        Uintah/Core/Util          \
+        Uintah/Core/Math          \
+        Uintah/Core/ProblemSpec   \
+        Uintah/Core/Parallel      \
+        Uintah/Core/Disclosure    \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Persistent  \
@@ -71,4 +71,4 @@ LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(Z_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
-SimpleMath: prereqs Packages/Uintah/StandAlone/Benchmarks/SimpleMath
+SimpleMath: prereqs Uintah/StandAlone/Benchmarks/SimpleMath

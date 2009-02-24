@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/testprograms/TestFastMatrix
+SRCDIR := Uintah/testprograms/TestFastMatrix
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 
@@ -39,7 +39,7 @@ LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRA
 
 SRCS := $(SRCDIR)/testfastmatrix.cc
 
-PSELIBS := Packages/Uintah/Core/Math
+PSELIBS := Uintah/Core/Math
 PROGRAM := $(SRCDIR)/testfastmatrix
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -49,7 +49,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/perffastmatrix.cc
 
-PSELIBS := Packages/Uintah/Core/Math Core/Thread
+PSELIBS := Uintah/Core/Math Core/Thread
 PROGRAM := $(SRCDIR)/perffastmatrix
 
 include $(SCIRUN_SCRIPTS)/program.mk

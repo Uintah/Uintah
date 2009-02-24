@@ -31,7 +31,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/testprograms/RegionTest
+SRCDIR := Uintah/testprograms/RegionTest
 
 PROGRAM := $(SRCDIR)/RegionTest
 SRCS    := $(SRCDIR)/RegionTest.cc
@@ -39,8 +39,8 @@ SRCS    := $(SRCDIR)/RegionTest.cc
 PSELIBS := \
         Core/Exceptions                          \
         Core/Geometry                            \
-        Packages/Uintah/Core/Grid                \
-        Packages/Uintah/Core/Util                
+        Uintah/Core/Grid                \
+        Uintah/Core/Util                
 
 LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 

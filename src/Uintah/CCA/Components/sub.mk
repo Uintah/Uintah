@@ -32,7 +32,7 @@
 
 # include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR  := Packages/Uintah/CCA/Components
+SRCDIR  := Uintah/CCA/Components
 
 ADIR = $(SRCDIR)/Arches
 

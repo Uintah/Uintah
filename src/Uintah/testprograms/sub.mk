@@ -28,7 +28,7 @@
 # 
 # 
 # 
-SRCDIR := Packages/Uintah/testprograms
+SRCDIR := Uintah/testprograms
 
 SUBDIRS := \
         $(SRCDIR)/TestSuite               \
@@ -51,12 +51,12 @@ PROGRAM := $(SRCDIR)/RunTests
 SRCS    = $(SRCDIR)/RunTests.cc
 
 PSELIBS := \
-        Packages/Uintah/testprograms/TestSuite               \
-        Packages/Uintah/testprograms/TestMatrix3             \
-        Packages/Uintah/Core/Util                            \
-        Packages/Uintah/testprograms/TestConsecutiveRangeSet \
-        Packages/Uintah/testprograms/TestRangeTree           \
-        Packages/Uintah/testprograms/TestBoxGrouper
+        Uintah/testprograms/TestSuite               \
+        Uintah/testprograms/TestMatrix3             \
+        Uintah/Core/Util                            \
+        Uintah/testprograms/TestConsecutiveRangeSet \
+        Uintah/testprograms/TestRangeTree           \
+        Uintah/testprograms/TestBoxGrouper
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 

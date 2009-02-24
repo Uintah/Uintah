@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/GeometryPiece
+SRCDIR   := Uintah/Core/GeometryPiece
 
 SRCS     += \
 	$(SRCDIR)/GeometryObject.cc \
@@ -65,12 +65,12 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Geometry   \
 	Core/Util       \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Math        \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Util
+	Uintah/Core/Exceptions  \
+	Uintah/Core/Grid        \
+	Uintah/Core/Math        \
+	Uintah/Core/Parallel    \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Util
 
 
 LIBS       := $(M_LIBRARY)

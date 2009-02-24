@@ -28,7 +28,7 @@
 # 
 # 
 # 
-#Makefile fragment for the Packages/Uintah/Dataflow directory
+#Makefile fragment for the Uintah/Dataflow directory
 
 SRCDIR := Uintah/CCA
 SUBDIRS := \

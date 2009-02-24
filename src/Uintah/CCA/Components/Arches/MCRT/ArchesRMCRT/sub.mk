@@ -2,7 +2,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT
+SRCDIR   := Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT
 
 SRCS     += $(SRCDIR)/RMCRTRadiationModel.cc \
             $(SRCDIR)/RMCRTnoInterpolation.cc \
@@ -24,15 +24,15 @@ SRCS     += $(SRCDIR)/RMCRTRadiationModel.cc \
 # include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
-        Packages/Uintah/CCA/Ports     \
-        Packages/Uintah/Core/Parallel \
+        Uintah/Core/ProblemSpec   \
+        Uintah/Core/GeometryPiece \
+        Uintah/Core/Grid          \
+        Uintah/Core/Util          \
+        Uintah/Core/Disclosure    \
+        Uintah/Core/Exceptions    \
+        Uintah/CCA/Components/OnTheFlyAnalysis \
+        Uintah/CCA/Ports     \
+        Uintah/Core/Parallel \
         Core/Util       \
         Core/Thread     \
         Core/Exceptions \

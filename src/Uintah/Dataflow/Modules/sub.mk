@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/Dataflow/Modules
+SRCDIR := Uintah/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Operators    \
