@@ -275,7 +275,7 @@ SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = fa
     sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
   char *tmp=MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS"));
   sci_putenv("SCIRUN_ITCL_WIDGETS",tmp);
-  delete tmp;
+  delete[] tmp;
 
   find_and_parse_scirunrc( beSilent );
 
