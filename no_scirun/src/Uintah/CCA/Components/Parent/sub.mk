@@ -32,8 +32,8 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR  := Packages/Uintah/CCA/Components/Parent
-COMPONENTS := Packages/Uintah/CCA/Components
+SRCDIR  := Uintah/CCA/Components/Parent
+COMPONENTS := Uintah/CCA/Components
 
 SRCS    := $(SRCDIR)/Switcher.cc \
 	   $(SRCDIR)/ComponentFactory.cc 
@@ -44,14 +44,14 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Util \
 	Core/Geometry \
-        Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Disclosure  \
-        Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Math	 \
-        Packages/Uintah/Core/Parallel    \
-        Packages/Uintah/Core/ProblemSpec \
-        Packages/Uintah/Core/Util        \
+        Uintah/CCA/Ports        \
+	Uintah/Core/Disclosure  \
+        Uintah/Core/Exceptions  \
+	Uintah/Core/Grid        \
+	Uintah/Core/Math	 \
+        Uintah/Core/Parallel    \
+        Uintah/Core/ProblemSpec \
+        Uintah/Core/Util        \
         $(ARCHES) \
         $(MPMARCHES) \
         $(ICE)    \

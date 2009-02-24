@@ -28,9 +28,9 @@
 # 
 # 
 # 
-#Makefile fragment for the Packages/Uintah/Core directory
+#Makefile fragment for the Uintah/Core directory
 
-SRCDIR := Packages/Uintah/Core
+SRCDIR := Uintah/Core
 SUBDIRS := \
 	$(SRCDIR)/DataArchive   \
 	$(SRCDIR)/Datatypes     \

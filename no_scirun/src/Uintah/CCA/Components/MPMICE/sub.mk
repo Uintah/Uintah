@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPMICE
+SRCDIR   := Uintah/CCA/Components/MPMICE
 
 SRCS     += \
 	$(SRCDIR)/MPMICE.cc \
@@ -40,17 +40,17 @@ SRCS     += \
        $(SRCDIR)/MPMICEDebug.cc \
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports          \
-	Packages/Uintah/Core/Disclosure    \
-	Packages/Uintah/Core/Grid          \
-	Packages/Uintah/Core/Util          \
-	Packages/Uintah/Core/Labels        \
-	Packages/Uintah/Core/Parallel      \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Exceptions    \
-	Packages/Uintah/Core/Math          \
-	Packages/Uintah/CCA/Components/MPM \
-	Packages/Uintah/CCA/Components/ICE \
+	Uintah/CCA/Ports          \
+	Uintah/Core/Disclosure    \
+	Uintah/Core/Grid          \
+	Uintah/Core/Util          \
+	Uintah/Core/Labels        \
+	Uintah/Core/Parallel      \
+	Uintah/Core/ProblemSpec   \
+	Uintah/Core/Exceptions    \
+	Uintah/Core/Math          \
+	Uintah/CCA/Components/MPM \
+	Uintah/CCA/Components/ICE \
 	Core/Exceptions \
 	Core/Thread     \
 	Core/Geometry   \

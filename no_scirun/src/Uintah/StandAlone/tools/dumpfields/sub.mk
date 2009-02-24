@@ -30,9 +30,9 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR  := Packages/Uintah/StandAlone/tools/dumpfields
-#PROGRAM := Packages/Uintah/StandAlone/dumpfields
-PROGRAM := Packages/Uintah/StandAlone/tools/dumpfields/dumpfields
+SRCDIR  := Uintah/StandAlone/tools/dumpfields
+#PROGRAM := Uintah/StandAlone/dumpfields
+PROGRAM := Uintah/StandAlone/tools/dumpfields/dumpfields
 
 SRCS    := \
 	$(SRCDIR)/dumpfields.cc \
@@ -53,20 +53,20 @@ SRCS    := \
 	$(SRCDIR)/HistogramDumper.h $(SRCDIR)/HistogramDumper.cc 
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
+  PSELIBS := Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-	Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Uintah/Core/Exceptions    \
+        Uintah/Core/Grid          \
+        Uintah/Core/Util          \
+        Uintah/Core/Math          \
+        Uintah/Core/Parallel      \
+        Uintah/Core/Disclosure    \
+        Uintah/Core/ProblemSpec   \
+        Uintah/Core/Disclosure    \
+        Uintah/Core/DataArchive   \
+	Uintah/CCA/Ports          \
+        Uintah/CCA/Components/ProblemSpecification \
         Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \

@@ -33,7 +33,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR	:= Packages/Uintah/CCA/Components/MPM
+SRCDIR	:= Uintah/CCA/Components/MPM
 
 SRCS += $(SRCDIR)/SerialMPM.cc    \
 	$(SRCDIR)/RigidMPM.cc     \
@@ -66,16 +66,16 @@ SUBDIRS := \
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Labels      \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/GeometryPiece  \
-	Packages/Uintah/Core/Math        \
+	Uintah/CCA/Ports        \
+	Uintah/Core/Grid        \
+	Uintah/Core/Util        \
+	Uintah/Core/Disclosure  \
+	Uintah/Core/Labels      \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Parallel    \
+	Uintah/Core/Exceptions  \
+	Uintah/Core/GeometryPiece  \
+	Uintah/Core/Math        \
 	Core/Exceptions Core/Thread      \
 	Core/Geometry Core/Util          \
 	Core/Math

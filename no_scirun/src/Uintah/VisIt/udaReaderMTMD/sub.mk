@@ -29,12 +29,12 @@
 # 
 # 
 
-# Makefile fragment for the Packages/Uintah/VisIt directory
+# Makefile fragment for the Uintah/VisIt directory
 
 # 'SRCDIR' get's overwritten when the actual rules execute in make, so
 # I use my VISIT_SRCDIR to avoid this from happening...
 
-VISIT_SRCDIR := Packages/Uintah/VisIt/udaReaderMTMD
+VISIT_SRCDIR := Uintah/VisIt/udaReaderMTMD
 
 # Force the make system to do the visit_stuff:
 

@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/Tracker
+SRCDIR   := Uintah/Core/Tracker
 
 SRCS += \
 	$(SRCDIR)/Tracker.cc       \

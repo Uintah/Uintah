@@ -28,9 +28,9 @@
 # 
 # 
 # 
-# Makefile fragment for the Packages/Uintah directory
+# Makefile fragment for the Uintah directory
 
-SRCDIR := Packages/Uintah
+SRCDIR := Uintah
 
 SUBDIRS := \
 	$(SRCDIR)/Core         \

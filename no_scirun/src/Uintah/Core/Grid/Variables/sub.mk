@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/Core/Grid/Variables
+SRCDIR := Uintah/Core/Grid/Variables
 
 SRCS += \
         $(SRCDIR)/Iterator.cc                   \

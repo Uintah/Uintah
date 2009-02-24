@@ -32,17 +32,17 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/ProblemSpecification
+SRCDIR   := Uintah/CCA/Components/ProblemSpecification
 
 SRCS	+= $(SRCDIR)/ProblemSpecReader.cc
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/ProblemSpec \
+	Uintah/CCA/Ports        \
+	Uintah/Core/Exceptions  \
+	Uintah/Core/Grid        \
+	Uintah/Core/Util        \
+	Uintah/Core/Parallel    \
+	Uintah/Core/ProblemSpec \
 	Core/Containers                  \
 	Core/Util                        \
 	Core/XMLUtil                     \
@@ -58,13 +58,13 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 #PROGRAM	:= $(SRCDIR)/test2
 #SRCS	:= $(SRCDIR)/test2.cc 
 #ifeq ($(LARGESOS),yes)
-#  PSELIBS := Packages/Uintah
+#  PSELIBS := Uintah
 #else
 #  PSELIBS := \
-#	Packages/Uintah/CCA/Ports \
-#	Packages/Uintah/Core/Grid \
-#	Packages/Uintah/Core/ProblemSpec \
-#	Packages/Uintah/CCA/Components/ProblemSpecification \
+#	Uintah/CCA/Ports \
+#	Uintah/Core/Grid \
+#	Uintah/Core/ProblemSpec \
+#	Uintah/CCA/Components/ProblemSpecification \
 #endif
 #LIBS 	:= $(XML2_LIBRARY)
 #include $(SCIRUN_SCRIPTS)/program.mk

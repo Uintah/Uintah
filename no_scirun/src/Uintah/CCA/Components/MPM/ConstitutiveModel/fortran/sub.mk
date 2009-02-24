@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/fortran
+SRCDIR   := Uintah/CCA/Components/MPM/ConstitutiveModel/fortran
 
 FFLAGS += -DNOEOSMOD -DGEO_MBF_BETA
 

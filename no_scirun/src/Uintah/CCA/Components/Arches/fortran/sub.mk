@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Arches/fortran
+SRCDIR   := Uintah/CCA/Components/Arches/fortran
 
 SRCS += \
 	$(SRCDIR)/add_mm_enth_src.F \

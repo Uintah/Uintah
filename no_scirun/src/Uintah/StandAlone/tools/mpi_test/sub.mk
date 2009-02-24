@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/tools/mpi_test
+SRCDIR := Uintah/StandAlone/tools/mpi_test
 
 ##############################################
 # async_mpi_test.cc
@@ -39,7 +39,7 @@ SRCS    := $(SRCDIR)/async_mpi_test.cc
 PROGRAM := $(SRCDIR)/async_mpi_test
 PSELIBS := \
         Core/Thread \
-        Packages/Uintah/Core/Parallel
+        Uintah/Core/Parallel
 
 LIBS    := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 
