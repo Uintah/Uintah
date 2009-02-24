@@ -281,7 +281,6 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         IntVector high(patch->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0)));
         level->selectPatches(low-ghost, high+ghost, neighbor);
         n.push_back(&neighbor);
-            
         if (d_sharedState->isCopyDataTimestep() && proc == me) {
           if (oldGrid->numLevels() > l) {
             // on copy data timestep we need old patches that line up with this proc's patches,
@@ -300,8 +299,8 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           // we can require up to 1 ghost cell from a coarse patch
           int ngc = 1 * Max(Max(ratio.x(), ratio.y()), ratio.z());
           IntVector ghost(ngc,ngc,ngc);
-          coarseLevel->selectPatches(level->mapCellToCoarser(low) - ghost, 
-              level->mapCellToCoarser(high) + ghost, coarse);
+          coarseLevel->selectPatches(level->mapCellToCoarser(low-ghost), 
+              level->mapCellToCoarser(high+ghost), coarse);
           n.push_back(&coarse);
         }
         if (l < grid->numLevels()-1 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
@@ -313,7 +312,9 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         }
         for (unsigned i = 0; i < n.size(); i++) {
           for(int j=0;j<(*n[i]).size();j++)
+          {
             d_neighbors.insert((*n[i])[j]->getRealPatch());
+          }
         }
       }
     }
@@ -389,6 +390,10 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
       //add coarse neighbors
       if(l>0)
       {
+        IntVector ratio = level->getRefinementRatio();
+        int ngc = Max(Max(ratio.x(), ratio.y()), ratio.z());
+        IntVector ghost(ngc,ngc,ngc);
+                  
         const LevelP& coarseLevel = level->getCoarserLevel();
 
         Patch::selectType coarse;
