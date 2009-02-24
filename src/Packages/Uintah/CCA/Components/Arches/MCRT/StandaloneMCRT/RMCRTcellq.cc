@@ -116,6 +116,7 @@ double MeshSize(int &Nchalf, double &Lhalf, double &ratio){
 template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
 		 RealSurface *RealPointer,
+		 VirtualSurface &obVirtual,
 		 ray &obRay,
 		 MTRand &MTrng,
 		 const int &surfaceFlag,
@@ -189,7 +190,7 @@ void rayfromSurf(SurfaceType &obSurface,
       // checking scattering first
       // if hit on virtual surface, PathSurfaceLeft is updated.
       // else no update on PathSurfaceLeft.
-      obRay.TravelInMediumInten(MTrng,
+      obRay.TravelInMediumInten(MTrng, obVirtual,
 				kl_Vol, scatter_Vol,
 				X, Y, Z, VolFeature,
 				PathLeft, PathSurfaceLeft);
@@ -312,6 +313,16 @@ int main(int argc, char *argv[]){
   //  double EnergyAmount; // set as customer self-set-up later
   //  double sumIncomInten, aveIncomInten;  
   double StopLowerBound;
+  double linear_b, eddington_f, eddington_g;
+  int PhFunc;
+  double scat;
+
+ 
+  scat = 9.0;
+  linear_b = 1;
+  eddington_f = 0;
+  eddington_g = 0;
+  PhFunc = LINEAR_SCATTER;
   
   StopLowerBound = 1e-10;
   rayNoSurface = 0;
@@ -812,14 +823,14 @@ int main(int argc, char *argv[]){
    
    MTRand MTrng;
    VolElement obVol;
+   VirtualSurface obVirtual;
+   obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);
+   ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
    
    double OutIntenVol, traceProbability, LeftIntenFrac, sumIncomInten, aveIncomInten;
    double PathLeft, PathSurfaceLeft, weight;
    double previousSum, currentSum;
    double SurLeft;
-
-   ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
-   
    double theta, phi;
    double random1, random2;
    double s[3];
@@ -949,6 +960,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obTop,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1002,6 +1014,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obBottom,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1056,6 +1069,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obFront,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1109,6 +1123,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obBack,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1163,6 +1178,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obLeft,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1217,6 +1233,7 @@ int main(int argc, char *argv[]){
 
 	  rayfromSurf(obRight,
 		      RealPointer,
+		      obVirtual,
 		      obRay,
 		      MTrng,
 		      surfaceFlag,
@@ -1337,7 +1354,7 @@ int main(int argc, char *argv[]){
 		
 		previousSum = currentSum;
 		
-		obRay.TravelInMediumInten(MTrng,
+		obRay.TravelInMediumInten(MTrng, obVirtual,
 					  kl_Vol, scatter_Vol,
 					  X, Y, Z, VolFeature,
 					  PathLeft, PathSurfaceLeft);
@@ -1575,7 +1592,7 @@ int main(int argc, char *argv[]){
 	      
 	      previousSum = currentSum;
 	      
-	      obRay.TravelInMediumInten(MTrng,
+	      obRay.TravelInMediumInten(MTrng, obVirtual,
 					kl_Vol, scatter_Vol,
 					X, Y, Z, VolFeature,
 					PathLeft, PathSurfaceLeft);
@@ -1688,7 +1705,7 @@ int main(int argc, char *argv[]){
 		  
 		  previousSum = currentSum;
 		  
-		  obRay.TravelInMediumInten(MTrng,
+		  obRay.TravelInMediumInten(MTrng, obVirtual,
 					    kl_Vol, scatter_Vol,
 					    X, Y, Z, VolFeature,
 					    PathLeft, PathSurfaceLeft);

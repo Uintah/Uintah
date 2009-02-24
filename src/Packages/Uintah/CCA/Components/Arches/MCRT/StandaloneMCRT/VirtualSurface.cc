@@ -29,9 +29,12 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "VirtualSurface.h"
+#include "Consts.h"
 
 #include <iostream>
 #include <cstdlib>
+
+using namespace std;
 
 VirtualSurface::VirtualSurface(){
 }
@@ -39,6 +42,29 @@ VirtualSurface::VirtualSurface(){
 VirtualSurface::~VirtualSurface(){
 }
 
+
+
+  
+void VirtualSurface::getTheta(const double &random){
+  if (PhFunc==ISOTROPIC){
+    theta = acos( 1 - 2 * random);
+  }
+  else if (PhFunc==LINEAR_SCATTER) {// phasefunc = 1 + b* cos(theta)      
+    // R_theta = (1 - cos(theta) + b/2 * sin(theta) * sin(theta))/2
+    // cout << "linear scattering" << endl;
+    theta = acos( ( -1 + sqrt(1 - 4 *b*(random - 0.5- 0.25*b)) )/b );
+  }
+  else if (PhFunc == EDDINGTON) { // delta-Eddington function
+    // mu = cos(theta);
+    // PhFunc = 2 * f * delta(1 - mu) + (1 - f)(1+3g*mu)
+    // drop the forward direction term ( the 1st term)
+    // calculate CDF from the 2nd term
+    // reference 1998, Advanced heat transfer, Farmer
+    
+    theta = acos( ( -1+ sqrt( 1-6*g*(2*random-1-1.5*g) )) /3/g );
+  }
+  
+}
 
 
 // get_e1, sIn = sIn ( incoming direction vector)
@@ -84,15 +110,12 @@ void VirtualSurface::get_e2(const double *sIn){
 
 void VirtualSurface::get_s(MTRand &MTrng, const double *sIn, double *s){
 
-   //  get_sIn(sIncoming);
-  
   get_e1(MTrng.randExc(),MTrng.randExc(), MTrng.randExc(), sIn);
   get_e2(sIn);
 
-  this->getTheta(MTrng.randExc());
-
+  this->getTheta(MTrng.randExc());   
   getPhi(MTrng.randExc());
-
+    
   for ( int i = 0; i < 3; i ++ ) 
     s[i] = sin(theta) * ( cos(phi) * e1[i] + sin(phi) * e2[i] )
       + cos(theta) * sIn[i] ;
