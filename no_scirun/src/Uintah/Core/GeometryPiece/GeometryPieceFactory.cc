@@ -28,28 +28,28 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/GeometryPiece/ShellGeometryFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/ShellGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/NaaBoxGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SphereMembraneGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SmoothCylGeomPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CorrugEdgeGeomPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/ConeGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/TriGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/IntersectionGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/NullGeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/GeometryPiece/ShellGeometryFactory.h>
+#include <Uintah/Core/GeometryPiece/ShellGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/NaaBoxGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/SphereMembraneGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/SmoothCylGeomPiece.h>
+#include <Uintah/Core/GeometryPiece/CorrugEdgeGeomPiece.h>
+#include <Uintah/Core/GeometryPiece/ConeGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/TriGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/IntersectionGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/FileGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/NullGeometryPiece.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Parallel/Parallel.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>

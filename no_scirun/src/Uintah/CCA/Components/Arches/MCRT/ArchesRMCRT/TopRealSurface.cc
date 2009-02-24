@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <iostream>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
 
 using std::cout;
 using std::endl;

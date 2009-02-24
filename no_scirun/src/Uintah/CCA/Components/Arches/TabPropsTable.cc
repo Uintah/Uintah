@@ -31,18 +31,18 @@ DEALINGS IN THE SOFTWARE.
 //----- TabPropsTable.cc --------------------------------------------------
 
 // includes for Arches
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabPropsTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/MixingRxnTable.h>
+#include <Uintah/CCA/Components/Arches/TabProps/StateTable.h>
+#include <Uintah/CCA/Components/Arches/TabPropsTable.h>
+#include <Uintah/CCA/Components/Arches/Properties.h>
 
 // includes for Uintah
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Parallel/Parallel.h>
 #include <dirent.h>
 
 using namespace std;

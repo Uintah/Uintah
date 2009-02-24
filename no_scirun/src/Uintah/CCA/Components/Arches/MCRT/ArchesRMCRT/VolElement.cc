@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VolElement.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VolElement.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 
 VolElement::VolElement(){ 
 }

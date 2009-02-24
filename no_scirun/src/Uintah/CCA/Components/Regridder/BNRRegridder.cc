@@ -29,17 +29,17 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVH.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/Regridder/BNRRegridder.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/PatchBVH/PatchBVH.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <Uintah/CCA/Ports/SFC.h>
 using namespace Uintah;
 
 #include <vector>

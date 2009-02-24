@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
+#include <Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Core/Geometry/IntVector.h>
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -78,7 +78,7 @@ const char* ConvergenceFailure::message() const
 
 const char* ConvergenceFailure::type() const
 {
-  return "Packages/Uintah::Exceptions::ConvergenceFailure";
+  return "Uintah::Exceptions::ConvergenceFailure";
 }
 
 

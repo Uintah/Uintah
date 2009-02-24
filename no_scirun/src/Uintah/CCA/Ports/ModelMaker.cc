@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
+#include <Uintah/CCA/Ports/ModelMaker.h>
 
 using namespace Uintah;
 

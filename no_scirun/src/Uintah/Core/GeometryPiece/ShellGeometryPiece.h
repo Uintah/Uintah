@@ -31,14 +31,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __SHELL_GEOMETRY_OBJECT_H__
 #define __SHELL_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 
 #include <cmath>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////

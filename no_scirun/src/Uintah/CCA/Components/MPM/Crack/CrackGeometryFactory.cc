@@ -28,16 +28,16 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometryFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/NullCrack.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/QuadCrack.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/CurvedQuadCrack.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/TriangularCrack.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/ArcCrack.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/EllipticCrack.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/PartialEllipticCrack.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/MPM/Crack/CrackGeometryFactory.h>
+#include <Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
+#include <Uintah/CCA/Components/MPM/Crack/NullCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/QuadCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/CurvedQuadCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/TriangularCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/ArcCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/EllipticCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/PartialEllipticCrack.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <fstream>

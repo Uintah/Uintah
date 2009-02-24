@@ -50,15 +50,15 @@ DEALINGS IN THE SOFTWARE.
 #ifndef LOCALLYCOMPUTEDPATCHVARMAP
 #define LOCALLYCOMPUTEDPATCHVARMAP
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
 #include <Core/Containers/SuperBox.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
   inline int getVolume(const IntVector& low, const IntVector& high)

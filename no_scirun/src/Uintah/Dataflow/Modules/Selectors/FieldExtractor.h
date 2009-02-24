@@ -60,7 +60,7 @@ LOG
 #define FIELDEXTRACTOR_H 1
 
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Matrix3.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
@@ -76,14 +76,14 @@ LOG
 #include <Dataflow/Network/Module.h> 
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
@@ -91,7 +91,7 @@ LOG
 #include <sgi_stl_warnings_on.h>
 
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/uintahshare.h>
+#include <Uintah/Dataflow/Modules/Selectors/uintahshare.h>
 namespace Uintah {
 using namespace SCIRun;
 

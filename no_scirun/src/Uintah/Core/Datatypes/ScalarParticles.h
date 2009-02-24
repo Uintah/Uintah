@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef SCALARPARTICLES_H
 #define SCALARPARTICLES_H
 
-#include <Packages/Uintah/Core/Datatypes/PSet.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-//#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Datatypes/PSet.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+//#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Patch.h>
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
@@ -48,7 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
+#include <Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
   using std::vector;
   using namespace SCIRun;

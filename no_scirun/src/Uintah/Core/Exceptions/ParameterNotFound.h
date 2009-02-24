@@ -43,12 +43,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_EXCEPTIONS_PARAMETERNOTFOUND_H
 #define UINTAH_EXCEPTIONS_PARAMETERNOTFOUND_H
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/uintahshare.h>
+#include <Uintah/Core/Exceptions/uintahshare.h>
 namespace Uintah {
 
    class UINTAHSHARE ParameterNotFound : public ProblemSetupException {

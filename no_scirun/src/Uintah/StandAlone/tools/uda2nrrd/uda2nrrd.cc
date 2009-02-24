@@ -40,15 +40,15 @@ DEALINGS IN THE SOFTWARE.
  *  Copyright (C) 2003-2007 U of U
  */
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/bc.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/particles.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/Args.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/bc.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/particles.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Matrix3.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
@@ -67,17 +67,17 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Persistent/Pstreams.h>
 
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
 
 #include <sci_hash_map.h>
 #include <teem/nrrd.h>

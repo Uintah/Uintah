@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Parallel/uintahshare.h>
+#include <Uintah/Core/Parallel/uintahshare.h>
 namespace Uintah {
   using namespace std;
   class RefCounted;

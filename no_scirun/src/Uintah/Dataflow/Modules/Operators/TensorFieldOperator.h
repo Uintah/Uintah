@@ -42,9 +42,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/TensorOperatorFunctors.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/OperatorThread.h>
+#include <Uintah/Dataflow/Modules/Operators/TensorOperatorFunctors.h>
+#include <Uintah/Dataflow/Modules/Operators/UnaryFieldOperator.h>
+#include <Uintah/Dataflow/Modules/Operators/OperatorThread.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>

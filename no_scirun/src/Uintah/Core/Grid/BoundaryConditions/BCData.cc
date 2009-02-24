@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BCData.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/Util/DebugStream.h>
 
 

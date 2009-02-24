@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Parent_ComponentFactory_h
 #define Packages_Uintah_CCA_Components_Parent_ComponentFactory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <string>
 
-#include <Packages/Uintah/CCA/Components/Parent/uintahshare.h>
+#include <Uintah/CCA/Components/Parent/uintahshare.h>
 
 namespace Uintah {
 

@@ -28,13 +28,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/StandAlone/tools/dumpfields/HistogramDumper.h>
-#include <Packages/Uintah/StandAlone/tools/dumpfields/ScalarDiags.h>
-#include <Packages/Uintah/StandAlone/tools/dumpfields/TensorDiags.h>
+#include <Uintah/StandAlone/tools/dumpfields/HistogramDumper.h>
+#include <Uintah/StandAlone/tools/dumpfields/ScalarDiags.h>
+#include <Uintah/StandAlone/tools/dumpfields/TensorDiags.h>
 
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 
 #include <iomanip>
 #include <sstream>

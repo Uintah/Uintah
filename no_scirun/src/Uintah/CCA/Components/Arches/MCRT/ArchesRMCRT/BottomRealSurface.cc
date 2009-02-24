@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
 
 using std::cout;
 using std::endl;

@@ -49,14 +49,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Persistent/Persistent.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Matrix3.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
+#include <Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
   using std::vector;
   using std::string;

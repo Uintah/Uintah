@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_CRACK_GEOMETRY_H
 #define UINTAH_HOMEBREW_CRACK_GEOMETRY_H
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <vector>

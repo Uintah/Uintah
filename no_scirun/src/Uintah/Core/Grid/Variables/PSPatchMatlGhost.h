@@ -32,12 +32,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_PSPatchMatlGhost_H
 #define UINTAH_HOMEBREW_PSPatchMatlGhost_H
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
 
 using SCIRun::IntVector;
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
 

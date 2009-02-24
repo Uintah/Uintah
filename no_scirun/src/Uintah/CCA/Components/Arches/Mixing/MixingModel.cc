@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //----- MixingModel.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 
 using namespace Uintah;
 

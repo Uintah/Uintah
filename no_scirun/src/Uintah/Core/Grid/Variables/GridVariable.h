@@ -31,15 +31,15 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_GridVARIABLE_H
 #define UINTAH_HOMEBREW_GridVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Grid/Variables/GridVariableBase.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Ports/InputContext.h>
-#include <Packages/Uintah/CCA/Ports/OutputContext.h>
-#include <Packages/Uintah/Core/IO/SpecializedRunLengthEncoder.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/Core/Grid/Variables/GridVariableBase.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/CCA/Ports/InputContext.h>
+#include <Uintah/CCA/Ports/OutputContext.h>
+#include <Uintah/Core/IO/SpecializedRunLengthEncoder.h>
+#include <Uintah/Core/Exceptions/TypeMismatchException.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>

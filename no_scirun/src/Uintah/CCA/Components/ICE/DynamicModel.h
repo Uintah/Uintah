@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_DYNAMICMODEL_H
 #define UINTAH_DYNAMICMODEL_H
 
-#include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
-#include <Packages/Uintah/CCA/Components/ICE/SmagorinskyModel.h>
+#include <Uintah/CCA/Components/ICE/Turbulence.h>
+#include <Uintah/CCA/Components/ICE/SmagorinskyModel.h>
 #include <Core/Containers/StaticArray.h>
 #include <cmath>
 

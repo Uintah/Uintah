@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _CUSTOMINITIALIZE_H
 #define _CUSTOMINITIALIZE_H
 
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Patch.h>
 
 namespace Uintah {
 

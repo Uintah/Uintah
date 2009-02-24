@@ -53,7 +53,7 @@ DEALINGS IN THE SOFTWARE.
  *
  *  Copyright (C) 2000 SCI Group
  */
-#include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
+#include <Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
@@ -68,17 +68,17 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // Include after Patch.h
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h> // Include after Patch.h
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h> // Include after Patch.h
+#include <Uintah/Core/Grid/Variables/CellIterator.h> // Include after Patch.h
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <vector>
 #include <sstream>
 #include <iostream>

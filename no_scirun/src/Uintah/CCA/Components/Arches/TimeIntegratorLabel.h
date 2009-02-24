@@ -59,7 +59,7 @@ WARNING
 
 ************************************************************************/
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
 
 namespace Uintah {
   class ArchesLabel;

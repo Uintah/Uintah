@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ProblemSpec_H
 #define UINTAH_HOMEBREW_ProblemSpec_H
 
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Util/Handle.h>
+#include <Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
@@ -48,7 +48,7 @@ DEALINGS IN THE SOFTWARE.
 
 typedef struct _xmlNode xmlNode;
 
-#include <Packages/Uintah/Core/ProblemSpec/uintahshare.h>
+#include <Uintah/Core/ProblemSpec/uintahshare.h>
 namespace Uintah {
 
 class TypeDescription;

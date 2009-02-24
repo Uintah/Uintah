@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Regridders_RegridderFactory_h
 #define Packages_Uintah_CCA_Components_Regridders_RegridderFactory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Components/Regridder/RegridderCommon.h>
 
-#include <Packages/Uintah/CCA/Components/Regridder/uintahshare.h>
+#include <Uintah/CCA/Components/Regridder/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;

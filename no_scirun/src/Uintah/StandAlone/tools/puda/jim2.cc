@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/StandAlone/tools/puda/jim2.h>
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/StandAlone/tools/puda/jim2.h>
+#include <Uintah/StandAlone/tools/puda/util.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
 #include <iomanip>
 #include <fstream>
 #include <vector>

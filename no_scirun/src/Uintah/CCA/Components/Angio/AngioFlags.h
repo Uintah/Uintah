@@ -31,14 +31,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __ANGIO_FLAGS_H__
 #define __ANGIO_FLAGS_H__
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Grid/ParticleInterpolator.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Components/Angio/uintahshare.h>
+#include <Uintah/CCA/Components/Angio/uintahshare.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////

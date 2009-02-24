@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PragerKinematicHardening.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PragerKinematicHardening.h>
 #include <cmath>
 
 #ifdef _WIN32

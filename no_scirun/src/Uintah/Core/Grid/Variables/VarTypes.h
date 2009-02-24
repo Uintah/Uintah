@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_VarTypes_H
 
 
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Grid/Variables/Reductions.h>
+#include <Uintah/Core/Grid/Variables/ReductionVariable.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 
 namespace Uintah {
    /**************************************

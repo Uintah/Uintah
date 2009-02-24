@@ -60,8 +60,8 @@ LOG
     Created January 5, 1999
 ----------------------------------------------------------------------*/
     
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Uintah/Core/Datatypes/Archive.h>
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 

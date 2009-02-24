@@ -29,13 +29,13 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrcFactory.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/ZeroExtraScalarSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/CO2RateSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/SO2RateSrc.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/Arches/ExtraScalarSrcFactory.h>
+#include <Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
+#include <Uintah/CCA/Components/Arches/ZeroExtraScalarSrc.h>
+#include <Uintah/CCA/Components/Arches/CO2RateSrc.h>
+#include <Uintah/CCA/Components/Arches/SO2RateSrc.h>
+#include <Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace std;

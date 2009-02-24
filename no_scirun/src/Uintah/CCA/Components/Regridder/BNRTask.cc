@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
-#include <Packages/Uintah/CCA/Components/Regridder/BNRTask.h>
+#include <Uintah/CCA/Components/Regridder/BNRRegridder.h>
+#include <Uintah/CCA/Components/Regridder/BNRTask.h>
 
 using namespace Uintah;
 #include <vector>

@@ -64,7 +64,7 @@ WARNING
    none
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
+#include <Uintah/CCA/Components/Arches/SmagorinskyModel.h>
 
 
 namespace Uintah {

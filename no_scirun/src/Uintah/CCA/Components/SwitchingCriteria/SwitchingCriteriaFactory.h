@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Switching_Criteria_Factory_h
 #define Packages_Uintah_CCA_Components_Switching_Criteria_Factory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/SwitchingCriteria.h>
 
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/uintahshare.h>
+#include <Uintah/CCA/Components/SwitchingCriteria/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;

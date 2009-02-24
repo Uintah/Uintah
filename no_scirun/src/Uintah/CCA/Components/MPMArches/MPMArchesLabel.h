@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef Uintah_Component_MPMArchesLabel_h
 #define Uintah_Component_MPMArchesLabel_h
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
 

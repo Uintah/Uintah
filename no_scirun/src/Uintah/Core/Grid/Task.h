@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_Task_H
 #define UINTAH_HOMEBREW_Task_H
 
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Util/constHandle.h>
+#include <Uintah/Core/Grid/Ghost.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Util/constHandle.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 
@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sgi_stl_warnings_on.h>
 
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class Level;
@@ -805,6 +805,6 @@ WARNING
 } // End namespace Uintah
 
 // This mus tbe at the bottom
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
 
 #endif

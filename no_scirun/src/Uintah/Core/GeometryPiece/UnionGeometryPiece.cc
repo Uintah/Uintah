@@ -28,12 +28,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace SCIRun;
 using namespace Uintah;

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/PerPatchBase.h>
+#include <Uintah/Core/Grid/Variables/PerPatchBase.h>
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;

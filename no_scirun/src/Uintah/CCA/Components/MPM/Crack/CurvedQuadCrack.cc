@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/CurvedQuadCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/CurvedQuadCrack.h>
 #include <iostream>
 
 using std::cout;

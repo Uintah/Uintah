@@ -64,8 +64,8 @@ WARNING
   
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Uintah/Core/Util/RefCounted.h>
 #include <Core/Containers/OffsetArray1.h>
 namespace Uintah {
   using namespace SCIRun;

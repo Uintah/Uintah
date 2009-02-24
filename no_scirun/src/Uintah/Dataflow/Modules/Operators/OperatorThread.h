@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Mutex.h>
 
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

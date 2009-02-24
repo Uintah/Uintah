@@ -29,23 +29,23 @@ DEALINGS IN THE SOFTWARE.
 
 
 //  ICEMaterial.cc
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <Uintah/CCA/Components/ICE/ICE.h>
+#include <Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/GeometryPiece/GeometryObject.h>
+#include <Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/FileGeometryPiece.h>
+#include <Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
 #include <iostream>
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#include <Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 
 #define d_TINY_RHO 1.0e-12 // also defined ICE.cc and MPMMaterial.cc 
 

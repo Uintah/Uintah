@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include <Packages/Uintah/Core/Disclosure/uintahshare.h>
+#include <Uintah/Core/Disclosure/uintahshare.h>
 
 namespace Uintah {
 

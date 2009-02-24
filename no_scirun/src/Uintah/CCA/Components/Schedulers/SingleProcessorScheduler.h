@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
 #define UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
  
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Task.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Core/Malloc/Allocator.h>
 #include <algorithm>
 

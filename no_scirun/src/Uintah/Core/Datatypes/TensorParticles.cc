@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Datatypes/TensorParticles.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Grid.h>
 
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>

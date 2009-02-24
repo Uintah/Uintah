@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_RoundRobinLoadBalancer_H
 #define UINTAH_HOMEBREW_RoundRobinLoadBalancer_H
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <set>
 
 namespace Uintah {

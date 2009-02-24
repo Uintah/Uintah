@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Switching_SteadyBurn_h
 #define Packages_Uintah_CCA_Components_Switching_SteadyBurn_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/SwitchingCriteria.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Labels/MPMLabel.h>
+#include <Uintah/Core/Labels/MPMICELabel.h>
+#include <Uintah/Core/Labels/ICELabel.h>
 
 namespace Uintah {
 

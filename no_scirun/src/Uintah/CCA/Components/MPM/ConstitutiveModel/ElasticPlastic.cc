@@ -35,33 +35,33 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModelFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Labels/MPMLabel.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/SymmMatrix3.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/SymmMatrix3.h>
+#include <Uintah/Core/Math/FastMatrix.h>
+#include <Uintah/Core/Math/TangentModulusTensor.h>
+#include <Uintah/Core/Math/Short27.h> //for Fracture
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <cmath>
@@ -69,8 +69,8 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ParameterNotFound.h>
 
 #ifdef _WIN32
 #include <process.h>

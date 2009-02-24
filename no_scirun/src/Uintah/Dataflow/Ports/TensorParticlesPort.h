@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef SCI_project_TensorParticlesPort_h
 #define SCI_project_TensorParticlesPort_h 1
 
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
+#include <Uintah/Core/Datatypes/TensorParticles.h>
 #include <Dataflow/Network/Ports/SimplePort.h>
 
 namespace Uintah {

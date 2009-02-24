@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __EQUATION_OF_STATE_H__
 #define __EQUATION_OF_STATE_H__
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
 

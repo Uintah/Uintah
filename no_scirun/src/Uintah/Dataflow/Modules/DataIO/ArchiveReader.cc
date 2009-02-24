@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Dataflow/Modules/DataIO/ArchiveReader.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Dataflow/Modules/DataIO/ArchiveReader.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
 #include <Core/Exceptions/Exception.h>
 
 #include <sys/types.h>

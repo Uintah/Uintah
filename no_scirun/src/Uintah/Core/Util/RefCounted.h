@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_REFCOUNTED_H
 #define UINTAH_HOMEBREW_REFCOUNTED_H
 
-#include <Packages/Uintah/Core/Util/uintahshare.h>
+#include <Uintah/Core/Util/uintahshare.h>
 namespace Uintah {
 /**************************************
 

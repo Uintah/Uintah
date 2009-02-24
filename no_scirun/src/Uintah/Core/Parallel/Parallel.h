@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Parallel/uintahshare.h>
+#include <Uintah/Core/Parallel/uintahshare.h>
 
 // macro used by components to eliminate excess spew on 
 // large parallel runs

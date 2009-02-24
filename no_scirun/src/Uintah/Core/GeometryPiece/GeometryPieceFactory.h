@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __GEOMETRY_OBJECT_FACTORY_H__
 #define __GEOMETRY_OBJECT_FACTORY_H__
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <vector>
@@ -40,7 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
 namespace Uintah {
 
   class UINTAHSHARE GeometryPieceFactory

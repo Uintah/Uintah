@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __SYMM_MATRIX3_H__
 #define __SYMM_MATRIX3_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/TntJama/tnt.h>
 
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Uintah/Core/Math/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::Vector;

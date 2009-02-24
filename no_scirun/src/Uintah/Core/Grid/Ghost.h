@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #undef None
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 namespace Uintah {
    /**************************************
      
@@ -102,7 +102,7 @@ namespace Uintah {
 #ifdef __GNUG__
    public:
       // Keep gcc quiet, to avoid:
-      // warning: all member functions in class `Packages/Uintah::Ghost' are private
+      // warning: all member functions in class `Uintah::Ghost' are private
       Ghost(Ghost*);
 #endif
    };

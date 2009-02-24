@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef SCI_project_ScalarParticlesPort_h
 #define SCI_project_ScalarParticlesPort_h 1
 
-#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
+#include <Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Dataflow/Network/Ports/SimplePort.h>
 
 namespace Uintah {

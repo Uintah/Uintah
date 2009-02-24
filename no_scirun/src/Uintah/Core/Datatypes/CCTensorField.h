@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef SCI_project_CCTensorField_h
 #define SCI_project_CCTensorField_h 1
 
-#include <Packages/Uintah/Core/Datatypes/TensorField.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Datatypes/TensorField.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>

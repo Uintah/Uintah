@@ -61,26 +61,26 @@ DEALINGS IN THE SOFTWARE.
  *
  */
 
-#include <Packages/Uintah/StandAlone/tools/puda/puda.h>
+#include <Uintah/StandAlone/tools/puda/puda.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/Math/Matrix3.h>
 
-#include <Packages/Uintah/StandAlone/tools/puda/asci.h>
-#include <Packages/Uintah/StandAlone/tools/puda/jim1.h>
-#include <Packages/Uintah/StandAlone/tools/puda/jim2.h>
-#include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
-#include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
-#include <Packages/Uintah/StandAlone/tools/puda/varsummary.h>
+#include <Uintah/StandAlone/tools/puda/asci.h>
+#include <Uintah/StandAlone/tools/puda/jim1.h>
+#include <Uintah/StandAlone/tools/puda/jim2.h>
+#include <Uintah/StandAlone/tools/puda/rtdata.h>
+#include <Uintah/StandAlone/tools/puda/tecplot.h>
+#include <Uintah/StandAlone/tools/puda/util.h>
+#include <Uintah/StandAlone/tools/puda/varsummary.h>
 
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>

@@ -28,15 +28,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
+#include <Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
+#include <Uintah/CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
+#include <Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
+#include <Uintah/CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using std::cerr;

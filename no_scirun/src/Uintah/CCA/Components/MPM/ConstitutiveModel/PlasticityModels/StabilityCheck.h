@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __STABILITY_CHECK_H__
 #define __STABILITY_CHECK_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/TangentModulusTensor.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 

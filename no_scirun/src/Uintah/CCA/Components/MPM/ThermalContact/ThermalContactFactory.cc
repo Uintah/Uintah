@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/STThermalContact.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/NullThermalContact.h>
+#include <Uintah/CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
+#include <Uintah/CCA/Components/MPM/ThermalContact/STThermalContact.h>
+#include <Uintah/CCA/Components/MPM/ThermalContact/NullThermalContact.h>
 #include <Core/Malloc/Allocator.h>
 #include <string>
 using std::cerr;

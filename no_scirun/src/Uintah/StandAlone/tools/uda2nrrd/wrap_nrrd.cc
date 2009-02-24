@@ -33,14 +33,14 @@ DEALINGS IN THE SOFTWARE.
 
 ////// 
 // For templates instantiations to be found, these includes must remain in this order:
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Matrix3.h>
 #include <Core/Basis/Constant.h> 
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
 // End in-order templates.
 //////
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>

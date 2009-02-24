@@ -87,7 +87,7 @@ WARNING
    1.7.7).
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriver.h>
 
 namespace Uintah {
 

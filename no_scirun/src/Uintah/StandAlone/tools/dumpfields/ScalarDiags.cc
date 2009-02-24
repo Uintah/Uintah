@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ScalarDiags.h"
 #include "TensorDiags.h"
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 
 #include <string>
 #include <map>

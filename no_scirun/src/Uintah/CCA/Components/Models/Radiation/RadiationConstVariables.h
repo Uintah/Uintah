@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Components_Models_RadiationConstVariables_h
 #define Uintah_Components_Models_RadiationConstVariables_h
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
 
 /**************************************
 CLASS

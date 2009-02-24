@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_CONSTVARIABLE_H
 #define UINTAH_HOMEBREW_CONSTVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/constVariableBase.h>
+#include <Uintah/Core/Grid/Variables/constVariableBase.h>
 #include <Core/Util/Assert.h>
 
 namespace Uintah {

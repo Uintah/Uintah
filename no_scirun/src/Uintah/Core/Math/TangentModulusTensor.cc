@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 // Implementation of TangentModulusTensor
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
+#include <Uintah/Core/Math/TangentModulusTensor.h>
 
 using namespace Uintah;
 

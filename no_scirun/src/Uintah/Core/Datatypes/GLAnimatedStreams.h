@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_gl.h>
 
-#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
+#include <Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
 
 using SCIRun::Point;

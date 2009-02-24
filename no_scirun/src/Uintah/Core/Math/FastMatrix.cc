@@ -65,7 +65,7 @@ DEALINGS IN THE SOFTWARE.
  *     small matrices
  */
 
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Uintah/Core/Math/FastMatrix.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>

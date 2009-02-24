@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef UINTAH_HOMEBREW_TILEDREGRIDDER_H
 #define UINTAH_HOMEBREW_TILEDREGRIDDER_H
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
+#include <Uintah/CCA/Components/Regridder/RegridderCommon.h>
 
 #include <vector> 
 using namespace std;

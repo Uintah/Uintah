@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/customInitialize.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/CCA/Components/ICE/customInitialize.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 

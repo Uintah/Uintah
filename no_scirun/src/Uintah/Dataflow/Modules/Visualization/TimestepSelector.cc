@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include "TimestepSelector.h"

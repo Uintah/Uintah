@@ -44,22 +44,22 @@ DEALINGS IN THE SOFTWARE.
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
+#include <Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Containers/StringUtil.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Datatypes/VariableCache.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // Includ after Patch.h
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h> // Includ after Patch.h
-//#include <Packages/Uintah/Core/Grid/FaceIterator.h> // Includ after Patch.h
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/Datatypes/VariableCache.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h> // Includ after Patch.h
+#include <Uintah/Core/Grid/Variables/CellIterator.h> // Includ after Patch.h
+//#include <Uintah/Core/Grid/FaceIterator.h> // Includ after Patch.h
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <vector>
 #include <sstream>
 #include <iostream>

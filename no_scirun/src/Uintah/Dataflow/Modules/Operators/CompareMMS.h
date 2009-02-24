@@ -70,8 +70,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/ProgressReporter.h>
 #include <Dataflow/Network/Module.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
+#include <Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
+#include <Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 #include <iostream>
 #include <fstream>
 #include <sgi_stl_warnings_off.h>

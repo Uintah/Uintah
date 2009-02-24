@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ZerilliArmstrongPlastic.h"
 #include <cmath>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 
 
 using namespace Uintah;

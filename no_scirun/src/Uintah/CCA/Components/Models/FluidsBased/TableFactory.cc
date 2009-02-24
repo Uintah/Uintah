@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableFactory.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/ArchesTable.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/TableFactory.h>
+#include <Uintah/CCA/Components/Models/FluidsBased/ArchesTable.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 
 using namespace Uintah;
 
