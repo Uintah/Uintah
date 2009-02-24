@@ -44,11 +44,19 @@ public:
   //  virtual void getTheta(const double &random);
 
   inline
-  void getTheta(const double &random){
-    // if (isotropic)
-      theta = acos( 1 - 2 * random);
+  void get_PhFunc(const int &PhFunc_Flag,
+		  const double &linear_b,
+		  const double &eddington_f,
+		  const double &eddington_g){
+    PhFunc = PhFunc_Flag;
+    b = linear_b;
+    f = eddington_f;
+    g = eddington_g;
   }
+
   
+  virtual void getTheta(const double &random);
+ 
   //get e1-- e1
   void get_e1(const double &random1,
 	      const double &random2,
@@ -62,6 +70,8 @@ public:
   void get_s(MTRand &MTrng, const double *sIn, double *s);
 private:
   double e1[3], e2[3];
+  int PhFunc;
+  double b, f, g;  
 };
 
 #endif
