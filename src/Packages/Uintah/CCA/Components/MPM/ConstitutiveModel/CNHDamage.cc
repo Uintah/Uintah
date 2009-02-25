@@ -228,9 +228,6 @@ CNHDamage::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pFailureStrain, pFailureStrainLabel, pset);
   new_dw->allocateAndPut(pFailed,        pFailedLabel,        pset);
 
-  // Initialize a gaussian random number generator
-  SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, 0);
-
   ParticleSubset::iterator iter = pset->begin();
 
   if (d_epsf.dist == "constant") {
@@ -240,6 +237,9 @@ CNHDamage::initializeCMData(const Patch* patch,
       pFailed[*iter] = 0;
     }
   } else {
+    // Initialize a gaussian random number generator
+    SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, 0);
+
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;
       pFailureStrain[*iter] = fabs(gaussGen.rand());
