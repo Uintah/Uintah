@@ -248,7 +248,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
   int maxGhost = 2;
   d_neighbors.clear();
   d_neighborProcessors.clear();
-
+  
   // go through all patches on all levels, and if the patchwise
   // processor assignment equals the current processor, then store the 
   // patch's neighbors in the load balancer array
@@ -281,6 +281,15 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         IntVector high(patch->getExtraHighIndex(Patch::CellBased, IntVector(0,0,0)));
         level->selectPatches(low-ghost, high+ghost, neighbor);
         n.push_back(&neighbor);
+        for(int i=0;i<neighbor.size();i++) //add owning processors
+        { 
+          int nproc=getPatchwiseProcessorAssignment(neighbor[i]);
+          if(nproc>=0)
+            d_neighborProcessors.insert(nproc);
+          int oproc=getOldProcessorAssignment(0,neighbor[i],0);
+          if(oproc>=0)
+            d_neighborProcessors.insert(oproc);
+        }
         if (d_sharedState->isCopyDataTimestep() && proc == me) {
           if (oldGrid->numLevels() > l) {
             // on copy data timestep we need old patches that line up with this proc's patches,
@@ -288,6 +297,15 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
             const LevelP& oldLevel = oldGrid->getLevel(l);
             oldLevel->selectPatches(patch->getExtraCellLowIndex__New()-ghost, patch->getExtraCellHighIndex__New()+ghost, old);
             n.push_back(&old);
+            for(int i=0;i<old.size();i++) //add owning processors (they are the old owners)
+            { 
+              int nproc=getPatchwiseProcessorAssignment(old[i]);
+              if(nproc>=0)
+                d_neighborProcessors.insert(nproc);
+              int oproc=getOldProcessorAssignment(0,old[i],0);
+              if(oproc>=0)
+                d_neighborProcessors.insert(oproc);
+            }
           }
         }
 
@@ -302,6 +320,15 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           coarseLevel->selectPatches(level->mapCellToCoarser(low-ghost), 
               level->mapCellToCoarser(high+ghost), coarse);
           n.push_back(&coarse);
+          for(int i=0;i<coarse.size();i++) //add owning processors
+          { 
+            int nproc=getPatchwiseProcessorAssignment(coarse[i]);
+            if(nproc>=0)
+              d_neighborProcessors.insert(nproc);
+            int oproc=getOldProcessorAssignment(0,coarse[i],0);
+            if(oproc>=0)
+              d_neighborProcessors.insert(oproc);
+          }
         }
         if (l < grid->numLevels()-1 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
           IntVector ghost(2,2,2); // need two to compensate for extra cells
@@ -309,6 +336,15 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           fineLevel->selectPatches(level->mapCellToFiner(low-ghost), 
               level->mapCellToFiner(high+ghost), fine);
           n.push_back(&fine);
+          for(int i=0;i<fine.size();i++) //add owning processors
+          { 
+            int nproc=getPatchwiseProcessorAssignment(fine[i]);
+            if(nproc>=0)
+              d_neighborProcessors.insert(nproc);
+            int oproc=getOldProcessorAssignment(0,fine[i],0);
+            if(oproc>=0)
+              d_neighborProcessors.insert(oproc);
+          }
         }
         for (unsigned i = 0; i < n.size(); i++) {
           for(int j=0;j<(*n[i]).size();j++)
@@ -344,195 +380,27 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           Patch::selectType n;
           newLevel->selectPatches(oldPatch->getExtraCellLowIndex__New()-ghost, oldPatch->getExtraCellHighIndex__New()+ghost, n);
           d_neighbors.insert(oldPatch);
-
+          
+          int nproc=getPatchwiseProcessorAssignment(oldPatch);
+          if(nproc>=0)
+            d_neighborProcessors.insert(nproc);
+          int oproc=getOldProcessorAssignment(0,oldPatch,0);
+          if(oproc>=0)
+            d_neighborProcessors.insert(oproc);
+          
           for(int i=0;i<(int)n.size();i++){
             d_neighbors.insert(n[i]->getRealPatch());
+            int nproc=getPatchwiseProcessorAssignment(n[i]);
+            if(nproc>=0)
+              d_neighborProcessors.insert(nproc);
+            int oproc=getOldProcessorAssignment(0,n[i],0);
+            if(oproc>=0)
+              d_neighborProcessors.insert(oproc);
           }
         }
       }
     }
   }
-  
-  //create a list of processors that this processor will have to communicate with
-
-  IntVector ghost(maxGhost, maxGhost, maxGhost);
-  //add processors that will be communicated with in the new grid
-  for(int l=0;l<grid->numLevels();l++){
-    LevelP level = grid->getLevel(l);
-
-    const PatchSubset* patches=getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
-    
-    //for each patch 
-    for(int i=0;i<patches->size();i++)
-    {
-      const Patch* patch=patches->get(i);
-      IntVector low=patch->getExtraCellLowIndex__New();
-      IntVector high=patch->getExtraCellHighIndex__New();
-     
-      Patch::selectType neighbors;
-      //select patches on patch+ghost
-      level->selectPatches(patch->getExtraCellLowIndex__New()-ghost, patch->getExtraCellHighIndex__New()+ghost, neighbors);
-
-      //for each selected patch
-      for(Patch::selectType::iterator iter=neighbors.begin();iter!=neighbors.end();iter++)
-      {
-        //add old owner to set
-        int oproc=getOldProcessorAssignment(0,*iter,0);
-        if(oproc>=0)
-          d_neighborProcessors.insert(oproc);
-
-        //add new owner to set
-        int nproc=getPatchwiseProcessorAssignment(*iter);
-        if(nproc>=0)
-          d_neighborProcessors.insert(nproc);
-      }
-
-      //add coarse neighbors
-      if(l>0)
-      {
-        IntVector ratio = level->getRefinementRatio();
-        int ngc = Max(Max(ratio.x(), ratio.y()), ratio.z());
-        IntVector ghost(ngc,ngc,ngc);
-                  
-        const LevelP& coarseLevel = level->getCoarserLevel();
-
-        Patch::selectType coarse;
-        coarseLevel->selectPatches(level->mapCellToCoarser(low-ghost), level->mapCellToCoarser(high+ghost),coarse);
-
-        //for each selected patch
-        for(Patch::selectType::iterator iter=coarse.begin();iter!=coarse.end();iter++)
-        {
-          //add old owner to set
-          int oproc=getOldProcessorAssignment(0,*iter,0);
-          if(oproc>=0)
-            d_neighborProcessors.insert(oproc);
-
-          //add new owner to set
-          int nproc=getPatchwiseProcessorAssignment(*iter);
-          if(nproc>=0)
-            d_neighborProcessors.insert(nproc);
-        }
-      }
-
-      //add fine neighbors
-      if(l<grid->numLevels()-1)
-      {
-        const LevelP& fineLevel = level->getFinerLevel();
-
-        IntVector ec=level->getExtraCells();
-        Patch::selectType fine;
-        fineLevel->selectPatches(level->mapCellToFiner(low-ec), level->mapCellToFiner(high+ec),fine);
-
-        //for each selected patch
-        for(Patch::selectType::iterator iter=fine.begin();iter!=fine.end();iter++)
-        {
-          //add old owner to set
-          int oproc=getOldProcessorAssignment(0,*iter,0);
-          if(oproc>=0)
-            d_neighborProcessors.insert(oproc);
-
-          //add new owner to set
-          int nproc=getPatchwiseProcessorAssignment(*iter);
-          if(nproc>=0)
-            d_neighborProcessors.insert(nproc);
-        }
-      }
-
-    }
-
-    //with reduced output processors the communication neighbors are different so add those also
-    const PatchSubset* output_patches=getOutputPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
-    
-    //for each patch 
-    for(int i=0;i<output_patches->size();i++)
-    {
-      const Patch* patch=patches->get(i);
-     
-      Patch::selectType neighbors;
-      //select patches on patch+ghost
-      level->selectPatches(patch->getExtraCellLowIndex__New()-ghost, patch->getExtraCellHighIndex__New()+ghost, neighbors);
-
-      //for each selected patch
-      for(Patch::selectType::iterator iter=neighbors.begin();iter!=neighbors.end();iter++)
-      {
-        //add old owner to set
-        int oproc=getOldProcessorAssignment(0,*iter,0);
-        if(oproc>=0)
-          d_neighborProcessors.insert(oproc);
-
-        //add new owner to set
-        int nproc=getPatchwiseProcessorAssignment(*iter);
-        if(nproc>=0)
-          d_neighborProcessors.insert(nproc);
-      }
-    }
-  }
-
-  //if the grid has changed
-  if(oldGrid!=0 && oldGrid!=grid)
-  {
-    for(int l=0;l<oldGrid->numLevels();l++)
-    {
-      if(grid->numLevels()<=l)
-        break;
-      
-      LevelP oldlevel = oldGrid->getLevel(l);
-      LevelP newlevel = grid->getLevel(l);
-    
-      //add processors that I will be sending my old grid data to
-      
-      //create a list of patches from the old grid that I own
-      vector<Patch*> old_patches;
-      
-      for(Level::const_patchIterator iter=oldlevel->patchesBegin();iter!=oldlevel->patchesEnd();iter++)
-      {
-        int oproc=getOldProcessorAssignment(0,*iter,0);
-        if(oproc==d_myworld->myrank())
-          old_patches.push_back(*iter);
-      }
-
-      //for each patch 
-      for(unsigned int i=0;i<old_patches.size();i++)
-      {
-        const Patch* patch=old_patches[i];
-
-        Patch::selectType neighbors;
-        //select patches on patch
-        newlevel->selectPatches(patch->getExtraCellLowIndex__New()-ghost, patch->getExtraCellHighIndex__New()+ghost, neighbors);
-
-        //for each selected patch
-        for(Patch::selectType::iterator iter=neighbors.begin();iter!=neighbors.end();iter++)
-        {
-          //add new owner to set
-          int nproc=getPatchwiseProcessorAssignment(*iter);
-          if(nproc>=0)
-            d_neighborProcessors.insert(nproc);
-        }
-      }
-      //add processors that I will be recieving old grid data from
-      const PatchSubset* patches=getPerProcessorPatchSet(newlevel)->getSubset(d_myworld->myrank());
-      
-      //for each patch 
-      for(int i=0;i<patches->size();i++)
-      {
-        const Patch* patch=patches->get(i);
-
-        Patch::selectType neighbors;
-        //select patches on patch
-        oldlevel->selectPatches(patch->getExtraCellLowIndex__New()-ghost, patch->getExtraCellHighIndex__New()+ghost, neighbors);
-
-        //for each selected patch
-        for(Patch::selectType::iterator iter=neighbors.begin();iter!=neighbors.end();iter++)
-        {
-          //add old owner to set
-          int oproc=getOldProcessorAssignment(0,*iter,0);
-          if(oproc>=0)
-            d_neighborProcessors.insert(oproc);
-        }
-      }
-    }
-  }
-
 #if 0
   cout << d_myworld->myrank() << " np: ";
   for(set<int>::iterator iter=d_neighborProcessors.begin();iter!=d_neighborProcessors.end();iter++)
