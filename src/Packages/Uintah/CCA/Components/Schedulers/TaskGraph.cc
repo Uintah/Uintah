@@ -650,8 +650,9 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
   }
   
   
-  if(dts_->numTasks() == 0)
-    cerr << "WARNING: Compiling scheduler with no tasks\n";
+// this can happen if a processor has no patches (which may happen at the beginning of some AMR runs)
+//  if(dts_->numTasks() == 0)
+//    cerr << "WARNING: Compiling scheduler with no tasks\n";
 
   TAU_PROFILE_STOP(dttimer);
 
