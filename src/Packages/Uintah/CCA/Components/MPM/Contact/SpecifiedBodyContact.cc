@@ -84,25 +84,21 @@ SpecifiedBodyContact::SpecifiedBodyContact(const ProcessorGroup* myworld,
                                   __FILE__, __LINE__);
     }
     double t0(-1.e9);
-    while(is)
-      {
+    while(is) {
         double t1;
         double vx, vy, vz;
         is >> t1 >> vx >> vy >> vz;
-        if(is)
-          {
-            if(t1<=t0)
-              throw ProblemSetupException("ERROR: profile file is not monotomically increasing",
-                                          __FILE__, __LINE__);
+        if(is) {
+            if(t1<=t0){
+              throw ProblemSetupException("ERROR: profile file is not monotomically increasing", __FILE__, __LINE__);
+            }
             d_vel_profile.push_back( std::pair<double,Vector>(t1,Vector(vx,vy,vz)) );
-          }
+        }
         t0 = t1;
-      }
-    if(d_vel_profile.size()<2)
-      {
-        throw ProblemSetupException("ERROR: Failed to generate valid velocity profile",
-                                    __FILE__, __LINE__);
-      }
+    }
+    if(d_vel_profile.size()<2) {
+        throw ProblemSetupException("ERROR: Failed to generate valid velocity profile", __FILE__, __LINE__);
+    }
   }
   
   // disable all changes after this time
@@ -216,7 +212,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
     }
     
     // Set each field's velocity equal to the requested velocity
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector c = *iter; 
 
       for(int n = 0; n < numMatls; n++){ // update rigid body here
@@ -285,7 +281,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
       requested_velocity = findVelFromProfile(tcurr);
     }
     
-    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done(); iter++){
+    for(NodeIterator iter = patch->getNodeIterator__New(); !iter.done();iter++){
       IntVector c = *iter; 
       
       for(int  n = 0; n < numMatls; n++){ // also updates material d_material to new velocity.
@@ -340,5 +336,3 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   
   sched->addTask(t, patches, ms);
 }
-
-
