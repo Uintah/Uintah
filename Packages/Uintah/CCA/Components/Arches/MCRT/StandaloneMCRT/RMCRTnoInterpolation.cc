@@ -318,7 +318,7 @@ int main(int argc, char *argv[]){
   double scat;
 
  
-  scat = 9.0;
+  scat = 10.0;
   linear_b = 1;
   eddington_f = 0;
   eddington_g = 0;
@@ -327,9 +327,9 @@ int main(int argc, char *argv[]){
   StopLowerBound = 1e-4;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
+  Ncx = 40;
+  Ncy = 40;
+  Ncz = 40;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
@@ -781,7 +781,7 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1500; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
    // TopBottomNo = Ncx * Ncy;
 
 
@@ -799,8 +799,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 1500;
-       rayNo_back_surface[iSurface] = 1500;
+       rayNo_front_surface[iSurface] = 0;
+       rayNo_back_surface[iSurface] = 0;
      }   
 
 
@@ -808,8 +808,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 500;
-       rayNo_right_surface[iSurface] = 500;
+       rayNo_left_surface[iSurface] = 0;
+       rayNo_right_surface[iSurface] = 0;
      }
 
 

@@ -38,14 +38,14 @@ using namespace std;
 
 
 // get NoMedia from main function
-ray::ray(const int &_VolElementNo,
+ray::ray(const int &VolElementNo_,
 	 const int &Ncx_,
 	 const int &Ncy_,
 	 const int &Ncz_,
 	 const int &offset_){
   
   
-  VolElementNo = _VolElementNo;
+  VolElementNo = VolElementNo_;
   Ncx = Ncx_;
   Ncy = Ncy_;
   Ncz = Ncz_;
@@ -432,7 +432,12 @@ ray::surfaceIntersect( const double *X,
 // store path Index, Index's path length ( might not need to be stored),
 // left fraction
 
+// modify scattering scheme.
+// instead of picking a scattering length every time, pick scat-length once,
+// then keep tracking if the ray goes to that scatter length yet.
+// otherwise, if scat-length is too long, the ray will never get a chance to scatter
 void ray::TravelInMediumInten(MTRand &MTrng,
+			      VirtualSurface &obVirtual,
 			      const double *kl_Vol,
 			      const double *scatter_Vol,
 			      const double *X,
@@ -566,7 +571,7 @@ void ray::hitRealSurfaceInten(MTRand &MTrng,
   rhod = rd_surface[hitSurfaceIndex];
   //  cout << "hitSurfaceIndex inside = " << hitSurfaceIndex << endl;
   // rng.RandomNumberGen( random );
-
+  // cout << "alpha = " << alpha << endl;
   if ( alpha == 1 ) ratio = 10; // black body
   else ratio = rhod / ( rhos + rhod );
 
