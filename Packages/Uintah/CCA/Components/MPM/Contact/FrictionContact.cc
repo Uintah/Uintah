@@ -144,7 +144,6 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     for(Patch::FaceType face = Patch::startFace;
            face <= Patch::endFace; face=Patch::nextFace(face)){
         Patch::BCType bc_type = patch->getBCType(face);
-                                                                                                                                                                                                 
         switch(face) {
          case Patch::xminus:
           if(bc_type == Patch::Neighbor) { ILOW = low.x(); }

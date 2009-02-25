@@ -114,7 +114,6 @@ CompositeContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
     t->computes(lb->frictionalWorkLabel);
     sched->addTask(t, patches, matls);
   }
-  
   for(list<Contact*>::const_iterator mit(d_m.begin());mit!=d_m.end();mit++)
     {
       (*mit)->addComputesAndRequiresInterpolated(sched, patches, matls);
