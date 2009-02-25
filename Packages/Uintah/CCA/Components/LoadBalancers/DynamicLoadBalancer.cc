@@ -667,8 +667,8 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
       double meanCost=totalCost/num_procs;
       double minCost=procCosts[0];
       double maxCost=procCosts[0];
-      if(d_myworld->myrank()==0)
-        stats << "Level:" << l << " ProcCosts:";
+      //if(d_myworld->myrank()==0)
+      //  stats << "Level:" << l << " ProcCosts:";
 
       for(int p=0;p<num_procs;p++)
       {
@@ -677,11 +677,11 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
         else if(maxCost<procCosts[p])
           maxCost=procCosts[p];
 
-        if(d_myworld->myrank()==0)
-          stats << p << ":" << procCosts[p] << " ";
+       // if(d_myworld->myrank()==0)
+       //   stats << p << ":" << procCosts[p] << " ";
       }
-      if(d_myworld->myrank()==0)
-        stats << endl;
+      //if(d_myworld->myrank()==0)
+      //  stats << endl;
 
       stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost <<  endl;
     }  
@@ -730,6 +730,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
 
   int level_offset=0;
 
+  vector<double> totalProcCosts(num_procs,0);
+  vector<double> procCosts(num_procs,0);
   vector<double> previousProcCosts(num_procs,0);
   double previous_total_cost=0;
   for(int l=0;l<grid->numLevels();l++){
@@ -922,6 +924,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       {
         totalCost+=patch_costs[l][p];
         procCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
+        totalProcCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
         patchCounts[d_tempAssignment[level_offset+p]]++;
       }
 
@@ -930,8 +933,8 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       double maxCost=procCosts[0];
       int maxProc=0;
 
-      if(d_myworld->myrank()==0)
-        stats << "Level:" << l << " ProcCosts:";
+      //if(d_myworld->myrank()==0)
+      //  stats << "Level:" << l << " ProcCosts:";
 
       for(int p=0;p<num_procs;p++)
       {
@@ -942,16 +945,41 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
           maxCost=procCosts[p];
           maxProc=p;
         }
-        if(d_myworld->myrank()==0)
-          stats << p << ":" << procCosts[p] << " ";
+       // if(d_myworld->myrank()==0)
+       //   stats << p << ":" << procCosts[p] << " ";
       }
-      if(d_myworld->myrank()==0)
-        stats << endl;
+      //if(d_myworld->myrank()==0)
+      //  stats << endl;
 
-      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost << " Patches on rank:" << maxProc << " with " << patchCounts[maxProc] << " patches."  << endl;
+      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost << " max on:" << maxProc << endl;
     }  
 
     level_offset+=num_patches;
+  }
+
+  if(stats.active() && d_myworld->myrank()==0)
+  {
+      double meanCost=0;
+      double minCost=totalProcCosts[0];
+      double maxCost=totalProcCosts[0];
+      int maxProc=0;
+
+      for(int p=0;p<num_procs;p++)
+      {
+        meanCost+=totalProcCosts[p];
+        
+        if(minCost>totalProcCosts[p])
+          minCost=totalProcCosts[p];
+        else if(maxCost<totalProcCosts[p])
+        {
+          maxCost=totalProcCosts[p];
+          maxProc=p;
+        }
+      }
+      meanCost/=num_procs;
+
+      stats << "LoadBalance Stats total:"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost << " max on:" << maxProc << endl;
+
   }
   if(times.active())
   {
