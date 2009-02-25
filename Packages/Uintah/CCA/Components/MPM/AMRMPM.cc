@@ -321,11 +321,6 @@ AMRMPM::scheduleTimeAdvance(const LevelP & inlevel,
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& level = inlevel->getGrid()->getLevel(l);
     const PatchSet* patches = level->eachPatch();
-    scheduleSetBCsInterpolated(             sched, patches, matls);
-  }
-  for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-    const LevelP& level = inlevel->getGrid()->getLevel(l);
-    const PatchSet* patches = level->eachPatch();
     scheduleComputeStressTensor(            sched, patches, matls);
   }
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
@@ -481,32 +476,12 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gMassLabel);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
-  t->computes(lb->gVelocityInterpLabel);
   t->computes(lb->gExternalForceLabel);
 
   sched->addTask(t, patches, matls);
 
   if (one_matl->removeReference())
     delete one_matl;
-}
-
-void AMRMPM::scheduleSetBCsInterpolated(SchedulerP& sched,
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  printSchedule(patches,cout_doing,"MPM::scheduleSetBCsInterpolated\t\t\t");
-
-  Task* t = scinew Task("MPM::setBCsInterpolated",
-                        this,&AMRMPM::setBCsInterpolated);
-
-  t->modifies(lb->gVelocityLabel);
-  t->modifies(lb->gVelocityInterpLabel);
-
-  sched->addTask(t, patches, matls);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -677,7 +652,7 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
-  t->requires(Task::NewDW, lb->gVelocityInterpLabel,   Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
 
   if(!flags->d_doGridReset){
     t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
@@ -1000,13 +975,11 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       // Create arrays for the grid data
       NCVariable<double> gmass, gvolume;
-      NCVariable<Vector> gvelocity,gvelocityInterp,gexternalforce;
+      NCVariable<Vector> gvelocity,gexternalforce;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,       dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
-      new_dw->allocateAndPut(gvelocityInterp,  lb->gVelocityInterpLabel,
-                                                                     dwi,patch);
       new_dw->allocateAndPut(gexternalforce,   lb->gExternalForceLabel,
                                                                      dwi,patch);
 
@@ -1093,42 +1066,9 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();iter++){
         IntVector c = *iter; 
         gvelocity[c]    /= gmass[c];
-        gvelocityInterp[c]=gvelocity[c];
       }
     }  // End loop over materials
     delete interpolator;
-  }  // End loop over patches
-}
-
-void AMRMPM::setBCsInterpolated(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* ,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    printTask(patches,patch,cout_doing,"Doing setBCsInterpolated\t\t\t");
-
-    int numMatls = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-
-      NCVariable<Vector> gvelocity,gvelocityInterp;
-      new_dw->getModifiable(gvelocity,      lb->gVelocityLabel,      dwi,patch);
-      new_dw->getModifiable(gvelocityInterp,lb->gVelocityInterpLabel,dwi,patch);
-      string inter_type = flags->d_interpolator_type;
-
-      gvelocityInterp.copyData(gvelocity);
-
-      // Apply grid boundary conditions to the velocity before storing the data
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity,      inter_type);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity,      inter_type);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityInterp,inter_type);
-    }
   }  // End loop over patches
 }
 
@@ -1392,12 +1332,11 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
-      constNCVariable<Vector> gvelocityInterp;
+      constNCVariable<Vector> gvelocity;
 
       new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,  dwi,patch);
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
-      new_dw->get(gvelocityInterp,         lb->gVelocityInterpLabel,dwi, patch,
-                                                                Ghost::None,0);
+      new_dw->get(gvelocity,     lb->gVelocityLabel,dwi, patch, Ghost::None,0);
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
 
@@ -1410,7 +1349,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
       for(NodeIterator iter = patch->getExtraNodeIterator__New(); !iter.done();
                                                                iter++){
         IntVector c = *iter;
-        gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
+        gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
       }
 
       if(!flags->d_doGridReset){

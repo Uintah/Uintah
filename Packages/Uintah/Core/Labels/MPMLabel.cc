@@ -204,7 +204,7 @@ MPMLabel::MPMLabel()
   gVelocityLabel = VarLabel::create( "g.velocity",
 			NCVariable<Vector>::getTypeDescription() );
   
-  gVelocityInterpLabel = VarLabel::create( "g.velocityInterp",
+  gVelocityBCLabel = VarLabel::create( "g.velocityBC",
 			NCVariable<Vector>::getTypeDescription() );
   
   gExternalForceLabel = VarLabel::create( "g.externalforce",
@@ -461,9 +461,6 @@ MPMLabel::MPMLabel()
   GVelocityLabel = VarLabel::create("G.velocity",
                   NCVariable<Vector>::getTypeDescription());
   
-  GVelocityInterpLabel = VarLabel::create( "G.velocityInterp",
-		  NCVariable<Vector>::getTypeDescription() );
-
   GTemperatureLabel = VarLabel::create("G.temperature",
                   NCVariable<double>::getTypeDescription());
 
@@ -619,7 +616,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gMassLabel);
   VarLabel::destroy(gMassAllLabel);
   VarLabel::destroy(gVelocityLabel);
-  VarLabel::destroy(gVelocityInterpLabel);
+  VarLabel::destroy(gVelocityBCLabel);
   VarLabel::destroy(gExternalForceLabel);
   VarLabel::destroy(gInternalForceLabel);
   VarLabel::destroy(gContactLabel);
@@ -713,7 +710,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(GMassLabel);
   VarLabel::destroy(GVolumeLabel);
   VarLabel::destroy(GVelocityLabel);
-  VarLabel::destroy(GVelocityInterpLabel);
   VarLabel::destroy(GTemperatureLabel);
   VarLabel::destroy(GTemperatureNoBCLabel);
   VarLabel::destroy(GExternalForceLabel);

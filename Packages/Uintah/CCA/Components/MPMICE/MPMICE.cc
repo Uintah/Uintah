@@ -365,7 +365,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleComputeHeatExchange(         sched, mpm_patches, mpm_matls);
 
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
@@ -710,7 +709,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     const MaterialSubset* mss = mpm_matls->getUnion();
     t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
     t->requires(Task::NewDW, Mlb->gVolumeLabel,     Ghost::AroundCells, 1);
-    t->requires(Task::NewDW, Mlb->gVelocityLabel,   Ghost::AroundCells, 1); 
+    t->requires(Task::NewDW, Mlb->gVelocityBCLabel, Ghost::AroundCells, 1); 
     t->requires(Task::NewDW, Mlb->gTemperatureLabel,Ghost::AroundCells, 1);
     t->requires(Task::NewDW, Mlb->gSp_volLabel,     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
@@ -1243,12 +1242,13 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
       new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
-      new_dw->get(gvelocity,    Mlb->gVelocityLabel,    indx, patch,gac, 1);
+      new_dw->get(gvelocity,    Mlb->gVelocityBCLabel,  indx, patch,gac, 1);
       new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
       new_dw->get(gSp_vol,      Mlb->gSp_volLabel,      indx, patch,gac, 1);
       old_dw->get(sp_vol_CC_ice,Ilb->sp_vol_CCLabel,    indx, patch,gn, 0); 
       old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
       IntVector nodeIdx[8];
+
 //      double sp_vol_orig = 1.0/(mpm_matl->getInitialDensity());
       
       //---- P R I N T   D A T A ------ 
@@ -1979,7 +1979,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       }
       
       for (int m = 0; m < numALLMatls; m++){
-        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0 && !tsr) {
+        if ((rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !tsr) {
           allTestsPassed = false;
           message <<" rho_micro < 0 || vol_frac < 0";
         }
