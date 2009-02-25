@@ -258,7 +258,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);
      new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
-     new_dw->get(gvelocity[m],lb->gVelocityInterpLabel, dwi,patch, Ghost::None,0); // -> v^k
+//     new_dw->get(gvelocity[m],lb->gVelocityInterpLabel, dwi,patch, Ghost::None,0); // -> v^k
      new_dw->getModifiable(gvelocity_star[m],  lb->gVelocityStarLabel,   dwi,patch); // -> v*^k+1
      new_dw->getModifiable(gacceleration[m],   lb->gAccelerationLabel,   dwi,patch); // -> a*^k+1/2
      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
@@ -298,7 +298,7 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
         if(!compare(gmass[d_material][c],0.)){
           gvelocity_star[n][c] =  new_vel;
-          gacceleration[n][c]  = (gvelocity_star[n][c]  - gvelocity[n][c])/delT;
+//          gacceleration[n][c]  = (gvelocity_star[n][c]  - gvelocity[n][c])/delT;
         }
       }
     }
@@ -329,7 +329,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityInterpLabel, Ghost::None);
+//  t->requires(Task::NewDW, lb->gVelocityInterpLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,   mss);
   t->modifies(             lb->gAccelerationLabel,   mss);
   t->modifies(             lb->frictionalWorkLabel,  mss);

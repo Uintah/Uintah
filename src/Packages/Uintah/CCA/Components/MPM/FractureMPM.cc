@@ -341,7 +341,6 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleAdjustCrackContactInterpolated( sched, patches, matls);//for FractureMPM
   scheduleExMomInterpolated(              sched, patches, matls);
-  scheduleSetBCsInterpolated(             sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
   scheduleSolveEquationsMotion(           sched, patches, matls);
@@ -453,7 +452,6 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
-  t->computes(lb->gVelocityInterpLabel);
   t->computes(lb->gExternalForceLabel);
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
@@ -470,7 +468,6 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->GSp_volLabel);
   t->computes(lb->GVolumeLabel);
   t->computes(lb->GVelocityLabel);
-  t->computes(lb->GVelocityInterpLabel);
   t->computes(lb->GExternalForceLabel);
   t->computes(lb->GTemperatureLabel);
   t->computes(lb->GTemperatureNoBCLabel);
@@ -796,12 +793,12 @@ void FractureMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   
   t->modifies(             lb->gAccelerationLabel,     mss);
   t->modifies(             lb->gVelocityStarLabel,     mss);
-  t->requires(Task::NewDW, lb->gVelocityInterpLabel,   Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,   Ghost::None);
 
   // for FractureMPM
   t->modifies(             lb->GAccelerationLabel,     mss);
   t->modifies(             lb->GVelocityStarLabel,     mss);
-  t->requires(Task::NewDW, lb->GVelocityInterpLabel,   Ghost::None);
+  t->requires(Task::NewDW, lb->GVelocityLabel,   Ghost::None);
 
   sched->addTask(t, patches, matls);
 }
@@ -1427,7 +1424,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the grid data
       NCVariable<double> gmass;
       NCVariable<double> gvolume;
-      NCVariable<Vector> gvelocity,gvelocityInterp;
+      NCVariable<Vector> gvelocity;
       NCVariable<Vector> gexternalforce;
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
@@ -1440,8 +1437,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gSp_vol,          lb->gSp_volLabel,     dwi,patch);
       new_dw->allocateAndPut(gvolume,          lb->gVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(gvelocity,        lb->gVelocityLabel,   dwi,patch);
-      new_dw->allocateAndPut(gvelocityInterp,  lb->gVelocityInterpLabel,
-                                                                     dwi,patch);
       new_dw->allocateAndPut(gTemperature,     lb->gTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
 			     dwi,patch);
@@ -1468,7 +1463,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // for FractureMPM
       NCVariable<double> Gmass;
       NCVariable<double> Gvolume;
-      NCVariable<Vector> Gvelocity,GvelocityInterp;
+      NCVariable<Vector> Gvelocity;
       NCVariable<Vector> Gexternalforce;
       NCVariable<double> Gexternalheatrate;
       NCVariable<double> GTemperature;
@@ -1481,8 +1476,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(GSp_vol,          lb->GSp_volLabel,     dwi,patch);
       new_dw->allocateAndPut(Gvolume,          lb->GVolumeLabel,     dwi,patch);
       new_dw->allocateAndPut(Gvelocity,        lb->GVelocityLabel,   dwi,patch);
-      new_dw->allocateAndPut(GvelocityInterp,  lb->GVelocityInterpLabel,
-                                                                     dwi,patch);
       new_dw->allocateAndPut(GTemperature,     lb->GTemperatureLabel,dwi,patch);
       new_dw->allocateAndPut(GTemperatureNoBC, lb->GTemperatureNoBCLabel,
                                                                      dwi,patch);
@@ -1572,7 +1565,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gSp_vol[c]         /= gmass[c];
         gdisplacement[c]   /= gmass[c];
         gTemperatureNoBC[c] = gTemperature[c];
-        gvelocityInterp[c]  = gvelocity[c];
 
         // below crack 
         Gvelocity[c]       /= Gmass[c];
@@ -1580,7 +1572,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         GSp_vol[c]         /= Gmass[c];
         Gdisplacement[c]   /= Gmass[c];
         GTemperatureNoBC[c] = GTemperature[c];
-        GvelocityInterp[c]  = Gvelocity[c];
 	
       }
 
@@ -1589,12 +1580,10 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // above crack
       bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,      interp_type);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,      interp_type);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp,interp_type);
       bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,   interp_type);
       // below crack
       bc.setBoundaryCondition(patch,dwi,"Velocity",   Gvelocity,      interp_type);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",  Gvelocity,      interp_type);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  GvelocityInterp,interp_type);
       bc.setBoundaryCondition(patch,dwi,"Temperature",GTemperature,   interp_type);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
@@ -2206,17 +2195,17 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       NCVariable<Vector> gvelocity_star, gacceleration;
-      constNCVariable<Vector> gvelocityInterp;
+      constNCVariable<Vector> gvelocity;
       
       new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,   dwi,patch);
       new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,   dwi,patch);
-      new_dw->get(gvelocityInterp,lb->gVelocityInterpLabel,dwi,patch,Ghost::None,0);
+      new_dw->get(gvelocity,lb->gVelocityLabel,dwi,patch,Ghost::None,0);
       // for FractureMPM
       NCVariable<Vector> Gvelocity_star, Gacceleration;
-      constNCVariable<Vector> GvelocityInterp;
+      constNCVariable<Vector> Gvelocity;
       new_dw->getModifiable(Gacceleration, lb->GAccelerationLabel,   dwi,patch);
       new_dw->getModifiable(Gvelocity_star,lb->GVelocityStarLabel,   dwi,patch);
-      new_dw->get(GvelocityInterp,lb->GVelocityInterpLabel,dwi,patch,Ghost::None,0);
+      new_dw->get(Gvelocity,lb->GVelocityLabel,dwi,patch,Ghost::None,0);
       
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
@@ -2226,24 +2215,15 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
       bc.setBoundaryCondition(patch,dwi,"Velocity",Gvelocity_star,interp_type);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity_star,interp_type);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",Gvelocity_star,interp_type);
-      //bc.setBoundaryCondition(patch,dwi,"Acceleration",gacceleration,interp_type);
-      //bc.setBoundaryCondition(patch,dwi,"Acceleration",Gacceleration,interp_type);
-      //bc.setBoundaryCondition(patch,dwi,"Symmetric",gacceleration,interp_type);
-      //obc.setBoundaryCondition(patch,dwi,"Symmetric",Gacceleration,interp_type);
-      
+
       // Now recompute acceleration as the difference between the velocity
       // interpolated to the grid (no bcs applied) and the new velocity_star
       for(NodeIterator iter = patch->getExtraNodeIterator__New(); !iter.done();
                                                                iter++){
         IntVector c = *iter;
-        gacceleration[c] = (gvelocity_star[c] - gvelocityInterp[c])/delT;
-        Gacceleration[c] = (Gvelocity_star[c] - GvelocityInterp[c])/delT;
+        gacceleration[c] = (gvelocity_star[c] - gvelocity[c])/delT;
+        Gacceleration[c] = (Gvelocity_star[c] - Gvelocity[c])/delT;
       }
-      
-      // Set symmetry BCs on acceleration if called for
-      bc.setBoundaryCondition(patch, dwi, "Symmetric", gacceleration, interp_type);
-      bc.setBoundaryCondition(patch, dwi, "Symmetric", Gacceleration, interp_type);
-
     } // matl loop
   }  // patch loop
 
@@ -3260,11 +3240,3 @@ FractureMPM::refine(const ProcessorGroup*,
   }
 
 } // end refine()
-
-
-
-
-
-
-
-    
