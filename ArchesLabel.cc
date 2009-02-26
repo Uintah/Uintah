@@ -196,6 +196,9 @@ ArchesLabel::ArchesLabel()
   // for reacting flows
   d_normalizedScalarVarLabel = VarLabel::create("normalizedScalarVar",CC_double);
   d_tempINLabel    =  VarLabel::create("tempIN",    CC_double);
+  d_tempFxLabel    =  VarLabel::create("tempFxLabel", SFCX_double); 
+  d_tempFyLabel    =  VarLabel::create("tempFyLabel", SFCY_double); 
+  d_tempFzLabel    =  VarLabel::create("tempFzLabel", SFCZ_double); 
   d_cpINLabel      =  VarLabel::create("cpIN",      CC_double);
   d_co2INLabel     =  VarLabel::create("co2IN",     CC_double);
   d_heatLossLabel  =  VarLabel::create("heatLoss",  CC_double);
