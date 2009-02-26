@@ -289,7 +289,7 @@ Properties::problemSetup(const ProblemSpecP& params)
       // VarLabel is already created (d_lab->d_tempINLabel)
       // LabelMap insert
       LabelMap::iterator iLabel = d_dvLabelMap.insert(make_pair(depVarNames.size(), d_lab->d_tempINLabel)).first;
-      d_lab->d_tempINLabel->addReference();  
+      d_lab->d_tempINLabel->addReference(); //What does this do? 
       // CCVariable create
       CCVariable<double>* dvTempVar = new CCVariable<double>;
       // VarMap insert

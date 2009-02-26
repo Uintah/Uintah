@@ -32,7 +32,6 @@ DEALINGS IN THE SOFTWARE.
 #define RMCRTnoInterpolation_h
 
 namespace Uintah {
-
 class RMCRTnoInterpolation {
 
 public:

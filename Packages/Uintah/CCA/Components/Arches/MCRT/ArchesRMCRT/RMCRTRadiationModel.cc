@@ -1,7 +1,7 @@
 /// RMCRTRadiationModel.cc-------------------------------------------------------
 /// Reverse Monte Carlo Ray Tracing Radiation Model interface
 /// 
-/// @author Xiaojing Sun ( Paula ) and Jeremy
+/// @author Xiaojing Sun ( Paula ) and Jeremy Thornock
 /// @date Feb 20, 2009.
 ///
 /*
@@ -33,8 +33,12 @@ DEALINGS IN THE SOFTWARE.
 
 */
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
@@ -43,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRadiationModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 
 using namespace Uintah; 
 using namespace std;
@@ -50,9 +55,12 @@ using namespace std;
 //---------------------------------------------------------------------------
 //  Constructor
 //---------------------------------------------------------------------------
-RMCRTRadiationModel::RMCRTRadiationModel( const ArchesLabel* label ) : 
+RMCRTRadiationModel::RMCRTRadiationModel( const ArchesLabel* label, BoundaryCondition* bc ) : 
 d_lab(label) 
 {
+  d_mmWallID = bc->getMMWallId();  //kumar's multimaterial (mpm) wall 
+  d_wallID   = bc->wallCellType(); //regular old wall
+  d_flowID   = bc->flowCellType(); //flow cell 
 }
 
 //---------------------------------------------------------------------------
@@ -169,10 +177,10 @@ RMCRTRadiationModel::problemSetup( const ProblemSpecP& params )
 //---------------------------------------------------------------------------
 
 void 
-RMCRTRadiationModel::sched_solve( const LevelP& level, SchedulerP& sched )
+RMCRTRadiationModel::sched_solve( const LevelP& level, SchedulerP& sched, const TimeIntegratorLabel* timeLabels )
 {
   const string taskname = "RMCRTRadiationModel::solve"; 
-  Task* tsk = scinew Task(taskname, this, &RMCRTRadiationModel::solve); 
+  Task* tsk = scinew Task(taskname, this, &RMCRTRadiationModel::solve, timeLabels); 
 
   //Variables needed from DW
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -181,6 +189,17 @@ RMCRTRadiationModel::sched_solve( const LevelP& level, SchedulerP& sched )
   
   tsk->requires(Task::OldDW, d_lab->d_tempINLabel, gac, 1); // getting temperature w/1 ghost to use only (not to modify it)
   tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, gac, 1); // getting absorption coef w/1 ghost
+  tsk->requires(Task::OldDW, d_lab->d_cellTypeLabel, gac, 1);
+
+  if (timeLabels->integrator_step_number == TimeIntegratorStepNumber::First){
+    tsk->computes(d_lab->d_tempFxLabel);
+    tsk->computes(d_lab->d_tempFyLabel);
+    tsk->computes(d_lab->d_tempFzLabel);
+  } else {
+    tsk->modifies(d_lab->d_tempFxLabel);
+    tsk->modifies(d_lab->d_tempFyLabel);
+    tsk->modifies(d_lab->d_tempFzLabel);
+  } 
 
   sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials()); 
 
@@ -194,7 +213,8 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
                              const PatchSubset* patches,
                              const MaterialSubset*, 
                              DataWarehouse* old_dw, 
-                             DataWarehouse* new_dw )
+                             DataWarehouse* new_dw,
+                             const TimeIntegratorLabel* timeLabels )
 
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -210,9 +230,15 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     int matlIndex = 0; 
 
     // get temperature and absorption coefficient 
-    constCCVariable<double> temperature; 
+    constCCVariable<double> T; 
     constCCVariable<double> absorpCoef; 
     constCCVariable<double> scatterCoeff;
+    constCCVariable<int> cellType; 
+
+    SFCXVariable<double> Tx;
+    SFCYVariable<double> Ty; 
+    SFCZVariable<double> Tz; 
+
     // emission coefficient on boundaries are CCVariable? or SFXVariable?
     // absorption coefficient on boundaries? define as what type?
     // rs, rd?
@@ -225,21 +251,46 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     //  ArchesVariables* vars, vars->temperature
     //  ArchesConstVariables* constvars) constvars->cellType
     
-    old_dw->get( temperature, d_lab->d_tempINLabel, 0, patch, gac, 1 ); 
+    old_dw->get( T, d_lab->d_tempINLabel, 0, patch, gac, 1 ); 
     old_dw->get( absorpCoef, d_lab->d_absorpINLabel, 0, patch, gac, 1 );
+    old_dw->get( cellType, d_lab->d_cellTypeLabel, 0, patch, gac, 1 ); 
 
+    if (timeLabels->integrator_step_number == TimeIntegratorStepNumber::First){
+      new_dw->allocateAndPut( Tx, d_lab->d_tempFxLabel, archIndex, patch );
+      new_dw->allocateAndPut( Ty, d_lab->d_tempFyLabel, archIndex, patch ); 
+      new_dw->allocateAndPut( Tz, d_lab->d_tempFzLabel, archIndex, patch ); 
+    } else {
+      new_dw->getModifiable( Tx, d_lab->d_tempFxLabel, archIndex, patch ); 
+      new_dw->getModifiable( Ty, d_lab->d_tempFyLabel, archIndex, patch ); 
+      new_dw->getModifiable( Tz, d_lab->d_tempFzLabel, archIndex, patch ); 
+    }
 
-    
+    // interpolate temperatures to FC
+    IntVector dir(1,0,0);
+    IntVector highIdx = patch->getCellHighIndex__New(); 
+    interpCCTemperatureToFC( cellType, Tx, dir, highIdx, T, patch ); 
+    dir += IntVector(-1,1,0); 
+    interpCCTemperatureToFC( cellType, Ty, dir, highIdx, T, patch ); 
+    dir += IntVector(0,-1,1); 
+    interpCCTemperatureToFC( cellType, Tz, dir, highIdx, T, patch );
+ 
     // IntVector currCell(currI, currJ, currK);
+    /*for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      IntVector currCell = *iter; 
+      ....temperature[currCell]; 
+  
+    }*/
     // temperature[currCell]??
     // where does the currCell starts? for b.c. cells and ghost cells
     
     cout << "GOING TO CALL STAND ALONE SOLVER!\n"; 
     
-    obRMCRT.RMCRTsolver();
+    obRMCRT.RMCRTsolver( );
 
   } // end patch loop 
 
 }
+
+ 
 
 

@@ -244,6 +244,9 @@ namespace Uintah {
 
       // for reacting flows
       const VarLabel* d_tempINLabel;
+      const VarLabel* d_tempFxLabel; 
+      const VarLabel* d_tempFyLabel;
+      const VarLabel* d_tempFzLabel; 
       const VarLabel* d_cpINLabel;
       const VarLabel* d_co2INLabel;
       const VarLabel* d_h2oINLabel;

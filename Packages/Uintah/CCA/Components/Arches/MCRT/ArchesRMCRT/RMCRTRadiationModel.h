@@ -37,14 +37,19 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
-
+class TimeIntegratorLabel; 
+class BoundaryCondition; 
 class RMCRTRadiationModel {
 
 public:
   // constructor
-  RMCRTRadiationModel( const ArchesLabel* label );
+  RMCRTRadiationModel( const ArchesLabel* label, BoundaryCondition* bc );
 
   // destructor
   ~RMCRTRadiationModel();
@@ -54,15 +59,21 @@ public:
   void problemSetup( const ProblemSpecP& params );
   
   /** @brief Schedule the solution of the radiative transport equation using RMCRT */
-  void sched_solve( const LevelP& level, SchedulerP& sched );
+  void sched_solve( const LevelP& level, SchedulerP& sched, const TimeIntegratorLabel* timeLabels );
 
   /** @brief Actually solve the radiative transport equation using RMCRT */
   void solve( const ProcessorGroup* pc,  
               const PatchSubset* patches, 
               const MaterialSubset*, 
               DataWarehouse* old_dw, 
-              DataWarehouse* new_dw );
- 
+              DataWarehouse* new_dw,
+              const TimeIntegratorLabel* timeLabels );
+
+  /** @brief Interpolate CC temperatures to FC temperatures */ 
+  template <class FCV>
+  void interpCCTemperatureToFC( constCCVariable<int>& cellType, 
+                                FCV& Tx, IntVector dir, IntVector highIdx, 
+                                constCCVariable<double>& T, const Patch* p );
 
 private:
 
@@ -76,8 +87,79 @@ private:
   double d_opl;
   int d_ambda; 
   const ArchesLabel* d_lab; 
+  int d_mmWallID; 
+  int d_wallID; 
+  int d_flowID; 
 
 }; // end class RMCRTRadiationModel
+
+template <class FCV> 
+void RMCRTRadiationModel::interpCCTemperatureToFC( constCCVariable<int>& cellType,
+                                              FCV& Tf, IntVector dir, IntVector highIdx,  
+                                              constCCVariable<double>& T, const Patch* p )
+{
+
+  //NOTE!:
+  // Here we have assume piece-wise interpolation if a cell is any kind of boundary.
+  // Do we only want to do this for walls?  If yes, one needs to change the logic below. 
+  
+  // get the index of the current direction
+  int mydir = -1; 
+  if      ( dir.x() !=0 ) mydir = 0;
+  else if ( dir.y() !=0 ) mydir = 1;
+  else if ( dir.z() !=0 ) mydir = 2; 
+  
+   
+  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+    
+    IntVector c = *iter; 
+    IntVector cm1 = *iter - dir;
+ 
+    if ( cellType[c] == d_flowID && cellType[cm1] == d_flowID ) {
+      
+      Tf[c] = ( T[c] + T[cm1] ) / 2.0;
+ 
+    } else if ( cellType[c] != d_flowID | cellType[cm1] != d_flowID ) {
+
+      if ( cellType[c] !=d_flowID ) {
+        //current cell is a wall
+        Tf[c] = T[c]; 
+      } else if ( cellType[c] == d_flowID && cellType[cm1] != d_flowID ) {
+        //neighbor is a wall and current cell is flow
+        Tf[c] = T[cm1]; 
+      } else {
+        //both are walls 
+        Tf[c] = T[c]; 
+      }
+    }
+
+    bool doBoundary=false; 
+    // subtract 1 because of the "extra cells" used in Arches
+    if ( mydir == 0 ) 
+      if ( c.x() == highIdx.x() - 1) doBoundary = true; 
+    else if ( mydir == 1 )
+      if ( c.y() == highIdx.y() - 1) doBoundary = true; 
+    else if ( mydir == 2 )
+      if ( c.z() == highIdx.z() - 1) doBoundary = true; 
+    
+    //do + boundary
+    if ( doBoundary ) {
+
+      IntVector cp1 = *iter + dir; 
+      if ( cellType[cp1] != d_flowID ) {
+
+        Tf[cp1] = T[cp1];
+ 
+      } else {
+
+        Tf[cp1] = ( T[c] + T[cp1] ) / 2.0; 
+
+      }
+    }
+  } // end interpolation 
+}
+
+
 } // end uintah namespace
 
 #endif
