@@ -142,7 +142,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   //RMCRT StandAlone solver:
   db->getWithDefault("do_standalone_RMCRT",d_standAloneRMCRT, false);
   if (d_standAloneRMCRT) {
-    d_RMCRTRadiationModel = scinew RMCRTRadiationModel(d_lab);
+    d_RMCRTRadiationModel = scinew RMCRTRadiationModel(d_lab, d_boundaryCondition);
     d_RMCRTRadiationModel->problemSetup(db);  
   }  
 
@@ -439,12 +439,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                   d_timeIntegratorLabels[curr_level],
                                   true, false,
                                   d_EKTCorrection, doing_EKT_now);
-
     if (d_standAloneRMCRT) { 
-      d_RMCRTRadiationModel->sched_solve( level, sched);  
+      d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
     }
  
-
     sched_computeDensityLag(sched, patches, matls,
                            d_timeIntegratorLabels[curr_level],
                            false);
@@ -482,7 +480,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                     d_timeIntegratorLabels[curr_level],
                                     false, false,
                                     d_EKTCorrection, doing_EKT_now);
-                                    
+
+                                   
       sched_computeDensityLag(sched, patches, matls,
                               d_timeIntegratorLabels[curr_level],
                               true);
@@ -507,6 +506,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_momSolver->solve(sched, patches, matls,
                        d_timeIntegratorLabels[curr_level],
                        false, false);
+
+
 
     if (d_extraProjection) {
       d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
