@@ -1663,9 +1663,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gSp_vol[c]        /= gmass[c];
       }
 
-      // Apply boundary conditions to the temperature and (if w/mpmice) velocity
+      // Apply boundary conditions to the temperature and velocity (if symmetry)
       MPMBoundCond bc;
       bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,interp_type);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,   interp_type);
+
+      // If an MPMICE problem, create a velocity with BCs variable for NCToCC_0
       if(flags->d_with_ice){
         NCVariable<Vector> gvelocityWBC;
         new_dw->allocateAndPut(gvelocityWBC,lb->gVelocityBCLabel,dwi,patch);
