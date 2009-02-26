@@ -622,8 +622,8 @@ void Level::setBCTypes()
     rank=myworld->myrank();
   }
 
-  vector<int> displacements(numProcs);
-  vector<int> recvcounts(numProcs);
+  vector<int> displacements(numProcs,0);
+  vector<int> recvcounts(numProcs,0);
 
   //create recvcounts and displacement arrays
   int div=d_virtualAndRealPatches.size()/numProcs;
@@ -643,8 +643,9 @@ void Level::setBCTypes()
    
   vector<unsigned int> bctypes(d_virtualAndRealPatches.size());
   vector<unsigned int> mybctypes(recvcounts[rank]);
-  
+
   int idx;
+  
   patchIterator startpatch=d_virtualAndRealPatches.begin()+displacements[rank];
   patchIterator endpatch=startpatch+recvcounts[rank];
   //for each of my patches
@@ -703,11 +704,16 @@ void Level::setBCTypes()
     }
     mybctypes[idx]=bitfield;
   }
-
+  
   if(numProcs>1)
   {
     //allgather bctypes
-    MPI_Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+    if(mybctypes.size()==0)
+    {
+      MPI_Allgatherv(0,0,MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+    }
+    else
+      MPI_Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
   }
   else
   {
