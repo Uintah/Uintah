@@ -348,7 +348,8 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
            break;
          }
        }
-       if(*p){
+
+       if(*base){
          free(base);
          base = strdup(".");
        }
