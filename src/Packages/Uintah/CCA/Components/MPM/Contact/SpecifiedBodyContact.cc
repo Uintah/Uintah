@@ -174,6 +174,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
                                              DataWarehouse* old_dw,
                                              DataWarehouse* new_dw)
 {
+#if 0
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
   for(int p=0;p<patches->size();p++){
@@ -235,6 +236,7 @@ void SpecifiedBodyContact::exMomInterpolated(const ProcessorGroup*,
       }
     }
   }
+#endif
 }
 
 // apply boundary conditions to the interpolated velocity v^k+1
@@ -252,17 +254,11 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
     StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
-    StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
-    StaticArray<NCVariable<double> >      frictionWork(numMatls);
 
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);
      new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
-//     new_dw->get(gvelocity[m],lb->gVelocityInterpLabel, dwi,patch, Ghost::None,0); // -> v^k
-     new_dw->getModifiable(gvelocity_star[m],  lb->gVelocityStarLabel,   dwi,patch); // -> v*^k+1
-     new_dw->getModifiable(gacceleration[m],   lb->gAccelerationLabel,   dwi,patch); // -> a*^k+1/2
-     new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
-                           patch);
+     new_dw->getModifiable(gvelocity_star[m],  lb->gVelocityStarLabel, dwi,patch); // -> v*^k+1
     }
     
     delt_vartype delT;
@@ -298,7 +294,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
 
         if(!compare(gmass[d_material][c],0.)){
           gvelocity_star[n][c] =  new_vel;
-//          gacceleration[n][c]  = (gvelocity_star[n][c]  - gvelocity[n][c])/delT;
         }
       }
     }
@@ -309,6 +304,7 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
+#if 0
   Task * t = scinew Task("SpecifiedBodyContact::exMomInterpolated",
                       this, &SpecifiedBodyContact::exMomInterpolated);
   
@@ -317,6 +313,7 @@ void SpecifiedBodyContact::addComputesAndRequiresInterpolated(SchedulerP & sched
   t->modifies(             lb->gVelocityLabel,       mss);
   
   sched->addTask(t, patches, ms);
+#endif
 }
 
 void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
@@ -329,10 +326,7 @@ void SpecifiedBodyContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
-//  t->requires(Task::NewDW, lb->gVelocityInterpLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,   mss);
-  t->modifies(             lb->gAccelerationLabel,   mss);
-  t->modifies(             lb->frictionalWorkLabel,  mss);
-  
+
   sched->addTask(t, patches, ms);
 }
