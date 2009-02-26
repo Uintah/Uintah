@@ -219,7 +219,7 @@ struct ChildRequirements : public RefCounted {
 struct AttributeAndTagBase :  public RefCounted {
 
   AttributeAndTagBase( const string & name, TagP parent ) :
-    parent_( parent ), name_( name ), occurrences_( 0 ) { }
+    parent_( parent ), name_( name ), need_(INVALID_NEED), occurrences_( 0 ) { }
 
   AttributeAndTagBase( const string & name, need_e need, type_e type, 
                        const vector<string> & validValues, /*const*/ TagP parent ) :

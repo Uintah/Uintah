@@ -655,9 +655,9 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
 template<class LOCS>
 void SFC<LOCS>::GenerateCurve(int mode)
 {
+  P=d_myworld->size();
   ASSERT(BulletProof(mode)); 
   
-  P=d_myworld->size();
   switch(dim)
   {
     case 1:
