@@ -114,6 +114,12 @@ Properties::~Properties()
   {
     VarLabel::destroy((*iLabel).second); 
   } 
+
+  for(VarMap::iterator iter = d_dvVarMap.begin();
+      iter != d_dvVarMap.end(); iter++)
+  {
+    delete iter->second; 
+  }
 }
 
 //****************************************************************************
