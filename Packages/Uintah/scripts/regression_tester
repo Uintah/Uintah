@@ -33,12 +33,11 @@ else
     fi
 fi
 
-
 if test ! -d $GOLD_STANDARD; then
-   echo "The directory, '$GOLD_STANDARD', does not exist.  Please set the variable"
-   echo "GOLD_STANDARD, either in your environment or in this script, to a valid directory."
-   echo "Goodbye."
-   exit
+    echo "The directory, '$GOLD_STANDARD', does not exist.  Please set the variable"
+    echo "GOLD_STANDARD, either in your environment or in this script, to a valid directory."
+    echo "Goodbye."
+    exit
 fi
 
 if test ! -x "sus"; then
@@ -99,6 +98,7 @@ do_remove=0
 do_restart=0
 do_mem=0
 compare_uda_options=""
+create_goldStandard=false
 
 ALL=
 
@@ -127,6 +127,7 @@ usage () {
     echo "  -mem           check for memory leaks"
     echo "  -clean         remove the *.out *.compare and uda directories"
     echo "  -exact         perform an exact comparison (absolute/relative tolerance == 0)"
+    echo "  -create_goldStandard create gold standard data for that test"
     echo "  -h[elp]        display this help and exit"
     echo;
     exit
@@ -211,6 +212,9 @@ for arg in $*; do
         -exact)
             echo; echo "Doing an exact comparison test"
             compare_uda_options="-exact";;
+        -create_goldStandard)
+            echo; echo "Creating gold standard data"
+            create_goldStandard=true;;
         *)
             usage ;;
     esac
@@ -318,21 +322,18 @@ run_test () {
 
     echo; echo "Running: $MPI sus $opts $n.ups"
     $MPI ../sus $opts $n.ups &> $n.out
-    rm $n.ups
-#    rm $in_file
-
-    success=`grep "successfully" $n.out`
-    if test -n "$success"; then 
-        echo $success
-#        cd ..
+    
+    if [ $? -eq 0 ]; then
+        echo "Success running sus . . ."
         run_test_return=0
     else
         echo; echo "FAILURE running sus . . ."
-	cat $n.out
-#        cd ..
+        cat $n.out
         continue
         run_test_return=1
     fi
+
+    rm $n.ups
 
     if test -x /usr/bin/lamhalt; then
         /usr/bin/lamhalt
@@ -468,13 +469,27 @@ run_case () {
 #        compare_results
 #        run_restart
         MPI=""
-        if (run_test && compare_results && run_restart) && $all_tests_pass ; 
-        then
-            all_tests_pass=true
+        
+        if [ $create_goldStandard = "true" ]; then
+            run_test;
         else
-            all_tests_pass=false
+            if (run_test && compare_results && run_restart) && $all_tests_pass ; 
+            then
+                all_tests_pass=true
+            else
+                all_tests_pass=false
+            fi
         fi
     done
+
+    if [ $create_goldStandard = "true" ]; then
+        for n in ${!tc}; do
+            input_file inputs/$CASE $n
+            uda_name $in_file
+            mkdir -p $GOLD_STANDARD/$DIR/$CASE/$n
+            cp -r -L $uda $GOLD_STANDARD/$DIR/$CASE/$n
+        done 
+    fi
 
     cd ..
     
