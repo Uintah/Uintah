@@ -809,7 +809,10 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_umomBoundarySrcLabel);
   VarLabel::destroy(d_vmomBoundarySrcLabel);
   VarLabel::destroy(d_wmomBoundarySrcLabel);
-   
+  
+  VarLabel::destroy(d_tempFxLabel);
+  VarLabel::destroy(d_tempFyLabel);
+  VarLabel::destroy(d_tempFzLabel);
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)
