@@ -486,8 +486,12 @@ run_case () {
         for n in ${!tc}; do
             input_file inputs/$CASE $n
             uda_name $in_file
+            uda=`echo $uda | tr -d [=/=]`
             mkdir -p $GOLD_STANDARD/$DIR/$CASE/$n
+            mv $GOLD_STANDARD/$DIR/$CASE/$n/$uda  $GOLD_STANDARD/$DIR/$CASE/$n/$uda.bad
             cp -r -L $uda $GOLD_STANDARD/$DIR/$CASE/$n
+            rm -rf $GOLD_STANDARD/$DIR/$CASE/$n/$uda.bad
+            chmod ugo+rw $GOLD_STANDARD/$DIR/$CASE/$n/$uda
         done 
     fi
 
