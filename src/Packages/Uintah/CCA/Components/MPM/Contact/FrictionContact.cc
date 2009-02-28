@@ -555,7 +555,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   StaticArray<constNCVariable<double> > gvolume(numMatls);
   StaticArray<constNCVariable<double> > numnearparticles(numMatls);
   StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
-  StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
   StaticArray<constNCVariable<double> > normtraction(numMatls);
   StaticArray<NCVariable<double> >      frictionWork(numMatls);
   StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
@@ -575,8 +574,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
                   dwi, patch, gnone, 0);
       new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel,
-                            dwi, patch);
-      new_dw->getModifiable(gacceleration[m],lb->gAccelerationLabel,
                             dwi, patch);
       new_dw->getModifiable(frictionWork[m], lb->frictionalWorkLabel,
                             dwi, patch);
@@ -711,7 +708,6 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                 Dv=scale_factor*Dv;
                 gvelocity_star[n][c]+=Dv;
                 Dv=Dv/delT;
-                gacceleration[n][c]+=Dv;
               } // traction
             }   // if !compare && !compare
           }     // for numMatls
@@ -792,7 +788,6 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
   t->modifies(             lb->gVelocityStarLabel,  mss);
-  t->modifies(             lb->gAccelerationLabel,  mss);
   t->modifies(             lb->frictionalWorkLabel, mss);
 
   sched->addTask(t, patches, ms);

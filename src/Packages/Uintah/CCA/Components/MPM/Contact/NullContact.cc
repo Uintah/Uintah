@@ -81,15 +81,6 @@ void NullContact::exMomInterpolated(const ProcessorGroup*,
 				    DataWarehouse* /*old_dw*/,
 				    DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    for(int m=0;m<matls->size();m++){
-      NCVariable<Vector> gvelocity;
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      new_dw->getModifiable(   gvelocity, lb->gVelocityLabel, dwi, patch);
-    }
-  }
 }
 
 void NullContact::exMomIntegrated(const ProcessorGroup*,
@@ -98,22 +89,6 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
 				    DataWarehouse* /*old_dw*/,
 				    DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    for(int m=0;m<matls->size();m++){
-      NCVariable<Vector> gv_star;
-      NCVariable<Vector> gacc;
-      NCVariable<double> frictionalWork;
-
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-
-      new_dw->getModifiable(gv_star, lb->gVelocityStarLabel,        dwi, patch);
-      new_dw->getModifiable(gacc,    lb->gAccelerationLabel,        dwi, patch);
-      new_dw->getModifiable(frictionalWork,lb->frictionalWorkLabel, dwi,
-                            patch);
-    }
-  }
 }
 
 void NullContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
@@ -121,9 +96,6 @@ void NullContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
 						const MaterialSet* ms)
 {
   Task * t = scinew Task("NullContact::exMomInterpolated", this, &NullContact::exMomInterpolated);
-  
-  const MaterialSubset* mss = ms->getUnion();
-  t->modifies(lb->gVelocityLabel, mss);
   
   sched->addTask(t, patches, ms);
 }
@@ -133,11 +105,6 @@ void NullContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
 					     const MaterialSet* ms) 
 {
   Task * t = scinew Task("NullContact::exMomIntegrated", this, &NullContact::exMomIntegrated);
-  
-  const MaterialSubset* mss = ms->getUnion();
-  t->modifies(lb->gVelocityStarLabel, mss);
-  t->modifies(lb->gAccelerationLabel, mss);
-  t->modifies(lb->frictionalWorkLabel, mss);
   
   sched->addTask(t, patches, ms);
 }

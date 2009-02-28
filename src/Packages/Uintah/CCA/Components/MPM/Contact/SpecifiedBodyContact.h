@@ -133,26 +133,6 @@ DESCRIPTION
      v^k+1      velocity coming in to exMomIntegrated
      v*^k+1     velocity coming out of exMomIntegrated (with rigid cells set)
 
-     a^k+1/2    acceleration
-     a*^k+1/2   acceleration in rigid cells
-
-     for non-contact cells, we expect
-        a^k+1/2 = ( v^k+1 - v^k)/dt   (basic center diff)     [1]
-
-     for rigid cells, we require the acceleration
-        a*^k+1/2 = (v*k+1 - v^k)/dt                           [2]
-     
-     
-     // this option is not done, v^k is stored throughout ....
-     //
-     to avoid having to store v^k through the entire iteration, we store
-        a*^k = (v*^k - v^k)/dt                                [3]
-     in exMomInterpolated
-     
-     and then
-        a*^k+1/2 = (v*k+1/2 - v*^k)/dt + a*^k                 [4]
-     in exMomIntegrated, which reduces to [2] as required.
-     
   ****************************************/
   
   class SpecifiedBodyContact : public Contact {
