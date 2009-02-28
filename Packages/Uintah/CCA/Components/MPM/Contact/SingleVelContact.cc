@@ -150,16 +150,11 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     // Retrieve necessary data from DataWarehouse
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
-    StaticArray<NCVariable<Vector> > gacceleration(numMatls);
-    StaticArray<NCVariable<double> > frictionWork(numMatls);
 
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);
      new_dw->get(gmass[m],lb->gMassLabel, dwi, patch, Ghost::None, 0);
      new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
-     new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
-     new_dw->getModifiable(frictionWork[m], lb->frictionalWorkLabel, dwi,
-                           patch);
     }
 
     delt_vartype delT;
@@ -178,13 +173,11 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
       }
 
       // Set each field's velocity equal to the center of mass velocity
-      // and adjust the acceleration of each field to account for this
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
       for(int  n = 0; n < numMatls; n++){
         if(d_matls.requested(n)) {
           Dvdt = (centerOfMassVelocity - gvelocity_star[n][c])/delT;
           gvelocity_star[n][c] = centerOfMassVelocity;
-          gacceleration[n][c]+=Dvdt;
         }
       }
     }
@@ -218,8 +211,6 @@ void SingleVelContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel, mss);
-  t->modifies(             lb->gAccelerationLabel, mss);
-  t->modifies(             lb->frictionalWorkLabel,mss);
-  
+
   sched->addTask(t, patches, ms);
 }
