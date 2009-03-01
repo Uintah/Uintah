@@ -960,7 +960,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
       scheduleOutputTimestep(d_saveLabels, grid, sched, false);
   }
     
-  if (delt != 0) {
+  if (delt != 0 && d_checkpointCycle>0 && (d_checkpointInterval>0 || d_checkpointTimestepInterval>0 ||  d_checkpointWalltimeInterval>0 ) ) {
     // output checkpoint timestep
     Task* t = scinew Task("DataArchiver::output (CheckpointReduction)",
                           this, &DataArchiver::output, CHECKPOINT_REDUCTION);
