@@ -1541,6 +1541,9 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
   }
 
+  if(d_myworld->myrank()==0)
+    cout << "Dynamic Algorithm: " << dynamicAlgo << endl;
+
   if (dynamicAlgo == "cyclic")
     d_dynamicAlgorithm = cyclic_lb;
   else if (dynamicAlgo == "random")
