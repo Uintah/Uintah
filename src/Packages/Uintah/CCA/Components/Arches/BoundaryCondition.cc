@@ -5832,7 +5832,7 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
     CCVariable<double> scalar;
     CCVariable<double> reactscalar;
     CCVariable<double> enthalpy;
-        constCCVariable<int> cellType;
+    constCCVariable<int> cellType;
 
     new_dw->getModifiable(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->getModifiable(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
@@ -5854,102 +5854,98 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
 
     // loop thru the flow inlets to set all the components of velocity and density
     if (d_inletBoundary) {
+
       double time = 0.0;
       double ramping_factor;
+      Vector dx = patch->dCell();
       Box patchInteriorBox = patch->getBox();
+
       for (int indx = 0; indx < d_numInlets; indx++) {
+
         sum_vartype area_var;
-        new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
-        double area = area_var;
         delt_vartype flow_r;
-        new_dw->get(flow_r, d_flowInlets[indx]->d_flowRate_label);
+        double area = area_var;
         double flow_rate = flow_r;
-        FlowInlet* fi = d_flowInlets[indx];
-        fort_get_ramping_factor(fi->d_ramping_inlet_flowrate,
-                                time, ramping_factor);
+        new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
+        new_dw->get(flow_r, d_flowInlets[indx]->d_flowRate_label);
+        FlowInlet* fi = d_flowInlets[indx];  // get the current flow inlet
+
+// This wasn't used anywhere.  
+//        fort_get_ramping_factor(fi->d_ramping_inlet_flowrate,
+//                                time, ramping_factor);
+
         if (fi->d_prefill) {
+
           int nofGeomPieces = (int)fi->d_prefillGeomPiece.size();
+
           for (int ii = 0; ii < nofGeomPieces; ii++) {
+
             GeometryPieceP  piece = fi->d_prefillGeomPiece[ii];
             Box geomBox = piece->getBoundingBox();
             Box b = geomBox.intersect(patchInteriorBox);
+
             if (!(b.degenerate())) {
-              for (CellIterator iter = patch->getCellCenterIterator(b);
-                !iter.done(); iter++) {
+
+              for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
+
                 Point p = patch->cellPosition(*iter);
+
                 if (piece->inside(p) && cellType[*iter] == d_flowfieldCellTypeVal) {
+
+                  //Take care of velocities
                   if (fi->d_prefill_index == 1) {
-                    cout << "PREFILLINGNNNNNNNNNNNNNNNNNNNNNNNNNNN!!!!" << endl;
-                    Point p_shift = patch->cellPosition(*iter-IntVector(1,0,0));
-                    if (piece->inside(p_shift))
-                      uVelocity[*iter] = flow_rate/
-                                       (fi->calcStream.d_density * area);
-                  }
+                    Point p_fx(p.x()-dx.x()/2,p.y(),p.z()); // minus x-face
+                    if ( piece->inside(p_fx) ) {
+                      uVelocity[*iter] = flow_rate / ( fi->calcStream.d_density * area );
+                    }
+                  } 
                   if (fi->d_prefill_index == 2) {
-                    Point p_shift = patch->cellPosition(*iter-IntVector(0,1,0));
-                    if (piece->inside(p_shift))
-                      vVelocity[*iter] = flow_rate/
-                                       (fi->calcStream.d_density * area);
+                    Point p_fy(p.x(),p.y()-dx.y(),p.z()); // minus y-face
+                    if ( piece->inside(p_fy) ) {
+                      vVelocity[*iter] = flow_rate / ( fi->calcStream.d_density * area );
+                    }
                   }
                   if (fi->d_prefill_index == 3) {
-                    Point p_shift = patch->cellPosition(*iter-IntVector(0,0,1));
-                    if (piece->inside(p_shift))
-                      wVelocity[*iter] = flow_rate/
-                                       (fi->calcStream.d_density * area);
+                    Point p_fz(p.x(),p.y(),p.z()-dx.z()); // minus z-face
+                    if ( piece->inside(p_fz) )
+                      wVelocity[*iter] = flow_rate / ( fi->calcStream.d_density * area );
                   }
+                  //Now handle  regular scalars
                   density[*iter] = fi->calcStream.d_density;
                   scalar[*iter] = fi->streamMixturefraction.d_mixVars[0];
                   if (d_enthalpySolve)
                     enthalpy[*iter] = fi->calcStream.d_enthalpy;
                   if (d_reactingScalarSolve)
                     reactscalar[*iter] = fi->streamMixturefraction.d_rxnVars[0];
-                }
-              }
-            }
+
+                  //Now hangle extra scalars
+                  for ( int i=0; i < static_cast<int>(d_extraScalars->size()); i++ ) {
+
+                    CCVariable<double> extra_scalar;
+                    new_dw->getModifiable(extra_scalar, d_extraScalars->at(i)->getScalarLabel(), indx, patch); // get the current extra scalar
+                    string extra_scalar_name = d_extraScalars->at(i)->getScalarName(); // actual name of the extra scalar
+                    int BC_ID = fi->d_cellTypeID; 
+
+                    for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++) {
+                      if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
+                          (d_extraScalarBCs[j]->d_BC_ID) == BC_ID) {
+                        extra_scalar[*iter] = d_extraScalarBCs[j]->d_scalarBC_value; //finally set the extra scalar's value
+                      }
+                    }
+                  } // end extra scalars
+
+                } // end point is inside piece & we have a flow type cell 
+              } // cell iter loop 
+            } // non-degenerate statement 
           }  // geom iter
         }  // prefill
       }  // inlets loop
     }
+
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
 
-    if (d_calcExtraScalars)
-      for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-        CCVariable<double> extra_scalar;
-        new_dw->getModifiable(extra_scalar,
-                              d_extraScalars->at(i)->getScalarLabel(), indx, patch);
-        string extra_scalar_name = d_extraScalars->at(i)->getScalarName();
-        if (d_inletBoundary) {
-          Box patchInteriorBox = patch->getBox();
-          for (int indx = 0; indx < d_numInlets; indx++) {
-            FlowInlet* fi = d_flowInlets[indx];
-            if (fi->d_prefill) {
-              int BC_ID = fi->d_cellTypeID;
-              double extra_scalar_value=0.0;
-              for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++)
-                if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                    (d_extraScalarBCs[j]->d_BC_ID) == BC_ID)
-                  extra_scalar_value = d_extraScalarBCs[j]->d_scalarBC_value;
-              int nofGeomPieces = (int)fi->d_prefillGeomPiece.size();
-              for (int ii = 0; ii < nofGeomPieces; ii++) {
-                GeometryPieceP  piece = fi->d_prefillGeomPiece[ii];
-                Box geomBox = piece->getBoundingBox();
-                Box b = geomBox.intersect(patchInteriorBox);
-                if (!(b.degenerate())) {
-                  for (CellIterator iter = patch->getCellCenterIterator(b);
-                    !iter.done(); iter++) {
-                    Point p = patch->cellPosition(*iter);
-                    if (piece->inside(p)) {
-                      extra_scalar[*iter] = extra_scalar_value;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
   }
 }
 
