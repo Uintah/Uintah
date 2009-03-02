@@ -62,7 +62,7 @@ static DebugStream times("LBTimes",false);
 double lbtimes[5]={0};
 
 DynamicLoadBalancer::DynamicLoadBalancer(const ProcessorGroup* myworld)
-  : LoadBalancerCommon(myworld), d_costProfiler(myworld), sfc(myworld)
+  : LoadBalancerCommon(myworld), d_costProfiler(myworld,this), sfc(myworld)
 {
   d_lbInterval = 0.0;
   d_lastLbTime = 0.0;
@@ -1510,6 +1510,57 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
   return changed;
 }
 
+void DynamicLoadBalancer::finalizeContributions(const GridP grid) 
+{
+#if 0 
+  //get costs  
+  vector<vector<double> > costs;
+  vector<vector<Region> > patches; //not used
+  getCosts(grid.get_rep(), patches,costs, false);
+
+  vector<double> proc_costs(d_myworld->size(),0);
+
+  //compute proc costs
+  //for each level
+  for(unsigned int l=0;l<costs.size();l++)
+  {
+    LevelP level=grid->getLevel(l);
+    //for each patch
+    for(unsigned int p=0;p<costs[l].size();p++)
+    {
+      const Patch* patch=level->getPatch(p);
+      //add cost to owner processor
+      int proc=getPatchwiseProcessorAssignment(patch);
+      proc_costs[proc]+=costs[l][p];
+    }
+  }
+  //compute min mean max LIB proc costs
+  double totalCost=0;
+  double minCost=proc_costs[0];
+  double maxCost=proc_costs[0];
+
+  int num_procs=d_myworld->size();
+
+  for(int p=0;p<num_procs;p++)
+  {
+    totalCost+=proc_costs[p];
+
+    if(minCost>proc_costs[p])
+      minCost=proc_costs[p];
+    else if(maxCost<proc_costs[p])
+      maxCost=proc_costs[p];
+  }
+  double meanCost=totalCost/num_procs;
+
+
+  if(d_myworld->myrank()==0)
+    cout << "LoadBalance Projected Costs: "  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost <<  endl;
+#endif 
+
+  d_costProfiler.finalizeContributions(grid);
+}
+
+
 void
 DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationStateP& state)
 {
@@ -1590,8 +1641,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
   if(regridder)
   {
     d_costProfiler.setMinPatchSize(regridder->getMinPatchSize());
-    d_costProfiler.setRefinementRatios(regridder->getRefinementRatios());
-    d_costProfiler.setNumLevels(regridder->maxLevels());
   }
   else
   {

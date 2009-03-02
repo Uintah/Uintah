@@ -42,6 +42,7 @@ using namespace std;
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 namespace Uintah {
    /**************************************
      
@@ -96,30 +97,33 @@ namespace Uintah {
       }
     };
   public:
-    ProfileDriver(const ProcessorGroup* myworld) : d_myworld(myworld), d_timestepWindow(20), timesteps(0) {updateAlpha();};
-    void setNumLevels(int num) {costs.resize(num);}
+    ProfileDriver(const ProcessorGroup* myworld, LoadBalancer *lb) : d_lb(lb), d_myworld(myworld), d_timestepWindow(20), timesteps(0) {updateAlpha();};
+    void setMinPatchSize(const vector<IntVector> &min_patch_size);
     //add the contribution for region r on level l
-    void addContribution(const vector<Region> &regions, const vector<int> &levels, double cost);
+    void addContribution(const PatchSubset* patches, double cost);
     //finalize the contributions for this timestep
-    void finalizeContributions();
-    //get the contribution for the regions
+    void finalizeContributions(const GridP currentGrid);
+    //outputs the error associated with the profiler
+    void outputError(const GridP currentGrid);
+    //get the contribution for region r on level l
     void getWeights(int l, const vector<Region> &regions, vector<double> &weights);
-    //get the predicted and measured values for each region
-    void getMeasuredAndPredictedWeights(int l, const vector<Region> &regions, vector<double> &measured, vector<double> &predicted);
     //sets the decay rate for the exponential average
     void setTimestepWindow(int window) {d_timestepWindow=window, updateAlpha();}
     //initializes the regions in the new level that are not in the old level
-    void initializeWeights(const vector<Region> &old_regions, const vector<Region> &new_regions, int level);
+    void initializeWeights(const Grid* oldgrid, const Grid* newgrid);
     //resets all counters to zero
     void reset();
     //returns true if profiling data exists
     bool hasData() {return timesteps>0;}
   private:
+    LoadBalancer *d_lb;
     const void updateAlpha() { d_alpha=2.0/(d_timestepWindow+1); }
     const ProcessorGroup* d_myworld;
             
     int d_timestepWindow;
     double d_alpha;
+    vector<IntVector> d_minPatchSize;
+    vector<int> d_minPatchSizeVolume;
 
     vector<map<IntVector, Contribution> > costs;
     int timesteps;
