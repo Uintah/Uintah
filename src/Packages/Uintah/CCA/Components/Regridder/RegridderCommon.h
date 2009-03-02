@@ -150,10 +150,6 @@ WARNING
                 IntVector depth);
 
 
-    SizeList getRefinementRatios()
-    {
-      return d_cellRefinementRatio;
-    }
 
   protected:
 

@@ -640,8 +640,6 @@ WARNING
       
       constHandle<MaterialSubset>
       getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const;
-    
-      
 
     private:
       static constHandle< PatchSubset >
@@ -704,11 +702,7 @@ WARNING
     bool isReductionTask() const {
       return d_tasktype == Reduction;
     }
-
-    bool isFineTask() const {
-        return d_fineTask;
-      }
-
+    
     void setType(TaskType tasktype) {
       d_tasktype = tasktype;
     }
@@ -744,7 +738,6 @@ WARNING
     Dependency* isInDepMap(const DepMap& depMap, const VarLabel* var,
 			   int matlIndex, const Patch* patch) const;
     
-    bool d_fineTask;
     //////////
     // Insert Documentation Here:
     std::string d_taskName;
