@@ -5451,8 +5451,8 @@ BoundaryCondition::mmswVelocityBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  double time=d_lab->d_sharedState->getElapsedTime();
-  double current_time = time + time_shift;
+  //double time=d_lab->d_sharedState->getElapsedTime();
+  //double current_time = time + time_shift;
 
   //currently only supporting sinemms in x-y plane
   
@@ -5863,16 +5863,15 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
       for (int indx = 0; indx < d_numInlets; indx++) {
 
         sum_vartype area_var;
-        delt_vartype flow_r;
-        double area = area_var;
-        double flow_rate = flow_r;
         new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
+        double area = area_var;
+        delt_vartype flow_r;
         new_dw->get(flow_r, d_flowInlets[indx]->d_flowRate_label);
-        FlowInlet* fi = d_flowInlets[indx];  // get the current flow inlet
-
-// This wasn't used anywhere.  
-//        fort_get_ramping_factor(fi->d_ramping_inlet_flowrate,
-//                                time, ramping_factor);
+        double flow_rate = flow_r;
+        FlowInlet* fi = d_flowInlets[indx];
+        // This call does something magical behind the scenes. 
+        fort_get_ramping_factor(fi->d_ramping_inlet_flowrate,
+                                time, ramping_factor);
 
         if (fi->d_prefill) {
 
@@ -5886,39 +5885,36 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
 
             if (!(b.degenerate())) {
 
-              for (CellIterator iter = patch->getCellCenterIterator(b);!iter.done(); iter++) {
+              for (CellIterator iter = patch->getCellCenterIterator(b); !iter.done(); iter++) {
 
                 Point p = patch->cellPosition(*iter);
-
+                // Do Velocities
                 if (piece->inside(p) && cellType[*iter] == d_flowfieldCellTypeVal) {
-
-                  //Take care of velocities
                   if (fi->d_prefill_index == 1) {
-                    Point p_fx(p.x()-dx.x()/2,p.y(),p.z()); // minus x-face
-                    if ( piece->inside(p_fx) ) {
-                      uVelocity[*iter] = flow_rate / ( fi->calcStream.d_density * area );
-                    }
-                  } 
+                    Point p_fx(p.x()-dx.x()/2.,p.y(),p.z()); // minus x-face
+                    if (piece->inside(p_fx))
+                      uVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
+                  }
                   if (fi->d_prefill_index == 2) {
-                    Point p_fy(p.x(),p.y()-dx.y(),p.z()); // minus y-face
-                    if ( piece->inside(p_fy) ) {
-                      vVelocity[*iter] = flow_rate / ( fi->calcStream.d_density * area );
-                    }
+                    Point p_fy(p.x(),p.y()-dx.y()/2.,p.z()); // minus y-face
+                    if (piece->inside(p_fy))
+                      vVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
                   }
                   if (fi->d_prefill_index == 3) {
-                    Point p_fz(p.x(),p.y(),p.z()-dx.z()); // minus z-face
-                    if ( piece->inside(p_fz) )
-                      wVelocity[*iter] = flow_rate / ( fi->calcStream.d_density * area );
+                    Point p_fz(p.x(),p.y(),p.z()-dx.z()/2.); // minus z-face
+                    if (piece->inside(p_fz))
+                      wVelocity[*iter] = flow_rate / (fi->calcStream.d_density * area);
                   }
-                  //Now handle  regular scalars
+
+                  // Now do scalars
                   density[*iter] = fi->calcStream.d_density;
                   scalar[*iter] = fi->streamMixturefraction.d_mixVars[0];
                   if (d_enthalpySolve)
                     enthalpy[*iter] = fi->calcStream.d_enthalpy;
                   if (d_reactingScalarSolve)
                     reactscalar[*iter] = fi->streamMixturefraction.d_rxnVars[0];
-
-                  //Now hangle extra scalars
+                
+                  //Now handle extra scalars
                   if (d_calcExtraScalars) {
                     for ( int i=0; i < static_cast<int>(d_extraScalars->size()); i++ ) {
 
@@ -5929,21 +5925,20 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
 
                       for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++) {
                         if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                            (d_extraScalarBCs[j]->d_BC_ID) == BC_ID) {
-                          extra_scalar[*iter] = d_extraScalarBCs[j]->d_scalarBC_value; //finally set the extra scalar's value
+                           (d_extraScalarBCs[j]->d_BC_ID) == BC_ID) {
+                         extra_scalar[*iter] = d_extraScalarBCs[j]->d_scalarBC_value; //finally set the extra scalar's value
                         }
                       }
                     } 
-                  }// end extra scalars
-
-                } // end point is inside piece & we have a flow type cell 
-              } // cell iter loop 
-            } // non-degenerate statement 
+                  } // end extra scalars
+                } // Cell Iter loop 
+  
+              } // cell iterator loop
+            }
           }  // geom iter
         }  // prefill
       }  // inlets loop
     }
-
     uVelRhoHat.copyData(uVelocity); 
     vVelRhoHat.copyData(vVelocity); 
     wVelRhoHat.copyData(wVelocity); 
