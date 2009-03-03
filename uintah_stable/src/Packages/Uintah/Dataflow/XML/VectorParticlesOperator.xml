@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="VectorParticlesOperator" category="Operators">
+  <overview>
+    <authors>
+      <author>Wayne Witzel</author>
+    </authors>
+    <summary>Create a scalar particle field from a vector particle
+    field.</summary> 
+    <description>
+      <p>Version Date: November 2000</p><p>Version: 1.0</p>
+      <p>This module creates a scalar field from a vector field via a
+      particle wise operation. A
+      vector element can be selected, or an operation can be
+      performed on the vector particle values to create new scalar
+      particles.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Vector Particles</name>
+        <datatype>Uintah::VectorParticles</datatype>
+      </port>
+     </inputs>
+    <outputs>
+      <port>
+	<name>Scalar Particles</name>
+	<datatype>Uintah::ScalarParticles</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

@@ -1,0 +1,199 @@
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.20 Release Notes</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes - SCIRun Version 1.20.1 - Nov 17, 2003
+    </h1>
+
+    <h1>
+      Data Sets
+    </h1>
+    <ul>
+      <li>
+	Added a diffusion tensor heart dataset (heart-dt), high-resolution
+	and medium-resolution.  Diffusion tensor data was obtained through
+	the collaborative efforts of investigators in the Center for
+	Cardiovascular Bioinformatics and Modelling (P. Helm, R. Winslow),
+	at the NHLBI (D. Ennis, E. McVeigh), at the Cardiovascular Research
+	and Training Institute (R. MacLeod, B. Punske, S. Shome, and
+	J. Stinstra), and the Scientific Computing and Imaging Institute
+	(D. Weinstein, G. Kindlmann).
+      </li>
+    </ul>
+
+    <h1>
+      New Modules
+    </h1>
+
+    <h2>
+      SCIRun Modules&#xA0;(Category in parentheses)
+    </h2>
+    <ul>
+      <li>
+	MatrixOperations (Math)&#x2014;Fast ColumnMatrix multiply support
+      </li>
+      <li>
+	LinAlgBinary (Math)&#x2014;Added support for SparseRowMatrix X
+	DenseMatrix multiplication.
+      </li>
+    </ul>
+
+    <h2>
+      Teem Modules&#xA0;(Category in parentheses)
+    </h2>
+    <ul>
+      <li>
+	NrrdReader (DataIO)&#x2014;Fixed UI to better handle tuple axis.
+      </li>
+    </ul>
+
+    <h1>
+      Module Enhancements
+    </h1>
+
+    <h2>
+      SCIRun Modules&#xA0;(Category in parentheses)
+    </h2>
+    <ul>
+      <li>
+	SampleField (FieldsGeometry)&#x2014;added Reset Rake option
+      </li>
+    </ul>
+
+    <h2>
+      BioPSE Modules&#xA0;(Category in parentheses)
+    </h2>
+    <ul>
+      <li>
+	Incorporated support for 2D (triangle-mesh) finite element
+	problems.
+      </li>
+    </ul>
+
+    <h2>
+      Teem Modules&#xA0;(Category in parentheses)
+    </h2>
+    <ul>
+      <li>
+	TendEstim (Tend)&#x2014;Fixed bug which was causing auto-threshold to be
+	ignored.
+      </li>
+      <li>
+	AnalyzeToNrrd (DataIO)&#x2014;Now saves all files that have been loaded
+	instead of just the last one.
+      </li>
+    </ul>
+
+    <h1>
+      PowerApp Enhancements
+    </h1>
+    <ul>
+      <li>
+	Added PowerApp base class
+      </li>
+      <li>
+	Reorganized PowerApp File Menu to include Load Session, Save
+	Session, Save Session As, Save Image, and Quit.  The Save
+	Image option will save the image in the Viewer
+	Window. Sessions are now saved with a .ses extention.
+      </li>
+      <li>
+	Fixed "Save Image" in PowerApps
+      </li>
+      <li>
+	Fixed loading and saving session for BioTensor.
+      </li>
+      <li>
+	Fixed seeding glyphs on a grid for BioTensor.
+      </li>
+      <li>
+	Fixed BioTensor when loading a B-Matrix file.
+      </li>
+    </ul>
+
+    <h1>
+      Infrastructure Enhancements
+    </h1> 
+    <ul>
+      <li>
+	Update numerous GUIs to be consistent and more professional.
+	Added the "Find" button to allow the user to find the module that
+	a particular GUI belongs to.  All (most) modules now have
+	"Execute" and "Close" buttons.  Added more tooltips to make use
+	easier.
+      </li>
+      <li>Updated SCIRun Introduction tutorial to reflect v1.20.
+      </li>
+      <li>
+	Fixed Thirdparty OSX install script error (in install-dlcompat.sh).
+      </li>
+      <li>
+	Updated various files to improve OSX support (now works with 10.2,
+	10.3, gcc-3.1, and gcc-3.3)
+      </li>
+      <li>
+	Added a Clear button to the Module Log.  This clears the text as
+	well as the indicator on the module.
+      </li>
+      <li>
+	Fixed makefile and path variables for dynamic compilation.
+      </li>
+      <li>Fixed bug in TetVolMesh::get_cells
+      </li>
+      <li>Fixed file->clear hang
+      </li>
+    </ul>
+
+    <h1>
+      Documentation
+    </h1>
+    <ul>
+      <li>
+	Added a BioFEM tutorial
+      </li>
+      <li>
+	Updated BioPSE tutorial
+      </li>
+      <li>
+	Updated BioTensor tutorial
+      </li>
+    </ul>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+</html>

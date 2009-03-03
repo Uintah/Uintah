@@ -1,0 +1,16 @@
+<Uintah_Include>
+  <Level>
+    <Box>
+      <lower> [-.1,-.1,-.1] </lower>
+      <upper> [.1,0,0] </upper>
+      <patches> [2,1,1] </patches>
+      <extraCells> [1,1,1] </extraCells>
+    </Box>
+    <Box>
+      <lower> [-.1,0,0] </lower>
+      <upper> [0,.1,.1] </upper>
+      <extraCells> [1,1,1] </extraCells>
+    </Box>
+    <spacing> [.0125, .0125, .0125] </spacing>
+  </Level>
+</Uintah_Include>

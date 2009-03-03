@@ -1,0 +1,685 @@
+<html>
+<head>
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+<meta name="generator" content="Adobe GoLive 4">
+<title>SCIRun Introduction (Geometry Visualization)</title>
+</head>
+
+<body bgcolor="#a9a9a9">
+
+<A name="chapter-1">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
+<tr>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="../../index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
+</tr>
+
+<tr>
+<td>
+<center>
+<table border="0" cellpadding="0" cellspacing="5" width="600">
+<tr>
+<td>
+<center>
+<font face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="maroon">
+<H1>Chapter 1: SCIRun Introduction (Geometry Visualization)</H1></font>
+</center>
+
+<H2>Chapter Sections</H2>
+
+<UL>
+  <LI> <A href="#section-0">Chapter Overview</A>
+  <LI> <A href="#section-0a">Before Running SCIRun</A>
+  <LI> <A href="#section-1">FieldReader Module</A>
+  <LI> <A href="#section-4">Hooking Modules Together</A>
+  <LI> <A href="#section-4.1">Dynamic Compilation</A>
+  <LI> <A href="#section-5">Viewer Module</A>
+  <LI> <A href="#section-6">Navigating the ViewWindow</A>
+  <LI> <A href="#section-7">Mouse Controls</A>
+  <LI> <A href="#section-8">Setting Visualization Parameters</A>
+  <LI> <A href="#section-10">Saving and Reloading Networks</A>
+  <LI> <A href="#summary">Summary</A>
+</UL>    
+
+<H2>Appendices</H2>
+<UL>    
+  <LI> <A href="#appendix-1">Overview of Field Types</A>
+</UL>    
+    
+    <p>
+    <H2><A name="section-0">Chapter Overview</A></H2>
+    
+    <p> SCIRun is a <I>modular dataflow programming</I> Problem
+    Solving Environment (PSE).  SCIRun has a set of <I>Modules</I>
+    that perform specific functions on a data stream.  Each module
+    reads data from its input ports, calculates the data, and sends
+    new data from output ports.  In SCIRun, a module is represented by
+    a rectangular box on the Network Editor canvas.  Data flowing
+    between modules is represented by pipes connecting the modules.  A
+    group of connected modules is called a Dataflow Network, or
+    <I>Net</I> (see <A HREF="#figure-1.3">Figure 1.3</A>).  An
+    infinite number of nets can be created, each solving a separate
+    problem. Chapter 1 of this tutorial demonstrates the use of SCIRun
+    to visualize a tetrahedral mesh. This chapter demonstrates the
+    construction of  a network comprised of three standard modules:
+    FieldReader, ShowField, and Viewer.  This chapter also instructs the
+    user on reading <I>Field</I> data from a file, setting 
+    rendering properties for the nodes, edges, and faces (the nodes
+    are rendered as blue spheres), and rendering geometry to the
+    screen in an interactive ViewWindow.
+    
+    <H2><A name="section-0a">Before Running SCIRun</A></H2>
+    
+    <p>Before running the <I>scirun</I> executable, an environment
+    needs to be set up.  (For more information about environment
+    variables consult the <a
+    HREF="../../Guide/usersguide/srug4_4.html#sec:scirundata"><i>User's
+    Guide</i> 4.4, "SCIRUN_DATA"</a>.)
+
+    <p> The following environment variables need to be set
+        in the shell.  Note: another method of setting these variables is to run SCIRun once so that it will create a .scirunrc file in your home directory.  Then edit this file and uncomment the above variables and point them to your data.  This only needs to be done once.  Environment variables set in the shell will override the .scirunrc values.</p>
+
+    <ul><li value="1.">SCIRUN_DATA: points to the location of the
+      SCIRunData directory on the system.  Note: it is assumed the
+      SCIRunData directory has been downloaded.  (This is a
+      separate download from the SCIRun build.)
+      <P>
+      <li value="2.0">SCIRUN_DATASET: indicates which dataset to load.
+      (Note: example networks built in this tutorial can run
+      with a variety of data inputs: <i>e.g.</i>, sphere, brain-EG,
+      and utahtorso-lowres.)
+    </ul>
+
+    <p> Set these environment variables to the following values (See
+        Figures 1.0 (csh/tcsh) and 1.1 (bask,ksh,sh)):
+    <ol>
+         <li value="1.">Set the SCIRUN_DATA variable to point to
+             the location of SCIRunData (as shown in <b>Figure
+             1.0</b>). The &quot;path_to_data&quot; should represent
+             the directory path where data is stored on the 
+             computer (<i>e.g.</i>, /usr/local/SCIRunData/1.20.0).
+          <P>
+          <li value="2.">Set the SCIRUN_DATASET variable to
+             &quot;utahtorso-lowres&quot;.
+    </ol>
+  <center>
+  <p><img height="200" width="516" src="images/figures/1_2.gif"><br>
+  <b>Figure 1.0: Set environment variables using C-style shell (csh, tcsh).</b></p>
+  <p><img height="200" width="516" src="images/figures/1_2b.gif"><br>
+  <b>Figure 1.1: Setup using a Borne-style shell (bash, ksh, sh).</b></p>
+  </center>
+
+  <P><B>Running SCIRun</B></P>
+
+  Once these environment variables have been set, 
+  SCIRun is ready to run:
+
+  <p>
+  <ul>
+    <li> Move into the SCIRun executable directory and enter the
+    command <b>scirun</b>.  (Note: SCIRun cannot run as a background
+    application.)
+    <p>
+    <li>The SCIRun NetworkEditor window will appear on the screen (see
+    Figure 1.2.)  The NetworkEditor screen consists of three frames:
+    the GlobalView frame in the upper left corner, the Message frame in
+    the upper right corner, and the NetEdit frame. The NetEdit frame
+    is the large area where networks of modules are constructed.
+    Since the NetEdit frame is extensive, the GlobalView frame shows
+    which part of the NetEdit frame is currently being viewed. The
+    Message frame reports errors, warnings, and important information.
+  </ul>
+  <p>
+    <center>
+    <p><img width="400" height="440" src="images/figures/BlankSCIRun.gif"><br>
+    <b>Figure 1.2: SCIRun initial NetworkEditor window.</b></p>
+    </center>
+
+  <p>For more information about the NetworkEditor consult the <a
+    HREF="../../Guide/usersguide/srug4_2.html"><i>User's
+    Guide</i> 4.2, "Anatomy of the Main Window"</a>.</p>
+
+   <B>SCIRun Network Building Blocks: Modules and Connections</B>
+
+   <p>Lets begin constructing the network pictured in
+   <b>Figure 1.3</b>. (Note: subsequent tutorial chapters expand on
+   this network, adding more features and functionality.)  This
+   network loads a geometric mesh from a data file and renders it to
+   the screen.
+    
+    <center>
+    <a NAME=figure-1.3>
+    <p><img width="453" height="513" src="images/figures/Chap1Net.gif"><br>
+    <b>Figure 1.3: SCIRun NetworkEditor after building the Chapter 1 network.</b>
+    </center>
+    
+   <p> <B>Modules</B>: A module is a single-purpose unit that functions within a
+   dataflow environment. Modules have at least one input port
+   for receiving data, located at the top of the module, or one output
+   port for sending data, located at the bottom of the module (See
+   <B>Figure 1.4</B>).</p>
+
+<p>For a more complete description of modules, consult the <a
+    HREF="../../Guide/usersguide/srug2_3.html"><i>User's
+    Guide</i>, Section 2.3 "Modules and Networks."</a></p>
+
+<p> All modules have an indicator that alerts the user to messages
+    that exist in a module's log. Different colors represent different
+    types of messages. Gray means no message, blue represents a
+    Remark, yellow a Warning, and red an Error. To read messages, click the
+    module's indicator button to open the log window.</p>
+                                                              
+    <A NAME="figure-1.4">
+    <CENTER>
+    <IMG WIDTH="353" HEIGHT="273" SRC="images/figures/FieldReaderIcon.gif"><br>
+    <b>Figure 1.4: SCIRun Module Icon.</b>
+    </CENTER>
+   
+<p> <B>Pipes</B>: Data is transfered from one module to another using
+    dataflow connections,commonly refered to as <B>Pipes</B>. Each
+    dataflow pipe transfers a specific datatype in SCIRun, denoted by
+    a unique color. Pipes run from the output <B>Port</B> of one
+    module to the input <B>Port(s)</B> of one or more other modules.
+    Ports of the same color correspond to the same datatype and can
+    be connected. These colors are described in detail
+    in the <a
+    HREF="../../Guide/usersguide/srug5_1.html"><i>User's
+    Guide</i>, Section 4.2, "Anatomy of a Module"</a>.</p>
+
+<p> Two or more connected modules form a SCIRun network, or <i>net</i>.</p>
+
+    <H2><A name="section-1">FieldReader Module</A></H2>
+
+    <p> Now it is time to begin creating a SCIRun dataflow net.  First,
+    create a FieldReader module, which will be used to load a
+    SCIRun Field dataset from disk.
+
+    <ul><li>Select SCIRun-&gt;DataIO-&gt;FieldReader from the menu bar,
+    as shown in <b>Figure 1.5</b>.</ul>
+
+    <center>
+    <p><IMG WIDTH="452" HEIGHT="290" src="images/figures/FieldReaderMenu.gif"><br>
+    <b>Figure 1.5: Module Creation Menu (FieldReader).</b></p>
+    </center>
+
+    The FieldReader module will appear on the NetEdit frame.  Now,
+    set user interface parameters for this module, by 
+    pressing the <B><I>UI</I></B> button on the module.  This brings
+    up a standard file selection dialog (<b><A
+    HREF="#figure-1.6">Figure 1.6</A></b>).  Select the 
+    <B>utahtorso-lowres/utahtorso-lowres-voltage.tvd.fld</B> input
+    file. (Note: This file can be found in the SCIRunData directory.
+    This directory should have been downloaded and installed when
+    SCIRun was installed.)  This dataset contains a low resolution
+    tetrahedral mesh of a human torso.    
+
+    <center>
+    <A NAME="figure-1.6">
+    <p><img src="images/figures/FieldReaderGui.gif"><br>
+    <b>Figure 1.6: Field Reader file selection GUI.</b></p>
+    </center>
+
+    Once the file has been selected, the following will occur:
+
+    <UL>
+      <LI> The file selection window disappears.</p>
+      <LI> The module reads in the dataset (a SCIRun Field) and the progress bar turns green.</p> 
+      <LI> The module icon displays a number that indicates the amount
+	   of CPU time required to complete its execution (<b><A
+	   HREF="#figure-1.4">Figure 1.4</A></b>).</p>
+    </UL>
+
+    <B>Brief Field Overview</B>
+    <p>
+    A Field contains a geometric mesh, and a collection of data values
+    mapped on to the mesh. Data can be stored at the nodes, edges,
+    faces, and/or cells of the mesh. In this case, a
+    tetrahedral mesh with voltages defined at the nodes of the mesh
+    has been selected.
+    <p>
+    The dimensionality of the mesh type determines the available storage
+    locations. For example, a TriSurf mesh has nodes, edges, and
+    planar faces, but not cells, which are assumed to be
+    three-dimensional elements.  As a result, a TriSurf cannot store
+    data in cells, but can store data in edges or faces.
+    <p>
+    See <A HREF="#appendix-1">Appendix 1</A> for a description
+    of various types of geometric meshes, data values, and mappings
+    SCIRun supports.
+    
+    <H2><A name="section-4">Hooking Modules Together</A></H2>
+    
+    Now add a second module to the network.  This module is 
+    used to visualize various Field types. Then connect the
+    two modules in the canvas so data can flow between them.</p>
+   
+     <OL>
+        <LI value="1."> Create a ShowField module using the
+             SCIRun-&gt;Visualization menu (use the same menus 
+             used to create the FieldReader module).
+	<BR><P>
+        <LI> Position the mouse pointer over the yellow output port on
+             the FieldReader. Press and hold the mouse middle
+             button. The name of the port and lines indicating
+             possible data pipe connections will appear.
+	<BR><P>
+        <LI> Continue to hold the middle mouse button and drag the
+             mouse toward the first yellow ShowField input port.
+	<BR><P>
+        <LI> The line turns red, showing the desired connection has
+             been selected. See <B>Figure 1.7</B>.
+	<BR><P>
+      <center>
+      <img height="173" width="189" src="images/figures/FRtoSFconnect.gif"><br>
+      <b>Figure 1.7: Pipe Selection Options.</b>
+      </center>
+	<BR><P>
+         <LI> Release the mouse button.  A yellow pipe showing a data
+              flow connection between FieldReader and ShowField will
+              appear (<B>Figure 1.8</B>).
+	<BR><P>
+       <center>
+       <p><img width="190" height="173" src="images/figures/FRtoSFdone.gif"><br>
+       <b>Figure 1.8: Connected Dataflow Pipe.</b></p>
+       </center>
+    </ol>
+
+    <H2><A name="section-4.1">Dynamic Compilation</A></H2>
+
+    <p>
+    ShowField works with all SCIRun Field data types. However, these
+    data types must first be compiled into a shared library (as
+    needed) where they are saved for future use.  This process is
+    called &quot;Dynamic Compilation.&quot;</p>
+    <p>
+    Dynamic Compilation causes a delay when the module
+    executes the first time. For more details, refer to <a
+    href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">"Dynamic
+    Compilation."</a>
+
+    <p>
+    In addition, the module turns light yellow while it compiles, and
+    compilation output goes to the module's log as a remark. Note that
+    SGI computers can take over 30 seconds to perform dynamic
+    compilation.  When compilation is done, the modules color 
+    returns to a light gray.</p>
+
+    <p><b>Setting the ShowField User Interface</b></p>
+    
+    <p>
+    The ShowField module has options for changing the visual
+    representations of a Field's geometry.  To illustrate the module's
+    functionality, change ShowField parameters using
+    its GUI.  Specifically, change the color of the nodes
+    to blue spheres.
+    <p>
+    <OL>
+      <LI value="1.">Select the UI button on the ShowField module.
+      <BR><P>
+      <LI> Select the Default Color button near the bottom of the GUI
+           to change the default color and a separate Color Chooser GUI
+           appears.
+      <BR><P>
+      <LI> In the Color Chooser GUI, use the sliders to adjust the color
+           values. Set Red and Green to 0.00, and Blue to 1.00. The
+           Alpha value remains at 0.50.
+      <BR><P>
+      <LI> Select the Apply button in the Color Chooser GUI. Notice that the
+           Default Color swatch in the ShowField GUI has changed to
+           blue.  SCIRun and the ShowField GUI should now look like
+           <b>Figure 1.9</b>.
+      <BR><P>
+      <LI> Close the Color Chooser GUI.<BR><P>
+      <LI> Set the name of the Field to <U>Voltage</U>.  This 
+             makes it easy to identify the Field in the Viewer Window
+             (discussed later).
+      <BR><P>
+    </OL>
+
+    <center>
+    <p><IMG WIDTH="550" HEIGHT="699" SRC="images/figures/SF_Gui.gif"><br>
+    <b>Figure 1.9: ShowField GUI.</b>
+    </center>
+
+    <p>
+    Now change the scale and resolution of the nodes.</p>
+    <p>
+      <OL>
+        <LI> In the ShowField GUI, a slider widget represents the Node
+             Scale. The <I>Node Scale</I> interval can be increased or
+             decreased by a power of 10 by pressing the + or - button.
+             Set the Node Scale to 2.  Make sure the Node Display Type
+             is set to Spheres.
+	<BR><P>
+        <LI> Set the <I>Sphere, Box and Disk Resolution</I> to 5.
+	<BR><P>
+        <LI> Go to the Edges tab and turn off the display of edges by
+             deselecting the <I>Show Edges</I> check box.
+	<BR><P>
+        <LI> Go the the Faces tab and repeat the same action.
+	<BR><P>
+	<LI> Close the ShowField GUI by pressing the <I>Close</I> button.
+      </OL>
+      <P>
+      The ShowField module is ready to render the nodes as blue
+      spheres. The module Interactively Updates, by default, to
+      execute after every user GUI change. Users can select the
+      <I>Execute button only</I> box to delay all changes until the
+      <I>Execute</I> button is pressed. This is useful with large
+      dataset,when rendering takes a long time.)  Consult the <a
+      HREF="../../Guide/usersguide/srug5_22.html"> <i>User's
+      Guide</i> 5.22, "Executing a Network"</a>, for more details.</p>
+
+     <H2><A name="section-5">Viewer module</A></H2>
+    
+     The Viewer is the last module that will be added to the
+     network. (More information about the Viewer can be found in the <a
+     HREF="../../Guide/usersguide/srug6.html"><i>User's
+     Guide</i> 6.0, "Visualization with the Viewer."</a>) 
+
+     <OL>
+       <LI> Create a Viewer module by using the SCIRun-&gt;Render menu.
+       <BR><P> <LI> Connect the output port from ShowField into the
+       Viewer input port. Notice the Viewer module automatically
+       creates a new input port; this is an example of a SCIRun module
+       that has dynamic input ports.  This allows the Viewer module to
+       support an infinite number of geometry producing modules.
+       <BR><P> <LI> Open the ViewWindow by pressing the Viewer's UI
+       button.  <BR><P> <LI> In the ViewWindow, there is a set of
+       axes, representing X, Y, and Z directions.  To make all of
+       geometry piped to the viewer visible, press the <B>Autoview</B>
+       button.  (Note: any time the view is changed (scaled, rotated,
+       or translated), and you want the viewer to re-display
+       everything in the center of the screen, use the Autoview
+       button.)  At this point, the utah-torso voltage Field should
+       appear in the Viewer window.  It should appear similar to
+       <b>Figure 1.11</b>, but will be somewhat different as the
+       figure has been scaled and rotated.
+     </OL>
+     <p>
+     <center>
+     <img width="550" height="574" src="images/figures/Viewer.gif"><br>
+     <b>Figure 1.11: ViewWindow showing the utahtorso-lowres-voltage data.</b></p>
+     </center>
+    
+     <H2><A name="section-6">Navigating the ViewWindow</A></H2>
+    
+     Since the Viewer is one of the most important SCIRun modules, we
+     suggest reading <a
+     HREF="../../Guide/usersguide/srug6_1.html">User's
+     Guide 6.1, "Anatomy of the ViewWindow"</a> for a full description
+     of the Viewer.
+
+     <UL>
+        <LI> Please note, this tutorial was tested on a 1.8 Ghz
+        Linux/Nvidia GForce 3 at approximately 7 fps (frames per
+        second).  On slower systems with a frame rate less
+        than .3 fps, the GUI may appear to freeze.</UL></LI>
+           
+    <H2><A name="section-7">Mouse Controls</A></H2>
+    
+    In the Viewer, the mouse can be used to rotate, scale, and
+    translate the image.  The <a
+    HREF="../../Guide/usersguide/srug6_3.html#sec:view-mouse"><i>User's
+    Guide</i> 6.3, "Mouse Control in the Viewer Window"</a> provides more
+    complete information.</p>
+    <P>
+    <B>Translating the image (Left Button)</B> <p><ol><li> Move the
+      mouse to the center of the image.</p> <p><li> Click and hold the
+      left mouse button.</p> <p><li> Move the mouse to translate the
+      image.</p> <p><li> Release the button, and the image stays in its
+      new location.</p></ol>
+
+    <p><b>Rotating the image (Middle Button)</b></p>
+      <ol><p><li> Click and hold the middle mouse button.</p> 
+	<p><li>Move the mouse to rotate the image.</p>
+        <p><li>Release the mouse button.</p>
+	<p><li>If the mouse button is released while dragging, the
+	image will continue to rotate.</p>
+        <p><li>Click the middle mouse button to stop rotation.</p>
+      </ol>  
+    
+    <p><b>Scaling the scene (Right Button)</b></p>
+
+    <p><OL><li>Click the right mouse button and drag the mouse.</p>
+        <p><li>Move the mouse up or to the left to zoom the image out.</p>
+        <p><li>Move the mouse down or to the right to zoom the image in.</p>
+       </OL>
+    
+    <H2><A name="section-8">Setting Visualization Parameters</A></H2>
+    
+    Now review the controls at the bottom of the ViewWindow
+    (see <b>Figure 1.13</b>). Buttons located at the bottom of the
+    ViewWindow are used for the following functions:</p>
+ 
+      <UL>
+        <LI> Autoview: attempts to render all objects on the screen.
+        <BR><P>
+        <LI> Set Home View: captures the setting of the current view
+             (position, scale, angle, etc.) so it can be returned to
+             by clicking the "Go home" button.
+        <BR><P>
+        <LI> Go home: restores the current home view (set by the last
+        press of the <I>Set Home View</I> button.)
+        <BR><P>
+        <LI> Views: allows the user to select from a list of standard
+	  viewing angles and orientations. 
+      </UL>
+
+    <center>
+    <p><img height="64" width="500" src="images/figures/1_10_2.gif"><br>
+    <b>Figure 1.13: Basic Viewer controls.</b></p>
+    </center>
+           
+
+    <p>To access more display options:</p>
+    <ul>
+      <p><li> The Extended Control Window contains additional Viewer
+	  settings.To access the Extended Control Window, press the
+	  "+" button in the lower right corner of the ViewWindow (see
+	  <b>Figure 1.14</b>). For a more complete description, read
+	  the <a
+	  HREF="../../Guide/usersguide/srug6_4.html"><i>User's
+	  Guide</i> 6.4, "Extended Control Window.:"</a></p>
+          Notice that in the <I>Objects</I> list, the geometry is
+	  named "Voltage Nodes" based on the name given to the
+	  field using the ShowField GUI earlier.
+    </ul>
+
+    <center>
+    <p><IMG WIDTH="550" height="238" src="images/figures/ViewerSettings.gif"><br>
+    <b>Figure 1.14: Extended control window.</b></p>
+    </center>
+
+    <p><br>
+  <p>The Extended Control Window can be used to manipulate various
+  settings for individual objects.</p>
+     
+    <H2><A name="section-10">Saving and reloading networks</A></H2> 
+
+    Now that a three-module network has been created, save the net to
+    disk.  The net can  easily be reloaded in a future SCIRun
+    session.
+
+    <p>Saving a SCIRun network:</p>
+
+      <p><ol><li value="1.">Click on the File menu (at the top of the
+      Network Editor window) and select "Save As."</p>
+      <p><li>When the file browser appears, follow the prompt to choose a
+	  location and filename for the net. By convention, most
+	  nets are stored in the SCIRun/src/nets/ directory, but can be stored in another location.</p>
+      <p><li>For this example, store the net as
+	  SCIRun/src/nets/show-torso-mesh.net, as in <b>Figure
+	  1.15</b>. The .net suffix is used for SCIRun network files.</p>
+    </ol>
+
+    <p><b>Please note, to avoid losing work, it is strongly
+          recommended that nets be saved frequently.</p></b> <br>
+
+    <center>
+    <p><img height="216" width="320" src="images/figures/1_11.gif"><br>
+    <b>Figure 1.15: &quot;Save As&quot; GUI.</b>
+    </center>
+    </p>
+    
+<p><ol><li>Click the Save button. The network is saved, and the dialog
+      disappears.</p> <p><li>Exit SCIRun by selecting File-&gt;Quit from the NetworkEditor menu or pressing Ctrl-Q.</p></ol> <p>Loading a SCIRun
+      network:</p> <p><ol><li>Start SCIRun.</p> <p><li>From the File
+      drop-down menu, select the the Load... option.</p> <li>Select
+      SCIRun/src/nets/show-torso-mesh.net.  </p></ol>
+    
+    <center>
+    <p><img width="500" height="554" src="images/figures/1_12.gif"><br>
+    <b>Figure 1.16: GUI for loading a network.</b></p>
+    </center>
+    
+    <p>The net reloads into SCIRun, where it was previously saved. If
+    the net was saved with any of the module UIs open, those UIs
+    automatically re-open when loaded to the net.  After changing
+    module settings (<i>e.g.</i>, rotating the image in the ViewWindow
+    or changing the rendering color of the nodes in ShowField), there
+    are two options for re-saving the net:</p>
+   
+      <p><ol><li>Overwrite existing show-torso-mesh.net file by
+	  using File-&gt;Save from the drop-down menu.</p>  
+      <p><li>Save the net to a new file by using File-&gt;Save As...</p>  
+    </ol>
+    
+    <H2><A name="summary">Summary</A></H2> 
+    
+    <p>Chapter 1 demonstrated the construction of a three module
+    network to visualize the geometry of a mesh, and how to render
+    that mesh to the viewing window.  This chapter also instructed the
+    user on saving and reloading networks.
+
+    <p>Chapter 2 features additional tools to examine data values, 
+    and instructions for varying colors over the geometry. 
+
+
+
+    <H2><A name="appendix-1"><U>Appendix 1</U>: Overview of Field types</A></H2>
+    
+    <p>
+    SCIRun has nine geometric meshes available for Fields:
+    <p>
+    <img height="100" width="100" src="images/figures/pointcloud.gif" align="left" valign="top">
+    <b>PointCloudMesh:</b> unconnected points<br clear="all">
+    <p>
+    <img height="60" width="100" src="images/figures/ScanlineField.gif" align="left" valign="top">
+    <b>ScanlineMesh:</b> regularly segmented straight line (a regular 1D grid)<br clear="all">
+    <p>
+    <img height="60" width="100" src="images/figures/ContourField.gif" align="left" valign="top">
+    <b>CurveMesh:</b> segmented curve<br clear="all">
+    <p>
+    <img height="100" width="100" src="images/figures/ImageField.gif" align="left" valign="top">
+    <b>ImageMesh:</b> regular 2D grid (see note below)<br clear="all">
+    <p>
+    <img height="250" width="100" src="images/figures/StructQuadSurf2.gif" align="left" valign="top">
+    <b>Structured Quad Surface mesh:</b> surface made of connected
+quadrilaterals on a structured grid<br clear="all">
+    <p>
+    <img height="250" width="100" src="images/figures/StructHexVol2.gif" align="left" valign="top">
+    <b>Structured Hex Volume mesh:</b> subdivision of space into
+structured hexagonal elements<br clear="all">
+    <p>
+    <img height="65" width="100" src="images/figures/trisurf.gif" align="left" valign="top">
+    <b>TriSurfMesh:</b> surface made of connected triangles<br
+    clear="all">
+    <p>
+    <img height="83" width="100" src="images/figures/quadsurf.gif" align="left" valign="top">
+    <b>QuadSurfMesh:</b> surface made of connected quadrilaterals<br clear="all">
+    <p>
+    <img height="87" width="100" src="images/figures/latticevol.gif" align="left" valign="top">
+    <b>LatVolMesh:</b> regular 3D grid<br clear="all">
+    <p>
+    <img height="60" width="100" src="images/figures/tetvol.gif" align="left" valign="top">
+    <b>TetVolMesh:</b> subdivision of space into tetrahedral elements<br clear="all">
+    <p>
+    <img height="84" width="100" src="images/figures/hexvol.gif" align="left" valign="top">
+    <b>HexVolMesh:</b> subdivision of space into hexagonal elements<br clear="all"><br>
+    <p>
+    <img height="84" width="101" src="images/figures/prismvol.gif" align="left" valign="top">
+    <b>PrismVolMesh:</b> five faces, two triangular faces connected together by three quadrilateral faces. <br clear="all"><br>
+    <P>
+    The following data types can be stored in a Field:<BR>
+    <UL>
+      <LI>tensor
+      <LI>vector
+      <LI>double precision
+      <LI>floating point
+      <LI>integer
+      <LI>short integer
+      <LI>char
+      <LI>unsigned integer
+      <LI>unsigned short integer
+      <LI>unsigned char
+    </UL>
+    <p>
+    To continue the tutorial, go to <A HREF="#section-4">Hooking
+    Modules Together</A>
+
+    <P>
+      <A HREF="#chapter-1">Return to Top</A>
+</td>
+</tr>
+</table>
+</center>
+</td>
+</tr>
+<tr>
+<td><img height="35" width="600" src="images/sub-banner-bottom.jpg"
+    border="0" usemap="#sub-banner-bottom8abfd9a4"><map
+    name="sub-banner-bottom8abfd9a4"><area href="chapter_2.html"
+    coords="564,3,589,18" shape="rect"><area href="Intro.html"
+    coords="537,6,560,21" shape="rect"><area href="http://www.sci.utah.edu"
+    coords="6,7,67,31" shape="rect" title="SCI Institute"></map></td> 
+</tr>
+</table>
+</body>
+</html>
