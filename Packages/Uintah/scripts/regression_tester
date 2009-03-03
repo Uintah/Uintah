@@ -289,19 +289,28 @@ mem_check () {
 
 }
 
+lam_status () {
+
+    if [ $1 = "boot" ]; then
+        if [ -x /usr/bin/lamboot ]; then
+            /usr/bin/lamboot
+        fi
+    fi
+    if [ $1 = "halt" ]; then
+        if [ -x /usr/bin/lamhalt ]; then
+            /usr/bin/lamhalt
+        fi
+    fi
+}
+        
+
 run_test () {
 
     echo; date
 
     run_test_return=0
 
-    if test -x /usr/bin/lamboot; then
-        /usr/bin/lamboot
-    fi
-
-#    cd $results
-#    cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
-#    input_file=../$n.ups.rt
+    lam_status boot
 
     cp $in_file .
 
@@ -329,15 +338,12 @@ run_test () {
     else
         echo; echo "FAILURE running sus . . ."
         cat $n.out
-        continue
         run_test_return=1
     fi
 
     rm $n.ups
 
-    if test -x /usr/bin/lamhalt; then
-        /usr/bin/lamhalt
-    fi
+    lam_status halt
 
     return $run_test_return
 }
@@ -445,6 +451,12 @@ uda_name () {
     
 }
 
+run_compare () {
+    (run_test && compare_results && run_restart)
+    return $?
+
+}
+
 run_case () {
 
 ## Use indirect expansion to get the list of cases to run found 
@@ -465,16 +477,13 @@ run_case () {
     for n in ${!tc}; do
 	input_file inputs/$CASE $n
         uda_name $in_file
-#        run_test
-#        compare_results
-#        run_restart
+
         MPI=""
         
         if [ $create_goldStandard = "true" ]; then
             run_test;
         else
-            if (run_test && compare_results && run_restart) && $all_tests_pass ; 
-            then
+            if run_compare  && $all_tests_pass ; then
                 all_tests_pass=true
             else
                 all_tests_pass=false
