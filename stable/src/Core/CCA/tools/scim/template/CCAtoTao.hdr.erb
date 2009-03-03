@@ -1,0 +1,32 @@
+#include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/Bridge/BridgeServices.h>
+#include <SCIRun/Bridge/BridgeComponent.h>
+using namespace SCIRun;
+using namespace std;
+ 
+    extern "C" BridgeComponent* make_Bridge_<%= $templateArgv[0]%>();
+ 
+namespace SCIRun{
+  class Bridge1: public BridgeComponent {
+ public:
+    Bridge1();
+    virtual ~Bridge1();
+    virtual void setServices(const BridgeServices* svcs);
+ 
+  };
+} //namespace SCIRun
+namespace SCIRun{
+<port>
+  class my<%= $inPortName%>: public sci::cca::ports::<%= $inPortName%> {
+ public:
+    my<%= $inPortName%>();
+    virtual ~my<%= $inPortName%>();
+<method>
+    <%= $inMethodType%> <%= $inMethodName%>( <%= outDefArgs(method(:ccaType))%>);
+</method>
+    sci::cca::Services::pointer services;
+    BridgeServices* bservices;
+  };
+} //namespace SCIRun
+</port>
+
