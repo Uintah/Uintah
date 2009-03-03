@@ -5919,20 +5919,22 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
                     reactscalar[*iter] = fi->streamMixturefraction.d_rxnVars[0];
 
                   //Now hangle extra scalars
-                  for ( int i=0; i < static_cast<int>(d_extraScalars->size()); i++ ) {
+                  if (d_calcExtraScalars) {
+                    for ( int i=0; i < static_cast<int>(d_extraScalars->size()); i++ ) {
 
-                    CCVariable<double> extra_scalar;
-                    new_dw->getModifiable(extra_scalar, d_extraScalars->at(i)->getScalarLabel(), indx, patch); // get the current extra scalar
-                    string extra_scalar_name = d_extraScalars->at(i)->getScalarName(); // actual name of the extra scalar
-                    int BC_ID = fi->d_cellTypeID; 
+                      CCVariable<double> extra_scalar;
+                      new_dw->getModifiable(extra_scalar, d_extraScalars->at(i)->getScalarLabel(), indx, patch); // get the current extra scalar
+                      string extra_scalar_name = d_extraScalars->at(i)->getScalarName(); // actual name of the extra scalar
+                      int BC_ID = fi->d_cellTypeID; 
 
-                    for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++) {
-                      if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
-                          (d_extraScalarBCs[j]->d_BC_ID) == BC_ID) {
-                        extra_scalar[*iter] = d_extraScalarBCs[j]->d_scalarBC_value; //finally set the extra scalar's value
+                      for (int j=0; j < static_cast<int>(d_extraScalarBCs.size()); j++) {
+                        if ((d_extraScalarBCs[j]->d_scalar_name == extra_scalar_name)&&
+                            (d_extraScalarBCs[j]->d_BC_ID) == BC_ID) {
+                          extra_scalar[*iter] = d_extraScalarBCs[j]->d_scalarBC_value; //finally set the extra scalar's value
+                        }
                       }
-                    }
-                  } // end extra scalars
+                    } 
+                  }// end extra scalars
 
                 } // end point is inside piece & we have a flow type cell 
               } // cell iter loop 
