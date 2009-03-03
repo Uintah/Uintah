@@ -204,18 +204,21 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
       if(data.current>0)
         data.timestep=0;
       else
-        data.timestep++;
+        data.timestep++;  //this keeps track of how long it has been since the data has been updated on this processor
 
-      if(timesteps<=2)
+      if(timesteps<=2 || data.timestep<0)
       {
         //first couple timesteps should be set to last timestep to initialize the system
           //the first couple timesteps are not representative of the actual cost as extra things
           //are occuring.
+        //Also if the data's timestep is negative then also just take this value
+          //a negative value implies that current data was approximated through averaging. 
+          //Taking the most recent measurement will be more accurate than using the exponential average
         data.weight=data.current;
+        data.timestep=0;
       }
       else
       {
-
         //update exponential averagea
         data.weight=d_alpha*data.current+(1-d_alpha)*data.weight;
       }
@@ -309,21 +312,50 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     
     //compute regions in new level that are not in old
     
-    vector<Region> new_regions, dnew, dold(old_level.begin(),old_level.end());
+    vector<Region> new_regions_partial, new_regions, dnew, dold(old_level.begin(),old_level.end());
     
     //create dnew to contain a subset of the new patches
     for(int p=0; p<newgrid->getLevel(l)->numPatches(); p++) 
     {
       const Patch* patch = newgrid->getLevel(l)->getPatch(p);
+      //distribute regions accross processors in order to parallelize the differencing operation
       if(p%d_myworld->size()==d_myworld->myrank())
         dnew.push_back(Region(patch->getCellLowIndex__New(), patch->getCellHighIndex__New()));
     }
     
     //compute difference
-    new_regions=Region::difference(dnew, dold);
+    new_regions_partial=Region::difference(dnew, dold);
    
+    //gather new regions onto each processor (needed to erase old data)
 
-    int i=0;
+    int mysize=new_regions_partial.size();
+    vector<int> recvs(d_myworld->size(),0), displs(d_myworld->size(),0);
+
+    //gather new regions counts
+    MPI_Allgather(&mysize,1,MPI_INT,&recvs[0],1,MPI_INT,d_myworld->getComm());
+
+    int size=recvs[0]; 
+    recvs[0]*=sizeof(Region);
+
+    for(int p=1;p<d_myworld->size();p++)
+    {
+      //compute displacements
+      displs[p]=displs[p-1]+recvs[p-1];
+
+      //compute number of regions
+      size+=recvs[p];
+
+      //convert to bytes
+      recvs[p]*=sizeof(Region);
+    }
+   
+    new_regions.resize(size);
+  
+    //gather the regions
+    MPI_Allgatherv(&new_regions_partial[0],mysize,MPI_BYTE,&new_regions[0],&recvs[0],&displs[0],MPI_BYTE,d_myworld->getComm());
+
+
+    int p=0;
     //initialize weights 
     for(vector<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
     {
@@ -334,10 +366,16 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       //loop through datapoints
       for(CellIterator iter(low,high); !iter.done(); iter++)
       {
-        //add cost to current contribution
-        costs[l][*iter].weight=average_cost;
+        //erase any old data in map
+        costs[l].erase(*iter);
+
+        if(p++%d_myworld->size()==d_myworld->myrank())  //distribute new regions accross processors
+        {
+          //add cost to current contribution
+          costs[l][*iter].weight=average_cost;
+          costs[l][*iter].timestep=-2;  //use -2 as a sentinal saying that this weight has been approximated
+        }
       } //end cell iteration
-      i++;
     } //end region iteration
   }// end levels iteration
 }
