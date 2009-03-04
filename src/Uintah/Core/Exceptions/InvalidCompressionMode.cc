@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Exceptions/InvalidCompressionMode.h>
+#include <Uintah/Core/Exceptions/InvalidCompressionMode.h>
 #include <iostream>
 #include <sstream>
 using namespace Uintah;
@@ -70,5 +70,5 @@ const char* InvalidCompressionMode::message() const
 
 const char* InvalidCompressionMode::type() const
 {
-  return "Packages/Uintah::Exceptions::InvalidCompressionMode";
+  return "Uintah::Exceptions::InvalidCompressionMode";
 }

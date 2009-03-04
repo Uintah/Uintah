@@ -29,10 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
+#include <Uintah/StandAlone/tools/puda/tecplot.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>

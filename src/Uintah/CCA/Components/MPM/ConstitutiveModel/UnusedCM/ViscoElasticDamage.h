@@ -68,7 +68,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 #include "ConstitutiveModel.h"	
 #include <vector>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Uintah/CCA/Components/MPM/Util/Matrix3.h>
 
 
 namespace Uintah {

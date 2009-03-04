@@ -65,22 +65,22 @@ WARNING
 
 ************************************************************************/
 
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationConstVariables.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Ports/ModelInterface.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Components/Models/Radiation/RadiationVariables.h>
+#include <Uintah/CCA/Components/Models/Radiation/RadiationConstVariables.h>
 
 namespace Uintah {
 

@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 
 #include "ScalarFieldAverage.h"
 

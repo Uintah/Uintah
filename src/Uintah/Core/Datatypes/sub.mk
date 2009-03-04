@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/Core/Datatypes
+SRCDIR := Uintah/Core/Datatypes
 
 SRCS += \
         $(SRCDIR)/Archive.cc \
@@ -55,14 +55,14 @@ PSELIBS := \
         Core/Containers  \
         Core/Thread      \
         Core/Util        \
-        Packages/Uintah/Core/Grid        \
-        Packages/Uintah/Core/Parallel    \
-        Packages/Uintah/Core/Util        \
-        Packages/Uintah/Core/Math        \
-        Packages/Uintah/Core/Disclosure  \
-        Packages/Uintah/Core/ProblemSpec \
-        Packages/Uintah/CCA/Ports        \
-        Packages/Uintah/Core/Exceptions  
+        Uintah/Core/Grid        \
+        Uintah/Core/Parallel    \
+        Uintah/Core/Util        \
+        Uintah/Core/Math        \
+        Uintah/Core/Disclosure  \
+        Uintah/Core/ProblemSpec \
+        Uintah/CCA/Ports        \
+        Uintah/Core/Exceptions  
 
 ifeq ($(BUILD_DATAFLOW),yes)
   PSELIBS += Dataflow/Network Core/Geom

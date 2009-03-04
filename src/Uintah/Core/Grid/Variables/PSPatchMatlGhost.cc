@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Uintah/Core/Grid/Ghost.h>
+#include <Uintah/Core/Grid/Patch.h>
 
 using namespace Uintah;
 

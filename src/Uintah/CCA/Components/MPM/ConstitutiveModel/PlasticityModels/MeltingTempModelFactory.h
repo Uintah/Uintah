@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _MELTING_TEMP_MODELFACTORY_H_
 #define _MELTING_TEMP_MODELFACTORY_H_
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

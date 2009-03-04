@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <numeric>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Uintah/Core/Math/uintahshare.h>
 namespace Uintah {
 using namespace std;
 

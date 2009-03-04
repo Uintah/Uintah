@@ -37,19 +37,19 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/hypre_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolverParams.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Uintah/CCA/Components/Solvers/MatrixUtil.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/Stencil7.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/ConvergenceFailure.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Geometry/IntVector.h>

@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/TensorParticlesOperator.h>
+#include <Uintah/Dataflow/Modules/Operators/TensorParticlesOperator.h>
 
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
+#include <Uintah/Core/Datatypes/TensorParticles.h>
+#include <Uintah/Core/Datatypes/ScalarParticles.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
 
 #include <cmath>
 

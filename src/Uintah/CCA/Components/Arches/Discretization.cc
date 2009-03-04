@@ -30,19 +30,19 @@ DEALINGS IN THE SOFTWARE.
 
 //----- Discretization.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Uintah/CCA/Components/Arches/Discretization.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Grid/Variables/SoleVariable.h>
+#include <Uintah/Core/Grid/Task.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/Expon.h>
@@ -54,14 +54,14 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_all_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/apcal_all_fort.h>
 #ifdef divergenceconstraint
-#include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
 #endif
-#include <Packages/Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoef_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/uvelcoef_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/vvelcoef_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
 
 //****************************************************************************
 // Default constructor for Discretization

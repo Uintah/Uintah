@@ -31,18 +31,18 @@ DEALINGS IN THE SOFTWARE.
 
 /////////////////
 // Due to template instantiation ordering problems, these 2 includes must be first:
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Matrix3.h>
 #include <Core/Basis/Constant.h> 
 // End template needed .h files
 /////////////////
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/handleVariable.h>
+#include <Uintah/StandAlone/tools/uda2vis/handleVariable.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2vis/build.h>
-#include <Packages/Uintah/StandAlone/tools/uda2vis/wrap_nrrd.h>
+#include <Uintah/StandAlone/tools/uda2vis/Args.h>
+#include <Uintah/StandAlone/tools/uda2vis/build.h>
+#include <Uintah/StandAlone/tools/uda2vis/wrap_nrrd.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/PatchToField.h>
+#include <Uintah/Dataflow/Modules/Selectors/PatchToField.h>
 
 #include <Core/Geometry/Vector.h>
 

@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __EXCHANGE_COEFFICIENTS_H__
 #define __EXCHANGE_COEFFICIENTS_H__
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
 #include <vector>
 
 namespace Uintah {

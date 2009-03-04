@@ -32,10 +32,10 @@ DEALINGS IN THE SOFTWARE.
 #define __SOILFOAM_CONSTITUTIVE_MODEL_H__
 
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
 
 #include <cmath>
 

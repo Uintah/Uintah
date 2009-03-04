@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>      
+#include <Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>      
 
 c---------------------------------------------------------------------
 c     three-dimensional version

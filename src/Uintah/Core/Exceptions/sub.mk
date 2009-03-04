@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/Core/Exceptions
+SRCDIR := Uintah/Core/Exceptions
 
 SRCS += \
 	$(SRCDIR)/ConvergenceFailure.cc     \

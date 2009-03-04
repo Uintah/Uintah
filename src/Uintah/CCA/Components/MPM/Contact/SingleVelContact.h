@@ -33,16 +33,16 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __SINGLE_VEL_H__
 #define __SINGLE_VEL_H__
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h> 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h> 
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/Task.h>
 
 
 

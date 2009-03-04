@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_PROCESSORGROUP_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
-#include <Packages/Uintah/Core/Parallel/uintahshare.h>
+#include <Uintah/Core/Parallel/uintahshare.h>
 namespace Uintah {
 /**************************************
 

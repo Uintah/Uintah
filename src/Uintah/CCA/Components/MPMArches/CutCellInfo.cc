@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfo.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Uintah/CCA/Components/MPMArches/CutCellInfo.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <iostream>
 
 using namespace std;

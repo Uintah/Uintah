@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Grid.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Containers/StringUtil.h>

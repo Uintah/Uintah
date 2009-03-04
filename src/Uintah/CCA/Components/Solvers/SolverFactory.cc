@@ -29,13 +29,13 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <sci_defs/hypre_defs.h>
-#include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
-#include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/AMRSolver.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/CCA/Components/Solvers/SolverFactory.h>
+#include <Uintah/CCA/Components/Solvers/CGSolver.h>
+#include <Uintah/CCA/Components/Solvers/DirectSolve.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolver.h>
+#include <Uintah/CCA/Components/Solvers/AMRSolver.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using namespace Uintah;

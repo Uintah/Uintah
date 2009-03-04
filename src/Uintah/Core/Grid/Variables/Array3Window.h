@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_Array3Window_H
 #define UINTAH_HOMEBREW_Array3Window_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3Data.h>
+#include <Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/Grid/Variables/Array3Data.h>
 #include <climits>
 #include <Core/Geometry/IntVector.h>
 

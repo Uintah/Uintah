@@ -32,10 +32,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ProblemSpecINTERFACE_H
 #define UINTAH_HOMEBREW_ProblemSpecINTERFACE_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <Uintah/CCA/Ports/uintahshare.h>
 
 #include <string>
 

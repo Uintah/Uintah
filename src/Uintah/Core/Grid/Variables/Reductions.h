@@ -120,7 +120,7 @@ namespace Uintah {
 #ifdef __GNUG__      
    public:
        // Keep gcc quiet, to avoid:
-       // warning: all member functions in class `Packages/Uintah::Reductions' are private
+       // warning: all member functions in class `Uintah::Reductions' are private
        Reductions(Reductions*);
 #endif
    };

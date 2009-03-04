@@ -35,16 +35,16 @@ DEALINGS IN THE SOFTWARE.
 // can work with the input interface. The actual precond setup/destroy is
 // done in the classes derived from HyprePrecondBase.
 //--------------------------------------------------------------------------
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondSMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondPFMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondSparseMSG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondJacobi.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondDiagonal.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolverParams.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondSMG.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondPFMG.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondSparseMSG.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondJacobi.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondDiagonal.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Thread/Time.h>

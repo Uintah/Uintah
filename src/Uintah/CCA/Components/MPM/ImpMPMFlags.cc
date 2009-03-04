@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/ImpMPMFlags.h>
+#include <Uintah/CCA/Components/MPM/ImpMPMFlags.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

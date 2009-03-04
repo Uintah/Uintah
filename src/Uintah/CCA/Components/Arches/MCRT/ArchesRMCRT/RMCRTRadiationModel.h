@@ -7,9 +7,9 @@
 #ifndef Uintah_Component_Arches_RMCRTRadiationModel_h
 #define Uintah_Component_Arches_RMCRTRadiationModel_h
 
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
 

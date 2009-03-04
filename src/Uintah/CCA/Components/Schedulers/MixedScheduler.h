@@ -32,13 +32,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 #define UINTAH_HOMEBREW_MIXEDSCHEDULER_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Components/Schedulers/MPIScheduler.h>
+#include <Uintah/CCA/Components/Schedulers/Relocate.h>
+#include <Uintah/CCA/Components/Schedulers/MessageLog.h>
+#include <Uintah/CCA/Components/Schedulers/ThreadPool.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
  
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Task.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>

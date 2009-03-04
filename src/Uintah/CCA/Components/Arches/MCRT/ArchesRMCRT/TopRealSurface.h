@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef TopRealSurface_H
 #define TopRealSurface_H
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
 
 class TopRealSurface : public RealSurface {
   

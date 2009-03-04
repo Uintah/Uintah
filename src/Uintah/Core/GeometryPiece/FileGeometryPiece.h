@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __FILE_GEOMETRY_OBJECT_H__
 #define __FILE_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/SmoothGeomPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/GeometryPiece/SmoothGeomPiece.h>
+#include <Uintah/Core/Grid/Box.h>
 #include <Core/Geometry/Point.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -41,7 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////

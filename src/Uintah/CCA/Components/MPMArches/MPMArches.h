@@ -60,13 +60,13 @@ WARNING
 
 ****************************************/
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
 
 namespace Uintah {
  struct cutcell { double d_cutcell[13]; }; //centroids/surface normals/areafractions
@@ -78,11 +78,11 @@ namespace SCIRun {
 
 }
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Uintah/CCA/Components/MPM/RigidMPM.h>
+#include <Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
 
 #include <Core/Geometry/Vector.h>
 

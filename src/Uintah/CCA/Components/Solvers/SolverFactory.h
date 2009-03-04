@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
-#define Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
+#ifndef Uintah_CCA_Components_Solvers_SolverFactory_h
+#define Uintah_CCA_Components_Solvers_SolverFactory_h
 
 /*--------------------------------------------------------------------------
 CLASS
@@ -65,10 +65,10 @@ WARNING
    sus cannot pass linking.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
 
-#include <Packages/Uintah/CCA/Components/Solvers/uintahshare.h>
+#include <Uintah/CCA/Components/Solvers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;
@@ -85,4 +85,4 @@ namespace Uintah {
     };
 } // End namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_SolverFactory_h
+#endif // Uintah_CCA_Components_Solvers_SolverFactory_h

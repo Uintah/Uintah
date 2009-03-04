@@ -32,26 +32,26 @@ DEALINGS IN THE SOFTWARE.
 
 #include <fstream> // work around compiler bug with RHEL 3
 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
+#include <Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Uintah/CCA/Components/Arches/Discretization.h>
+#include <Uintah/CCA/Components/Arches/PressureSolver.h>
+#include <Uintah/CCA/Components/Arches/Source.h>
+#include <Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <cstdlib>
 #include <cstdio>

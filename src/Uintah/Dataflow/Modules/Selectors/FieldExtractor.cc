@@ -58,7 +58,7 @@ LOG
     Created January 5, 1999
 ****************************************/
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
+#include <Uintah/Dataflow/Modules/Selectors/FieldExtractor.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Containers/StringUtil.h>
@@ -69,17 +69,17 @@ LOG
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Timer.h>
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignArray3.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignArray3.h>
+#include <Uintah/Dataflow/Ports/ArchivePort.h>
  
 #include <iostream> 
 #include <sstream>

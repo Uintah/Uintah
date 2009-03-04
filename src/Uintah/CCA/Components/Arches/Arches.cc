@@ -30,36 +30,36 @@ DEALINGS IN THE SOFTWARE.
 
 //----- Arches.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExplicitSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/SmagorinskyModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/IncDynamicProcedure.h>
-#include <Packages/Uintah/CCA/Components/Arches/CompDynamicProcedure.h>
-#include <Packages/Uintah/CCA/Components/Arches/CompLocalDynamicProcedure.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Uintah/CCA/Components/Arches/ExplicitSolver.h>
+#include <Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <Uintah/CCA/Components/Arches/Properties.h>
+#include <Uintah/CCA/Components/Arches/SmagorinskyModel.h>
+#include <Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <Uintah/CCA/Components/Arches/IncDynamicProcedure.h>
+#include <Uintah/CCA/Components/Arches/CompDynamicProcedure.h>
+#include <Uintah/CCA/Components/Arches/CompLocalDynamicProcedure.h>
+#include <Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
+#include <Uintah/CCA/Components/Arches/OdtClosure.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Grid/Variables/ReductionVariable.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 
 #include <Core/Math/MinMax.h>
@@ -74,7 +74,7 @@ using std::string;
 using namespace Uintah;
 using namespace SCIRun;
 #ifdef PetscFilter
-#include <Packages/Uintah/CCA/Components/Arches/Filter.h>
+#include <Uintah/CCA/Components/Arches/Filter.h>
 #endif
 
 const int Arches::NDIM = 3;

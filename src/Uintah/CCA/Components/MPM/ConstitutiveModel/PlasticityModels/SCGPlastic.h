@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "PlasticityModel.h"    
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

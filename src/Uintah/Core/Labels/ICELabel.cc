@@ -29,13 +29,13 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Labels/ICELabel.h>
+#include <Uintah/Core/Grid/Variables/Stencil7.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
 
 using namespace Uintah;
 

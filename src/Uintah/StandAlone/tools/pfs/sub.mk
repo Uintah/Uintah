@@ -29,7 +29,7 @@
 # 
 # 
 
-SRCDIR := Packages/Uintah/StandAlone/tools/pfs
+SRCDIR := Uintah/StandAlone/tools/pfs
 
 ###############################################
 # pfs
@@ -38,18 +38,18 @@ SRCS := $(SRCDIR)/pfs.cc
 PROGRAM := $(SRCDIR)/pfs
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Uintah
 else
   PSELIBS := \
-      Packages/Uintah/Core/Grid \
-      Packages/Uintah/Core/Util \
-      Packages/Uintah/Core/Parallel \
-      Packages/Uintah/Core/Exceptions \
-      Packages/Uintah/Core/Math \
-      Packages/Uintah/Core/ProblemSpec \
-      Packages/Uintah/CCA/Ports \
-      Packages/Uintah/CCA/Components/ProblemSpecification \
-      Packages/Uintah/Core/GeometryPiece \
+      Uintah/Core/Grid \
+      Uintah/Core/Util \
+      Uintah/Core/Parallel \
+      Uintah/Core/Exceptions \
+      Uintah/Core/Math \
+      Uintah/Core/ProblemSpec \
+      Uintah/CCA/Ports \
+      Uintah/CCA/Components/ProblemSpecification \
+      Uintah/Core/GeometryPiece \
       Core/Exceptions \
       Core/Geometry 
 endif
@@ -65,18 +65,18 @@ SRCS := $(SRCDIR)/pfs2.cc
 PROGRAM := $(SRCDIR)/pfs2
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Uintah
 else
   PSELIBS := \
-     Packages/Uintah/Core/Grid \
-     Packages/Uintah/Core/Util \
-     Packages/Uintah/Core/Parallel \
-     Packages/Uintah/Core/Exceptions \
-     Packages/Uintah/Core/Math \
-     Packages/Uintah/Core/ProblemSpec \
-     Packages/Uintah/CCA/Ports \
-     Packages/Uintah/CCA/Components/ProblemSpecification \
-     Packages/Uintah/Core/GeometryPiece \
+     Uintah/Core/Grid \
+     Uintah/Core/Util \
+     Uintah/Core/Parallel \
+     Uintah/Core/Exceptions \
+     Uintah/Core/Math \
+     Uintah/Core/ProblemSpec \
+     Uintah/CCA/Ports \
+     Uintah/CCA/Components/ProblemSpecification \
+     Uintah/Core/GeometryPiece \
      Core/Exceptions \
      Core/Geometry
 endif

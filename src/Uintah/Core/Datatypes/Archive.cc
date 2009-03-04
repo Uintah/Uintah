@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/Datatypes/Archive.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 

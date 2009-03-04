@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #include "ScalarDiags.h"
 #include "TensorDiags.h"
 
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <iomanip>
 #include <sstream>
 using namespace std;

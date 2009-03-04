@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_TableInterface_h
 #define Uintah_TableInterface_h
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
 

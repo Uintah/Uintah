@@ -28,9 +28,9 @@
 # 
 # 
 # 
-#Makefile fragment for the Packages/Uintah/Dataflow directory
+#Makefile fragment for the Uintah/Dataflow directory
 
-SRCDIR := Packages/Uintah/Dataflow
+SRCDIR := Uintah/Dataflow
 SUBDIRS := \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Modules \

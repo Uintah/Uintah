@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "FieldSelection.h"
 #include "utils.h"
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <algorithm>
 #include <iostream>
 

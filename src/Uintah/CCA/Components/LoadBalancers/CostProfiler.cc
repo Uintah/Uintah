@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
+#include <Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Uintah/Core/Grid/Patch.h>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
 using namespace SCIRun;

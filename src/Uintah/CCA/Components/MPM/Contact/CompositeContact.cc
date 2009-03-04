@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/CompositeContact.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Uintah/CCA/Components/MPM/Contact/CompositeContact.h>
+#include <Uintah/Core/Labels/MPMLabel.h>
+#include <Uintah/CCA/Components/MPM/MPMFlags.h>
 
 using namespace std;
 using namespace Uintah;

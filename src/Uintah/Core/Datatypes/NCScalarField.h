@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef SCI_project_NCScalarField_h
 #define SCI_project_NCScalarField_h 1
 
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
 
 #include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Geometry/Point.h>
@@ -79,7 +79,7 @@ public:
   virtual double get_value( int i, int j, int k);
   void computeHighLowIndices();
 
-//   virtual ScalarField::Rep getType(){ return Packages/UintahScalarField::NC;}
+//   virtual ScalarField::Rep getType(){ return UintahScalarField::NC;}
 
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; }

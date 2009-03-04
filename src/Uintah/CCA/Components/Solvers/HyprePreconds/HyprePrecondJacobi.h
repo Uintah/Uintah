@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_HyprePrecondJacobi_h
-#define Packages_Uintah_CCA_Components_Solvers_HyprePrecondJacobi_h
+#ifndef Uintah_CCA_Components_Solvers_HyprePrecondJacobi_h
+#define Uintah_CCA_Components_Solvers_HyprePrecondJacobi_h
 
 /*--------------------------------------------------------------------------
 CLASS
@@ -64,7 +64,7 @@ WARNING
    matrices.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
 
 namespace Uintah {
   
@@ -88,4 +88,4 @@ namespace Uintah {
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HyprePrecondJacobi_h
+#endif // Uintah_CCA_Components_Solvers_HyprePrecondJacobi_h

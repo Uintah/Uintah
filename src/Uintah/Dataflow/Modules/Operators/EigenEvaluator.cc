@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Math/Matrix3.h> // 
+#include <Uintah/Core/Math/Matrix3.h> // 
 #include <Core/Basis/HexTrilinearLgn.h>        // Note, for template instantiation on some compilers
 #include <Core/Datatypes/LatVolMesh.h>         // these includes must appear in this order.
 #include <Core/Geometry/Point.h>               //

@@ -30,12 +30,12 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef UINTAH_ICEDIFFUSION_H
 #define UINTAH_ICEDIFFUSION_H
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/uintahshare.h>
+#include <Uintah/CCA/Components/ICE/uintahshare.h>
 namespace Uintah { 
   class DataWarehouse;
   

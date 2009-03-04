@@ -34,18 +34,18 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsTable_h
 
 // includes for Arches
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/MixingRxnTable.h>
+#include <Uintah/CCA/Components/Arches/TabProps/StateTable.h>
+#include <Uintah/CCA/Components/Arches/Properties.h>
 
 // includes for Uintah
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
 
 
 /***************************************************************************

@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 // Headers
 #include <Core/Util/Assert.h>
-#include <Packages/Uintah/Core/Math/StaticNumberArray.h>
+#include <Uintah/Core/Math/StaticNumberArray.h>
 
 namespace Uintah {
 

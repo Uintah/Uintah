@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderFactory.h>
-#include <Packages/Uintah/CCA/Components/Regridder/HierarchicalRegridder.h>
-#include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
-#include <Packages/Uintah/CCA/Components/Regridder/TiledRegridder.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/CCA/Components/Regridder/RegridderFactory.h>
+#include <Uintah/CCA/Components/Regridder/HierarchicalRegridder.h>
+#include <Uintah/CCA/Components/Regridder/BNRRegridder.h>
+#include <Uintah/CCA/Components/Regridder/TiledRegridder.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
 

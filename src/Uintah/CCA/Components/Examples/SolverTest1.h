@@ -29,15 +29,15 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef Packages_Uintah_CCA_Components_Examples_SolverTest1_h
-#define Packages_Uintah_CCA_Components_Examples_SolverTest1_h
+#ifndef Uintah_CCA_Components_Examples_SolverTest1_h
+#define Uintah_CCA_Components_Examples_SolverTest1_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
+#include <Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;

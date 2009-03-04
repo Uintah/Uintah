@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVHNode.h>
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVHLeaf.h>
+#include <Uintah/Core/Grid/PatchBVH/PatchBVHNode.h>
+#include <Uintah/Core/Grid/PatchBVH/PatchBVHLeaf.h>
 
 namespace Uintah {
 

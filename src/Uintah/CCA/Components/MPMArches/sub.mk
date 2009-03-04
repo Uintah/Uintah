@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPMArches
+SRCDIR   := Uintah/CCA/Components/MPMArches
 
 SRCS     += \
 	$(SRCDIR)/MPMArches.cc \
@@ -43,19 +43,19 @@ SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports          \
-	Packages/Uintah/Core/Grid          \
-	Packages/Uintah/Core/Util          \
-	Packages/Uintah/Core/Labels        \
-	Packages/Uintah/Core/Disclosure    \
-	Packages/Uintah/Core/Parallel      \
-	Packages/Uintah/Core/ProblemSpec   \
-	Packages/Uintah/Core/Exceptions    \
-	Packages/Uintah/Core/Math          \
-	Packages/Uintah/CCA/Components/MPM \
-	Packages/Uintah/CCA/Components/Arches \
-	Packages/Uintah/CCA/Components/Arches/fortran \
-	Packages/Uintah/CCA/Components/Arches/Mixing  \
+	Uintah/CCA/Ports          \
+	Uintah/Core/Grid          \
+	Uintah/Core/Util          \
+	Uintah/Core/Labels        \
+	Uintah/Core/Disclosure    \
+	Uintah/Core/Parallel      \
+	Uintah/Core/ProblemSpec   \
+	Uintah/Core/Exceptions    \
+	Uintah/Core/Math          \
+	Uintah/CCA/Components/MPM \
+	Uintah/CCA/Components/Arches \
+	Uintah/CCA/Components/Arches/fortran \
+	Uintah/CCA/Components/Arches/Mixing  \
 	Core/Exceptions \
 	Core/Util       \
 	Core/Thread     \

@@ -35,9 +35,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 

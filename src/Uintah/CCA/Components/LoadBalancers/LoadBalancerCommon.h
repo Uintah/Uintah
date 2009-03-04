@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_LoadBalancerCommon_H
 #define UINTAH_HOMEBREW_LoadBalancerCommon_H
 
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/Level.h>
 
 #include <set>
 #include <string>

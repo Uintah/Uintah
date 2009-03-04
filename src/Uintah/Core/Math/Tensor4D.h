@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sgi_stl_warnings_on.h>
 
 // Base class
-#include <Packages/Uintah/Core/Math/Tensor.h>
+#include <Uintah/Core/Math/Tensor.h>
 
 namespace Uintah {
 

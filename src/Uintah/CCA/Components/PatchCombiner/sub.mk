@@ -32,19 +32,19 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/PatchCombiner
+SRCDIR   := Uintah/CCA/Components/PatchCombiner
 
 SRCS     += $(SRCDIR)/PatchCombiner.cc $(SRCDIR)/UdaReducer.cc
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/DataArchive \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/ProblemSpec \
+	Uintah/CCA/Ports \
+	Uintah/Core/DataArchive \
+	Uintah/Core/Parallel    \
+	Uintah/Core/Grid        \
+	Uintah/Core/Util        \
+	Uintah/Core/Disclosure  \
+	Uintah/Core/Exceptions  \
+	Uintah/Core/ProblemSpec \
 	Core/OS          \
 	Core/Exceptions  \
 	Core/Containers  \

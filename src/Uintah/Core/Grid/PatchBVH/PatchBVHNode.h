@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define PATCH_BVH_NODE_H
 
 
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVHBase.h>
+#include <Uintah/Core/Grid/PatchBVH/PatchBVHBase.h>
 #include <vector>
 namespace Uintah {
 

@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/EOS/Tillotson.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Components/ICE/EOS/Tillotson.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 #include <iomanip>

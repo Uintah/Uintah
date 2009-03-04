@@ -35,22 +35,22 @@ DEALINGS IN THE SOFTWARE.
 #include <fstream> // work around compiler bug with RHEL 3
 
 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/DORadiationModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#include <Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
+#include <Uintah/CCA/Components/Arches/Radiation/DORadiationModel.h>
+#include <Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
 #ifdef HAVE_HYPRE
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
+#include <Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
 #endif
-//#include <Packages/Uintah/CCA/Components/Arches/Mixing/Common.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+//#include <Uintah/CCA/Components/Arches/Mixing/Common.h>
+#include <Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Time.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
 #include <cmath>
 #include <Core/Math/MiscMath.h>
 
@@ -59,21 +59,21 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rordrtn_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rordr_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rordrss_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rordrtn_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/radarray_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/radcoef_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/radwsgg_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rdombc_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rshsolve_fort.h>
+#include <Uintah/CCA/Components/Arches/Radiation/fortran/rshresults_fort.h>
 //****************************************************************************
 // Default constructor for DORadiationModel
 //****************************************************************************

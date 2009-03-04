@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h> 
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Uintah/CCA/Components/MPM/MPMCommon.h> 
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Grid/Level.h>
 
 
 using namespace Uintah;

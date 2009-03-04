@@ -29,10 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/CCA/Components/Schedulers/SendState.h>
+#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
+#include <Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Uintah/Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;

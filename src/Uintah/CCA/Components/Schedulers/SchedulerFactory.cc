@@ -28,15 +28,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
+#include <Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
+#include <Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Uintah/CCA/Components/Schedulers/SingleProcessorScheduler.h>
+#include <Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 
 using std::cerr;

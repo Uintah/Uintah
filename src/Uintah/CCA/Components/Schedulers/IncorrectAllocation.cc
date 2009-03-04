@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/IncorrectAllocation.h>
+#include <Uintah/CCA/Components/Schedulers/IncorrectAllocation.h>
 #include <sstream>
 
 using namespace Uintah;

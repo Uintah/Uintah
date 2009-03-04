@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Regridder/PatchFixer.h>
+#include <Uintah/CCA/Components/Regridder/PatchFixer.h>
 
 #include <stack>
 

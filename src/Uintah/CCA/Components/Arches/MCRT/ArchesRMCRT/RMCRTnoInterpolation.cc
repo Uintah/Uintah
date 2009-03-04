@@ -30,21 +30,21 @@ DEALINGS IN THE SOFTWARE.
 
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/FrontRealSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BackRealSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/LeftRealSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RightRealSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/ray.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VolElement.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MakeTableFunction.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/FrontRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BackRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/LeftRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RightRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/ray.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VolElement.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MakeTableFunction.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 
 #include <cmath>
 #include <iostream>
@@ -814,10 +814,10 @@ RMCRTsolver(){
 
 
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-   //  #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmark.cc>
-    #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmarkSurf.cc>
-   //   #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputNonblackSurf.cc>
-   // #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputScattering.cc>   
+   //  #include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmark.cc>
+    #include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmarkSurf.cc>
+   //   #include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputNonblackSurf.cc>
+   // #include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputScattering.cc>   
      
    MTRand MTrng;
    VolElement obVol;

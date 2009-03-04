@@ -31,17 +31,17 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ModelMaker_H
 #define UINTAH_HOMEBREW_ModelMaker_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Util/Handle.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <Uintah/CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 /**************************************

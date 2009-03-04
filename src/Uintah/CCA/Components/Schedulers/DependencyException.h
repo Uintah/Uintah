@@ -44,9 +44,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_COMPONENTS_SCHEDULERS_DEPENDENCY_EXCEPTION_H
 #define UINTAH_COMPONENTS_SCHEDULERS_DEPENDENCY_EXCEPTION_H
 
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Patch.h>
 #include <Core/Exceptions/Exception.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>

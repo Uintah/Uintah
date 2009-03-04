@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_PERPATCH_H
 #define UINTAH_HOMEBREW_PERPATCH_H
 
-#include <Packages/Uintah/Core/Grid/Variables/PerPatchBase.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Grid/Variables/PerPatchBase.h>
+#include <Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace Uintah {

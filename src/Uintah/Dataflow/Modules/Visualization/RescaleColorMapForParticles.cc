@@ -43,8 +43,8 @@ DEALINGS IN THE SOFTWARE.
 #include "RescaleColorMapForParticles.h"
 #include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
+#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
+#include <Uintah/Core/Datatypes/ScalarParticles.h>
 
 namespace Uintah {
 

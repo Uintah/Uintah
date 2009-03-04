@@ -32,8 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #include "ScalarDiags.h"
 #include "VectorDiags.h"
 
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
 
 using namespace std;
 

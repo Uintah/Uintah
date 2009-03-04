@@ -29,20 +29,20 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/CCA/Components/LoadBalancers/DynamicLoadBalancer.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/Regridder.h>
+#include <Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/SimulationState.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>

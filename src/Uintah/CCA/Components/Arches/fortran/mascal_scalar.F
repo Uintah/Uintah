@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #include "param4.h"
 C--------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996

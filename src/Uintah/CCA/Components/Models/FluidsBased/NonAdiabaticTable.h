@@ -29,15 +29,15 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef Packages_Uintah_CCA_Components_Examples_NonAdiabaticTable_h
-#define Packages_Uintah_CCA_Components_Examples_NonAdiabaticTable_h
+#ifndef Uintah_CCA_Components_Examples_NonAdiabaticTable_h
+#define Uintah_CCA_Components_Examples_NonAdiabaticTable_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
+#include <Uintah/CCA/Ports/ModelInterface.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
 
 #include <vector>
 

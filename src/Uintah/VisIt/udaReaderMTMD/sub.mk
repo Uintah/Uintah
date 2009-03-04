@@ -29,12 +29,12 @@
 # 
 # 
 
-# Makefile fragment for the Packages/Uintah/VisIt directory
+# Makefile fragment for the Uintah/VisIt directory
 
 # 'SRCDIR' get's overwritten when the actual rules execute in make, so
 # I use my VISIT_SRCDIR to avoid this from happening...
 
-VISIT_SRCDIR := Packages/Uintah/VisIt/udaReaderMTMD
+VISIT_SRCDIR := Uintah/VisIt/udaReaderMTMD
 
 # Force the make system to do the visit_stuff:
 
@@ -65,7 +65,7 @@ $(links_to_create) :
 # This creates the VisIt Makefile.  Have to move your Makefile out of
 # the way, rename VisIt's Makefile, and put ours back.
 #
-${VISIT_SRCDIR}/Makefile.visit : lib/libPackages_Uintah_StandAlone_tools_uda2vis.so
+${VISIT_SRCDIR}/Makefile.visit : lib/libUintah_StandAlone_tools_uda2vis.so
 	@echo create visit makefile
 	@cd ${VISIT_SRCDIR}; \
 	  rm -f Makefile.visit; \

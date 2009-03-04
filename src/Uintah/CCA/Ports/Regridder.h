@@ -32,13 +32,13 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_REGRIDDER_H
 
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/SchedulerP.h>
+#include <Uintah/CCA/Ports/uintahshare.h>
 #include <vector>
 using namespace std;
 using SCIRun::IntVector;

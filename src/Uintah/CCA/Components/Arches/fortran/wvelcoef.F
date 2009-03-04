@@ -33,7 +33,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/wvelcoef_fort.h>
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity

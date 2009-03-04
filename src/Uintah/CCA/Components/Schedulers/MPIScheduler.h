@@ -31,16 +31,16 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_MPISCHEDULER_H
 #define UINTAH_HOMEBREW_MPISCHEDULER_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MessageLog.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Parallel/PackBufferInfo.h>
+#include <Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Uintah/CCA/Components/Schedulers/MessageLog.h>
+#include <Uintah/CCA/Components/Schedulers/CommRecMPI.h>
+#include <Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Parallel/PackBufferInfo.h>
 #include <Core/Util/DebugStream.h>
  
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Parallel/BufferInfo.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>

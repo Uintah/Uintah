@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <cmath>
 

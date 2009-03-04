@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef PARTICLEVIS_H
 #define PARTICLEVIS_H
 
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>

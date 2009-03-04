@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <iostream>
 using namespace Uintah;
 

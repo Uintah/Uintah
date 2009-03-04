@@ -43,11 +43,11 @@ DEALINGS IN THE SOFTWARE.
 #include "PlasticityModels/MeltingTempModel.h"
 #include "PlasticityModels/SpecificHeatModel.h"
 #include <cmath>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/TangentModulusTensor.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
 

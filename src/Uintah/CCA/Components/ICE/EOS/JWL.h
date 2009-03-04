@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __JWL_H__
 #define __JWL_H__
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
 #include "EquationOfState.h"
 
 namespace Uintah {

@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __STThermalContact__
 #define __STThermalContact__
 
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 #include <cmath>

@@ -63,9 +63,9 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Components/Arches/Mixing/InletStream.h>
+#include <Uintah/CCA/Components/Arches/Mixing/Stream.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
 #include <string>

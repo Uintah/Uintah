@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_OnTheFlyAnalysis_Factory_h
-#define Packages_Uintah_CCA_Components_OnTheFlyAnalysis_Factory_h
+#ifndef Uintah_CCA_Components_OnTheFlyAnalysis_Factory_h
+#define Uintah_CCA_Components_OnTheFlyAnalysis_Factory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/CCA/Ports/Output.h>
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/uintahshare.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/uintahshare.h>
 
 namespace Uintah {
   class AnalysisModule;

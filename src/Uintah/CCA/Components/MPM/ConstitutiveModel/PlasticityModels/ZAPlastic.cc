@@ -35,10 +35,10 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPlastic.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAPlastic.h>
 
 #include <cmath>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 
 #ifdef _WIN32
 #include <cfloat>

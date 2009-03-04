@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Datatypes/TensorFieldPort.h>
+#include <Uintah/Core/Datatypes/TensorFieldPort.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;

@@ -32,30 +32,30 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/hypre_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <Uintah/CCA/Components/Arches/PressureSolver.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Uintah/CCA/Components/Arches/ArchesConstVariables.h>
+#include <Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Uintah/CCA/Components/Arches/Discretization.h>
+#include <Uintah/CCA/Components/Arches/PetscSolver.h>
 #ifdef HAVE_HYPRE
-#include <Packages/Uintah/CCA/Components/Arches/HypreSolver.h>
+#include <Uintah/CCA/Components/Arches/HypreSolver.h>
 #endif
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Uintah/CCA/Components/Arches/Source.h>
+#include <Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
 
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Grid/SimulationState.h>
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 using namespace std;

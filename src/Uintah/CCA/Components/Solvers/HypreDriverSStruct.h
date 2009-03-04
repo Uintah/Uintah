@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
+#ifndef Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
+#define Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
 
 /*--------------------------------------------------------------------------
   CLASS
@@ -86,7 +86,7 @@ DEALINGS IN THE SOFTWARE.
   1.7.7).
   --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriver.h>
 #include <iostream>
 
 namespace Uintah {
@@ -323,4 +323,4 @@ namespace Uintah {
 //========================== Utilities, printouts ==========================
 void          printLine(const std::string& s, const unsigned int len);
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreDriverSStruct_h
+#endif // Uintah_CCA_Components_Solvers_HypreDriverSStruct_h

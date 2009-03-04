@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/DifferenceIterator.h>
+#include <Uintah/Core/Grid/Variables/DifferenceIterator.h>
 
 namespace Uintah
 {

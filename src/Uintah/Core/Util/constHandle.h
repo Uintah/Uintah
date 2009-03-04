@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_CONSTHANDLE_H
 #define UINTAH_GRID_CONSTHANDLE_H
 
-#include <Packages/Uintah/Core/Util/Handle.h>
+#include <Uintah/Core/Util/Handle.h>
 #include <Core/Util/Assert.h>
 
 namespace Uintah {

@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreTypes_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreTypes_h
+#ifndef Uintah_CCA_Components_Solvers_HypreTypes_h
+#define Uintah_CCA_Components_Solvers_HypreTypes_h
 
 /*--------------------------------------------------------------------------
 CLASS
@@ -118,4 +118,4 @@ namespace Uintah {
   
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreTypes_h
+#endif // Uintah_CCA_Components_Solvers_HypreTypes_h

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

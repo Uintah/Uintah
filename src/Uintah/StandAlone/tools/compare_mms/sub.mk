@@ -30,11 +30,11 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/tools/compare_mms
+SRCDIR := Uintah/StandAlone/tools/compare_mms
 
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
+  PSELIBS := Uintah
 else
 
   PSELIBS := \
@@ -43,17 +43,17 @@ else
         Core/Geometry     \
         Core/Math         \
         Core/Util         \
-        Packages/Uintah/Core/DataArchive \
-        Packages/Uintah/Core/Disclosure  \
-        Packages/Uintah/Core/Exceptions  \
-        Packages/Uintah/Core/Grid        \
-        Packages/Uintah/Core/Labels      \
-        Packages/Uintah/Core/ProblemSpec                    \
-        Packages/Uintah/Core/Util                           \
-        Packages/Uintah/CCA/Components/DataArchiver         \
-        Packages/Uintah/CCA/Components/Schedulers           \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
-        Packages/Uintah/CCA/Components/PatchCombiner
+        Uintah/Core/DataArchive \
+        Uintah/Core/Disclosure  \
+        Uintah/Core/Exceptions  \
+        Uintah/Core/Grid        \
+        Uintah/Core/Labels      \
+        Uintah/Core/ProblemSpec                    \
+        Uintah/Core/Util                           \
+        Uintah/CCA/Components/DataArchiver         \
+        Uintah/CCA/Components/Schedulers           \
+        Uintah/CCA/Components/ProblemSpecification \
+        Uintah/CCA/Components/PatchCombiner
 endif
 
 LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
@@ -83,5 +83,5 @@ PROGRAM := $(SRCDIR)/compare_scalar
 include $(SCIRUN_SCRIPTS)/program.mk
 
 
-compare_mms: prereqs Packages/Uintah/StandAlone/tools/compare_mms/compare_mms
-compare_scalar: prereqs Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar
+compare_mms: prereqs Uintah/StandAlone/tools/compare_mms/compare_mms
+compare_scalar: prereqs Uintah/StandAlone/tools/compare_mms/compare_scalar

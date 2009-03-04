@@ -29,22 +29,22 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/Angio/AngioMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Grid/Variables/ReductionVariable.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Grid/Material.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/SimpleMaterial.h>
+#include <Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/CCA/Components/Angio/AngioMaterial.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Uintah/Core/Grid/Variables/Reductions.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 

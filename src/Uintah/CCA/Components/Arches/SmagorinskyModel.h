@@ -67,8 +67,8 @@ WARNING
    none
 ****************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
 class PhysicalConstants;

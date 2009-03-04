@@ -40,11 +40,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/Timer.h>
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
-#include <Packages/Uintah/Core/Grid/Variables/GridVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Variables/Variable.h>
+#include <Uintah/Core/Grid/Variables/GridVariable.h>
+#include <Uintah/Core/Grid/Variables/Array3.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
 
 
 #include <sgi_stl_warnings_off.h>

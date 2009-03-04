@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #undef UINTAHSHARE
 
 #if defined(_WIN32) && !defined(BUILD_UINTAH_STATIC)
-#ifdef BUILD_Packages_Uintah_CCA_Ports
+#ifdef BUILD_Uintah_CCA_Ports
 #define UINTAHSHARE __declspec(dllexport)
 #else
 #define UINTAHSHARE __declspec(dllimport)

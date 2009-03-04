@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/Solvers/HyprePreconds
+SRCDIR   := Uintah/CCA/Components/Solvers/HyprePreconds
 
 SRCS += $(SRCDIR)/HyprePrecondBase.cc \
         $(SRCDIR)/HyprePrecondSMG.cc \

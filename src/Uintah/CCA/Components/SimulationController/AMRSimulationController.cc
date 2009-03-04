@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/malloc_defs.h>
 
-#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
+#include <Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
 
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/IntVector.h>
@@ -39,34 +39,34 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Thread/Time.h>
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationTime.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Tracker/TrackerClient.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/SimulationTime.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Grid/Variables/ReductionVariable.h>
+#include <Uintah/Core/Grid/Variables/SoleVariable.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/VarLabelMatl.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Tracker/TrackerClient.h>
 
-#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
+#include <Uintah/CCA/Components/Regridder/PerPatchVars.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/CCA/Ports/Output.h>
+#include <Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <Uintah/CCA/Ports/Regridder.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
 
 #include <TauProfilerForSCIRun.h>
 

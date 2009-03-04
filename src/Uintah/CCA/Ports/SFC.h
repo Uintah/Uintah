@@ -41,9 +41,9 @@ DEALINGS IN THE SOFTWARE.
 #include <cstring>
 using namespace std;
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <Uintah/CCA/Ports/uintahshare.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 using namespace SCIRun;

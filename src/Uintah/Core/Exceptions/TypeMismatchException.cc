@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <iostream>
 #include <sstream>
 

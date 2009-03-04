@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/Rand48.h>
+#include <Uintah/Core/Math/FastMatrix.h>
+#include <Uintah/Core/Math/Rand48.h>
 #include <Core/Math/MiscMath.h>
 #include <cmath>
 #include <cstdlib>

@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #define __DERIVE_PARTICLEEIGENEVALUATOR_H__
 
 #include <Dataflow/Network/Module.h>
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreSolverParams_h
+#ifndef Uintah_CCA_Components_Solvers_HypreSolverParams_h
+#define Uintah_CCA_Components_Solvers_HypreSolverParams_h
 
 /*--------------------------------------------------------------------------
 CLASS
@@ -59,7 +59,7 @@ WARNING
 
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
 
 namespace Uintah {
 

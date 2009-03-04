@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_MPM_POLYNOMIAL_H
 #define UINTAH_MPM_POLYNOMIAL_H
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Geometry/Point.h>
 #include <vector>
 #include <deque>

@@ -29,7 +29,7 @@ C
 C 
 C 
 #if 1
-#include <Packages/Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
 #include "../../Arches/fortran/param4.h"
 #else
       SUBROUTINE add_mm_enth_src(

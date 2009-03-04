@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __CONE_GEOMETRY_OBJECT_H__
 #define __CONE_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************

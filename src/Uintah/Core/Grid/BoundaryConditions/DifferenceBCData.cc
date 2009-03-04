@@ -28,12 +28,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
+#include <Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/Variables/DifferenceIterator.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Uintah/Core/Grid/Variables/DifferenceIterator.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Malloc/Allocator.h>
 #include <set>
 #include <iostream>

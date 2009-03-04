@@ -34,8 +34,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

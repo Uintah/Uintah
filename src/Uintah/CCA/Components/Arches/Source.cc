@@ -28,25 +28,25 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Uintah/CCA/Components/Arches/Source.h>
+#include <Uintah/CCA/Components/Arches/Discretization.h>
+#include <Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Uintah/CCA/Components/Arches/BoundaryCondition.h>
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #ifdef divergenceconstraint
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/pressrcpred_var_fort.h>
 #else
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
 #endif
-#include <Packages/Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
 
 //****************************************************************************
 // Constructor for Source

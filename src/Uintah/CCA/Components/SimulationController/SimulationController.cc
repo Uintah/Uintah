@@ -30,20 +30,20 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/malloc_defs.h>
 
-#include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationTime.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Uintah/CCA/Components/SimulationController/SimulationController.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/SimulationTime.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/CCA/Ports/Regridder.h>
+#include <Uintah/CCA/Ports/Output.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/LoadBalancer.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/OS/Dir.h>

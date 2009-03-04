@@ -44,28 +44,28 @@ DEALINGS IN THE SOFTWARE.
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Tracker/TrackerClient.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Tracker/TrackerClient.h>
 
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
-#include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
-#include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
-#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderFactory.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
-#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
+#include <Uintah/CCA/Components/Models/ModelFactory.h>
+#include <Uintah/CCA/Components/Solvers/CGSolver.h>
+#include <Uintah/CCA/Components/Solvers/DirectSolve.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolver.h>
+#include <Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
+#include <Uintah/CCA/Components/DataArchiver/DataArchiver.h>
+#include <Uintah/CCA/Components/Solvers/SolverFactory.h>
+#include <Uintah/CCA/Components/Regridder/RegridderFactory.h>
+#include <Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
+#include <Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
+#include <Uintah/CCA/Components/Parent/ComponentFactory.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/InternalError.h>
@@ -83,7 +83,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 #ifdef USE_VAMPIR
-#  include <Packages/Uintah/Core/Parallel/Vampir.h>
+#  include <Uintah/Core/Parallel/Vampir.h>
 #endif
 
 #if HAVE_IEEEFP_H
@@ -184,8 +184,8 @@ usage( const std::string & message,
       cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
       cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";      
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
-      cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
-      cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
+      cerr << "-svnDiff             : runs svn diff <src/...../Uintah \n";
+      cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Uintah \n";
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
       cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
@@ -472,13 +472,13 @@ main( int argc, char *argv[], char *env[] )
     cout << "Date:    " << time_string; // has its own newline
     cout << "Machine: " << name << endl;
 
-    // Run svn commands on Packages/Uintah 
+    // Run svn commands on Uintah 
     if (do_svnDiff || do_svnStat){
 #if defined(REDSTORM)
       cerr << "WARNING:  SVN DIFF is disabled.\n";
 #else
       cerr << "____SVN_____________________________________________________________\n";
-      string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Packages/Uintah";
+      string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Uintah";
       if(do_svnDiff){
         string cmd = "svn diff " + sdir;
         system(cmd.c_str());

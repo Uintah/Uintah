@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/Core/Util/uintahshare.h>
+#include <Uintah/Core/Util/uintahshare.h>
 
 using SCIRun::Mutex;
 UINTAHSHARE Mutex cerrLock( "cerr lock" );

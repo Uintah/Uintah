@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
-#define Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
+#ifndef Uintah_CCA_Components_Solvers_DirectSolve_h
+#define Uintah_CCA_Components_Solvers_DirectSolve_h
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
   class DirectSolve : public SolverInterface, public UintahParallelComponent { 
@@ -60,4 +60,4 @@ namespace Uintah {
   };
 }
 
-#endif // Packages_Uintah_CCA_Components_Solvers_DirectSolve_h
+#endif // Uintah_CCA_Components_Solvers_DirectSolve_h

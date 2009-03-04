@@ -65,23 +65,23 @@ LOG
 #  define _ISOC99_SOURCE
 #endif
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
+#include <Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Datatypes/ScalarParticles.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Datatypes/VectorParticles.h>
+#include <Uintah/Core/Datatypes/TensorParticles.h>
 
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/IntVector.h>

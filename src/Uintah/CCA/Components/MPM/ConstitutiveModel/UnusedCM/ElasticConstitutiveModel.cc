@@ -39,13 +39,13 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ConstitutiveModelFactory.h"
 #include "ElasticConstitutiveModel.h"
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/CCA/Components/MPM/MPMLabel.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
+#include <Uintah/CCA/Components/MPM/Util/Matrix.cc> // for bounded array multiplier	
 #include <fstream>
 #include <iostream>
 using namespace std;
