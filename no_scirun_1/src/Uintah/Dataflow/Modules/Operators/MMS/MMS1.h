@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_COMPARE_MMS_MMS1_H
 #define UINTAH_COMPARE_MMS_MMS1_H
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
+#include <Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/uintahshare.h>
+#include <Uintah/Dataflow/Modules/Operators/MMS/uintahshare.h>
 
 class MMS1 : public MMS {
 

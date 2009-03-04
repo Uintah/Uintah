@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/Util
+SRCDIR   := Uintah/Core/Util
 
 SRCS     += \
 	$(SRCDIR)/RefCounted.cc \

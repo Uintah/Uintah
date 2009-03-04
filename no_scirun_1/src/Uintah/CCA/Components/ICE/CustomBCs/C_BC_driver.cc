@@ -29,10 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/C_BC_driver.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Uintah/CCA/Components/ICE/CustomBCs/C_BC_driver.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/Core/Grid/Task.h>
 
 using namespace Uintah;
 namespace Uintah {

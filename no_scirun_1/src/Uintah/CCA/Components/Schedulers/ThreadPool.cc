@@ -29,18 +29,18 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/ThreadPool.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Uintah/CCA/Components/Schedulers/ThreadPool.h>
+#include <Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
+#include <Uintah/CCA/Components/Schedulers/MPIScheduler.h>
+#include <Uintah/CCA/Components/Schedulers/MixedScheduler.h>
+#include <Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <Uintah/CCA/Components/Schedulers/SendState.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Util/Handle.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Time.h>

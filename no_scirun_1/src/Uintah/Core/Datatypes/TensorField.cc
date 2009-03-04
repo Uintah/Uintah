@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Datatypes/TensorField.h>
+#include <Uintah/Core/Datatypes/TensorField.h>
 
 #include <Core/Containers/String.h>
 

@@ -28,12 +28,12 @@
 # 
 # 
 # 
-SRCDIR  := Packages/Uintah/StandAlone/tools/radiusMaker
+SRCDIR  := Uintah/StandAlone/tools/radiusMaker
 PROGRAM := $(SRCDIR)/radius_maker
 
 #ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
   ifeq ($(LARGESOS),yes)
-    PSELIBS := Datflow Packages/Uintah
+    PSELIBS := Datflow Uintah
   else
     PSELIBS := \
         Core/Math         \
@@ -49,5 +49,5 @@ PROGRAM := $(SRCDIR)/radius_maker
 
 #endif
 
-radius_maker: prereqs Packages/Uintah/StandAlone/tools/radiusMaker/radius_maker
+radius_maker: prereqs Uintah/StandAlone/tools/radiusMaker/radius_maker
 

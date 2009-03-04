@@ -41,9 +41,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/GuiInterface/GuiVar.h> 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Dataflow/Ports/ArchivePort.h>
 
 namespace Uintah {
 

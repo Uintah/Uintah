@@ -32,13 +32,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SCHEDULER_H
 #define UINTAH_HOMEBREW_SCHEDULER_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/Core/Grid/Task.h>
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <list>
@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <Uintah/CCA/Ports/uintahshare.h>
 
 namespace Uintah {
   using namespace std;

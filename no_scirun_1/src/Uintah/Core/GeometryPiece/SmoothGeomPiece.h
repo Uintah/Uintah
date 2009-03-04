@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __SMOOTH_PIECE_H__
 #define __SMOOTH_PIECE_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Box.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <string>
@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
   using std::vector;

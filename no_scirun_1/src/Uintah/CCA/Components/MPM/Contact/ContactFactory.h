@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _CONTACTFACTORY_H_
 #define _CONTACTFACTORY_H_
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
 

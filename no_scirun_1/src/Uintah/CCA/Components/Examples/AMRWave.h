@@ -29,12 +29,12 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef Packages_Uintah_CCA_Components_Examples_AMRWave_h
-#define Packages_Uintah_CCA_Components_Examples_AMRWave_h
+#ifndef Uintah_CCA_Components_Examples_AMRWave_h
+#define Uintah_CCA_Components_Examples_AMRWave_h
 
-#include <Packages/Uintah/CCA/Components/Examples/Wave.h>
+#include <Uintah/CCA/Components/Examples/Wave.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
+#include <Uintah/CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;

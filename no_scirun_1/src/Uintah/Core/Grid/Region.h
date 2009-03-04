@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 
@@ -115,7 +115,7 @@ WARNING
     /********************
       The following are needed in order to use Region as a Box in
       Core/Container/SuperBox.h (see
-      Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
+      Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
     *********************/
     
     inline IntVector getLow() const

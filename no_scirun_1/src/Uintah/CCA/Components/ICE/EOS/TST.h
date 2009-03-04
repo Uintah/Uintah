@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __TST_H__
 #define __TST_H__
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
 #include "EquationOfState.h"
 
 namespace Uintah {

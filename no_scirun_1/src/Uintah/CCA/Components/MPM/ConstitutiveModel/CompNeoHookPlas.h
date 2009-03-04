@@ -48,10 +48,10 @@ namespace SCIRun {
 
 #include "ConstitutiveModel.h"  
 #include <cmath>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
 
 namespace Uintah {
   class TypeDescription;

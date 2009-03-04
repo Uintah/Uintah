@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __SMOOTH_CYL_PIECE_H__
 #define __SMOOTH_CYL_PIECE_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/SmoothGeomPiece.h>
+#include <Uintah/Core/GeometryPiece/SmoothGeomPiece.h>
 #include <Core/Geometry/Point.h>
 
 #include <cmath>
@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Uintah/Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////

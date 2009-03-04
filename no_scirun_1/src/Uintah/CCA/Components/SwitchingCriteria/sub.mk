@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/SwitchingCriteria
+SRCDIR   := Uintah/CCA/Components/SwitchingCriteria
 
 SRCS     += \
 	$(SRCDIR)/SwitchingCriteriaFactory.cc \
@@ -46,15 +46,15 @@ PSELIBS := \
 	Core/Exceptions                  \
 	Core/Geometry                    \
 	Core/Util                        \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Labels      \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/ProblemSpec 
+	Uintah/CCA/Ports        \
+	Uintah/Core/Disclosure  \
+	Uintah/Core/Exceptions  \
+	Uintah/Core/Grid        \
+	Uintah/Core/Parallel    \
+	Uintah/Core/Labels      \
+	Uintah/Core/Parallel    \
+	Uintah/Core/Util        \
+	Uintah/Core/ProblemSpec 
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 

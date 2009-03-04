@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/GeometryPiece/ShellGeometryFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/PlaneShellPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SphereShellPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CylinderShellPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/GUVSphereShellPiece.h>
+#include <Uintah/Core/GeometryPiece/ShellGeometryFactory.h>
+#include <Uintah/Core/GeometryPiece/PlaneShellPiece.h>
+#include <Uintah/Core/GeometryPiece/SphereShellPiece.h>
+#include <Uintah/Core/GeometryPiece/CylinderShellPiece.h>
+#include <Uintah/Core/GeometryPiece/GUVSphereShellPiece.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <iostream>
 #include <string>

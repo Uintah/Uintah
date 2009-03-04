@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;

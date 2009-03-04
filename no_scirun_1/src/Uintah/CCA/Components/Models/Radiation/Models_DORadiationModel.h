@@ -68,10 +68,10 @@ WARNINGS
 POSSIBLE REVISIONS
     None
 ***************************************************************************/
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_RadiationModel.h>
-#include <Packages/Uintah/CCA/Components/Models/Radiation/Models_RadiationSolver.h>
+#include <Uintah/CCA/Components/Models/Radiation/Models_CellInformation.h>
+#include <Uintah/CCA/Components/Models/Radiation/Models_CellInformationP.h>
+#include <Uintah/CCA/Components/Models/Radiation/Models_RadiationModel.h>
+#include <Uintah/CCA/Components/Models/Radiation/Models_RadiationSolver.h>
 
 namespace Uintah {
 

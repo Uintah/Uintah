@@ -28,7 +28,7 @@
 # 
 # 
 # 
-SRCDIR := Packages/Uintah/R_Tester/helpers
+SRCDIR := Uintah/R_Tester/helpers
 
 PROGRAM := $(SRCDIR)/compare_dat_files
 

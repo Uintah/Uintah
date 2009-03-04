@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ELLIPTIC_CRACK_H
 #define UINTAH_HOMEBREW_ELLIPTIC_CRACK_H
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
 
 
 namespace Uintah {

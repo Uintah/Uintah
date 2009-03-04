@@ -68,7 +68,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Box.h>
 
 
 #include <iostream>

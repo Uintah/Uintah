@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
+#include <Uintah/Core/Exceptions/UintahPetscError.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <sstream>

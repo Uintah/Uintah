@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_AMRSolver_h
-#define Packages_Uintah_CCA_Components_Solvers_AMRSolver_h
+#ifndef Uintah_CCA_Components_Solvers_AMRSolver_h
+#define Uintah_CCA_Components_Solvers_AMRSolver_h
 
 /*--------------------------------------------------------------------------
 CLASS
@@ -61,8 +61,8 @@ WARNING
    * This interface is written for Hypre 1.9.0b (released 2005).
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
   class AMRSolver :

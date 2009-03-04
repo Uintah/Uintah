@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Variables/Iterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/GridIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ListOfCellsIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/DifferenceIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/UnionIterator.h>
+#include <Uintah/Core/Grid/Variables/Iterator.h>
+#include <Uintah/Core/Grid/Variables/GridIterator.h>
+#include <Uintah/Core/Grid/Variables/ListOfCellsIterator.h>
+#include <Uintah/Core/Grid/Variables/DifferenceIterator.h>
+#include <Uintah/Core/Grid/Variables/UnionIterator.h>
 
 #include <iostream>
 using namespace std;

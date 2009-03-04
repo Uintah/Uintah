@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/OdtData.h>
+#include <Uintah/CCA/Components/Arches/OdtData.h>
 #include <Core/Util/Endian.h>
 #include <Core/Malloc/Allocator.h>
 

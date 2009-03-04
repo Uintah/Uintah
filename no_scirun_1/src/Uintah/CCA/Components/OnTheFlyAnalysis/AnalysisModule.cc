@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <Uintah/Core/Grid/SimulationState.h>
 
 using namespace Uintah;
 AnalysisModule::AnalysisModule()

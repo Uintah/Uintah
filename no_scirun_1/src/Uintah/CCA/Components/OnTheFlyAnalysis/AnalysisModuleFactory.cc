@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/pointExtract.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/containerExtract.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/vorticity.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/lineExtract.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/pointExtract.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/containerExtract.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/vorticity.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/SimulationState.h>
 
 using namespace std;
 using namespace Uintah;

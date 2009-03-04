@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/Parallel
+SRCDIR   := Uintah/Core/Parallel
 
 SRCS     += \
 	$(SRCDIR)/BufferInfo.cc              \
@@ -47,8 +47,8 @@ SRCS     += \
 PSELIBS := \
 	Core/Thread \
 	Core/Exceptions \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Util
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Util
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) 
 

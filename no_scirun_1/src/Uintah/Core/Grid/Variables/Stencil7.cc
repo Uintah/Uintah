@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Grid/Variables/Stencil7.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>

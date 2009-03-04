@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
-#include <Packages/Uintah/Core/Datatypes/GLAnimatedStreams.h>
+#include <Uintah/Core/Datatypes/GLAnimatedStreams.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>

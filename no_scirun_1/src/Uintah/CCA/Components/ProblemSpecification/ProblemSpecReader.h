@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __PROBLEM_SPEC_READER_H__ 
 #define __PROBLEM_SPEC_READER_H__
 
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/uintahshare.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <Uintah/CCA/Components/ProblemSpecification/uintahshare.h>
+#include <Uintah/CCA/Ports/ProblemSpecInterface.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/XMLUtil/XMLUtil.h>
 

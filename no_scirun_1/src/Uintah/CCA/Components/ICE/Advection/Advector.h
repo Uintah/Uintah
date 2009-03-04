@@ -30,15 +30,15 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef UINTAH_ADVECTOR_H
 #define UINTAH_ADVECTOR_H
-#include <Packages/Uintah/CCA/Components/ICE/Advection/FluxDatatypes.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
+#include <Uintah/CCA/Components/ICE/Advection/FluxDatatypes.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Labels/ICELabel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/ProgressiveWarning.h>

@@ -30,8 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "IsoHardeningPlastic.h"        
-#include <Packages/Uintah/Core/Math/FastMatrix.h>       
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Math/FastMatrix.h>       
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <cmath>
 
 using namespace std;

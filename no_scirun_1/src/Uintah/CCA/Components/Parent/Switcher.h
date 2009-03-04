@@ -28,13 +28,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Switcher_h
-#define Packages_Uintah_CCA_Components_Switcher_h
+#ifndef Uintah_CCA_Components_Switcher_h
+#define Uintah_CCA_Components_Switcher_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
 
 #include <map>
 #include <set>

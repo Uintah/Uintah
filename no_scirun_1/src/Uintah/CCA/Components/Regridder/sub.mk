@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Regridder
+SRCDIR   := Uintah/CCA/Components/Regridder
 
 SRCS     += $(SRCDIR)/RegridderCommon.cc \
 	    $(SRCDIR)/RegridderFactory.cc \
@@ -45,13 +45,13 @@ SRCS     += $(SRCDIR)/RegridderCommon.cc \
 			
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Exceptions  \
+	Uintah/CCA/Ports        \
+	Uintah/Core/Disclosure  \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Parallel    \
+	Uintah/Core/Grid        \
+	Uintah/Core/Util        \
+	Uintah/Core/Exceptions  \
 	Core/Geometry			 \
 	Core/Exceptions			 \
 	Core/Thread			 \

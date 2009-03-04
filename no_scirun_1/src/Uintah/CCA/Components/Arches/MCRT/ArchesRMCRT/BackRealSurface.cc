@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BackRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BackRealSurface.h>
 #include <iostream>
 
 using std::cout;

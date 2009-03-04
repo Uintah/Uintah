@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 // Headers
 #include <Core/Util/Assert.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/FastMatrix.h>
+#include <Uintah/Core/Math/Matrix3.h>
 
 // Base class
-#include <Packages/Uintah/Core/Math/Tensor4D.h>
+#include <Uintah/Core/Math/Tensor4D.h>
 
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Uintah/Core/Math/uintahshare.h>
 namespace Uintah {
 
   /*! \class TangentModulusTensor

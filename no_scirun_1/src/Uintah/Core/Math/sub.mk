@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/Math
+SRCDIR   := Uintah/Core/Math
 
 SRCS     += \
 	$(SRCDIR)/FastMatrix.cc \
@@ -55,7 +55,7 @@ PSELIBS := \
 	Core/Util                       \
 	Core/Geometry                   \
 	Core/Thread			\
-	Packages/Uintah/Core/Disclosure 
+	Uintah/Core/Disclosure 
 
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) 

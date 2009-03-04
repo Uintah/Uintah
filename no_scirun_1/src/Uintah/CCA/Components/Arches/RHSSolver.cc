@@ -30,26 +30,26 @@ DEALINGS IN THE SOFTWARE.
 
 //----- RHSSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/RHSSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/CCA/Components/Arches/RHSSolver.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Uintah/CCA/Components/Arches/Discretization.h>
+#include <Uintah/CCA/Components/Arches/PressureSolver.h>
+#include <Uintah/CCA/Components/Arches/Source.h>
+#include <Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 
 //****************************************************************************
 // Default constructor for RHSSolver

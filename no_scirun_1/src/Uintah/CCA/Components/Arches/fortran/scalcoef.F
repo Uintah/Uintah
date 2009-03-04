@@ -31,7 +31,7 @@ C
 c
 c
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
+#include <Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
 #include "param4.h"
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996

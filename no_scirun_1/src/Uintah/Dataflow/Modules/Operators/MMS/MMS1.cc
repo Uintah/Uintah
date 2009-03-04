@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
+#include <Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 
 #include <cmath>
 

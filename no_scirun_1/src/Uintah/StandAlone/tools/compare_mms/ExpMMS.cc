@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/compare_mms/ExpMMS.h>
+#include <Uintah/StandAlone/tools/compare_mms/ExpMMS.h>
 
 #include <cmath>
 

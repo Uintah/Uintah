@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef SCI_project_CCVectorField_h
 #define SCI_project_CCVectorField_h 1
 
-//#include "Packages/UintahVectorField.h"
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+//#include "UintahVectorField.h"
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
 #include <Core/Datatypes/VectorFieldRG.h>
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>

@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Tracker/TrackerClient.h>
+#include <Uintah/Core/Tracker/TrackerClient.h>
 
 #include <iostream>
 #include <sstream>

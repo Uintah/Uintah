@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/FrontRealSurface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/FrontRealSurface.h>
 
 using std::cout;
 using std::endl;

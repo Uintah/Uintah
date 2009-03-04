@@ -50,7 +50,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/uintahshare.h>
+#include <Uintah/Core/Exceptions/uintahshare.h>
 namespace Uintah {
   
   class UINTAHSHARE VariableNotFoundInGrid : public SCIRun::Exception {

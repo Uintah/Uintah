@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "TensorToTensorConvertor.h"
-#include <Packages/Uintah/Core/Datatypes/TensorParticles.h>
+#include <Uintah/Core/Datatypes/TensorParticles.h>
 
 //#include <SCICore/Math/Mat.h>
 

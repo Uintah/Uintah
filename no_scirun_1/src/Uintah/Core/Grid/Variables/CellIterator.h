@@ -36,8 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Assert.h>
 #include <iterator>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
-#include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
+#include <Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/Variables/BaseIterator.h>
 
 namespace Uintah {
 

@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
+#include <Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <vector>
 #include <iostream>
 

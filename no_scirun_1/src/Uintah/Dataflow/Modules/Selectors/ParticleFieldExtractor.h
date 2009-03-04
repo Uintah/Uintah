@@ -47,7 +47,7 @@ KEYWORDS
     ParticleGridReader, Material/Particle Method
 
 AUTHOR
-    Packages/Kurt Zimmerman
+    Kurt Zimmerman
     Department of Computer Science
     University of Utah
     January 1999
@@ -61,11 +61,11 @@ LOG
 #define PARTICLEFIELDEXTRACTOR_H 1
 
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
-#include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Dataflow/Ports/ArchivePort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
+#include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Network/Module.h> 
 #include <Core/GuiInterface/GuiVar.h> 
 #include <Core/Containers/ConsecutiveRangeSet.h>
@@ -81,7 +81,7 @@ namespace SCIRun {
   class Mutex;
 }
 
-#include <Packages/Uintah/Dataflow/Modules/Selectors/uintahshare.h>
+#include <Uintah/Dataflow/Modules/Selectors/uintahshare.h>
 namespace Uintah {
   class PFEThread;
 

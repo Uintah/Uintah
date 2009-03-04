@@ -29,11 +29,11 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef Packages_Uintah_CCA_Components_Examples_Steady_Burn_h
-#define Packages_Uintah_CCA_Components_Examples_Steady_Burn_h
+#ifndef Uintah_CCA_Components_Examples_Steady_Burn_h
+#define Uintah_CCA_Components_Examples_Steady_Burn_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/CCA/Ports/ModelInterface.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
 
 namespace Uintah {
   class ICELabel;

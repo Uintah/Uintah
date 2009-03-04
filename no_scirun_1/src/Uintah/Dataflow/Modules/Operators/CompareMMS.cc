@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 //    Author : J. Davison de St. Germain
 //    Date   : Jan 2006
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/CompareMMS.h>
+#include <Uintah/Dataflow/Modules/Operators/CompareMMS.h>
 
 #include <Core/Datatypes/FieldInterface.h>
 
@@ -63,8 +63,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Packages/Uintah/Core/Datatypes/Archive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Datatypes/Archive.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>

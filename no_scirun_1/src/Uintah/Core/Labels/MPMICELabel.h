@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_MPMICELABEL_H
 #define UINTAH_HOMEBREW_MPMICELABEL_H
 
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
 
-#include <Packages/Uintah/Core/Labels/uintahshare.h>
+#include <Uintah/Core/Labels/uintahshare.h>
 
 namespace Uintah {
 

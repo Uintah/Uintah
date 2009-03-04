@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Parallel/PackBufferInfo.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/Parallel/PackBufferInfo.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Util/RefCounted.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 

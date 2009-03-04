@@ -31,14 +31,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_SECOND_ORDER_BASE_H
 #define UINTAH_SECOND_ORDER_BASE_H
 
-#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Grid/Ghost.h>
 
 using namespace SCIRun;
 

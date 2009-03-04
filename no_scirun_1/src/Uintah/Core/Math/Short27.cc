@@ -30,9 +30,9 @@ DEALINGS IN THE SOFTWARE.
 
 //  Short27.cc
 
-#include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/Core/Math/CubeRoot.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Math/Short27.h>
+#include <Uintah/Core/Math/CubeRoot.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>

@@ -30,19 +30,19 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/tools/makedot
+SRCDIR := Uintah/StandAlone/tools/makedot
 
 PROGRAM := $(SRCDIR)/makedot
 
 SRCS := $(SRCDIR)/makedot.cc
 
 PSELIBS := \
-	Packages/Uintah/Core/DataArchive \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/Core/Disclosure \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Exceptions \
+	Uintah/Core/DataArchive \
+	Uintah/CCA/Components/ProblemSpecification \
+	Uintah/Core/Disclosure \
+	Uintah/Core/Grid \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Exceptions \
 	Core/Exceptions  \
 	Core/Geometry \
 	Core/Thread 

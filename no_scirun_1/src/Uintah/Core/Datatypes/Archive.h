@@ -35,9 +35,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/Persistent.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
 
-#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
+#include <Uintah/Core/Datatypes/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -53,7 +53,7 @@ GENERAL INFORMATION
 
    Archive.h
 
-   Packages/Kurt Zimmerman
+   Kurt Zimmerman
    Department of Computer Science
    University of Utah
 

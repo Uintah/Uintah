@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
  *  ParticleColorMapKey.cc: create a key for colormap
  *
  *  Written by:
- *   Packages/Kurt Zimmerman
+ *   Kurt Zimmerman
  *   Department of Computer Science
  *   University of Utah
  *   June 2000
@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Dataflow/Network/Module.h>
 
 namespace Uintah {

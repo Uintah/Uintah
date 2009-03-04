@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#ifndef Packages_Uintah_CCA_Components_Examples_ExamplesLabel_h
-#define Packages_Uintah_CCA_Components_Examples_ExamplesLabel_h
+#ifndef Uintah_CCA_Components_Examples_ExamplesLabel_h
+#define Uintah_CCA_Components_Examples_ExamplesLabel_h
 
 #include <vector>
 using std::vector;

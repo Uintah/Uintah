@@ -33,10 +33,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <string>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 #include "FieldDiags.h"
 #include "FieldSelection.h"
 #include "TensorDiags.h"

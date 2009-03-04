@@ -28,15 +28,15 @@
 # 
 # 
 # 
-SRCDIR  := Packages/Uintah/StandAlone/tools/tracker
+SRCDIR  := Uintah/StandAlone/tools/tracker
 PROGRAM := $(SRCDIR)/tracker
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Uintah
 else
   PSELIBS := \
 	Core/Util                     \
-        Packages/Uintah/Core/Tracker
+        Uintah/Core/Tracker
 endif
 
 SRCS := \

@@ -31,26 +31,26 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_FRACTUREMPM_H
 #define UINTAH_HOMEBREW_FRACTUREMPM_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/Crack.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Uintah/CCA/Ports/Output.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/LevelP.h>
+#include <Uintah/CCA/Components/MPM/Crack/Crack.h>
 // put here to avoid template problems
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Short27.h>
+#include <Uintah/Core/Labels/MPMLabel.h>
+#include <Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/CCA/Components/MPM/MPMFlags.h>
+#include <Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
+#include <Uintah/CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;

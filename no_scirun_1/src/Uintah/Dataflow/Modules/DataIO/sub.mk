@@ -32,19 +32,19 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Dataflow/Modules/DataIO
+SRCDIR   := Uintah/Dataflow/Modules/DataIO
 
 SRCS     += \
 	$(SRCDIR)/ArchiveReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Packages/Uintah/Core/Datatypes   \
-	Packages/Uintah/Core/DataArchive \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Math \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/CCA/Ports \
+	Uintah/Core/Datatypes   \
+	Uintah/Core/DataArchive \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Math \
+	Uintah/Core/Grid \
+	Uintah/CCA/Ports \
 	Dataflow/Network   \
 	Core/Containers    \
 	Core/Datatypes     \

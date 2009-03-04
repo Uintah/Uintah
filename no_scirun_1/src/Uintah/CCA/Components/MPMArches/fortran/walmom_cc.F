@@ -29,7 +29,7 @@ C
 C 
 C 
 #if 1
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/walmom_cc_fort.h>
+#include <Uintah/CCA/Components/MPMArches/fortran/walmom_cc_fort.h>
 #include "../../Arches/fortran/param4.h"
 #else
       subroutine walmom_cc(

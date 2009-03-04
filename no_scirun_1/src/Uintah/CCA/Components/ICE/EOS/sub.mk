@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/ICE/EOS
+SRCDIR   := Uintah/CCA/Components/ICE/EOS
 
 SRCS     += $(SRCDIR)/EquationOfState.cc \
 	$(SRCDIR)/EquationOfStateFactory.cc \
@@ -45,11 +45,11 @@ SRCS     += $(SRCDIR)/EquationOfState.cc \
 	$(SRCDIR)/Murnahan.cc
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
+	Uintah/CCA/Ports \
+	Uintah/Core/Grid \
+	Uintah/Core/Parallel \
+	Uintah/Core/Exceptions \
+	Uintah/Core/Math \
 	Core/Exceptions Core/Thread Core/Geometry 
 
 LIBS	:= 

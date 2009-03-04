@@ -31,14 +31,14 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/testprograms/SFCTest
+SRCDIR := Uintah/testprograms/SFCTest
 
 LIBS := $(MPI_LIBRARY) 
 
 PROGRAM := $(SRCDIR)/sfctest
 SRCS := $(SRCDIR)/sfctest.cc
-PSELIBS := Packages/Uintah/CCA/Ports \
-           Packages/Uintah/Core/Parallel \
+PSELIBS := Uintah/CCA/Ports \
+           Uintah/Core/Parallel \
            Core/Thread
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)

@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/Dataflow/GUI
+SRCDIR := Uintah/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/CompareMMS.tcl \

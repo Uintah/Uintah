@@ -28,13 +28,13 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
-#define Packages_Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
+#ifndef Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
+#define Uintah_CCA_Components_LoadBalancer_LoadBalancerFactory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/uintahshare.h>
+#include <Uintah/CCA/Components/LoadBalancers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;

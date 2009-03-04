@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/Core/Grid/BoundaryConditions
+SRCDIR   := Uintah/Core/Grid/BoundaryConditions
 
 SRCS     += \
 	$(SRCDIR)/BoundCondFactory.cc \
@@ -49,9 +49,9 @@ PSELIBS := \
 	Core/Util \
 	Core/Exceptions \
 	Core/Geometry \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Util \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/ProblemSpec
+	Uintah/Core/Grid \
+	Uintah/Core/Util \
+	Uintah/Core/Exceptions \
+	Uintah/Core/ProblemSpec
 
 LIBS := 

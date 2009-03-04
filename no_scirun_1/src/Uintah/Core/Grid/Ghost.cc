@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Uintah/Core/Grid/Ghost.h>
 
 using namespace Uintah;
 using namespace SCIRun;

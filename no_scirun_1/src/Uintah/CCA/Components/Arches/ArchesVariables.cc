@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
+#include <Uintah/CCA/Components/Arches/ArchesVariables.h>
 
 using namespace Uintah;
 

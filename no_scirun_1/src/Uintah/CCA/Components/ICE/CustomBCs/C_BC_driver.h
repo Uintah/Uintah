@@ -28,15 +28,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
-#define Packages_Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/sine.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#ifndef Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
+#define Uintah_CCA_Components_Ice_CustomBCs_C_BC_driver_h
+#include <Uintah/CCA/Components/ICE/CustomBCs/sine.h>
+#include <Uintah/CCA/Components/ICE/CustomBCs/MMS_BCs.h>
+#include <Uintah/CCA/Components/ICE/CustomBCs/microSlipBCs.h>
+#include <Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
+#include <Uintah/Core/Grid/SimulationState.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/uintahshare.h>
+#include <Uintah/CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
   class DataWarehouse;
 

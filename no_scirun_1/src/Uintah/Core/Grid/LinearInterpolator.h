@@ -32,14 +32,14 @@ DEALINGS IN THE SOFTWARE.
 #define LINEAR_INTERPOLATOR_H
 
 #include <Core/Math/MiscMath.h>
-#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/ParticleInterpolator.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/Stencil7.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
 #include <vector>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 
 namespace Uintah {
 

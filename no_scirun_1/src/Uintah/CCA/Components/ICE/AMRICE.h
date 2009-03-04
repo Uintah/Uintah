@@ -28,16 +28,16 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_ICE_AMRICE_h
-#define Packages_Uintah_CCA_Components_ICE_AMRICE_h
+#ifndef Uintah_CCA_Components_ICE_AMRICE_h
+#define Uintah_CCA_Components_ICE_AMRICE_h
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Grid/AMR.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
-#include <Packages/Uintah/CCA/Components/ICE/uintahshare.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Grid/AMR.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/CCA/Components/ICE/ICE.h>
+#include <Uintah/CCA/Components/Regridder/PerPatchVars.h>
+#include <Uintah/CCA/Components/ICE/uintahshare.h>
 
 //#define REFLUX_DBG 
 #undef REFLUX_DBG

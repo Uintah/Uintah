@@ -51,7 +51,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_values.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/ScalarMinMax.h>
+#include <Uintah/Dataflow/Modules/Operators/ScalarMinMax.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>

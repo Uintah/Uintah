@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/GeometryPiece/NaaBoxGeometryPiece.h>
+#include <Uintah/Core/GeometryPiece/NaaBoxGeometryPiece.h>
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>

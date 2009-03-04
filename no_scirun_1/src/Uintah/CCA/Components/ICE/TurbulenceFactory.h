@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _TURBULENCEFACTORY_H_
 #define _TURBULENCEFACTORY_H_
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
 

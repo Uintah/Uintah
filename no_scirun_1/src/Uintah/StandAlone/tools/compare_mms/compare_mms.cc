@@ -42,20 +42,20 @@ DEALINGS IN THE SOFTWARE.
  *
  *  Copyright (C) 2005 U of U
  */
-#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
-#include <Packages/Uintah/StandAlone/tools/compare_mms/ExpMMS.h>
-#include <Packages/Uintah/StandAlone/tools/compare_mms/LinearMMS.h>
-#include <Packages/Uintah/StandAlone/tools/compare_mms/SineMMS.h>
+#include <Uintah/StandAlone/tools/compare_mms/MMS.h>
+#include <Uintah/StandAlone/tools/compare_mms/ExpMMS.h>
+#include <Uintah/StandAlone/tools/compare_mms/LinearMMS.h>
+#include <Uintah/StandAlone/tools/compare_mms/SineMMS.h>
 
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

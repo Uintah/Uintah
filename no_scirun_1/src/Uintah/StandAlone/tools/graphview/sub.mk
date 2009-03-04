@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/tools/graphview
+SRCDIR := Uintah/StandAlone/tools/graphview
 
 PROGRAM := $(SRCDIR)/graphview
 
@@ -38,11 +38,11 @@ SRCS := $(SRCDIR)/graphview.cc	$(SRCDIR)/GV_TaskGraph.cc 	\
 	$(SRCDIR)/DaVinci.cc
 
 PSELIBS := \
-	Packages/Uintah/Core/DataArchive \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Util \
+	Uintah/Core/DataArchive \
+	Uintah/CCA/Components/ProblemSpecification \
+	Uintah/Core/ProblemSpec \
+	Uintah/Core/Exceptions \
+	Uintah/Core/Util \
 	Core/Exceptions  \
 	Core/Util  
 

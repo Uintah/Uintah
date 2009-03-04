@@ -36,8 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Uintah/Core/Util/Handle.h>
+#include <Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
 
 namespace Uintah {
 using std::map;

@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreSolverSMG_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreSolverSMG_h
+#ifndef Uintah_CCA_Components_Solvers_HypreSolverSMG_h
+#define Uintah_CCA_Components_Solvers_HypreSolverSMG_h
 
 /*--------------------------------------------------------------------------
 CLASS
@@ -63,7 +63,7 @@ WARNING
       Works with Hypre Struct interface only.
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
 
 namespace Uintah {
   
@@ -91,4 +91,4 @@ namespace Uintah {
 
 } // end namespace Uintah
 
-#endif // Packages_Uintah_CCA_Components_Solvers_HypreSolverSMG_h
+#endif // Uintah_CCA_Components_Solvers_HypreSolverSMG_h

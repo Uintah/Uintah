@@ -38,7 +38,7 @@ CLASS
 GENERAL INFORMATION 
    RescaleColormap.h
    Written by:
-     Packages/Kurt Zimmerman
+     Kurt Zimmerman
      Department of Computer Science
      University of Utah
      June 1999
@@ -57,7 +57,7 @@ DESCRIPTION
 #include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Packages/Uintah/Dataflow/Ports/ScalarParticlesPort.h>
+#include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 
 namespace Uintah {
 using namespace SCIRun;

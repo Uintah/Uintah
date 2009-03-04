@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "GursonYield.h"	
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>

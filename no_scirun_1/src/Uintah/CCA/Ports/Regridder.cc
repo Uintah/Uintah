@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
+#include <Uintah/CCA/Ports/Regridder.h>
 
 using namespace Uintah;
 

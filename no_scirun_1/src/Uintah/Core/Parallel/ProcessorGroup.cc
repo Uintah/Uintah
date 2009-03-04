@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
 

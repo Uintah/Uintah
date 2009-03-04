@@ -30,10 +30,10 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/tools/extractors
+SRCDIR := Uintah/StandAlone/tools/extractors
 
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Packages/Uintah
+  PSELIBS := Uintah
 else
   PSELIBS := \
         Core/Containers   \
@@ -43,17 +43,17 @@ else
 	Core/Persistent   \
         Core/Thread       \
         Core/Util         \
-        Packages/Uintah/Core/DataArchive \
-        Packages/Uintah/Core/Grid        \
-        Packages/Uintah/Core/Parallel    \
-        Packages/Uintah/Core/Labels      \
-        Packages/Uintah/Core/Util        \
-        Packages/Uintah/Core/Math        \
-        Packages/Uintah/Core/Disclosure  \
-        Packages/Uintah/Core/Exceptions  \
-        Packages/Uintah/CCA/Ports        \
-        Packages/Uintah/Core/ProblemSpec             \
-        Packages/Uintah/CCA/Components/ProblemSpecification
+        Uintah/Core/DataArchive \
+        Uintah/Core/Grid        \
+        Uintah/Core/Parallel    \
+        Uintah/Core/Labels      \
+        Uintah/Core/Util        \
+        Uintah/Core/Math        \
+        Uintah/Core/Disclosure  \
+        Uintah/Core/Exceptions  \
+        Uintah/CCA/Ports        \
+        Uintah/Core/ProblemSpec             \
+        Uintah/CCA/Components/ProblemSpecification
 endif
 
 ifeq ($(IS_AIX),yes)

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Uintah/Core/Exceptions/InvalidGrid.h>
 #include <iostream>
 #include <sstream>
 using namespace Uintah;

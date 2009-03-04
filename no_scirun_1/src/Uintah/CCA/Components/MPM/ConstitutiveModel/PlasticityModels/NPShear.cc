@@ -36,8 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 #include "NPShear.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
 #include <cmath>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

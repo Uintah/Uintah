@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef VirtualSurface_H
 #define VirtualSurface_H
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
+#include <Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
 #include <cmath>
 
 class MTRand;

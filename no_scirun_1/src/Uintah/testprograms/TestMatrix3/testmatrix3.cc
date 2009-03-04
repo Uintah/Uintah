@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "testmatrix3.h"
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Matrix3.h>
 #include <cstdlib>
 #ifndef _WIN32
 #include <unistd.h>

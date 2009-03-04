@@ -31,17 +31,17 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __VISCO_PLASTICITY_MODEL_H__
 #define __VISCO_PLASTICITY_MODEL_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Matrix3.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-// #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+// #include <Uintah/Core/Grid/Variables/ParticleSet.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Math/TangentModulusTensor.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include "PlasticityState.h"
 
 

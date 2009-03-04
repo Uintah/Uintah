@@ -28,21 +28,21 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // just added
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Math/Matrix3.h>
+#include <Uintah/Core/Math/Short27.h> //for Fracture
+#include <Uintah/Core/Grid/Variables/NodeIterator.h> // just added
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Labels/MPMLabel.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>

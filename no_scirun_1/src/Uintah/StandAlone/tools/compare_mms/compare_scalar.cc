@@ -48,14 +48,14 @@ DEALINGS IN THE SOFTWARE.
  *  Copyright (C) 2007 U of U
  */
 
-#include <Packages/Uintah/StandAlone/tools/compare_mms/compare_scalar.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/StandAlone/tools/compare_mms/compare_scalar.h>
+#include <Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Grid/Level.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>

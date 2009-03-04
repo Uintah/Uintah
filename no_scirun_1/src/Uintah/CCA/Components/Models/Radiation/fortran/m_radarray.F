@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
+#include <Uintah/CCA/Components/Models/Radiation/fortran/m_radarray_fort.h>
 c      SUBROUTINE m_radarray(RGAMMA,SD15,SD,SD7,SD3)
 
 

@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_CGSolver_h
-#define Packages_Uintah_CCA_Components_Solvers_CGSolver_h
+#ifndef Uintah_CCA_Components_Solvers_CGSolver_h
+#define Uintah_CCA_Components_Solvers_CGSolver_h
 
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/CCA/Ports/SolverInterface.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
   class CGSolver : public SolverInterface, public UintahParallelComponent { 
@@ -59,4 +59,4 @@ namespace Uintah {
   };
 }
 
-#endif // Packages_Uintah_CCA_Components_Solvers_CGSolver_h
+#endif // Uintah_CCA_Components_Solvers_CGSolver_h

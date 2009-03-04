@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/EllipticCrack.h>
+#include <Uintah/CCA/Components/MPM/Crack/EllipticCrack.h>
 #include <iostream>
 
 using std::cout;

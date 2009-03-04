@@ -30,36 +30,36 @@ DEALINGS IN THE SOFTWARE.
 
 //----- Properties.cc --------------------------------------------------
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabPropsTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/Properties.h>
+#include <Uintah/CCA/Components/Arches/Arches.h>
+#include <Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Uintah/CCA/Components/Arches/TabPropsTable.h>
+#include <Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
+#include <Uintah/CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
+#include <Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
+#include <Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
+#include <Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
+#include <Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Uintah/CCA/Ports/Scheduler.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/Core/Grid/Variables/PerPatch.h>
+#include <Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Uintah/Core/Grid/SimulationState.h>
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Uintah/Core/Exceptions/InvalidValue.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Thread/Time.h>
 #include <Core/Math/MiscMath.h>

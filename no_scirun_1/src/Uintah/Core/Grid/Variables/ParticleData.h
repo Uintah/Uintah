@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_PARTICLEDATA_H
 #define UINTAH_HOMEBREW_PARTICLEDATA_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/Util/RefCounted.h>
 
 namespace Uintah {
 

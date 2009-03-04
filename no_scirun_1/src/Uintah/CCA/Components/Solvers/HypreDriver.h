@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreDriver_h
+#ifndef Uintah_CCA_Components_Solvers_HypreDriver_h
+#define Uintah_CCA_Components_Solvers_HypreDriver_h
 
 /*--------------------------------------------------------------------------
   CLASS
@@ -88,18 +88,18 @@ DEALINGS IN THE SOFTWARE.
   --------------------------------------------------------------------------*/
 
 #include <Core/Thread/Time.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreTypes.h>
-#include <Packages/Uintah/CCA/Components/Solvers/MatrixUtil.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
+#include <Uintah/Core/Util/RefCounted.h>
+#include <Uintah/Core/Grid/Task.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Exceptions/ConvergenceFailure.h>
+#include <Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Uintah/Core/Parallel/Parallel.h>
+#include <Uintah/CCA/Components/Solvers/HypreTypes.h>
+#include <Uintah/CCA/Components/Solvers/MatrixUtil.h>
+#include <Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverBase.h>
+#include <Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondBase.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Uintah/Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah {
 

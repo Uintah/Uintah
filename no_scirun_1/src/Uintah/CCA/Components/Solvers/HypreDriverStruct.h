@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Components_Solvers_HypreDriverStruct_h
-#define Packages_Uintah_CCA_Components_Solvers_HypreDriverStruct_h
+#ifndef Uintah_CCA_Components_Solvers_HypreDriverStruct_h
+#define Uintah_CCA_Components_Solvers_HypreDriverStruct_h
 
 /*--------------------------------------------------------------------------
 CLASS
@@ -87,7 +87,7 @@ WARNING
    1.7.7).
    --------------------------------------------------------------------------*/
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
+#include <Uintah/CCA/Components/Solvers/HypreDriver.h>
 
 namespace Uintah {
 

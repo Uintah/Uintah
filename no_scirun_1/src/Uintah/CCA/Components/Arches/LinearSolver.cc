@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //----- LinearSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
+#include <Uintah/CCA/Components/Arches/LinearSolver.h>
 
 using namespace Uintah;
 using namespace std;

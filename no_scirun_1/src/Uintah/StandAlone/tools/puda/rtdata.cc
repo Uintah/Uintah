@@ -29,14 +29,14 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
+#include <Uintah/StandAlone/tools/puda/rtdata.h>
 
-#include <Packages/Uintah/StandAlone/tools/puda/util.h>
+#include <Uintah/StandAlone/tools/puda/util.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Uintah/Core/DataArchive/DataArchive.h>
+#include <Uintah/Core/Grid/Box.h>
+#include <Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 
 #include <Core/OS/Dir.h>
 

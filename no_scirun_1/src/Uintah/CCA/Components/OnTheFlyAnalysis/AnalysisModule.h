@@ -28,20 +28,20 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#ifndef Packages_Uintah_CCA_Ports_AnalysisModule_h
-#define Packages_Uintah_CCA_Ports_AnalysisModule_h
+#ifndef Uintah_CCA_Ports_AnalysisModule_h
+#define Uintah_CCA_Ports_AnalysisModule_h
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Uintah/CCA/Ports/DataWarehouse.h>
+#include <Uintah/CCA/Ports/Output.h>
+#include <Uintah/CCA/Ports/SimulationInterface.h>
+#include <Uintah/Core/Grid/GridP.h>
+#include <Uintah/Core/Grid/Patch.h>
+#include <Uintah/Core/Grid/SimulationStateP.h>
+#include <Uintah/Core/Grid/Variables/ComputeSet.h>
 
 #include <Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/uintahshare.h>
+#include <Uintah/CCA/Components/OnTheFlyAnalysis/uintahshare.h>
 namespace Uintah {
 
   class DataWarehouse;

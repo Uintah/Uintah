@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UDA2NRRD_PARTICLES_H
 #define UDA2NRRD_PARTICLES_H
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/particleData.h>
+#include <Uintah/StandAlone/tools/uda2vis/particleData.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2vis/QueryInfo.h>
+#include <Uintah/StandAlone/tools/uda2vis/Args.h>
+#include <Uintah/StandAlone/tools/uda2vis/QueryInfo.h>
 
 #include <cstdlib>
 

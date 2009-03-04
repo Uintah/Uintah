@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_DynamicLoadBalancer_H
 #define UINTAH_HOMEBREW_DynamicLoadBalancer_H
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
-#include <Packages/Uintah/CCA/Ports/SFC.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
+#include <Uintah/CCA/Ports/SFC.h>
+#include <Uintah/Core/Grid/Grid.h>
+#include <Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sci_defs/uintah_defs.h>
 #if defined( HAVE_ZOLTAN )

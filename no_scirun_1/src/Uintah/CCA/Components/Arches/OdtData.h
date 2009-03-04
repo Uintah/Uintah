@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_OdtData_h
 #define Uintah_Component_Arches_OdtData_h
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Uintah/Core/Disclosure/TypeDescription.h>
 
 namespace Uintah {
   struct odtData { 

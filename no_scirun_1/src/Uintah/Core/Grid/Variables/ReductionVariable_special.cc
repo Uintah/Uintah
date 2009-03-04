@@ -28,15 +28,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
+#include <Uintah/Core/Grid/Variables/ReductionVariable.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/FancyAssert.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Uintah/Core/Disclosure/TypeUtils.h>
+#include <Uintah/Core/Grid/uintahshare.h>
 
 using namespace Uintah;
 using namespace SCIRun;
