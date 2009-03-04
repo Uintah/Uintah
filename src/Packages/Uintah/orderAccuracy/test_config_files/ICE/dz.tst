@@ -26,7 +26,7 @@
 <!--__________________________________-->
 <Test>
     <Title>100</Title>
-    <sus_cmd>sus -ice </sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_scalar -v</compare_cmd>
     <x>100</x>
@@ -38,7 +38,7 @@
 
 <Test>
     <Title>200</Title>
-    <sus_cmd>sus -ice </sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_scalar -v</compare_cmd>
     <x>200</x>
@@ -50,7 +50,7 @@
 
 <Test>
     <Title>400</Title>
-    <sus_cmd>sus -ice </sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_scalar -v</compare_cmd>
     <x>400</x>
@@ -61,7 +61,7 @@
 </Test>
 <Test>
     <Title>800</Title>
-    <sus_cmd>sus -ice </sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_scalar -v</compare_cmd>
     <x>800</x>
@@ -72,7 +72,7 @@
 </Test>
 <Test>
     <Title>1600</Title>
-    <sus_cmd>sus -ice </sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_scalar -v</compare_cmd>
     <x>1600</x>
