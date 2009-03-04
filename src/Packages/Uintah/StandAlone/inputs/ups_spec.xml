@@ -1170,14 +1170,30 @@
                                 attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST'" > <!-- FIXME: what is TST? -->
-          <a                  spec="OPTIONAL DOUBLE" need_applies_to='type hard_sphere_gas TST' />
-          <b                  spec="OPTIONAL DOUBLE" need_applies_to='type hard_sphere_gas TST' />
-          <gamma              spec="OPTIONAL DOUBLE" need_applies_to='type hard_sphere_gas' />
-          <Gamma              spec="OPTIONAL DOUBLE" need_applies_to='type hard_sphere_gas TST' />
-          <gas_constant       spec="OPTIONAL DOUBLE" need_applies_to='type hard_sphere_gas ideal_gas' />
-          <u                  spec="OPTIONAL DOUBLE" need_applies_to='type hard_sphere_gas TST' />
-          <w                  spec="OPTIONAL DOUBLE" need_applies_to='type hard_sphere_gas TST' />
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, JWL JWLC Murnahan'" >
+          <!--  TST  -->
+          <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          <b                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          <Gamma              spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          <u                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          <w                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
+          
+          <gas_constant       spec="OPTIONAL DOUBLE" need_applies_to='type  ideal_gas' />
+          <!--  Guneisen  -->
+          
+          <!--  JWL & JWLC  -->
+          <A                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
+          <B                  spec="REQUIRED DOUBLE           " need_applies_to='type JWL JWLC' />
+          <C                  spec="REQUIRED DOUBLE           " need_applies_to='type     JWLC' />
+          <R1                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
+          <R2                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' />
+          <om                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC' /> 
+          <rho0               spec="REQUIRED DOUBLE 'positive'" need_applies_to='type JWL JWLC Murnahan' />
+          <!--  Murnahan  -->
+          <n                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
+          <K                  spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
+          <P0                 spec="REQUIRED DOUBLE 'positive'" need_applies_to='type Murnahan' />
+          
         </EOS>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
         <geom_object          spec="MULTIPLE" />
@@ -1203,7 +1219,7 @@
 
   <Models                     spec="OPTIONAL NO_DATA" >
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'AdiabaticTable, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src'" > <!-- FIXME: is <Model> really MULTIPLE? -->
+                                attribute1="type REQUIRED STRING 'AdiabaticTable, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" > <!-- FIXME: is <Model> really MULTIPLE? -->
      
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
