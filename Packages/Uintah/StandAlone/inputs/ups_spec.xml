@@ -265,7 +265,7 @@
       <compression            spec="OPTIONAL STRING 'gzip'" />
       <filebase               spec="REQUIRED STRING" />
       <outputInterval         spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: only one of these should be allowed... -->
-      <outputInitTimestep     spec="OPTIONAL BOOLEAN" />
+      <outputInitTimestep     spec="OPTIONAL NO_DATA" />
       <outputTimestepInterval spec="OPTIONAL INTEGER 'positive'" />
 
      <!-- HACK: until we know what to do about checking the label names-->
