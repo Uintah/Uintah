@@ -60,7 +60,7 @@
     <ARCHES>
       <doMMS>true</doMMS>
       <MMS whichMMS="almgrenMMS" >
-        <mmsErrorType>L</mmsErrorType>
+        <mmsErrorType>L2</mmsErrorType>
         <almgrenMMS>
           <!--Note: This viscosity needs to be set twice for now, both here
                     and in the PhysicalConstant section. -->
