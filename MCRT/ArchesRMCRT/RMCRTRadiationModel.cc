@@ -33,6 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
@@ -220,9 +222,11 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
+
   
-  RMCRTnoInterpolation obRMCRT;
+  RMCRTnoInterpolation *obRMCRT = new RMCRTnoInterpolation;
   
+    
   // patch loop 
   for ( int p = 0; p < patches->size(); p++ ) {
     const Patch* patch = patches->get(p); 
@@ -285,7 +289,7 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     
     cout << "GOING TO CALL STAND ALONE SOLVER!\n"; 
     
-    obRMCRT.RMCRTsolver( );
+    obRMCRT->RMCRTsolver( );
 
   } // end patch loop 
 
