@@ -89,13 +89,18 @@ void ProfileDriver::addContribution(const PatchSubset* patches, double cost)
 
 void ProfileDriver::outputError(const GridP currentGrid)
 {
-    
-  vector<double> proc_costs(d_myworld->size(),0);
+
+  vector<double> proc_costsm(d_myworld->size(),0);
+  vector<double> proc_costsp(d_myworld->size(),0);
+  vector<vector<double> > predicted_sum(currentGrid->numLevels()), measured_sum(currentGrid->numLevels());
   //for each level
   for (int l=0; l<currentGrid->numLevels();l++)
   {
     LevelP level=currentGrid->getLevel(l);
     vector<Region> regions(level->numPatches());
+
+    predicted_sum[l].assign(level->numPatches(),0);
+    measured_sum[l].assign(level->numPatches(),0);
 
     for(int p=0; p<level->numPatches();p++)
     {
@@ -103,7 +108,6 @@ void ProfileDriver::outputError(const GridP currentGrid)
       regions[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
     }
 
-    vector<double> predicted_sum(regions.size(),0), measured_sum(regions.size(),0);
     vector<double>  predicted(regions.size(),0), measured(regions.size(),0);
 
     for(int r=0;r<(int)regions.size();r++)
@@ -131,18 +135,19 @@ void ProfileDriver::outputError(const GridP currentGrid)
     //allreduce sum weights
     if(d_myworld->size()>1)
     {
-      MPI_Reduce(&predicted[0],&predicted_sum[0],predicted.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-      MPI_Reduce(&measured[0],&measured_sum[0],measured.size(),MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+      MPI_Allreduce(&predicted[0],&predicted_sum[l][0],predicted.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
+      MPI_Allreduce(&measured[0],&measured_sum[l][0],measured.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
     }
-    
+
     for( int p=0;p<level->numPatches();p++)
     {
       const Patch *patch=level->getPatch(p);
-     
+
       int proc=d_lb->getPatchwiseProcessorAssignment(patch);
-      proc_costs[proc]+=measured_sum[p];
+      proc_costsm[proc]+=measured_sum[l][p];
+      proc_costsp[proc]+=predicted_sum[l][p];
     }
-    
+
     if(d_myworld->myrank()==0)
     {
       //calculate total cost for normalization
@@ -151,10 +156,10 @@ void ProfileDriver::outputError(const GridP currentGrid)
       double total_volume=0;
       for(int r=0;r<(int)regions.size();r++)
       {
-        total_measured+=measured_sum[r];
-        total_predicted+=predicted_sum[r];
-        total_measured_error+=fabs(measured_sum[r]-predicted_sum[r]);
-        total_measured_percent_error+=fabs(measured_sum[r]-predicted_sum[r])/measured_sum[r];
+        total_measured+=measured_sum[l][r];
+        total_predicted+=predicted_sum[l][r];
+        total_measured_error+=fabs(measured_sum[l][r]-predicted_sum[l][r]);
+        total_measured_percent_error+=fabs(measured_sum[l][r]-predicted_sum[l][r])/measured_sum[l][r];
         total_volume+=regions[r].getVolume();
       }
 
@@ -162,26 +167,100 @@ void ProfileDriver::outputError(const GridP currentGrid)
     }
   }
 
+  double meanCostm=0, meanCostp=0;
+  double maxCostm=proc_costsm[0], maxCostp=proc_costsp[0];
+  int maxLocm=0, maxLocp=0;
+  for(int p=0;p<d_myworld->size();p++)
+  {
+    meanCostm+=proc_costsm[p];
+    meanCostp+=proc_costsp[p];
+
+    if(maxCostm<proc_costsm[p])
+    {
+      maxCostm=proc_costsm[p];
+      maxLocm=p;
+    }
+
+    if(maxCostp<proc_costsp[p])
+    {
+      maxCostp=proc_costsp[p];
+      maxLocp=p;
+    }
+  }
   if(d_myworld->myrank()==0)
   {
-    double meanCost=0;
-    double maxCost=proc_costs[0];
-    int maxLoc=0;
-    for(int p=0;p<d_myworld->size();p++)
+    stats << "LoadBalance Measured:  Mean:" << meanCostm/d_myworld->size() << " Max:" << maxCostm << " on processor " << maxLocm << endl;
+    stats << "LoadBalance Predicted:  Mean:" << meanCostp/d_myworld->size() << " Max:" << maxCostp << " on processor " << maxLocp << endl;
+  }
+
+  if(maxCostm/maxCostp>1.1)
+  {
+    if(d_myworld->myrank()==0)
     {
-      meanCost+=proc_costs[p];
-      if(maxCost<proc_costs[p])
-      {
-        maxCost=proc_costs[p];
-        maxLoc=p;
-      }
+      cout << d_myworld->myrank() << " Error measured/predicted do not line up, patch cost processor " << maxLocm << " patches:";
     }
-    stats << "LoadBalance Measured:  Mean:" << meanCost/d_myworld->size() << " Max:" << maxCost << " on processor " << maxLoc << endl;
+      
+    //for each level
+    for (int l=0; l<currentGrid->numLevels();l++)
+    {
+      LevelP level=currentGrid->getLevel(l);
+      vector<Region> regions(level->numPatches());
+
+      for(int p=0; p<level->numPatches();p++)
+      {
+        const Patch *patch=level->getPatch(p);
+        regions[p]=Region(patch->getCellLowIndex__New(),patch->getCellHighIndex__New());
+      }
+
+      double maxError=0;
+      int maxLoc=0;
+      for(unsigned int r=0; r<regions.size();r++)
+      {
+        const Patch *patch=level->getPatch(r);
+        
+        int proc=d_lb->getPatchwiseProcessorAssignment(patch);
+      
+        if(proc==maxLocm)
+        {
+          if(d_myworld->myrank()==0)
+          {
+            stats << "    level: " << l << " region: " << regions[r] << " measured:" << measured_sum[l][r] << " predicted:" << predicted_sum[l][r] << endl;
+          }
+          //find max error region
+          double error=measured_sum[l][r]-predicted_sum[l][r];
+          if(error>maxError)
+          {
+            maxError=error;
+            maxLoc=r;
+          }
+        }
+      }
+      
+      IntVector low=regions[maxLoc].getLow()/d_minPatchSize[l];
+      IntVector high=regions[maxLoc].getHigh()/d_minPatchSize[l];
+      
+      MPI_Barrier(d_myworld->getComm());
+      if(d_myworld->myrank()==0)
+        stats << "        map entries for region:" << regions[maxLoc] << endl;
+      MPI_Barrier(d_myworld->getComm());
+      //loop through datapoints
+      for(CellIterator iter(low,high); !iter.done(); iter++) 
+      {
+        //search for point in the map
+        map<IntVector,Contribution>::iterator it=costs[l].find(*iter);
+
+        //if in the map
+        if(it!=costs[l].end())
+        {
+         stats << "              " << d_myworld->myrank() << " level: " << l << " key: " << it->first << " measured: " << it->second.current << " predicted: " << it->second.weight << endl;
+        }
+      } 
+    }
   }
 }
 void ProfileDriver::finalizeContributions(const GridP currentGrid)
 {
- 
+
   if(stats.active())
   {
     outputError(currentGrid);
