@@ -151,7 +151,8 @@
       <union                  spec="MULTIPLE" />
     </difference>
 
-    <intersection             spec="OPTIONAL NO_DATA" >
+    <intersection             spec="OPTIONAL NO_DATA"
+                                attribute1="label OPTIONAL STRING" >
       <box                    spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
