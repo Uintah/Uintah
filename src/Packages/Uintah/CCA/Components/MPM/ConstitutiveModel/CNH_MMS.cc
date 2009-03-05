@@ -191,9 +191,6 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
-    Matrix3 velGrad,Shear,bElBar_new,deformationGradientInc;
-    double J,p,se=0.;
-    double c_dil=0.0;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Matrix3 Identity;
     Identity.Identity();
@@ -268,31 +265,23 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
       // get the volumetric part of the deformation
-      J = deformationGradient_new[idx].Determinant();
+      double J = deformationGradient_new[idx].Determinant();
 
       // Get the deformed volume
       pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute local wave speed
       double rho_cur = rho_orig/J;
-      c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
+      double c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
 
-      Shear = 
+      Matrix3 Shear = 
           (deformationGradient_new[idx]*deformationGradient_new[idx].Transpose()             - Identity)*mu;
 
       // get the hydrostatic part of the stress (times J)
-      p = lambda*log(J);
+      double p = lambda*log(J);
 
       // compute the total stress (volumetric + deviatoric)
       pstress[idx] = (Identity*p + Shear)/J;
-
-      // Compute the strain energy for all the particles
-      //U = .5*bulk*(.5*(J*J - 1.0) - log(J));
-      //W = .5*shear*(bElBar_new.Trace() - 3.0);
-      
-      double e = 0;//(U + W)*pvolume_new[idx]/J;
-
-      se += e;
 
       Vector pvelocity_idx = pvelocity[idx];
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
@@ -302,6 +291,7 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
+    double se = 0;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
 
