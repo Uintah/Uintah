@@ -28,27 +28,26 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <cmath>
-#include <iostream>
-#include <ctime>
-#include <cstdlib>
-#include <fstream>
-#include <iomanip>
-#include <vector>
-#include <sstream>
+#ifndef RMCRTRRSD_h
+#define RMCRTRRSD_h
 
-using namespace std;
+namespace Uintah {
+class RMCRTRRSD {
 
-int main(){
-  double *test = new double [500];
-  for ( int i = -400; i < 9; i ++ ){
-    test[i] = i;
-    cout << "test[" << i << "] = " << test[i] << endl;
-  }
+public:
+  RMCRTRRSD();
 
-  //  delete[] test;
-  return 0;
+  ~RMCRTRRSD();
+
+  void ToArray(int size, double *array, char *_argv);
+ 
+  double MeshSize(int &Nchalf, double &Lhalf, double &ratio);
+
+  int RMCRTsolver();
+  
+  
+};
 
 }
-  
-  
+
+#endif

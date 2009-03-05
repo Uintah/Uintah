@@ -38,14 +38,14 @@ using namespace std;
 
 
 // get NoMedia from main function
-ray::ray(const int &_VolElementNo,
+ray::ray(const int &VolElementNo_,
 	 const int &Ncx_,
 	 const int &Ncy_,
 	 const int &Ncz_,
 	 const int &offset_){
   
   
-  VolElementNo = _VolElementNo;
+  VolElementNo = VolElementNo_;
   Ncx = Ncx_;
   Ncy = Ncy_;
   Ncz = Ncz_;
@@ -63,10 +63,12 @@ ray::~ray(){
   
 void ray::set_emissS_vol(MTRand &MTrng,
 			 double *sVol){
-  
   double phi, theta;
-  phi = 2 * pi * MTrng.randExc();
-  sVol[2] = 1 - 2 *  MTrng.randExc(); // cos(theta), k
+  R_phi =  MTrng.randExc();
+  R_theta = MTrng.randExc();
+  
+  phi = 2 * pi * R_phi;
+  sVol[2] = 1 - 2 *  R_theta; // cos(theta), k
   
   theta = acos(sVol[2]); 
   sVol[0] = sin(theta) * cos( phi ); // i 
@@ -432,6 +434,10 @@ ray::surfaceIntersect( const double *X,
 // store path Index, Index's path length ( might not need to be stored),
 // left fraction
 
+// modify scattering scheme.
+// instead of picking a scattering length every time, pick scat-length once,
+// then keep tracking if the ray goes to that scatter length yet.
+// otherwise, if scat-length is too long, the ray will never get a chance to scatter
 void ray::TravelInMediumInten(MTRand &MTrng,
 			      VirtualSurface &obVirtual,
 			      const double *kl_Vol,
@@ -488,7 +494,9 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       // if real, the PathSurfaceLeft will be updated again later
       PathSurfaceLeft = 1;      
       vIndexUpdate = 1;
-      
+   //    cout << "directionVector in ray.cc = " << directionVector[0] <<
+// 	"; " << directionVector[1] << "; " <<
+// 	directionVector[2] << endl;
       }
     else { // scatter happens within the subregion
       
@@ -565,7 +573,7 @@ void ray::hitRealSurfaceInten(MTRand &MTrng,
   rhod = rd_surface[hitSurfaceIndex];
   //  cout << "hitSurfaceIndex inside = " << hitSurfaceIndex << endl;
   // rng.RandomNumberGen( random );
-
+  // cout << "alpha = " << alpha << endl;
   if ( alpha == 1 ) ratio = 10; // black body
   else ratio = rhod / ( rhos + rhod );
 
