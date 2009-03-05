@@ -77,6 +77,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/StandAlone/tools/puda/asci.h>
 #include <Packages/Uintah/StandAlone/tools/puda/jim1.h>
 #include <Packages/Uintah/StandAlone/tools/puda/jim2.h>
+#include <Packages/Uintah/StandAlone/tools/puda/AA_MMS.h>
 #include <Packages/Uintah/StandAlone/tools/puda/rtdata.h>
 #include <Packages/Uintah/StandAlone/tools/puda/tecplot.h>
 #include <Packages/Uintah/StandAlone/tools/puda/util.h>
@@ -126,6 +127,7 @@ usage( const std::string& badarg, const std::string& progname )
   cerr << "  -varsummary\n";
   cerr << "  -jim1\n";
   cerr << "  -jim2\n";
+  cerr << "  -AA_MMS\n";
   cerr << "  -partvar <variable name>\n";
   cerr << "  -asci\n";
   cerr << "  -tecplot <variable name>\n";
@@ -273,6 +275,8 @@ main(int argc, char** argv)
       clf.do_jim1=true;
     } else if(s == "-jim2"){
       clf.do_jim2=true;
+    } else if(s == "-AA_MMS"){
+      clf.do_AA_MMS=true;
     } else if(s == "-partvar"){
       clf.do_partvar=true;
       clf.particleVariable = argv[++i]; 
@@ -450,6 +454,10 @@ main(int argc, char** argv)
 
     if( clf.do_jim2 ){
       jim2( da, clf );
+    }
+
+    if( clf.do_AA_MMS ){
+      AA_MMS( da, clf );
     }
 
     if (clf.do_asci){
