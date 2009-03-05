@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef VirtualSurface_H
 #define VirtualSurface_H
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
+#include "Surface.h"
+#include "MersenneTwister.h"
 #include <cmath>
 
 class MTRand;
@@ -41,7 +41,6 @@ class VirtualSurface : public Surface{
 public:
   VirtualSurface();
   ~VirtualSurface();
-  //  virtual void getTheta(const double &random);
 
   inline
   void get_PhFunc(const int &PhFunc_Flag,
@@ -53,10 +52,9 @@ public:
     f = eddington_f;
     g = eddington_g;
   }
-
+    
+  virtual void set_theta(const double &random);
   
-  virtual void getTheta(const double &random);
- 
   //get e1-- e1
   void get_e1(const double &random1,
 	      const double &random2,
@@ -71,7 +69,7 @@ public:
 private:
   double e1[3], e2[3];
   int PhFunc;
-  double b, f, g;  
+  double b, f, g;
 };
 
 #endif

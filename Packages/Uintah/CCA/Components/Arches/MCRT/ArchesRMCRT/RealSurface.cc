@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RRealSurface.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 
 #include <iostream>
@@ -49,10 +49,13 @@ void RealSurface::get_s(MTRand &MTrng, double *s){
   this->get_t1();
   this->get_t2();
   
-  this->getTheta(MTrng.randExc()); 
+  R_theta = MTrng.randExc();
+  R_phi = MTrng.randExc();
+  
+  this->set_theta(R_theta); 
 
-  // getPhi is inherited from Class Surface
-  this->getPhi(MTrng.randExc());
+  // set_phi is inherited from Class Surface
+  this->set_phi(R_phi);
 
 //   cout << "random1 = " << random1 << "; random2 = " << random2 << endl;
 //   cout << " theta = " << theta << "; phi = " << phi << endl;
