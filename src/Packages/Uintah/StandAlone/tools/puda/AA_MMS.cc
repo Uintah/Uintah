@@ -49,7 +49,7 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
     double E = 9.*bulk*mu/(3.*bulk+mu);
     double rho0=1.0;
     double c = sqrt(E/rho0);
-    double A=.01;
+    double A=.1;
     for(int l=0;l<grid->numLevels();l++){
       LevelP level = grid->getLevel(l);
       for(Level::const_patchIterator iter = level->patchesBegin();
