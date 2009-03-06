@@ -6,7 +6,7 @@
        <title/>
    </Meta>
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--  Special Instructions                                              -->
     <!-- In order to get a exploding container surrounded by a fire you need-->

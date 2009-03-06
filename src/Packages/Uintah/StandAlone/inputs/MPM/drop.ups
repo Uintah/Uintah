@@ -2,7 +2,7 @@
 <Uintah_specification>
 
    <Meta>
-       <title></title>
+       <title>none</title>
    </Meta>
 
    <SimulationComponent type="mpm" />
