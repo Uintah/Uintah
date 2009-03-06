@@ -28,27 +28,31 @@ print STDERR "Old total memory highwater " . $compare_highwater . "\n";
 
 if ($compare_highwater == 0 && $test_highwater > 0) {
     $percent = 99999;
+    $abs = 0;
 }
 elsif ($test_highwater == 0 && $compare_highwater > 0) {
     $percent = -99999;
+    $abs = 0;
 }
 elsif ($test_highwater > 0 && $compare_highwater > 0) {
     $percent = int(($test_highwater - $compare_highwater) / 
 		   $compare_highwater * 100 + 0.5);
+    $abs = $test_highwater - $compare_highwater;
 }
 else {
     $percent = 0; # both are zero
+    $abs = 0;
 }
  
 if ($percent > 0) {
-    print STDERR "Memory usage increased (worsened) by %" . $percent . "\n";
+    print STDERR "Memory usage increased (worsened) by %" . $percent . " " . $abs . " bytes\n";
 }
 elsif ($percent < 0) {
-    print STDERR "Memory usage decreased (improved) by %" . -$percent . "\n";
+    print STDERR "Memory usage decreased (improved) by %" . -$percent . " " . $abs . " bytes\n";
 }
 else {
     print STDERR "Memory usage stayed the same.\n"
 }
-print $percent;
+print "$percent $abs";
 exit 0
 
