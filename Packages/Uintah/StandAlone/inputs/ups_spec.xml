@@ -608,8 +608,8 @@
             <sampling_scheme            spec="OPTIONAL STRING 'simple_sample, RRSD, RRSDstratified'" /> 
               <RRSDstratified           spec="OPTIONAL NO_DATA" >
                  <x_n                   spec="REQUIRED INTEGER" />
-                 <x_n                   spec="REQUIRED INTEGER" />
-                 <x_n                   spec="REQUIRED INTEGER" />
+                 <y_n                   spec="REQUIRED INTEGER" />
+                 <z_n                   spec="REQUIRED INTEGER" />
                  <theta_n               spec="REQUIRED INTEGER" />
                  <phi_n                 spec="REQUIRED INTEGER" />
               </RRSDstratified>
