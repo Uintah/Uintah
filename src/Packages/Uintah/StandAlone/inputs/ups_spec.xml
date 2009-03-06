@@ -1236,7 +1236,7 @@
 
   <Models                     spec="OPTIONAL NO_DATA" >
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'AdiabaticTable, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" > <!-- FIXME: is <Model> really MULTIPLE? -->
+                                attribute1="type REQUIRED STRING 'AdiabaticTable, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" >
      
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
@@ -1285,14 +1285,33 @@
       </RadiationModel>
       <rate                   spec="OPTIONAL DOUBLE" />
       <refPressure            spec="OPTIONAL DOUBLE" />
-      <scalar                 spec="OPTIONAL NO_DATA" 
-                                attribute1="name REQUIRED STRING 'f'" >
-        <constants            spec="REQUIRED NO_DATA" >
-          <diffusivity        spec="OPTIONAL DOUBLE" />  <!-- FIXME: really optional? -->
+      
+      <!--  Passive Scalar -->
+      <scalar                     spec="OPTIONAL NO_DATA" 
+                                  attribute1="name REQUIRED STRING" >
+        <material                    spec="REQUIRED STRING"/>
+        <test_conservation           spec="OPTIONAL BOOLEAN"/>
+        <constants                   spec="REQUIRED NO_DATA" >
+          <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
+          <diffusivity               spec="OPTIONAL DOUBLE" />
+          <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
         </constants>
-        <geom_object/>
-        <test_conservation    spec="OPTIONAL BOOLEAN" /> <!-- FIXME: really optional? default? -->
+        
+        <geom_object  >
+          <scalar                    spec="REQUIRED DOUBLE"/>
+          <sinusoidalInitialize      spec="OPTIONAL BOOLEAN"/>
+          <freq                      spec="OPTIONAL VECTOR"/>
+          <linearInitialize          spec="OPTIONAL BOOLEAN"/>
+          <slope                     spec="OPTIONAL VECTOR"/>
+          <triangularInitialize      spec="OPTIONAL BOOLEAN"/>
+          <cubicInitialize           spec="OPTIONAL BOOLEAN"/>
+          <exponentialInitialize_1D  spec="OPTIONAL BOOLEAN"/>
+          <coeff                     spec="OPTIONAL VECTOR"/>
+        </geom_object>
+
       </scalar>
+      
+      
       <SpecificHeatBoth       spec="OPTIONAL DOUBLE" />
       <table                  spec="OPTIONAL NO_DATA" 
                                 attribute1="name REQUIRED STRING 'adiabatic'"
