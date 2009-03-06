@@ -6,10 +6,10 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title></title>
+       <title>none</title>
    </Meta>    
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -164,7 +164,7 @@
       <save label="sum_scalar_f"/>
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
-      <checkpoint interval="0.005" cycle="2"/>"
+      <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
