@@ -27,33 +27,30 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-#ifndef RMCRTRRSD_h
-#define RMCRTRRSD_h
-
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
 
-namespace Uintah {
-  class RMCRTRRSD:public RMCRTFactory{
+using namespace Uintah; 
+using namespace std;
 
-public:
-  RMCRTRRSD();
 
-  virtual ~RMCRTRRSD();
+RMCRTFactory::RMCRTFactory(){}
 
-  void ToArray(int size, double *array, char *_argv);
- 
-  double MeshSize(int &Nchalf, double &Lhalf, double &ratio);
+RMCRTFactory::~RMCRTFactory(){}
 
-  int RMCRTsolver(const int &i_n,
-		  const int &j_n,
-		  const int &k_n,
-		  const int &theta_n,
-		  const int &phi_);
+
+static RMCRTFactory *RMCRTFactory::RMCRTModel(const std::string sample_sche){
+  // call RMCRTnoInterpolation, with no stratified sampling,
+  // not even with i_n, j_n, k_n, theta_n, and phi_n all = 1
+  // this should be faster
   
+  if ( sample_sche == "simple_sample"){
+    return new RMCRTnoInterpolation;
+  }
+  else if ( sample_sche == "RRSD"){
+    return new RMCRTRRSD;
+  }
+  else if ( sample_sche == "RRSDstratified") {
+    return  new RMCRTRRSDStratified;
+  }
   
-};
-
 }
-
-#endif
