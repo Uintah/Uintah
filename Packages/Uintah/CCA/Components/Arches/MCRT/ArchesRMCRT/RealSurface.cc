@@ -68,7 +68,9 @@ void RealSurface::get_s(MTRand &MTrng, double *s){
 
 
 // to get q on surface elements ( make it efficient to calculate intensity
-// on surface element 
+// on surface element
+
+// i -> IntVector currCell
 double RealSurface::SurfaceEmissFlux(const int &i,
 				     const double *emiss_surface,
 				     const double *T_surface,
