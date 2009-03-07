@@ -27,31 +27,58 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
+#ifndef Uintah_Component_Arches_RMCRTFactory_h
+#define Uintah_Component_Arches_RMCRTFactory_h
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
 
-#ifndef RMCRTRRSDStratified_h
-#define RMCRTRRSDStratified_h
+class RMCRTRRSD; 
+class RMCRTRRSDStratified;
+class RMCRTnoInterpolation;
 
-//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
-
+using namespace std;
 namespace Uintah {
-  
-  class RMCRTRRSDStratified{
+
+  class RMCRTFactory {
     
   public:
-    RMCRTRRSDStratified();
+     // constructor
+    RMCRTFactory();
     
-    virtual ~RMCRTRRSDStratified();
+     // destructor
+    virtual ~RMCRTFactory();
+
+    virtual int RMCRTsolver(const int &i_n,
+			    const int &j_n,
+			    const int &k_n,
+			    const int &theta_n,
+			    const int &phi_n) =0;
     
-    void ToArray(int size, double *array, char *_argv);
+    static RMCRTFactory *RMCRTModel(string sample_sche);
+
+    /*
+    static RMCRTFactory *RMCRTModel(const std::string sample_sche){
+      // call RMCRTnoInterpolation, with no stratified sampling,
+      // not even with i_n, j_n, k_n, theta_n, and phi_n all = 1
+      // this should be faster
+      
+      if ( sample_sche == "simple_sample"){
+	return new RMCRTnoInterpolation;
+      }
+      else if ( sample_sche == "RRSD"){
+	return new RMCRTRRSD;
+      }
+      else if ( sample_sche == "RRSDstratified") {
+	return  new RMCRTRRSDStratified;
+      }
+      
+    }
+    */
     
-    double MeshSize(int &Nchalf, double &Lhalf, double &ratio);
-    
-    int RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
-		    const int& theta_n, const int& phi_n);
-    
-    
-  };
+  }; // Class RMCRTFactory
   
-}
+}// end of namespace Uintah
 
 #endif
+  

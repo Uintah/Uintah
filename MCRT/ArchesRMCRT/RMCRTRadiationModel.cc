@@ -32,8 +32,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
+//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
+//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
+//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
@@ -51,8 +52,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
 
+//class RMCRTFactory;
+
 using namespace Uintah; 
 using namespace std;
+
 
 //---------------------------------------------------------------------------
 //  Constructor
@@ -81,22 +85,45 @@ RMCRTRadiationModel::problemSetup( const ProblemSpecP& params )
   // This will look for a block in the input file called <RMCRTRadiationModel>
   ProblemSpecP db_rad = params->findBlock("RMCRTRadiationModel");
 
-  string prop_model; // Do i need this?
-
+  string prop_model; 
+  
   // ask for number of rays
   db_rad->require("const_num_rays", d_constNumRays);
 
   // if using russian roulette
-  if ( db_rad->findBlock("russian_roulette")){
-    d_rr = true; 
-    db_rad->getWithDefault("rr_threshold", d_StopLowerBound, 1.e-4);
-  }
+  db_rad->getWithDefault("rr_threshold", d_StopLowerBound, 1.e-4);
+  
+//   if ( db_rad->findBlock("russian_roulette")){
+//     d_rr = true; 
+//     db_rad->getWithDefault("rr_threshold", d_StopLowerBound, 1.e-4);
+//   }
   
   // property model set up
   // radcoef requires opl 
   db_rad->require("opl",d_opl);
   db_rad->require("property_model", prop_model);
   
+  db_rad->getWithDefault("sampling_scheme", sample_sche, "simple_sample");
+
+  if ( sample_sche == "simple_sample" || sample_sche == "RRSD"){
+    db_rad->getWithDefault("x_n", i_n, 1);
+    db_rad->getWithDefault("y_n", j_n, 1);
+    db_rad->getWithDefault("z_n", k_n, 1);
+    db_rad->getWithDefault("theta_n", theta_n, 1);
+    db_rad->getWithDefault("phi_n", phi_n, 1);
+  }
+  else if ( sample_sche == "RRSDstratified"){
+  
+    ProblemSpecP db_stratified = db_rad->findBlock("RRSDstratified");
+    db_stratified->require("x_n", i_n);
+    db_stratified->require("y_n", j_n);
+    db_stratified->require("z_n", k_n);
+    db_stratified->require("theta_n", theta_n);
+    db_stratified->require("phi_n", phi_n);
+    
+  }
+    
+    
   if (prop_model == "radcoef"){  // have this in c++
     d_radcal     = false;
     d_wsgg       = false;
@@ -207,6 +234,8 @@ RMCRTRadiationModel::sched_solve( const LevelP& level, SchedulerP& sched, const 
 
 }
 
+
+
 //---------------------------------------------------------------------------
 //  Actually solve the RTE using RMCRT
 //---------------------------------------------------------------------------
@@ -223,10 +252,17 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Ghost::GhostType  gn = Ghost::None;
 
+  // need to pass in property, RR, stratified sampling para.
+
+  // generate a root class RMCRTScheme
+  // then RMCRTScheme *obRMCRT in factory
+  // return new derivedClass
+
+  // RMCRTFactory *obRMCRT;
+  // obRMCRT = RMCRTFactory::RMCRTModel(sample_sche);
   
-  RMCRTnoInterpolation *obRMCRT = new RMCRTnoInterpolation;
-  
-    
+  RMCRTRRSDStratified *obRMCRT;
+
   // patch loop 
   for ( int p = 0; p < patches->size(); p++ ) {
     const Patch* patch = patches->get(p); 
@@ -289,12 +325,19 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     
     cout << "GOING TO CALL STAND ALONE SOLVER!\n"; 
     
-    obRMCRT->RMCRTsolver( );
 
+    /*
+      obRMCRT->RMCRTsolver(constCCVariable<int>& cellType,
+      constCCVariable<double> &T,
+      SFCXVariable<double> &Tx,
+      SFCYVariable<double> &Ty, 
+      SFCZVariable<double> &Tz )
+    */
+   
+    obRMCRT->RMCRTsolver(i_n, j_n, k_n, theta_n, phi_n);
   } // end patch loop 
 
 }
 
  
-
 
