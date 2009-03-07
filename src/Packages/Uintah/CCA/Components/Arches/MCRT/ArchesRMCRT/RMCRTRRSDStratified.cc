@@ -227,13 +227,17 @@ void rayfromSurf(SurfaceType &obSurface,
     
     // get emitting ray's direction vector s
     // should watch out, the s might have previous values
-    RealPointer->get_s(MTrng, s);    
+    RealPointer->get_s(MTrng, s);
+
+    // RealPointer get limits
+    // get limits can be replaced by Point p_fx.x() etc.
     RealPointer->get_limits(X, Y, Z);
     
     R_theta = RealPointer->get_R_theta();
     R_phi = RealPointer->get_R_phi();
     
     // get ray's emission position, xemiss, yemiss, zemiss
+    // xlow = p_fx.x() etc. 
     obRay.set_emissP(MTrng, 
 		     obSurface.get_xlow(), obSurface.get_xup(),
 		     obSurface.get_ylow(), obSurface.get_yup(),
@@ -1056,6 +1060,9 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    VolElement obVol;
    VirtualSurface obVirtual;
    obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);
+
+   // VolElementNo is not necessary
+   // ray obRay(IntVector &currCell)
    ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
       
    double OutIntenVol, traceProbability, LeftIntenFrac;

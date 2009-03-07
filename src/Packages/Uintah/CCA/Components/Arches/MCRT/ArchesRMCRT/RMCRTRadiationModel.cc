@@ -286,7 +286,10 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     // wondering if they have got the same structure as obtained from DW
     CCVariable<double> Ttest;
     CCVariable<double> absorpCoeftest;
-    
+
+    // what about absorb_surface, rs_surface, and rd_surface?
+    // work the same way as T ?
+    // but there are no rs, rd for media at all.
     // temperature variables on physical boundaries.
     double Tleft, Tright, Ttop, Tbottom, Tfront, Tback;
     Tleft = 0;
