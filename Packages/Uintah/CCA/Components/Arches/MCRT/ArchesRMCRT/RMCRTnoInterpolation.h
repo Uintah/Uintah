@@ -31,19 +31,22 @@ DEALINGS IN THE SOFTWARE.
 #ifndef RMCRTnoInterpolation_h
 #define RMCRTnoInterpolation_h
 
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
+
 namespace Uintah {
-class RMCRTnoInterpolation {
+  class RMCRTnoInterpolation:public RMCRTFactory{
 
 public:
   RMCRTnoInterpolation();
 
-  ~RMCRTnoInterpolation();
+  virtual ~RMCRTnoInterpolation();
 
   void ToArray(int size, double *array, char *_argv);
  
   double MeshSize(int &Nchalf, double &Lhalf, double &ratio);
 
-  int RMCRTsolver();
+  int RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
+		  const int& theta_n, const int& phi_);
   
   
 };

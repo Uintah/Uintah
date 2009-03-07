@@ -90,7 +90,9 @@ private:
   int d_mmWallID; 
   int d_wallID; 
   int d_flowID; 
-
+  int i_n, j_n, k_n, theta_n, phi_n;
+  string sample_sche;
+  
 }; // end class RMCRTRadiationModel
 
 template <class FCV> 
