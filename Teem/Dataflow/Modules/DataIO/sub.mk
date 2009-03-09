@@ -40,7 +40,7 @@ INCLUDES += $(TEEM_INCLUDE) $(GDCM_INCLUDE)
 
 
 
-SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
+SRCDIR   := Teem/Dataflow/Modules/DataIO
 
 
 SRCS     += \

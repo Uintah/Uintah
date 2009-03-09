@@ -27,18 +27,18 @@
 #
 
 
-#Makefile fragment for the Packages/Teem/Dataflow directory
+#Makefile fragment for the Teem/Dataflow directory
 
 include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
-SRCDIR := Packages/Teem/Dataflow
+SRCDIR := Teem/Dataflow
 SUBDIRS := \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Modules \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := Packages/Teem/Core Dataflow Core
+PSELIBS := Teem/Core Dataflow Core
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
