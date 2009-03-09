@@ -30,9 +30,9 @@ DEALINGS IN THE SOFTWARE.
 
 //----- PhysicalConstants.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/DataWarehouse.h>
 
 using namespace Uintah;
 

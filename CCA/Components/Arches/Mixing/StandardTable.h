@@ -66,8 +66,8 @@ POSSIBLE REVISIONS
  
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <CCA/Components/Arches/Mixing/MixingModel.h>
 
 #include <vector>
 #include <string>

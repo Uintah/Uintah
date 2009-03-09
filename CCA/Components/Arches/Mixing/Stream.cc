@@ -30,9 +30,9 @@ DEALINGS IN THE SOFTWARE.
 
 //----- Stream.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <string>
 #include <iostream>
 #include <fstream>

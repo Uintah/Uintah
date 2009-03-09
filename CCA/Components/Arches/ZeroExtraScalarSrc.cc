@@ -30,13 +30,13 @@ DEALINGS IN THE SOFTWARE.
 
 //----- ZeroExtraScalarSrc.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/ZeroExtraScalarSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <CCA/Components/Arches/ZeroExtraScalarSrc.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <CCA/Ports/Scheduler.h>
 
 using namespace std;
 using namespace Uintah;

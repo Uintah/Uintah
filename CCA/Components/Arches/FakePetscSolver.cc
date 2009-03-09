@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <CCA/Components/Arches/PetscSolver.h>
 #include <Core/Exceptions/InternalError.h>
 
 using namespace std;

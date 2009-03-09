@@ -63,7 +63,7 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
+#include <CCA/Components/Arches/Mixing/MixingModel.h>
 
 #include <vector>
 #include <string>

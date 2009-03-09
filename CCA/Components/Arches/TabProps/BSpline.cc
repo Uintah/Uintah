@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/BSpline.h>
+#include <CCA/Components/Arches/TabProps/BSpline.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/LU.h>
+#include <CCA/Components/Arches/TabProps/LU.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Thread.h>

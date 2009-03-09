@@ -27,7 +27,7 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
 
 using namespace Uintah; 
 using namespace std;

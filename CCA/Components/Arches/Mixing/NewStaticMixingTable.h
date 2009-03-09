@@ -64,9 +64,9 @@ POSSIBLE REVISIONS
         Read and interpolate 4-D tables e.g., non-adiabatic flamelets/extent of reaction tables 
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/Arches/Mixing/Stream.h>
+#include <CCA/Components/Arches/Mixing/MixingModel.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 #include   <vector>
 #include   <string>
 

@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //  ArchesMaterial.cc
 
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
 
 using namespace Uintah;
 

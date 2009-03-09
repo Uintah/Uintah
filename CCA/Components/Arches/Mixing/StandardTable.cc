@@ -30,13 +30,13 @@ DEALINGS IN THE SOFTWARE.
 
 //----- StandardTable.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/StandardTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableFactory.h>
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Arches/Mixing/StandardTable.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <CCA/Components/Models/FluidsBased/TableFactory.h>
+#include <CCA/Components/Models/FluidsBased/TableInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Math/MiscMath.h>
 #include <cmath>
 #include <cstdio>

@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef RMCRTRRSDStratified_h
 #define RMCRTRRSDStratified_h
 
-//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
+//#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
 
 namespace Uintah {
   

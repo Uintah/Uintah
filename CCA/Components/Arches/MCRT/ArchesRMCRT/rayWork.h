@@ -34,15 +34,15 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdlib>
 #include <cmath>
 
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/FrontRealSurface.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BackRealSurface.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/LeftRealSurface.h>
-#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RightRealSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/FrontRealSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/BackRealSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/LeftRealSurface.h>
+#include  <CCA/Components/Arches/MCRT/ArchesRMCRT/RightRealSurface.h>
 
 
 class MTRand;

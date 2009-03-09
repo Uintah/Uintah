@@ -34,10 +34,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/petsc_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/LinearSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <CCA/Components/Arches/LinearSolver.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <Core/Grid/Patch.h>
 
 #ifdef HAVE_PETSC
 extern "C" {
