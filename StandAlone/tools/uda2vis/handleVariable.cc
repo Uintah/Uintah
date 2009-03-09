@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <StandAlone/tools/uda2vis/build.h>
 #include <StandAlone/tools/uda2vis/wrap_nrrd.h>
 
-#include <Dataflow/Modules/Selectors/PatchToField.h>
+#include <StandAlone/tools/uda2nrrd/PatchToField.h>
 
 #include <Core/Geometry/Vector.h>
 
