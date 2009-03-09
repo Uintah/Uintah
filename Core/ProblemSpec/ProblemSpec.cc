@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Malloc/Allocator.h>
 
 #include   <iostream>
@@ -93,7 +92,8 @@ ProblemSpec::findBlock(const string& name) const
   }
   const xmlNode *child = d_node->children;
   while (child != 0) {
-    string child_name(to_char_ptr(child->name));
+    //    string child_name(to_char_ptr(child->name));
+    string child_name((const char *)(child->name));
     if (name == child_name) {
       xmlNode* dbl_child = child->children;
       while (dbl_child != 0) {
@@ -135,7 +135,8 @@ ProblemSpec::findNextBlock(const string& name) const
   const xmlNode* found_node = d_node->next;
 
   while(found_node != 0){
-    string c_name(to_char_ptr(found_node->name));
+    //    string c_name(to_char_ptr(found_node->name));
+    string c_name((const char *)(found_node->name));
     if (c_name == name) {
       break;
     }
@@ -166,7 +167,8 @@ ProblemSpec::findTextBlock()
 string
 ProblemSpec::getNodeName() const
 {
-  return string(to_char_ptr(d_node->name));
+  //  return string(to_char_ptr(d_node->name));
+  return string((const char *)(d_node->name));
 }
 
 short
@@ -1142,7 +1144,7 @@ ProblemSpec::getAttributes(map<string,string>& attributes)
 
   for (; attr != 0; attr = attr->next) {
     if (attr->type == XML_ATTRIBUTE_NODE) {
-      attributes[to_char_ptr(attr->name)] = to_char_ptr(attr->children->content);
+      attributes[(const char *)(attr->name)] = (const char *)(attr->children->content);
     }
   }
 }
@@ -1223,7 +1225,7 @@ ProblemSpec::getNodeValue()
   for (xmlNode *child = d_node->children; child != 0;
        child = child->next) {
     if (child->type == XML_TEXT_NODE) {
-      ret = to_char_ptr(child->content);
+      ret = (const char *)(child->content);
       break;
     }
   }
