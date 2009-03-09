@@ -35,7 +35,7 @@
 #
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/CCA/Components/Arches/TabProps
+SRCDIR := CCA/Components/Arches/TabProps
 
 SRCS := \
         $(SRCDIR)/BSpline.cc \

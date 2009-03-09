@@ -30,23 +30,23 @@
 # 
 include $(SCIRUN_SCRIPTS)/so_prologue.mk
 
-SRCDIR  := Packages/Uintah/StandAlone/tools/uda2vis
+SRCDIR  := StandAlone/tools/uda2vis
 
 ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-      Packages/Uintah/Core/Exceptions    \
-      Packages/Uintah/Core/Grid          \
-      Packages/Uintah/Core/Util          \
-      Packages/Uintah/Core/Math          \
-      Packages/Uintah/Core/Disclosure    \
-      Packages/Uintah/Core/ProblemSpec   \
-      Packages/Uintah/Core/Disclosure    \
-      Packages/Uintah/Core/DataArchive   \
-      Packages/Uintah/Core/Parallel      \
-      Packages/Uintah/CCA/Ports          \
-      Packages/Uintah/CCA/Components/ProblemSpecification \
+      Core/Exceptions    \
+      Core/Grid          \
+      Core/Util          \
+      Core/Math          \
+      Core/Disclosure    \
+      Core/ProblemSpec   \
+      Core/Disclosure    \
+      Core/DataArchive   \
+      Core/Parallel      \
+      CCA/Ports          \
+      CCA/Components/ProblemSpecification \
       Core/Basis        \
       Core/Exceptions   \
       Core/Containers   \

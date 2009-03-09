@@ -28,9 +28,9 @@
 # 
 # 
 # 
-#Makefile fragment for the Packages/Uintah/R_Tester directory
+#Makefile fragment for the R_Tester directory
 
-SRCDIR := Packages/Uintah/R_Tester
+SRCDIR := R_Tester
 SUBDIRS := $(SRCDIR)/helpers
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

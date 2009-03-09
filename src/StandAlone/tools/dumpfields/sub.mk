@@ -30,9 +30,9 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR  := Packages/Uintah/StandAlone/tools/dumpfields
-#PROGRAM := Packages/Uintah/StandAlone/dumpfields
-PROGRAM := Packages/Uintah/StandAlone/tools/dumpfields/dumpfields
+SRCDIR  := StandAlone/tools/dumpfields
+#PROGRAM := StandAlone/dumpfields
+PROGRAM := StandAlone/tools/dumpfields/dumpfields
 
 SRCS    := \
 	$(SRCDIR)/dumpfields.cc \
@@ -56,17 +56,17 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
 else
   PSELIBS := \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Math          \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/DataArchive   \
-	Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Core/Exceptions    \
+        Core/Grid          \
+        Core/Util          \
+        Core/Math          \
+        Core/Parallel      \
+        Core/Disclosure    \
+        Core/ProblemSpec   \
+        Core/Disclosure    \
+        Core/DataArchive   \
+	CCA/Ports          \
+        CCA/Components/ProblemSpecification \
         Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \

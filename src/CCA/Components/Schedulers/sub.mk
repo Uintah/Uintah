@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Schedulers
+SRCDIR   := CCA/Components/Schedulers
 
 SRCS += \
 	$(SRCDIR)/DetailedTasks.cc \
@@ -55,14 +55,14 @@ SRCS += \
 	$(SRCDIR)/templates.cc
 
 PSELIBS := \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Exceptions  \
+	CCA/Components/ProblemSpecification \
+	Core/Grid        \
+	Core/Util        \
+	Core/Disclosure  \
+	Core/ProblemSpec \
+	CCA/Ports        \
+	Core/Parallel    \
+	Core/Exceptions  \
 	Core/Containers                  \
 	Core/Exceptions                  \
 	Core/Geometry                    \

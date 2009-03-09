@@ -29,7 +29,7 @@
 # 
 # 
 # Makefile fragment for this subdirectory
-SRCDIR   := Packages/Uintah/CCA/Components/Models
+SRCDIR   := CCA/Components/Models
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
@@ -50,28 +50,28 @@ PSELIBS :=              \
         Core/Geometry   \
         Core/Thread     \
         Core/Util       \
-        Packages/Uintah/CCA/Ports          \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/IO            \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/Core/Labels        \
-        Packages/Uintah/Core/Parallel      \
-        Packages/Uintah/Core/ProblemSpec
+        CCA/Ports          \
+        Core/Disclosure    \
+        Core/Exceptions    \
+        Core/Grid          \
+        Core/IO            \
+        Core/Util          \
+        Core/GeometryPiece \
+        Core/Labels        \
+        Core/Parallel      \
+        Core/ProblemSpec
 
 ifneq ($(BUILD_ICE),no)
-  PSELIBS += Packages/Uintah/CCA/Components/ICE
+  PSELIBS += CCA/Components/ICE
 endif
 
 ifneq ($(BUILD_MPM),no)
-  PSELIBS += Packages/Uintah/CCA/Components/MPM
+  PSELIBS += CCA/Components/MPM
 endif
 
 ifneq ($(BUILD_MPM),no) 
   ifneq ($(BUILD_ICE),no) 
-    PSELIBS += Packages/Uintah/CCA/Components/MPMICE
+    PSELIBS += CCA/Components/MPMICE
     SUBDIRS += $(SRCDIR)/HEChem
   endif
 endif

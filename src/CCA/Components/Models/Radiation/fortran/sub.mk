@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/Models/Radiation/fortran
+SRCDIR   := CCA/Components/Models/Radiation/fortran
 
 SRCS += \
         $(SRCDIR)/m_cellg.F \

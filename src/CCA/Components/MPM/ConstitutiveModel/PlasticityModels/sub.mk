@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels
+SRCDIR := CCA/Components/MPM/ConstitutiveModel/PlasticityModels
 
 SRCS   += \
 	$(SRCDIR)/PlasticityState.cc \

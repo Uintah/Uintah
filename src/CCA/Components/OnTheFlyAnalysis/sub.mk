@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/OnTheFlyAnalysis
+SRCDIR   := CCA/Components/OnTheFlyAnalysis
 
 SRCS     += \
 	$(SRCDIR)/AnalysisModuleFactory.cc \
@@ -48,16 +48,16 @@ PSELIBS := \
 	Core/Exceptions                  \
 	Core/Util                        \
 	Core/OS                          \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Labels      \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/GeometryPiece \
-	Packages/Uintah/Core/ProblemSpec 
+	CCA/Ports        \
+	Core/Disclosure  \
+	Core/Exceptions  \
+	Core/Grid        \
+	Core/Parallel    \
+	Core/Labels      \
+	Core/Parallel    \
+	Core/Util        \
+	Core/GeometryPiece \
+	Core/ProblemSpec 
 
 LIBS := $(XML_LIBRARY) 
 

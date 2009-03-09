@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPM/ThermalContact
+SRCDIR   := CCA/Components/MPM/ThermalContact
 
 SRCS     += $(SRCDIR)/ThermalContact.cc \
 	$(SRCDIR)/STThermalContact.cc \

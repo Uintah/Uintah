@@ -29,7 +29,7 @@
 # 
 # 
 
-SRCDIR := Packages/Uintah/StandAlone/tools/pfs
+SRCDIR := StandAlone/tools/pfs
 
 ###############################################
 # pfs
@@ -41,15 +41,15 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-      Packages/Uintah/Core/Grid \
-      Packages/Uintah/Core/Util \
-      Packages/Uintah/Core/Parallel \
-      Packages/Uintah/Core/Exceptions \
-      Packages/Uintah/Core/Math \
-      Packages/Uintah/Core/ProblemSpec \
-      Packages/Uintah/CCA/Ports \
-      Packages/Uintah/CCA/Components/ProblemSpecification \
-      Packages/Uintah/Core/GeometryPiece \
+      Core/Grid \
+      Core/Util \
+      Core/Parallel \
+      Core/Exceptions \
+      Core/Math \
+      Core/ProblemSpec \
+      CCA/Ports \
+      CCA/Components/ProblemSpecification \
+      Core/GeometryPiece \
       Core/Exceptions \
       Core/Geometry 
 endif
@@ -68,15 +68,15 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-     Packages/Uintah/Core/Grid \
-     Packages/Uintah/Core/Util \
-     Packages/Uintah/Core/Parallel \
-     Packages/Uintah/Core/Exceptions \
-     Packages/Uintah/Core/Math \
-     Packages/Uintah/Core/ProblemSpec \
-     Packages/Uintah/CCA/Ports \
-     Packages/Uintah/CCA/Components/ProblemSpecification \
-     Packages/Uintah/Core/GeometryPiece \
+     Core/Grid \
+     Core/Util \
+     Core/Parallel \
+     Core/Exceptions \
+     Core/Math \
+     Core/ProblemSpec \
+     CCA/Ports \
+     CCA/Components/ProblemSpecification \
+     Core/GeometryPiece \
      Core/Exceptions \
      Core/Geometry
 endif

@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPM/PhysicalBC
+SRCDIR   := CCA/Components/MPM/PhysicalBC
 
 SRCS     += \
 	$(SRCDIR)/MPMPhysicalBCFactory.cc 	\

@@ -29,9 +29,9 @@
 # 
 # 
 
-# Makefile fragment for the Packages/Uintah/VisIt directory
+# Makefile fragment for the VisIt directory
 
-SRCDIR := Packages/Uintah/VisIt
+SRCDIR := VisIt
 
 SUBDIRS := \
 	$(SRCDIR)/udaReaderMTMD

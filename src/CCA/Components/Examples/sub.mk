@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Examples
+SRCDIR   := CCA/Components/Examples
 
 SRCS     += \
 	$(SRCDIR)/AMRWave.cc \
@@ -53,15 +53,15 @@ PSELIBS := \
 	Core/Geometry \
 	Core/Util \
 	Core/Exceptions                   \
-	Packages/Uintah/CCA/Ports         \
-	Packages/Uintah/Core/Grid         \
-	Packages/Uintah/Core/Util         \
-	Packages/Uintah/Core/ProblemSpec  \
-	Packages/Uintah/Core/GeometryPiece  \
-	Packages/Uintah/Core/Exceptions   \
-	Packages/Uintah/Core/Disclosure   \
-	Packages/Uintah/Core/Math         \
-	Packages/Uintah/Core/Parallel
+	CCA/Ports         \
+	Core/Grid         \
+	Core/Util         \
+	Core/ProblemSpec  \
+	Core/GeometryPiece  \
+	Core/Exceptions   \
+	Core/Disclosure   \
+	Core/Math         \
+	Core/Parallel
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

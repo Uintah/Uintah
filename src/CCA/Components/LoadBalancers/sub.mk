@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/LoadBalancers
+SRCDIR   := CCA/Components/LoadBalancers
 
 SRCS += \
 	$(SRCDIR)/LoadBalancerCommon.cc \
@@ -45,15 +45,15 @@ SRCS += \
 	$(SRCDIR)/ProfileDriver.cc
 
 PSELIBS := \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/DataArchive \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Util        \
+	CCA/Components/ProblemSpecification \
+	CCA/Ports        \
+	Core/DataArchive \
+	Core/Disclosure  \
+	Core/Exceptions  \
+	Core/Grid        \
+	Core/Parallel    \
+	Core/ProblemSpec \
+	Core/Util        \
 	Core/Containers                  \
 	Core/Exceptions                  \
 	Core/Geometry                    \

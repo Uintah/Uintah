@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/Core/IO
+SRCDIR := Core/IO
 
 SRCS += \
 	$(SRCDIR)/UintahZlibUtil.cc

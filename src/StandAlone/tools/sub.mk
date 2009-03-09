@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/StandAlone/tools
+SRCDIR := StandAlone/tools
 
 SUBDIRS := \
         $(SRCDIR)/compare_mms \

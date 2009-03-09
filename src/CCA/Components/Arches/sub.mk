@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Arches
+SRCDIR   := CCA/Components/Arches
 
 SRCS += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/ArchesLabel.cc \
@@ -86,20 +86,20 @@ endif
 # include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-        Packages/Uintah/Core/ProblemSpec   \
-        Packages/Uintah/Core/GeometryPiece \
-        Packages/Uintah/Core/Grid          \
-        Packages/Uintah/Core/Util          \
-        Packages/Uintah/Core/Disclosure    \
-        Packages/Uintah/Core/Exceptions    \
-        Packages/Uintah/CCA/Components/Arches/fortran   \
-        Packages/Uintah/CCA/Components/Arches/Mixing    \
-        Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT  \
-        Packages/Uintah/CCA/Components/Arches/Radiation \
-        Packages/Uintah/CCA/Components/Arches/TabProps  \
-        Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
-        Packages/Uintah/CCA/Ports     \
-        Packages/Uintah/Core/Parallel \
+        Core/ProblemSpec   \
+        Core/GeometryPiece \
+        Core/Grid          \
+        Core/Util          \
+        Core/Disclosure    \
+        Core/Exceptions    \
+        CCA/Components/Arches/fortran   \
+        CCA/Components/Arches/Mixing    \
+        CCA/Components/Arches/MCRT/ArchesRMCRT  \
+        CCA/Components/Arches/Radiation \
+        CCA/Components/Arches/TabProps  \
+        CCA/Components/OnTheFlyAnalysis \
+        CCA/Ports     \
+        Core/Parallel \
         Core/Util       \
         Core/Thread     \
         Core/Exceptions \

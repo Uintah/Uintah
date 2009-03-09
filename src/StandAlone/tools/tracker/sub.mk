@@ -28,7 +28,7 @@
 # 
 # 
 # 
-SRCDIR  := Packages/Uintah/StandAlone/tools/tracker
+SRCDIR  := StandAlone/tools/tracker
 PROGRAM := $(SRCDIR)/tracker
 
 ifeq ($(LARGESOS),yes)
@@ -36,7 +36,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := \
 	Core/Util                     \
-        Packages/Uintah/Core/Tracker
+        Core/Tracker
 endif
 
 SRCS := \

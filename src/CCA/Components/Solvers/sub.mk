@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Solvers
+SRCDIR   := CCA/Components/Solvers
 
 SRCS     += \
 	$(SRCDIR)/CGSolver.cc \
@@ -61,13 +61,13 @@ PSELIBS := \
 	Core/Thread                      \
 	Core/Util                        \
 	Core/Geometry                    \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/ProblemSpec 
+	CCA/Ports        \
+	Core/Exceptions  \
+	Core/Grid        \
+	Core/Util        \
+	Core/Disclosure  \
+	Core/Parallel    \
+	Core/ProblemSpec 
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 

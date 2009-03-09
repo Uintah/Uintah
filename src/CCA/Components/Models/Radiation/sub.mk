@@ -33,7 +33,7 @@
 # $Id: sub.mk,v 1.12 2005/03/02 20:19:24 worthen Exp $
 #
 
-SRCDIR   := Packages/Uintah/CCA/Components/Models/Radiation
+SRCDIR   := CCA/Components/Models/Radiation
 
 SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk

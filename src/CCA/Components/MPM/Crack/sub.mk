@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPM/Crack
+SRCDIR   := CCA/Components/MPM/Crack
 
 SRCS     += \
 	$(SRCDIR)/ReadAndDiscretizeCracks.cc \
