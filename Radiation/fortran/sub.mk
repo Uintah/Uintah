@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Arches/Radiation/fortran
+SRCDIR   := CCA/Components/Arches/Radiation/fortran
 
 SRCS += \
 	$(SRCDIR)/eco.F \

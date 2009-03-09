@@ -34,7 +34,7 @@
 #
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing
+SRCDIR   := CCA/Components/Arches/Mixing
 
 SRCS += \
         $(SRCDIR)/ColdflowMixingModel.cc    \
@@ -46,12 +46,12 @@ SRCS += \
         $(SRCDIR)/Stream.cc                 
 
 PSELIBS := \
-	Packages/Uintah/Core/Exceptions       \
-	Packages/Uintah/Core/IO               \
-	Packages/Uintah/Core/Math             \
-	Packages/Uintah/Core/ProblemSpec      \
-	Packages/Uintah/Core/Util             \
-	Packages/Uintah/CCA/Components/Models \
+	Core/Exceptions       \
+	Core/IO               \
+	Core/Math             \
+	Core/ProblemSpec      \
+	Core/Util             \
+	CCA/Components/Models \
 	Core/Exceptions \
 	Core/Thread     \
 	Core/Geometry   
