@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Vector.h>
 

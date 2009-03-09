@@ -34,9 +34,9 @@ DEALINGS IN THE SOFTWARE.
 //      1.  Nearly, all the overloaded operations of the Matrix class,
 //      no dynamic memory allocation.
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/CubeRoot.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/CubeRoot.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>

@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef SCI_project_NCVectorField_h
 #define SCI_project_NCVectorField_h 1
 
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Datatypes/VectorFieldRG.h>

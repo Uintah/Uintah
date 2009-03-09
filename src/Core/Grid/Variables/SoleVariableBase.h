@@ -32,13 +32,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SoleVariableBase_H
 #define UINTAH_HOMEBREW_SoleVariableBase_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
+#include <Core/Grid/Variables/Variable.h>
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using std::ostream;

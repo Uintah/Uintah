@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SHAREASSIGNARRAY3_H
 #define UINTAH_HOMEBREW_SHAREASSIGNARRAY3_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/Array3.h>
 
 #ifndef _WIN32
 #include <unistd.h>

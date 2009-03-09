@@ -36,10 +36,10 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::IntVector;

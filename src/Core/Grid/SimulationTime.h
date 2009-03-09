@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SimulationTime_H
 #define UINTAH_HOMEBREW_SimulationTime_H
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 /**************************************

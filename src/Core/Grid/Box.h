@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 using std::deque;

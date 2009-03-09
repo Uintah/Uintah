@@ -28,11 +28,11 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Datatypes/VectorParticles.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Core/Datatypes/VectorParticles.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Grid.h>
 
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>

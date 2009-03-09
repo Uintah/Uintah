@@ -38,8 +38,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __MATRIX3_H__
 #define __MATRIX3_H__
 
-#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h> // for get_funTD(Matrix3) prototype
+#include <Core/Math/TntJama/tnt.h>
+#include <Core/Disclosure/TypeUtils.h> // for get_funTD(Matrix3) prototype
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
 
@@ -51,7 +51,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Core/Math/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::Vector;

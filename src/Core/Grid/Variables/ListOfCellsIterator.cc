@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/ListOfCellsIterator.h>
+#include <Core/Grid/Variables/ListOfCellsIterator.h>
 
 namespace Uintah
 {

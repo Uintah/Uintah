@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Datatypes/NCTensorField.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Core/Datatypes/NCTensorField.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Grid.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>

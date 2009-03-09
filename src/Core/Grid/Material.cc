@@ -30,8 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 //  Material.cc
 
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Material.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <string>
 #include <iostream>
 #include <sstream>

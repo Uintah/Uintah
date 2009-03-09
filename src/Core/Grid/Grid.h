@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_GRID_H
 #define UINTAH_HOMEBREW_GRID_H
 
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
@@ -47,7 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include <list>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;

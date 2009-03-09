@@ -34,10 +34,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
-#include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/Iterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ListOfCellsIterator.h>
+#include <Core/Grid/uintahshare.h>
+#include <Core/Grid/Variables/BaseIterator.h>
+#include <Core/Grid/Variables/Iterator.h>
+#include <Core/Grid/Variables/ListOfCellsIterator.h>
 
 namespace Uintah {
 

@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __SPHERE_GEOMETRY_OBJECT_H__
 #define __SPHERE_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
 
 #ifndef M_PI
@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #endif
 
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************

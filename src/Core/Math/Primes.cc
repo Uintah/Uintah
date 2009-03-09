@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Math/Primes.h>
+#include <Core/Math/Primes.h>
 #include <Core/Exceptions/InternalError.h>
 using namespace SCIRun;
 

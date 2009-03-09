@@ -34,10 +34,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/IntVector.h>
 
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <iostream>

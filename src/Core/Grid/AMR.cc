@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/AMR.h>
+#include <Core/Grid/AMR.h>
 #include <Core/Math/MinMax.h>
 
 using namespace SCIRun;

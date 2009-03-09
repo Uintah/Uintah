@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 // RunLengthEncoder with speciailizations for basic types, Vector's,
 // and Point's. 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Geometry/SpecializedRunLengthEncoder.h>
 
 // Specializations of the DefaultRunLengthSequencer, to override the

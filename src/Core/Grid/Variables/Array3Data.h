@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ARRAY3DATA_H
 #define UINTAH_HOMEBREW_ARRAY3DATA_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>

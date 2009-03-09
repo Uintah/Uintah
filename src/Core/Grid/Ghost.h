@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #undef None
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
    /**************************************
      

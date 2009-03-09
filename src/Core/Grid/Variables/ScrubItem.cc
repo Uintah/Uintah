@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Variables/ScrubItem.h>
+#include <Core/Grid/Variables/ScrubItem.h>
 
 using namespace Uintah;
 

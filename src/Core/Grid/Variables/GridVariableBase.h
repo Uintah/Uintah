@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_GRIDVARIABLE_H
 #define UINTAH_HOMEBREW_GRIDVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/Variables/Variable.h>
+#include <Core/Parallel/BufferInfo.h>
+#include <Core/Grid/uintahshare.h>
 #include <Core/Geometry/IntVector.h>
 namespace Uintah {
 

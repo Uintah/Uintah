@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariableBase.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Variables/ReductionVariableBase.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;

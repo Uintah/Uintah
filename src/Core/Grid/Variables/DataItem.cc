@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/DataItem.h>
+#include <Core/Grid/Variables/DataItem.h>
 
 using namespace Uintah;
 

@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_RectangleBCData_H
 #define UINTAH_GRID_RectangleBCData_H
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>
+#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>

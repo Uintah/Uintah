@@ -66,7 +66,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Core/Math/uintahshare.h>
 namespace Uintah {
   using namespace std;
   class UINTAHSHARE FastMatrix {

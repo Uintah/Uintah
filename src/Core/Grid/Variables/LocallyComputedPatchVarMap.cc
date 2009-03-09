@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 

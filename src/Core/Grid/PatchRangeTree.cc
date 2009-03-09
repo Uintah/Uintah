@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
+#include <Core/Grid/PatchRangeTree.h>
 #include <list>
 
 using namespace Uintah;

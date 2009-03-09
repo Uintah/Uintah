@@ -28,21 +28,21 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondReader.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondBase.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/SideBCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/CircleBCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/AnnulusBCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/RectangleBCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/UnionBCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/DifferenceBCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCData.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCond.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/BoundaryConditions/BoundCondReader.h>
+#include <Core/Grid/BoundaryConditions/BoundCondBase.h>
+#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/BoundaryConditions/SideBCData.h>
+#include <Core/Grid/BoundaryConditions/CircleBCData.h>
+#include <Core/Grid/BoundaryConditions/AnnulusBCData.h>
+#include <Core/Grid/BoundaryConditions/RectangleBCData.h>
+#include <Core/Grid/BoundaryConditions/UnionBCData.h>
+#include <Core/Grid/BoundaryConditions/DifferenceBCData.h>
+#include <Core/Grid/BoundaryConditions/BCData.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 

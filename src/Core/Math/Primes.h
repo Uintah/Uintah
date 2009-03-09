@@ -32,8 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_Primes_H
 #define UINTAH_HOMEBREW_Primes_H
 
-#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Core/Math/TntJama/tnt.h>
+#include <Core/Math/uintahshare.h>
 namespace Uintah {
   class UINTAHSHARE Primes {
   public:

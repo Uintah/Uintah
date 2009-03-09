@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/Assert.h>
 
 // Base Class
-#include <Packages/Uintah/Core/Math/StaticObjectArray.h>
+#include <Core/Math/StaticObjectArray.h>
 
 namespace Uintah {
 

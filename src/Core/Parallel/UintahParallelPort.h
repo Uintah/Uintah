@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_PARALLEL_UINTAHPARALLELPORT_H
 #define UINTAH_PARALLEL_UINTAHPARALLELPORT_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Core/Util/RefCounted.h>
 
-#include <Packages/Uintah/Core/Parallel/uintahshare.h>
+#include <Core/Parallel/uintahshare.h>
 
 namespace Uintah {
 

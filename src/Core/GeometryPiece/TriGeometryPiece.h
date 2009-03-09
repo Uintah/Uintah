@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __TRI_GEOMETRY_OBJECT_H__
 #define __TRI_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/UniformGrid.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/UniformGrid.h>
+#include <Core/Grid/Box.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 using std::vector;

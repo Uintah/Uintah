@@ -29,13 +29,13 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Core/Parallel/BufferInfo.h>
+#include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Uintah/Core/Parallel/uintahshare.h>
+#include <Core/Parallel/uintahshare.h>
 using namespace Uintah;
 
 UINTAHSHARE SCIRun::Mutex MPITypeLock( "MPITypeLock" );

@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_LEVEL_H
 #define UINTAH_GRID_LEVEL_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Util/Handle.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Containers/OffsetArray1.h>
 
 #ifdef max
@@ -47,16 +47,16 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/fixedvector.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/fixedvector.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   using SCIRun::Vector;

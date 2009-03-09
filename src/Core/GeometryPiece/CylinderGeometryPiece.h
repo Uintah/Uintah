@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __CYLINDER_GEOMETRY_OBJECT_H__
 #define __CYLINDER_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************

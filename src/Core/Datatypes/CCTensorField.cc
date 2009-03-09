@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Datatypes/CCTensorField.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Datatypes/CCTensorField.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>

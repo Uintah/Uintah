@@ -32,19 +32,19 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_AMRInterpolate_h
 #define Uintah_AMRInterpolate_h
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Math/FastMatrix.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 
 #include <sstream>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 
 //#define is_rightFace(face) ( (face == "xminus" || face == "xplus" || face == "yminus" || face == "yplus"|| face == "zminus" || face == "zplus") ?1:0  )
 #define is_rightFace(face) ( (face == "xminus" || face == "yminus" ||  face == "zminus" ) ?1:0  )

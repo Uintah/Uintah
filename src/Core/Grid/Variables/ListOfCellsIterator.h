@@ -38,8 +38,8 @@ using namespace std;
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
-#include <Packages/Uintah/Core/Grid/Variables/BaseIterator.h>
+#include <Core/Grid/uintahshare.h>
+#include <Core/Grid/Variables/BaseIterator.h>
 namespace Uintah {
 
   using SCIRun::IntVector;

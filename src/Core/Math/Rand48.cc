@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #if defined(_WIN32) && !defined(HAVE_DRAND48)
-#include <Packages/Uintah/Core/Math/Rand48.h>
+#include <Core/Math/Rand48.h>
 #include <Core/Thread/Time.h>
 #include <cstdlib>
 static bool initialized = false;

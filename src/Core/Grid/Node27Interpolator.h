@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef NODE27_INTERPOLATOR_H
 #define NODE27_INTERPOLATOR_H
 
-#include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
+#include <Core/Grid/ParticleInterpolator.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
   class Patch;

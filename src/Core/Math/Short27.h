@@ -37,7 +37,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h> // for get_funTD(Short27) prototype
+#include <Core/Disclosure/TypeUtils.h> // for get_funTD(Short27) prototype
 
 #include <cmath>
 #include <sgi_stl_warnings_off.h>
@@ -49,8 +49,8 @@ namespace SCIRun {
   class TypeDescription;
   class Piostream;
 }
-#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Core/Math/TntJama/tnt.h>
+#include <Core/Math/uintahshare.h>
 namespace Uintah {
 using namespace SCIRun;
 

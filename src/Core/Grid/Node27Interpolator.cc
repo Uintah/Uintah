@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Core/Grid/Node27Interpolator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 
