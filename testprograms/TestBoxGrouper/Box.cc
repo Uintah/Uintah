@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/testprograms/TestBoxGrouper/Box.h>
+#include <testprograms/TestBoxGrouper/Box.h>
 
 using namespace Uintah;
 

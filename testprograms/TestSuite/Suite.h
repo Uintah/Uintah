@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <map>
 #include <list>
 
-#include <Packages/Uintah/testprograms/TestSuite/uintahshare.h>
+#include <testprograms/TestSuite/uintahshare.h>
 
 typedef map<string, Test*> testMap;
 typedef map<string, Test*>::iterator testMapIterator;

@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 using namespace std;
 
-#include <Packages/Uintah/CCA/Ports/SFC.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <CCA/Ports/SFC.h>
+#include <Core/Parallel/Parallel.h>
 #include<Core/Thread/Time.h>
 using namespace Uintah;
 

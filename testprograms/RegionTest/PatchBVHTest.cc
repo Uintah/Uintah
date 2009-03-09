@@ -30,11 +30,11 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/GridIterator.h>
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVH.h>
-#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/GridIterator.h>
+#include <Core/Grid/PatchBVH/PatchBVH.h>
+#include <Core/Grid/PatchRangeTree.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
 
 #include <iostream>
 using namespace std;

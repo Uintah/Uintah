@@ -36,8 +36,8 @@
 *
 *****************************************************************************/
 
-#include <Packages/Uintah/VisIt/udaReaderMTMD/udaReaderMTMDPluginInfo.h>
-#include <Packages/Uintah/VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.h>
+#include <VisIt/udaReaderMTMD/udaReaderMTMDPluginInfo.h>
+#include <VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.h>
 
 #include <avtMTMDFileFormatInterface.h>
 #include <avtGenericDatabase.h>
