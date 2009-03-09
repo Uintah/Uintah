@@ -31,7 +31,7 @@
 
 SRCDIR := testprograms
 
-SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread
+SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread \
 	$(SRCDIR)/TestSuite               \
         $(SRCDIR)/TestFastMatrix          \
         $(SRCDIR)/TestMatrix3             \
@@ -39,9 +39,9 @@ SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread
         $(SRCDIR)/TestRangeTree           \
         $(SRCDIR)/TestBoxGrouper          \
         $(SRCDIR)/BNRRegridder            \
-        $(SRCDIR)/IteratorTest            \
-        $(SRCDIR)/RegionTest            \
-        $(SRCDIR)/PatchBVH
+	$(SRCDIR)/IteratorTest            \
+	$(SRCDIR)/RegionTest            \
+	$(SRCDIR)/PatchBVH
 
 #       $(SRCDIR)/SFCTest \
 
@@ -60,9 +60,6 @@ PSELIBS := \
         testprograms/TestRangeTree           \
         testprograms/TestBoxGrouper
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRA\
-RY) $(THREAD_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
-
-
