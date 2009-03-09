@@ -70,7 +70,6 @@ PSELIBS := \
         Core/Parallel    \
         Core/ProblemSpec \
         Core/Exceptions  \
-        Core/Util        \
         Core/Math        \
         Core/Disclosure
 

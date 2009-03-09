@@ -70,7 +70,7 @@ PSELIBS := \
 	Core/Math        \
 	Core/Parallel    \
 	Core/ProblemSpec \
-	Core/Util
+
 
 
 LIBS       := $(M_LIBRARY)
