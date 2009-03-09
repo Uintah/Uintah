@@ -87,7 +87,7 @@ fi
 
 if [ $retval != "0" ]; then
   # failed 3 times
-  if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+  if  [ -x "${BUILDROOT}/${mode}/build/StandAlone/sus" ]; then
     # sus compiled alone
     mv ../remake_with_fortran.log ../remake_failed_scirun.log
     echo "*** Make failed, but sus was compiled successfully"
@@ -101,7 +101,7 @@ if [ $retval != "0" ]; then
     # Use Todd's make target to turn off fortran"
     echo "Failed third compile, try without fortran."
 
-    FILES="${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/Dummy/sub.mk" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/Parent/sub.mk" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/Models/sub.mk" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/Models/ModelFactory.cc"
+    FILES="${BUILDROOT}/src/StandAlone/sub.mk" "${BUILDROOT}/src/CCA/Components/sub.mk" "${BUILDROOT}/src/CCA/Components/Dummy/sub.mk" "${BUILDROOT}/src/CCA/Components/Parent/sub.mk" "${BUILDROOT}/src/CCA/Components/Models/sub.mk" "${BUILDROOT}/src/CCA/Components/Models/ModelFactory.cc"
 
     for file in $FILES; do cp $file $file.orig; done
 
@@ -120,7 +120,7 @@ if [ $retval != "0" ]; then
       echo ""
       echo "Showing make errors with FORTRAN:" > ../make_results.log
      WithArches="no"
-    elif  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
+    elif  [ -x "${BUILDROOT}/${mode}/build/StandAlone/sus" ]; then
       echo "*** Make failed, but sus was compiled successfully without FORTRAN"
       echo ""
       echo "Showing make errors with FORTRAN:" > ../make_results.log

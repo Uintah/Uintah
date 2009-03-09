@@ -52,7 +52,7 @@ will either be in relation to the tester root, which currently is
 
 or it will be in relation to the Uintah code, which is 
 
-$BUILDROOT/src/Packages/Uintah
+$BUILDROOT/src/
 
 The do*tests, which are built by the regression tester, live in
 
@@ -62,7 +62,7 @@ To run everything, use startTester.  To test a subset of the tester,
 Use the appropriate do*tests.  I.e., if changes are made to the ICE segment,
 you could:
 
-cd <test dir>/src/Packages/Uintah
+cd <test dir>/src/
 cvs update -Pd
 cd ../../../dbg
 rm -rf ICE-results
@@ -284,7 +284,7 @@ message is displayed saying this.  If no sus, then try without arches
 (uses useFakeArches.pl script).
 
 If any of these strategies is successful, it runs all the files (test scripts)
-in Packages/Uintah/R_Tester.  build_and_run actually creates scripts to run
+in R_Tester.  build_and_run actually creates scripts to run
 each of these tests.
 
 Environment variables that must be set
@@ -307,7 +307,7 @@ Files Created:
   configure.log        Output of running configure
   make.log             Output of running make.
   summary.log          Summary of test results (these are posted on the web)
-  do*tests             Script created to run tests in Packages/Uintah/R_Tester
+  do*tests             Script created to run tests in R_Tester
                        where * is a test in that directory.
   remake_with_arches.log
   remake_failed_scirun.log
@@ -331,7 +331,7 @@ Overview:
   These scripts (doARCHEStests, doICEtests, etc.) are output of the regression
 tester itself.  They (currently) provide an interface between the sh scripts
 and the python scripts.  Each script simply calls its corresponding test in
-Packages/Uintah/R_Testers and passes appropriate arguments.
+R_Testers and passes appropriate arguments.
 
 Usage:
  
@@ -779,7 +779,7 @@ Note: The absolute and relative tolerance tests must both fail
 Adding tests: (MPM,ARCHES,etc.)
 ------------
 
-In the src/Packages/Uintah directory there is a directory called
+In the src/ directory there is a directory called
 test.  In that directory there are several directories (helpers, toplevel,
 etc.) and several files (ARCHES, MPM, etc.).  These files are the test
 files.

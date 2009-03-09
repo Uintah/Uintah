@@ -301,7 +301,7 @@ else
   fi
 
   # link directly from the build root to the Uintah code
-  ln -s src/Packages/Uintah Uintah
+  ln -s src/ Uintah
 
   cd "$BUILD_DIR"
 
@@ -370,7 +370,7 @@ echo "Using build: ${BUILDROOT}" >> $HTMLLOG
 echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 
-PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
+PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
 export PATH DO_DBG DO_OPT DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
 
 if [ $VERBOSE == "yes" ]; then
