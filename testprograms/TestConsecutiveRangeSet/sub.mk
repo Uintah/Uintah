@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/testprograms/TestConsecutiveRangeSet
+SRCDIR := testprograms/TestConsecutiveRangeSet
 
 SRCS := $(SRCDIR)/TestConsecutiveRangeSet.cc
 
@@ -40,7 +40,7 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Thread \
 	Core/Containers \
-	Packages/Uintah/testprograms/TestSuite
+	testprograms/TestSuite
 
 LIBS := 
 

@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/Angio
+SRCDIR   := CCA/Components/Angio
 
 SRCS     += \
 	$(SRCDIR)/AngioParticleCreator.cc  \
@@ -41,16 +41,16 @@ SRCS     += \
 	$(SRCDIR)/Angio.cc	
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports        \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/Util        \
-	Packages/Uintah/Core/Disclosure  \
-	Packages/Uintah/Core/Labels      \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Parallel    \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/Core/GeometryPiece  \
-	Packages/Uintah/Core/Math        \
+	CCA/Ports        \
+	Core/Grid        \
+	Core/Util        \
+	Core/Disclosure  \
+	Core/Labels      \
+	Core/ProblemSpec \
+	Core/Parallel    \
+	Core/Exceptions  \
+	Core/GeometryPiece  \
+	Core/Math        \
 	Core/Exceptions Core/Thread      \
 	Core/Geometry Core/Util          \
 	Core/Math

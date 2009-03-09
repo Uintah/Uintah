@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/CCA/Components/Models/FluidsBased
+SRCDIR := CCA/Components/Models/FluidsBased
 
 # Uncomment this like to compile with cantera
 #CANTERA_DIR := /home/sci/sparker/canterataz

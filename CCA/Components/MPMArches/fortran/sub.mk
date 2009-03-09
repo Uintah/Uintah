@@ -32,7 +32,7 @@
 
 #include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPMArches/fortran
+SRCDIR   := CCA/Components/MPMArches/fortran
 
 SRCS += $(SRCDIR)/collect_drag_cc.F \
 	$(SRCDIR)/collect_scalar_fctocc.F \

@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/ICE/CustomBCs
+SRCDIR   := CCA/Components/ICE/CustomBCs
 
 SRCS     += $(SRCDIR)/C_BC_driver.cc \
        $(SRCDIR)/microSlipBCs.cc \
@@ -39,11 +39,11 @@ SRCS     += $(SRCDIR)/C_BC_driver.cc \
        $(SRCDIR)/sine.cc
        
 PSELIBS := \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/Parallel \
-	Packages/Uintah/Core/Exceptions \
-	Packages/Uintah/Core/Math \
+	CCA/Ports \
+	Core/Grid \
+	Core/Parallel \
+	Core/Exceptions \
+	Core/Math \
 	Core/Exceptions Core/Thread Core/Geometry 
 
 LIBS	:= 

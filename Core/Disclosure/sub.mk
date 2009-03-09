@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/Core/Disclosure
+SRCDIR   := Core/Disclosure
 
 SRCS     += \
 	$(SRCDIR)/TypeDescription.cc \

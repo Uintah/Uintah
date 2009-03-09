@@ -31,7 +31,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/testprograms/BNRRegridder
+SRCDIR := testprograms/BNRRegridder
 
 PROGRAM := $(SRCDIR)/bnrtest
 SRCS    := $(SRCDIR)/bnrtest.cc
@@ -41,13 +41,13 @@ PSELIBS := \
         Core/Geometry                            \
         Core/Thread                              \
         Core/Util                                \
-        Packages/Uintah/Core/Disclosure          \
-        Packages/Uintah/Core/Exceptions          \
-        Packages/Uintah/Core/Grid                \
-        Packages/Uintah/Core/Parallel            \
-        Packages/Uintah/Core/Util                \
-        Packages/Uintah/CCA/Ports                \
-        Packages/Uintah/CCA/Components/Regridder
+        Core/Disclosure          \
+        Core/Exceptions          \
+        Core/Grid                \
+        Core/Parallel            \
+        Core/Util                \
+        CCA/Ports                \
+        CCA/Components/Regridder
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 

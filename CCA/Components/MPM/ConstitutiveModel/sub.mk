@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/CCA/Components/MPM/ConstitutiveModel
+SRCDIR := CCA/Components/MPM/ConstitutiveModel
 
 SRCS   += \
         $(SRCDIR)/RigidMaterial.cc              \

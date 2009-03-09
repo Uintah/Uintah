@@ -32,7 +32,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/testprograms/TestSuite
+SRCDIR := testprograms/TestSuite
 
 SRCS := $(SRCDIR)/Test.cc $(SRCDIR)/Suite.cc $(SRCDIR)/SuiteTree.cc
 

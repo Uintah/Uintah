@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/Core/Grid/PatchBVH
+SRCDIR   := Core/Grid/PatchBVH
 
 SRCS     += \
 	$(SRCDIR)/PatchBVHBase.cc \

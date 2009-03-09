@@ -31,7 +31,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/Uintah/testprograms/IteratorTest
+SRCDIR := testprograms/IteratorTest
 
 PROGRAM := $(SRCDIR)/IteratorTest
 SRCS    := $(SRCDIR)/IteratorTest.cc
@@ -41,10 +41,10 @@ PSELIBS := \
         Core/Geometry                            \
         Core/Thread                              \
         Core/Util                                \
-        Packages/Uintah/Core/Disclosure          \
-        Packages/Uintah/Core/Exceptions          \
-        Packages/Uintah/Core/Grid                \
-        Packages/Uintah/Core/Util                
+        Core/Disclosure          \
+        Core/Exceptions          \
+        Core/Grid                \
+        Core/Util                
 
 LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 

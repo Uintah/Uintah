@@ -30,7 +30,7 @@
 # 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := Packages/Uintah/CCA/Components/MPM/Contact
+SRCDIR   := CCA/Components/MPM/Contact
 
 SRCS     += \
 	$(SRCDIR)/SpecifiedBodyContact.cc \

@@ -32,17 +32,17 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Packages/Uintah/testprograms/TestMatrix3
+SRCDIR := testprograms/TestMatrix3
 
 SRCS := $(SRCDIR)/testmatrix3.cc
 
 PSELIBS := \
-	Packages/Uintah/CCA/Ports              \
-	Packages/Uintah/Core/Grid              \
-	Packages/Uintah/Core/Parallel          \
-	Packages/Uintah/Core/Exceptions        \
-	Packages/Uintah/Core/Math              \
-	Packages/Uintah/testprograms/TestSuite \
+	CCA/Ports              \
+	Core/Grid              \
+	Core/Parallel          \
+	Core/Exceptions        \
+	Core/Math              \
+	testprograms/TestSuite \
 	Core/Exceptions \
 	Core/Thread     \
 	Core/Geometry

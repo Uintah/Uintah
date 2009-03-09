@@ -31,7 +31,7 @@
 # Makefile fragment for this subdirectory
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Uintah/CCA/Components/ICE
+SRCDIR   := CCA/Components/ICE
 
 SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/AMRICE.cc \
@@ -53,23 +53,23 @@ SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs
 include $(SCIRUN_SCRIPTS)/recurse.mk          
 
 PSELIBS := \
-       Packages/Uintah/CCA/Components/OnTheFlyAnalysis \
-       Packages/Uintah/CCA/Ports                       \
-       Packages/Uintah/Core/Grid                       \
-       Packages/Uintah/Core/Util                       \
-       Packages/Uintah/Core/Math                       \
-       Packages/Uintah/Core/Disclosure                 \
-       Packages/Uintah/Core/GeometryPiece              \
-       Packages/Uintah/Core/ProblemSpec                \
-       Packages/Uintah/Core/Parallel                   \
-       Packages/Uintah/Core/Exceptions                 \
-       Packages/Uintah/Core/Math                       \
-       Packages/Uintah/Core/Labels                     \
+       CCA/Components/OnTheFlyAnalysis \
+       CCA/Ports                       \
+       Core/Grid                       \
+       Core/Util                       \
+       Core/Math                       \
+       Core/Disclosure                 \
+       Core/GeometryPiece              \
+       Core/ProblemSpec                \
+       Core/Parallel                   \
+       Core/Exceptions                 \
+       Core/Math                       \
+       Core/Labels                     \
        Core/Exceptions Core/Geometry                   \
        Core/Thread Core/Util Core/OS
 
 ifeq ($(OS_NAME),Darwin)
-  PSELIBS += Packages/Uintah/CCA/Components/MPM
+  PSELIBS += CCA/Components/MPM
 endif
 
 LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)

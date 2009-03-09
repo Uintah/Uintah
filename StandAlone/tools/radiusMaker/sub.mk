@@ -28,7 +28,7 @@
 # 
 # 
 # 
-SRCDIR  := Packages/Uintah/StandAlone/tools/radiusMaker
+SRCDIR  := StandAlone/tools/radiusMaker
 PROGRAM := $(SRCDIR)/radius_maker
 
 #ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
@@ -49,5 +49,5 @@ PROGRAM := $(SRCDIR)/radius_maker
 
 #endif
 
-radius_maker: prereqs Packages/Uintah/StandAlone/tools/radiusMaker/radius_maker
+radius_maker: prereqs StandAlone/tools/radiusMaker/radius_maker
 
