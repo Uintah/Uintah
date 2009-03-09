@@ -63,9 +63,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/CompGeom.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

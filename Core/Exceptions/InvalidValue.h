@@ -45,9 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_EXCEPTIONS_INVALIDVALUE_H
 
 #include <Core/Exceptions/Exception.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Exceptions/uintahshare.h>
 namespace Uintah {

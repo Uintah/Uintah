@@ -56,10 +56,8 @@
 #include <sci_hash_set.h>
 #include <sci_hash_map.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <set>
-#include <sgi_stl_warnings_on.h>
 
 #include <cfloat>
 

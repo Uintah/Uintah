@@ -31,9 +31,7 @@
 #define Geometry_Transform_h 1
 
 #include <Core/Persistent/Persistent.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Geometry/share.h>
 

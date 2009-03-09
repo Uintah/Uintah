@@ -37,10 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <algorithm>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

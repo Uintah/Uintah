@@ -32,7 +32,6 @@
 //
 // The use of this file should be minimized as much as possible.  Turn
 // the warnings back on as soon as possible using '#include
-// <sgi_stl_warnings_on.h>'
 //
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

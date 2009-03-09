@@ -52,12 +52,10 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/CompGeom.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <set>
 #include <sci_hash_map.h>
 #include <algorithm>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

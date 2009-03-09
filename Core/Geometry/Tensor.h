@@ -43,10 +43,8 @@
 #define Geometry_Tensor_h 1
 
 #include <Core/Geometry/Vector.h>
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Geometry/share.h>
 

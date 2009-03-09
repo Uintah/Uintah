@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Containers/StaticArray.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <typeinfo>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

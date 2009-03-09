@@ -39,13 +39,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <algorithm>
 #include <set>
 #include <vector>
 #include <functional>
-#include <sgi_stl_warnings_on.h>
 
 using namespace SCIRun;
 using namespace Uintah;

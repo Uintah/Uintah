@@ -38,13 +38,11 @@
 #include <Core/Util/Environment.h>
 #include <Core/Containers/StringUtil.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <string>
 #include <iostream>
 #include <algorithm>
 #include <sstream>
-#include <sgi_stl_warnings_off.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <cerrno>

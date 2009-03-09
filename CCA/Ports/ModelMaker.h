@@ -37,9 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <CCA/Ports/uintahshare.h>
 

@@ -34,14 +34,12 @@
 #include <Core/Util/sci_system.h>
 
 // STL Includes
-#include <sgi_stl_warnings_off.h>
 #include   <Core/Util/Environment.h> // includes <string>
 #include   <iostream>
 #include   <map>
 #include   <cstring>
 #include   <cstdlib>
 #include   <cstdio>
-#include <sgi_stl_warnings_on.h>
 
 #define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
 #include <sci_defs/environment_defs.h>

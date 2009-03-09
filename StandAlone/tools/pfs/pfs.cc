@@ -47,11 +47,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <iostream>
 #include   <fstream>
 #include   <cstring>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace std;

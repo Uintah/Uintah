@@ -40,11 +40,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
 

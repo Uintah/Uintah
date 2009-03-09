@@ -76,9 +76,7 @@ POSSIBLE REVISIONS
 #include <CCA/Components/Models/Radiation/RadiationVariables.h>
 #include <CCA/Components/Models/Radiation/RadiationConstVariables.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

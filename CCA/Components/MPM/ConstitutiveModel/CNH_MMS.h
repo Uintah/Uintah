@@ -15,9 +15,7 @@
 #include <math.h>
 #include "ConstitutiveModel.h"  
 #include <Core/Math/Matrix3.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Core/Disclosure/TypeDescription.h>
 
 namespace Uintah {

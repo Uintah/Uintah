@@ -51,11 +51,9 @@
 #include <Core/Containers/StackVector.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/MusilRNG.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <cfloat>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

@@ -54,9 +54,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _WIN32
 #include <unistd.h>
 #endif
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
 using std::cout;

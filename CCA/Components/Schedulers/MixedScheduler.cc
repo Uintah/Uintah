@@ -39,11 +39,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <set>
 #include <map>
 #include <algorithm>
-#include <sgi_stl_warnings_on.h>
 
 
 using namespace Uintah;

@@ -41,11 +41,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Grid/Grid.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <iosfwd>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace SCIRun {

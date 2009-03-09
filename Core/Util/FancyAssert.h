@@ -46,9 +46,7 @@
 #include <sci_defs/error_defs.h>
 
 #include <Core/Exceptions/AssertionFailed.h>
-#include <sgi_stl_warnings_off.h>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 /*
  * Note - a normal AssertionFailed exception cannot be used here.  We

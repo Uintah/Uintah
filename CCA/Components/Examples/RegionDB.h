@@ -36,10 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/GridP.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <map>
 #include   <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

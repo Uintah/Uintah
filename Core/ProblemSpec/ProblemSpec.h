@@ -39,12 +39,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
 #include   <map>
 #include   <iostream>
-#include <sgi_stl_warnings_on.h>
 
 typedef struct _xmlNode xmlNode;
 

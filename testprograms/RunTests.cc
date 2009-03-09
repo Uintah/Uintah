@@ -53,9 +53,7 @@ DEALINGS IN THE SOFTWARE.
 #else
 #include <process.h>
 #endif
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 

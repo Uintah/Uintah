@@ -63,11 +63,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #include <process.h>

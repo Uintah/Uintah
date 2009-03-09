@@ -33,10 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <map>
 #include <cassert>
-#include <sgi_stl_warnings_off.h>
 #include <valarray>
 #include <numeric>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Math/uintahshare.h>
 namespace Uintah {

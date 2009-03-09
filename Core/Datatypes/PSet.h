@@ -42,9 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Datatypes/uintahshare.h>
 namespace Uintah {

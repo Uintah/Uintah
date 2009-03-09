@@ -33,11 +33,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

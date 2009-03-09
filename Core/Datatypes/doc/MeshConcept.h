@@ -47,10 +47,8 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 

@@ -45,11 +45,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Containers/StaticArray.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

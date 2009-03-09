@@ -52,11 +52,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Containers/StaticArray.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 using namespace Uintah;

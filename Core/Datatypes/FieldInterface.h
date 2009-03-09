@@ -49,9 +49,7 @@
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
   class Point;

@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
  *
  ****************************************/
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 #include <testprograms/TestSuite/uintahshare.h>
 using namespace std;
 

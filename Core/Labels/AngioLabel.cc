@@ -37,9 +37,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 using namespace Uintah;
 using std::cerr;
 using std::endl;

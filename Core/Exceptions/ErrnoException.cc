@@ -41,10 +41,8 @@
  */
 
 #include <Core/Exceptions/ErrnoException.h>
-#include <sgi_stl_warnings_off.h>
 #include <sstream>
 #include <cstring>
-#include <sgi_stl_warnings_on.h>
 #include <iostream>
 
 namespace SCIRun {

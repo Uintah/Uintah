@@ -38,11 +38,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/Array3.h>
 #include <CCA/Components/MPM/Solver.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <set>
 #include <map>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <iostream>
 
 #ifdef HAVE_PETSC
