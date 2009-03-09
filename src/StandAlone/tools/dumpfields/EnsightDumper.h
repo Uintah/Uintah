@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef DUMPFIELDS_ENSIGHT_DUMPER_H
 #define DUMPFIELDS_ENSIGHT_DUMPER_H
 
-#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldDumper.h>
-#include <Packages/Uintah/StandAlone/tools/dumpfields/Args.h>
-#include <Packages/Uintah/StandAlone/tools/dumpfields/FieldSelection.h>
+#include <StandAlone/tools/dumpfields/FieldDumper.h>
+#include <StandAlone/tools/dumpfields/Args.h>
+#include <StandAlone/tools/dumpfields/FieldSelection.h>
 
 #include <iomanip>
 #include <fstream>

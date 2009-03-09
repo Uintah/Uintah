@@ -37,13 +37,13 @@ DEALINGS IN THE SOFTWARE.
  *
  */
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Math/Matrix3.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Containers/Array3.h>

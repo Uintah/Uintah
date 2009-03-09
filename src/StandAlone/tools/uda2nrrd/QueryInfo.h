@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Core/DataArchive/DataArchive.h>
 
 using namespace Uintah;
 

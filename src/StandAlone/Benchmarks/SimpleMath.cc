@@ -40,8 +40,8 @@ DEALINGS IN THE SOFTWARE.
  *  Copyright (C) 2000 U of U
  */
 
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Thread/Time.h>
 #include <iostream>

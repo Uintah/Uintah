@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/particles.h>
+#include <StandAlone/tools/uda2vis/particles.h>
 
 #include <Core/Geometry/Point.h>
 

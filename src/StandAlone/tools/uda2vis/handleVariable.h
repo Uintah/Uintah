@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UDA2NRRD_GET_FUNCTIONS_H
 #define UDA2NRRD_GET_FUNCTIONS_H
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/particleData.h>
+#include <StandAlone/tools/uda2vis/particleData.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2vis/QueryInfo.h>
+#include <StandAlone/tools/uda2vis/Args.h>
+#include <StandAlone/tools/uda2vis/QueryInfo.h>
 
 
 template<class T>                           void handleVariable( QueryInfo &    qinfo,

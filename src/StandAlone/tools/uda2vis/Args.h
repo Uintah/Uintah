@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UDA2NRRD_ARGS_H
 #define UDA2NRRD_ARGS_H
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/Matrix_Op.h>
+#include <StandAlone/tools/uda2vis/Matrix_Op.h>
 
 struct Args {
   bool      use_all_levels;

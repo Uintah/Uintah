@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef DUMPFIELDS_FIELD_DUMPER_H
 #define DUMPFIELDS_FIELD_DUMPER_H
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <string>
 
 namespace Uintah {
