@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Math/MiscMath.h>
+#include <Core/Math/UintahMiscMath.h>
 #include <Core/Math/Primes.h>
 #include <TauProfilerForSCIRun.h>
 #include <Core/Util/FancyAssert.h>
