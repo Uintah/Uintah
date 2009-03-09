@@ -30,22 +30,22 @@ DEALINGS IN THE SOFTWARE.
 
 //  AngioMaterial.cc
 
-#include <Packages/Uintah/CCA/Components/Angio/AngioParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/Angio/AngioMaterial.h>
-#include <Packages/Uintah/CCA/Components/Angio/AngioFlags.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
+#include <CCA/Components/Angio/AngioParticleCreator.h>
+#include <CCA/Components/Angio/AngioMaterial.h>
+#include <CCA/Components/Angio/AngioFlags.h>
+#include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Labels/AngioLabel.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/NullGeometryPiece.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Labels/AngioLabel.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/GeometryPiece/NullGeometryPiece.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <string>

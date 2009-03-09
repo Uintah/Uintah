@@ -28,19 +28,19 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Angio/AngioParticleCreator.h>
-#include <Packages/Uintah/CCA/Components/Angio/AngioMaterial.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryObject.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SmoothGeomPiece.h>
-#include <Packages/Uintah/Core/Labels/AngioLabel.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Angio/AngioParticleCreator.h>
+#include <CCA/Components/Angio/AngioMaterial.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/GeometryPiece/GeometryObject.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
+#include <Core/GeometryPiece/SmoothGeomPiece.h>
+#include <Core/Labels/AngioLabel.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <fstream>

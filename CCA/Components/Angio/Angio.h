@@ -31,17 +31,17 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ANGIO_H
 #define UINTAH_HOMEBREW_ANGIO_H
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Components/Angio/AngioFlags.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Labels/AngioLabel.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/Angio/AngioFlags.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Labels/AngioLabel.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/DebugStream.h>
 
