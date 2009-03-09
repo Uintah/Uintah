@@ -48,7 +48,9 @@ SRCS += \
         $(SRCDIR)/Signals.cc            \
         $(SRCDIR)/Timer.cc              \
         $(SRCDIR)/TypeDescription.cc    \
-        $(SRCDIR)/ProgressiveWarning.cc
+        $(SRCDIR)/ProgressiveWarning.cc \
+	$(SRCDIR)/RefCounted.cc 	\
+	$(SRCDIR)/Util.cc
 
 ifneq ($(IS_REDSTORM),yes)
   SRCS += \
