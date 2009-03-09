@@ -49,15 +49,15 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 
-#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
-#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
-#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/DataArchiver/DataArchiver.h>
+#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <iostream>
 #include <string>

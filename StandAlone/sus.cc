@@ -44,28 +44,28 @@ DEALINGS IN THE SOFTWARE.
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Tracker/TrackerClient.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Exceptions/InvalidGrid.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Tracker/TrackerClient.h>
 
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
-#include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
-#include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
-#include <Packages/Uintah/CCA/Components/DataArchiver/DataArchiver.h>
-#include <Packages/Uintah/CCA/Components/Solvers/SolverFactory.h>
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderFactory.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerFactory.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerFactory.h>
-#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Components/Models/ModelFactory.h>
+#include <CCA/Components/Solvers/CGSolver.h>
+#include <CCA/Components/Solvers/DirectSolve.h>
+#include <CCA/Components/Solvers/HypreSolver.h>
+#include <CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/DataArchiver/DataArchiver.h>
+#include <CCA/Components/Solvers/SolverFactory.h>
+#include <CCA/Components/Regridder/RegridderFactory.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
+#include <CCA/Components/Schedulers/SchedulerFactory.h>
+#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/InternalError.h>
@@ -83,7 +83,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 
 #ifdef USE_VAMPIR
-#  include <Packages/Uintah/Core/Parallel/Vampir.h>
+#  include <Core/Parallel/Vampir.h>
 #endif
 
 #if HAVE_IEEEFP_H

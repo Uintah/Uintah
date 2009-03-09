@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Tracker/TrackerServer.h>
+#include <Core/Tracker/TrackerServer.h>
 
 #include <iostream>
 

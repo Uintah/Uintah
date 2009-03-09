@@ -34,11 +34,11 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
 
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Disclosure/TypeDescription.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
+#include <StandAlone/tools/uda2nrrd/Args.h>
 
 class SCIRun::BBox;
 class SCIRun::IntVector;

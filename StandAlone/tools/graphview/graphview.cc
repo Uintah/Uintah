@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Core/DataArchive/DataArchive.h>
 #include <cerrno>
 #include <fstream>
 #include <iostream>

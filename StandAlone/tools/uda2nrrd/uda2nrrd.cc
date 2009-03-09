@@ -40,15 +40,15 @@ DEALINGS IN THE SOFTWARE.
  *  Copyright (C) 2003-2007 U of U
  */
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/wrap_nrrd.h>
+#include <StandAlone/tools/uda2nrrd/wrap_nrrd.h>
 
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/Args.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/bc.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/handleVariable.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/particles.h>
-#include <Packages/Uintah/StandAlone/tools/uda2nrrd/QueryInfo.h>
+#include <StandAlone/tools/uda2nrrd/Args.h>
+#include <StandAlone/tools/uda2nrrd/bc.h>
+#include <StandAlone/tools/uda2nrrd/handleVariable.h>
+#include <StandAlone/tools/uda2nrrd/particles.h>
+#include <StandAlone/tools/uda2nrrd/QueryInfo.h>
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
@@ -67,17 +67,17 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Persistent/Pstreams.h>
 
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/DataArchive/DataArchive.h>
 
 #include <sci_hash_map.h>
 #include <teem/nrrd.h>

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/StandAlone/tools/uda2vis/bc.h>
+#include <StandAlone/tools/uda2vis/bc.h>
 
 using namespace SCIRun;
 

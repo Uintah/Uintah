@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_COMPARE_MMS_SineMMS_H
 
 
-#include <Packages/Uintah/StandAlone/tools/compare_mms/MMS.h>
+#include <StandAlone/tools/compare_mms/MMS.h>
 
 class SineMMS : public MMS {
 
