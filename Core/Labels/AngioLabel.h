@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Labels/uintahshare.h>
+#include <Core/Labels/uintahshare.h>
 
 namespace Uintah {
 

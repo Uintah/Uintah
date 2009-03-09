@@ -30,18 +30,18 @@ DEALINGS IN THE SOFTWARE.
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVH.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondReader.h>
+#include <Core/Grid/Level.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/PatchBVH/PatchBVH.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidGrid.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>

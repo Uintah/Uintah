@@ -29,14 +29,14 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Math/MiscMath.h>
-#include <Packages/Uintah/Core/Math/Primes.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/InvalidGrid.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Math/Primes.h>
 #include <TauProfilerForSCIRun.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/BBox.h>

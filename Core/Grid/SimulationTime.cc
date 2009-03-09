@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/SimulationTime.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/SimulationTime.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Thread/Thread.h>
 

@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
+#include <Core/IO/UintahZlibUtil.h>
 
 #include <cstdio>
 

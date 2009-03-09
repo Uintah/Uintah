@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/UnionIterator.h>
+#include <Core/Grid/Variables/UnionIterator.h>
 
 namespace Uintah
 {

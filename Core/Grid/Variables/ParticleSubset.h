@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef PARTICLESUBSET_H
 #define PARTICLESUBSET_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/Grid/Ghost.h>
 #include <Core/Geometry/IntVector.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 using std::ostream;
 using SCIRun::IntVector;
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
   typedef int particleIndex;
   typedef int particleId;

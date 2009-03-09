@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/Variables/GridVariableBase.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
+#include <Core/Grid/Variables/GridVariableBase.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Parallel/BufferInfo.h>
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>

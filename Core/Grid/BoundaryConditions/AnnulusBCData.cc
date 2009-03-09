@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/AnnulusBCData.h>
+#include <Core/Grid/BoundaryConditions/AnnulusBCData.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 

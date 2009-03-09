@@ -38,8 +38,8 @@ DEALINGS IN THE SOFTWARE.
 // ComputeSet.h when using the PGI compilers...
 //
 
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Patch.h>
 #include <algorithm>
 
 namespace Uintah {

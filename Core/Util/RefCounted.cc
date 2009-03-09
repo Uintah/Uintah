@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
+#include <Core/Util/RefCounted.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/Assert.h>

@@ -28,12 +28,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/GeometryPiece/DifferenceGeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Core/Grid/Box.h>
 
 #include <vector>
 #include <sstream>

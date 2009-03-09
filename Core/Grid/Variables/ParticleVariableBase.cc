@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariableBase.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Parallel/BufferInfo.h>
+#include <Core/Grid/Variables/ParticleVariableBase.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Parallel/BufferInfo.h>
 
 #include <Core/Thread/Mutex.h>
 

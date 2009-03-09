@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef PATCH_BVH_H
 #define PATCH_BVH_H
 
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVHBase.h>
+#include <Core/Grid/PatchBVH/PatchBVHBase.h>
 #include <vector>
 
 #include <iostream>

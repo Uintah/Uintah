@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SimulationState_H
 #define UINTAH_HOMEBREW_SimulationState_H
 
-#include <Packages/Uintah/Core/Util/RefCounted.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationTime.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
+#include <Core/Util/RefCounted.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationTime.h>
+#include <Core/Grid/Ghost.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
@@ -46,7 +46,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 
 #define OVERHEAD_WINDOW 40
 namespace Uintah {

@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __BOX_GEOMETRY_OBJECT_H__
 #define __BOX_GEOMETRY_OBJECT_H__
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Box.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************

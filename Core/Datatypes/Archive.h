@@ -35,9 +35,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/Persistent.h>
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Core/DataArchive/DataArchive.h>
 
-#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
+#include <Core/Datatypes/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;

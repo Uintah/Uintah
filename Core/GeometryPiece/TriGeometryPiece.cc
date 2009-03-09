@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/GeometryPiece/TriGeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/GeometryPiece/TriGeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Box.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Ray.h>

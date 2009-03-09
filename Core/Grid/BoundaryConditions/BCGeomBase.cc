@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCGeomBase.h>
+#include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/Variables/ListOfCellsIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/GridIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Grid/Variables/ListOfCellsIterator.h>
+#include <Core/Grid/Variables/GridIterator.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <iostream>
 #include <vector>
 

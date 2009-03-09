@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __MATERIAL_H__
 #define __MATERIAL_H__
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/SimulationStateP.h>
 
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace Uintah {
 
 /**************************************

@@ -44,12 +44,12 @@ DEALINGS IN THE SOFTWARE.
  */
 
 // Header file for .cc file
-#include <Packages/Uintah/Core/Datatypes/VariableCache.h>
+#include <Core/Datatypes/VariableCache.h>
 
 // Local includes
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 
 // Basic includes
 #include <sstream>

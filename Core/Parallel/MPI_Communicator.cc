@@ -44,7 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Malloc/Allocator.h>
 #include <sys/time.h>
-#include <Packages/Uintah/Core/Parallel/MPI_Communicator.h>
+#include <Core/Parallel/MPI_Communicator.h>
 
 #define debug_main
 #define debug_main_thread
@@ -327,7 +327,7 @@ RET_TYPE MPI_CALL(NAME)(CALLSIG){\
   }\
 } \
 
-#include <Packages/Uintah/Core/Parallel/stubs.h>
+#include <Core/Parallel/stubs.h>
 
 #ifdef MALLOC_TRACE
 #include "MallocTraceMPIOn.h"

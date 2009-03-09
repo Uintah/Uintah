@@ -28,18 +28,18 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Packages/Uintah/CCA/Ports/InputContext.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Math/MiscMath.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Ports/InputContext.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/UnknownVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Level.h>
+#include <Core/Math/MiscMath.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>

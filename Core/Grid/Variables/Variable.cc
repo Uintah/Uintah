@@ -29,13 +29,13 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/Variable.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidCompressionMode.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/CCA/Ports/InputContext.h>
-#include <Packages/Uintah/CCA/Ports/OutputContext.h>
-#include <Packages/Uintah/Core/IO/SpecializedRunLengthEncoder.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Variables/Variable.h>
+#include <Core/Exceptions/InvalidCompressionMode.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <CCA/Ports/InputContext.h>
+#include <CCA/Ports/OutputContext.h>
+#include <Core/IO/SpecializedRunLengthEncoder.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>

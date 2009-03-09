@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Disclosure/TypeDescription.h>
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Point.h>

@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/Core/Disclosure/uintahshare.h>
+#include <Core/Disclosure/uintahshare.h>
 namespace Uintah {
 
 using SCIRun::Point;
@@ -74,19 +74,19 @@ UINTAHSHARE const TypeDescription* fun_getTypeDescription(Vector*);
 // true for Matrix3 too.  However, both the fun_getTypeDescription of
 // Matrix3 and Stencil7 are inplemented in their respective .cc files.
 
-#include <Packages/Uintah/Core/Math/uintahshare.h>
+#include <Core/Math/uintahshare.h>
 // since these are defined in Math/Grid, and declared here, we need to export them correctly
 UINTAHSHARE const TypeDescription* fun_getTypeDescription(Matrix3*);
 UINTAHSHARE const TypeDescription* fun_getTypeDescription(Short27*);
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 UINTAHSHARE const TypeDescription* fun_getTypeDescription(Stencil7*);
 
 // Added by Oren for implicit ICE AMR pressure solver type that
 // appears in ICELabel.cc.
 UINTAHSHARE const TypeDescription* fun_getTypeDescription(ConnectionList*);
 
-#include <Packages/Uintah/Core/Disclosure/uintahshare.h>
+#include <Core/Disclosure/uintahshare.h>
 
 // these functions are for getting safe values of types
 // return back the value in the argument (so we don't have to include
@@ -116,7 +116,7 @@ UINTAHSHARE void fun_getSmallValue(Vector*);
 
 #if !defined( REDSTORM )
 // typename.h redefines UINTAHSHARE
-#include <Packages/Uintah/Core/Disclosure/uintahshare.h>
+#include <Core/Disclosure/uintahshare.h>
 namespace SCIRun {
   using std::string;
   using Uintah::long64;

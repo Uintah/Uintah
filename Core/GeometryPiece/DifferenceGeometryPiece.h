@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __DIFFERENCE_GEOMETRY_OBJECT_H__
 #define __DIFFERENCE_GEOMETRY_OBJECT_H__      
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 /**************************************

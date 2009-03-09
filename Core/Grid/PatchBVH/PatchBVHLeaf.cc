@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVHLeaf.h>
+#include <Core/Grid/PatchBVH/PatchBVHLeaf.h>
 
 namespace Uintah {
 

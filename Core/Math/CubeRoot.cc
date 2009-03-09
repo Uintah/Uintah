@@ -52,7 +52,7 @@ DEALINGS IN THE SOFTWARE.
  *                  than once.
  */
 
-#include    <Packages/Uintah/Core/Math/CubeRoot.h>
+#include    <Core/Math/CubeRoot.h>
 #include    <cmath>
 #include    <cstdio>
 

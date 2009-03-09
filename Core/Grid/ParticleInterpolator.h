@@ -36,8 +36,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <vector>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/uintahshare.h>
+#include <Core/Grid/Variables/NCVariable.h>
 namespace Uintah {
 
   class Patch;

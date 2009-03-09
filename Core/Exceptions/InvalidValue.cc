@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <iostream>
 #include <sstream>
 

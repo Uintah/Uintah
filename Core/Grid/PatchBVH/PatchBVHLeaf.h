@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define PATCH_BVH_LEAF_H
 
 
-#include <Packages/Uintah/Core/Grid/PatchBVH/PatchBVHBase.h>
+#include <Core/Grid/PatchBVH/PatchBVHBase.h>
 #include <vector>
 
 namespace Uintah {

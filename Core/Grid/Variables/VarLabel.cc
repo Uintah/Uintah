@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Mutex.h>
 #include <map>

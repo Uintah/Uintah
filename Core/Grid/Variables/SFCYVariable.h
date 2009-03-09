@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SFCYVARIABLE_H
 #define UINTAH_HOMEBREW_SFCYVARIABLE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/GridVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/constGridVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Variables/GridVariable.h>
+#include <Core/Grid/Variables/constGridVariable.h>
+#include <Core/Grid/Patch.h>
 
 #ifndef _WIN32
 #include <unistd.h>

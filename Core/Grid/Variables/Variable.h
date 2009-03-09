@@ -36,9 +36,9 @@ DEALINGS IN THE SOFTWARE.
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 namespace SCIRun {
   class IntVector;
 }

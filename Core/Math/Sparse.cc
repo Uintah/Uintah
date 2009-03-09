@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Math/Sparse.h>
-#include <Packages/Uintah/Core/Math/Rand48.h>
+#include <Core/Math/Sparse.h>
+#include <Core/Math/Rand48.h>
 #include <iostream>
 
 using namespace Uintah;

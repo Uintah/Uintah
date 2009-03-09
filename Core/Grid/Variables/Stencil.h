@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_STENCIL_H
 #define UINTAH_HOMEBREW_STENCIL_H
 
-#include <Packages/Uintah/Core/Grid/Variables/DataItem.h>
-#include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
+#include <Core/Grid/Variables/DataItem.h>
+#include <Core/Exceptions/TypeMismatchException.h>
 
 namespace Uintah {
 

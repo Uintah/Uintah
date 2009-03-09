@@ -32,10 +32,10 @@ DEALINGS IN THE SOFTWARE.
 #define SCI_project_CCScalarField_h 1
 
 //#include "Packages/UintahScalarField.h"
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/CellIterator.h>
 
 #include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Geometry/IntVector.h>

@@ -31,13 +31,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef TENSORPARTICLES_H
 #define TENSORPARTICLES_H
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Datatypes/PSet.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
-#include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Datatypes/PSet.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
@@ -49,7 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Datatypes/uintahshare.h>
+#include <Core/Datatypes/uintahshare.h>
 namespace Uintah {
 using std::vector;
 using namespace SCIRun;

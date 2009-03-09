@@ -33,8 +33,8 @@ DEALINGS IN THE SOFTWARE.
 #define __GEOMETRY_OBJECT_H__
 
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <list>
@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <map>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/uintahshare.h>
+#include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {
 
 class GeometryPiece;

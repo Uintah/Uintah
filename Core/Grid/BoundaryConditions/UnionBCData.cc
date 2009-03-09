@@ -28,12 +28,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/UnionBCData.h>
+#include <Core/Grid/BoundaryConditions/UnionBCData.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/Variables/UnionIterator.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
+#include <Core/Grid/Variables/UnionIterator.h>
+#include <Core/Grid/Level.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <algorithm>

@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
+#include <Core/Parallel/UintahParallelPort.h>
 
 using namespace Uintah;
 

@@ -38,7 +38,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/Socket.h>
 
-#include <Packages/Uintah/Core/Tracker/Tracker.h>
+#include <Core/Tracker/Tracker.h>
 
 namespace Uintah {
 

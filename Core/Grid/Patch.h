@@ -31,14 +31,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_Patch_H
 #define UINTAH_HOMEBREW_Patch_H
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/fixedvector.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/Iterator.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Ghost.h>
+#include <Core/Grid/Level.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/fixedvector.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/Iterator.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Grid/uintahshare.h>
+#include <Core/Grid/uintahshare.h>
 
 //#define DELETE_OLD_INTERFACE
 
@@ -2225,7 +2225,7 @@ WARNING
       /********************
         The following are needed in order to use Patch as a Box in
         Core/Container/SuperBox.h (see
-        Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
+        Core/Grid/Variables/LocallyComputedPatchVarMap.cc)
 
         These are private so that other people don't try to use them.  Please
         use the other more descriptive queries.

@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Core/Grid/Box.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
