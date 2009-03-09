@@ -32,9 +32,37 @@
 SRCDIR := testprograms
 
 SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread
-ifeq ($(BUILD_SCIJUMP),yes)
-  SUBDIRS := $(SUBDIRS) $(SRCDIR)/Component
-endif
+	$(SRCDIR)/TestSuite               \
+        $(SRCDIR)/TestFastMatrix          \
+        $(SRCDIR)/TestMatrix3             \
+        $(SRCDIR)/TestConsecutiveRangeSet \
+        $(SRCDIR)/TestRangeTree           \
+        $(SRCDIR)/TestBoxGrouper          \
+        $(SRCDIR)/BNRRegridder            \
+        $(SRCDIR)/IteratorTest            \
+        $(SRCDIR)/RegionTest            \
+        $(SRCDIR)/PatchBVH
+
+#       $(SRCDIR)/SFCTest \
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
+
+PROGRAM := $(SRCDIR)/RunTests
+
+SRCS    = $(SRCDIR)/RunTests.cc
+
+PSELIBS := \
+        testprograms/TestSuite               \
+        testprograms/TestMatrix3             \
+        Core/Util                            \
+        testprograms/TestConsecutiveRangeSet \
+        testprograms/TestRangeTree           \
+        testprograms/TestBoxGrouper
+
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRA\
+RY) $(THREAD_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
 
