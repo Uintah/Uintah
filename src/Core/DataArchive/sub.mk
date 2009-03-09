@@ -40,7 +40,6 @@ PSELIBS := \
 	CCA/Ports    \
 	Core/Parallel    \
 	Core/ProblemSpec \
-	Core/Util \
 	CCA/Components/ProblemSpecification \
 	Core/Grid        \
 	Core/Disclosure  \
