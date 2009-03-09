@@ -31,16 +31,16 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_OUTPUT_H
 #define UINTAH_HOMEBREW_OUTPUT_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Core/Parallel/UintahParallelPort.h>
+#include <Core/Grid/GridP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/SchedulerP.h>
 #include <Core/OS/Dir.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Ports/uintahshare.h>
+#include <CCA/Ports/uintahshare.h>
 
 namespace Uintah {
 
