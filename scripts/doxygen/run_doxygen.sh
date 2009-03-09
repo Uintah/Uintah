@@ -29,7 +29,7 @@ function usage
     echo ""
     echo "Usage: run_doxygen.sh"
     echo ""
-    echo "   Run from the src/Packages/Uintah directory."
+    echo "   Run from the src/ directory."
     echo ""
     exit
 }

@@ -39,11 +39,11 @@
 
 # The UDA you wish to extract data from:
 
-UDA=~/SVN/SCIRun/inferno32opt/Packages/Uintah/StandAlone/vab_newtable_2motors.uda
+UDA=~/SVN/SCIRun/inferno32opt/StandAlone/vab_newtable_2motors.uda
 
 # Location of uda2nrrd executable:
 
-UDA2NRRD=~/SVN/SCIRun/inferno32opt/Packages/Uintah/StandAlone/tools/uda2nrrd/uda2nrrd
+UDA2NRRD=~/SVN/SCIRun/inferno32opt/StandAlone/tools/uda2nrrd/uda2nrrd
 
 # Index of first timestep to extract:
 
