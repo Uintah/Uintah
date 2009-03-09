@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Math/FastMatrix.h>
-#include <Core/Math/MiscMath.h>
+#include <Core/Math/UintahMiscMath.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Vector.h>
