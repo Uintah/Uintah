@@ -44,43 +44,45 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
         $(SRCDIR)/Matrix.cc                     \
         $(SRCDIR)/MatrixOperations.cc           \
         $(SRCDIR)/Mesh.cc                       \
-        $(SRCDIR)/NrrdData.cc                   \
         $(SRCDIR)/PropertyManager.cc            \
         $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
         $(SRCDIR)/String.cc                     \
-        $(SRCDIR)/TypeName.cc                   
+	$(SRCDIR)/FieldInterfaceAux.cc          \
+        $(SRCDIR)/TypeName.cc                   \
+      	$(SRCDIR)/Archive.cc \
+        $(SRCDIR)/ScalarParticles.cc \
+        $(SRCDIR)/VectorParticles.cc \
+        $(SRCDIR)/TensorParticles.cc \
+        $(SRCDIR)/PSet.cc \
+        $(SRCDIR)/VariableCache.cc \
+#       $(SRCDIR)/cd_templates.cc \
 
+
+ifeq ($(HAVE_TEEM),yes)
+  SRCS += \
+        $(SRCDIR)/NrrdData.cc                   
+endif
 
 PSELIBS := \
         Core/Basis        \
         Core/Containers   \
+        Core/Disclosure   \
         Core/Exceptions   \
+        Core/Grid   \
         Core/Geometry     \
         Core/Math         \
         Core/Persistent   \
         Core/Thread       \
         Core/Util         
 
-ifeq ($(BUILD_DATAFLOW),yes)
-  SRCS    += \
-	$(SRCDIR)/FieldInterfaceAux.cc          \
-        $(SRCDIR)/cd_templates.cc               \
-        $(SRCDIR)/cd_templates_fields_0.cc      \
-        $(SRCDIR)/cd_templates_fields_1.cc      \
-        $(SRCDIR)/cd_templates_fields_2.cc      \
-        $(SRCDIR)/cd_templates_fields_3.cc      \
-        $(SRCDIR)/cd_templates_fields_4.cc      \
-        $(SRCDIR)/cd_templates_fields_5.cc      \
-        $(SRCDIR)/cd_templates_fields_6.cc      \
-  PSELIBS += Core/GuiInterface
-endif
-
-LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
+LIBS := $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
         $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)             \
         $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+ifeq ($(HAVE_TEEM),yes)
 INCLUDES += $(TEEM_INCLUDE)
+endif
 INCLUDES += $(BLAS_INCLUDE)
