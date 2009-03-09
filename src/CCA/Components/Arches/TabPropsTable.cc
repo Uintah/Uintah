@@ -31,18 +31,18 @@ DEALINGS IN THE SOFTWARE.
 //----- TabPropsTable.cc --------------------------------------------------
 
 // includes for Arches
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabPropsTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/MixingRxnTable.h>
+#include <CCA/Components/Arches/TabProps/StateTable.h>
+#include <CCA/Components/Arches/TabPropsTable.h>
+#include <CCA/Components/Arches/Properties.h>
 
 // includes for Uintah
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
 #include <dirent.h>
 
 using namespace std;

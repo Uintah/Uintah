@@ -42,7 +42,7 @@ DEALINGS IN THE SOFTWARE.
 // getDepVars
 
 // Uintah includes
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 // C++ includes
 #include     <vector>

@@ -28,21 +28,21 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Grid/Level.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
 
 using namespace Uintah;
 

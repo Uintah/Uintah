@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_all_fort.h>
+#include <CCA/Components/Arches/fortran/apcal_all_fort.h>
 *-----------------------------------------------------------------------
 
 *

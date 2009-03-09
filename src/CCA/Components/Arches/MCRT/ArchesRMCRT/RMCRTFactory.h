@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef Uintah_Component_Arches_RMCRTFactory_h
 #define Uintah_Component_Arches_RMCRTFactory_h
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
 
 class RMCRTRRSD; 
 class RMCRTRRSDStratified;

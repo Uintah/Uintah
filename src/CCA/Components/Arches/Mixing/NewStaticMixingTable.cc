@@ -30,18 +30,18 @@ DEALINGS IN THE SOFTWARE.
 
 //----- NewStaticMixingTable.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/Mixing/NewStaticMixingTable.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <CCA/Components/Arches/ExtraScalarSolver.h>
+#include <CCA/Components/Arches/ExtraScalarSrc.h>
+#include <CCA/Components/Arches/Arches.h>
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/IO/UintahZlibUtil.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Math/MiscMath.h>
 
 #include <fstream>

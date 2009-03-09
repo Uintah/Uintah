@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Components_Arches_ArchesConstVariables_h
 #define Uintah_Components_Arches_ArchesConstVariables_h
 
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/StencilMatrix.h>
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
 
 /**************************************
 CLASS

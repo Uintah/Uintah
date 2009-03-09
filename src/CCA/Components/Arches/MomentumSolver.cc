@@ -31,29 +31,29 @@ DEALINGS IN THE SOFTWARE.
 //----- MomentumSolver.cc ----------------------------------------------
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/RHSSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/OdtClosure.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/MomentumSolver.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/RHSSolver.h>
+#include <CCA/Components/Arches/Source.h>
+#include <CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <CCA/Components/Arches/OdtClosure.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 using namespace Uintah;
 using namespace std;
 

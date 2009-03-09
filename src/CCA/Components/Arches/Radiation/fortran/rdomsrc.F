@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
 
       integer i,j,k
 

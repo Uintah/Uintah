@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 
 #include <iostream>
 #include <cstdlib>

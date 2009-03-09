@@ -30,38 +30,38 @@ DEALINGS IN THE SOFTWARE.
 
 //----- BoundaryCondition.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/CellInformationP.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/ExtraScalarSolver.h>
+#include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/DataWarehouse.h>
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
 
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
 
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MiscMath.h>
 
 #include <iostream>
@@ -72,28 +72,28 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/celltypeInit_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/areain_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/profscalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inlbcs_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/inlpresbcinout_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcscalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcuvel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcvvel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcwvel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_computevel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
+#include <CCA/Components/Arches/fortran/celltypeInit_fort.h>
+#include <CCA/Components/Arches/fortran/areain_fort.h>
+#include <CCA/Components/Arches/fortran/profscalar_fort.h>
+#include <CCA/Components/Arches/fortran/inlbcs_fort.h>
+#include <CCA/Components/Arches/fortran/inlpresbcinout_fort.h>
+#include <CCA/Components/Arches/fortran/bcscalar_fort.h>
+#include <CCA/Components/Arches/fortran/bcuvel_fort.h>
+#include <CCA/Components/Arches/fortran/bcvvel_fort.h>
+#include <CCA/Components/Arches/fortran/bcwvel_fort.h>
+#include <CCA/Components/Arches/fortran/profv_fort.h>
+#include <CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
+#include <CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
+#include <CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
+#include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
+#include <CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
+#include <CCA/Components/Arches/fortran/mmwallbc_fort.h>
+#include <CCA/Components/Arches/fortran/mmwallbc_trans_fort.h>
+#include <CCA/Components/Arches/fortran/mm_computevel_fort.h>
+#include <CCA/Components/Arches/fortran/mm_explicit_fort.h>
+#include <CCA/Components/Arches/fortran/mm_explicit_oldvalue_fort.h>
+#include <CCA/Components/Arches/fortran/mm_explicit_vel_fort.h>
+#include <CCA/Components/Arches/fortran/get_ramping_factor_fort.h>
 
 //****************************************************************************
 // Constructor for BoundaryCondition

@@ -34,13 +34,13 @@ DEALINGS IN THE SOFTWARE.
 
 #include <sci_defs/petsc_defs.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 #include <Core/Containers/Array1.h>
 

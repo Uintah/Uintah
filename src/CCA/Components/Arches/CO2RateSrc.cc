@@ -30,15 +30,15 @@ DEALINGS IN THE SOFTWARE.
 
 //----- CO2RateSrc.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/CO2RateSrc.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <CCA/Components/Arches/CO2RateSrc.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Ports/Scheduler.h>
 
 using namespace std;
 using namespace Uintah;

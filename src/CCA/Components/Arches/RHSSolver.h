@@ -61,9 +61,9 @@ WARNING
    none
 
 ****************************************/
-#include <Packages/Uintah/CCA/Components/Arches/ArchesVariables.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesConstVariables.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
+#include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <Core/Grid/Patch.h>
 
 namespace Uintah {
 

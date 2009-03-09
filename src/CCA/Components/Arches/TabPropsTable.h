@@ -34,18 +34,18 @@ DEALINGS IN THE SOFTWARE.
 #define Uintah_Component_Arches_TabPropsTable_h
 
 // includes for Arches
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/MixingRxnTable.h>
+#include <CCA/Components/Arches/TabProps/StateTable.h>
+#include <CCA/Components/Arches/Properties.h>
 
 // includes for Uintah
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 
 /***************************************************************************

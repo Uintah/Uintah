@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef RMCRTnoInterpolation_h
 #define RMCRTnoInterpolation_h
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
 
 namespace Uintah {
   class RMCRTnoInterpolation:public RMCRTFactory{

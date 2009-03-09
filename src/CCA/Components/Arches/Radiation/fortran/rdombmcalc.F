@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdombmcalc_fort.h>
 
       integer i,ii,j,jj,k,kk,m
 

@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/TabProps/StateTable.h>
+#include <CCA/Components/Arches/TabProps/StateTable.h>
 
 #include <Core/Exceptions/InternalError.h>
 

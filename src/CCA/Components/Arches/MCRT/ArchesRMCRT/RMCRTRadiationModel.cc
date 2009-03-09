@@ -32,27 +32,27 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 */
-//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
-//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
-//#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+//#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTFactory.h>
+//#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
+//#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSD.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/CellInformationP.h>
 
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRadiationModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRadiationModel.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
 
 //class RMCRTFactory;
 

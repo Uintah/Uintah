@@ -66,15 +66,15 @@ WARNING
 ****************************************/
 
 #include <sci_defs/petsc_defs.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/Handle.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
 #include <string>
 
 // Divergence constraint instead of drhodt in pressure equation

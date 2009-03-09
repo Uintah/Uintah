@@ -27,8 +27,8 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 #include <cmath>
 
 Surface::Surface(){

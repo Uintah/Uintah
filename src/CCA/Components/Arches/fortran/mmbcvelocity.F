@@ -33,7 +33,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
+#include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include "param4.h"
 
 #undef normalbc

@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //----- ExtraScalarSrc.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/ExtraScalarSrc.h>
+#include <CCA/Components/Arches/ExtraScalarSrc.h>
 
 using namespace std;
 using namespace Uintah;

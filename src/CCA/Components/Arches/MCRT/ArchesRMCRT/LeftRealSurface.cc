@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/LeftRealSurface.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/LeftRealSurface.h>
 #include <iostream>
 #include <cstdlib>
 
