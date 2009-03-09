@@ -31,24 +31,24 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_AMRMPM_H
 #define UINTAH_HOMEBREW_AMRMPM_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <CCA/Components/MPM/SerialMPM.h>
 // put here to avoid template problems
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/Short27.h>
+#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
+#include <CCA/Components/MPM/uintahshare.h>
 
 namespace Uintah {
 

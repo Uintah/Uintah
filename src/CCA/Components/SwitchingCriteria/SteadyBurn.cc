@@ -28,19 +28,19 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/SteadyBurn.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <CCA/Components/SwitchingCriteria/SteadyBurn.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Labels/MPMICELabel.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Containers/StaticArray.h>
 
 #include <string>

@@ -32,10 +32,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 #define Packages_Uintah_CCA_Components_Examples_ModelFactory_h
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/ModelMaker.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/ModelMaker.h>
 
-#include <Packages/Uintah/CCA/Components/Models/uintahshare.h>
+#include <CCA/Components/Models/uintahshare.h>
 namespace Uintah {
 
 /**************************************

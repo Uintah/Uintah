@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/EOS/Thomsen_Hartka_water.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/ICE/EOS/Thomsen_Hartka_water.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 

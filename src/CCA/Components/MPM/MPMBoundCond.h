@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_MPMBOUNDCOND_H
 
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
+#include <CCA/Components/MPM/uintahshare.h>
 
 namespace Uintah {
 

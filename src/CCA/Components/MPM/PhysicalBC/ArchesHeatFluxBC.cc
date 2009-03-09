@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PolynomialData.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
-#include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
+#include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
+#include <CCA/Components/MPM/PhysicalBC/PolynomialData.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Core/GeometryPiece/SphereGeometryPiece.h>
+#include <Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

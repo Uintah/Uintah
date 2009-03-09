@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_SMAGORINSKYMODEL_H
 #define UINTAH_SMAGORINSKYMODEL_H
 
-#include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
+#include <CCA/Components/ICE/Turbulence.h>
 #include <Core/Containers/StaticArray.h>
 #include <cmath>
 

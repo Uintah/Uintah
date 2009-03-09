@@ -29,15 +29,15 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/ICE/SmagorinskyModel.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Math/CubeRoot.h>
+#include <CCA/Components/ICE/SmagorinskyModel.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Math/CubeRoot.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

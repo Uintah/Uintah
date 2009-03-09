@@ -29,26 +29,26 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>

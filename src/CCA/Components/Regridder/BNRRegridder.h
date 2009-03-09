@@ -30,9 +30,9 @@ DEALINGS IN THE SOFTWARE.
 
 #ifndef UINTAH_HOMEBREW_BNRREGRIDDER_H
 #define UINTAH_HOMEBREW_BNRREGRIDDER_H
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
-#include <Packages/Uintah/CCA/Components/Regridder/BNRTask.h>
-#include <Packages/Uintah/CCA/Components/Regridder/PatchFixer.h>
+#include <CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Components/Regridder/BNRTask.h>
+#include <CCA/Components/Regridder/PatchFixer.h>
 #include <queue>
 #include <stack>
 #include <list>

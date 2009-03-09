@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/TableInterface.h>
+#include <CCA/Components/Models/FluidsBased/TableInterface.h>
 
 using namespace Uintah;
 

@@ -30,15 +30,15 @@ DEALINGS IN THE SOFTWARE.
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-//#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Grid/Grid.h>
+//#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <CCA/Components/Schedulers/MemoryLog.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>

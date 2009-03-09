@@ -32,32 +32,32 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_ICE_H
 #define UINTAH_HOMEBREW_ICE_H
 
-#include <Packages/Uintah/Core/Grid/Variables/Stencil7.h>
-#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-#include <Packages/Uintah/CCA/Components/ICE/customInitialize.h>
-#include <Packages/Uintah/CCA/Components/ICE/CustomBCs/LODI2.h>
-#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
-#include <Packages/Uintah/CCA/Components/ICE/Turbulence.h>
-#include <Packages/Uintah/CCA/Components/ICE/ExchangeCoefficients.h>
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/CCA/Ports/SolverInterface.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Labels/MPMICELabel.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Math/MiscMath.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/Stencil7.h>
+#include <CCA/Components/ICE/Advection/Advector.h>
+#include <CCA/Components/ICE/customInitialize.h>
+#include <CCA/Components/ICE/CustomBCs/LODI2.h>
+#include <CCA/Components/ICE/BoundaryCond.h>
+#include <CCA/Components/ICE/Turbulence.h>
+#include <CCA/Components/ICE/ExchangeCoefficients.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
+#include <CCA/Ports/ModelInterface.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/SolverInterface.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Labels/MPMICELabel.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Math/FastMatrix.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Vector.h>
 #include <sgi_stl_warnings_off.h>
@@ -68,7 +68,7 @@ DEALINGS IN THE SOFTWARE.
 
 #define MAX_MATLS 16
 
-#include <Packages/Uintah/CCA/Components/ICE/uintahshare.h>
+#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah { 
   using namespace SCIRun;
   class ModelInfo; 

@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __EQUATION_OF_STATE_H__
 #define __EQUATION_OF_STATE_H__
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include "PlasticityState.h"
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 
 
 namespace Uintah {

@@ -33,13 +33,13 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Thread/CrowdMonitor.h>
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/DWDatabase.h>
+#include <CCA/Components/Schedulers/SendState.h>
+#include <Core/Grid/Variables/VarLabelMatl.h>
+#include <Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <Core/Grid/Grid.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <map>

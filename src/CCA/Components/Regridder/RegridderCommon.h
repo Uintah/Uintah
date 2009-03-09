@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_REGRIDDERCOMMON_H
 #define UINTAH_HOMEBREW_REGRIDDERCOMMON_H
 
-#include <Packages/Uintah/CCA/Ports/Regridder.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Geometry/IntVector.h>
 #include <vector>
 

@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_SCHEDULERS_THREADPOOL_H
 #define UINTAH_SCHEDULERS_THREADPOOL_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
 
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>

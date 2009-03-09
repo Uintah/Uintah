@@ -28,14 +28,14 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Packages/Uintah/Core/Grid/Node27Interpolator.h>
-#include <Packages/Uintah/Core/Grid/TOBSplineInterpolator.h>
-#include <Packages/Uintah/Core/Grid/BSplineInterpolator.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/LinearInterpolator.h>
+#include <Core/Grid/Node27Interpolator.h>
+#include <Core/Grid/TOBSplineInterpolator.h>
+#include <Core/Grid/BSplineInterpolator.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

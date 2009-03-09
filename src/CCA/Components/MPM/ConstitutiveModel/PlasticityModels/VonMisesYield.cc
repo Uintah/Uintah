@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "VonMisesYield.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <cmath>
 
 using namespace Uintah;

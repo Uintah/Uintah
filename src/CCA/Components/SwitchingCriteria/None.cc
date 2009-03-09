@@ -28,10 +28,10 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/SwitchingCriteria/None.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <CCA/Components/SwitchingCriteria/None.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Ports/Scheduler.h>
 
 using namespace Uintah;
 

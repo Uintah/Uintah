@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/CostProfiler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/LoadBalancers/CostProfiler.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
 using namespace SCIRun;

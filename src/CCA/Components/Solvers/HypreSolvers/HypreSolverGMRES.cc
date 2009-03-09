@@ -34,10 +34,10 @@ DEALINGS IN THE SOFTWARE.
 // Hypre GMRES ([preconditioned] conjugate gradient) solver.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverGMRES.h>
+#include <CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

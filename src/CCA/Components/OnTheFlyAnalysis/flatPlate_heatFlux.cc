@@ -28,15 +28,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/OnTheFlyAnalysis/flatPlate_heatFlux.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Box.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>

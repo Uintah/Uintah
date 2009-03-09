@@ -29,7 +29,7 @@ C
 C 
 C 
 #if 1
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/pressure_force_fort.h>
+#include <CCA/Components/MPMArches/fortran/pressure_force_fort.h>
 #include "../../Arches/fortran/param4.h"
 #else
       subroutine pressure_force(

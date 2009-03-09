@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __ZERILLI_ARMSTRONG_MODEL_H__
 #define __ZERILLI_ARMSTRONG_MODEL_H__
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModel.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityModel.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

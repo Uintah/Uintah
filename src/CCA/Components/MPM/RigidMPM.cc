@@ -28,31 +28,31 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <Core/Math/Matrix3.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>

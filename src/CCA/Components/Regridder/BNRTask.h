@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_BNRTASK_H
 #define UINTAH_HOMEBREW_BNRTASK_H
 
-#include <Packages/Uintah/CCA/Components/Regridder/RegridderCommon.h>
+#include <CCA/Components/Regridder/RegridderCommon.h>
 #include <queue>
-#include <Packages/Uintah/Core/Grid/Region.h>
+#include <Core/Grid/Region.h>
 
 namespace Uintah {
 

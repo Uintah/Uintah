@@ -29,9 +29,9 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include "BeckerCheck.h"
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Math/SymmMatrix3.h>
+#include <Core/Math/TangentModulusTensor.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Math/SymmMatrix3.h>
 #include <cmath>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

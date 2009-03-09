@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __YIELD_CONDITION_H__
 #define __YIELD_CONDITION_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/TangentModulusTensor.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Math/TangentModulusTensor.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 
 namespace Uintah {
 

@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_PATCHFIXER_H
 #define UINTAH_HOMEBREW_PATCHFIXER_H
 
-#include <Packages/Uintah/CCA/Components/Regridder/BNRTask.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/Regridder/BNRTask.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 #include <vector>
 using namespace std;

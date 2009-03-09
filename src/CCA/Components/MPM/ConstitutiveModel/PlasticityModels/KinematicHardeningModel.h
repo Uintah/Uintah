@@ -31,15 +31,15 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __KINEMATIC_HARDENING_MODEL_H__
 #define __KINEMATIC_HARDENING_MODEL_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include "PlasticityState.h"
 
 

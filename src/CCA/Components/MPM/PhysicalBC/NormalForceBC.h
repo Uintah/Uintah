@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_GRID_NormalForceBC_H
 #define UINTAH_GRID_NormalForceBC_H
 
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/LoadCurve.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

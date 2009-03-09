@@ -28,23 +28,23 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/Crack/FractureDefine.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+#include <CCA/Components/MPM/ConstitutiveModel/GUVMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/Short27.h> // for Fracture
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h> // just added
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Patch.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/Short27.h> // for Fracture
+#include <Core/Grid/Variables/NodeIterator.h> // just added
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>

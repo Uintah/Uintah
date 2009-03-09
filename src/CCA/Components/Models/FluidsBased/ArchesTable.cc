@@ -29,10 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Models/FluidsBased/ArchesTable.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/IO/UintahZlibUtil.h>
+#include <CCA/Components/Models/FluidsBased/ArchesTable.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/IO/UintahZlibUtil.h>
 
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Time.h>

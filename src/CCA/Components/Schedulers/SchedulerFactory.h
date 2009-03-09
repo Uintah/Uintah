@@ -31,11 +31,11 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Scheduler_SchedulerFactory_h
 #define Packages_Uintah_CCA_Components_Scheduler_SchedulerFactory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <CCA/Ports/Output.h>
 
-#include <Packages/Uintah/CCA/Components/Schedulers/uintahshare.h>
+#include <CCA/Components/Schedulers/uintahshare.h>
 namespace Uintah {
 
   class ProcessorGroup;

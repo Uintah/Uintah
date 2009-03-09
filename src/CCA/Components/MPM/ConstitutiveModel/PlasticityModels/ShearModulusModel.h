@@ -32,8 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #define __SHEAR_MODULUS_MODEL_H__
 
 #include "PlasticityState.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 

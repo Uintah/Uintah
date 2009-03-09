@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookPlastic.h>
 #include <cmath>
 
 #ifdef _WIN32

@@ -29,18 +29,18 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
+#include <CCA/Components/Schedulers/Relocate.h>
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Box.h>
+#include <Core/Parallel/Parallel.h>
+#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <Core/Containers/Array2.h>

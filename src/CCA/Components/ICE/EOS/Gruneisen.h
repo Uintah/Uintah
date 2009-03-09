@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __Gruneisen_H__
 #define __Gruneisen_H__
 
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include "EquationOfState.h"
 
 namespace Uintah {

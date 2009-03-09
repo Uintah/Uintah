@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/RadiationConstVariables.h>
+#include <CCA/Components/Models/Radiation/RadiationConstVariables.h>
 
 using namespace Uintah;
 

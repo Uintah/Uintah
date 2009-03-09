@@ -32,14 +32,14 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_Poisson3_h
 #define Packages_Uintah_CCA_Components_Examples_Poisson3_h
 
-#include <Packages/Uintah/CCA/Components/Examples/Interpolator.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/Examples/Interpolator.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
-#include <Packages/Uintah/CCA/Components/Examples/uintahshare.h>
+#include <CCA/Components/Examples/uintahshare.h>
 namespace Uintah {
   class SimpleMaterial;
 

@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <CCA/Components/ICE/Advection/Advector.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>

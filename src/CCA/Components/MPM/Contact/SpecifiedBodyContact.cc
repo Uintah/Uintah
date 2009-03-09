@@ -29,23 +29,23 @@ DEALINGS IN THE SOFTWARE.
 
 
 // SpecifiedBodyContact.cc
-#include <Packages/Uintah/CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
+#include <CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Labels/MPMLabel.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Containers/StaticArray.h>
 
 #include <sgi_stl_warnings_off.h>
