@@ -30,18 +30,18 @@ DEALINGS IN THE SOFTWARE.
 
 #include <TauProfilerForSCIRun.h>
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Parallel/Vampir.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/SendState.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/Vampir.h>
+#include <Core/Grid/Variables/ParticleSubset.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
@@ -59,7 +59,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sgi_stl_warnings_on.h>
 
 #ifdef USE_PERFEX_COUNTERS
-#  include <Packages/Uintah/CCA/Components/Schedulers/counters.h>
+#  include <CCA/Components/Schedulers/counters.h>
 #endif
 
 // Pack data into a buffer before sending -- testing to see if this

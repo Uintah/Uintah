@@ -28,12 +28,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/NullThermalContact.h>
+#include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
 #include <Core/Malloc/Allocator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Task.h>
+#include <Core/Labels/MPMLabel.h>
 
 #include <vector>
 

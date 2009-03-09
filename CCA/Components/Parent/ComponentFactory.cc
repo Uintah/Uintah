@@ -28,34 +28,34 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Parent/ComponentFactory.h>
-#include <Packages/Uintah/CCA/Components/Parent/Switcher.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/AMRMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/AMRICE.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
-#include <Packages/Uintah/CCA/Components/Examples/Poisson1.h>
-#include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
-#include <Packages/Uintah/CCA/Components/Examples/Burger.h>
-#include <Packages/Uintah/CCA/Components/Examples/Wave.h>
-#include <Packages/Uintah/CCA/Components/Examples/AMRWave.h>
-#include <Packages/Uintah/CCA/Components/Examples/ParticleTest1.h>
-#include <Packages/Uintah/CCA/Components/Examples/RegridderTest.h>
-#include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
-#include <Packages/Uintah/CCA/Components/Angio/Angio.h>
-#include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
-#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
+#include <CCA/Components/Parent/ComponentFactory.h>
+#include <CCA/Components/Parent/Switcher.h>
+#include <CCA/Components/MPM/SerialMPM.h>
+#include <CCA/Components/MPM/AMRMPM.h>
+#include <CCA/Components/MPM/FractureMPM.h>
+#include <CCA/Components/MPM/RigidMPM.h>
+#include <CCA/Components/MPM/ShellMPM.h>
+#include <CCA/Components/MPM/ImpMPM.h>
+#include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/ICE/AMRICE.h>
+#include <CCA/Components/MPMICE/MPMICE.h>
+#include <CCA/Components/MPMArches/MPMArches.h>
+#include <CCA/Components/Examples/Poisson1.h>
+#include <CCA/Components/Examples/Poisson2.h>
+#include <CCA/Components/Examples/Burger.h>
+#include <CCA/Components/Examples/Wave.h>
+#include <CCA/Components/Examples/AMRWave.h>
+#include <CCA/Components/Examples/ParticleTest1.h>
+#include <CCA/Components/Examples/RegridderTest.h>
+#include <CCA/Components/Examples/Poisson3.h>
+#include <CCA/Components/Angio/Angio.h>
+#include <CCA/Components/Examples/SolverTest1.h>
+#include <CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <CCA/Components/PatchCombiner/UdaReducer.h>
 
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Parallel/Parallel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 
 #include <iosfwd>

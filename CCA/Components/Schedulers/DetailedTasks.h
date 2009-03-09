@@ -31,12 +31,12 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_DetailedTasks_H
 #define UINTAH_HOMEBREW_DetailedTasks_H
 
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ScrubItem.h>
-#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ScrubItem.h>
+#include <Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>

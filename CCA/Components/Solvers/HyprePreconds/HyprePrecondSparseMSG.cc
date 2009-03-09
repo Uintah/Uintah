@@ -34,11 +34,11 @@ DEALINGS IN THE SOFTWARE.
 // Hypre SparseMSG (geometric multigrid #2) preconditioner.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HyprePreconds/HyprePrecondSparseMSG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriver.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolverParams.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/Solvers/HyprePreconds/HyprePrecondSparseMSG.h>
+#include <CCA/Components/Solvers/HypreDriver.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Solvers/HypreSolverParams.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomsolve_fort.h>
+#include <CCA/Components/Models/Radiation/fortran/m_rdomsolve_fort.h>
 
       integer i,j,k,ii,jj,kk
 

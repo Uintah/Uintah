@@ -34,10 +34,10 @@ DEALINGS IN THE SOFTWARE.
 // Hypre PFMG (geometric multigrid #2) solver.
 //--------------------------------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Solvers/HypreSolvers/HypreSolverPFMG.h>
-#include <Packages/Uintah/CCA/Components/Solvers/HypreDriverStruct.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Solvers/HypreSolvers/HypreSolverPFMG.h>
+#include <CCA/Components/Solvers/HypreDriverStruct.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
 
 using namespace Uintah;

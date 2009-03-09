@@ -30,15 +30,15 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
-#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <CCA/Components/Schedulers/NullScheduler.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>

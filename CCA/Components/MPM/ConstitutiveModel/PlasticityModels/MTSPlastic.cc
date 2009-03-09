@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 using namespace Uintah;
 using namespace SCIRun;

@@ -29,7 +29,7 @@ C
 C 
 C 
 #if 1
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/redistribute_dragforce_cc_fort.h>
+#include <CCA/Components/MPMArches/fortran/redistribute_dragforce_cc_fort.h>
 #include "../../Arches/fortran/param4.h"
 #else
       subroutine redistribute_dragforce_cc(

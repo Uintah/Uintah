@@ -28,12 +28,12 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/CommRecMPI.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 using namespace Uintah;
 using namespace SCIRun;

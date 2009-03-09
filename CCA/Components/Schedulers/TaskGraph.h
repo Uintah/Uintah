@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_TaskGraph_H
 
  
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Core/Grid/Task.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Grid.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>

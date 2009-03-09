@@ -31,9 +31,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HEAT_CONDUCTION_H
 #define UINTAH_HEAT_CONDUCTION_H
 
-#include <Packages/Uintah/CCA/Ports/SchedulerP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
 

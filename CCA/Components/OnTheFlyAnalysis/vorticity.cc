@@ -28,15 +28,15 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/vorticity.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Labels/ICELabel.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
+#include <CCA/Components/ICE/ICEMaterial.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Labels/ICELabel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>

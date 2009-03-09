@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Examples/Interpolator.h>
+#include <CCA/Components/Examples/Interpolator.h>
 
 
 using namespace Uintah;

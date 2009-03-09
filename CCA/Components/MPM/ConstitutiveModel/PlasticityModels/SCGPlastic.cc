@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #  define _CPP_CMATH
 #endif
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SCGPlastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SCGPlastic.h>
 
 #include <cmath>
 
@@ -43,7 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 #ifdef _WIN32
 #include <cfloat>

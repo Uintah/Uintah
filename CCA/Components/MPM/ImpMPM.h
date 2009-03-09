@@ -35,19 +35,19 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Geometry/Vector.h>
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Labels/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ImpMPMFlags.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h>
-#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/ImpMPMFlags.h>
+#include <CCA/Components/MPM/MPMCommon.h>
+#include <CCA/Components/MPM/Solver.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/SwitchingCriteria.h>
 
 
 #include <sgi_stl_warnings_off.h>
@@ -56,7 +56,7 @@ DEALINGS IN THE SOFTWARE.
 #include <list>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
+#include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {
 
 using namespace SCIRun;

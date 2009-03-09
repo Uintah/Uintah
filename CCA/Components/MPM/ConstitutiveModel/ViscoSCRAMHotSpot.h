@@ -32,10 +32,10 @@ DEALINGS IN THE SOFTWARE.
 #define __VISCOSCRAM_FULL_CONSTITUTIVE_MODEL_H__
 
 #include "ViscoScram.h"
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Math/FastMatrix.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <cmath>
 #include <sgi_stl_warnings_off.h>

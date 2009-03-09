@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "SteelCp.h"
 #include <cmath>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 	 

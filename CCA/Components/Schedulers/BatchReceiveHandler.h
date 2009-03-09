@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {

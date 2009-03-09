@@ -38,7 +38,7 @@ C
 ! EOSMGR: Energy as function of temperature and density
 ! EOSMGV: Pressure and temperature as function of energy and density
 !
-C#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModels/fortran/HookeChk_fort.h>
+C#include <CCA/Components/MPM/ConstitutiveModels/fortran/HookeChk_fort.h>
 C
 C---.----1----.----2----.----3----.----4----.----5----.----6----.----7-|--.----
       SUBROUTINE HOOKE_INCREMENTAL( NBLK, NINSV, DT, PROP,

@@ -25,12 +25,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
-#include <Packages/Uintah/Core/Parallel/Parallel.h> // Only used for MPI cerr
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h> // process determination
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h> // Only used for MPI cerr
+#include <Core/Parallel/ProcessorGroup.h> // process determination
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/Exceptions/InternalError.h>
@@ -993,7 +993,7 @@ ProblemSpecReader::parseValidationFile()
 
   xmlDocPtr doc; /* the resulting document tree */
   
-  const string valFile = string(sci_getenv("SCIRUN_SRCDIR")) +  "/Packages/Uintah/StandAlone/inputs/ups_spec.xml";
+  const string valFile = string(sci_getenv("SCIRUN_SRCDIR")) +  "/StandAlone/inputs/ups_spec.xml";
 
   doc = xmlReadFile( valFile.c_str(), 0, XML_PARSE_PEDANTIC );
 

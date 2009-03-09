@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
+#include <CCA/Components/ICE/EOS/EquationOfState.h>
 
 using namespace Uintah;
 

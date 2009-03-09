@@ -44,8 +44,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cmath>
 
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Core/Math/Matrix3.h>
 
 #include <vector>
 

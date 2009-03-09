@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_TableFactory_h
 #define Uintah_TableFactory_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
   class TableInterface;

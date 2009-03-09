@@ -32,9 +32,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 #define Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 
-#include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <CCA/Ports/ModelInterface.h>
+#include <Core/GeometryPiece/GeometryPiece.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 #include <map>
 #include <vector>

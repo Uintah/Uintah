@@ -31,10 +31,10 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Packages_Uintah_CCA_Components_Switching_SteadyState_h
 #define Packages_Uintah_CCA_Components_Switching_SteadyState_h
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Ports/SwitchingCriteria.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationState.h>
 
 
 namespace Uintah {

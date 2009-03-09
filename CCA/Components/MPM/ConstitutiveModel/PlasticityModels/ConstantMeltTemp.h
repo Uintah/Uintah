@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __CONSTANT_MELT_TEMP_MODEL_H__
 
 #include "MeltingTempModel.h"
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/CrackGeometry.h>
+#include <CCA/Components/MPM/Crack/CrackGeometry.h>
 #include <Core/Geometry/Vector.h>
 #include <cmath>
 

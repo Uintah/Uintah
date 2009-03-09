@@ -32,55 +32,55 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstring>
 #include <fstream>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
+#include <CCA/Components/MPMArches/MPMArches.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Geometry/Point.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/NonlinearSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
-#include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfo.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/CutCellInfoP.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
-#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/CellInformationP.h>
+#include <CCA/Components/Arches/EnthalpySolver.h>
+#include <CCA/Components/Arches/NonlinearSolver.h>
+#include <CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <CCA/Components/Arches/TurbulenceModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Grid/LinearInterpolator.h>
+#include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/MPMArches/CutCellInfo.h>
+#include <CCA/Components/MPMArches/CutCellInfoP.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/collect_scalar_fctocc_fort.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/energy_exchange_term_fort.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/interp_centertoface_fort.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/momentum_exchange_term_continuous_cc_fort.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/pressure_force_fort.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/read_complex_geometry_fort.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/fortran/read_complex_geometry_walls_fort.h>
+#include <CCA/Components/MPMArches/fortran/collect_drag_cc_fort.h>
+#include <CCA/Components/MPMArches/fortran/collect_scalar_fctocc_fort.h>
+#include <CCA/Components/MPMArches/fortran/energy_exchange_term_fort.h>
+#include <CCA/Components/MPMArches/fortran/interp_centertoface_fort.h>
+#include <CCA/Components/MPMArches/fortran/momentum_exchange_term_continuous_cc_fort.h>
+#include <CCA/Components/MPMArches/fortran/pressure_force_fort.h>
+#include <CCA/Components/MPMArches/fortran/read_complex_geometry_fort.h>
+#include <CCA/Components/MPMArches/fortran/read_complex_geometry_walls_fort.h>
 
 // ****************************************************************************
 // Actual constructor for MPMArches

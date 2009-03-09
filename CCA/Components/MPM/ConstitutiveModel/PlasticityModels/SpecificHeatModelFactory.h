@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef _SPECIFIC_HEAT_MODELFACTORY_H_
 #define _SPECIFIC_HEAT_MODELFACTORY_H_
 
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

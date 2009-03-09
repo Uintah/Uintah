@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/ProfileDriver.h>
+#include <CCA/Components/LoadBalancers/ProfileDriver.h>
 #include <Core/Util/DebugStream.h>
 #include <sstream>
 using namespace std;

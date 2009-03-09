@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
+#include <CCA/Components/MPM/PetscSolver.h>
 #include <Core/Exceptions/InternalError.h>
 
 

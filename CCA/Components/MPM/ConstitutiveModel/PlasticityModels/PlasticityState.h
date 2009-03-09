@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __PLASTICITY_STATE_DATA_H__
 #define __PLASTICITY_STATE_DATA_H__
 
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 
 namespace Uintah {
 

@@ -34,10 +34,10 @@ DEALINGS IN THE SOFTWARE.
 // Do not EVER put a #include for anything in CCA/Components in here.
 // Ask steve for a better way
 
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/Material.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <CCA/Ports/DataWarehouseP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Material.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 #include <Core/Geometry/Vector.h>
 
@@ -45,7 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Packages/Uintah/CCA/Components/ICE/uintahshare.h>
+#include <CCA/Components/ICE/uintahshare.h>
 namespace Uintah {
   using namespace SCIRun;
   class ICELabel;

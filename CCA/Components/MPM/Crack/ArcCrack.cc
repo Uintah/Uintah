@@ -28,9 +28,9 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Crack/ArcCrack.h>
+#include <CCA/Components/MPM/Crack/ArcCrack.h>
 #include <Core/Geometry/Plane.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Core/Math/Matrix3.h>
 #include <iostream>
 
 using std::cout;

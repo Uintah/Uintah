@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SingleProcessorLoadBalancer_H
 #define UINTAH_HOMEBREW_SingleProcessorLoadBalancer_H
 
-#include <Packages/Uintah/CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 namespace Uintah {
    /**************************************

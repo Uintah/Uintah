@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/CCA/Components/MPM/Contact/ContactMaterialSpec.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/MPM/Contact/ContactMaterialSpec.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 using namespace std;
 using namespace Uintah;

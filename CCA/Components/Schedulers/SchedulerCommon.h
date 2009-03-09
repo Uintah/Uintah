@@ -32,13 +32,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_SCHEDULERCOMMON_H
 #define UINTAH_HOMEBREW_SCHEDULERCOMMON_H
 
-#include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/Relocate.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Schedulers/Relocate.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/SimulationStateP.h>
 
 #include <sgi_stl_warnings_off.h>
 #include   <iosfwd>

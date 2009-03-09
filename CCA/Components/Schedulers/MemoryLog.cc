@@ -29,8 +29,8 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <CCA/Components/Schedulers/MemoryLog.h>
+#include <Core/Grid/Patch.h>
 #include <iostream>
 
 using namespace std;

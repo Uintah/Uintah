@@ -35,14 +35,14 @@ DEALINGS IN THE SOFTWARE.
 #include <vector>
 using namespace std;
 
-#include <Packages/Uintah/Core/Grid/Grid.h>
-#include <Packages/Uintah/Core/Grid/Region.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/CCA/Components/LoadBalancers/ProfileDriver.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Region.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/LoadBalancers/ProfileDriver.h>
 namespace Uintah {
    /**************************************
      
