@@ -32,7 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Components_Arches_LinearSolver_h
 #define Uintah_Components_Arches_LinearSolver_h
 
-#include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Grid/Patch.h>
 
 namespace Uintah {
 

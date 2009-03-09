@@ -33,9 +33,9 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Components_Arches_ArchesLabel_h
 #define Uintah_Components_Arches_ArchesLabel_h
 
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Util/Handle.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Util/Handle.h>
 
 
 /**************************************

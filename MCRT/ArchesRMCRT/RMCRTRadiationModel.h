@@ -34,13 +34,13 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_RMCRTRadiationModel_h
 #define Uintah_Component_Arches_RMCRTRadiationModel_h
 
-#include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/LevelP.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah {
 class TimeIntegratorLabel; 

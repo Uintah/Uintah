@@ -33,7 +33,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
+#include <CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 C-----------------------------------------------------------------------
 *
 *

@@ -31,32 +31,32 @@ DEALINGS IN THE SOFTWARE.
 //----- CompLocalDynamicProcedure.cc --------------------------------------------------
 
 #include <TauProfilerForSCIRun.h>
-#include <Packages/Uintah/CCA/Components/Arches/CompLocalDynamicProcedure.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
-#include <Packages/Uintah/CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
-#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
+#include <CCA/Components/Arches/PhysicalConstants.h>
+#include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/CellInformation.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/StencilMatrix.h>
+#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+#include <Core/Grid/Level.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/SFCXVariable.h>
+#include <Core/Grid/Variables/SFCYVariable.h>
+#include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Geometry/Vector.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/VariableNotFoundInGrid.h>
+#include <Core/Grid/Variables/Array3.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Thread/Time.h>
 #include <Core/Math/MinMax.h>
@@ -68,14 +68,14 @@ using namespace Uintah;
 using namespace SCIRun;
 //#define use_fortran
 #ifdef use_fortran
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_1loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_2loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_3loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_4loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_5loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_6loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_7loop_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/comp_dynamic_8loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_1loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_2loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_3loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_4loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_5loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_6loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_7loop_fort.h>
+#include <CCA/Components/Arches/fortran/comp_dynamic_8loop_fort.h>
 #endif
 
 // flag to enable filter check

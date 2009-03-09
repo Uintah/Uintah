@@ -30,13 +30,13 @@ DEALINGS IN THE SOFTWARE.
 
 //----- PetscSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <CCA/Components/Arches/PetscSolver.h>
 #include <Core/Thread/Time.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Exceptions/UintahPetscError.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Components/Arches/Arches.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/UintahPetscError.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 
 #undef CHKERRQ

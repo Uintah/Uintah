@@ -30,11 +30,11 @@ DEALINGS IN THE SOFTWARE.
 
 //----- MOMColdflowMixingModel.cc --------------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <CCA/Components/Arches/Mixing/MOMColdflowMixingModel.h>
+#include <CCA/Components/Arches/Mixing/InletStream.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidValue.h>
 #include <Core/Geometry/IntVector.h>
 using namespace Uintah;
 using namespace SCIRun;

@@ -34,15 +34,15 @@ DEALINGS IN THE SOFTWARE.
 //
 
 // includes for Arches
-#include <Packages/Uintah/CCA/Components/Arches/MixingRxnTable.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/MixingRxnTable.h>
+#include <CCA/Components/Arches/Properties.h>
+#include <CCA/Components/Arches/Arches.h>
 
 // includes for Uintah
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InvalidValue.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 
 // includes for C++
 #include <fstream>

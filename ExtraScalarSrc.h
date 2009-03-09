@@ -33,7 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef Uintah_Component_Arches_ExtraScalarSrc_h
 #define Uintah_Component_Arches_ExtraScalarSrc_h
 
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <CCA/Components/Arches/Arches.h>
 
 /**************************************
 CLASS

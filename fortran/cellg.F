@@ -28,7 +28,7 @@ C
 C
 C 
 C 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/cellg_fort.h>
+#include <CCA/Components/Arches/fortran/cellg_fort.h>
 #include "param4.h"
 
 c*********************************************************************
