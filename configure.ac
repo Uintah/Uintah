@@ -128,7 +128,7 @@ rm -rf ii_files sedscript
 AC_CONFIG_SRCDIR(configVars.mk.in)
 
 ##  set the location of config.guess, config.sub, and install.sh
-AC_CONFIG_AUX_DIR(scripts)
+AC_CONFIG_AUX_DIR(build_scripts)
 
 ## If user tried to configure in the src directory, this will block it.
 if test -f Makefile.in; then
@@ -213,11 +213,7 @@ sci_arg_enable_list=""
 ##  Use the SCI_ARG_WITH and SCI_ARG_ENABLE macros to check for arguments
 ##
 
-SCI_ARG_WITH(thirdparty, 
-  AC_HELP_STRING(--with-thirdparty=DIR,
-                Use the Thirdparty_install installation in DIR. This is output from the Thirdparty_install install script. The default is /usr/local/SCIRun/Thirdparty/ followed by: <version>/<OS>/<compiler>-<32 or 64>bit),
-  [thirdparty="$withval"],
-  [thirdparty=""])
+
 SCI_ARG_WITH(atlas,
   AC_HELP_STRING(--with-atlas=DIR,
                  Use the atlas (for lapack/blas) installation in DIR),
@@ -254,19 +250,6 @@ SCI_ARG_WITH(fortran,
   [with_fortran="$withval"
    sci_required_fortran=yes],
   [with_fortran=""])
-SCI_ARG_WITH(ptolemyII,
-  AC_HELP_STRING(--with-ptolemyII=DIR,
-                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
-  [with_ptolemyII="$withval"
-   sci_required_ptolemyII=yes
-   sci_required_java=yes],
-  [with_ptolemyII=""])
-SCI_ARG_WITH(java,
-  AC_HELP_STRING(--with-java=DIR,
-                 Use the Java distribution in DIR),
-  [with_java="$withval"
-   sci_required_java=yes],
-  [with_java=""])
 SCI_ARG_WITH(ofed,
   AC_HELP_STRING(--with-ofed=DIR,
                  Specify that OFED - Infiniband - is needed for the mpi installation),
@@ -297,54 +280,18 @@ SCI_ARG_WITH(hypre,
   [with_hypre="$withval"
    sci_required_hypre=yes],
   [with_hypre=""])
-SCI_ARG_WITH(netsolve,
-  AC_HELP_STRING(--with-netsolve=DIR,
-                 Use the netsolve installation in DIR),
-  [with_netsolve="$withval"
-   sci_required_netsolve=yes],
-  [with_netsolve=""])
 SCI_ARG_WITH(petsc,
   AC_HELP_STRING(--with-petsc=DIR,
                  Use the petsc installation in DIR),
   [with_petsc="$withval"
    sci_required_petsc=yes],
   [with_petsc=""])
-SCI_ARG_WITH(png,
-  AC_HELP_STRING(--with-png=DIR,
-                 Use the png installation in DIR),
-  [with_png="$withval"
-   sci_required_png=yes],
-  [with_png=""])
-SCI_ARG_WITH(camal,
-  AC_HELP_STRING(--with-camal=DIR,
-                 Use the CMLTET installation in DIR),
-  [with_camal="$withval"
-   sci_required_camal=yes],
-  [with_camal=""])
-SCI_ARG_WITH(mesquite,
-  AC_HELP_STRING(--with-mesquite=DIR,
-                 Use the Mesquite installation in DIR),
-  [with_mesquite="$withval"
-   sci_required_mesquite=yes],
-  [with_mesquite=""])
 SCI_ARG_WITH(zoltan,
   AC_HELP_STRING(--with-zoltan=DIR,
                  Use the Zoltan installation in DIR),
   [with_zoltan="$withval"
    sci_required_zoltan=yes],
   [with_zoltan=""])
-SCI_ARG_WITH(verdict,
-  AC_HELP_STRING(--with-verdict=DIR,
-                 Use the Verdict installation in DIR),
-  [with_verdict="$withval"
-   sci_required_verdict=yes],
-  [with_verdict=""])
-SCI_ARG_WITH(tetgen,
-  AC_HELP_STRING(--with-tetgen=DIR,
-                 Use the Tetgen installation in DIR),
-  [with_tetgen="$withval"
-   sci_required_tetgen=yes],
-  [with_tetgen=""])
 SCI_ARG_WITH(unipetsc,
   AC_HELP_STRING(--with-unipetsc=DIR,
                  Use the unipetsc installation in DIR),
@@ -363,69 +310,7 @@ SCI_ARG_WITH(unp,
   [with_unp="$withval"
    sci_required_unp=yes],
   [with_unp=""])
-SCI_ARG_WITH(globus,
-  AC_HELP_STRING(--with-globus=DIR,
-                 Use the globus installation in DIR),
-  [with_globus="$withval"
-   sci_required_globus=yes
-   sci_required_ssl=yes
-   sci_required_crypto=yes],
-  [with_globus=""])
-SCI_ARG_WITH(crypto,
-  AC_HELP_STRING(--with-crypto=DIR,
-                 Use the crypto installation in DIR (only for use with globus)),
-  [with_crypto="$withval"
-   sci_required_crypto=yes],
-  [with_crypto=""])
-SCI_ARG_WITH(ssl,
-  AC_HELP_STRING(--with-ssl=DIR,
-                 Use the ssl installation in DIR (only for use with globus)),
-  [with_ssl="$withval"
-   sci_required_ssl=yes],
-  [with_ssl=""])
-SCI_ARG_WITH(ncurses,
-  AC_HELP_STRING(--with-ncurses=DIR,
-                 Use the Ncurses installation in DIR),
-  [with_ncurses="$withval"
-   sci_required_ncurses=yes],
-  [with_ncurses=""])
-SCI_ARG_WITH(babel,
-  AC_HELP_STRING(--with-babel=DIR,
-  Use the Babel installation in DIR (strongly recommended for SCIJump)),
-  [with_babel="$withval"
-   sci_required_babel=yes
-   sci_required_java=yes],
-  [with_babel=""])
-SCI_ARG_WITH(wxwidgets,
-  AC_HELP_STRING(--with-wxwidgets=DIR,
-                 Use the wxWidgets installation in DIR),
-  [with_wx="$withval"
-   sci_required_wx=yes],
-  [with_wx=""])
-SCI_ARG_WITH(ruby,
-  AC_HELP_STRING(--with-ruby=DIR,
-                 Use the ruby installation in DIR where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/local),
-  [with_ruby="$withval"
-   sci_required_ruby=yes],
-  [with_ruby=""])
-SCI_ARG_WITH(tao,
-  AC_HELP_STRING(--with-tao=DIR,
-                 Use the tao corba installation in DIR where DIR points to the --prefix option specified when installing tao.),
-  [with_tao="$withval"
-   sci_required_tao=yes],
-  [with_tao=""])
-SCI_ARG_WITH(vtk,
-  AC_HELP_STRING(--with-vtk=DIR,
-                 Build the VTK components. Use VTK build in DIR.  DIR should be the directory specified in the VTK CMake variable CMAKE_INSTALL_PREFIX, which is /usr/local by default),
-  [with_vtk="$withval"
-   sci_required_vtk=yes],
-  [with_vtk=""])
-SCI_ARG_WITH(opengl,
-  AC_HELP_STRING(--with-opengl=DIR,
-                 Use the OpenGL installation in DIR),
-  [with_opengl="$withval"
-   sci_required_opengl=yes],
-  [with_opengl=""])
+
 SCI_ARG_WITH(zlib,
   AC_HELP_STRING(--with-zlib=DIR,
                  Use the zlib installation in DIR),
@@ -459,13 +344,6 @@ SCI_ARG_WITH(libxml2,
    sci_required_libxml2=yes],
   [with_libxml2=""])
 
-SCI_ARG_WITH(mdsplus,
-  AC_HELP_STRING(--with-mdsplus=DIR,
-                 Use the mdsplus installation in DIR),
-  [with_mdsplus="$withval"
-   sci_required_mdsplus=yes],
-  [with_mdsplus=""])
-
 SCI_ARG_WITH(hdf5,
   AC_HELP_STRING(--with-hdf5=DIR,
                  Use the hdf5 installation in DIR),
@@ -473,36 +351,6 @@ SCI_ARG_WITH(hdf5,
    sci_required_hdf5=yes],		      # flag to check for the libs
   [with_hdf5=""])		      # undefinded otherwise
 
-SCI_ARG_WITH(glut,
-  AC_HELP_STRING(--with-glut=DIR,
-                 Use the glut installation in DIR),
-  [with_glut="$withval"
-   sci_required_glut=yes],
-  [with_glut=""])
-SCI_ARG_WITH(glui,
-  AC_HELP_STRING(--with-glui=DIR,
-                 Use the glui installation in DIR),
-  [with_glui="$withval"
-   sci_required_glui=yes],
-  [with_glui=""])
-SCI_ARG_WITH(oogl,
-  AC_HELP_STRING(--with-oogl=DIR,
-                 Use the oogl installation in DIR),
-  [with_oogl="$withval"
-   sci_required_oogl=yes],
-  [with_oogl=""])
-SCI_ARG_WITH(glew,
-  AC_HELP_STRING(--with-glew=DIR,
-                 Use the GLEW installation in DIR),
-  [with_glew="$withval"
-   sci_required_glew=yes],
-  [with_glew=""])
-SCI_ARG_WITH(audio,
-  AC_HELP_STRING(--with-audio=DIR,
-                 Use the audio installation in DIR),
-  [with_audio="$withval"
-   sci_required_audio=yes],
-  [with_audio=""])
 SCI_ARG_WITH(freetype,
   AC_HELP_STRING(--with-freetype=DIR,
                  Use the Freetype2 installation in DIR),
@@ -516,23 +364,12 @@ SCI_ARG_WITH(ftgl,
    sci_required_ftgl=yes
    sci_required_freetype=yes],
   [with_ftgl=""])
-SCI_ARG_WITH(boost,
-  AC_HELP_STRING(--with-boost=DIR,
-                 Use the Boost in DIR),
-  [with_boost="$withval"
-   sci_required_boost=yes],
-  [with_boost=""])
 SCI_ARG_WITH(visit,
   AC_HELP_STRING(--with-visit=DIR,
                  Turn on VisIt visualization tool support.  Point to VisIt installation.),
   [with_visit="$withval"],
   [with_visit=""])
-SCI_ARG_WITH(loki,
-  AC_HELP_STRING(--with-loki=DIR,
-                 Use the Loki in DIR),
-  [with_loki="$withval"
-   sci_required_loki=yes],
-  [with_loki=""])
+
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
                  Turn on verbose configure output),
@@ -569,27 +406,13 @@ SCI_ARG_ENABLE(output-avg-walltime,
                  Output ellapsed wall-times),
   [output_avg_walltime="$enableval"],
   [output_avg_walltime=${output_avg_walltime='no'}])
-SCI_ARG_ENABLE(perfex,
-  AC_HELP_STRING(--enable-perfex,
-                 Use perfex hardware counters (sgi only)),
-  [sci_required_perfex=yes],
-  [sci_required_perfex=no])
 SCI_ARG_ENABLE(package,
   AC_HELP_STRING(--enable-package=<list>,
                  Use the SCIRun packages specified by list.
                  example: --enable-package='Uintah Teem'),
   [package="$enableval"],
   [package=""])
-SCI_ARG_ENABLE(dataflow,
-  AC_HELP_STRING(--disable-dataflow,
-                 Do not build Dataflow component model (same as --disable-scirun) ),
-  [sci_required_dataflow=no],
-  [sci_required_dataflow=yes])
-SCI_ARG_ENABLE(scirun,
-  AC_HELP_STRING(--disable-scirun,
-                 Do not require SCIRun components (same as --disable-dataflow) ),
-  [sci_required_scirun=no],
-  [sci_required_scirun=yes])
+
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
                  Use name for executable name instead of the default: scirun),
@@ -630,58 +453,12 @@ SCI_ARG_ENABLE(throw-level,
                  Use throw level N (0-3)),
   [enable_throw_level="$enableval"],
   [enable_throw_level=${enable_throw_level=0}])
-SCI_ARG_ENABLE(scijump,
-  AC_HELP_STRING(--enable-scijump,
-                 Build experimental SCIJump),
-  [enable_scijump="$enableval"
-   [SCI_SET_PACKAGE_CHECKS(SCIJump, $host)]
-  ],
-  [enable_scijump=${enable_scijump='no'}])
-SCI_ARG_WITH(cppunit,
-  AC_HELP_STRING(--with-cppunit=DIR,
-                 Enable cppunit based unit tests),
-  [with_cppunit="$withval"
-   sci_required_cppunit=yes],
-  [with_cppunit=""])
-SCI_ARG_ENABLE(plume,
-  AC_HELP_STRING(--enable-plume,
-                 Build Plume (based on SCIJump)),
-  [enable_plume="$enableval"
-   [SCI_SET_PACKAGE_CHECKS(Plume, $host)]
-   ],
-  [enable_plume=${enable_plume='no'}])
-SCI_ARG_WITH(tena,
-  AC_HELP_STRING(--with-tena=DIR,
-                 Use the TENA installation in DIR),
-  [with_tena="$withval"
-   sci_required_tena=yes],
-  [with_tena=""])
-SCI_ARG_WITH(om,
-  AC_HELP_STRING(--with-om=DIR,
-                 Use the TENA OM installation in DIR),
-  [with_tena_om="$withval"
-   sci_required_tena_om=yes],
-  [with_tena_om=""])
+
 SCI_ARG_ENABLE(rath,
   AC_HELP_STRING(--enable-rpath,
                  Use the default runtime library search path),
   [enable_rpath="$enableval"],
   [enable_rpath=${enable_rpath='yes'}])
-SCI_ARG_ENABLE(chromium,
-  AC_HELP_STRING(--enable-chromium,
-                 Using Chromium so skip unsupported OGL calls),
-  [enable_chromium="$enableval"],
-  [enable_chromium=${enable_chromium='no'}])
-SCI_ARG_ENABLE(ati-card-fix,
-  AC_HELP_STRING(--enable-ati-card-fix,
-                 Enable the ati car fix to repair bad polygons - Deprecated - use SCIRUN_DRAWARRAYS_DISABLE environment variable - see scirunrc file),
-  [enable_ati_card_fix="$enableval"],
-  [enable_ati_card_fix=${enable_ati_card_fix='no'}])
-SCI_ARG_ENABLE(no-dynamic-cast,
-  AC_HELP_STRING(--enable-no-dynamic-cast,
-	         Disable dynamic casting, SGI compiler bug workaround.),
-  [enable_no_dynamic_cast="$enableval"],
-  [enable_no_dynamic_cast=${enable_no_dynamic_cast='no'}])
 
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
    AC_MSG_ERROR( "You cannot use both --with-MallocTrace and --enable-sci-malloc!" )
@@ -712,24 +489,6 @@ if test "$enable_rpath" = "no"; then
    AC_MSG_WARN("Do not do this unless you really know what you are doing.")
 fi
 
-if test "$enable_chromium" = "yes"; then
-   DEF_CHROMIUM="#define HAVE_CHROMIUM 1"
-fi
-AC_SUBST(DEF_CHROMIUM)
-sci_defs_files="$sci_defs_files include/sci_defs/chromium_testdefs.h"
-
-if test "$enable_ati_card_fix" = "yes"; then
-   AC_MSG_WARN("The ATI card hack is no longer controlled by configure.")
-   AC_MSG_WARN("You can turn it on/off by setting the environment variable")
-   AC_MSG_WARN("SCIRUN_DRAWARRAYS_DISABLE to true.  This can be done either")
-   AC_MSG_ERROR("in your environment or in your .scirunrc file.)
-fi
-
-if test "$enable_no_dynamic_cast" = "yes"; then
-   DEF_NO_DYNAMIC_CAST="#define NO_DYNAMIC_CAST 1"
-fi
-AC_SUBST(DEF_NO_DYNAMIC_CAST)
-sci_defs_files="$sci_defs_files include/sci_defs/dynamic_cast_testdefs.h"
 
 ##  --------------------------------------------------------------------
 ##  Save off the arguments to configure, being careful to save 
@@ -745,57 +504,23 @@ myargs=`echo $args | sed 's%\^% %g'`
 ## Cut off the /configure from the configure command (eg: ../src/configure)
 path_to_src=`echo $0 | sed 's/\/configure//'`
 
-if test "${enable_dataflow}" = "yes" -a "$enable_scirun" = "no"; then
-    AC_MSG_ERROR( You cannot disable scirun and enable dataflow. )
-fi
-if test "${enable_dataflow}" = "no" -a "$enable_scirun" = "yes"; then
-    AC_MSG_ERROR( You cannot enable scirun and disable dataflow. )
-fi
+pkg_Uintah="yes"
+package="Teem"
 
-if test "$sci_required_scirun" = "no"; then
-  sci_required_dataflow=no
-fi
-
-BUILD_DATAFLOW="$sci_required_dataflow"
-if test "$sci_required_dataflow" = "yes"; then
-  DEF_BUILD_DATAFLOW="#define BUILD_DATAFLOW 1"
-else
-  sci_required_scirun=no
-fi
-AC_SUBST(DEF_BUILD_DATAFLOW)
-AC_SUBST(BUILD_DATAFLOW)
-sci_defs_files="$sci_defs_files include/sci_defs/dataflow_testdefs.h"
-
-
-if test "$package" = "all"; then
-  AC_MSG_RESULT(Enabling all the packages in your SCIRun/src/Packages directory.)
-  _sci_tmp=`ls $path_to_src/Packages`
-  package=`echo $_sci_tmp | sed 's/CVS //g'`
-  AC_MSG_RESULT(Packages include $package)
-fi
 PACKAGE_DIRS=""
 for i in $package; do
-   PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
+   PACKAGE_DIRS=$PACKAGE_DIRS" $i"
    # set the package dependent checks
    SCI_SET_PACKAGE_CHECKS($i, $host)
 done
 
-if test "$pkg_Ptolemy" = "yes"; then
-  ## check PtolemyII version?
-  if test -z "$with_ptolemyII"; then
-    AC_MSG_WARN(The Ptolemy II JNI interface requires Java bindings in the Ptolemy package.)
-    AC_MSG_WARN(Use the --with-ptolemyII=DIR option to set the installation directory.)
-    sci_required_ptolemyII=yes
-    sci_required_java=yes
-  fi
-fi
 
 # Make sure the Package directories exist.
 #   Do an 'ls' of all files in the Packages directory and then grep for the
 #   package in this list.  (We used to just do a "test -d $package", but on
 #   a case-insensitive Mac file system, this fails.)
 
-packages_list=`ls $path_to_src/Packages`
+packages_list=`ls $path_to_src/`
 for i in $package; do
    found_package=`echo $packages_list | grep $i`
    if test -z "$found_package"; then
@@ -811,25 +536,6 @@ if test "$sci_required_unipetsc" = "yes" -o "$sci_required_petsc" = "yes"; then
    sci_required_lapack=yes
 fi
 
-# Set the collaborative vars.
-if test "$pkg_CollabVis" = "yes"; then
-  DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
-  HAVE_COLLAB_VIS="yes"
-fi
-
-AC_SUBST(DEF_COLLAB_VIS)
-AC_SUBST(HAVE_COLLAB_VIS)
-sci_defs_files="$sci_defs_files include/sci_defs/collab_vis_testdefs.h"
-
-# Set the Kepler vars.
-if test "$pkg_Kepler" = "yes"; then
-  DEF_KEPLER="#define HAVE_KEPLER 1"
-  HAVE_KEPLER="yes"
-fi
-
-AC_SUBST(DEF_KEPLER)
-AC_SUBST(HAVE_KEPLER)
-sci_defs_files="$sci_defs_files include/sci_defs/kepler_testdefs.h"
 
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
@@ -872,11 +578,6 @@ DEF_NEED_OSX_HACK=
 MAKE_ARCHIVES="no"
 
 case $host in
-  *-irix*)
-    SCI_CHECK_OS_VERSION(6.5,,
-      configure: error: wrong Irix version. exiting.;exit)
-    NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"    
-    ;;
   *linux*)
     SCI_CHECK_OS_VERSION(2.2.17,,
       configure: error: wrong Linux version. exiting.;exit)
@@ -995,14 +696,6 @@ if test "$CC" = ""; then
   AC_PROG_CC(cc gcc)
 
   case "$host" in 
-     *-irix*)
-        AC_MSG_WARN(Configure script only allows SGI compilers on IRIX.)
-        AC_MSG_WARN(If this is a problem email scirun-users@sci.utah.edu.)
-
-        if test $CC != cc; then
-           AC_MSG_ERROR(Configure did not find the 'cc' SGI C compiler.)
-        fi
-	;;
      *)
         #qwerty
         # Check to see if cc is actually gcc
@@ -1049,7 +742,7 @@ fi
 
 # Most fortran compilers need an "_" for C function names.
 # Some have strange underscore needs.  This flag is used in the
-# Packages/Uintah/tools/fspec.pl.in file to generate the correct
+# tools/fspec.pl.in file to generate the correct
 # cname of the fortran function.
 FORTRAN_UNDERSCORE=end
 DEF_FORTRAN_UNDERSCORE="#define FORTRAN_UNDERSCORE_END"
@@ -1221,10 +914,6 @@ else
   AC_MSG_RESULT(yes ($optimize) )
 fi
 
-if test "$sci_required_perfex" = "yes"; then
-  extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
-fi
-
 if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
   SCI_MSG_ERROR(Could not find the specified C compiler ($CC))
 fi
@@ -1344,89 +1033,6 @@ WIN_DLLFLAGS=""
 WIN_OTFFLAGS=""
 
 case $host in 
-  *-irix*)
-    ac_objext=o
-
-    # Check for the use of the 7.4 compiler (so that we can turn off
-    # some extra warnings.)
-    SCI_CHECK_VERSION($CXX,-version,7.4,USING_74=yes,)
-    if test "$USING_74" = "yes"; then
-      WOFF_NUMBERS="$WOFF_NUMBERS 3625 3649"
-    fi
-
-    SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
-                      echo configure: error: wrong $CC version.; exit)
-    SCI_CHECK_VERSION($CXX,-version,7.3.1.1,,
-                      echo configure: error: wrong $CXX version.; exit)
-    if test $sci_required_fortran = "yes"; then
-      SCI_CHECK_VERSION($F77,-version,7.3.1.1,,
-                        echo configure: error: wrong $F77 version.; exit)
-    fi
-    AC_PATH_PROG(AS,as,,$COMPILER_DIR,)
-    if test -z "$AS"; then
-      AC_MSG_WARN(Could not find the MIPSPro linker (as))
-      AC_MSG_ERROR(Looked in $COMPILER_DIR)
-    fi
-    SCI_CHECK_VERSION($AS,-version,7.3.1.1,,
-                      echo configure: error: wrong $CC version.; exit)
-    AC_PATH_PROG(LD,ld,,$COMPILER_DIR,)
-    if test -z "$LD"; then
-      AC_MSG_WARN(Could not find the MIPSPro linker (ld))
-      AC_MSG_ERROR(Looked in $COMPILER_DIR)
-    fi
-    CPP="$CC"
-    CXXCPP="$CXX -c"
-    ##  this WOFF is required for configure 
-    if test "$USING_74" = "yes"; then
-        WOFF=" -woff 3625,3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
-    else
-        WOFF=" -woff 3303,1047,1209,1110 -Wl,-woff,84 -woff 1342"
-    fi
-    CPPFLAGS=" $WOFF -LANG:std"
-
-    if test "$enable_64bit" = "yes"; then
-      if test $NBITS = "32"; then
-        # The machine defaults to 32 bits (as found above by void* check).
-        # This flag tries to force it to give us 64 bits...
-        BINARYFLAGS="-64 -mips4"
-      fi
-      NBITS=64
-    else
-      # FIX ME - we might want to check NBITS at this point... if it is 64 then the machine default
-      # is 64 bits and we are trying to switch it to 32 bits... perhaps should let the user know...
-      NBITS=32
-      BINARYFLAGS="-n32 -mips4"
-    fi
-
-    FFLAGS="$BINARYFLAGS $extra_cflags"
-    CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
-    CXXFLAGS="$CFLAGS"
-    ASFLAGS="$BINARYFLAGS"
-    SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)/so_locations $(TLINK) ${SOFLAGS}"
-    LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved"
-    AC_MSG_CHECKING(if ${CC} talks too much)
-    touch wow.c
-    if ${CC} -c wow.c 2>&1 | fgrep "requires a license password" > /dev/null ; then
-      AC_MSG_RESULT(yes)
-      AC_MSG_WARN(Using cc and CC wrappers in scripts/cc)
-
-      mkdir -p scripts
-      sed "s+VERBOSE_CC+${CC}+g;" < ${srcdir}/scripts/cc.in > scripts/cc
-      sed "s+VERBOSE_CC+${CXX}+g;" < ${srcdir}/scripts/cc.in > scripts/CC
-      chmod 755 scripts/cc scripts/CC
-
-      # use the script to parse out license noise.  Must be absolute path so
-      # dynamic compilation works.
-      scripts_path=`cd scripts;pwd`
-      CC="$scripts_path/cc"
-      CXX="$scripts_path/CC"
-
-    else
-      AC_MSG_RESULT(no)
-    fi
-    rm -f wow.c wow.o
-    ;;
-
   *-dec*)
     ac_objext=o
 
@@ -1921,38 +1527,6 @@ if test "$IS_WIN" = "yes"; then
   echo "skipping bison, lex, etags, perl tests"
 else
 
-##  --  Plume ----------------------
-
-if test "$enable_plume" = "yes"; then
-   BUILD_PLUME="yes"
-else
-   BUILD_PLUME="no"
-fi
-AC_SUBST(BUILD_PLUME)
-
-## test for bison. yacc is not sufficient as it has no -o option.
-## Only need for SCIJump currently.
-AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
-if test "$enable_scijump" = "yes" -a "$YACC" = "nobison"; then
-  echo "configure: error: bison is required, and was not found in your PATH."
-  echo "                  Please add it to your PATH, or set the environment"
-  echo "                  variable YACC to the appropriate bison executable,"
-  echo "                  then run configure again."
-  exit
-fi
-
-AC_PROG_LEX
-LEX_LIB_FLAG="$LEXLIB"
-AC_SUBST(LEX_LIB_FLAG)
-
-if test "$enable_scijump" = "yes" -a "$LEX" != "flex" -a "$LEX" != "lex"; then
-  echo "configure: error: flex or lex is required, and was not found in your PATH."
-  echo "                  Please add it to your PATH, or set the environment"
-  echo "                  variable LEX to the appropriate lex executable,"
-  echo "                  then run configure again."
-  exit
-fi
-
 AC_CHECK_PROG(ETAGS, etags, etags)
 
 if test "$sci_required_perl" = "yes" ; then
@@ -1968,11 +1542,11 @@ fi
 
 fi # end if IS_WIN = yes
 
-##  Create the Packages/Uintah/tools dir for later use.
+##  Create the tools dir for later use.
 if test "$sci_required_tools" = "yes" ; then
-  if test ! -d "Packages/Uintah/tools"; then
-    AC_MSG_RESULT(Creating Packages/Uintah/tools directory)
-    mkdir -p "Packages/Uintah/tools"
+  if test ! -d "tools"; then
+    AC_MSG_RESULT(Creating tools directory)
+    mkdir -p "tools"
   fi
   if test "$ac_cv_f77_compiler_gnu" = "yes" ; then
      G77=1
@@ -2011,150 +1585,12 @@ sci_defs_files="$sci_defs_files include/sci_defs/template_testdefs.h"
 ##  set the default language after the build tools are found
 AC_LANG([C])
 
-#########################################################################
-## Make sure number of bit build for Thirdparty and SCIRun compile match
-##
-
-if test "$thirdparty" && test -e $thirdparty; then
-  if test "$enable_64bit" = "yes"; then
-    case "$thirdparty" in 
-      *32bit*)
-	AC_MSG_ERROR(You specified 64 bit compile but have 32 bit Thirdparty?)
-      ;;
-    esac
-  else
-    case "$thirdparty" in 
-      *64bit*)
-	AC_MSG_ERROR(You specified 32 bit compile but have 64 bit Thirdparty?)
-      ;;
-    esac
-  fi
-
-  sci_thirdparty_dir="$thirdparty"
-else
-  if test "$thirdparty"; then
-    SCI_MSG_ERROR(Specified thirdparty directory: $thirdparty does not exist!)
-  fi
-fi
-
-##  sci_thirdparty_dir is the path to the current thirdparty
-##  if thirdparty not set use defaults
-
-if test -z "$thirdparty"; then
-  sci_tp_version=1.25.4
-  sci_tp_arch=`uname -s`
-  sci_compiler_vers=gcc-3.0.4
-
-  if test "$sci_tp_arch" = "Darwin"; then
-     # Add on to the path info on whether it is a PPC or Intel Processor, and which os version
-     sci_tp_arch=$sci_tp_arch-`uname -p`-`uname -r`
-  fi
-
-  # Try to figure out the compilers version (as it is used in the thirdparty directory name.)
-  ac_try="$CC -v > /dev/null 2> conftest.out"
-  (eval $ac_try) 2>&5
-  vers=`grep "gcc version" conftest.out | sed -e 's/.*gcc version //' | cut -d' ' -f1`
-  rm -f conftest.out
-  if test -n "$vers"; then
-    sci_compiler_vers=gcc-$vers
-  else
-    ac_try="$CC -version > /dev/null 2> conftest.out"
-    (eval $ac_try) 2>&5
-    vers=`grep MIPSpro conftest.out | cut -d' ' -f 4`
-    rm -f conftest.out
-    if test -n "$vers"; then
-      sci_compiler_vers=MIPSpro-$vers
-    else
-      sci_compiler_vers=""
-    fi
-  fi
-
-  # first if we are in the sci facility
-  _sci_tp_base=/usr/sci/projects
-  _sci_tp_subdir=$sci_tp_arch/$sci_compiler_vers-${NBITS}bit
-  _sci_tp_path=$_sci_tp_base/SCIRun/Thirdparty/$sci_tp_version/$_sci_tp_subdir
-
-  if test -e $_sci_tp_path; then
-    sci_thirdparty_dir="$_sci_tp_path"
-  else
-    # now try the default install location for thirdparty
-    _sci_tmp_tp_path=$_sci_tp_path
-    _sci_tp_base=/usr/local
-    _sci_tp_path=$_sci_tp_base/SCIRun/Thirdparty/$sci_tp_version/$_sci_tp_subdir
-    if test -e $_sci_tp_path; then
-      sci_thirdparty_dir="$_sci_tp_path"
-    else
-      AC_MSG_ERROR(Thirdparty installation does not exist in $_sci_tmp_tp_path or in $_sci_tp_path. Please specify the installation like this --with-thirdparty=DIR)
-    fi
-  fi
-
-  # extra thirdparty code for CCA
-  cca_tp_version=1.0.0
-  cca_tp_path=$_sci_tp_base/CCA/Thirdparty/$cca_tp_version/$_sci_tp_subdir
-
-  # extra thirdparty code for Uintah
-  uintah_tp_version=1.0.0
-  uintah_tp_path=$_sci_tp_base/Uintah/Thirdparty/$uintah_tp_version/$_sci_tp_subdir
-
-  # extra thirdparty code for rtrt
-  rtrt_tp_version=1.0.0
-  rtrt_tp_path=$_sci_tp_base/rtrt/Thirdparty/$rtrt_tp_version/$_sci_tp_subdir
-
-  # extra thirdparty code for plume
-  plume_tp_version=1.0.0
-  plume_tp_path=$_sci_tp_base/plume/Thirdparty/$plume_tp_version/$_sci_tp_subdir
-
-  AC_MSG_RESULT(Using default thirdparty directory $sci_thirdparty_dir)
-fi
-
-if test ! -d "$sci_thirdparty_dir"; then
-  AC_MSG_ERROR($sci_thirdparty_dir does not exist.)
-fi
-
-SCI_THIRDPARTY_DIR="$sci_thirdparty_dir"
-AC_SUBST(SCI_THIRDPARTY_DIR)
-
-
-# This is where the include and lib actually lives:
-if test ! -d "$sci_thirdparty_dir/include"; then
-  AC_MSG_ERROR(SCI Thirdparty invalid.  $sci_thirdparty_dir/include does not exist.)
-fi
-
-if test ! -d "$sci_thirdparty_dir/lib"; then
-  AC_MSG_ERROR(SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist.)
-fi
-
-sci_thirdparty_include="$sci_thirdparty_dir/include"
-sci_thirdparty_lib="$sci_thirdparty_dir/lib"
-
-INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
-SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_lib"
-
-if test "$IS_VC" != "yes"; then
-  SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib -L$sci_thirdparty_lib"
-else
-  SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib"
-fi
-
-AC_MSG_RESULT(Thirdparty directory is $SCI_THIRDPARTY_DIR)
-
-SCI_SUBST_THIRDPARTY_DIR(INC_SCI_THIRDPARTY_H)
-SCI_SUBST_THIRDPARTY_DIR(SCI_THIRDPARTY_LIB_DIR)
-SCI_SUBST_THIRDPARTY_DIR(SCI_THIRDPARTY_LIB_DIR_FLAG)
-
-AC_SUBST(INC_SCI_THIRDPARTY_H)
-AC_SUBST(SCI_THIRDPARTY_LIB_DIR)
-AC_SUBST(SCI_THIRDPARTY_LIB_DIR_FLAG)
 
 #########################################################################
 ##  Set the no_optimize_flag 
 ##  
 
 case $host in
-  *-irix*) 
-    no_optimize_flag=-O0
-    TIME_IMPL=Time_irix.cc
-    ;;
   *linux*)
     no_optimize_flag=-O0
     ;;
@@ -2215,38 +1651,6 @@ SCI_TRY_LINK(M,math libraries and headers,math.h,,$M_LIB,,,[
 AC_SUBST(M_LIB_FLAG)
 AC_SUBST(M_LIB_DIR_FLAG)
 
-##  --  search for X  ----------------------------------------------------
-
-if test "$IS_WIN" = "yes" -o "$sci_required_scirun" = "no"; then
-  AC_MSG_WARN( Skipping test for X11 )
-else
-  _sci_optional=required
-  if test "$with_X11_lib"; then
-    _x_lib_dir="$with_X11_lib"
-    _x_inc_dir="$with_X11_lib/../include"
-    _sci_optional=specific
-  else 
-    _x_lib_dir="/usr/X11R6"
-    BASE_LIB_PATH(_x_lib_dir,$_x_lib_dir)
-    _x_inc_dir="/usr/X11R6/include"
-  fi
-
-
-  SCI_TRY_LINK(X,X libraries and headers,X11/Xlib.h,
-               $_x_inc_dir,X11 Xext Xaw Xi Xt Xmu,$_x_lib_dir,,,$_sci_optional)
-
-  if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-    AC_MSG_WARN("$X_LIB_DIR_FLAG")
-    AC_MSG_WARN("flag for X has been changed to")
-    X_LIB_DIR_FLAG="-L$LIB_DIR_X"
-    AC_MSG_WARN("$X_LIB_DIR_FLAG")
-  fi
-
-fi # end "$IS_WIN" = "yes"
-
-AC_SUBST(X_LIB_FLAG)
-AC_SUBST(X_LIB_DIR_FLAG)
-
 ##  --  check for the 'rt' library  ---------------------------
 
 SCI_TRY_LINK(RT,rt library,,,rt,,,,optional)
@@ -2259,13 +1663,6 @@ MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 SOCKET_LIBRARY=""
 
 case $host in
-  *-irix*)
-    if test "$threads" = "unknown"; then
-      threads=irix
-    elif test "$threads" != "pthreads" -a "$threads" != "irix"; then
-      SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
-    fi
-    ;;
   *-pc-mingw*)
     threads=win32
     if test $IS_VC = "yes"; then
@@ -2284,14 +1681,6 @@ case $host in
 esac
 
 case $threads in
-   irix)
-      SCI_TRY_LINK(FETCHOP,fetchop library,,,fetchop,,,,required)
-      if test "$HAVE_FETCHOP" = "yes"; then
-         CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
-         THREAD_LIB_FLAG="$FETCHOP_LIB_FLAG"
-         DEF_THREAD=
-      fi
-      ;;
    pthreads)
       SCI_TRY_LINK(PTHREAD,pthread library and headers,pthread.h semaphore.h,,
                    pthread,,,,required)
@@ -2372,10 +1761,10 @@ if test "$with_visit"; then
       AC_MSG_ERROR( Could not find xml2makefile in $with_visit/src/bin/... )
    fi
 
-   sci_defs_files="$sci_defs_files Packages/Uintah/VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
+   sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
-   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libPackages_Uintah_StandAlone_tools_uda2vis.so
+   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.so
    VISIT_INSTALL_DIR=$with_visit
 fi
 
@@ -2415,115 +1804,6 @@ if test "$with_mx"; then
       MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $MX_LIB_DIR"
    fi
 fi
-
-##  --  search for OpenGL  -----------------------------------------------
-
-if test "$sci_required_scirun" = "no"; then
-  _sci_optional=optional
-else
-  _sci_optional=required
-fi
-
-if test "$with_opengl"; then
-  _sci_lib="$with_opengl/lib"
-  _sci_inc="$with_opengl/include"
-  _sci_optional=specific
-else
-  BASE_LIB_PATH(_sci_lib,"/usr/X11R6")
-  _sci_inc="/usr/X11R6/include"
-fi
-
-# GLU_OTHERS, GLU_OTHERS_FLAG
-
-# These variables are used to supply libraries which GL and GLU may
-# need.  As it turns out, the gl libraries in linux need the pthread
-# library.  We need to make two versions of the variable though.
-# GLU_OTHERS is used without the -l and GLU_OTHERS_FLAG includes it.
-  
-case $host in
-  *linux*)
-    if test "$threads" != "none"; then
-      GLU_OTHERS="pthread m"
-      GLU_OTHERS_FLAG="$THREAD_LIB_FLAG -lm"
-    else
-      GLU_OTHERS="m"
-      GLU_OTHERS_FLAG="-lm"
-    fi
-  ;;
-  *)
-  GLU_OTHERS=""
-  GLU_OTHERS_FLAG=""
-  ;;
-esac
-
-##########
-##### This stuff was in the includes between gl.h and glu.h
-#####
-##### #ifndef GLAPIENTRY
-#####   #define GLAPIENTRY
-##### #endif
-#####
-##### #ifndef GLAPI
-#####   #define GLAPI
-##### #endif
-
-AC_LANG(C++)
-
-if test "$IS_WIN" = "yes"; then
-  SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
-               $_sci_inc,glu32 opengl32 gdi32 user32 advapi32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
-else
-  if test "$IS_LEOPARD" = "yes"; then
-     DEF_LEOPARD="#define IS_LEOPARD 1"
-     LEOPARD_GL_HACK="-dylib_file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib"
-     AC_MSG_WARN( "Using Mac OSX Leopard OpenGL hack..." )
-
-     _sci_lib=/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries
-
-     SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
-	          $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
-  else
-     SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
-	          $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
-  fi
-fi
-
-if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  AC_MSG_WARN("$GL_LIB_DIR_FLAG")
-  AC_MSG_WARN("flag for OpenGL has been removed.")
-  GL_LIB_DIR_FLAG=""
-fi
-
-AC_SUBST(LEOPARD_GL_HACK)
-AC_SUBST(GL_LIB_FLAG)
-AC_SUBST(GL_LIB_DIR_FLAG)
-AC_SUBST(INC_GL_H)
-
-
-# Test for correct OpenGL extension headers
-
-SCI_COMPILE_LINK_TEST(EXT_HDRS,correct OpenGL extension headers ,
-[
-  #define GL_GLEXT_PROTOTYPES
-  #ifdef _WIN32
-  #include <windows.h>
-  #endif
-  #include <GL/gl.h>
-  #include <GL/glext.h>
-],
-$_sci_inc, GL, $_sci_lib,,
-[
-  int r = 5;
-],optional)
-
-if test "$HAVE_EXT_HDRS" = "yes"; then
-  DEF_OGL_EXT_HDRS="#define CORRECT_OGLEXT_HDRS 1"
-else
-  DEF_OGL_EXT_HDRS=""
-fi
-
-AC_SUBST(DEF_LEOPARD)
-AC_SUBST(DEF_OGL_EXT_HDRS)
 
 
 ##  --  search for dlopen  -----------------------------------------------
@@ -2586,11 +1866,6 @@ case $host in
   *-darwin*)
     SCI_TRY_LINK(STD_HDRS, standard headers-2,unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
-  *-irix*)
-    # test for required sqi headers as well
-    SCI_TRY_LINK(STD_HDRS,SGI standard headers,unistd.h dirent.h sys/time.h sys/param.h ieeefp.h ulocks.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
-    DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
-    ;;
   *-pc-mingw*)
     ;;
 
@@ -2651,168 +1926,10 @@ fi
 AC_SUBST(DEF_HASHMAP)
 sci_defs_files="$sci_defs_files include/sci_defs/hashmap_testdefs.h"
 AC_LANG(C)
-##  --  search for tcl stuff  ---------------------------------------------
-echo 
-AC_CHECKING(for required Tcl components...)
-echo
-
-if test "$sci_required_scirun" = "no"; then
-  _sci_optional=optional
-else
-  _sci_optional=required
-fi
-
-if test "$with_tcl"; then
-  _sci_inc="$with_tcl/include"
-  _sci_lib="$with_tcl/lib"
-  _sci_optional=specific
-else
-  _sci_inc="$sci_thirdparty_include"
-  _sci_lib="$sci_thirdparty_lib"
-fi
-
-if test -f "$_sci_lib/tclConfig.sh"; then 
-  . $_sci_lib/tclConfig.sh; 
-  if test ! -d $TCL_SRC_DIR; then
-     # Catch the case of the SCIRun 3P being copied to a new location.
-     AC_MSG_WARN(The TCL src dir specified in the $sci_lib/tclConfig.sh file)
-     AC_MSG_WARN(is not valid.  This usually means that this SCIRun Thirdparty)
-     AC_MSG_WARN(was copied to and not built in its current location.)
-     AC_MSG_ERROR(This is not allowed.  Please rebuild the 3P or contact)
-     AC_MSG_ERROR(scirun-develop@sci.utah.edu for more help.)
-  fi
-  _sci_tcl_inc="$_sci_inc $TCL_SRC_DIR/generic"
-else
-  _sci_tcl_inc="$_sci_inc"  
-fi
-
-SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
-             $_sci_tcl_inc,tcl,$_sci_lib,,,$_sci_optional)
-
-# if test "$IS_WIN" = "yes"; then
-  # change the unix-style dir to a windows-style dir for tclsh to read
-  # TCL_LIB_DIR=`echo "$TCL_LIB_DIR" | sed 's,/,,' | sed 's,/,:/,'`
-# fi
-
-SCI_SUBST_THIRDPARTY_DIR(TCL_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_TCL_H)
-
-AC_SUBST(TCL_LIB_DIR)
-AC_SUBST(TCL_LIB_FLAG)
-AC_SUBST(TCL_LIB_DIR_FLAG)
-AC_SUBST(INC_TCL_H)
-
-# -- tk --
-if test -f "$_sci_lib/tkConfig.sh"; then 
-  . $_sci_lib/tkConfig.sh; 
-  _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic $TK_SRC_DIR/unix"
-else
-  _sci_tk_inc="$_sci_inc"  
-fi
-
-# Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
-SCI_TRY_LINK(TK,tk library and headers, tk.h tk3d.h tkPort.h,
-      $_x_inc_dir $_sci_tk_inc,tk $TCL_LIB_FLAG,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG,,$_sci_optional)
-
-SCI_SUBST_THIRDPARTY_DIR(TK_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_TK_H)
-
-AC_SUBST(TK_LIB_DIR)
-AC_SUBST(TK_LIB_FLAG)
-AC_SUBST(TK_LIB_DIR_FLAG)
-AC_SUBST(INC_TK_H)
-
-# -- itcl --
-SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
-             $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
-
-# if test "$IS_WIN" = "yes"; then
-  # change the unix-style dir to a windows-style dir for tclsh to read
-  # ITCL_LIB_DIR=`echo "$ITCL_LIB_DIR" | sed 's,/,,' | sed 's,/,:/,'`
-# fi
-
-SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR)
-SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_ITCL_H)
-
-AC_SUBST(ITCL_LIB_DIR)
-AC_SUBST(ITCL_LIB_FLAG)
-AC_SUBST(ITCL_LIB_DIR_FLAG)
-AC_SUBST(INC_ITCL_H)
-
-# -- itk --
-SCI_TRY_LINK(ITK,itk library and headers, itk.h, $_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
-
-SCI_SUBST_THIRDPARTY_DIR(INC_ITK_H)
-
-AC_SUBST(ITK_LIB_FLAG)
-AC_SUBST(ITK_LIB_DIR_FLAG)
-AC_SUBST(INC_ITK_H)
-
-# -- blt --
-SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional) 
-
-if test "$IS_WIN" = "yes"; then
-  # Windows BLT needs these other libs
-  if test $IS_VC = "yes"; then
-    BLT_LIB_FLAG="$BLT_LIB_FLAG gdi32.lib winspool.lib comdlg32.lib user32.lib advapi32.lib"
-  else
-    BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
-  fi
-fi
-
-SCI_SUBST_THIRDPARTY_DIR(BLT_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_BLT_H)
-
-AC_SUBST(BLT_LIB_FLAG)
-AC_SUBST(BLT_LIB_DIR_FLAG)
-AC_SUBST(INC_BLT_H)
-
-# -- check TCL version == 8.3.2 and TK version == 8.3.2
-CORRECT_TCL_VERSION=no
-CORRECT_TK_VERSION=no
-CORRECT_ITCL_VERSION=no
-
-# if we don't have the tcl/tkConfig.sh files, we can grab the version number from the header file
-if ! test -f "$_sci_lib/tclConfig.sh"; then
-   if test -f $sci_thirdparty_include/tcl.h; then
-      TCL_VERSION=`grep TCL_VERSION $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
-      TCL_PATCH_LEVEL=".`grep TCL_RELEASE_SERIAL $sci_thirdparty_include/tcl.h | head -n 1 | awk '{print $3}'`"
-      TCL_PREFIX=$sci_thirdparty_dir
-   else
-      SKIP_TCL_TK_VERSION_COMPARE=true
-      AC_MSG_WARN(tcl.h not found...)
-   fi
-fi
-
-if ! test -f "$_sci_lib/tkConfig.sh"; then 
-   if test -f $sci_thirdparty_include/tk.h; then
-      TK_VERSION=`grep TK_VERSION $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}' | sed 's,\",,g'`
-      TK_PATCH_LEVEL=".`grep TK_RELEASE_SERIAL $sci_thirdparty_include/tk.h | head -n 1 | awk '{print $3}'`"
-   else
-      SKIP_TCL_TK_VERSION_COMPARE=true
-      AC_MSG_WARN(tk.h not found...)
-   fi
-fi
-
-if test "$SKIP_TCL_TK_VERSION_COMPARE" != "true"; then 
-   SCI_CHECK_VAR_VERSION(Tcl,$TCL_VERSION$TCL_PATCH_LEVEL,8.3.2,,continue)
-   SCI_CHECK_VAR_VERSION(Tk,$TK_VERSION$TK_PATCH_LEVEL,8.3.2,,continue)
-   SCI_CHECK_VAR_VERSION(equal Tcl and Tk, $TCL_VERSION$TCL_PATCH_LEVEL,
-                         $TK_VERSION$TK_PATCH_LEVEL,,continue,-ne)
-else
-   TCL_PREFIX="Tcl/tk not found..."
-   TCL_VERSION=
-   TK_VERSION=
-fi
-
-AC_SUBST(TCL_PREFIX)
-AC_SUBST(TCL_VERSION)
-AC_SUBST(TK_VERSION)
 
 ##  --  search for libxml2 --
 _sci_optional=required
-_sci_lib="$sci_thirdparty_lib"
+_sci_lib=
 
 
 if test "$with_libxml2"; then
@@ -2855,11 +1972,6 @@ if test -e $_sci_lib/../bin/xml2-config; then
       fi
     done
     includes=`$_sci_lib/../bin/xml2-config --cflags`
-else
-    # otherwise, assume it's in the SCI 3P
-    XML2_LIB_PATH=$sci_thirdparty_lib
-    XML2_LDFLAGS=xml2
-    includes=$sci_thirdparty_include
 fi
 SCI_TRY_LINK(XML2,xml2 library and headers,libxml/tree.h libxml/parser.h,
               $includes,$XML2_LDFLAGS,$XML2_LIB_PATH,,[
@@ -2891,9 +2003,6 @@ if test ! "$DEF_XML2"; then
   echo
   AC_MSG_ERROR(One or more of the xml2 components is missing.)
 fi
-
-SCI_SUBST_THIRDPARTY_DIR(XML2_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_XML2_H)
 
 AC_SUBST(XML2_LIB_FLAG)
 AC_SUBST(XML2_LIB_DIR_FLAG)
@@ -3046,12 +2155,6 @@ else
     _sci_inc="$with_png/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
-  else
-    # If --with-png not specified, and png.h is in the 3P, then look there by default.
-    if test -f "$sci_thirdparty_include"/png.h; then
-      _sci_lib="$sci_thirdparty_lib"
-      _sci_inc="$sci_thirdparty_include"
-    fi
   fi 
 fi
 
@@ -3169,8 +2272,6 @@ _sci_optional=optional
 if test "$with_mpeg"; then
   _sci_lib="$with_mpeg/lib"
   _sci_optional=specific
-else
-  _sci_lib="$sci_thirdparty_lib"
 fi
 
 SCI_TRY_LINK(MPEGE,MPEG library,,,mpege,$_sci_lib,,,$_sci_optional)
@@ -3184,9 +2285,6 @@ if test "$with_mpeg" && test ! "$DEF_MPEG"; then
   AC_MSG_ERROR(One or more of the MPEG components is missing.)
   echo
 fi
-
-SCI_SUBST_THIRDPARTY_DIR(MPEGE_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_MPEGE_H)
 
 AC_SUBST(MPEGE_LIB_FLAG)
 AC_SUBST(MPEGE_LIB_DIR_FLAG)
@@ -3212,9 +2310,6 @@ fi
 if test "$with_unp"; then
   _sci_lib="$with_unp/lib"
   _sci_inc="$with_unp/include"
-else
-  _sci_lib="$sci_thirdparty_lib"
-  _sci_inc="$sci_thirdparty_include"
 fi
 
 SCI_TRY_LINK(UNP,unp socket library and headers,extern_C unpv12e/unp.h unpv12e/unpthread.h,$_sci_inc,
@@ -3249,9 +2344,6 @@ elif test "$with_fortran" -a "$with_fortran" != "no"; then
 fi
 
 case $host in 
-  *-irix*)
-    SCI_TRY_LINK(F,fortran libraries,,,ftn fortran,$_sci_lib,,,$_sci_optional)
-    ;;
   *aix*)
     # AIX Fortran Library Check
     SCI_TRY_LINK(F,fortran libraries,,,xlf90,$_sci_lib,,,$_sci_optional)
@@ -3302,284 +2394,8 @@ AC_SUBST(F_LIB_DIR_FLAG)
 MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $F_LIB_FLAG"
 MPI_EXTRA_LIB_DIR="$MPI_EXTRA_LIB_DIR $F_LIB_DIR_FLAG"
 
-##  --  search for Java ------------------------
-
-## Sun distribution only
-
-## check env for JAVA_HOME, JAVAHOME (Ptolemy II)?
-
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-# move this up
-_cca_version=1.0.0
-_sci_cca_tp_base=/usr/sci/projects
-_sci_cca_tp_subdir=CCA/Thirdparty/$_cca_version
-_sci_cca_tp_path=$_sci_tp_base/$_sci_cca_tp_subdir/$sci_tp_arch
-
-if test "$sci_required_java" = "yes" ; then
-  AC_MSG_CHECKING(for Java)
-
-  _fatal_error=
-  if test "$sci_required_ptolemyII" = "yes" -o "$with_java"; then
-    _fatal_error="yes"
-    _sci_optional=required
-  else
-    _fatal_error="no"
-    _sci_optional=optional
-  fi
-
-  ## Sun RPMs or bin installer usually install in /usr/java
-  ## Suse RPMs usually install in /usr/lib/jvm
-  ## OSX Java installation in /System and /Developer
-  if test "$IS_OSX" = "yes"; then
-    JAVA_PROG=
-    AC_PATH_PROG(JAVA_PROG,java,NOT_FOUND,)
-    if test "$JAVA_PROG" != "NOT_FOUND" ; then
-        _sci_inc="/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers /System/Library/Frameworks/JavaVM.framework/Headers/darwin"
-        _sci_lib="/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Libraries"
-        SCI_TRY_LINK(JAVA, java JNI libraries,jni.h,$_sci_inc,jvm jvm_compat,$_sci_lib,,,$_sci_optional)
-    fi
-  else
-    _java_top_guess="$_sci_cca_tp_path/java /usr/java /usr/lib/jvm /usr/local/lib"
-    _java_top=
-
-    if test "$with_java" = "yes"; then
-      #_sci_optional=required
-      for d in $_java_top_guess; do
-        _jni_h=`find $d -follow -name "jni.h" -print 2>/dev/null`
-        if test -f "$_jni_h"; then
-            _jni_h_dir=`dirname $_jni_h`
-            _java_top=`dirname $_jni_h_dir`
-            AC_MSG_RESULT(Found Java top directory $_java_top)
-            _sci_inc=_jni_h_dir
-            break
-        fi
-      done
-    elif test "$with_java"; then
-      ## need to link more than one library
-      #_sci_optional=required
-      _sci_inc="$with_java/include"
-      _java_top=$with_java
-      AC_MSG_RESULT(Found Java top directory $_java_top)
-    fi
-
-    _java_lib_dir=`find $_java_top -follow -name "libjava.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
-    if test -d "$_java_lib_dir"; then
-      _sci_lib="$_sci_lib $_java_lib_dir"
-    fi
-
-    _jvm_lib_dir=`find $_java_top -follow -name server -prune -o -name "libjvm.*" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
-    if test -d "$_jvm_lib_dir"; then
-      _sci_lib="$_sci_lib $_jvm_lib_dir"
-    fi
-
-    _jni_platfrom_h_dir=`find $_sci_inc -follow -name "jni_md.h" -exec dirname {} \; 2> /dev/null | tr -d "\n"`
-    if test -d "$_jni_platfrom_h_dir"; then
-      _sci_inc="$_sci_inc $_jni_platfrom_h_dir"
-    fi
-
-    SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
-  fi
-
-  AC_ARG_VAR(JAVAC,Java compiler)
-  AC_PATH_PROG(JAVAC,javac,NOT_FOUND,$_java_top $PATH)
-  if test "$JAVAC" = "NOT_FOUND"; then
-    if test "$_fatal_error" = "yes" ; then
-      SCI_MSG_ERROR(java not found)
-    else
-      AC_MSG_WARN(java not found)
-    fi
-  fi
-
-  AC_ARG_VAR(JAR,Java archive tool)
-  AC_PATH_PROG(JAR,jar,NOT_FOUND,$_java_top $PATH)
-  if test "$JAR" = "NOT_FOUND"; then
-    if test "$_fatal_error" = "yes" ; then
-      SCI_MSG_ERROR(jar not found)
-    else
-      AC_MSG_WARN(jar not found)
-    fi
-  fi
-
-  if test "$HAVE_JAVA" = "yes"; then
-    DEF_JAVA="#define HAVE_JAVA 1"
-  fi
-
-  if test "$with_java" && test ! "$DEF_JAVA"; then
-    #AC_MSG_ERROR(Java installation directory is missing.)
-    AC_MSG_WARN(Java installation directory is missing.)
-  fi
-fi
-
-AC_SUBST(HAVE_JAVA)
-AC_SUBST(DEF_JAVA)
-AC_SUBST(JAVA)
-
-##  --  search for Mesquite ------------------------
-AC_LANG([C++])
-_sci_optional=optional
-
-if test "$with_mesquite" = "yes"; then
-  # If --with-mesquite is specified without a parameter, then it makes it required
-  _sci_optional=not-optional
-else 
-  if test "$with_mesquite"; then
-    # If --with-mesquite has a parameter, then use it
-    _sci_lib="$with_mesquite"
-    _sci_inc="$with_mesquite/include $with_mesquite/includeLinks"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=not-optional
-  fi 
-fi
-
-SCI_COMPILE_LINK_TEST(MESQUITE,Mesquite library,
-[
-#include <Mesquite.hpp> 
-#include <MeshImpl.hpp>
-], $_sci_inc, mesquite, $_sci_lib,, 
-[
-  double d = Mesquite::cbrt_sqr(1.0);
-  Mesquite::MeshImpl mi;
-], optional)
-
-  
-if test "$HAVE_MESQUITE" = "yes"; then
-  DEF_MESQUITE="#define HAVE_MESQUITE 1"
-fi
-
-if test "$with_mesquite" && test ! "$DEF_MESQUITE"; then
-  echo
-  AC_MSG_ERROR(One or more of the MESQUITE components is missing.)
-  echo
-fi
-
-AC_SUBST(MESQUITE_LIB_FLAG)
-AC_SUBST(INC_MESQUITE_H)
-AC_SUBST(MESQUITE_LIB_DIR_FLAG)
-AC_SUBST(DEF_MESQUITE)
-AC_SUBST(HAVE_MESQUITE)
-
 AC_LANG(C)
 
-##  --  search for Verdict ------------------------
-AC_LANG([C++])
-_sci_optional=optional
-
-if test "$with_verdict" = "yes"; then
-  # If --with-verdict is specified without a parameter, then it makes it required
-  _sci_optional=required
-else 
-  if test "$with_verdict"; then
-    # If --with-verdict has a parameter, then use it
-    _sci_lib="$with_verdict"
-    _sci_inc="$with_verdict"
-    _sci_optional=specific
-  fi 
-fi
-
-SCI_TRY_LINK(VERDICT,Verdict library,verdict.h,$_sci_inc,
-    verdict110,$_sci_lib,,[
-      v_tet_quality(0,(double (*)[3])0, 0, (TetMetricVals*)0);
-    ],$_sci_optional)
-
-if test "$HAVE_VERDICT" = "yes"; then
-  DEF_VERDICT="#define HAVE_VERDICT 1"
-fi
-
-if test "$with_verdict" && test ! "$DEF_VERDICT"; then
-  echo
-  AC_MSG_ERROR(One or more of the VERDICT components is missing.)
-  echo
-fi
-
-AC_SUBST(VERDICT_LIB_FLAG)
-AC_SUBST(INC_VERDICT_H)
-AC_SUBST(VERDICT_LIB_DIR_FLAG)
-AC_SUBST(DEF_VERDICT)
-AC_SUBST(HAVE_VERDICT)
-
-AC_LANG(C)
-##  --  search for Camal (Sandia meshing library) ------------------------
-
-_sci_optional=optional
-
-if test "$with_camal" = "yes"; then
-  # If --with-camal is specified without a parameter, then it makes it required
-  _sci_optional=required
-else 
-  if test "$with_camal"; then
-    # If --with-camal has a parameter, then use it
-    _sci_lib="$with_camal"
-    _sci_inc="$with_camal/include"
-    _sci_optional=specific
-  fi 
-fi
-
-if test "$_sci_optional" != "optional" && test "$HAVE_F" != "yes"; then
-   AC_MSG_ERROR(Fortran library not found but is required for CAMAL!)
-fi
-
-if test "$IS_OSX" = "yes"; then
-  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet210 CMLUtl210,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
-  if test "$HAVE_CAMAL" = "yes"; then
-    CAMAL_LIB_DIR_FLAG="$CAMAL_LIB_DIR_FLAG -Wl,-read_only_relocs,warning -single_module"
-  fi
-else
-  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet202,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
-fi
-
-if test "$HAVE_CAMAL" = "yes"; then
-  DEF_CAMAL="#define HAVE_CAMAL 1"
-fi
-
-if test "$with_camal" && test ! "$DEF_CAMAL"; then
-  echo
-  AC_MSG_ERROR(One or more of the CAMAL components is missing.)
-  echo
-fi
-
-AC_SUBST(CAMAL_LIB_FLAG)
-AC_SUBST(INC_CAMAL_H)
-AC_SUBST(CAMAL_LIB_DIR_FLAG)
-AC_SUBST(DEF_CAMAL)
-AC_SUBST(HAVE_CAMAL)
-
-##  --  search for Tetgen (http://tetgen.berlios.de) ------------------------
-
-_sci_optional=optional
-if test "$with_tetgen" = "yes"; then
-  AC_MSG_ERROR(--with-tetgen must have a have a path to an installation --with-tetgen=/path/to/my/tetgen/installation/dir)
-else 
-  if test "$with_tetgen"; then
-    # If --with-tetgen has a parameter, then use it
-    _sci_lib="$with_tetgen"
-    _sci_inc="$with_tetgen"
-    _sci_optional=specific
-  fi 
-fi
-
-
-SCI_TRY_LINK(TETGEN,TETGEN library,,$_sci_inc,tet,
-			   $_sci_lib,,,$_sci_optional)
-
-
-if test "$HAVE_TETGEN" = "yes"; then
-  DEF_TETGEN="#define HAVE_TETGEN 1"
-fi
-
-if test "$with_tetgen" && test ! "$DEF_TETGEN"; then
-  echo
-  AC_MSG_ERROR(One or more of the TETGEN components is missing.)
-  echo
-fi
-
-AC_SUBST(TETGEN_LIB_FLAG)
-AC_SUBST(INC_TETGEN_H)
-AC_SUBST(TETGEN_LIB_DIR_FLAG)
-AC_SUBST(DEF_TETGEN)
-AC_SUBST(HAVE_TETGEN)
 
 ##  --  search for acml (optimized blas/lapack) stuff  -------------------------------------
 
@@ -3874,7 +2690,7 @@ AC_SUBST(LAPACKMP_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/lapack_testdefs.h"
 
 ##  --  search for mpi  --------------------------------------------------
-
+sci_required_mpi="yes"
 if test "$sci_required_mpi" = "yes"; then
   echo
   AS_MESSAGE(checking for required MPI components......)
@@ -3882,7 +2698,7 @@ if test "$sci_required_mpi" = "yes"; then
 
   case $host in
   #  *aix*)
-        # On LLNL blue pacific, the "mp" compilers (scripts) automagically
+        # On LLNL blue pacific, the "mp" compilers (build_scripts) automagically
         # include the paths to mpi stuff...  However, if you don't want 
         # them to automatically force you to run in poe (batch) mode, you
         # can comment this out and link in MPI directly yourself.
@@ -4073,13 +2889,6 @@ PETSC_VERSION_DIR=petsc-2.3.2
 
 if test -z "$PETSC_ARCH"; then
 case $host in
-  *-irix*)
-    if test "$enable_64bit" = "yes"; then
-      PETSC_ARCH=IRIX64
-    else
-      PETSC_ARCH=IRIX32
-    fi
-    ;;
   *linux*)
     if test "$enable_64bit" = "yes"; then
       PETSC_ARCH=linux64
@@ -4346,37 +3155,6 @@ AC_SUBST(DEF_PETSC_UNI)
 AC_SUBST(INC_PETSC_UNI_H)
 sci_defs_files="$sci_defs_files include/sci_defs/petsc_testdefs.h"
 
-##  --  search for Ptolemy II ---------------------------------------------------
-
-if test "$sci_required_ptolemyII" = "yes"; then
-  AC_MSG_CHECKING(for Ptolemy II.)
-  if test "$HAVE_JAVA" != "yes"; then
-    AC_MSG_ERROR(Java installation directory is missing.)
-  fi
-
-  # search here
-  if test "$with_ptolemyII"; then
-    pdir="$with_ptolemyII"
-  fi
-
-  if test -d "$pdir"; then
-    AC_MSG_RESULT($pdir)
-
-    PTOLEMY_PATH="#define PTOLEMY_PATH \"$pdir\""
-    ## this could be handled better in env?
-    PTOLEMY_CLASSPATH="#define PTOLEMY_CLASSPATH \"$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar\""
-    HAVE_PTOLEMY="yes"
-    DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
-  else
-    AC_MSG_ERROR(Ptolemy II directory is missing.)
-  fi
-fi
-
-AC_SUBST(HAVE_PTOLEMY)
-AC_SUBST(DEF_PTOLEMY)
-AC_SUBST(PTOLEMY_PATH)
-AC_SUBST(PTOLEMY_CLASSPATH)
-sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
@@ -4384,8 +3162,6 @@ if test "$sci_required_xalan" ; then
 
   if test "$with_xalan"; then
 	dir="$with_xalan"
-  else
-	dir="$sci_thirdparty_dir"
   fi
   if test -a $dir/bin/xalan.jar -a $dir/bin/xml-apis.jar -a $dir/bin/xercesImpl.jar; then
 	AC_MSG_RESULT($dir)
@@ -4444,324 +3220,6 @@ EOF
 fi
 
 AC_SUBST(TAU_MAKEFILE)
-
-##  --  search for Babel  ----------------------------------------------------
-
-## add Thirdparty path
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-if test "$sci_required_babel" = "yes" ; then
-
-  if test "$with_babel"; then
-    if test "$with_babel" != "yes"; then
-      _sci_lib="$with_babel/lib"
-      _sci_inc="$with_babel/include $with_babel/include/cxx"
-
-      ## check for fortran (assuming Fortran77)
-      ## if and when it becomes necessary, add check for Fortran90
-      if test "$HAVE_F" = "yes" && test "$F77" ; then
-        _sci_inc="$_sci_inc $with_babel/include/f77"
-        _babel_libs="$_babel_libs -lsidlstub_f77"
-      fi
-
-      if test "$HAVE_JAVA" = "yes" ; then
-        _sci_inc="$_sci_inc $with_babel/include/java"
-        _babel_libs="$_babel_libs -lsidlstub_java"
-      fi
-    fi
-    _sci_optional=required
-  fi
-
-  AC_MSG_CHECKING(for Babel)
-
-  # the bare minumum:
-  _babel_libs="-lsidl -lsidlx -lsidlstub_cxx"
-
-  ## should try to link with C++ header (<babel>/include/cxx/sidl.hxx)?
-  SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,$_babel_libs,,$_sci_optional)
-
-  BABEL_BIN=
-  if test "$with_babel" = "yes"; then
-    AC_CHECKING(for babel in PATH)
-    AC_CHECK_PROG(BABEL_BIN,babel,babel,NONE)
-  else
-    AC_CHECKING(for babel in $SIDL_LIB_DIR/../bin)
-    AC_CHECK_PROG(BABEL_BIN,babel,$SIDL_LIB_DIR/../bin/babel,NONE,$SIDL_LIB_DIR/../bin)
-  fi
-
-  if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-    ## check for compatible version (0.99.0 or greater)
-    SCI_CHECK_VERSION($BABEL_BIN,--version,0.99.0,,echo configure: error: wrong Babel version.; exit)
-    DEF_BABEL="#define HAVE_BABEL 1"
-    HAVE_BABEL="yes"
-  fi
-
-  ## make missing babel an error!
-  BABEL_CLASSPATH=
-  if test "$with_babel" && test ! "$DEF_BABEL"; then
-    echo
-    AC_MSG_ERROR(One or more of the Babel components is missing.)
-  fi
-
-  if test "$HAVE_JAVA" = "yes"; then
-    BABEL_CLASSPATH=`find $LIB_DIR_SIDL -follow -name "*.jar" 2> /dev/null | tr -d "\n"`
-    AS_MESSAGE(Babel classpath=$BABEL_CLASSPATH)
-  fi
-
-fi
-
-AC_SUBST(HAVE_BABEL)
-AC_SUBST(DEF_BABEL)
-AC_SUBST(BABEL_BIN)
-AC_SUBST(BABEL_CLASSPATH)
-
-AC_SUBST(INC_SIDL_H)
-AC_SUBST(SIDL_LIB_FLAG)
-AC_SUBST(SIDL_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/babel_testdefs.h"
-
-##  --  search for netsolve ----------------------------------------------
-
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-if test "$with_netsolve" = "yes"; then
-  _sci_optional=required
-elif test "$with_netsolve"; then
-  _sci_lib="$with_netsolve/lib"
-  _sci_inc="$with_netsolve/include"
-  _sci_optional=specific
-fi
-
-SCI_TRY_LINK(NETSOLVE,netsolve library,,,netsolve,$_sci_lib,,,$_sci_optional)
-
-AC_SUBST(NETSOLVE_LIB_FLAG)
-AC_SUBST(NETSOLVE_LIB_DIR_FLAG)
-
-
-##  --  search for glut  -----------------------------------------------
-
-if test "$sci_required_glut" = "yes"; then
-
-   libs="$GL_LIB_DIR_FLAG $GL_LIB_FLAG $X_LIB_FLAG $GLU_OTHERS_FLAG"
-
-   if test "$with_glut"; then
-     _sci_lib_glut="$with_glut"
-     BASE_LIB_PATH(_sci_lib_glut,$_sci_lib_glut)
-     if test "$with_opengl"; then
-       _sci_lib_ogl="$with_opengl"
-       BASE_LIB_PATH(_sci_lib_ogl,$_sci_lib_ogl)
-       _sci_lib="$_sci_lib_glut $_sci_lib_ogl"
-       _sci_inc="$with_glut/include $with_opengl/include"
-     else
-       _sci_lib_X="/usr/X11R6"
-       BASE_LIB_PATH(_sci_lib_X,$_sci_lib_X)
-       _sci_lib="$_sci_lib_glut $_sci_lib_X"
-       _sci_inc="$with_glut/include /usr/X11R6/include"
-     fi
-   else
-     if test "$with_opengl"; then
-       _sci_lib="$with_opengl"
-       BASE_LIB_PATH(_sci_lib,$_sci_lib)
-       _sci_lib="$sci_thirdparty_lib $_sci_lib"
-       _sci_inc="$sci_thirdparty_include $with_opengl/include"
-     else
-       _sci_lib="/usr/X11R6"
-       BASE_LIB_PATH(_sci_lib,$_sci_lib)
-       _sci_lib="$sci_thirdparty_lib $_sci_lib"
-       _sci_inc="$sci_thirdparty_include /usr/X11R6/include"
-     fi
-   fi
-
-   SCI_TRY_LINK(GLUT,glut library and headers,GL/glut.h,$_sci_inc,glut,$_sci_lib,$libs,,required)
-
-  if test "$GLUT_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-    AC_MSG_WARN("$GLUT_LIB_DIR_FLAG")
-    AC_MSG_WARN("flag for GLUT has been removed.")
-    GLUT_LIB_DIR_FLAG=""
-  fi
-
-fi #end sci_required_glut
-
-AC_SUBST(INC_GLUT_H)
-AC_SUBST(GLUT_LIB_FLAG)
-AC_SUBST(GLUT_LIB_DIR_FLAG)
-
-
-##  --  search for glui  -----------------------------------------------
-AC_LANG([C++])
-if test "$sci_required_glui" = "yes"; then
-   if test "$with_glui"; then
-   
-     ## Set the path for glut and glui
-     _sci_lib_glut="$with_glut"
-     BASE_LIB_PATH(_sci_lib_glut,$_sci_lib_glut)
-     _sci_lib_glui="$with_glui"
-     BASE_LIB_PATH(_sci_lib_glui,$_sci_lib_glui)
-     
-     if test "$with_opengl"; then
-       ## OpenGL path
-       _sci_lib_ogl="$with_opengl"
-       BASE_LIB_PATH(_sci_lib_ogl,$_sci_lib_ogl)
-       _sci_lib="$_sci_lib_glut $_sci_lib_glui $_sci_lib_ogl"
-       _sci_inc="$with_glut/include $with_glui/include $with_opengl/include"
-     else
-       ## X path
-       _sci_lib_X="/usr/X11R6"
-       BASE_LIB_PATH(_sci_lib_X,$_sci_lib_X)
-       _sci_lib="$_sci_lib_glut $_sci_lib_glui $_sci_lib_X"
-       _sci_inc="$with_glut/include $with_glui/include /usr/X11R6/include"
-     fi
-   else
-     if test "$with_opengl"; then
-       _sci_lib="$with_opengl"
-       BASE_LIB_PATH(_sci_lib,$_sci_lib)
-       _sci_lib="$sci_thirdparty_lib $_sci_lib"
-       _sci_inc="$sci_thirdparty_include $with_opengl/include"
-     else
-       _sci_lib="/usr/X11R6"
-       BASE_LIB_PATH(_sci_lib,$_sci_lib)
-       _sci_lib="$sci_thirdparty_lib $_sci_lib"
-       _sci_inc="$sci_thirdparty_include /usr/X11R6/include"
-     fi
-   fi
-
-   AC_LANG([C++])
-
-   AC_MSG_WARN( If the following check for glui.h fails it may be due to the fact
-                that glui.h used to reside in /usr/include but with more modern
-                distributions is found in /usr/include/GL.  If you do not have 
-                glui.h in /usr/include/GL please create a symbolic link to it.
-                Contact dav@sci.utah.edu if you have questions about this. )
-
-   SCI_TRY_LINK(GLUI,glui library and headers,GL/glut.h GL/glui.h,
-                $_sci_inc,glui,$_sci_lib,$libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG,,required)
-
-   AC_LANG([C])
-
-   if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-     AC_MSG_WARN("$GLUI_LIB_DIR_FLAG")
-     AC_MSG_WARN("flag for GLUI has been removed.")
-     GLUI_LIB_DIR_FLAG=""
-   fi
-
-fi # end sci_required_glui
-
-AC_SUBST(INC_GLUI_H)
-AC_SUBST(GLUI_LIB_FLAG)
-AC_SUBST(GLUI_LIB_DIR_FLAG)
-AC_LANG([C])
-
-##  --  search for oogl  -----------------------------------------------
-if test "$sci_required_oogl" = "yes"; then
-  # Modify _sci_dirs to have correct path information:
-  if test "$with_oogl"; then
-    _sci_lib="$with_oogl/lib"
-    _sci_inc="$with_oogl/include"
-  else
-    for i in $sci_thirdparty_dir; do
-      if test ! -d "$i"; then
-        continue
-      fi
-  
-      #this is where the lib actually lives
-      if test ! -d "$i/OOGL/lib"; then
-        continue
-      fi
-  
-      _sci_lib="$_sci_dirs $i/OOGL/lib"
-      _sci_inc="$_sci_dirs $i/OOGL/include"
-    done
-  fi
-  # Only check for OOGL if the user did not say without-oogl.
-  if test "$with_oogl" != "no"; then
-
-    AC_LANG([C++])
-    SCI_TRY_LINK(OOGL,oogl library and headers,oogl/basicTexture.h oogl/shadedPrim.h,
-                 $_sci_inc,oogl,$_sci_lib,$INC_GLUT_H $INC_GLUI_H,,optional)
-    AC_LANG([C])
-  fi
-
-  if test "$HAVE_OOGL" = "yes"; then
-    DEF_OOGL="#define HAVE_OOGL 1"
-  fi
-
-  if test "$with_oogl" && test ! "$DEF_OOGL"; then
-    echo
-    AC_MSG_ERROR(One or more of the OOGL components is missing.)
-    echo
-  fi
-
-  if test "$OOGL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-    AC_MSG_WARN("$OOGL_LIB_DIR_FLAG")
-    AC_MSG_WARN("flag for OOGL has been removed.")
-    OOGL_LIB_DIR_FLAG=""
-  fi
-
-fi # end sci_required_oogl
-
-AC_SUBST(DEF_OOGL)
-AC_SUBST(INC_OOGL_H)
-AC_SUBST(OOGL_LIB_FLAG)
-AC_SUBST(OOGL_LIB_DIR_FLAG)
-
-##  --  search for glew  -----------------------------------------------
-if test "$sci_required_scirun" = "no"; then
-  _sci_optional=optional
-else
-  _sci_optional=required
-fi
-
-_sci_lib="$sci_thirdparty_lib"
-_sci_inc="$sci_thirdparty_include"
-
-if test "$with_glew"; then
-  if test "$with_glew" = "yes"; then
-    AC_MSG_WARN(GLEW is already required - you do not need to specify --with-glew.)
-  else
-    _sci_lib="$with_glew"
-    _sci_inc="$with_glew/include"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=specific
-  fi 
-fi
-
-if test "$IS_WIN" = "yes"; then
-  SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/wglew.h,
-                $_sci_inc, glew32,$_sci_lib,$GL_LIB_DIR_FLAG $GL_LIB_FLAG,,
-                optional)
-else
-  SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/glxew.h,
-               $_sci_inc, GLEW,$_sci_lib,$GL_LIB_DIR_FLAG $GL_LIB_FLAG,,
-               $_sci_optional)
-fi
-
-if test "$HAVE_GLEW" = "yes"; then
-  DEF_GLEW="#define HAVE_GLEW 1"
-fi  
-
-if test "$with_glew" && test ! "$DEF_GLEW"; then
-  echo
-  AC_MSG_ERROR(One or more of the GLEW components is missing.)
-  echo
-fi
-
-if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-  AC_MSG_WARN("$GLEW_LIB_DIR_FLAG")
-  AC_MSG_WARN("flag for GLEW has been removed.")
-  GLEW_LIB_DIR_FLAG=""
-fi
-
-SCI_SUBST_THIRDPARTY_DIR(GLEW_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_GLEW_H)
-
-AC_SUBST(DEF_GLEW)
-AC_SUBST(INC_GLEW_H)
-AC_SUBST(GLEW_LIB_FLAG)
-AC_SUBST(GLEW_LIB_DIR_FLAG)
 
 ##  --  search for freetype stuff  -------------------------------------------
 # Default values:
@@ -4865,38 +3323,13 @@ AC_SUBST(INC_FTGL_H)
 sci_defs_files="$sci_defs_files include/sci_defs/ogl_testdefs.h"
 
 
-##  --  search for audio  -----------------------------------------------
-
-if test "$sci_required_audio" = "yes"; then
-  _sci_lib="$with_audio"
-
-  SCI_TRY_LINK(AUDIO,audio library,,,audio audiofile,$_sci_lib,,,optional)
-
-  if test "$HAVE_AUDIO" = "yes"; then
-    DEF_AUDIO="#define HAVE_AUDIO 1"
-  fi
-
-  if test "$with_audio" && test ! "$DEF_AUDIO"; then
-    echo
-    AC_MSG_ERROR(One or more of the AUDIO components is missing.)
-    echo
-  fi
-
-fi # end sci_required_audio
-
-AC_SUBST(DEF_AUDIO)
-AC_SUBST(HAVE_AUDIO)
-AC_SUBST(AUDIO_LIB_FLAG)
-AC_SUBST(AUDIO_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/audio_testdefs.h"
-
 ##  --  search for teem  -------------------------------------------------
 
 # Default values: (Really required, but need to give info to user if fails.)
 #                 (See below.)
 _sci_optional=optional
-_sci_lib="$sci_thirdparty_lib"
-_sci_inc="$sci_thirdparty_include"
+_sci_lib=
+_sci_inc=
 
 if test "$with_teem"; then
   if test "$with_teem" = "yes"; then
@@ -4906,7 +3339,7 @@ if test "$with_teem"; then
     _sci_lib="$with_teem"
     _sci_inc="$with_teem/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=specific
+    _sci_optional=required
   fi 
 fi
 
@@ -4914,7 +3347,7 @@ fi
 # or where the user has specified (as we are going to use nm to look at its
 # symbols and are not trying to link against it (at this point.))
 
-result=`nm $_sci_lib/libteem.a | grep png_write_info`
+result=`nm $_sci_lib/libteem.so | grep png_write_info`
 if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != "yes"; then
    AC_MSG_WARN(Teem was built with PNG support.  However the SCIRun configure)
    AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
@@ -4923,7 +3356,8 @@ if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != 
    AC_MSG_ERROR(Please fix this problem and then configure again.)
 fi
 
-SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem $PNG_LIB_FLAG $Z_LIB_FLAG $M_LIB_FLAG,$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG,,[
+
+SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,,[
 float a[3], b[9], c[7];
 tenEigensolve_f(a,b,c);
 ]
@@ -4945,8 +3379,6 @@ else
   fi
 fi
 
-SCI_SUBST_THIRDPARTY_DIR(TEEM_LIB_DIR_FLAG)
-SCI_SUBST_THIRDPARTY_DIR(INC_TEEM_H)
 
 AC_SUBST(HAVE_TEEM)
 AC_SUBST(DEF_TEEM)
@@ -4954,47 +3386,6 @@ AC_SUBST(INC_TEEM_H)
 AC_SUBST(TEEM_LIB_FLAG)
 AC_SUBST(TEEM_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/teem_testdefs.h"
-
-##  --  search for mdsplus  -------------------------------------------------
-
-if test "$sci_required_mdsplus" = "yes"; then
-  if test "$with_mdsplus"; then
-    _sci_lib="$with_mdsplus/lib"
-    _sci_inc="$with_mdsplus/include"
-  else
-    _sci_lib="/usr/local/mdsplus/lib"
-    _sci_inc="/usr/local/mdsplus/include"
-  fi
-
-# mdsplus is a C lib so it has to be checked as a C file not CC.
-  cxx="$CXX"
-  CXX="$CC"
-
-  ext="$ac_ext"
-  ac_ext="c"
-
-  SCI_TRY_LINK(MDSPLUS,mdslib library and headers,mdslib.h,$_sci_inc,MdsLib_client,$_sci_lib,,,optional)
-
-  if test "$HAVE_MDSPLUS" = "yes"; then
-     DEF_MDSPLUS="#define HAVE_MDSPLUS 1"
-  fi
-  
-  if test "$with_mdsplus" && test ! "$DEF_MDSPLUS"; then
-    echo
-    AC_MSG_ERROR(One or more of the MDSPLUS components is missing.)
-    echo
-  fi
-
-# Restore the previous settings.
-  CXX="$cxx"
-  ac_ext="$ext"
-fi #end sci_required_mdsplus
-
-AC_SUBST(DEF_MDSPLUS)
-AC_SUBST(INC_MDSPLUS_H)
-AC_SUBST(MDSPLUS_LIB_FLAG)
-AC_SUBST(MDSPLUS_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/mdsplus_testdefs.h"  
 
 ##  --  search for hdf5  -------------------------------------------------
 
@@ -5028,386 +3419,6 @@ AC_SUBST(INC_HDF5_H)		# Place this var in the configVars.mk.in
 AC_SUBST(HDF5_LIB_FLAG)		# Place this var in the configVars.mk.in
 AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
 sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
-
-##  --  search for perfex  -----------------------------------------------
-
-if test "$sci_required_perfex" = "yes"; then
-
-  _sci_lib=
-
-  SCI_TRY_LINK(PERFEX,perfex library,,,perfex,$_sci_lib,,,required)
-
-  if test "$HAVE_PERFEX" = "yes"; then
-    DEF_PERFEX="#define HAVE_PERFEX 1"
-  fi
-fi
-
-AC_SUBST(DEF_PERFEX)
-AC_SUBST(PERFEX_LIB_FLAG)
-AC_SUBST(PERFEX_LIB_DIR_FLAG)
-
-
-##  --  search for crypto --------------------------------
-
-if test "$sci_required_crypto" = "yes"; then
-  if test "$with_crypto"; then
-    _sci_lib="$with_crypto/lib"
-  else
-    _sci_lib="$with_globus/lib"
-  fi
-  
-  SCI_TRY_LINK(CRYPTO,crypto library,,,crypto,$_sci_lib,,,optional) 
-  
-  if test "$HAVE_CRYPTO" = "yes"; then
-    DEF_CRYPTO="#define HAVE_CRYPTO 1"
-  fi
-  
-  if test "$with_crypto" && test ! "$DEF_CRYPTO"; then
-    echo
-    AC_MSG_ERROR(One or more of the CRYPTO components is missing.)
-    echo
-  fi
-fi # end sci_required_crypto
-
-AC_SUBST(DEF_CRYPTO)
-AC_SUBST(CRYPTO_LIB_FLAG)
-AC_SUBST(CRYPTO_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/crypto_testdefs.h"
-
-##  --  search for ssl ---------------------------------
-
-if test "$sci_required_ssl" = "yes"; then
-
-  _sci_lib=
-
-  if test "$with_ssl"; then
-    _sci_lib="$with_ssl/lib"
-  else
-    _sci_lib="$sci_thirdparty_lib"
-  fi
-
-  SCI_TRY_LINK(SSL,ssl library,,,ssl crypto,$_sci_lib,,,optional)  
-  
-  if test "$HAVE_SSL" = "yes"; then
-    DEF_SSL="#define HAVE_SSL 1"
-  fi
-  
-  if test "$with_ssl" && test ! "$DEF_SSL"; then
-    echo
-    AC_MSG_ERROR(One or more of the SSL components is missing.)
-    echo
-  fi
-fi # end sci_required_ssl
-
-AC_SUBST(DEF_SSL)
-AC_SUBST(SSL_LIB_FLAG)
-AC_SUBST(SSL_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/ssl_testdefs.h"
-
-##  --  globus nexus  ----------------------------------------------------
-
-if test "$sci_required_globus" = "yes"; then
-
-  if test "$with_globus"; then
-    _sci_lib="$with_globus/lib"
-    _sci_inc="$with_globus/include"
-  else
-    _sci_lib="$sci_thirdparty_lib"
-    _sci_inc="$sci_thirdparty_include"
-  fi
-  
-  if test ! "$DEF_SSL"; then
-    AC_MSG_ERROR(SSL library not found.  This will cause globus check to fail.  Use --with-ssl=path_to_ssl.)
-  fi
-  if test ! "$DEF_CRYPTO"; then
-    AC_MSG_ERROR(CRYPTO library not found.  This will cause globus check to fail.  Use --with-crypto=path_to_crypto)
-  fi
-
-  MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_FLAG"
-  
-  SCI_TRY_LINK(GLOBUS,globus library and headers,,
-  $_sci_inc, globus_dc pthread,$_sci_lib,$MISC_LIB_FLAG,,optional)
-
-  # If no with-globus on command line, but we have found globus, try
-  # the one we found when doing the following AC_CHECK_FILES:
-  if test "$with_globus"; then
-    with_globus_lib=$with_globus
-  else
-    with_globus_lib=$LIB_DIR_GLOBUS/..
-  fi
-
-  # These globus libs need SCIRun thread files to link.  Because we
-  # don't have them yet (we haven't compiled SCIRun yet...), we
-  # can't test for linking.  Therefore we just test for existence.
-  AC_CHECK_FILES($with_globus_lib/lib/libglobus_common.so $with_globus_lib/lib/libglobus_nexus.so $with_globus_lib/lib/libglobus_io.so $with_globus_lib/lib/libglobus_utp.so $with_globus_lib/lib/libglobus_mp.so $with_globus_lib/lib/libglobus_gss_assist.so $with_globus_lib/lib/libglobus_gss.so $with_globus_lib/lib/libglobus_gaa.so $with_globus_lib/include/globus_nexus.h,,HAVE_GLOBUS="")
-
-  if test "$HAVE_GLOBUS" = "yes"; then
-    DEF_GLOBUS="#define HAVE_GLOBUS 1"
-    GLOBUS_LIB_FLAG="$GLOBUS_LIB_FLAG -lglobus_common -lglobus_nexus -lglobus_io -lglobus_mp -lglobus_gss_assist -lglobus_gss -lglobus_gaa $MISC_LIB_FLAG"
-    INC_GLOBUS_H=-I"$with_globus"/include
-  fi
-  
-  if test "$with_globus" && test ! "$DEF_GLOBUS"; then
-    echo
-    AC_MSG_ERROR(One or more of the GLOBUS components is missing.)
-    echo
-  fi
-
-fi #end sci_required_globus
-
-AC_SUBST(HAVE_GLOBUS)
-AC_SUBST(DEF_GLOBUS)
-AC_SUBST(INC_GLOBUS_H)
-AC_SUBST(GLOBUS_LIB_FLAG)
-AC_SUBST(GLOBUS_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/globus_testdefs.h"
-
-##  --  search for ncurses  ----------------------------------------------
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-if test "$enable_scijump" = "yes" -o "$sci_required_ncurses" = "yes"; then
-  _sci_optional=required
-fi
-
-if test "$with_ncurses"; then
-  _sci_lib="$with_ncurses/lib"
-  _sci_inc="$with_ncurses/include"
-  _sci_optional=specific
-fi
-
-SCI_TRY_LINK(NCURSES,ncurses library,curses.h menu.h,$_sci_inc,ncurses panel menu,$_sci_lib,,,$_sci_optional)
-
-if test "$HAVE_NCURSES" = "yes"; then
-   DEF_NCURSES="#define HAVE_NCURSES 1"
-fi
-
-if test "$with_ncurses" && test ! "$DEF_NCURSES"; then
-  echo
-  AC_MSG_ERROR(One or more of the ncurses components is missing.)
-fi
-
-AC_SUBST(HAVE_NCURSES)
-AC_SUBST(DEF_NCURSES)
-AC_SUBST(INC_NCURSES_H)
-AC_SUBST(NCURSES_LIB_FLAG)
-AC_SUBST(NCURSES_LIB_DIR_FLAG)
-
-##  --  search for wxWidgets  --------------------------------------------
-
-_sci_inc=
-_sci_lib=
-_sci_optional=optional
-
-if test "$sci_required_wx" = "yes" -a "$enable_scijump" = "yes" ; then
-
-  if test "$with_wx" = "yes"; then
-    _sci_optional=required
-  elif test "$with_wx"; then
-    ## can't use 'specific' setting because we'll try to link more than 1 library later
-    _sci_optional=required
-    _sci_lib="$with_wx/lib"
-    _sci_inc="$with_wx/include"
-  fi
-
-  _wx_bin=$_sci_lib/../bin
-  WX_CONFIG=
-  AC_PATH_PROG(WX_CONFIG,wx-config,NOT_FOUND,$_wx_bin $PATH)
-
-  if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
-    SCI_MSG_ERROR(wx-config not found)
-  fi
-  WX_DIR=`$WX_CONFIG --prefix`
-
-  SCI_CHECK_VERSION($WX_CONFIG,--version,2.6,,echo configure: error: wrong wxWidgets version (2.6.x supported).; exit)
-  HAVE_WX="yes"
-  WX_LIBS=`$WX_CONFIG --libs`
-  WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
-
- if test "$HAVE_WX" = "yes"; then
-   DEF_WX="#define HAVE_WX 1"
- fi
-fi
-
-AC_SUBST(HAVE_WX)
-AC_SUBST(DEF_WX)
-AC_SUBST(WX_CONFIG)
-AC_SUBST(WX_DIR)
-AC_SUBST(WX_CXXFLAGS)
-AC_SUBST(WX_LIBS)
-sci_defs_files="$sci_defs_files include/sci_defs/wx_testdefs.h"
-
-##  --  search for ruby  ------------------------------------------------
-_sci_inc=
-_sci_lib=
-_sci_optional=optional
-
-if test "$sci_required_ruby" = "yes"; then
-
-  if test "$with_ruby" = "yes"; then
-    # --with-ruby has been specified without a parameter.
-    _sci_lib="$sci_thirdparty_lib"
-    _ruby_inc="$sci_thirdparty_include"
-    _sci_optional=required
-  elif test "$with_ruby"; then
-     #if --with-ruby has been specified with a parameter, then use that parameter
-    _sci_lib="$with_ruby/lib"
-    # A standard ruby install only places include files in platform-specific directories and does
-    # not bother to create symlinks.  We have to search for the .h files here.  This may fail where
-    # multiple builds of ruby are placed under the same root install tree.  If "find" fails, then the
-    # configure will also fail unless ruby.h is in a standard path.
-    echo "Searching for ruby.h under $with_ruby"
-    _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed 's/ruby.h//'`
-    _sci_optional=specific
-  fi
-
-  # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(RUBY,ruby library,ruby.h,$_ruby_inc,ruby-static,$_sci_lib,,,$_sci_optional)
-
-  if test "$HAVE_RUBY" = "yes"; then
-     DEF_RUBY="#define HAVE_RUBY 1"
-  fi
-
-  if test "$with_ruby" && test ! "$DEF_RUBY"; then
-    echo
-    AC_MSG_ERROR(One or more of the ruby components are missing.)
-    echo
-  fi
-fi # end sci_required_ruby
-
-AC_SUBST(HAVE_RUBY)
-AC_SUBST(DEF_RUBY)
-AC_SUBST(INC_RUBY_H)
-AC_SUBST(RUBY_LIB_FLAG)
-AC_SUBST(RUBY_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/ruby_testdefs.h"
-
-##  --  search for tao corba ----------------------------------------------------
-if test "$sci_required_tao" = "yes"; then
-  if test "$with_tao" = "yes"; then
-    # --with-tao has been specified without a parameter.
-    _sci_lib="$sci_thirdparty_lib"
-    _tao_inc="$sci_thirdparty_include"
-  else
-   if test "$with_tao"; then
-    _sci_lib="$with_tao/ace"
-    _tao_inc="$with_tao $with_tao/ace $with_tao/TAO $with_tao/TAO/tao"
-   fi
-  fi
-
-  # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(TAO,tao corba library,pre.h,$_tao_inc,TAO_IORTable TAO_PortableServer TAO_IORInterceptor TAO ACE,$_sci_lib,,,optional)
-
-  if test "$HAVE_TAO" = "yes"; then
-     DEF_TAO="#define HAVE_TAO 1"
-     HAVE_TAO="yes"
-  fi
-
-  if test "$with_tao" && test ! "$DEF_TAO"; then
-    echo
-    AC_MSG_ERROR(One or more of the Tao components are missing.)
-    echo
-  fi
-fi # end sci_required_tao
-
-AC_SUBST(HAVE_TAO)
-AC_SUBST(DEF_TAO)
-AC_SUBST(INC_TAO_H)
-AC_SUBST(TAO_LIB_FLAG)
-AC_SUBST(TAO_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/tao_testdefs.h"
-
-##  --  search for vtk  ----------------------------------------------------
-if test "$sci_required_vtk" = "yes"; then
-  if test "$with_vtk"; then
-    _sci_lib="$with_vtk/lib/vtk"
-    _vtk_inc="$with_vtk/include/vtk"
-  else
-    _sci_lib="$sci_thirdparty_lib"
-    _vtk_inc="$sci_thirdparty_include"
-  fi
-
-  AC_LANG([C++])
-  # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(VTK,vtk library, vtkImageData.h,$_vtk_inc,vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib,$_sci_lib,,,optional)
-  # Restore the previous settings.
-  AC_LANG([C])
-
-  if test "$HAVE_VTK" = "yes"; then
-     DEF_VTK="#define HAVE_VTK 1"
-     HAVE_VTK="yes"
-  fi
-
-  if test "$with_vtk" && test ! "$DEF_VTK"; then
-    echo
-    AC_MSG_ERROR(One or more of the vtk components are missing.)
-    echo
-  fi
-fi # end sci_required_vtk
-
-AC_SUBST(HAVE_VTK)
-AC_SUBST(DEF_VTK)
-AC_SUBST(INC_VTK_H)
-AC_SUBST(VTK_LIB_FLAG)
-AC_SUBST(VTK_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/vtk_testdefs.h"
-
-##  --  search for VDT  ----------------------------------------------------
-
-if test "$sci_required_vdt" = "yes"; then
-  if test "$with_vdt"; then
-    _vdtbase="$with_vdt"
-  else
-    _vdtbase=$sci_thirdparty_dir
-  fi
-
-  for i in $_vdtbase; do
-    if test ! -d "$i"; then
-      continue
-    fi
-  
-    #from here we should find src/vdt/bin
-    if test ! -d "$i/src/vdt/bin"; then
-      continue
-    fi
-  
-    guess=`sh $i/src/vdt/bin/config.guess`
-    ad=`sh $i/src/vdt/bin/config.sub $guess`
-  
-    #this is where the lib actually lives
-    if test ! -d "$i/src/vdt/VDT/lib/$ad"; then
-      continue
-    fi
-    _vdt_inc="$i/src/vdt/VDT/src $i/src/vdt/G3D/include $i/src/vdt/Ckit/include $i/src/vdt/LOBS/include $i/src/vdt/PiRaT/include $i/src/vdt/Meschach $i/src/vdt/lp_solve_2.2 $i/src/vdt/Elixir/include"
-    _vdt_lib_path="$i/src/vdt/VDT/lib/$ad $i/src/vdt/Elixir/lib/$ad $i/src/vdt/lp_solve_2.2/$ad $i/src/vdt/PiRaT/lib/$ad $i/src/vdt/LOBS/lib/$ad $i/src/vdt/G3D/lib/$ad $i/src/vdt/Ckit/lib/$ad $i/src/vdt/Meschach/$ad"
-
-    _vdt_libs="esi elixir lpk pirat lobs3d lobs2d lobs1d g3d ckit meschach vdt"
-
-    MISC_LIB_FLAGS="$X_LIB_DIR_FLAG $X_LIB_FLAG $M_LIB_FLAG $LEX_LIB_FLAG"
-
-    SCI_TRY_LINK(VDT,vdt libraries and headers,vdt.h,$_vdt_inc,$_vdt_libs,$_vdt_lib_path,$MISC_LIB_FLAGS,[
-    VDT_triangulate();
-    ],required) 
- 
-    if test "$HAVE_VDT" = "yes"; then
-      DEF_VDT="#define HAVE_VDT 1"
-      break
-    fi
-  done
-
-  if test "$with_vdt" && test ! "$DEF_VDT"; then
-    echo
-    AC_MSG_ERROR(One or more of the VDT components is missing.)
-    echo
-  fi
-fi # end sci_required_vdt
-
-AC_SUBST(DEF_VDT)
-AC_SUBST(INC_VDT_H)
-AC_SUBST(VDT_LIB_FLAG)
-AC_SUBST(VDT_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/vdt_testdefs.h"
 
 ##  --  search for hypre stuff  ------------------------------------------
 
@@ -5458,243 +3469,10 @@ AC_SUBST(HYPRE_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
 
-##  --  search for boost stuff  -------------------------------------------
-if test "$sci_required_boost" = "yes"; then
-  _sci_optional=required
-
-  if test "$with_boost" = ""; then
-    _sci_lib=/usr/local/lib/
-    _sci_inc="/usr/local/include"
-  else 
-  if test "$with_boost" = "yes"; then
-    # --with-boost has been specified without a parameter.
-    _sci_lib=/usr/local/lib/
-    _sci_inc=/usr/local/include
-  else 
-   if test "$with_boost"; then
-     #if --with-boost has been specified with a parameter, then use that parameter
-    _sci_lib="$with_boost/lib"
-    _sci_inc="$with_boost/include"
-    _sci_optional=specific
-   fi
-  fi
-  fi
-  
-  
-  case $host in
-    *linux*)
-       boost_ver=gcc-mt
-       ;;
-    *-darwin*)
-       boost_ver=1_32
-       ;;
-    *)
-       #assume there is no specific version
-       ;;
-  esac
-
-  # Only looking for one .h file... assuming all the rest are in the same place.
-  SCI_TRY_LINK(BOOST,boost library,boost/program_options.hpp,$_sci_inc,boost_program_options-$boost_ver,$_sci_lib,,,$_sci_optional)
-
-  if test "$HAVE_BOOST" = "yes"; then
-     DEF_BOOST="#define HAVE_BOOST"
-     HAVE_BOOST="yes"
-  fi
-  
-  if test "$with_boost" && test ! "$DEF_BOOST"; then
-    echo
-    AC_MSG_ERROR(One or more of the boost components are missing.)
-    echo
-  fi
-fi # end sci_required_boost
-
-
-AC_SUBST(BOOST_LIB_FLAG)
-AC_SUBST(BOOST_LIB_DIR_FLAG)
-AC_SUBST(DEF_BOOST)
-AC_SUBST(INC_BOOST_H)
-
-sci_defs_files="$sci_defs_files include/sci_defs/boost_testdefs.h"
-
-##  --  search for cppunit  -------------------------------------------
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-if test "$sci_required_cppunit" = "yes" ; then
-  _sci_optional=required
-
-  if test "$with_cppunit" ; then
-    _sci_lib="$with_cppunit/lib"
-    _sci_inc="$with_cppunit/include"
-    #_sci_optional=specific
-  fi
-
-  AC_LANG([C++])
-  SCI_TRY_LINK(CPPUNIT,cppunit library,cppunit/Test.h,$_sci_inc,cppunit,$_sci_lib,-ldl,,$_sci_optional)
-  AC_LANG([C])
-
-  if test "$HAVE_CPPUNIT" = "yes"; then
-     DEF_CPPUNIT="#define HAVE_CPPUNIT 1"
-     HAVE_CPPUNIT="yes"
-  fi
-
-  if test "$with_cppunit" && test ! "$DEF_CPPUNIT"; then
-    echo
-    AC_MSG_ERROR(One or more of the cppunit components is missing.)
-  fi
-
-fi #end sci_required_cppunit
-
-AC_SUBST(HAVE_CPPUNIT)
-AC_SUBST(DEF_CPPUNIT)
-AC_SUBST(INC_CPPUNIT_H)
-AC_SUBST(CPPUNIT_LIB_FLAG)
-AC_SUBST(CPPUNIT_LIB_DIR_FLAG)
-
-##  --  search for loki stuff  -------------------------------------------
-if test "$sci_required_loki" = "yes"; then
-  _sci_optional=required
-
-  if test "$with_loki" = ""; then
-    _sci_lib=/usr/local/lib/
-    _sci_inc="/usr/local/include"
-  else 
-  if test "$with_boost" = "yes"; then
-    # --with-loki has been specified without a parameter.
-    _sci_lib=/usr/local/lib/
-    _sci_inc=/usr/local/include
-  else 
-   if test "$with_boost"; then
-     #if --with-loki has been specified with a parameter, then use that parameter
-    _sci_lib="$with_loki"
-    _sci_inc="$with_loki"
-    _sci_optional=specific
-   fi
-  fi
-  fi
-  
-  # Only looking for one .h file... assuming all the rest are in the same place.
-   SCI_TRY_LINK(LOKI,loki library,loki/Singleton.h,$_sci_inc,loki,$_sci_lib,,,$_sci_optional)
-
-  if test "$HAVE_LOKI" = "yes"; then
-    DEF_LOKI="#define HAVE_LOKI"
-    HAVE_LOKI="yes"
-  fi
-
-  if test "$with_loki" && test ! "$DEF_LOKI"; then
-    echo
-    AC_MSG_ERROR(One or more of the loki components are missing.)
-    echo
-  fi
-fi # end sci_required_loki
-
-AC_SUBST(LOKI_LIB_FLAG)
-AC_SUBST(LOKI_LIB_DIR_FLAG)
-AC_SUBST(DEF_LOKI)
-AC_SUBST(INC_LOKI_H)
-
-sci_defs_files="$sci_defs_files include/sci_defs/loki_testdefs.h"
-
-
-##  --  search for TENA  ----------------------------------------------------
-
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-if test "$with_tena" = "yes"; then
-  _sci_optional=required
-elif test "$with_tena"; then
-  _sci_lib="$with_tena/lib"
-  _sci_inc="$with_tena/5.1/include"
-  TENA_HOME="$with_tena"
-  _sci_optional=specific
-fi
-
-# fixme
-HAVE_TENA="yes" 
-INC_TENA_H="-I$_sci_inc"
-TENA_LIB_DIR="-L$_sci_lib/"
-TENA_LIB_DIR_FLAG="-Wl,-rpath -Wl,$TENA_LIB_DIR"
-TENA_BIN_DIR="$with_tena/5.1/bin"
-
-#SCI_TRY_LINK(TENA,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
-  
-AC_CHECKING(for TENA in $TENA_HOME)
-#AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
-
-
-if test "$HAVE_TENA" = "yes" ; then
-   DEF_TENA="#define HAVE_TENA 1"
-   HAVE_TENA="yes"
-fi
-
-TENA_VERSION="5.1"
-TENA_PLATFORM="fc3-gcc343"
-TENA_OMC_VERSION="0"
-
-PS_DEFINES="-D__EXTENSIONS__ -D_PTHREADS -D_POSIX_C_SOURCE=199506L -D_POSIX_PTHREAD_SEMANTICS -DTENA_PLATFORM=$TENA_PLATFORM"
-
-TENA_DEFINES="-D_REENTRANT $PS_DEFINES"
-
-AC_SUBST(HAVE_TENA)
-AC_SUBST(DEF_TENA)
-AC_SUBST(TENA_BIN_DIR)
-
-AC_SUBST(INC_TENA_H)
-AC_SUBST(TENA_LIB_DIR)
-AC_SUBST(TENA_LIB_DIR_FLAG)
-AC_SUBST(TENA_VERSION)
-AC_SUBST(TENA_PLATFORM)
-AC_SUBST(TENA_OMC_VERSION)
-AC_SUBST(TENA_DEFINES)
-
-sci_defs_files="$sci_defs_files include/sci_defs/tena_testdefs.h"
-
-
-##  --  search for TENA_OM  ----------------------------------------------------
-
-if test "$with_tena_om" = "yes"; then
-  _tena_om=$TENA_HOME
-  HAVE_TENA_OM="yes" 
-  _sci_optional=required
-elif test "$with_tena_om"; then
-  _tena_om="$with_tena_om"
-  HAVE_TENA_OM="yes" 
-  _sci_optional=specific
-fi
-
-
-
-if test "$HAVE_TENA_OM" = "yes" ; then
-   DEF_TENA_OM="#define HAVE_TENA_OM 1"
-   HAVE_TENA_OM="yes"
-
-   # fixme
-   TENA_OM_DEF_DIR="$_tena_om/$TENA_VERSION/include/OMs"
-   TENA_OM_IMPL_DIR="$_tena_om/$TENA_VERSION/src"
-
-fi
-  
-if test "$with_tena" && test ! "$DEF_TENA_OM"; then
-  echo
-  AC_MSG_ERROR(One or more of the TENA_OM components is missing.)
-fi 
-
-AC_SUBST(HAVE_TENA_OM)
-AC_SUBST(DEF_TENA_OM)
-
-AC_SUBST(TENA_OM_DEF_DIR)
-AC_SUBST(TENA_OM_IMPL_DIR)
-#sci_defs_files="$sci_defs_files include/sci_defs/tena_defs.h"
 
 
 ##  --  finis flags  ------------------------------------------------
 case $host in
-  *-irix*)
-    LDFLAGS="$LDFLAGS -J\$(MAKE_PARALLELISM) $(TLINK)"
-    ;;
   *linux*)
     ;;
   *aix*)
@@ -5705,23 +3483,6 @@ case $host in
     ;;
 esac
 
-##  --  See if we have everything needed for SCIJump ----------------------
-
-if test "$enable_scijump" = "yes"; then
-  if test "$HAVE_BABEL" != "yes"; then
-    AC_MSG_WARN([could not find a Babel installation (recommended for SCIJump).])
-  fi
-  if test "$DEBUG" = "yes"; then
-    DEF_DEBUG="#define FWK_DEBUG 1"
-  fi
-  BUILD_SCIJUMP="yes"
-else
-  BUILD_SCIJUMP="no"
-fi
-
-AC_SUBST(DEF_DEBUG)
-AC_SUBST(BUILD_SCIJUMP)
-sci_defs_files="$sci_defs_files include/sci_defs/framework_testdefs.h"
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  Fix Frost config vars  ------------------------
@@ -5781,7 +3542,7 @@ AC_CONFIG_FILES(configVars.mk Makefile on-the-fly-libs/Makefile
 ##   Only do the following if configuring with Uintah
 ##   Add a list of Uintah specific output files.
 if test "$pkg_Uintah" = "yes" ; then
-   AC_CONFIG_FILES(Packages/Uintah/tools/fspec.pl)
+   AC_CONFIG_FILES(tools/fspec.pl)
 fi 
 
 #  ignore --no-create and --no-recursion flags
@@ -5822,12 +3583,12 @@ for testfile in $sci_defs_files; do
 
     if test -d StandAlone -a "$file" = "include/sci_defs/petsc_defs.h"; then
        echo "WARNING: petsc dependent .o files are probably out of date... removing..."
-       $path_to_src/scripts/repair.sh -quiet petsc
+       $path_to_src/build_scripts/repair.sh -quiet petsc
     fi
 
     if test -d StandAlone -a "$file" = "include/sci_defs/hypre_defs.h"; then
        echo "WARNING: hypre dependent .o files are probably out of date... removing..."
-       $path_to_src/scripts/repair.sh -quiet hypre
+       $path_to_src/build_scripts/repair.sh -quiet hypre
     fi
 
   fi
