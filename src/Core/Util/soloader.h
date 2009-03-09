@@ -34,9 +34,7 @@
 #ifndef SOLOADER_H_
 #define SOLOADER_H_
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #  define _WINSOCKAPI_   /* Prevent inclusion of winsock.h in windows.h */

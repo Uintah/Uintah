@@ -71,9 +71,7 @@
 
 #elif !defined( DISABLE_SCI_MALLOC )
 #  ifndef _WIN32
-#    include <sgi_stl_warnings_off.h>
 #    include   <unistd.h>
-#    include <sgi_stl_warnings_on.h>
 #  endif
 
 //set these macros to be blank so everything will compile without MallocTrace

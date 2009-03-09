@@ -39,9 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/GeometryPiece/uintahshare.h>
 namespace Uintah {

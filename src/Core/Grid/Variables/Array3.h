@@ -40,9 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 typedef long ssize_t;

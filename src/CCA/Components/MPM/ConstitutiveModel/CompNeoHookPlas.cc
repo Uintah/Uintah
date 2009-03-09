@@ -44,9 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 

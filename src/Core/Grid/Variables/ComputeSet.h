@@ -38,11 +38,9 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/constHandle.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <vector>
 #include   <algorithm>
 #include   <sstream>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
 

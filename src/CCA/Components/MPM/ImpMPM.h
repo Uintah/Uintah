@@ -50,11 +50,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/SwitchingCriteria.h>
 
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <vector>
 #include <list>
-#include <sgi_stl_warnings_on.h>
 
 #include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {

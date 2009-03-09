@@ -32,9 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_PerPatchBase_H
 #define UINTAH_HOMEBREW_PerPatchBase_H
 
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Variables/Variable.h>
 

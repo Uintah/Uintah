@@ -33,10 +33,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/ParticleInterpolator.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 
 #include <CCA/Components/MPM/uintahshare.h>
 namespace Uintah {

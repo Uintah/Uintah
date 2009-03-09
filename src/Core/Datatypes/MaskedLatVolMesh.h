@@ -48,10 +48,8 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <set>
-#include <sgi_stl_warnings_on.h>
 #include <sci_comp_warn_fixes.h>
 
 namespace SCIRun {

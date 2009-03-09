@@ -49,9 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityState.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using std::cerr;
 using namespace Uintah;

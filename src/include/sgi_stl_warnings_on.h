@@ -28,7 +28,6 @@
 
 //
 // This file is used to turn back on SGI CC compiler warnings that
-// have been turned off by using sgi_stl_warnings_off.h.
 //
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

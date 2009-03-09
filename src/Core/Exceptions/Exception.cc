@@ -55,11 +55,9 @@
 #  include "StackWalker.h"
 #endif
 
-#include <sgi_stl_warnings_off.h>
 #include   <iostream>
 #include   <iomanip>
 #include   <sstream>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef HAVE_EXC
 #  include <libexc.h>

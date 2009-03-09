@@ -30,9 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <Core/Grid/Box.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #include <deque>
 

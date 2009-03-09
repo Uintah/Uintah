@@ -33,9 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_HOMEBREW_ReductionVariableBase_H
 
 #include <Core/Grid/Variables/Variable.h>
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
-#include <sgi_stl_warnings_on.h>
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 #include <Core/Grid/uintahshare.h>

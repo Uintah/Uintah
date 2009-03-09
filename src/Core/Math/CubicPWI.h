@@ -50,9 +50,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-#include <sgi_stl_warnings_off.h>
 #include   <iostream>
-#include <sgi_stl_warnings_off.h>
 
 #include <Core/Math/share.h>
 

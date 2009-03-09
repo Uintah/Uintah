@@ -43,10 +43,8 @@
 #ifndef SCI_project_Persistent_h
 #define SCI_project_Persistent_h 1
 
-#include <sgi_stl_warnings_off.h>
 #include <map>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Util/Assert.h>
 #include <Core/Util/ProgressReporter.h>

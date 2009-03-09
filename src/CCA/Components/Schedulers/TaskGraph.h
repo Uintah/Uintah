@@ -35,12 +35,10 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Grid.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <list>
 #include <map>
 #include <set>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 

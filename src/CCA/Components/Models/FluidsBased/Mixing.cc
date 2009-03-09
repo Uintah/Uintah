@@ -45,9 +45,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 using namespace Uintah;
 using namespace std;
 

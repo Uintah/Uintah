@@ -68,10 +68,8 @@
 #endif
 
 #include <cstdlib> // for getenv()
-#include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 
 #include <Core/Util/share.h>

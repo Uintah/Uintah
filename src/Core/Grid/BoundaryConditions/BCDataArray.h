@@ -37,10 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/Iterator.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
 namespace Uintah {

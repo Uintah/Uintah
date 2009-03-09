@@ -51,10 +51,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/fixedvector.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
 namespace Uintah {

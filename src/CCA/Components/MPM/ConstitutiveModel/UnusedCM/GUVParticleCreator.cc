@@ -41,9 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GUVSphereShellPiece.h>
 #include <Core/Util/DebugStream.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 using namespace Uintah;
 
 static DebugStream debug("GUV_Create", false);

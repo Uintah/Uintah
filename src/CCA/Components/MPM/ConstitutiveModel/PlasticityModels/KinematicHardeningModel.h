@@ -32,9 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define __KINEMATIC_HARDENING_MODEL_H__
 
 #include <Core/Math/Matrix3.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
-#include <sgi_stl_warnings_on.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>

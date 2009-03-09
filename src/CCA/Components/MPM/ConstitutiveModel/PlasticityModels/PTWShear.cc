@@ -32,10 +32,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 using namespace SCIRun;

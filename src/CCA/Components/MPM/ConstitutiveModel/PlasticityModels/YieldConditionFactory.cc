@@ -34,9 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 using namespace std;
 using namespace Uintah;

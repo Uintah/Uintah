@@ -29,12 +29,10 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <sgi_stl_warnings_off.h>
 #include <list>
 #include <vector>
 #include <map>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 class Edge;
 class GV_TaskGraph;

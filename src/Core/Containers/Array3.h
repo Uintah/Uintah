@@ -47,9 +47,7 @@
 #include <sci_defs/template_defs.h>
 #endif // #ifndef SCI_NOPERSISTENT
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 #include <stdio.h>
 #include <cerrno>
 #include <sys/types.h>

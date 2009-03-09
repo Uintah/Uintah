@@ -40,9 +40,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Patch.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/SphereMembraneGeometryPiece.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
 

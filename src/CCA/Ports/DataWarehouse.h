@@ -48,9 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
-#include <sgi_stl_warnings_on.h>
 
 #include <CCA/Ports/uintahshare.h>
 

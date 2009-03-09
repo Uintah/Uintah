@@ -30,9 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include "GursonYield.h"	
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 #include <cmath>
 
 #ifdef _WIN32

@@ -34,9 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Malloc/Allocator.h>
-#include <sgi_stl_warnings_off.h>
 #include <string>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::string;

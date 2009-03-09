@@ -35,9 +35,7 @@
 
 #include <Core/Containers/Sort.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 #include <cstdlib>
 using std::cerr;
 

@@ -41,10 +41,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Util/Endian.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <iosfwd>
 #include <iostream>
-#include <sgi_stl_warnings_on.h>
 
 
 namespace Uintah {

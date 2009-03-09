@@ -45,11 +45,9 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/StringUtil.h>
 
-#include <sgi_stl_warnings_off.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <sgi_stl_warnings_on.h>
 
 #include <sci_defs/teem_defs.h>
 

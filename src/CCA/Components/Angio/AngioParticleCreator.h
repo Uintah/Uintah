@@ -37,10 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
-#include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
-#include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
   typedef int particleIndex;

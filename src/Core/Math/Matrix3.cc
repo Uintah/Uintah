@@ -48,10 +48,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <cstdlib>
 
-#include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #define copysign _copysign

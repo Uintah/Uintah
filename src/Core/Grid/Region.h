@@ -35,14 +35,12 @@ DEALINGS IN THE SOFTWARE.
 
 #undef None
 
-#include <sgi_stl_warnings_off.h>
 #include   <string>
 #include   <vector>
 #include   <list>
 #include   <map>
 #include   <iosfwd>
 #include   <iostream>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Grid/uintahshare.h>
 
