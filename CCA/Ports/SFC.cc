@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Ports/SFC.h>
+#include <CCA/Ports/SFC.h>
 #include <climits>
 
 namespace Uintah

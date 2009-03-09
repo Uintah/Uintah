@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/CCA/Ports/Output.h>
+#include <CCA/Ports/Output.h>
 #include <iostream>
 
 using namespace Uintah;
