@@ -19,15 +19,15 @@ cd "${BUILDROOT}/${mode}"
 
 # Symbolic links
 if [ ! -d TestScripts ]; then
-  ln -s ../src/Packages/Uintah/R_Tester TestScripts
+  ln -s ../src/R_Tester TestScripts
 fi
 
 if [ ! -d susdir ]; then
-  ln -s build/Packages/Uintah/StandAlone susdir
+  ln -s build/StandAlone susdir
 fi
 
 if [ ! -d inputs ]; then
-  ln -s ../src/Packages/Uintah/StandAlone/inputs inputs
+  ln -s ../src/StandAlone/inputs inputs
 fi
 
 if [ ! -d CheckPoints ]; then
@@ -48,7 +48,7 @@ cd TestScripts
 # select files desired by a particular user
 if [ "$USER" != "" ]; then
   if [ ! -d users/$USER ]; then
-    echo "src/Packages/Uintah/R_Tester/users/$USER does not exist."
+    echo "src/R_Tester/users/$USER does not exist."
     echo "Please create and place tests there and run again."
     exit 1
   fi
