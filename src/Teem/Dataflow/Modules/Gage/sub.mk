@@ -40,7 +40,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Teem/Dataflow/Modules/Gage
+SRCDIR   := Teem/Dataflow/Modules/Gage
 
 SRCS     += \
         $(SRCDIR)/GageProbe.cc\

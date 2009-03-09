@@ -36,7 +36,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Teem/Dataflow/Modules/Tend
+SRCDIR   := Teem/Dataflow/Modules/Tend
 
 
 SRCS     += \

@@ -40,7 +40,7 @@ INCLUDES += $(TEEM_INCLUDE)
 
 
 
-SRCDIR   := Packages/Teem/Dataflow/Modules/Converters
+SRCDIR   := Teem/Dataflow/Modules/Converters
 
 
 SRCS     += \

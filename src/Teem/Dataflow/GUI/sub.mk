@@ -34,7 +34,7 @@
 # if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
 # documentation on how to do it correctly.
 
-SRCDIR := Packages/Teem/Dataflow/GUI
+SRCDIR := Teem/Dataflow/GUI
 
 SRCS := \
 	$(SRCDIR)/AnalyzeNrrdReader.tcl\

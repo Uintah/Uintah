@@ -27,9 +27,9 @@
 #
 
 
-#Makefile fragment for the Packages/Teem directory
+#Makefile fragment for the Teem directory
 
-SRCDIR := Packages/Teem
+SRCDIR := Teem
 SUBDIRS := \
 	$(SRCDIR)/Dataflow \
 	$(SRCDIR)/StandAlone \
