@@ -28,8 +28,8 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <Packages/Uintah/testprograms/TestBoxGrouper/Box.h>
-#include <Packages/Uintah/testprograms/TestBoxGrouper/BoxRangeQuerier.h>
+#include <testprograms/TestBoxGrouper/Box.h>
+#include <testprograms/TestBoxGrouper/BoxRangeQuerier.h>
 #include <list>
 
 using namespace Uintah;

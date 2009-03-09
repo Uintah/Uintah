@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 
-#include <Packages/Uintah/Core/Grid/Region.h>
+#include <Core/Grid/Region.h>
 
 #include <iostream>
 using namespace std;

@@ -73,7 +73,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef AVT_udaReader_FILE_FORMAT_H
 #define AVT_udaReader_FILE_FORMAT_H
 
-#include "/home/collab/sshankar/SVN/SCIRun/src/Packages/Uintah/StandAlone/tools/uda2nrrd/particleData.h"
+#include "/home/collab/sshankar/SVN/SCIRun/src/StandAlone/tools/uda2nrrd/particleData.h"
 
 #include <avtMTSDFileFormat.h>
 
