@@ -59,9 +59,27 @@ SRCS     += $(SRCDIR)/CubicPWI.cc              \
             $(SRCDIR)/TrigTable.cc	       \
             $(SRCDIR)/sci_lapack.cc	       \
             $(SRCDIR)/fft.c		       \
-            $(SRCDIR)/ssmult.c
+            $(SRCDIR)/ssmult.c			\
+	$(SRCDIR)/FastMatrix.cc \
+	$(SRCDIR)/Primes.cc     \
+	$(SRCDIR)/Matrix3.cc    \
+	$(SRCDIR)/SymmMatrix3.cc    \
+	$(SRCDIR)/CubeRoot.cc	\
+	$(SRCDIR)/Sparse.cc	\
+	$(SRCDIR)/Short27.cc \
+	$(SRCDIR)/TangentModulusTensor.cc 
 
-PSELIBS := Core/Exceptions Core/Containers
-LIBS := $(M_LIBRARY) $(DL_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)
+ifeq ($(IS_WIN),yes)
+  SRCS += $(SRCDIR)/Rand48.cc
+endif
+
+
+PSELIBS := Core/Exceptions Core/Containers \
+	Core/Util                       \
+	Core/Geometry                   \
+	Core/Thread			\
+	Core/Disclosure 
+
+LIBS := $(M_LIBRARY) $(DL_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
