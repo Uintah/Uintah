@@ -33,11 +33,10 @@ PROGRAM := $(SRCDIR)/radius_maker
 
 #ifeq ($(findstring teem, $(TEEM_LIBRARY)),teem)
   ifeq ($(LARGESOS),yes)
-    PSELIBS := Datflow Packages/Uintah
+    PSELIBS := Datflow Uintah
   else
     PSELIBS := \
-        Core/Math         
-
+        Core/Math        
   endif
 
   SRCS := \
