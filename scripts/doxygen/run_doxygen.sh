@@ -58,10 +58,10 @@ par_dir=`basename $temp`
 temp=`dirname $temp`
 gpar_dir=`basename $temp`
 
-if test $cur_dir != "Uintah" -o $par_dir != "Packages" -o $gpar_dir != "src"; then
+if test $cur_dir != "src"; then
    echo
-   echo "Error: This script must be run from the Uintah Package directory in the"
-   echo "       SCIRun src tree.  Exiting."
+   echo "Error: This script must be run from the src directory in the"
+   echo "       Uintah src tree.  Exiting."
    echo
    exit
 fi
@@ -82,7 +82,6 @@ fi
 echo "Updating SVN repository..."
 cd ../..
 svn update
-cd Packages/Uintah
 #
 ########
 
