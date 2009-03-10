@@ -2226,48 +2226,26 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
   # This list is alphabetical.  Please keep it that way.
-  sci_required_audio=no
   sci_required_awk=no
-  sci_required_babel=no
   sci_required_blas=no
-  sci_required_ncurses=no
-  sci_required_crypto=no
-  sci_required_dataflow=yes
   sci_required_etags=no
   sci_required_exc=no
   sci_required_fortran=no
   sci_required_hdf5=no
-  sci_required_glew=no
-  sci_required_globus=no
-  sci_required_glui=no
-  sci_required_glut=no
   sci_required_gmake=no
   sci_required_gzopen=no
   sci_required_hypre=no
-  sci_required_java=no
   sci_required_jpeg=no
   sci_required_lapack=no
-  sci_required_mdsplus=no
   sci_required_mpi=no
-  sci_required_netsolve=no
-  sci_required_oogl=no
   sci_required_perl=no
   sci_required_petsc=no
-  sci_required_ptolemyII=no
-  sci_required_qt=no
-  sci_required_ruby=no
-  sci_required_ssl=no
   sci_required_tau=no
-  sci_required_tcl=yes
   sci_required_teem=no
   sci_required_thirdparty=no
   sci_required_tiff=no
   sci_required_tools=no
   sci_required_unipetc=no
-  sci_required_vdt=no
-  sci_required_vtk=no
-
-  plume_checked=no
 
 
 
@@ -3031,17 +3009,6 @@ case $i in
     sci_required_mpi=yes
     sci_required_perl=yes
     sci_required_tools=yes
-  ;;
-  rtrt)
-    sci_required_glut=yes
-    sci_required_glui=yes
-    sci_required_oogl=yes
-    sci_required_audio=yes
-    sci_required_teem=yes
-  ;;
-  Ptolemy)
-  ;;
-  Kepler)
   ;;
   *)
     { echo "$as_me:$LINENO: WARNING: In aclocal.m4: No known dependencies for Package $i" >&5
@@ -10251,12 +10218,7 @@ fi
 if test -n "$M_LIB"; then
 
    found_framework=no
-   for lib in "" $M_LIB; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in $M_LIB; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -10312,12 +10274,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -10476,14 +10433,14 @@ eval M_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -10712,12 +10669,7 @@ fi
 if test -n "rt"; then
 
    found_framework=no
-   for lib in "" rt; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in rt; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -10773,12 +10725,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -10935,14 +10882,14 @@ eval RT_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -11223,12 +11170,7 @@ fi
 if test -n "pthread"; then
 
    found_framework=no
-   for lib in "" pthread; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in pthread; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -11284,12 +11226,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -11446,14 +11383,14 @@ eval PTHREAD_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -11896,12 +11833,7 @@ fi
 if test -n "ibverbs ibumad rdmacm pthread"; then
 
    found_framework=no
-   for lib in "" ibverbs ibumad rdmacm pthread; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ibverbs ibumad rdmacm pthread; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -11957,12 +11889,7 @@ fi
 
 if test -n "$dir"; then
 
-   for path in "" $dir; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $dir; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -12119,14 +12046,14 @@ eval OFED_LIB_DIR='"$dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -12402,12 +12329,7 @@ fi
 if test -n "myriexpress"; then
 
    found_framework=no
-   for lib in "" myriexpress; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in myriexpress; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -12463,12 +12385,7 @@ fi
 
 if test -n "$dir"; then
 
-   for path in "" $dir; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $dir; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -12625,14 +12542,14 @@ eval MX_LIB_DIR='"$dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -12862,12 +12779,7 @@ fi
 if test -n "c"; then
 
    found_framework=no
-   for lib in "" c; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in c; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -12923,12 +12835,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -13087,14 +12994,14 @@ eval DL_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -13363,12 +13270,7 @@ done
 if test -n "dl"; then
 
    found_framework=no
-   for lib in "" dl; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in dl; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -13424,12 +13326,7 @@ fi
 
 if test -n "$sci_thirdparty_lib"; then
 
-   for path in "" $sci_thirdparty_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $sci_thirdparty_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -13588,14 +13485,14 @@ eval DL_LIB_DIR='"$sci_thirdparty_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -13825,12 +13722,7 @@ fi
 if test -n "dl"; then
 
    found_framework=no
-   for lib in "" dl; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in dl; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -13886,12 +13778,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -14050,14 +13937,14 @@ eval DL_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -14294,12 +14181,7 @@ fi
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -14355,12 +14237,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -14519,14 +14396,14 @@ eval STAT64_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -14761,12 +14638,7 @@ fi
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -14822,12 +14694,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -14984,14 +14851,14 @@ eval STD_HDRS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -15219,12 +15086,7 @@ fi
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -15280,12 +15142,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -15442,14 +15299,14 @@ eval STD_HDRS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -15678,12 +15535,7 @@ fi
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -15739,12 +15591,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -15901,14 +15748,14 @@ eval STD_HDRS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -16147,12 +15994,7 @@ fi
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -16208,12 +16050,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -16373,14 +16210,14 @@ eval STL_HEADERS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -16975,12 +16812,7 @@ done
 if test -n "$XML2_LDFLAGS"; then
 
    found_framework=no
-   for lib in "" $XML2_LDFLAGS; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in $XML2_LDFLAGS; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -17036,12 +16868,7 @@ fi
 
 if test -n "$XML2_LIB_PATH"; then
 
-   for path in "" $XML2_LIB_PATH; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $XML2_LIB_PATH; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -17218,14 +17045,14 @@ eval XML2_LIB_DIR='"$XML2_LIB_PATH"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -17474,12 +17301,7 @@ fi
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -17535,12 +17357,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -17697,14 +17514,14 @@ eval SSTREAM_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -17997,12 +17814,7 @@ done
 if test -n "imagehlp psapi"; then
 
    found_framework=no
-   for lib in "" imagehlp psapi; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in imagehlp psapi; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -18058,12 +17870,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -18220,14 +18027,14 @@ eval EXC_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -18491,12 +18298,7 @@ done
 if test -n "exc"; then
 
    found_framework=no
-   for lib in "" exc; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in exc; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -18552,12 +18354,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -18714,14 +18511,14 @@ eval EXC_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -19023,12 +18820,7 @@ done
 if test -n "z"; then
 
    found_framework=no
-   for lib in "" z; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in z; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -19084,12 +18876,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -19246,14 +19033,14 @@ eval Z_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -19551,12 +19338,7 @@ done
 if test -n "jpeg"; then
 
    found_framework=no
-   for lib in "" jpeg; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in jpeg; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -19612,12 +19394,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -19774,14 +19551,14 @@ eval JPEG_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -20062,12 +19839,7 @@ done
 if test -n "tiff"; then
 
    found_framework=no
-   for lib in "" tiff; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in tiff; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -20123,12 +19895,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -20285,14 +20052,14 @@ eval TIFF_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -20616,12 +20383,7 @@ done
 if test -n "png"; then
 
    found_framework=no
-   for lib in "" png; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in png; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -20677,12 +20439,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -20839,14 +20596,14 @@ eval PNG_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -21194,12 +20951,7 @@ done
 if test -n "png"; then
 
    found_framework=no
-   for lib in "" png; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in png; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -21255,12 +21007,7 @@ fi
 
 if test -n "$png_lib_dir"; then
 
-   for path in "" $png_lib_dir; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $png_lib_dir; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -21417,14 +21164,14 @@ eval PNG_LIB_DIR='"$png_lib_dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -21723,12 +21470,7 @@ fi
 if test -n "mpege"; then
 
    found_framework=no
-   for lib in "" mpege; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpege; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -21784,12 +21526,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -21946,14 +21683,14 @@ eval MPEGE_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -22257,12 +21994,7 @@ done
 if test -n "unp scisock"; then
 
    found_framework=no
-   for lib in "" unp scisock; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in unp scisock; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -22318,12 +22050,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -22482,14 +22209,14 @@ eval UNP_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -22742,12 +22469,7 @@ fi
 if test -n "xlf90"; then
 
    found_framework=no
-   for lib in "" xlf90; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in xlf90; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -22803,12 +22525,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -22965,14 +22682,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -23200,12 +22917,7 @@ fi
 if test -n "pgftnrtl"; then
 
    found_framework=no
-   for lib in "" pgftnrtl; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in pgftnrtl; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -23261,12 +22973,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -23423,14 +23130,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -23655,12 +23362,7 @@ fi
 if test -n "gfortran"; then
 
    found_framework=no
-   for lib in "" gfortran; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in gfortran; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -23716,12 +23418,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -23878,14 +23575,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -24110,12 +23807,7 @@ fi
 if test -n "ifcore"; then
 
    found_framework=no
-   for lib in "" ifcore; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ifcore; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -24171,12 +23863,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -24333,14 +24020,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -24565,12 +24252,7 @@ fi
 if test -n "g2c"; then
 
    found_framework=no
-   for lib in "" g2c; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in g2c; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -24626,12 +24308,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -24788,14 +24465,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -25022,12 +24699,7 @@ fi
 if test -n "for Ufor"; then
 
    found_framework=no
-   for lib in "" for Ufor; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in for Ufor; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -25083,12 +24755,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -25245,14 +24912,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -25519,12 +25186,7 @@ done
 if test -n "xlf90"; then
 
    found_framework=no
-   for lib in "" xlf90; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in xlf90; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -25580,12 +25242,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -25742,14 +25399,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -26013,12 +25670,7 @@ done
 if test -n "gfortran"; then
 
    found_framework=no
-   for lib in "" gfortran; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in gfortran; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -26074,12 +25726,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -26236,14 +25883,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -26507,12 +26154,7 @@ done
 if test -n "g2c"; then
 
    found_framework=no
-   for lib in "" g2c; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in g2c; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -26568,12 +26210,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -26730,14 +26367,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -26965,12 +26602,7 @@ fi
 if test -n "g2c"; then
 
    found_framework=no
-   for lib in "" g2c; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in g2c; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -27026,12 +26658,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -27188,14 +26815,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -27420,12 +27047,7 @@ fi
 if test -n "F77"; then
 
    found_framework=no
-   for lib in "" F77; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in F77; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -27481,12 +27103,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -27643,14 +27260,14 @@ eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -27967,12 +27584,7 @@ done
 if test -n "acml acml_mv"; then
 
    found_framework=no
-   for lib in "" acml acml_mv; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in acml acml_mv; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -28028,12 +27640,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -28190,14 +27797,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -28503,12 +28110,7 @@ done
 if test -n "mkl mkl_core mkl_intel_lp64 guide"; then
 
    found_framework=no
-   for lib in "" mkl mkl_core mkl_intel_lp64 guide; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mkl mkl_core mkl_intel_lp64 guide; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -28564,12 +28166,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -28726,14 +28323,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -28996,12 +28593,7 @@ done
 if test -n "mkl mkl_def guide"; then
 
    found_framework=no
-   for lib in "" mkl mkl_def guide; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mkl mkl_def guide; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -29057,12 +28649,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -29219,14 +28806,14 @@ eval LAPACK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -29530,12 +29117,7 @@ done
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -29591,12 +29173,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -29753,14 +29330,14 @@ eval BLAS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -30025,12 +29602,7 @@ done
 if test -n "cblas f77blas atlas"; then
 
    found_framework=no
-   for lib in "" cblas f77blas atlas; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in cblas f77blas atlas; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -30086,12 +29658,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -30248,14 +29815,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -30512,12 +30079,7 @@ fi
 if test -n "essl"; then
 
    found_framework=no
-   for lib in "" essl; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in essl; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -30573,12 +30135,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -30735,14 +30292,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -30967,12 +30524,7 @@ fi
 if test -n "cxml"; then
 
    found_framework=no
-   for lib in "" cxml; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in cxml; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -31028,12 +30580,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -31190,14 +30737,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -31464,12 +31011,7 @@ done
 if test -n "cblas blas"; then
 
    found_framework=no
-   for lib in "" cblas blas; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in cblas blas; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -31525,12 +31067,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -31687,14 +31224,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -31962,12 +31499,7 @@ done
 if test -n "blas scs_mp"; then
 
    found_framework=no
-   for lib in "" blas scs_mp; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in blas scs_mp; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -32023,12 +31555,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -32185,14 +31712,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -32459,12 +31986,7 @@ done
 if test -n "blas"; then
 
    found_framework=no
-   for lib in "" blas; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in blas; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -32520,12 +32042,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -32682,14 +32199,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -32917,12 +32434,7 @@ fi
 if test -n "blas"; then
 
    found_framework=no
-   for lib in "" blas; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in blas; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -32978,12 +32490,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -33140,14 +32647,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -33371,12 +32878,7 @@ fi
 if test -n "fblas"; then
 
    found_framework=no
-   for lib in "" fblas; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in fblas; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -33432,12 +32934,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -33594,14 +33091,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -33827,12 +33324,7 @@ fi
 if test -n "blas"; then
 
    found_framework=no
-   for lib in "" blas; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in blas; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -33888,12 +33380,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -34050,14 +33537,14 @@ eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -34330,12 +33817,7 @@ fi
 if test -n ""; then
 
    found_framework=no
-   for lib in "" ; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -34391,12 +33873,7 @@ fi
 
 if test -n ""; then
 
-   for path in "" ; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in ; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -34553,14 +34030,14 @@ eval LAPACK_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -34788,12 +34265,7 @@ fi
 if test -n "lapack"; then
 
    found_framework=no
-   for lib in "" lapack; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in lapack; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -34849,12 +34321,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -35011,14 +34478,14 @@ eval LAPACK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -35245,12 +34712,7 @@ fi
 if test -n "flapack"; then
 
    found_framework=no
-   for lib in "" flapack; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in flapack; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -35306,12 +34768,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -35468,14 +34925,14 @@ eval LAPACK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -35710,12 +35167,7 @@ fi
 if test -n "complib.sgimath"; then
 
    found_framework=no
-   for lib in "" complib.sgimath; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in complib.sgimath; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -35771,12 +35223,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -35933,14 +35380,14 @@ eval LAPACK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -36166,12 +35613,7 @@ fi
 if test -n "complib.sgimath_mp"; then
 
    found_framework=no
-   for lib in "" complib.sgimath_mp; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in complib.sgimath_mp; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -36227,12 +35669,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -36389,14 +35826,14 @@ eval LAPACKMP_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -36773,12 +36210,7 @@ done
 if test -n "mpi lam util pmpi $MPI_EXTRA_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" mpi lam util pmpi $MPI_EXTRA_LIB_FLAG; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpi lam util pmpi $MPI_EXTRA_LIB_FLAG; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -36834,12 +36266,7 @@ fi
 
 if test -n "$_sci_lib $MPI_EXTRA_LIB_DIR"; then
 
-   for path in "" $_sci_lib $MPI_EXTRA_LIB_DIR; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib $MPI_EXTRA_LIB_DIR; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -36996,14 +36423,14 @@ eval MPI_LIB_DIR='"$_sci_lib $MPI_EXTRA_LIB_DIR"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -37281,12 +36708,7 @@ done
 if test -n "mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpi lam util $THREAD_LIB_FLAG $MPI_EXTRA_LIB_FLAG; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -37342,12 +36764,7 @@ fi
 
 if test -n "$_sci_lib $MPI_EXTRA_LIB_DIR"; then
 
-   for path in "" $_sci_lib $MPI_EXTRA_LIB_DIR; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib $MPI_EXTRA_LIB_DIR; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -37504,14 +36921,14 @@ eval MPI_LIB_DIR='"$_sci_lib $MPI_EXTRA_LIB_DIR"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -37787,12 +37204,7 @@ done
 if test -n "lam mpi $MPI_EXTRA_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" lam mpi $MPI_EXTRA_LIB_FLAG; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in lam mpi $MPI_EXTRA_LIB_FLAG; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -37848,12 +37260,7 @@ fi
 
 if test -n "$_sci_lib $MPI_EXTRA_LIB_DIR"; then
 
-   for path in "" $_sci_lib $MPI_EXTRA_LIB_DIR; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib $MPI_EXTRA_LIB_DIR; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -38010,14 +37417,14 @@ eval MPI_LIB_DIR='"$_sci_lib $MPI_EXTRA_LIB_DIR"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -38292,12 +37699,7 @@ done
 if test -n "mpi $MPI_EXTRA_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" mpi $MPI_EXTRA_LIB_FLAG; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpi $MPI_EXTRA_LIB_FLAG; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -38353,12 +37755,7 @@ fi
 
 if test -n "$_sci_lib $MPI_EXTRA_LIB_DIR"; then
 
-   for path in "" $_sci_lib $MPI_EXTRA_LIB_DIR; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib $MPI_EXTRA_LIB_DIR; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -38515,14 +37912,14 @@ eval MPI_LIB_DIR='"$_sci_lib $MPI_EXTRA_LIB_DIR"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -38797,12 +38194,7 @@ done
 if test -n "mpich $MPI_EXTRA_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" mpich $MPI_EXTRA_LIB_FLAG; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpich $MPI_EXTRA_LIB_FLAG; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -38858,12 +38250,7 @@ fi
 
 if test -n "$_sci_lib $MPI_EXTRA_LIB_DIR"; then
 
-   for path in "" $_sci_lib $MPI_EXTRA_LIB_DIR; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib $MPI_EXTRA_LIB_DIR; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -39020,14 +38407,14 @@ eval MPI_LIB_DIR='"$_sci_lib $MPI_EXTRA_LIB_DIR"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -39293,12 +38680,7 @@ done
 if test -n "mpich pmpich $MPI_EXTRA_LIB_FLAG"; then
 
    found_framework=no
-   for lib in "" mpich pmpich $MPI_EXTRA_LIB_FLAG; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpich pmpich $MPI_EXTRA_LIB_FLAG; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -39354,12 +38736,7 @@ fi
 
 if test -n "$_sci_lib $MPI_EXTRA_LIB_DIR"; then
 
-   for path in "" $_sci_lib $MPI_EXTRA_LIB_DIR; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib $MPI_EXTRA_LIB_DIR; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -39516,14 +38893,14 @@ eval MPI_LIB_DIR='"$_sci_lib $MPI_EXTRA_LIB_DIR"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -40015,12 +39392,7 @@ done
 if test -n "mpiuni"; then
 
    found_framework=no
-   for lib in "" mpiuni; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpiuni; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -40076,12 +39448,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -40238,14 +39605,14 @@ eval MPI_UNI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -40510,12 +39877,7 @@ done
 if test -n "mpiunich pmpiunich"; then
 
    found_framework=no
-   for lib in "" mpiunich pmpiunich; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in mpiunich pmpiunich; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -40571,12 +39933,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -40733,14 +40090,14 @@ eval MPI_UNICH_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -41096,12 +40453,7 @@ done
 if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -41157,12 +40509,7 @@ fi
 
 if test -n "$_sci_lib_dir"; then
 
-   for path in "" $_sci_lib_dir; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib_dir; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -41319,14 +40666,14 @@ eval PETSC_LIB_DIR='"$_sci_lib_dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -41595,12 +40942,7 @@ done
 if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -41656,12 +40998,7 @@ fi
 
 if test -n "$_sci_lib_dir"; then
 
-   for path in "" $_sci_lib_dir; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib_dir; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -41818,14 +41155,14 @@ eval PETSC_LIB_DIR='"$_sci_lib_dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -42118,12 +41455,7 @@ done
 if test -n "petsc petscvec petscmat petscdm petscsnes petscts petscksp"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in petsc petscvec petscmat petscdm petscsnes petscts petscksp; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -42179,12 +41511,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -42341,14 +41668,14 @@ eval PETSC_UNI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -42616,12 +41943,7 @@ done
 if test -n "petsc petscvec petscmat petscdm petscsnes petscts"; then
 
    found_framework=no
-   for lib in "" petsc petscvec petscmat petscdm petscsnes petscts; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in petsc petscvec petscmat petscdm petscsnes petscts; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -42677,12 +41999,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -42839,14 +42156,14 @@ eval PETSC_UNI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -43331,12 +42648,7 @@ done
 if test -n "freetype"; then
 
    found_framework=no
-   for lib in "" freetype; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in freetype; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -43392,12 +42704,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -43554,14 +42861,14 @@ eval FREETYPE_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -43866,12 +43173,7 @@ done
 if test -n "ftgl"; then
 
    found_framework=no
-   for lib in "" ftgl; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in ftgl; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -43927,12 +43229,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -44089,14 +43386,14 @@ eval FTGL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -44456,12 +43753,7 @@ done
 if test -n "teem"; then
 
    found_framework=no
-   for lib in "" teem; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in teem; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -44517,12 +43809,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -44683,14 +43970,14 @@ eval TEEM_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -45004,12 +44291,7 @@ done
 if test -n "hdf5"; then
 
    found_framework=no
-   for lib in "" hdf5; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in hdf5; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -45065,12 +44347,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -45227,14 +44504,14 @@ eval HDF5_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
@@ -45541,12 +44818,7 @@ done
 if test -n "HYPRE"; then
 
    found_framework=no
-   for lib in "" HYPRE; do
-
-      if test -z "$lib"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for lib in HYPRE; do
 
       if test "$found_framework" = "one"; then
          found_framework=two
@@ -45602,12 +44874,7 @@ fi
 
 if test -n "$_sci_lib"; then
 
-   for path in "" $_sci_lib; do
-
-      if test -z "$path"; then
-         # SGI sh needs the "" in the for statement... so skip it here.
-         continue
-      fi
+   for path in $_sci_lib; do
 
       # Make sure it doesn't have any thing but -L
       has_minus=`echo $path | sed 's/-.*//'`
@@ -45764,14 +45031,14 @@ eval HYPRE_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
-for _dir in "" $_sci_lib_path; do
-  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+for _dir in $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" ; then
     _final_dirs="$_final_dirs $_dir"
   fi
 done
 
 # Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
-_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+
 _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 
 # Remove leading spaces
