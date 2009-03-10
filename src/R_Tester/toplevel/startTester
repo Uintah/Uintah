@@ -4,7 +4,7 @@
 OS=`uname -s`
 
 USE_DEFAULT_BUILD="yes"
-SCRIPT_DIR=/home/csafe/csafe-tester/scripts
+SCRIPT_DIR=/usr/local/home/csafe-tester/scripts
 USE_DEFAULT_TEST_DATA="yes"
 COMPILE="yes"
 USE_PREVTREE="no"
@@ -24,15 +24,15 @@ USER=""
 DO_DBG="1"
 DO_OPT="1"
 
-BUILD_DIR=/home/csafe/csafe-tester/"$OS"
-TEST_DATA=/home/csafe/csafe-tester/"$OS"/TestData
-TEMP_DIR=/home/csafe/csafe-tester/"$OS"
+BUILD_DIR=/usr/local/home/csafe-tester/"$OS"
+TEST_DATA=/usr/local/home/csafe-tester/"$OS"/TestData
+TEMP_DIR=/usr/local/home/csafe-tester/"$OS"
 
 # test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
 if [ "$OS" == "Linux" ]; then
-  CC=gcc
-  CXX=c++
-  F77=gfortran
+  CC=gcc-4.2
+  CXX=g++-4.2
+  F77=gfortran-4.2
 elif [ "$OS" == "Darwin" ]; then
   CC=gcc
   CXX=c++
@@ -301,7 +301,7 @@ else
   fi
 
   # link directly from the build root to the Uintah code
-  ln -s src/ Uintah
+  # ln -s src/Packages/Uintah Uintah
 
   cd "$BUILD_DIR"
 
@@ -333,23 +333,25 @@ fi
 
 # where the webpage will be, and init webpage
 if [ "$WEEKLY" == "0" ]; then
-    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/SCIRun.${ID}.html
-    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/SCIRun.${ID}.html
+  HTMLLOG=/usr/local/home/csafe-tester/public_html/SCIRun.${ID}.html
+  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/SCIRun.${ID}.html
 else
-    HTMLLOG=/usr/sci/projects/Uintah/csafeweb/tester/"$OS"/Weekly/SCIRun.${ID}.html
-    WEBLOG=http://www.csafe.utah.edu/tester/"$OS"/Weekly/SCIRun.${ID}.html
+  HTMLLOG=/usr/local/home/csafe-tester/public_html//Weekly/SCIRun.${ID}.html
+  WEBLOG=http://blaze.sci.utah.edu/~csafe-tester/Weekly/SCIRun.${ID}.html
 fi
 
 #__________________________________
 # Configure Commands
-DBG_CONFIGURE="--enable-debug --enable-sci-malloc --enable-scinew-line-numbers"
-OPT_CONFIGURE="--enable-assertion-level=0"
+DBG_CONFIGURE="--enable-debug --enable-64bit --enable-sci-malloc --enable-scinew-line-numbers"
+OPT_CONFIGURE="--enable-64bit --enable-assertion-level=0"
 # set configure command options based on architecture
 if [ "$OS" == "Linux" ]; then
-  export PETSC_ARCH=linux-gnu-c-opt
-  COMMON="--enable-package='Uintah' --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/petsc-install/petsc-2.3.3-p1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-4.1-lam-32bit/hypre-2.0.0-install --with-mpi=/usr/local/lam-mpi --with-atlas=/usr/local/atlas --with-lapack=/usr/local/atlas"
+  export PETSC_ARCH=linux-gnu-amd64
+  COMMON="--with-mpi=/usr/lib/openmpi --with-petsc=/usr/ --with-hypre=/usr/"
+  #COMMON="--enable-package='Uintah' --with-thirdparty=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit --with-mpi=/usr/lib/openmpi --with-petsc=/usr/ --with-hypre=/usr/"
+  #COMMON="--enable-package='Uintah' --with-thirdparty=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit --with-mpi=/usr/lib/openmpi --with-petsc=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit/petsc-2.3.3-p13-openmpi-opt-install/ --with-hypre=/usr/local/share/SCIRun/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-64bit/hypre-2.0.0-openmpi-opt-install"
   DBG_CONFIGURE="$COMMON $DBG_CONFIGURE"
-  OPT_CONFIGURE="$COMMON '--enable-optimize=-march=pentium4 -msse -msse2 -mfpmath=sse -O3' $OPT_CONFIGURE"
+  OPT_CONFIGURE="$COMMON '--enable-optimize=-O3 -mfpmath=sse' $OPT_CONFIGURE"
 else
 # Darwin
   export PETSC_ARCH=darwin9.4.0-c-real-opt
@@ -370,6 +372,7 @@ echo "Using build: ${BUILDROOT}" >> $HTMLLOG
 echo "LOG: $HTMLLOG" >> $HTMLLOG
 
 
+#PATH="$BUILDROOT"/src/Packages/Uintah/R_Tester/helpers:"$PATH"
 PATH="$BUILDROOT"/src/R_Tester/helpers:"$PATH"
 export PATH DO_DBG DO_OPT DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
 
