@@ -56,7 +56,7 @@ else
       Core/Persistent   \
       Core/Thread       \
       Core/Util         \
-      Core/XMLUtil
+
 endif
 
 SRCS := \

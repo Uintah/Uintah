@@ -62,8 +62,8 @@ else
         Core/OS          \
         Core/Persistent  \
         Core/Thread      \
-        Core/Util        \
-        Core/XMLUtil     
+        Core/Util        
+
 endif
 
 LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(F_LIBRARY)

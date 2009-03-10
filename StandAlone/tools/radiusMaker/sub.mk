@@ -36,8 +36,8 @@ PROGRAM := $(SRCDIR)/radius_maker
     PSELIBS := Datflow Packages/Uintah
   else
     PSELIBS := \
-        Core/Math         \
-        Core/XMLUtil
+        Core/Math         
+
   endif
 
   SRCS := \
