@@ -42,7 +42,7 @@ PSELIBS := \
         Core/Grid                \
         Core/Util                
 
-LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

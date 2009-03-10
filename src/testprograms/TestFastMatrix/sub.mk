@@ -32,7 +32,7 @@
 
 SRCDIR := testprograms/TestFastMatrix
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
 
 ##############################################3
 # test fast matrix
