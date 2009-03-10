@@ -1084,9 +1084,8 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
   d_mpm->scheduleComputeInternalForce(sched, patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(sched, patches, mpm_matls);
   d_mpm->scheduleComputeNodalHeatFlux(sched, patches, mpm_matls);
-  scheduleSolveEquationsMotion(sched, patches, mpm_matls);
+  scheduleComputeAndIntegrateAcceleration(sched, patches, mpm_matls);
   scheduleSolveHeatEquations(sched, patches, mpm_matls);
-  d_mpm->scheduleIntegrateAcceleration(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(sched, patches, mpm_matls);
@@ -4447,49 +4446,74 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
   }
 }
 
-void MPMArches::scheduleSolveEquationsMotion(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls)
+void MPMArches::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls)
 {
-  d_mpm->scheduleSolveEquationsMotion(sched,patches,matls);
+  Task* t = scinew Task("MPMArches::computeAndIntegrateAcceleration",
+                        this, &MPMArches::computeAndIntegrateAcceleration);
 
-  Task* t = scinew Task("MPMArches::solveEquationsMotion",
-                        this, &MPMArches::solveEquationsMotion);
-  
-  t->requires(Task::NewDW, d_MAlb->AccArchesNCLabel,  Ghost::None);
-  t->modifies(Mlb->gAccelerationLabel);
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+  t->requires(Task::NewDW, Mlb->gMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, Mlb->gInternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, Mlb->gExternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, Mlb->gVelocityLabel,      Ghost::None);
+  t->requires(Task::NewDW, d_MAlb->AccArchesNCLabel,Ghost::None);
+
+  t->computes(Mlb->gVelocityStarLabel);
+  t->computes(Mlb->gAccelerationLabel);
   sched->addTask(t,patches,matls);
 }
 
-void MPMArches::solveEquationsMotion(const ProcessorGroup* pg,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* ms,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
+void MPMArches::computeAndIntegrateAcceleration(const ProcessorGroup* pg,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset* ms,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
+    Ghost::GhostType  gnone = Ghost::None;
+    Vector gravity = d_sharedState->getGravity();
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
+      constNCVariable<Vector> internalforce, externalforce, velocity;
+      constNCVariable<double> mass;
+
+      delt_vartype delT;
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+
+      new_dw->get(internalforce,Mlb->gInternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(externalforce,Mlb->gExternalForceLabel, dwi, patch, gnone, 0);
+      new_dw->get(mass,         Mlb->gMassLabel,          dwi, patch, gnone, 0);
+      new_dw->get(velocity,     Mlb->gVelocityLabel,      dwi, patch, gnone, 0);
+
       constNCVariable<Vector> AccArchesNC; 
-      NCVariable<Vector> acceleration;
-
-      new_dw->getModifiable(acceleration,Mlb->gAccelerationLabel,dwi, patch);
-      new_dw->get(AccArchesNC,d_MAlb->AccArchesNCLabel,dwi,patch,Ghost::None,
-		  0);
+      new_dw->get(AccArchesNC,d_MAlb->AccArchesNCLabel,dwi,patch,Ghost::None,0);
       
-      for(NodeIterator iter = patch->getNodeIterator("linear");
-	  !iter.done();iter++)
-	acceleration[*iter] += AccArchesNC[*iter];
-    }
-    
-  }
-  
-}
+      // Create variables for the results
+      NCVariable<Vector> velocity_star,acceleration;
+      new_dw->allocateAndPut(velocity_star,Mlb->gVelocityStarLabel, dwi, patch);
+      new_dw->allocateAndPut(acceleration, Mlb->gAccelerationLabel, dwi, patch);
 
+      acceleration.initialize(Vector(0.,0.,0.));
+
+      for(NodeIterator iter = patch->getNodeIterator("linear"); !iter.done();
+          iter++){
+         IntVector c = *iter;
+         Vector acc(0.,0.,0.);
+         acc = (internalforce[c] + externalforce[c])/mass[c];
+         acceleration[c] = acc +  gravity;
+	 acceleration[c] += AccArchesNC[c];
+         velocity_star[c] = velocity[c] + acceleration[c] * delT;
+      }
+    }
+  }
+}
 
 void MPMArches::scheduleSolveHeatEquations(SchedulerP& sched,
 					   const PatchSet* patches,

@@ -201,11 +201,6 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
     cout_doing << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
                << " 8 or 27 = " << flags->d_8or27 << endl;
 
-  if (flags->d_artificialDampCoeff > 0.0) {
-     t->computes(lb->pDampingRateLabel); 
-     t->computes(lb->pDampingCoeffLabel); 
-  }
-
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){
@@ -341,8 +336,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleExMomInterpolated(              sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
-  scheduleSolveEquationsMotion(           sched, patches, matls);
-  scheduleIntegrateAcceleration(          sched, patches, matls);
+  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
   scheduleAdjustCrackContactIntegrated(   sched, patches, matls);//for FractureMPM
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
@@ -353,7 +347,6 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
-  scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls); 
@@ -687,36 +680,6 @@ void FractureMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
 
-void FractureMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
-					     const PatchSet* patches,
-					     const MaterialSet* matls)
-{
-  /* solveEquationsMotion
-   *   in(G.MASS, G.F_INTERNAL)
-   *   operation(acceleration = f/m)
-   *   out(G.ACCELERATION) */
-
-  Task* t = scinew Task("FractureMPM::solveEquationsMotion",
-		    this, &FractureMPM::solveEquationsMotion);
-
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
-
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
-  //Uncomment  the next line to use damping
-  //t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
-  t->computes(lb->gAccelerationLabel);
-  
-  // for FractureMPM
-  t->requires(Task::NewDW, lb->GMassLabel,          Ghost::None);
-  t->requires(Task::NewDW, lb->GInternalForceLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->GExternalForceLabel, Ghost::None);
-  t->computes(lb->GAccelerationLabel);
-
-  sched->addTask(t, patches, matls);
-}
-
 void FractureMPM::scheduleSolveHeatEquations(SchedulerP& sched,
 					   const PatchSet* patches,
 					   const MaterialSet* matls)
@@ -724,28 +687,34 @@ void FractureMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
 }
 
-void FractureMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
-					      const PatchSet* patches,
-					      const MaterialSet* matls)
+void FractureMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls)
 {
-  /* integrateAcceleration
-   *   in(G.ACCELERATION, G.VELOCITY)
-   *   operation(v* = v + a*dt)
-   *   out(G.VELOCITY_STAR) */
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
 
-  Task* t = scinew Task("FractureMPM::integrateAcceleration",
-		        this, &FractureMPM::integrateAcceleration);
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
+
+  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+                        this, &FractureMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-  
-  t->requires(Task::NewDW, lb->gAccelerationLabel,      Ghost::None);
+
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
-  
+
+  t->requires(Task::NewDW, lb->GMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->GInternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->GExternalForceLabel, Ghost::None);
+
   t->computes(lb->gVelocityStarLabel);
-  
-  // for FractureMPM
-  t->requires(Task::NewDW, lb->GAccelerationLabel,      Ghost::None);
-  t->requires(Task::NewDW, lb->GVelocityLabel,          Ghost::None);
+  t->computes(lb->gAccelerationLabel);
+
+  t->computes(lb->GAccelerationLabel);
   t->computes(lb->GVelocityStarLabel);
 
   sched->addTask(t, patches, matls);
@@ -799,33 +768,6 @@ void FractureMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   t->requires(Task::NewDW, lb->GVelocityLabel,   Ghost::None);
 
   sched->addTask(t, patches, matls);
-}
-
-void FractureMPM::scheduleCalculateDampingRate(SchedulerP& sched,
-					       const PatchSet* patches,
-					       const MaterialSet* matls)
-{
- /*
-  * calculateDampingRate
-  *   in(G.VELOCITY_STAR, P.X, P.Size)
-  *   operation(Calculate the interpolated particle velocity and
-  *             sum the squares of the velocities over particles)
-  *   out(sum_vartpe(dampingRate)) 
-  */
-  if (flags->d_artificialDampCoeff > 0.0) {
-    Task* t=scinew Task("FractureMPM::calculateDampingRate", this, 
-			&FractureMPM::calculateDampingRate);
-    t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::AroundCells, NGN);
-    t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
-    t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
-
-    // for FractureMPM
-    t->requires(Task::NewDW, lb->GVelocityStarLabel, Ghost::AroundCells, NGN);
-    t->requires(Task::NewDW, lb->pgCodeLabel, Ghost::None);
-
-    t->computes(lb->pDampingRateLabel);
-    sched->addTask(t, patches, matls);
-  }
 }
 
 void FractureMPM::scheduleAddNewParticles(SchedulerP& sched,
@@ -947,15 +889,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->GTemperatureLabel,      gac,NGN);
   t->requires(Task::NewDW, lb->GTemperatureNoBCLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->pgCodeLabel,            gnone);
-
-  // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
-  // it is determined by the damping rate if the artificial damping
-  // coefficient Q is greater than 0.0
-  if (flags->d_artificialDampCoeff > 0.0) {
-    t->requires(Task::OldDW, lb->pDampingCoeffLabel);
-    t->requires(Task::NewDW, lb->pDampingRateLabel);
-    t->computes(lb->pDampingCoeffLabel);
-  }
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -1310,14 +1243,6 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
   if (flags->d_accStrainEnergy) {
     // Initialize the accumulated strain energy
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
-  }
-
-  // Initialize the artificial damping ceofficient (alpha) to zero
-  if (flags->d_artificialDampCoeff > 0.0) {
-    double alpha = 0.0;    
-    double alphaDot = 0.0;    
-    new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
-    new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
   }
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
@@ -2045,43 +1970,50 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
   }  
 }
 
-void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
- 	 			       const PatchSubset* patches,
-				       const MaterialSubset*,
-				       DataWarehouse* old_dw,
-				       DataWarehouse* new_dw)
+void FractureMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
+                                                  const PatchSubset* patches,
+                                                  const MaterialSubset*,
+                                                  DataWarehouse* old_dw,
+                                                  DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
-    if (cout_doing.active())
-      cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
-  	         <<"\t\t\t MPM"<< endl;
 
-    Vector gravity = d_sharedState->getGravity();
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    if (cout_doing.active())
+      cout_doing <<"Doing integrateAcceleration on patch " << patch->getID()
+  	         <<"\t\t\t MPM"<< endl;
+    
     Ghost::GhostType  gnone = Ghost::None;
+    Vector gravity = d_sharedState->getGravity();
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+      delt_vartype delT;
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
+
       // Get required variables for this patch
+      constNCVariable<Vector>  velocity;
       constNCVariable<Vector> internalforce;
       constNCVariable<Vector> externalforce;
-      constNCVariable<Vector> gradPAccNC;  // for MPMICE
       constNCVariable<double> mass;
- 
+
+      // for FractureMPM
+      constNCVariable<Vector>  Gvelocity;
       new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(mass,          lb->gMassLabel,          dwi, patch, gnone, 0);
+      new_dw->get(velocity,      lb->gVelocityLabel,      dwi, patch, gnone, 0);
+      new_dw->get(Gvelocity,     lb->GVelocityLabel,      dwi, patch, gnone, 0);
 
-      //Uncomment to use damping
-      //constNCVariable<Vector> velocity;
-      //new_dw->get(velocity,      lb->gVelocityLabel,      dwi, patch, gnone, 0);
-      //cout << "Damping is on" << endl;
-      
-      // Create variables for the results
       NCVariable<Vector> acceleration;
+      NCVariable<Vector> velocity_star;
+      NCVariable<Vector> Gvelocity_star;
+      new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
+      velocity_star.initialize(Vector(0.0));
+      new_dw->allocateAndPut(Gvelocity_star,lb->GVelocityStarLabel, dwi, patch);
+      Gvelocity_star.initialize(Vector(0.0));
+
+      // Create variables for the results
       new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
       acceleration.initialize(Vector(0.,0.,0.));
 
@@ -2099,72 +2031,16 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
 
       string interp_type = flags->d_interpolator_type;
       for(NodeIterator iter=patch->getExtraNodeIterator__New();
-		        !iter.done(); iter++){
-         IntVector c = *iter;
-         // above crack
-         acceleration[c]=(internalforce[c]+externalforce[c])/mass[c]+gravity;
-         // below crack
-         Gacceleration[c]=(Ginternalforce[c]+Gexternalforce[c])/Gmass[c]+gravity;
-#if 0
-         acceleration[c] += gradPAccNC[c];
-	 Gacceleration[c]+= gradPAccNC[c];
-#endif
-//         acceleration[c] =
-//            (internalforce[c] + externalforce[c]
-//            -5000.*velocity[c]*mass[c])/mass[c]
-//            + gravity + gradPAccNC[c];
-       }
-    }
-  }
-}
-
-void FractureMPM::integrateAcceleration(const ProcessorGroup*,
-				        const PatchSubset* patches,
-				        const MaterialSubset*,
-				        DataWarehouse* old_dw,
-				        DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-
-    if (cout_doing.active())
-      cout_doing <<"Doing integrateAcceleration on patch " << patch->getID()
-  	         <<"\t\t\t MPM"<< endl;
-    
-
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      constNCVariable<Vector>  acceleration, velocity;
-      delt_vartype delT;
-
-      new_dw->get(acceleration,lb->gAccelerationLabel,dwi, patch,Ghost::None,0);
-      new_dw->get(velocity,    lb->gVelocityLabel,    dwi, patch,Ghost::None,0);
-
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches));
-
-      // Create variables for the results
-      NCVariable<Vector> velocity_star;
-      new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
-      velocity_star.initialize(Vector(0.0));
-
-      // for FractureMPM
-      constNCVariable<Vector>  Gacceleration, Gvelocity;
-      new_dw->get(Gacceleration,lb->GAccelerationLabel,dwi, patch,Ghost::None,0);
-      new_dw->get(Gvelocity,    lb->GVelocityLabel,    dwi, patch,Ghost::None,0);
-
-      NCVariable<Vector> Gvelocity_star;
-      new_dw->allocateAndPut(Gvelocity_star,lb->GVelocityStarLabel, dwi, patch);
-      Gvelocity_star.initialize(Vector(0.0));
-
-      string interp_type = flags->d_interpolator_type;
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
 		       !iter.done(); iter++){
         IntVector c = *iter;
         // above crack
-	velocity_star[c] = velocity[c] + acceleration[c] * delT;
+        acceleration[c]=(internalforce[c]+externalforce[c])/mass[c]+gravity;
         // below crack
-        Gvelocity_star[c]=Gvelocity[c] + Gacceleration[c] *delT;
+        Gacceleration[c]=(Ginternalforce[c]+Gexternalforce[c])/Gmass[c]+gravity;
+       // above crack
+       velocity_star[c] = velocity[c] + acceleration[c] * delT;
+       // below crack
+       Gvelocity_star[c]=Gvelocity[c] + Gacceleration[c] *delT;
       }
     }
   }
@@ -2387,76 +2263,6 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
       }
     } // matl loop
   }  // patch loop
-}
-
-void FractureMPM::calculateDampingRate(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* ,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw)
-{
-  if (flags->d_artificialDampCoeff > 0.0) {
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-
-      if (cout_doing.active())
-	cout_doing <<"Doing calculateDampingRate on patch " 
-	  	   << patch->getID() << "\t MPM"<< endl;
-
-      
-      double alphaDot = 0.0;
-      int numMPMMatls=d_sharedState->getNumMPMMatls();
-      
-      ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-      vector<IntVector> ni(interpolator->size());
-      vector<double> S(interpolator->size());
-      vector<Vector> d_S(interpolator->size());
-
-      for(int m = 0; m < numMPMMatls; m++){
-	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-	int dwi = mpm_matl->getDWIndex();
-
-	// Get the arrays of particle values to be changed
-	constParticleVariable<Point> px;
-	constParticleVariable<Vector> psize;
-
-	// Get the arrays of grid data on which the new part. values depend
-	constNCVariable<Vector> gvelocity_star;
-
-	ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-	old_dw->get(px, lb->pXLabel, pset);
-	old_dw->get(psize, lb->pSizeLabel, pset);
-	Ghost::GhostType  gac = Ghost::AroundCells;
-	new_dw->get(gvelocity_star,lb->gVelocityStarLabel,dwi,patch,gac,NGP);
-
-        // for FractureMPM
-        constParticleVariable<Short27> pgCode;
-        constNCVariable<Vector> Gvelocity_star;
-        new_dw->get(pgCode,lb->pgCodeLabel,pset);
-        new_dw->get(Gvelocity_star,lb->GVelocityStarLabel,dwi,patch,gac,NGP);
-
-	// Calculate artificial dampening rate based on the interpolated particle
-	// velocities (ref. Ayton et al., 2002, Biophysical Journal, 1026-1038)
-	// d(alpha)/dt = 1/Q Sum(vp*^2)
-	ParticleSubset::iterator iter = pset->begin();
-	for(;iter != pset->end(); iter++){
-	  particleIndex idx = *iter;
-	  interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
-							      d_S,psize[idx]);
-
-	  Vector vel(0.0,0.0,0.0);
-	  for (int k = 0; k < flags->d_8or27; k++) {
-            if(pgCode[idx][k]==1) vel += gvelocity_star[ni[k]]*S[k];
-            if(pgCode[idx][k]==2) vel += Gvelocity_star[ni[k]]*S[k];
-          }
-	  alphaDot += Dot(vel,vel);
-	}
-	alphaDot /= flags->d_artificialDampCoeff;
-      } 
-      new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
-      delete interpolator;
-    }
-  }
 }
 
 void FractureMPM::addNewParticles(const ProcessorGroup*,
@@ -2845,20 +2651,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
     bool combustion_problem=false;
 
-    // Artificial Damping 
-    double alphaDot = 0.0;
-    double alpha = 0.0;
-    if (flags->d_artificialDampCoeff > 0.0) {
-      max_vartype dampingCoeff; 
-      sum_vartype dampingRate;
-      old_dw->get(dampingCoeff, lb->pDampingCoeffLabel);
-      new_dw->get(dampingRate, lb->pDampingRateLabel);
-      alpha = (double) dampingCoeff;
-      alphaDot = (double) dampingRate;
-      alpha += alphaDot*delT; // Calculate damping coefficient from damping rate
-      new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
-    }
-
     Material* reactant;
     int RMI = -99;
     reactant = d_sharedState->getMaterialByName("reactant");
@@ -3000,7 +2792,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	// Update the particle's position and velocity
 	pxnew[idx]           = px[idx] + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
-	pvelocitynew[idx]    = pvelocity[idx] + (acc - alpha*vel)*delT;
+	pvelocitynew[idx]    = pvelocity[idx] + acc*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
 	pxx[idx]             = px[idx]    + pdispnew[idx];	
 	pTempNew[idx]        = pTemperature[idx] + tempRate*delT;

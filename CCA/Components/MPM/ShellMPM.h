@@ -146,7 +146,7 @@ protected:
   //
   /*! Schedule Calculation of acceleration */
   //
-  virtual void scheduleSolveEquationsMotion(SchedulerP& sched,
+  virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 					    const PatchSet* patches,
 					    const MaterialSet* matls);
 

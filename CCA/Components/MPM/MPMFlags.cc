@@ -88,6 +88,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_prescribedDeformationFile = "time_stretch_rotation";
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
+  d_min_mass_for_acceleration = 0;// Min mass to allow division by in computing acceleration
   d_max_vel = 3.e105;
   d_with_ice = false;
   d_with_arches = false;
@@ -159,6 +160,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("DoThermalExpansion", d_doThermalExpansion);
   mpm_flag_ps->get("do_grid_reset",      d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",    d_min_part_mass);
+  mpm_flag_ps->get("minimum_mass_for_acc",     d_min_mass_for_acceleration);
   mpm_flag_ps->get("maximum_particle_velocity",d_max_vel);
   mpm_flag_ps->get("UsePrescribedDeformation",d_prescribeDeformation);
   if(d_prescribeDeformation){
@@ -292,6 +294,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
   ps->appendElement("do_grid_reset",      d_doGridReset);
   ps->appendElement("minimum_particle_mass",    d_min_part_mass);
+  ps->appendElement("minimum_mass_for_acc",     d_min_mass_for_acceleration);
   ps->appendElement("maximum_particle_velocity",d_max_vel);
   ps->appendElement("UsePrescribedDeformation",d_prescribeDeformation);
   if(d_prescribeDeformation){

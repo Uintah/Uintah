@@ -171,9 +171,6 @@ using std::vector;
       const VarLabel* pLoadCurveIDLabel;
       const VarLabel* pLoadCurveIDLabel_preReloc;
 
-      // MPM artificial damping labels (updated after each time step)
-      const VarLabel* pDampingRateLabel; // Damping rate summed over particles
-      const VarLabel* pDampingCoeffLabel; // Calculated damping coefficient
       const VarLabel* p_qLabel;
       const VarLabel* p_qLabel_preReloc;
 

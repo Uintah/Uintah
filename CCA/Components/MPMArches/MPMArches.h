@@ -205,14 +205,14 @@ public:
 			        const PatchSet* patches,
 			        const MaterialSet* mpm_matls);
 
-  void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
+  void scheduleComputeAndIntegrateAcceleration(SchedulerP&, const PatchSet*,
+				               const MaterialSet*);
 
-  void solveEquationsMotion(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+  void computeAndIntegrateAcceleration(const ProcessorGroup*,
+			               const PatchSubset* patches,
+			               const MaterialSubset* matls,
+			               DataWarehouse* old_dw,
+			               DataWarehouse* new_dw);
 
 
   void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,

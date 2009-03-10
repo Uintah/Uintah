@@ -240,12 +240,11 @@ ShellMPM::computeRotInternalMoment(const ProcessorGroup*,
 // Schedule Calculation of acceleration
 //
 void 
-ShellMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
-                                       const PatchSet* patches,
-                                       const MaterialSet* matls)
+ShellMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls)
 {
-  // Call SerialMPM version first
-  SerialMPM::scheduleSolveEquationsMotion(sched, patches, matls);
+  SerialMPM::scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
 
   // Add a task for the rotational acceleration for the shell
   schedComputeRotAcceleration(sched, patches, matls);

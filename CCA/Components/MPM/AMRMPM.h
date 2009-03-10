@@ -209,19 +209,11 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  virtual void solveEquationsMotion(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* matls,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void integrateAcceleration(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
+  virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:                            
@@ -282,11 +274,9 @@ protected:
   virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
 					    const MaterialSet*);
 
-  virtual void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
-					    const MaterialSet*);
-
-  virtual void scheduleIntegrateAcceleration(SchedulerP&, const PatchSet*,
-					     const MaterialSet*);
+  virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
+                                                       const PatchSet*,
+                                                       const MaterialSet*);
 
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
 					 const MaterialSet* matls);
