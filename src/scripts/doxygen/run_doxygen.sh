@@ -65,7 +65,6 @@ if test $cur_dir != "src"; then
    echo
    exit
 fi
-
 if test ! -f scripts/doxygen/doxygen_config; then
    echo
    echo "Error: doxgen_config file not found in scripts/doxygen directory.  Exiting."
@@ -80,7 +79,6 @@ fi
 # Update the SVN tree
 #
 echo "Updating SVN repository..."
-cd ../..
 svn update
 #
 ########
@@ -114,7 +112,6 @@ fi
 ##echo "here:"
 ##ls -l $DEST_DIR
 ##echo "now run doxygen"
-
 doxygen scripts/doxygen/doxygen_config > /dev/null
 
 #### DEBUG:
