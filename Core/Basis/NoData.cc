@@ -29,6 +29,9 @@
 //    Author : Martin Cole
 //    Date   : Mon Aug 23 10:33:51 2004
 
+#ifndef NoData_h
+#define NoData_h
+
 #include <Core/Basis/NoData.h>
 
 namespace SCIRun {
