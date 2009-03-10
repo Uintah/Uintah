@@ -6,7 +6,7 @@
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="rmpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -60,24 +60,14 @@
         <BCType id = "all"   label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>
-      <Face side = "z-">
-        <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-      </Face>                  
-      <Face side = "z+">
-        <BCType id = "all" var = "Dirichlet" label = "Velocity">
-                     <value> [0.0,0.0,0.0] </value>
-        </BCType>
-      </Face>
     </BoundaryConditions>
        <Level>
            <Box label = "1">
               <lower>        [-4.5,-7.0,0.0]    </lower>
-              <upper>        [15.5,7.0,1.0]    </upper>
-              <resolution>   [125,87,6]</resolution>
-              <extraCells>   [1,1,0]    </extraCells>
-              <patches>      [2,3,1]    </patches>
+              <upper>        [15.5,7.0,1.0]     </upper>
+              <resolution>   [125,87,6]         </resolution>
+              <extraCells>   [1,1,0]            </extraCells>
+              <patches>      [2,3,1]            </patches>
            </Box>
            <periodic>       [0,0,1]                </periodic>
        </Level>
@@ -96,7 +86,7 @@
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "turb_viscosity_CC"/>
-      <checkpoint interval="0.01" cycle="2"/>"
+      <checkpoint interval="0.01" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -107,9 +97,9 @@
        <ICE>
         <advection type = "SecondOrder" />
         <turbulence model = "Smagorinsky">           
-              <model_constant>0.1</model_constant>              
-              <filter_width>1.0</filter_width>
-              <turb_Pr>0.4</turb_Pr>                            
+          <model_constant>0.1</model_constant>              
+          <filter_width>1.0</filter_width>
+          <turb_Pr>0.4</turb_Pr>                            
         </turbulence>
       </ICE>        
     </CFD>
@@ -121,7 +111,9 @@
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
-
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+    </MPM>
 
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
@@ -155,7 +147,7 @@
        <ICE>
          <material>
             <EOS type = "ideal_gas">                     </EOS>
-           <viscosity>                  5.5e-3             </viscosity>
+           <dynamic_viscosity>          5.5e-3          </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>
            <gamma>                      1.4             </gamma>           
