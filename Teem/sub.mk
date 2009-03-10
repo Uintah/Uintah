@@ -28,6 +28,7 @@
 
 
 #Makefile fragment for the Teem directory
+ifeq ($(HAVE_TEEM),yes)
 
 SRCDIR := Teem
 SUBDIRS := \
@@ -35,3 +36,4 @@ SUBDIRS := \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
+endif

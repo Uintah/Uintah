@@ -40,9 +40,12 @@ SUBDIRS := \
         $(SRCDIR)/mpi_test    \
         $(SRCDIR)/pfs         \
         $(SRCDIR)/puda        \
-        $(SRCDIR)/radiusMaker \
-        $(SRCDIR)/tracker     \
-        $(SRCDIR)/uda2nrrd    \
+        $(SRCDIR)/tracker     
+
+ifeq ($(HAVE_TEEM),yes)
+  SUBDIRS += $(SRCDIR)/uda2nrrd \
+        $(SRCDIR)/radiusMaker 
+endif 
 
 ifeq ($(BUILD_VISIT),yes)
   SUBDIRS += $(SRCDIR)/uda2vis

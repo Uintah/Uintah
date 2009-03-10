@@ -28,6 +28,8 @@
 # 
 # 
 # 
+
+ifeq ($(HAVE_TEEM),yes)
 SRCDIR  := StandAlone/tools/radiusMaker
 PROGRAM := $(SRCDIR)/radius_maker
 
@@ -50,3 +52,4 @@ PROGRAM := $(SRCDIR)/radius_maker
 
 radius_maker: prereqs StandAlone/tools/radiusMaker/radius_maker
 
+endif
