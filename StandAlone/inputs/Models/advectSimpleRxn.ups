@@ -187,7 +187,7 @@
            <iters_before_timestep_restart>  10    </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
             <!-- Common options -->
-              <tolerance>1.e-8    </tolerance>
+              <tolerance>1.e-9    </tolerance>
 
             <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
@@ -246,42 +246,40 @@
     <!--____________________________________________________________________--> 
     <Models>
       <Model type="SimpleRxn">
-        <material>BackgroundGas</material>
-        <scalar name="f">
-        <constants>
-          <f_stoichometric>          0.06207   </f_stoichometric>
-          <diffusivity>              0.0       </diffusivity>
-          <initialize_diffusion_knob>  0       </initialize_diffusion_knob>
-          <rho_air>            1.178471737613  </rho_air>
-          <rho_fuel>           0.162527864325  </rho_fuel>
-          <cv_air>               716.5         </cv_air>
-          <cv_fuel>              3115.6        </cv_fuel>
-          <R_air>                287.0         </R_air>
-          <R_fuel>               2077.03       </R_fuel>
-          <thermalCond_air>     0.0            </thermalCond_air>
-          <thermalCond_fuel>    0.0            </thermalCond_fuel>  
-          <viscosity_air>       0.0            </viscosity_air>
-          <viscosity_fuel>      0.0            </viscosity_fuel>       
-        </constants>
-           <geom_object>
-             <difference>
+        <SimpleRxn>
+          <material>BackgroundGas</material>
+          <scalar name="f">
+            <constants>
+              <f_stoichometric>          0.06207   </f_stoichometric>
+              <diffusivity>              0.0       </diffusivity>
+              <initialize_diffusion_knob>  0       </initialize_diffusion_knob>
+              <rho_air>            1.178471737613  </rho_air>
+              <rho_fuel>           0.162527864325  </rho_fuel>
+              <cv_air>               716.5         </cv_air>
+              <cv_fuel>              3115.6        </cv_fuel>
+              <R_air>                287.0         </R_air>
+              <R_fuel>               2077.03       </R_fuel>
+              <thermalCond_air>     0.0            </thermalCond_air>
+              <thermalCond_fuel>    0.0            </thermalCond_fuel>  
+              <viscosity_air>       0.0            </viscosity_air>
+              <viscosity_fuel>      0.0            </viscosity_fuel>       
+            </constants>
+            <geom_object>
+              <difference>
                 <box label="wholeDomain">               </box>
                 <box label="blobInMiddle">
                     <min>       [ 2.0, 2.0, 2.0 ]       </min>
                     <max>       [ 3.0, 3.0, 3.0 ]       </max>
                 </box>
-             </difference>
+              </difference>
               <scalar>    0.00   </scalar>
-           </geom_object>
-           <geom_object>
-                <box label="blobInMiddle">
-                    <min>       [ 2.0, 2.0, 2.0 ]       </min>
-                    <max>       [ 3.0, 3.0, 3.0 ]       </max>
-                </box>
-               <scalar>    1.00   </scalar>
-           </geom_object>
-       </scalar>
+            </geom_object>
+            <geom_object>
+              <box label="blobInMiddle"/>
+              <scalar>    1.00   </scalar>
+            </geom_object>
+          </scalar>
+        </SimpleRxn>
       </Model>
-
     </Models>    
 </Uintah_specification>

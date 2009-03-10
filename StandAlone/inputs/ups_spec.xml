@@ -229,7 +229,7 @@
 
   <SimulationComponent          spec="REQUIRED NO_DATA"
                                   attribute1="type REQUIRED STRING 'arches, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                    poisson1, poisson2, rigidmpmice, switcher, '" >
+                                                                    poisson1, poisson2, rmpmice, switcher, '" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
     <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -406,11 +406,34 @@
     <CanAddICEMaterial                  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is the default? -->
     <cfl                                spec="OPTIONAL INTEGER 'positive'" /> <!-- FIX ME: REALLY OPTIONAL??? -->
     <ICE                                spec="OPTIONAL NO_DATA" >
-      <add_delP_Dilatate                spec="OPTIONAL BOOLEAN" />
       <advection                        spec="REQUIRED NO_DATA" 
                                           attribute1="type                REQUIRED STRING 'FirstOrder, SecondOrder'" 
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN" />
-      <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" /> <!-- Defaults to TRUE.  FIXME: is this correct? -->
+      <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" />
+      
+      <turbulence    spec="OPTIONAL NO_DATA"
+                      attribute1="model  REQUIRED STRING 'Smagorinsky Germano'">           
+        <model_constant                 spec="REQUIRED DOUBLE 'positive'"/>
+        <filter_width                   spec="REQUIRED DOUBLE '0,1'"/>
+        <turb_Pr                        spec="REQUIRED DOUBLE '0,1'"/>                            
+      </turbulence>
+      
+      <customInitialization             spec="OPTIONAL NO_DATA" >
+        <manufacturedSolution           spec="OPTIONAL NO_DATA" >
+          <A                            spec="REQUIRED DOUBLE" />
+        </manufacturedSolution>
+        
+        <vortices                       spec="OPTIONAL NO_DATA" >
+          <vortex                       spec="MULTIPLE NO_DATA" >
+            <origin                     spec="REQUIRED VECTOR" />
+            <strength                   spec="REQUIRED DOUBLE" />
+            <radius                     spec="REQUIRED DOUBLE 'positive'" />
+          </vortex>                
+        </vortices>
+        <hardWired                      spec="OPTIONAL NO_DATA">
+        </hardWired>
+      </customInitialization>
+      
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">
         <max_outer_iterations           spec="REQUIRED INTEGER 'positive'"/>
         <outer_iteration_tolerance      spec="REQUIRED DOUBLE 'positive'"/>
@@ -874,8 +897,6 @@
       </contact>
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
-        <burn                            spec="MULTIPLE NO_DATA"
-                                           attribute1="type REQUIRED STRING 'null'" />
         <C_p                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
         
         <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
@@ -1242,11 +1263,36 @@
 
   <Models                     spec="OPTIONAL NO_DATA" >
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'AdiabaticTable, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" >
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" >
      
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <momentum_src           spec="REQUIRED VECTOR" need_applies_to="type mass_momentum_energy_src"/>
+      
+      <!--  SimpleRxn -->
+      <SimpleRxn              spec="OPTIONAL NO_DATA">
+        <material             spec="REQUIRED STRING"/>
+        <scalar               spec="OPTIONAL NO_DATA" 
+                                attribute1="name REQUIRED STRING" >
+          <constants            spec="OPTIONAL NO_DATA">
+            <f_stoichometric    spec="REQUIRED DOUBLE '0,1'"/>   
+            <diffusivity        spec="REQUIRED DOUBLE 'positive'"/>
+            <rho_air            spec="REQUIRED DOUBLE 'positive'"/>   
+            <rho_fuel           spec="REQUIRED DOUBLE 'positive'"/>   
+            <cv_air             spec="REQUIRED DOUBLE 'positive'"/>   
+            <cv_fuel            spec="REQUIRED DOUBLE 'positive'"/>   
+            <R_air              spec="REQUIRED DOUBLE 'positive'"/>   
+            <R_fuel             spec="REQUIRED DOUBLE 'positive'"/>   
+            <thermalCond_air    spec="REQUIRED DOUBLE 'positive'"/>   
+            <thermalCond_fuel   spec="REQUIRED DOUBLE 'positive'"/>   
+            <viscosity_air      spec="REQUIRED DOUBLE 'positive'"/>   
+            <viscosity_fuel     spec="REQUIRED DOUBLE 'positive'"/>
+            <initialize_diffusion_knob  spec="REQUIRED DOUBLE 'positive'"/> 
+          </constants>
+          <geom_object          spec="MULTIPLE" />
+          <test_conservation    spec="OPTIONAL BOOLEAN"/>
+        </scalar>
+      </SimpleRxn>
      
       <ActEnergyCondPh        spec="OPTIONAL DOUBLE" />
       <BoundaryParticles      spec="OPTIONAL INTEGER" />
@@ -1268,19 +1314,22 @@
       <MoleWeightGasPh        spec="OPTIONAL DOUBLE" />
       <PreExpCondPh           spec="OPTIONAL DOUBLE" />
       <PreExpGasPh            spec="OPTIONAL DOUBLE" />
-      <radiatingGas           spec="OPTIONAL STRING 'BackgroundGas'" need_applies_to="type Radiation" />
+      
+      <!--  Radiation  -->
       
       <RadiationModel               spec="OPTIONAL NO_DATA" >
-        <calcFreq                   spec="REQUIRED DOUBLE" />
-        <calcInterval               spec="OPTIONAL DOUBLE" /> <!-- FIXME: optional? -->
-        <table_or_ice_temp_density  spec="REQUIRED STRING 'ice'" />
+        <radiatingGas               spec="REQUIRED STRING"/>
+        <absorbingSolid             spec="OPTIONAL STRING"/>
+        <calcFreq                   spec="OPTIONAL INTEGER" />
+        <calcInterval               spec="OPTIONAL DOUBLE" /> 
+        <table_or_ice_temp_density  spec="REQUIRED STRING 'ice table'" />
         <useTableValues             spec="REQUIRED BOOLEAN" />
         <DORadiationModel           spec="OPTIONAL NO_DATA" >
-          <ordinates                spec="REQUIRED INTEGER" /> <!-- FIXME: integer? -->
-          <opl                      spec="REQUIRED DOUBLE" />
-          <property_model           spec="REQUIRED STRING 'radcoef'" />
+          <ordinates                spec="REQUIRED INTEGER '2,8'" />
+          <opl                      spec="REQUIRED DOUBLE  '0,1'"/>
+          <property_model           spec="REQUIRED STRING 'radcoef patchmean wsggm'" />
           <spherical_harmonics      spec="REQUIRED BOOLEAN" />
-          <linear_solver            spec="REQUIRED STRING 'hypre'" />
+          <linear_solver            spec="REQUIRED STRING 'hypre petsc'" />
           <LinearSolver             spec="OPTIONAL NO_DATA" >
             <solver                 spec="REQUIRED STRING 'gmres'" />
             <preconditioner         spec="REQUIRED STRING 'jacobi'" />
@@ -1288,6 +1337,7 @@
             <tolerance              spec="REQUIRED DOUBLE 'positive'" />
           </LinearSolver>
         </DORadiationModel>
+        <geom_object                spec="OPTIONAL" />
       </RadiationModel>
       <rate                   spec="OPTIONAL DOUBLE" />
       <refPressure            spec="OPTIONAL DOUBLE" />
@@ -1303,7 +1353,7 @@
           <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
         </constants>
         
-        <geom_object          spec="MULTIPLE" />
+        <geom_object                 spec="MULTIPLE" />
       </scalar>
       
       
