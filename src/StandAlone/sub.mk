@@ -82,7 +82,6 @@ ifeq ($(SET_AIX_LIB),yes)
         Core/OS           \
         Core/Persistent   \
         Core/Thread       \
-        Core/XMLUtil      \
         Core/IO                          \
         Core/Math                        \
         Core/GeometryPiece               \
@@ -198,7 +197,7 @@ else
         Core/Persistent  \
         Core/Thread      \
         Core/Util        \
-        Core/XMLUtil     
+
 endif
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY) \
@@ -216,7 +215,6 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Datflow Packages/Uintah
 else
   PSELIBS := \
-        Core/XMLUtil  \
         Core/Exceptions    \
         Core/Grid          \
         Core/Util          \

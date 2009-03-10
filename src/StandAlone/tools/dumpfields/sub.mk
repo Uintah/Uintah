@@ -67,7 +67,6 @@ else
         Core/DataArchive   \
 	CCA/Ports          \
         CCA/Components/ProblemSpecification \
-        Core/XMLUtil \
         Core/Exceptions  \
         Core/Persistent  \
         Core/Geometry    \
