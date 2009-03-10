@@ -31,9 +31,13 @@
 
 # Makefile fragment for the VisIt directory
 
+ifeq ($(BUILD_VISIT),yes)
+
 SRCDIR := VisIt
 
 SUBDIRS := \
 	$(SRCDIR)/udaReaderMTMD
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
+
+endif

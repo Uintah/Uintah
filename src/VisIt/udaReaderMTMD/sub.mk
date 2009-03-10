@@ -34,6 +34,8 @@
 # 'SRCDIR' get's overwritten when the actual rules execute in make, so
 # I use my VISIT_SRCDIR to avoid this from happening...
 
+ifeq ($(BUILD_VISIT),yes)
+
 VISIT_SRCDIR := VisIt/udaReaderMTMD
 
 # Force the make system to do the visit_stuff:
@@ -81,3 +83,5 @@ ${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.so
 #
 ${VISIT_SRCDIR}/avtudaReaderMTMDFileFormat.C: ${VISIT_SRCDIR}/testavtudaReaderMTMDFileFormat.C.in
 	config.status --file=${OBJTOP_ABS}/$@:$<
+
+endif
