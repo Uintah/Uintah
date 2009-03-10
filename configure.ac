@@ -3357,7 +3357,7 @@ if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != 
 fi
 
 
-SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,,[
+SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,$M_LIB_FLAG,[
 float a[3], b[9], c[7];
 tenEigensolve_f(a,b,c);
 ]
