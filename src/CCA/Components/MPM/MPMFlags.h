@@ -103,6 +103,7 @@ namespace Uintah {
     bool        d_computeNodalHeatFlux;  // compute the auxilary nodal heat flux 
     bool        d_doGridReset;   // Default is true, standard MPM
     double      d_min_part_mass; // Minimum particle mass before deletion  
+    double      d_min_mass_for_acceleration; // Minimum mass to allow division by in computing acceleration
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
     bool        d_prescribeDeformation;  // Prescribe deformation via a table of U and R
     std::string d_prescribedDeformationFile; // File containing prescribed deformations

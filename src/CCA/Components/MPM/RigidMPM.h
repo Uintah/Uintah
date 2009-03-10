@@ -115,16 +115,17 @@ public:
 			    DataWarehouse* old_dw,
 			    DataWarehouse* new_dw);
 
-  void scheduleSolveEquationsMotion(      SchedulerP&, const PatchSet*,
-                                          const MaterialSet*);
+  void scheduleComputeAndIntegrateAcceleration(SchedulerP&, const PatchSet*,
+                                               const MaterialSet*);
 
 
   // Insert Documentation Here:
-  void solveEquationsMotion(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
+  virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
+
 
   void scheduleInterpolateToParticlesAndUpdate(SchedulerP&,
                                                        const PatchSet*,

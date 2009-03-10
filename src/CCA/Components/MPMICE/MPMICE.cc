@@ -485,9 +485,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleComputeInternalForce(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(     sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeNodalHeatFlux(        sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleSolveEquationsMotion(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSolveHeatEquations(          sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleIntegrateAcceleration(       sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeAndIntegrateAcceleration(sched, mpm_patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(    sched, mpm_patches, mpm_matls);
   
   scheduleComputeLagrangianValuesMPM(         sched, mpm_patches, one_matl,
@@ -536,7 +535,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleExMomIntegrated(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(   sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleCalculateDampingRate(        sched, mpm_patches, mpm_matls);
   d_mpm->scheduleAddNewParticles(             sched, mpm_patches, mpm_matls);
   d_mpm->scheduleConvertLocalizedParticles(   sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate(sched, mpm_patches, mpm_matls);

@@ -281,31 +281,13 @@ protected:
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw);
 
-#if 0
   //////////
   // Insert Documentation Here:
-  void computeArtificialViscosity(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-#endif
-
-  //////////
-  // Insert Documentation Here:
-  virtual void solveEquationsMotion(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void integrateAcceleration(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* matls,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
+  virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:                            
@@ -324,14 +306,6 @@ protected:
                           const MaterialSubset* ,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
-
-  //////////
-  // Calculate the rate of evolution of the damping coefficient
-  void calculateDampingRate(const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
 
   void addNewParticles(const ProcessorGroup*,
                        const PatchSubset* patches,
@@ -413,14 +387,12 @@ protected:
   virtual void scheduleComputeNodalHeatFlux(SchedulerP&, const PatchSet*,
                                             const MaterialSet*);
 
-  virtual void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
-                                            const MaterialSet*);
-
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
 
-  virtual void scheduleIntegrateAcceleration(SchedulerP&, const PatchSet*,
-                                             const MaterialSet*);
+  virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
+                                                       const PatchSet*,
+                                                       const MaterialSet*);
 
   virtual void scheduleIntegrateTemperatureRate(SchedulerP&, const PatchSet*,
                                                 const MaterialSet*);
@@ -442,14 +414,10 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
-  void scheduleAddNewParticles(SchedulerP&, const PatchSet*, const MaterialSet*);
+  void scheduleAddNewParticles(SchedulerP&, const PatchSet*,const MaterialSet*);
 
   void scheduleConvertLocalizedParticles(SchedulerP&, const PatchSet*,
                                          const MaterialSet*);
-
-  void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
-                                    const MaterialSet*);
-
 
   void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
                                        const PatchSet* patches,

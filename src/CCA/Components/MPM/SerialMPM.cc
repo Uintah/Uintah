@@ -329,11 +329,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
              << " 8 or 27 = " << flags->d_8or27 << endl;
 
-  if (flags->d_artificialDampCoeff > 0.0) {
-    t->computes(lb->pDampingRateLabel); 
-    t->computes(lb->pDampingCoeffLabel); 
-  }
-
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){
@@ -482,8 +477,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
 
-  scheduleSolveEquationsMotion(           sched, patches, matls);
-  scheduleIntegrateAcceleration(          sched, patches, matls);
+  scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleSetPrescribedMotion(            sched, patches, matls);
@@ -495,7 +489,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSolveHeatEquations(           sched, patches, matls);
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
-  scheduleCalculateDampingRate(           sched, patches, matls);
   scheduleAddNewParticles(                sched, patches, matls);
   scheduleConvertLocalizedParticles(      sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
@@ -828,34 +821,6 @@ void SerialMPM::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   printSchedule(patches,cout_doing,"MPM::scheduleComputeNodalHeatFlux\t\t\t\t");
   heatConductionModel->scheduleComputeNodalHeatFlux(sched,patches,matls);
 }
-void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  /* solveEquationsMotion
-   *   in(G.MASS, G.F_INTERNAL)
-   *   operation(acceleration = f/m)
-   *   out(G.ACCELERATION) */
-
-  printSchedule(patches,cout_doing,"MPM::scheduleSolveEquationsMotione\t\t\t\t");
-  
-  Task* t = scinew Task("MPM::solveEquationsMotion",
-                        this, &SerialMPM::solveEquationsMotion);
-
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
-
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
-  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
-  //Uncomment  the next line to use damping
-  //t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
-  t->computes(lb->gAccelerationLabel);
-  sched->addTask(t, patches, matls);
-}
 
 void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
                                            const PatchSet* patches,
@@ -868,30 +833,28 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   heatConductionModel->scheduleSolveHeatEquations(sched,patches,matls);
 }
 
-void SerialMPM::scheduleIntegrateAcceleration(SchedulerP& sched,
-                                              const PatchSet* patches,
-                                              const MaterialSet* matls)
+void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls)
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  /* integrateAcceleration
-   *   in(G.ACCELERATION, G.VELOCITY)
-   *   operation(v* = v + a*dt)
-   *   out(G.VELOCITY_STAR) */
-
-  printSchedule(patches,cout_doing,"MPM::scheduleIntegrateAcceleration\t\t\t\t");
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
   
-  Task* t = scinew Task("MPM::integrateAcceleration",
-                        this, &SerialMPM::integrateAcceleration);
+  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+                        this, &SerialMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
-  t->requires(Task::NewDW, lb->gAccelerationLabel,      Ghost::None);
-  t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+  t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);
 
   t->computes(lb->gVelocityStarLabel);
+  t->computes(lb->gAccelerationLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -950,35 +913,6 @@ void SerialMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   }
 
   sched->addTask(t, patches, matls);
-}
-
-void SerialMPM::scheduleCalculateDampingRate(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-
-  /*
-   * calculateDampingRate
-   *   in(G.VELOCITY_STAR, P.X, P.Size)
-   *   operation(Calculate the interpolated particle velocity and
-   *             sum the squares of the velocities over particles)
-   *   out(sum_vartpe(dampingRate)) 
-   */
-  if (flags->d_artificialDampCoeff > 0.0) {
-    printSchedule(patches,cout_doing,"MPM::scheduleCalculateDampingRate\t\t");
-    
-    Task* t=scinew Task("MPM::calculateDampingRate", this, 
-                        &SerialMPM::calculateDampingRate);
-    t->requires(Task::NewDW, lb->gVelocityStarLabel, Ghost::AroundCells, NGN);
-    t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
-    t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
-
-    t->computes(lb->pDampingRateLabel);
-    sched->addTask(t, patches, matls);
-  }
 }
 
 void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
@@ -1109,16 +1043,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,          gnone);
   t->modifies(lb->pVolumeLabel_preReloc);
     
-
-  // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
-  // it is determined by the damping rate if the artificial damping
-  // coefficient Q is greater than 0.0
-  if (flags->d_artificialDampCoeff > 0.0) {
-    t->requires(Task::OldDW, lb->pDampingCoeffLabel);
-    t->requires(Task::NewDW, lb->pDampingRateLabel);
-    t->computes(lb->pDampingCoeffLabel);
-  }
-
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
@@ -1210,11 +1134,6 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   if (flags->d_accStrainEnergy) {
     // Computes accumulated strain energy
     t->computes(lb->AccStrainEnergyLabel);
-  }
-                                                                                
-  if (flags->d_artificialDampCoeff > 0.0) {
-    t->computes(lb->pDampingRateLabel);
-    t->computes(lb->pDampingCoeffLabel);
   }
                                                                                 
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -1494,14 +1413,6 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   if (flags->d_accStrainEnergy) {
     // Initialize the accumulated strain energy
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
-  }
-
-  // Initialize the artificial damping ceofficient (alpha) to zero
-  if (flags->d_artificialDampCoeff > 0.0) {
-    double alpha = 0.0;    
-    double alphaDot = 0.0;    
-    new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
-    new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
   }
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
@@ -2174,98 +2085,56 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   }
 }
 
-void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
+void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset*,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing solveEquationsMotion\t\t\t\t");
-    
-    Vector gravity = d_sharedState->getGravity();
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t\t");
+
     Ghost::GhostType  gnone = Ghost::None;
-    string interp_type = flags->d_interpolator_type;
+    Vector gravity = d_sharedState->getGravity();
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+
       // Get required variables for this patch
-      constNCVariable<Vector> internalforce;
-      constNCVariable<Vector> externalforce;
-      //constNCVariable<Vector> gradPAccNC;  // for MPMICE
+      constNCVariable<Vector> internalforce, externalforce, velocity;
       constNCVariable<double> mass;
+
+      delt_vartype delT;
+      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
  
       new_dw->get(internalforce,lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce,lb->gExternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(mass,         lb->gMassLabel,          dwi, patch, gnone, 0);
-
-      //Uncomment to use damping
-      //constNCVariable<Vector> velocity;
-      //new_dw->get(velocity,  lb->gVelocityLabel,      dwi, patch, gnone, 0);
-      //cout << "Damping is on" << endl;
+      new_dw->get(velocity,     lb->gVelocityLabel,      dwi, patch, gnone, 0);
 
       // Create variables for the results
-      NCVariable<Vector> acceleration;
-      new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
-      acceleration.initialize(Vector(0.,0.,0.));
-  
-      for(NodeIterator iter=patch->getExtraNodeIterator__New();
-                       !iter.done();iter++){
-        IntVector c = *iter;
-        Vector acc(0.0,0.0,0.0);
-        //if (mass[c] > 1.0e-199)
-          acc = (internalforce[c] + externalforce[c])/mass[c] ;
-          acceleration[c] = acc +  gravity;
-//                 acceleration[c] =
-//                    (internalforce[c] + externalforce[c]
-//                    -500.*velocity[c]*mass[c])/mass[c]
-//                    + gravity;
-      }
-    }
-  }
-}
-
-
-
-void SerialMPM::integrateAcceleration(const ProcessorGroup*,
-                                      const PatchSubset* patches,
-                                      const MaterialSubset*,
-                                      DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing integrateAcceleration\t\t\t\t");
-
-    string interp_type = flags->d_interpolator_type;
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      constNCVariable<Vector>  acceleration, velocity;
-      delt_vartype delT;
-
-      new_dw->get(acceleration,lb->gAccelerationLabel,dwi, patch,Ghost::None,0);
-      new_dw->get(velocity,    lb->gVelocityLabel,    dwi, patch,Ghost::None,0);
-
-      old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-
-      // Create variables for the results
-      NCVariable<Vector> velocity_star;
+      NCVariable<Vector> velocity_star,acceleration;
       new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
-      velocity_star.initialize(Vector(0,0,0));
+      new_dw->allocateAndPut(acceleration,  lb->gAccelerationLabel, dwi, patch);
+
+      acceleration.initialize(Vector(0.,0.,0.));
+      double damp_coef = flags->d_artificialDampCoeff;
 
       for(NodeIterator iter=patch->getExtraNodeIterator__New();
                         !iter.done();iter++){
         IntVector c = *iter;
+        Vector acc(0.,0.,0.);
+        if (mass[c] > flags->d_min_mass_for_acceleration){
+          acc  = (internalforce[c] + externalforce[c])/mass[c];
+          acc -= damp_coef*velocity[c];
+        }
+        acceleration[c] = acc +  gravity;
         velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }
     }    // matls
   }
 }
-
 
 void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
                                           const PatchSubset* patches,
@@ -2585,62 +2454,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
   }  // patch loop
 }
 
-void SerialMPM::calculateDampingRate(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset* ,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw)
-{
-  if (flags->d_artificialDampCoeff > 0.0) {
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-      printTask(patches, patch,cout_doing,"Doing calculateDampingRate\t\t\t");
-
-      double alphaDot = 0.0;
-      int numMPMMatls=d_sharedState->getNumMPMMatls();
-
-      ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-      vector<IntVector> ni(interpolator->size());
-      vector<double> S(interpolator->size());
-      vector<Vector> d_S(interpolator->size());
-
-      for(int m = 0; m < numMPMMatls; m++){
-        MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-        int dwi = mpm_matl->getDWIndex();
-
-        // Get the arrays of particle values to be changed
-        constParticleVariable<Point> px;
-        constParticleVariable<Vector> psize;
-
-        // Get the arrays of grid data on which the new part. values depend
-        constNCVariable<Vector> gvelocity_star;
-
-        ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-        old_dw->get(px, lb->pXLabel, pset);
-        old_dw->get(psize, lb->pSizeLabel, pset);
-        Ghost::GhostType  gac = Ghost::AroundCells;
-        new_dw->get(gvelocity_star,   lb->gVelocityStarLabel,dwi,patch,gac,NGP);
-        // Calculate artificial dampening rate based on the interpolated particle
-        // velocities (ref. Ayton et al., 2002, Biophysical Journal, 1026-1038)
-        // d(alpha)/dt = 1/Q Sum(vp*^2)
-        ParticleSubset::iterator iter = pset->begin();
-        for(;iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,
-                                                              d_S,psize[idx]);
-          Vector vel(0.0,0.0,0.0);
-          for (int k = 0; k < flags->d_8or27; k++) 
-            vel += gvelocity_star[ni[k]]*S[k];
-          alphaDot += Dot(vel,vel);
-        }
-        alphaDot /= flags->d_artificialDampCoeff;
-      } 
-      new_dw->put(sum_vartype(alphaDot), lb->pDampingRateLabel);
-      delete interpolator;
-    }
-  }
-}
-
 void SerialMPM::addNewParticles(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* ,
@@ -2948,20 +2761,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
     bool combustion_problem=false;
 
-    // Artificial Damping 
-    double alphaDot = 0.0;
-    double alpha = 0.0;
-    if (flags->d_artificialDampCoeff > 0.0) {
-      max_vartype dampingCoeff; 
-      sum_vartype dampingRate;
-      old_dw->get(dampingCoeff, lb->pDampingCoeffLabel);
-      new_dw->get(dampingRate, lb->pDampingRateLabel);
-      alpha = (double) dampingCoeff;
-      alphaDot = (double) dampingRate;
-      alpha += alphaDot*delT; // Calculate damping coefficient from damping rate
-      new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
-    }
-
     Material* reactant;
     int RMI = -99;
     reactant = d_sharedState->getMaterialByName("reactant");
@@ -3083,7 +2882,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         // Update the particle's position and velocity
         pxnew[idx]           = px[idx]    + vel*delT*move_particles;
         pdispnew[idx]        = pdisp[idx] + vel*delT;
-        pvelocitynew[idx]    = pvelocity[idx]    + (acc - alpha*vel)*delT;
+        pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
         // pxx is only useful if we're not in normal grid resetting mode.
         pxx[idx]             = px[idx]    + pdispnew[idx];
         pTempNew[idx]        = pTemperature[idx] + (tempRate+pdTdt[idx])*delT;

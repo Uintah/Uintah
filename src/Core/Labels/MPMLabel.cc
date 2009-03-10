@@ -514,12 +514,6 @@ MPMLabel::MPMLabel()
   pLoadCurveIDLabel_preReloc = VarLabel::create("p.loadCurveID+",
                             ParticleVariable<int>::getTypeDescription());
 
-  // MPM Artificial Damping labels (updated after each time step)
-  pDampingRateLabel = VarLabel::create("dampingRate", 
-                      sum_vartype::getTypeDescription());
-  pDampingCoeffLabel = VarLabel::create("dampingCoeff", 
-                       max_vartype::getTypeDescription());
-
   // Labels for shell materials
   pThickTopLabel = VarLabel::create("p.thickTop",
                      ParticleVariable<double>::getTypeDescription());
@@ -731,10 +725,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(materialPointsPerLoadCurveLabel);
   VarLabel::destroy(pLoadCurveIDLabel);
   VarLabel::destroy(pLoadCurveIDLabel_preReloc);
-
-  // Destroy the MPM Damping rate labels
-  VarLabel::destroy(pDampingRateLabel);
-  VarLabel::destroy(pDampingCoeffLabel);
 
   // Destroy Labels for shell materials
   VarLabel::destroy(pThickTopLabel);

@@ -229,22 +229,12 @@ protected:
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
   
-
-  //////////
   // Insert Documentation Here:
-  virtual void solveEquationsMotion(const ProcessorGroup*,
-			            const PatchSubset* patches,
-			            const MaterialSubset* matls,
-			            DataWarehouse* old_dw,
-			            DataWarehouse* new_dw);
-
-  //////////
-  // Insert Documentation Here:
-  virtual void integrateAcceleration(const ProcessorGroup*,
-			             const PatchSubset* patches,
-			             const MaterialSubset* matls,
-			             DataWarehouse* old_dw,
-			             DataWarehouse* new_dw);
+  virtual void computeAndIntegrateAcceleration(const ProcessorGroup*,
+			                       const PatchSubset* patches,
+			                       const MaterialSubset* matls,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:                            
@@ -265,13 +255,6 @@ protected:
                           DataWarehouse* new_dw);
 
   //////////
-  // Calculate the rate of evolution of the damping coefficient
-  void calculateDampingRate(const ProcessorGroup*,
-			    const PatchSubset* patches,
-			    const MaterialSubset* matls,
-			    DataWarehouse* old_dw,
-			    DataWarehouse* new_dw);
-
   void addNewParticles(const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
@@ -344,14 +327,12 @@ protected:
   virtual void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
 				               const MaterialSet*);
 
-  virtual void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
-				            const MaterialSet*);
-
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
 				          const MaterialSet*);
 
-  virtual void scheduleIntegrateAcceleration(SchedulerP&, const PatchSet*,
-				             const MaterialSet*);
+  virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
+                                                       const PatchSet*,
+                                                       const MaterialSet*);
 
   virtual void scheduleIntegrateTemperatureRate(SchedulerP&, const PatchSet*,
 					        const MaterialSet*);
@@ -375,10 +356,7 @@ protected:
   void scheduleConvertLocalizedParticles(SchedulerP&, const PatchSet*,
                                          const MaterialSet*);
 
-  void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
-				    const MaterialSet*);
-
-  // for Farcture ----------------------------------
+  // for Fracture ----------------------------------
   virtual void scheduleParticleVelocityField(SchedulerP& sched,
                                              const PatchSet* patches,
                                              const MaterialSet* matls);

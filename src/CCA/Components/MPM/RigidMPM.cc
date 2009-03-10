@@ -149,47 +149,61 @@ void RigidMPM::computeInternalForce(const ProcessorGroup*,
   }
 }
 
-void RigidMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
-                                             const PatchSet* patches,
-                                             const MaterialSet* matls)
+void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
+                                                       const PatchSet* patches,
+                                                       const MaterialSet* matls)
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  Task* t = scinew Task("MPM::solveEquationsMotion",
-                    this, &RigidMPM::solveEquationsMotion);
+  printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration\t\t\t\t");
 
+  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+                        this, &RigidMPM::computeAndIntegrateAcceleration);
+
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
+  t->requires(Task::NewDW, lb->gVelocityLabel,          Ghost::None);
+
+  t->computes(lb->gVelocityStarLabel);
   t->computes(lb->gAccelerationLabel);
+
   sched->addTask(t, patches, matls);
 }
 
-void RigidMPM::solveEquationsMotion(const ProcessorGroup*,
-				     const PatchSubset* patches,
-				     const MaterialSubset*,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw)
+void RigidMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset*,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing solveEquationsMotion on patch " << patch->getID()
-		 <<"\t\t\t RigidMPM"<< endl;
-    }
+    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t\t");
 
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-
+    Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
- 
+
+      // Get required variables for this patch
+      constNCVariable<Vector> velocity;
+      new_dw->get(velocity,     lb->gVelocityLabel,      dwi, patch, gnone, 0);
+
       // Create variables for the results
-      NCVariable<Vector> acceleration;
-      new_dw->allocateAndPut(acceleration, lb->gAccelerationLabel, dwi, patch);
+      NCVariable<Vector> velocity_star,acceleration;
+      new_dw->allocateAndPut(velocity_star, lb->gVelocityStarLabel, dwi, patch);
+      new_dw->allocateAndPut(acceleration,  lb->gAccelerationLabel, dwi, patch);
+
       acceleration.initialize(Vector(0.,0.,0.));
 
-    }
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();
+                        !iter.done();iter++){
+        IntVector c = *iter;
+        velocity_star[c] = velocity[c];
+      }
+    }    // matls
   }
 }
 
@@ -220,15 +234,6 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
-
-  // The dampingCoeff (alpha) is 0.0 for standard usage, otherwise
-  // it is determined by the damping rate if the artificial damping
-  // coefficient Q is greater than 0.0
-  if (flags->d_artificialDampCoeff > 0.0) {
-    t->requires(Task::OldDW, lb->pDampingCoeffLabel);
-    t->requires(Task::NewDW, lb->pDampingRateLabel);
-    t->computes(lb->pDampingCoeffLabel);
-  }
 
   if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
@@ -290,20 +295,6 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-
-    // Artificial Damping 
-    if (flags->d_artificialDampCoeff > 0.0) {
-      double alphaDot = 0.0;
-      double alpha = 0.0;
-      max_vartype dampingCoeff; 
-      sum_vartype dampingRate;
-      old_dw->get(dampingCoeff, lb->pDampingCoeffLabel);
-      new_dw->get(dampingRate, lb->pDampingRateLabel);
-      alpha = (double) dampingCoeff;
-      alphaDot = (double) dampingRate;
-      alpha += alphaDot*delT; // Calculate damping coefficient from damping rate
-      new_dw->put(max_vartype(alpha), lb->pDampingCoeffLabel);
-    }
 
     double move_particles=1.;
     if(!flags->d_doGridReset){
