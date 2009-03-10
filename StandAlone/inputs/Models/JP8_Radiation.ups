@@ -345,8 +345,8 @@
       </Model>
     <!--__________________________________ -->
       <Model type = "Radiation">
-        <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
+          <radiatingGas>BackgroundGas</radiatingGas>
           <calcFreq>                  5    </calcFreq>  <!-- CHANGE THIS -->
           <!--<calcInterval>           0.005   </calcInterval> -->
           <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
