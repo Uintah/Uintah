@@ -49,7 +49,7 @@ PSELIBS := \
         CCA/Ports                \
         CCA/Components/Regridder
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

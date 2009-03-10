@@ -75,7 +75,7 @@ else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
-          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
+          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
 endif
 
 ##############################################
