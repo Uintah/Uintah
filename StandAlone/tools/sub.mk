@@ -48,7 +48,9 @@ ifeq ($(HAVE_TEEM),yes)
 endif 
 
 ifeq ($(BUILD_VISIT),yes)
-  SUBDIRS += $(SRCDIR)/uda2vis
+	ifeq ($(HAVE_TEEM),yes)
+  		SUBDIRS += $(SRCDIR)/uda2vis
+	endif 
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
