@@ -146,7 +146,7 @@
       <save label="delP_Dilatate"/>
       <save label= "scalar-f"/>
       <save label="TotalMass"/>
-      <checkpoint interval="0.005" cycle="2"/>"
+      <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
@@ -238,38 +238,38 @@
     </MaterialProperties>
   
     <Models>
-       <Model type = "SimpleRxn">
-        <material>BackgroundGas</material>
-        <scalar name = "f">
-        <constants>
-          <f_stoichometric>          0.06207   </f_stoichometric>
-          <diffusivity>              0.0       </diffusivity>
-          <initialize_diffusion_knob>  0       </initialize_diffusion_knob>
-          <rho_air>            1.176829268292683  </rho_air>
-          <rho_fuel>           0.1626119988637622  </rho_fuel>
-          <cv_air>               716.5         </cv_air>
-          <cv_fuel>              3115.6        </cv_fuel>
-          <R_air>                287.0         </R_air>
-          <R_fuel>               2077.03       </R_fuel>
-          <thermalCond_air>      0.0           </thermalCond_air>
-          <thermalCond_fuel>     0.0           </thermalCond_fuel>  
-          <dynamic_viscosity_air>     0.0      </dynamic_viscosity_air>
-          <dynamic_viscosity_fuel>    0.0      </dynamic_viscosity_fuel>       
-        
-       <viscosity_air>0</viscosity_air>
-       <viscosity_fuel>0</viscosity_fuel></constants>
-       <geom_object>
-              <difference>
-                <box label="world">           </box>
-                <cylinder label = "HeBlob">   </cylinder>
-              </difference>
-              <scalar>    0.00   </scalar>
-           </geom_object>
-           <geom_object>
-              <cylinder label = "HeBlob">    </cylinder>
-              <scalar>    1.00   </scalar>
-           </geom_object>
-       </scalar>
+      <Model type = "SimpleRxn">
+        <SimpleRxn> 
+          <material>BackgroundGas</material>
+          <scalar name = "f">                                                   
+            <constants>                                                         
+              <f_stoichometric>          0.06207   </f_stoichometric>           
+              <diffusivity>              0.0       </diffusivity>               
+              <initialize_diffusion_knob>  0       </initialize_diffusion_knob> 
+              <rho_air>            1.176829268292683  </rho_air>                
+              <rho_fuel>           0.1626119988637622  </rho_fuel>              
+              <cv_air>               716.5         </cv_air>                    
+              <cv_fuel>              3115.6        </cv_fuel>                   
+              <R_air>                287.0         </R_air>                     
+              <R_fuel>               2077.03       </R_fuel>                    
+              <thermalCond_air>      0.0           </thermalCond_air>           
+              <thermalCond_fuel>     0.0           </thermalCond_fuel>          
+              <viscosity_air>        0             </viscosity_air>             
+              <viscosity_fuel>       0             </viscosity_fuel>            
+           </constants>                                                         
+           <geom_object>                                                       
+             <difference>                                                    
+               <box label="world"/>
+               <cylinder label="HeBlob"/>
+             </difference>                                                   
+             <scalar>    0.00   </scalar>                                    
+            </geom_object>                                                     
+            <geom_object>                                                      
+              <cylinder label="HeBlob"/>
+              <scalar>    1.00   </scalar>                                    
+            </geom_object>                                                     
+          </scalar>  
+        </SimpleRxn>                                                            
       </Model> 
     </Models>                
 

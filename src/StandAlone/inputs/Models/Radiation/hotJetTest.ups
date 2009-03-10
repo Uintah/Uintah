@@ -6,7 +6,7 @@
        <title>none</title>
    </Meta>
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -338,18 +338,15 @@
           <diffusivity>0</diffusivity>
         </constants> 
           <geom_object>
-             <box label = "world">
-                  <min>       [-5, -5, -5]   </min>
-                  <max>       [5,   8,  5]   </max>
-             </box>
+             <box label = "world"/>
              <scalar>    0.00   </scalar>
           </geom_object>
        </scalar>
       </Model>
     <!--__________________________________   -->  
       <Model type = "Radiation">
-        <radiatingGas>BackgroundGas</radiatingGas>
         <RadiationModel>
+        <radiatingGas>BackgroundGas</radiatingGas>
         <!--<calcFreq>      5    </calcFreq> -->
         <calcInterval>              2.0e-06 </calcInterval>
         <table_or_ice_temp_density> ice     </table_or_ice_temp_density>

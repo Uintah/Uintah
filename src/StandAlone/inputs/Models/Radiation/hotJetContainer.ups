@@ -6,7 +6,7 @@
        <title>none</title>
    </Meta>
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -324,6 +324,9 @@
         </ImplicitSolver>
       </ICE>       
     </CFD>
+    <MPM>
+      <time_integrator>explicit</time_integrator>
+    </MPM>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
@@ -375,17 +378,20 @@
           <critical_scalar_damage>        1.0   </critical_scalar_damage>
           <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
         </constitutive_model>
-             <geom_object>
-                  <cylinder label = "SteelContainer">
-                     <bottom>          [0.0,0.0,-.25]     </bottom>
-                     <top>             [0.0,0.0, .25]     </top>
-                     <radius>          0.25               </radius>
-                   </cylinder>
-                 <res>                 [4,4,4]         </res>
-                 <velocity>            [0.0,0.0,0.0]   </velocity>
-                 <temperature>        300.0            </temperature>
-              </geom_object>
+          <geom_object>
+               <cylinder label = "SteelContainer">
+                  <bottom>          [0.0,0.0,-.25]     </bottom>
+                  <top>             [0.0,0.0, .25]     </top>
+                  <radius>          0.25               </radius>
+                </cylinder>
+              <res>                 [4,4,4]         </res>
+              <velocity>            [0.0,0.0,0.0]   </velocity>
+              <temperature>        300.0            </temperature>
+           </geom_object>
          </material>
+         <contact>
+           <type>null</type>
+         </contact>
        </MPM>
       <!--__________________________________-->
        <ICE>                        <!-- MATL 1 -->
@@ -403,11 +409,7 @@
                   <min>            [-5.0, -5.0, -5.0] </min>
                   <max>            [ 5.0,  8.0,  5.0] </max>                 
               </box>
-              <cylinder label = "SteelContainer">
-                  <bottom>       [0.0,0.0,-.25]      </bottom>
-                  <top>          [0.0,0.0, .25]      </top>
-                  <radius>       0.25                </radius>
-              </cylinder>
+              <cylinder label = "SteelContainer"/>
             </difference>
             <res>                [4,4,4]             </res>
             <velocity>           [.0,.01,.0]         </velocity>
@@ -423,10 +425,6 @@
               <momentum>              [1e10]         </momentum>
               <heat>                  [1e10]         </heat>
           </exchange_coefficients>
-        
-          <do_convective_heat_transfer> false </do_convective_heat_transfer>
-          <convective_fluid>1</convective_fluid>
-          <convective_solid>0</convective_solid>
        </exchange_properties>
     
     </MaterialProperties>
@@ -443,15 +441,8 @@
         </constants> 
           <geom_object>
             <difference>
-               <box label = "world">
-                    <min>       [-5, -5, -5]   </min>
-                    <max>       [5,   8,  5]   </max>
-               </box>
-               <cylinder label = "container">
-                  <bottom>        [0.0,0.0,-.25]   </bottom>
-                  <top>           [0.0,0.0, .25]   </top>
-                  <radius>        0.25              </radius>
-               </cylinder>
+               <box label = "world"/>
+               <cylinder label = "SteelContainer"/>
             </difference>
             <scalar>    0.00   </scalar>
           </geom_object>
@@ -462,29 +453,32 @@
       </Model>
     <!--__________________________________   -->  
       <Model type = "Radiation">
+
+      <RadiationModel>
         <radiatingGas>BackgroundGas</radiatingGas>
         <absorbingSolid>SteelRing</absorbingSolid>
-        <RadiationModel>
-        <absorbingSolid>          true   </absorbingSolid>
         <calcFreq>                 5     </calcFreq>
         <table_or_ice_temp_density> ice  </table_or_ice_temp_density>
         <useTableValues>           false </useTableValues>
         <DORadiationModel>
           <ordinates>             2      </ordinates>
           <opl>                   0.24   </opl>
-           <property_model>      radcoef </property_model>
-           <spherical_harmonics> false   </spherical_harmonics>
-           <linear_solver>       hypre   </linear_solver>
-           <LinearSolver>
-             <solver>           gmres     </solver>
-             <preconditioner>   jacobi    </preconditioner>
-             <max_iter>         1000      </max_iter>
-             <tolerance>        1.0e-8    </tolerance>
-           </LinearSolver>
+          <property_model>      radcoef </property_model>
+          <spherical_harmonics> false   </spherical_harmonics>
+          <linear_solver>       hypre   </linear_solver>
+          <LinearSolver>
+            <solver>           gmres     </solver>
+            <preconditioner>   jacobi    </preconditioner>
+            <max_iter>         1000      </max_iter>
+            <tolerance>        1.0e-8    </tolerance>
+          </LinearSolver>
         </DORadiationModel>
-        </RadiationModel>
-      </Model>
-    </Models>
+        <geom_object>
+          <cylinder label ="SteelContainer"/>
+        </geom_object>
+      </RadiationModel>
+    </Model>
+  </Models>
 
        
 </Uintah_specification>

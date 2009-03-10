@@ -140,7 +140,6 @@
          <cfl>0.5</cfl>
        <ICE>
         <advection type = "FirstOrder" />
-        <add_delP_Dilatate>false</add_delP_Dilatate>
       </ICE>        
     </CFD>
 

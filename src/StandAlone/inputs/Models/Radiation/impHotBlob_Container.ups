@@ -9,7 +9,7 @@
        <title>symetry test</title>
    </Meta>    
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -194,7 +194,7 @@
       <save label="p.temperature"/>
       
       <compression>gzip</compression>
-      <checkpoint interval="0.05" cycle="2"/>"
+      <checkpoint interval="0.05" cycle="2"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
@@ -296,6 +296,9 @@
               <temperature>        293.0               </temperature>
             </geom_object>
          </material>
+         <contact>
+           <type>null</type>
+         </contact>
        </MPM>
       <!--__________________________________-->
        <ICE>
@@ -312,16 +315,9 @@
                       <min>    [ -1.0, -1.0, -1.0 ]       </min>
                       <max>    [ 1.0, 1.0, 1.0 ]          </max>
                   </box>
-                  <sphere label = "Steel ball">
-                     <origin>     [0.0,0.0,0.0]         </origin>
-                     <radius>     0.2                   </radius>
-                  </sphere>
+                  <sphere label = "Steel ball"/>
                 </difference>
-                
-                <sphere label = "inside">
-                   <origin>           [0.0,0.0,0.0]   </origin>
-                   <radius>           0.1             </radius>
-                </sphere>
+                <sphere label = "inside"/>
               </union>
                 
                 
@@ -376,41 +372,32 @@
           <diffusivity>0</diffusivity>
         </constants> 
         <geom_object>
-                <box label="world">
-                  <min>       [ -6.0, -6.0, -6.0 ]   </min>
-                  <max>       [ 6.0, 6.0, 6.0 ]      </max>
-                </box>
-            <scalar>    1.00   </scalar>
+          <box label="Whole grid"/>
+          <scalar>    1.00   </scalar>
         </geom_object>
         <geom_object>
-              <sphere label = "Donut">
-                 <origin>           [0.0,0.0,0.0]   </origin>
-                 <radius>           0.5             </radius>
-              </sphere>
-              <scalar>    1.00   </scalar>
+          <sphere label = "HotGas Donut"/>
+          <scalar>    1.00   </scalar>
         </geom_object>
         <geom_object>
-              <sphere label = "hole in middle">
-                 <origin>           [0.0,0.0,0.0]    </origin>
-                 <radius>           0.25             </radius>
-              </sphere>
-              <scalar>    0.00   </scalar>
+          <sphere label = "hole in middle"/>
+          <scalar>    0.00   </scalar>
         </geom_object>
        </scalar>
       </Model>
       <!--__________________________________-->     
       <Model type = "Radiation">
-        <radiatingGas>BackgroundGas</radiatingGas>
-        <absorbingSolid>steelBall</absorbingSolid>
         <RadiationModel>
+          <radiatingGas>          BackgroundGas</radiatingGas>
+          <absorbingSolid>            steelBall</absorbingSolid>
           <absorbingSolid>            true  </absorbingSolid>
           <calcFreq>                  1     </calcFreq>
           <table_or_ice_temp_density> ice   </table_or_ice_temp_density>
           <useTableValues>            false </useTableValues>
 
           <DORadiationModel>
-            <ordinates> 2       </ordinates>
-            <opl>       0.24    </opl>
+             <ordinates> 2       </ordinates>
+             <opl>       0.24    </opl>
              <property_model>      radcoef </property_model>
              <spherical_harmonics> false   </spherical_harmonics>
              <linear_solver>       hypre   </linear_solver>
@@ -424,14 +411,8 @@
             <!-- absorbing solid geometry -->
             <geom_object>
               <difference>
-                <sphere label = "SteelBall">
-                   <origin>           [0.0,0.0,0.0]   </origin>
-                   <radius>           0.2             </radius>
-                </sphere>
-                <sphere label = "inside">
-                   <origin>           [0.0,0.0,0.0]   </origin>
-                   <radius>           0.1             </radius>
-                </sphere>                
+                <sphere label = "SteelBall"/>
+                <sphere label = "inside"/>
               </difference> 
             </geom_object>
         </RadiationModel>

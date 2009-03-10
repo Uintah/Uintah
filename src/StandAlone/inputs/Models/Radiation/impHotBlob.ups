@@ -9,7 +9,7 @@
        <title>symetry test</title>
    </Meta>    
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -170,7 +170,7 @@
       <save label="rhs"/>
       
       <compression>gzip</compression>
-      <checkpoint interval="0.05" cycle="2"/>"
+      <checkpoint interval="0.05" cycle="2"/>
    </DataArchiver>
    
     <!--____________________________________________________________________-->
@@ -250,10 +250,7 @@
            </geom_object>
            
            <geom_object>
-                <box label="hot_spot">
-                    <min>[ -0.1, -0.1, -0.1 ]              </min>
-                    <max>[  0.1,  0.1,  0.1 ]              </max>
-                </box>
+                <box label="hot_spot"/>
                <res>           [2,2,2]                  </res>
                <velocity>      [0.0,0.0,0.0]            </velocity>
                <density>       0.176907505349598        </density>
@@ -275,23 +272,13 @@
         </constants> 
           <geom_object>
             <difference>
-                <box label="Whole grid">
-                    <min>[ -1.0, -1.0, -1.0 ]       </min>
-                    <max>[ 1.0, 1.0, 1.0 ]          </max>
-                </box>
- 
-                <box label="hot_spot">
-                    <min>[ -0.1, -0.1, -0.1 ]       </min>
-                    <max>[  0.1,  0.1,  0.1 ]       </max> 
-                </box>
+                <box label="Whole grid"/>
+                <box label="hot_spot"/>
              </difference>
              <scalar>    0.00   </scalar>
           </geom_object>
           <geom_object>
-                <box label="hot_spot">
-                    <min>[ -0.1, -0.1, -0.1 ]       </min>
-                    <max>[  0.1,  0.1,  0.1 ]       </max>
-                </box>
+                <box label="hot_spot"/>
              <scalar>    1.00   </scalar>
           </geom_object>
        </scalar>
