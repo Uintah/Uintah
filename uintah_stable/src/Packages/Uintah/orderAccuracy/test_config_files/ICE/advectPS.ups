@@ -5,10 +5,8 @@
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
-   <Meta>
-       <title></title>
-   </Meta>
-   
+   <Meta></Meta>
+   <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -73,7 +71,6 @@
       <save label="temp_CC"/>
       <save label="scalar-f"/>
       <save label="sum_scalar_f"/>
-      <outputInitTimestep/>
    </DataArchiver>
    
   <Debug>
