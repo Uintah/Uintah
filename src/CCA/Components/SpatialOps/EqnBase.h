@@ -48,19 +48,19 @@ public:
   /** @brief Compute the convective terms */ 
   template <class fT, class oldPhiT>  
   void computeConv( const Patch* patch, fT& Fdiff, 
-                         oldPhiT& oldPhi ) = 0;
+                         oldPhiT& oldPhi );
 
   /** @brief Compute the diffusion terms */
   template <class fT, class oldPhiT, class lambdaT> 
   void computeDiff( const Patch* patch, fT& Fdiff, 
-                    oldPhiT& oldPhi, lambdaT& lambda ) = 0;
+                    oldPhiT& oldPhi, lambdaT& lambda );
 
   /** @brief Method for cleaning up after a transport equation at the end of a timestep */
   virtual void sched_cleanUp( const LevelP&, SchedulerP& sched ) = 0; 
 
   /** @brief Apply boundary conditions */
   // probably want to make this is a template
-  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi ) = 0;
+  template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
   // Access functions:
   inline void setBoundaryCond( BoundaryCond* boundaryCond ) {
