@@ -46,6 +46,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+
 #include <cmath>
 #include <iostream>
 #include <ctime>
@@ -470,7 +478,8 @@ void rayfromSurf(SurfaceType &obSurface,
 
 
 int RMCRTRRSDStratified::
-RMCRTsolver(){
+RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
+	    const int& theta_n, const int& phi_n){
 
   
 //   int my_rank; // rank of process
@@ -479,19 +488,25 @@ RMCRTsolver(){
   time (&time_start);
 
   // stratified sampling
-  int i_n, j_n, k_n, theta_n, phi_n, straSize;
+  //  int i_n, j_n, k_n, theta_n, phi_n
+  int straSize;
   int p_n; // position number
-  cout << " Please enter i_n, j_n, k_n, theta_n, phi_n" << endl;
-  cin >> i_n >> j_n >> k_n >> theta_n >> phi_n ;
+  //  cout << " Please enter i_n, j_n, k_n, theta_n, phi_n" << endl;
+  //  cin >> i_n >> j_n >> k_n >> theta_n >> phi_n ;
 
-//   i_n = 3;
-//   j_n = 3;
-//   k_n = 1;
-//   theta_n = 10;
+  //   i_n = 3;
+  //  j_n = 3;
+  // k_n = 1;
+  // theta_n = 10;
 //   phi_n = 10;
   
   p_n = i_n * j_n * k_n;
   straSize = p_n * theta_n * phi_n;
+  cout << "i_n = " << i_n << endl;
+  cout << "j_n = " << j_n << endl;
+  cout << "k_n = " << k_n << endl;
+  cout << "theta_n = " << theta_n << endl;
+  cout << "phi_n = " << phi_n << endl;
   
   int casePlates;
   //  cout << " Please enter plates case " << endl;
@@ -1030,8 +1045,8 @@ RMCRTsolver(){
 
      
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-//  #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmark.cc>
-    #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmarkSurf.cc>
+  #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmark.cc>
+   //  #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmarkSurf.cc>
    //   #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputNonblackSurf.cc>
    // #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputScattering.cc>
    //  #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/inputScatteringAniso.cc> 
