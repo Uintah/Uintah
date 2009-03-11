@@ -4,11 +4,9 @@
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
-   <Meta>
-       <title></title>
-   </Meta>
+   <Meta></Meta>
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="ice" />
     
     
     <!--____________________________________________________________________-->
@@ -222,8 +220,8 @@
       
        <exchange_properties>
          <exchange_coefficients>
-              <momentum>              [1.0e10,1.e10]         </momentum>
-              <heat>                  [1.0e10,1.e10]           </heat>
+              <momentum>              [1.0e10]           </momentum>
+              <heat>                  [1.0e10]           </heat>
         </exchange_coefficients>
        </exchange_properties>
 
