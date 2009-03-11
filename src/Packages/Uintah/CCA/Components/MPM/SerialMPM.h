@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/LoadCurve.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/uintahshare.h>
@@ -355,6 +356,14 @@ protected:
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
 
+  //////////
+  // Insert Documentation Here:
+  virtual void setPrescribedMotion(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw);
+
   void refine(const ProcessorGroup*,
               const PatchSubset* patches,
               const MaterialSubset* matls,
@@ -429,6 +438,10 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
 
+  virtual void scheduleSetPrescribedMotion(SchedulerP&, 
+                                           const PatchSet*,
+                                           const MaterialSet*);
+
   void scheduleAddNewParticles(SchedulerP&, const PatchSet*, const MaterialSet*);
 
   void scheduleConvertLocalizedParticles(SchedulerP&, const PatchSet*,
@@ -463,6 +476,8 @@ protected:
   
   bool needRecompile(double time, double dt,
                      const GridP& grid);
+
+  void readPrescribedDeformations(string filename);
   
   
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
@@ -488,9 +503,14 @@ protected:
   
   list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   vector<MPMPhysicalBC*> d_physicalBCs;
+
+  vector<double>   d_prescribedTimes;    // These three are used only if 
+  vector<Matrix3>  d_prescribedStretch;  // d_prescribeDeformation
+  vector<Matrix3>  d_prescribedRotation; // is "true".  It is "false" by default.
+
   bool             d_fracture;
   bool             d_recompile;
-  IntegratorType d_integrator;
+  IntegratorType   d_integrator;
   MaterialSubset*  d_loadCurveIndex;
 private:
 

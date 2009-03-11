@@ -86,6 +86,8 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_doExplicitHeatConduction = true;
   d_computeNodalHeatFlux = false;
   d_doTransientImplicitHeatConduction = true;
+  d_prescribeDeformation = false;
+  d_prescribedDeformationFile = "time_stretch_rotation";
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
   d_max_vel = 3.e105;
@@ -160,6 +162,10 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   mpm_flag_ps->get("do_grid_reset",      d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",    d_min_part_mass);
   mpm_flag_ps->get("maximum_particle_velocity",d_max_vel);
+  mpm_flag_ps->get("UsePrescribedDeformation",d_prescribeDeformation);
+  if(d_prescribeDeformation){
+    mpm_flag_ps->get("PresribedDeformationFile",d_prescribedDeformationFile);
+  }
 
   mpm_flag_ps->get("do_contact_friction_heating", d_do_contact_friction);
   if (!d_do_contact_friction) d_addFrictionWork = 0.0;
@@ -289,6 +295,10 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("do_grid_reset",      d_doGridReset);
   ps->appendElement("minimum_particle_mass",    d_min_part_mass);
   ps->appendElement("maximum_particle_velocity",d_max_vel);
+  ps->appendElement("UsePrescribedDeformation",d_prescribeDeformation);
+  if(d_prescribeDeformation){
+    ps->appendElement("PresribedDeformationFile",d_prescribedDeformationFile);
+  }
 
   ps->appendElement("do_contact_friction_heating", d_do_contact_friction);
 
