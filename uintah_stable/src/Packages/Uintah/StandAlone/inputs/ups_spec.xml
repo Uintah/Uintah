@@ -745,7 +745,7 @@
       <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
       <patch_combine_tolerance          spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
       <patch_ratio_to_target            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />
-      <patches_per_level_per_proc       spec="OPTIONAL DOUBLE '0,9'" need_applies_to="type BNR Tiled" />
+      <patches_per_level_per_proc       spec="OPTIONAL DOUBLE '0,9999999'" need_applies_to="type BNR Tiled" />
 
       <!--Hierarchical Regridder-->
       <!--       Required Options-->

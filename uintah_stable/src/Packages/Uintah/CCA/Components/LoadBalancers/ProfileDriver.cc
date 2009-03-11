@@ -194,13 +194,13 @@ void ProfileDriver::outputError(const GridP currentGrid)
     stats << "LoadBalance Measured:  Mean:" << meanCostm/d_myworld->size() << " Max:" << maxCostm << " on processor " << maxLocm << endl;
     stats << "LoadBalance Predicted:  Mean:" << meanCostp/d_myworld->size() << " Max:" << maxCostp << " on processor " << maxLocp << endl;
   }
-
+#if 0
   if(maxCostm/maxCostp>1.1)
   {
     stringstream str;
     if(d_myworld->myrank()==0)
     {
-      stats << d_myworld->myrank() << " Error measured/predicted do not line up, patch cost processor " << maxLocm << " patches:";
+      stats << d_myworld->myrank() << " Error measured/predicted do not line up, patch cost processor " << maxLocm << " patches:\n";
     }
       
     //for each level
@@ -265,10 +265,12 @@ void ProfileDriver::outputError(const GridP currentGrid)
         stats << str.str();
     }
   }
+#endif
 }
 void ProfileDriver::finalizeContributions(const GridP currentGrid)
 {
-
+  //if(d_myworld->myrank()==0)
+  //  cout << "Finalizing Contributions in cost profiler on timestep: " << timesteps << endl;
   if(stats.active())
   {
     outputError(currentGrid);
@@ -281,8 +283,8 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
     //for each datapoint
     for(map<IntVector,Contribution>::iterator iter=costs[l].begin();iter!=costs[l].end();)
     {
-      //save and increment iterator
-      map<IntVector,Contribution>::iterator it=iter++;
+      //copy the iterator (so it can be deleted if we need to)
+      map<IntVector,Contribution>::iterator it=iter;
      
       //create a reference to the data
       Contribution &data=it->second;
@@ -293,14 +295,13 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
       else
         data.timestep++;  //this keeps track of how long it has been since the data has been updated on this processor
 
-      if(timesteps<=2 || data.timestep<0)
+      if(timesteps<=2)
       {
         //first couple timesteps should be set to last timestep to initialize the system
           //the first couple timesteps are not representative of the actual cost as extra things
           //are occuring.
-        //Also if the data's timestep is negative then also just take this value
-          //a negative value implies that current data was approximated through averaging. 
-          //Taking the most recent measurement will be more accurate than using the exponential average
+        //if(data.current==0)
+        //  cout << d_myworld->myrank() << "WARNING current is equal to 0 at " << it->first << " weight: " << data.weight << " current: " << data.current << endl;
         data.weight=data.current;
         data.timestep=0;
       }
@@ -313,9 +314,13 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
       //reset current
       data.current=0;
       
-      //if data is old 
-      if (data.timestep>log(.001*d_alpha)/log(1-d_alpha))
+      //increment the iterator (doing it here because erasing might invalidate the iterator)
+      iter++;
+      
+      //if the data is empty or old 
+      if ( data.weight==0 || data.timestep>log(.001*d_alpha)/log(1-d_alpha))
       {
+        //cout << d_myworld->myrank() << " erasing data on level " << l << " at index: " << it->first << " data.timestep: " << data.timestep << " threshold: " << log(.001*d_alpha)/log(1-d_alpha) << endl;
            //erase saved iterator in order to save space and time
            costs[l].erase(it);
       }
@@ -361,6 +366,9 @@ void ProfileDriver::getWeights(int l, const vector<Region> &regions, vector<doub
 
 void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
 {
+  if(timesteps==0)
+    return;
+
   //for each level
   for(int l=1;l<newgrid->numLevels();l++)
   {
@@ -453,14 +461,17 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       //loop through datapoints
       for(CellIterator iter(low,high); !iter.done(); iter++)
       {
+        
+        map<IntVector,Contribution>::iterator it=costs[l].find(*iter);
+        
         //erase any old data in map
-        costs[l].erase(*iter);
+        if(it!=costs[l].end())
+          costs[l].erase(it);
 
         if(p++%d_myworld->size()==d_myworld->myrank())  //distribute new regions accross processors
         {
           //add cost to current contribution
           costs[l][*iter].weight=average_cost;
-          costs[l][*iter].timestep=-2;  //use -2 as a sentinal saying that this weight has been approximated
         }
       } //end cell iteration
     } //end region iteration
