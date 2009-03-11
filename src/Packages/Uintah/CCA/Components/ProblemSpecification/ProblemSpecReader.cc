@@ -92,14 +92,30 @@ indent( ostream & out, unsigned int depth )
 string
 getErrorInfo( const xmlNode * node )
 {
-  if( node->_private == NULL ) {
-    // All nodes should have a '_private' set... if not, then there is a problem.
-    throw ProblemSetupException( "ERROR: getErrorInfo()... _private shouldn't be NULL\n", __FILE__, __LINE__ );
-  }
-  string file = *(string*)(node->_private);
-
   ostringstream error;
-  error << "See file: " << file << " (line #" << node->line << ")";;
+
+  if( node->_private == NULL ) {
+    // All nodes of the ups_spec.xml will have _private set, but nodes coming from the 
+    // .ups file being validated may not.  However, they will have a doc pointer that
+    // has the file information.
+    //
+    // Both ATTRIBUTE and TEXT node line numbers aren't part of those
+    // type of 'node's... we have to look at their parents to get the
+    // real value.  (This occurs because we cast all nodes into
+    // generic xmlNodes before they get to this portion of the code,
+    // and this is why we need to do this test.)
+    if( node->type == XML_ATTRIBUTE_NODE || node->type == XML_TEXT_NODE ) {
+      error << "See file: " << to_char_ptr( node->doc->URL ) << " (line #" << node->parent->line << ")";
+    }
+    else {
+      error << "See file: " << to_char_ptr( node->doc->URL ) << " (line #" << node->line << ")";
+    }
+  }
+  else {
+    string file = *(string*)(node->_private);
+    error << "See file: " << file << " (line #" << node->line << ")";;
+
+  }
   
   return error.str();
 }
@@ -1223,7 +1239,8 @@ Tag::validateAttribute( xmlAttr * attr )
 
   attribute->occurrences_++;
 
-  const char * attrContent = to_char_ptr(attr->children->content);
+  string attrContent = to_char_ptr( attr->children->content );
+  collapse( attrContent );
   attribute->validateText( attrContent, (xmlNode*)attr );
 
   // dbg << "currentValue_ of " << name_ << " is now " << attrContent << "\n";
