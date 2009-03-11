@@ -7,7 +7,7 @@
 </AllTests>
 <Test>
     <Title>25</Title>
-    <sus_cmd>sus -rmpmice</sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 1 -plot false</compare_cmd>
     <x>25</x>
@@ -17,7 +17,7 @@
 </Test>
 <Test>
     <Title>50</Title>
-    <sus_cmd>sus -rmpmice</sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 1 -plot false</compare_cmd>
     <x>50</x>
@@ -27,7 +27,7 @@
 </Test>
 <Test>
     <Title>100</Title>
-    <sus_cmd>sus -rmpmice</sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 1 -plot false</compare_cmd>
     <x>100</x>
@@ -38,7 +38,7 @@
 
 <Test>
     <Title>200</Title>
-    <sus_cmd>sus -rmpmice</sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 1 -plot false</compare_cmd>
     <x>200</x>
@@ -49,7 +49,7 @@
 
 <Test>
     <Title>400</Title>
-    <sus_cmd>sus -rmpmice</sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 1 -plot false</compare_cmd>
     <x>400</x>
@@ -59,7 +59,7 @@
 </Test>
 <Test>
     <Title>800</Title>
-    <sus_cmd>sus -rmpmice</sus_cmd>
+    <sus_cmd>sus </sus_cmd>
     <Study>Res.Study</Study>
     <compare_cmd>compare_Rayleigh.m -pDir 1 -mat 1 -plot false</compare_cmd>
     <x>800</x>
