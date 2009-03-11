@@ -254,7 +254,7 @@
                        walltimeStart    - Start check pointing after time much real time has elapsed (since beginning the simulation).
                        walltimeInterval - How much real time must pass before the next check point is written.
       -->
-      <checkpoint             spec="REQUIRED NO_DATA"
+      <checkpoint             spec="OPTIONAL NO_DATA"
                                 children1="ONE_OF(interval, walltimeInterval, timestepInterval)"
                                 children2="ALL_OR_NONE_OF(walltimeStart, walltimeInterval)"
                                 attribute1="interval         OPTIONAL DOUBLE  'positive'"
