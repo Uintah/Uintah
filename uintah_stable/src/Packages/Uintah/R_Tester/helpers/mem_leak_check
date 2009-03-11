@@ -35,14 +35,17 @@ else
     fi
     
     echo "Performing highwater memory usage check"
-    percent=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
 
-    if [ $percent -gt "10" ]; then
+    meminfo=`highwater_percent.pl $MALLOC_STATS $COMPARISON_MALLOC_STATS`
+    percent=`echo $meminfo | cut -d " " -f 1`
+    abs=`echo $meminfo | cut -d " " -f 2`
+
+    if [ $percent -gt "10" -a $abs -gt "1000000" ]; then
 	echo "***Highwater memory usage test failed"
-	echo " -- memory usage increased by %$percent" > $TMPDIR/highwater_shortmessage.txt
+	echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
         error=2
     elif [ $percent -gt "0" ]; then
-	echo " -- memory usage increased by %$percent" > $TMPDIR/highwater_shortmessage.txt
+	echo " -- memory usage increased by %$percent ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
     elif [ $percent -lt "0" ]; then
 	let percent_improvement=-$percent;
 	
@@ -53,7 +56,7 @@ else
 #	    chgrp csafe $COMPARISON_MALLOC_STATS
 #	    chmod g+rw $COMPARISON_MALLOC_STATS
 #	else
-	    echo " -- memory usage improved by %$percent_improvement" > $TMPDIR/highwater_shortmessage.txt
+	    echo " -- memory usage improved by %$percent_improvement ($abs bytes)" > $TMPDIR/highwater_shortmessage.txt
 #	fi
     else
 	echo "" > $TMPDIR/highwater_shortmessage.txt
