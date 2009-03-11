@@ -516,6 +516,8 @@
           <tabulated_soot               spec="OPTIONAL BOOLEAN" />
         </NewStaticMixingTable>
 
+        <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
+
         <TabPropsTable                  spec="OPTIONAL NO_DATA" >
           <table_file_name              spec="REQUIRED STRING" />
           <strict_mode                  spec="OPTIONAL BOOLEAN" />
@@ -598,6 +600,20 @@
 
       <ExplicitSolver                   spec="REQUIRED NO_DATA" >
         <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
+        <RMCRTRadiationModel            spec="OPTIONAL NO_DATA" >
+            <opl                        spec="REQUIRED DOUBLE" />
+            <const_num_rays             spec="REQUIRED INTEGER" />
+            <rr_threshold               spec="OPTIONAL DOUBLE" /> 
+            <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm, fssk, fsck'" />
+            <sampling_scheme            spec="OPTIONAL STRING 'simple_sample, RRSD, RRSDstratified'" /> 
+              <RRSDstratified           spec="OPTIONAL NO_DATA" >
+                 <x_n                   spec="REQUIRED INTEGER" />
+                 <x_n                   spec="REQUIRED INTEGER" />
+                 <x_n                   spec="REQUIRED INTEGER" />
+                 <theta_n               spec="REQUIRED INTEGER" />
+                 <phi_n                 spec="REQUIRED INTEGER" />
+              </RRSDstratified>
+        </RMCRTRadiationModel>
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
           <radiation                    spec="REQUIRED BOOLEAN" />
