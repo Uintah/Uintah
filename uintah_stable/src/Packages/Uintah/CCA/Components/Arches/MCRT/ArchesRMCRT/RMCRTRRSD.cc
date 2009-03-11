@@ -46,6 +46,14 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+
 #include <cmath>
 #include <iostream>
 #include <ctime>
@@ -303,7 +311,8 @@ void rayfromSurf(SurfaceType &obSurface,
 
 
 int RMCRTRRSD::
-RMCRTsolver(){
+RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
+	    const int& theta_n, const int& phi_){
   
 //   int my_rank; // rank of process
 //   int np; // number of processes

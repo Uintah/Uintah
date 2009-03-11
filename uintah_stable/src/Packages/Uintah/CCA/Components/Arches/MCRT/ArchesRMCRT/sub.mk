@@ -5,20 +5,20 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT
 
 SRCS     += $(SRCDIR)/RMCRTRadiationModel.cc \
-            $(SRCDIR)/RMCRTnoInterpolation.cc \
-            $(SRCDIR)/Surface.cc \
+            $(SRCDIR)/RMCRTRRSDStratified.cc \
+	    $(SRCDIR)/Surface.cc \
             $(SRCDIR)/RealSurface.cc \
             $(SRCDIR)/TopRealSurface.cc \
             $(SRCDIR)/BottomRealSurface.cc \
-    	      $(SRCDIR)/FrontRealSurface.cc \
+	    $(SRCDIR)/FrontRealSurface.cc \
             $(SRCDIR)/BackRealSurface.cc \
             $(SRCDIR)/LeftRealSurface.cc \
             $(SRCDIR)/RightRealSurface.cc \
-	          $(SRCDIR)/VirtualSurface.cc \
+	    $(SRCDIR)/VirtualSurface.cc \
             $(SRCDIR)/ray.cc \
             $(SRCDIR)/VolElement.cc \
             $(SRCDIR)/MakeTableFunction.cc
-             
+
 
 # SUBDIRS := $(SRCDIR)/fortran 
 # include $(SCIRUN_SCRIPTS)/recurse.mk
