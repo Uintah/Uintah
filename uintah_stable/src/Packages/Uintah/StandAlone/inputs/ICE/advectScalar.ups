@@ -6,7 +6,7 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title></title>
+       <title>none</title>
    </Meta>
 
    <SimulationComponent type="ice" />
