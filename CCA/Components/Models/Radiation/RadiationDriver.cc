@@ -249,18 +249,19 @@ RadiationDriver::problemSetup(GridP& grid,
   cout_doing << " RadiationDriver::problemSetup "<< endl;
   
   d_sharedState = sharedState;
-  d_matl_G= d_sharedState->parseAndLookupMaterial(params, "radiatingGas");
+  ProblemSpecP db = params->findBlock("RadiationModel");
+  d_matl_G= d_sharedState->parseAndLookupMaterial(db, "radiatingGas");
 
   string absSolid("");
-  ProblemSpecP abs_ps = params->get("absorbingSolid",absSolid);
+  ProblemSpecP abs_ps = db->get("absorbingSolid",absSolid);
 
-  if (abs_ps)
+  if (abs_ps){
     d_hasAbsorbingSolid = true;
-  else
+  }else{
     d_hasAbsorbingSolid = false;
-    
+  }
   
-  ProblemSpecP db = params->findBlock("RadiationModel");
+  
   
   //__________________________________
   // absorbing solid
@@ -272,7 +273,7 @@ RadiationDriver::problemSetup(GridP& grid,
         " have at least 1 mpm material and use -mpmice/-rmpmice\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }    
-    d_matl_S = d_sharedState->parseAndLookupMaterial(params, "absorbingSolid");
+    d_matl_S = d_sharedState->parseAndLookupMaterial(db, "absorbingSolid");
     
     //__________________________________
     //  Read in the geometry objects of the absorbing solid 
@@ -337,12 +338,12 @@ void RadiationDriver::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Radiation");
 
-  model_ps->appendElement("radiatingGas",d_matl_G->getName());
-  if (d_hasAbsorbingSolid) {
-    model_ps->appendElement("absorbingSolid",d_matl_S->getName());
-  }
   ProblemSpecP rad_ps = model_ps->appendChild("RadiationModel");
  
+  rad_ps->appendElement("radiatingGas",d_matl_G->getName());
+  if (d_hasAbsorbingSolid) {
+    rad_ps->appendElement("absorbingSolid",d_matl_S->getName());
+  }
   rad_ps->appendElement("calcFreq",d_radCalcFreq);
   rad_ps->appendElement("calcInterval",d_radCalc_interval);
   rad_ps->appendElement("table_or_ice_temp_density",
