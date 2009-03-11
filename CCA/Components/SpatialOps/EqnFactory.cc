@@ -39,7 +39,7 @@ EqnFactory::self()
 void 
 EqnFactory::register_scalar_eqn( const std::string name, EqnBuilder* builder ) 
 {
-  assert( builder != NULL );
+  ASSERT( builder != NULL );
 
   BuildMap::iterator i = builders_.find( name );
   if( i == builders_.end() ){

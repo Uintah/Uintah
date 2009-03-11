@@ -41,7 +41,7 @@ SourceTermFactory::register_source_term( const std::string name,
                                          SourceTermBuilder* builder )
 {
 
-  assert( builder != NULL );
+  ASSERT( builder != NULL );
 
   BuildMap::iterator i = builders_.find( name );
   if( i == builders_.end() ){
