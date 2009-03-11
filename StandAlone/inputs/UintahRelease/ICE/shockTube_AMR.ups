@@ -8,9 +8,7 @@
    <Meta>
        <title>shock tube with 3 levels of refinement test</title>
    </Meta>    
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+   <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -149,7 +147,7 @@
           <Variable name = "press_CC" value = "1e3" matl = "0" />
         </Refinement_Criteria_Thresholds>
       </ICE>
-      <Regridder>
+      <Regridder type="Hierarchical">
         <max_levels>        3    </max_levels>
         <cell_refinement_ratio>    [[4,1,1],[4,1,1]]  </cell_refinement_ratio>
         <lattice_refinement_ratio> [[5,1,1],[2,1,1]]  </lattice_refinement_ratio>

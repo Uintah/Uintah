@@ -6,9 +6,7 @@
     <title>none</title>
   </Meta>
    
-  <SimulationComponent>
-     <type> mpmice </type>
-  </SimulationComponent>
+  <SimulationComponent type="mpmice" />
 
   <!--____________________________________________________________________-->
   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -24,8 +22,7 @@
     <!--<max_Timesteps>      10         </max_Timesteps>-->
   </Time>
   
-  <LoadBalancer>
-    <type>DLB</type>
+  <LoadBalancer type="DLB">
     <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
     <doSpaceCurve>         true            </doSpaceCurve>
     <timestepInterval>     100             </timestepInterval>

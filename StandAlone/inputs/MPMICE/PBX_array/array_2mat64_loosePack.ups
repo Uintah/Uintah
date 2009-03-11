@@ -6,15 +6,12 @@
    <Meta>
        <title>2D Array of Stacked PBX9501 Discs</title>
    </Meta>  
-   <SimulationComponent>
-     <type> mpmice </type>
-   </SimulationComponent>  
+   <SimulationComponent type="mpmice" />
    
    <doAMR>true</doAMR>
    
    
-   <LoadBalancer>
-     <type>DLB</type>
+   <LoadBalancer type="DLB">
      <dynamicAlgorithm> patchFactor </dynamicAlgorithm>
      <levelIndependent> true        </levelIndependent>
      <doSpaceCurve>     true        </doSpaceCurve>
@@ -160,8 +157,7 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
 
-      <Regridder>
-        <type> BNR </type>
+      <Regridder type="BNR">
         <min_patch_size> [[8,8,1]] </min_patch_size>
         <max_levels>                  2       </max_levels>
         <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>

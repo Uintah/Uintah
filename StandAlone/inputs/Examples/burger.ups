@@ -5,9 +5,7 @@
      <title>Burger test</title>
  </Meta>
 
- <SimulationComponent>
-       <type> burger </type>
- </SimulationComponent>
+ <SimulationComponent type="burger" />
 
  <Time>
    <maxTime>    1.e-2   </maxTime>

@@ -21,8 +21,7 @@
 
    <SimulationComponent type="mpmice" />
    
-   <LoadBalancer>
-      <type>DLB</type>
+   <LoadBalancer type="DLB">
       <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
       <levelIndependent>true</levelIndependent>
       <doSpaceCurve>true</doSpaceCurve>
@@ -158,8 +157,7 @@
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
-      <Regridder>
-        <type>BNR</type>
+      <Regridder type="BNR">
         <dynamic_dilation>false</dynamic_dilation>
         <max_timestep_interval> 300 </max_timestep_interval>
         <min_patch_size>        [[16,16,16]]        </min_patch_size>

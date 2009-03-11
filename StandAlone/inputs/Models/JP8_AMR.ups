@@ -313,7 +313,7 @@
         </Refinement_Criteria_Thresholds>
       </ICE>
 <!--
-      <Regridder>
+      <Regridder type="Hierarchical">
         <max_levels>3</max_levels>
         <cell_refinement_ratio>    [[2,2,2]]         </cell_refinement_ratio>
         <lattice_refinement_ratio> [[5,5,5][2,2,2]]  </lattice_refinement_ratio>

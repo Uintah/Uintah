@@ -11,9 +11,7 @@
     <title>Taylor Impact - Gust 1982 - Case 1</title>
   </Meta>
 
-  <SimulationComponent>
-    <type> mpm </type>
-  </SimulationComponent>
+  <SimulationComponent type="mpm" />
 
   <Time>
     <maxTime>101.0e-6</maxTime>

@@ -2,9 +2,7 @@
 <Uintah_specification> 
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
-   <SimulationComponent>
-        <type> ice </type>
-   </SimulationComponent>
+  <SimulationComponent type="ice" />
    <Solver>
         <type> hypre </type>
    </Solver>

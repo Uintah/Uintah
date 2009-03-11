@@ -60,8 +60,7 @@
   <!--____________________________________________________________________-->
   <!--      LOAD BALANCER (only turn this on during the explosion phase)  -->
   <!--____________________________________________________________________-->   
-  <LoadBalancer>
-    <type>DLB</type>
+  <LoadBalancer type="DLB">
     <dynamicAlgorithm> patchFactorParticles</dynamicAlgorithm>
     <doSpaceCurve>         true            </doSpaceCurve>
     <timestepInterval>     100             </timestepInterval>
@@ -131,9 +130,8 @@
     </MPM>
     <useLockStep>  true </useLockStep>
     
-    <Regridder>
+    <Regridder type="BNR">
       <adaptive>false</adaptive>
-      <type> BNR </type>
       <min_patch_size> [[8,8,8]] </min_patch_size>
       <patch_ratio_to_target>1</patch_ratio_to_target>
       <max_levels>                  3       </max_levels>
