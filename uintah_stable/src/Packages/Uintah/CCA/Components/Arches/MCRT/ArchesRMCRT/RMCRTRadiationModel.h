@@ -73,7 +73,7 @@ public:
   template <class FCV>
   void interpCCTemperatureToFC( constCCVariable<int>& cellType, 
                                 FCV& Tx, IntVector dir, IntVector highIdx, 
-                                constCCVariable<double>& T, const Patch* p );
+                                CCVariable<double>& T, const Patch* p );
 
 private:
 
@@ -98,7 +98,7 @@ private:
 template <class FCV> 
 void RMCRTRadiationModel::interpCCTemperatureToFC( constCCVariable<int>& cellType,
                                               FCV& Tf, IntVector dir, IntVector highIdx,  
-                                              constCCVariable<double>& T, const Patch* p )
+                                              CCVariable<double>& T, const Patch* p )
 {
 
   //NOTE!:

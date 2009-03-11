@@ -47,6 +47,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRadiationModel.h>
@@ -279,6 +281,22 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     SFCYVariable<double> Ty; 
     SFCZVariable<double> Tz; 
 
+    // have to reset my CCVariables
+    // so that i can initialize them.
+    // wondering if they have got the same structure as obtained from DW
+    CCVariable<double> Ttest;
+    CCVariable<double> absorpCoeftest;
+    
+    // temperature variables on physical boundaries.
+    double Tleft, Tright, Ttop, Tbottom, Tfront, Tback;
+    Tleft = 0;
+    Tright = 0;
+    Ttop = 0;
+    Tbottom = 0;
+    Tfront = 0;
+    Tback = 0;
+    
+    int currI, currJ, currK;
     // emission coefficient on boundaries are CCVariable? or SFXVariable?
     // absorption coefficient on boundaries? define as what type?
     // rs, rd?
@@ -305,22 +323,88 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
       new_dw->getModifiable( Tz, d_lab->d_tempFzLabel, archIndex, patch ); 
     }
 
+    IntVector currCell(currI, currJ, currK);
+
+    // this is the interior's boundary indices
+    // are these returning an array of indices???
+    IntVector idxLo = patch->getCellLowIndex__New();
+    IntVector idxHi = patch->getCellHighIndex__New();
+
+    // this is the SFCY's boundary indices
+    // what values are idxLos and idxHis??
+    // an array of indices????
+    IntVector idxLos = patch->getSFCYLowIndex__New();
+    IntVector idxHis = patch->getSFCYHighIndex__New();
+
+    IntVector idxLoe = patch->getExtraCellLowIndex__New();
+    IntVector idxHie = patch->getExtraCellHighIndex__New();
+    
+    cout << "Cell idxLo = " << idxLo << endl;
+    cout << "cell idxHi = " << idxHi << endl;
+    cout << "SFCY idxLos = " << idxLos << endl;
+    cout << "SFCY idxHis = " << idxHis << endl;
+    cout << "Extra idxLoe = " << idxLoe << endl;
+    cout << "Extra idxHie = " << idxHie << endl;
+    
+    /*
+      for (CellIterator iter=patch->getCellIterator__New();!iter.done(); iter++){
+      Point p = patch->cellPosition(*iter);
+      Point p_xp = patch->cellPosition(*iter + IntVector(1,0,0));
+      Point p_xm = patch->cellPosition(*iter - IntVector(1,0,0));
+      Point p_yp = patch->cellPosition(*iter + IntVector(0,1,0));
+      Point p_ym = patch->cellPosition(*iter - IntVector(0,1,0));
+      Point p_ymm = patch->cellPosition(*iter - IntVector(0,2,0));
+      Point p_zp = patch->cellPosition(*iter + IntVector(0,0,1));
+      Point p_zm = patch->cellPosition(*iter - IntVector(0,0,1));
+      Point p_zmm = patch->cellPosition(*iter - IntVector(0,0,2));
+    */
+    
+    // this is only iteratioing over interior cells.
+    // to be able to follow currCell,
+    // i have to change all of the variables???
+    // cuz my indexes are different from Arches.
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      IntVector currCell = *iter;
+      
+      if ( currCell.x() == idxLo.x() )  // left side boundary
+	Ttest[currCell - IntVector(1, 0, 0)] = Tleft;
+      else if ( currCell.x() == idxHi.x() ) // right side 
+	Ttest[currCell + IntVector(1, 0, 0)] = Tright;
+      
+      if ( currCell.y() == idxLo.y() ) // front side boundary
+	Ttest[currCell - IntVector(0, 1, 0)] = Tfront;
+      else if ( currCell.y() == idxHi.y() ) // back side boundary
+	Ttest[currCell + IntVector(0, 1, 0)] = Tback;
+      
+      if ( currCell.z() == idxLo.z() ) //  bottom side boundary
+	Ttest[currCell - IntVector(0, 0, 1)] = Tbottom;
+      else if ( currCell.y() == idxHi.z() ) // top side boundary
+	Ttest[currCell + IntVector(0, 0, 1)] = Ttop;
+      
+      
+      Ttest[currCell] = 64.80721904;
+        
+      Point p = patch->cellPosition(*iter);
+
+      // the p.x(), p.y(), p.z() are the cell centered x, y, z.
+      absorpCoeftest[currCell] = 0.9 * ( 1 - 2 * abs ( p.x() ) )
+	* ( 1 - 2 * abs ( p.y() ) )
+	* ( 1 - 2 * abs ( p.z() ) ) + 0.1;
+				     
+    }
+
+
     // interpolate temperatures to FC
+    // changed T to Ttest
     IntVector dir(1,0,0);
     IntVector highIdx = patch->getCellHighIndex__New(); 
-    interpCCTemperatureToFC( cellType, Tx, dir, highIdx, T, patch ); 
+    interpCCTemperatureToFC( cellType, Tx, dir, highIdx, Ttest, patch ); 
     dir += IntVector(-1,1,0); 
-    interpCCTemperatureToFC( cellType, Ty, dir, highIdx, T, patch ); 
+    interpCCTemperatureToFC( cellType, Ty, dir, highIdx, Ttest, patch ); 
     dir += IntVector(0,-1,1); 
-    interpCCTemperatureToFC( cellType, Tz, dir, highIdx, T, patch );
+    interpCCTemperatureToFC( cellType, Tz, dir, highIdx, Ttest, patch );
  
-    // IntVector currCell(currI, currJ, currK);
-    /*for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-      IntVector currCell = *iter; 
-      ....temperature[currCell]; 
-  
-    }*/
-    // temperature[currCell]??
+
     // where does the currCell starts? for b.c. cells and ghost cells
     
     cout << "GOING TO CALL STAND ALONE SOLVER!\n"; 
@@ -333,7 +417,9 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
       SFCYVariable<double> &Ty, 
       SFCZVariable<double> &Tz )
     */
-   
+
+    // Tx, Ty, Tz??
+    // what the index should be when i use Tx for left and right bc?
     obRMCRT->RMCRTsolver(i_n, j_n, k_n, theta_n, phi_n);
   } // end patch loop 
 
