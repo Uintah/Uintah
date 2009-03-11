@@ -70,6 +70,7 @@ SUBDIRS := \
         $(ARCHES)         \
         $(MPMARCHES)      \
         $(SRCDIR)/Angio   \
+	$(SRCDIR)/SpatialOps \
         $(SRCDIR)/ProblemSpecification \
         $(SRCDIR)/PatchCombiner \
         $(SRCDIR)/Solvers \

@@ -42,6 +42,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/Angio/AngioMaterial.h>
+#include <CCA/Components/SpatialOps/SpatialOpsMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <Core/Grid/Variables/Reductions.h>
@@ -105,6 +106,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   all_angio_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
+  all_spatialops_matls = 0;
   all_matls = 0;
   orig_all_matls = 0;
   allInOneMatl = 0;
@@ -193,6 +195,12 @@ void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
    registerMaterial(matl);
 }
 
+void SimulationState::registerSpatialOpsMaterial(SpatialOpsMaterial* matl)
+{
+   spatialops_matls.push_back(matl);
+   registerMaterial(matl);
+}
+
 void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
    ice_matls.push_back(matl);
@@ -241,6 +249,16 @@ void SimulationState::finalizeMaterials()
   for (int i = 0; i<(int)arches_matls.size();i++)
     tmp_arches_matls[i] = arches_matls[i]->getDWIndex();
   all_arches_matls->addAll(tmp_arches_matls);
+
+  if (all_spatialops_matls && all_spatialops_matls->removeReference())
+    delete all_spatialops_matls;
+  all_spatialops_matls = scinew MaterialSet();
+  all_spatialops_matls->addReference();
+  vector<int> tmp_spatialops_matls(spatialops_matls.size());
+  cout << "spatial ops materials= " << (int)spatialops_matls.size()<< endl; 
+  for (int i = 0; i<(int)spatialops_matls.size();i++)
+    tmp_spatialops_matls[i] = spatialops_matls[i]->getDWIndex();
+  all_spatialops_matls->addAll(tmp_spatialops_matls);
 
   if (all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
@@ -308,6 +326,9 @@ void SimulationState::clearMaterials()
   if (all_arches_matls && all_arches_matls->removeReference())
     delete all_arches_matls;
 
+  if (all_spatialops_matls && all_spatialops_matls->removeReference())
+    delete all_spatialops_matls;
+
   if(all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
 
@@ -319,6 +340,7 @@ void SimulationState::clearMaterials()
   mpm_matls.clear();
   angio_matls.clear();
   arches_matls.clear();
+  spatialops_matls.clear();
   ice_matls.clear();
   simple_matls.clear();
   named_matls.clear();
@@ -329,6 +351,7 @@ void SimulationState::clearMaterials()
   all_mpm_matls = 0;
   all_angio_matls = 0;
   all_arches_matls = 0;
+  all_spatialops_matls = 0;
   all_ice_matls = 0;
   allInOneMatl = 0;
 }
@@ -368,6 +391,12 @@ const MaterialSet* SimulationState::allArchesMaterials() const
 {
   ASSERT(all_arches_matls != 0);
   return all_arches_matls;
+}
+
+const MaterialSet* SimulationState::allSpatialOpsMaterials() const
+{
+  ASSERT(all_spatialops_matls != 0);
+  return all_spatialops_matls;
 }
 
 const MaterialSet* SimulationState::allICEMaterials() const

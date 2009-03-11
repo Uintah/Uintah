@@ -57,6 +57,7 @@ PSELIBS := \
         $(ICE)    \
         $(MPM)    \
         $(MPMICE) \
+	$(COMPONENTS)/SpatialOps           \
         $(COMPONENTS)/Examples             \
         $(COMPONENTS)/Angio                \
 	$(COMPONENTS)/PatchCombiner        \
