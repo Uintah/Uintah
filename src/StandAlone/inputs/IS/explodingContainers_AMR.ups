@@ -9,8 +9,7 @@
 
    <doAMR>true</doAMR>
    
-   <LoadBalancer>
-        <type>PLB</type>
+   <LoadBalancer ="PLB">
         <timestepInterval>      1000  </timestepInterval>
         <dynamicAlgorithm>      patchFactorParticles</dynamicAlgorithm>
         <cellFactor>            1.25  </cellFactor>
@@ -152,8 +151,7 @@
         <max_grid_level>-1</max_grid_level>
       </MPM>
 
-      <Regridder>
-        <type> BNR </type>
+      <Regridder type="BNR">
         <min_patch_size> [[16,16,1][16,16,1]] </min_patch_size>
         <patch_ratio_to_target>.25</patch_ratio_to_target>
         <max_levels>                  3       </max_levels>

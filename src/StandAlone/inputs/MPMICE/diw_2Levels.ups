@@ -165,7 +165,7 @@
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
-      <Regridder>
+      <Regridder type="Hierarchical">
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
         <lattice_refinement_ratio> [[9,5,1][2,2,1]]  </lattice_refinement_ratio>

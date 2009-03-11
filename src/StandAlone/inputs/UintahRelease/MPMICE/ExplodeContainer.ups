@@ -6,9 +6,7 @@
        <title>Pressurization of a container via burning w/o fracture</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpmice </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpmice" />
 
 
     <!--____________________________________________________________________-->

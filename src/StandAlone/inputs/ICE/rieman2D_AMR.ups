@@ -16,8 +16,7 @@
    <SimulationComponent type="ice" />
 
    <doAMR>true</doAMR>
-   <LoadBalancer>
-     <type>DLB</type>
+   <LoadBalancer type="DLB">
      <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
      <levelIndependent>true</levelIndependent>
      <doSpaceCurve>true</doSpaceCurve>
@@ -170,7 +169,7 @@
         </Refinement_Criteria_Thresholds>
       </ICE>
       
-      <Regridder> 
+      <Regridder type="Hierarchical"> 
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
         <cell_stability_dilation>   [2,2,0]   </cell_stability_dilation>   
@@ -180,16 +179,13 @@
         <!--  Hierarchical Specific -->
         <lattice_refinement_ratio> [[10,10,1],[2,2,1]]  </lattice_refinement_ratio>
         
-        <!--
-        <type>BNR</type>
-        -->
-        
         <!-- BNR Specific -->
+        <!--
         <min_patch_size>           [[20,20,1]] </min_patch_size>
         <patch_split_tolerance>    1       </patch_split_tolerance>
         <patch_combine_tolerance>  1       </patch_combine_tolerance>
         <patches_per_level_per_proc> 8     </patches_per_level_per_proc> 
-        
+        -->
       </Regridder> 
     </AMR>
     <!--____________________________________________________________________-->

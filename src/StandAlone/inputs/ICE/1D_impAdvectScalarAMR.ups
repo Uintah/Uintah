@@ -198,14 +198,12 @@
         </Refinement_Criteria_Thresholds>
       </ICE>
      
-      <Regridder>
+      <Regridder type="BNR">
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[4,1,1]]  </cell_refinement_ratio>
         <lattice_refinement_ratio> [[2,1,1]]  </lattice_refinement_ratio>
         <cell_stability_dilation>   [2,0,0]   </cell_stability_dilation>   
         <min_boundary_cells>       [1,0,0]   </min_boundary_cells>
-        
-        <type>BNR</type>
         
         <min_patch_size>           [[4,1,1]]  </min_patch_size>
         <patch_split_tolerance>     1        </patch_split_tolerance>

@@ -6,9 +6,7 @@
        <title>Inclined Plane with Sphere</title>
    </Meta>
 
-   <SimulationComponent>
-        <type> mpm </type>
-   </SimulationComponent>
+   <SimulationComponent type="mpm" />
    <Time>
        <maxTime>2.2</maxTime>
        <initTime>0.0</initTime>

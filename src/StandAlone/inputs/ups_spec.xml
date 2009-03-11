@@ -746,7 +746,7 @@
       <max_grid_level                   spec="REQUIRED INTEGER" />
     </MPM>
     <Regridder                          spec="OPTIONAL NO_DATA"
-                                           attribute1="type REQUIRED STRING 'BNR, Hierarchical, Tiled'" >
+                                           attribute1="type OPTIONAL STRING 'BNR, Hierarchical, Tiled'" >
       <adaptive                         spec="OPTIONAL BOOLEAN" /> <!-- FIXME: optional? does this only apply to one of the types of regridder? -->
       <!--Generic Required Regridder Options --> 
       <max_levels                       spec="REQUIRED INTEGER 'positive'" />
@@ -776,8 +776,6 @@
       <!--       Required Options-->
       <lattice_refinement_ratio         spec="REQUIRED STRING" need_applies_to="type Hierarchical" />
 
-      <!--       Optional Options--> <!-- FIXME: debug attribute: remove -> -->
-      <dav123                           spec="OPTIONAL STRING" need_applies_to="type Hierarchical" />
     </Regridder>
   </AMR>
 

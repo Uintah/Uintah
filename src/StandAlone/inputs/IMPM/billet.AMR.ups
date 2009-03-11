@@ -59,8 +59,7 @@
         <min_grid_level>-1</min_grid_level>
         <max_grid_level>-1</max_grid_level>
       </MPM>
-      <Regridder>
-        <type> BNR </type>
+      <Regridder type="BNR">
         <min_patch_size> [[8,8,1][16,16,1]] </min_patch_size>
         <patch_ratio_to_target>1</patch_ratio_to_target>
         <max_levels>                  2       </max_levels>

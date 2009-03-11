@@ -224,7 +224,7 @@
           <Variable name = "press_CC"  value = "1e3" matl = "0" />
         </Refinement_Criteria_Thresholds>
       </ICE>
-      <Regridder>
+      <Regridder type="Hierarchical">
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
         <lattice_refinement_ratio> [[5,5,1][2,2,1]]  </lattice_refinement_ratio>

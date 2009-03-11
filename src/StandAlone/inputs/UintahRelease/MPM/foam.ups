@@ -5,9 +5,7 @@
     <title>Foam Compaction</title>
   </Meta>
 
-   <SimulationComponent>
-        <type> mpm </type>
-   </SimulationComponent>
+  <SimulationComponent type="mpm" />
 
   <Time>
     <maxTime>3.75</maxTime>
