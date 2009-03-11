@@ -40,6 +40,7 @@ SRCS   += \
         $(SRCDIR)/ImplicitCM.cc                 \
         $(SRCDIR)/MPMMaterial.cc                \
         $(SRCDIR)/CompNeoHook.cc                \
+        $(SRCDIR)/CNH_MMS.cc                    \
         $(SRCDIR)/CNHDamage.cc                  \
         $(SRCDIR)/CNHPDamage.cc                 \
         $(SRCDIR)/CompNeoHookImplicit.cc        \

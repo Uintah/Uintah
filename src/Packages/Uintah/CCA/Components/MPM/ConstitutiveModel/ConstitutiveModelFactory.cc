@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CNH_MMS.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CNHDamage.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CNHPDamage.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
@@ -105,6 +106,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
   else if (mat_type ==  "cnh_damage") 
     return(scinew CNHDamage(child,flags));
+
+  else if (mat_type ==  "cnh_mms") 
+    return(scinew CNH_MMS(child,flags));
 
   else if (mat_type ==  "cnhp_damage") 
     return(scinew CNHPDamage(child,flags));
