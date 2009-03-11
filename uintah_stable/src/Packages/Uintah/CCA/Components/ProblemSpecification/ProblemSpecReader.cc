@@ -1496,8 +1496,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
       }
 
       throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
-                                   "' missing.  Please fix XML in .ups file or correct validation Tag list.\n" +
-                                   getErrorInfo( (xmlNode*)attr ),
+                                   "' missing.  Please fix .ups file (or update ups_spec.xml).\n",
                                    __FILE__, __LINE__ );
     }
   }

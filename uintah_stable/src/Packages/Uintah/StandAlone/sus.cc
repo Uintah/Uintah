@@ -639,8 +639,13 @@ main( int argc, char *argv[], char *env[] )
 #ifndef NO_ICE
     delete modelmaker;
 #endif
+  } catch (ProblemSetupException & e) {
+    // Don't show a stack trace in the case of ProblemSetupException.
+    cerrLock.lock();
+    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
+    cerrLock.unlock();
+    thrownException = true;
   } catch (Exception& e) {
-    
     cerrLock.lock();
     cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
     if(e.stackTrace())
