@@ -30,6 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Packages/Uintah/CCA/Components/LoadBalancers/ProfileDriver.h>
 #include <Core/Util/DebugStream.h>
+#include <sstream>
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
    
@@ -195,9 +197,10 @@ void ProfileDriver::outputError(const GridP currentGrid)
 
   if(maxCostm/maxCostp>1.1)
   {
+    stringstream str;
     if(d_myworld->myrank()==0)
     {
-      cout << d_myworld->myrank() << " Error measured/predicted do not line up, patch cost processor " << maxLocm << " patches:";
+      stats << d_myworld->myrank() << " Error measured/predicted do not line up, patch cost processor " << maxLocm << " patches:";
     }
       
     //for each level
@@ -239,10 +242,9 @@ void ProfileDriver::outputError(const GridP currentGrid)
       IntVector low=regions[maxLoc].getLow()/d_minPatchSize[l];
       IntVector high=regions[maxLoc].getHigh()/d_minPatchSize[l];
       
-      MPI_Barrier(d_myworld->getComm());
       if(d_myworld->myrank()==0)
-        stats << "        map entries for region:" << regions[maxLoc] << endl;
-      MPI_Barrier(d_myworld->getComm());
+        str << "        map entries for region:" << regions[maxLoc] << endl;
+      
       //loop through datapoints
       for(CellIterator iter(low,high); !iter.done(); iter++) 
       {
@@ -252,9 +254,15 @@ void ProfileDriver::outputError(const GridP currentGrid)
         //if in the map
         if(it!=costs[l].end())
         {
-         stats << "              " << d_myworld->myrank() << " level: " << l << " key: " << it->first << " measured: " << it->second.current << " predicted: " << it->second.weight << endl;
+         str << "              " << d_myworld->myrank() << " level: " << l << " key: " << it->first << " measured: " << it->second.current << " predicted: " << it->second.weight << endl;
         }
       } 
+    }
+    for(int p=0;p<d_myworld->size();p++)
+    {
+      MPI_Barrier(d_myworld->getComm());
+      if(p==d_myworld->myrank())
+        stats << str.str();
     }
   }
 }
