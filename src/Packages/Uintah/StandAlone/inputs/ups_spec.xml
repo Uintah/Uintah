@@ -129,6 +129,7 @@
 
     <difference               spec="FORWARD_DECLARATION" />
     <union                    spec="FORWARD_DECLARATION" />
+    <intersection             spec="FORWARD_DECLARATION" />
 
     <union                    spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
@@ -137,6 +138,7 @@
       <cylinder               spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
+      <intersection           spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </union>
 
