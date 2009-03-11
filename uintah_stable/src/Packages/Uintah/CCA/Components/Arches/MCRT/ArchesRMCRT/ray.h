@@ -34,15 +34,15 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdlib>
 #include <cmath>
 
-#include "MersenneTwister.h"
-#include "VirtualSurface.h"
-#include "RealSurface.h"
-#include "TopRealSurface.h"
-#include "BottomRealSurface.h"
-#include "FrontRealSurface.h"
-#include "BackRealSurface.h"
-#include "LeftRealSurface.h"
-#include "RightRealSurface.h"
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BottomRealSurface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/FrontRealSurface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/BackRealSurface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/LeftRealSurface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/RightRealSurface.h>
 
 
 class MTRand;
@@ -77,10 +77,14 @@ public:
 		  const double &xlow, const double &xup,
 		  const double &ylow, const double &yup,
 		  const double &zlow, const double &zup){
+
+    R_xemiss =  MTrng.randExc();
+    R_yemiss =  MTrng.randExc();
+    R_zemiss =  MTrng.randExc();
     
-    xemiss = xlow + ( xup - xlow ) * MTrng.randExc();
-    yemiss = ylow + ( yup - ylow ) * MTrng.randExc();
-    zemiss = zlow + ( zup - zlow ) * MTrng.randExc();
+    xemiss = xlow + ( xup - xlow ) * R_xemiss;
+    yemiss = ylow + ( yup - ylow ) * R_yemiss;
+    zemiss = zlow + ( zup - zlow ) * R_zemiss;
     
   }
   
@@ -156,6 +160,9 @@ public:
       jIndex * Ncx +
       kIndex * Ncx * Ncy;
     
+    //  if (directionVector[2] >  0 ) currentvIndex = 32779; //4189; //3789;
+    //   else currentvIndex = 31179;//3789; //4189;
+     
   }
   
 
@@ -219,7 +226,46 @@ public:
     return zemiss;
   }
 
+  inline
+  double get_R_xemiss(){
+    return R_xemiss;
+  }
 
+  
+  inline
+  double get_R_yemiss(){
+    return R_yemiss;
+  }
+
+
+  inline
+  double get_R_zemiss(){
+    return R_zemiss;
+  }
+
+  
+  inline
+  double get_R_theta(){
+    return R_theta;
+  }
+
+
+//   inline
+//   double get_theta(){
+//     return theta;
+//   }
+
+  
+  inline
+  double get_R_phi(){
+    return R_phi;
+  }
+
+//   inline
+//   double get_phi(){
+//     return phi;
+//   }
+  
   inline
   double dotProduct(const double *s1, const double *s2){
     return s1[0] * s2[0] + s1[1] * s2[1] + s1[2] * s2[2];
@@ -255,8 +301,8 @@ private:
   int currentvIndex; // for volume index
   int futurevIndex;
   int hitSurfaceIndex;
- 
-  //  VirtualSurface obVirtual;
+  
+  // VirtualSurface obVirtual;
   RealSurface *obReal;
   TopRealSurface obTop_ray;
   BottomRealSurface obBottom_ray;
@@ -269,6 +315,7 @@ private:
   int Ncx, Ncy, Ncz, ghostX, ghostY, ghostTB;
   int iIndex, jIndex, kIndex;
   int futureViIndex, futureVjIndex, futureVkIndex;
+  
   // basic data for a ray
   double xemiss, yemiss, zemiss;
   double xhit, yhit, zhit;
@@ -280,6 +327,8 @@ private:
   double disMin, disX, disY, disZ;
   double xx[2], yy[2], zz[2], inv_directionVector[3];
   int sign[3];
+
+  double R_phi, R_theta, R_xemiss, R_yemiss, R_zemiss;
    
 };
 

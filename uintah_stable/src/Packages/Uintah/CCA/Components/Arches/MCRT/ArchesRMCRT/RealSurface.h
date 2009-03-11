@@ -31,8 +31,8 @@ DEALINGS IN THE SOFTWARE.
 #ifndef RealSurface_H
 #define RealSurface_H
 
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
-#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
+#include  <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/MersenneTwister.h>
 #include <cmath>
 
 class MTRand;
@@ -57,10 +57,33 @@ public:
   virtual void get_t2() = 0;
 
   inline
-  void getTheta(const double &random){
+  void set_theta(const double &random){
     theta = asin(sqrt(random));
   }
 
+  inline
+  double get_theta(){
+    return theta;
+  }
+
+  
+  inline
+  double get_phi(){
+    return phi;
+  }
+
+  inline
+  double get_R_theta(){
+    return R_theta;
+  }
+
+
+  inline
+  double get_R_phi(){
+    return R_phi;
+  }
+
+  
   inline
   int get_surfaceIndex(){
     return this->surfaceIndex;
@@ -147,7 +170,8 @@ protected:
   double n[3], t1[3], t2[3];
   double xlow, xup, ylow, yup, zlow, zup;
   int surfaceIndex;
-  int surfaceiIndex, surfacejIndex, surfacekIndex;  
+  int surfaceiIndex, surfacejIndex, surfacekIndex;
+  double R_theta, R_phi;
  
 };
 
