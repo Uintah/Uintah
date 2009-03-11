@@ -608,16 +608,16 @@
         <do_standalone_RMCRT            spec="OPTIONAL BOOLEAN" />
         <RMCRTRadiationModel            spec="OPTIONAL NO_DATA" >
             <opl                        spec="REQUIRED DOUBLE" />
-            <const_num_rays             spec="REQUIRED INTEGER" />
+            <const_num_rays             spec="REQUIRED INTEGER 'positive'" />
             <rr_threshold               spec="OPTIONAL DOUBLE" /> 
             <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm, fssk, fsck'" />
             <sampling_scheme            spec="OPTIONAL STRING 'simple_sample, RRSD, RRSDstratified'" /> 
               <RRSDstratified           spec="OPTIONAL NO_DATA" >
-                 <x_n                   spec="REQUIRED INTEGER" />
-                 <y_n                   spec="REQUIRED INTEGER" />
-                 <z_n                   spec="REQUIRED INTEGER" />
-                 <theta_n               spec="REQUIRED INTEGER" />
-                 <phi_n                 spec="REQUIRED INTEGER" />
+                 <x_n                   spec="REQUIRED INTEGER 'positive'" />
+                 <y_n                   spec="REQUIRED INTEGER 'positive'" />
+                 <z_n                   spec="REQUIRED INTEGER 'positive'" />
+                 <theta_n               spec="REQUIRED INTEGER '1 30'" />
+                 <phi_n                 spec="REQUIRED INTEGER '1 30'"/>
               </RRSDstratified>
         </RMCRTRadiationModel>
         <EnthalpySolver                 spec="OPTIONAL NO_DATA" >
