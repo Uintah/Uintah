@@ -1063,7 +1063,7 @@
           <zero_stress_upon_failure      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: what is this for? -->
 
   <!-- The following are for the Kayenta model -->
-  <B0        spec="REQUIRED DOUBLE" /> <!--initial bulk modulus (stress) -->
+  <B0        spec="OPTIONAL DOUBLE" /> <!--initial bulk modulus (stress) -->
   <B1        spec="OPTIONAL DOUBLE" /> <!--nonlinear bulk mod param (stress) -->
   <B2        spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
   <B3        spec="OPTIONAL DOUBLE" /> <!-- nonlinear bulk mod param (stress) -->
