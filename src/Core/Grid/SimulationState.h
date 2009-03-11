@@ -57,6 +57,7 @@ class ICEMaterial;
 class MPMMaterial;
 class AngioMaterial;
 class ArchesMaterial; 
+class SpatialOpsMaterial;
 class SimpleMaterial;
 class Level;
    
@@ -119,6 +120,7 @@ public:
   void registerAngioMaterial(AngioMaterial*);
   void registerAngioMaterial(AngioMaterial*,unsigned int index);
   void registerArchesMaterial(ArchesMaterial*);
+  void registerSpatialOpsMaterial(SpatialOpsMaterial*);
   void registerICEMaterial(ICEMaterial*);
   void registerICEMaterial(ICEMaterial*,unsigned int index);
   int getNumVelFields() const;
@@ -134,6 +136,9 @@ public:
   }
   int getNumArchesMatls() const {
     return (int)arches_matls.size();
+  }
+ int getNumSpatialOpsMatls() const {
+    return (int)spatialops_matls.size();
   }
   int getNumICEMatls() const {
     return (int)ice_matls.size();
@@ -154,6 +159,9 @@ public:
   }
   ArchesMaterial* getArchesMaterial(int idx) const {
     return arches_matls[idx];
+  }
+  SpatialOpsMaterial* getSpatialOpsMaterial(int idx) const {
+    return spatialops_matls[idx];
   }
   ICEMaterial* getICEMaterial(int idx) const {
     return ice_matls[idx];
@@ -186,6 +194,7 @@ public:
   const MaterialSet* allMPMMaterials() const;
   const MaterialSet* allAngioMaterials() const;
   const MaterialSet* allArchesMaterials() const;
+  const MaterialSet* allSpatialOpsMaterials() const;
   const MaterialSet* allICEMaterials() const;
   const MaterialSet* allMaterials() const;
   const MaterialSet* originalAllMaterials() const;
@@ -277,6 +286,7 @@ private:
   std::vector<MPMMaterial*>    mpm_matls;
   std::vector<AngioMaterial*>  angio_matls;
   std::vector<ArchesMaterial*> arches_matls;
+  std::vector<SpatialOpsMaterial*> spatialops_matls;
   std::vector<ICEMaterial*>    ice_matls;
   std::vector<SimpleMaterial*> simple_matls;
 
@@ -300,6 +310,7 @@ private:
   MaterialSet    * all_angio_matls;
   MaterialSet    * all_ice_matls;
   MaterialSet    * all_arches_matls;
+  MaterialSet    * all_spatialops_matls;
   MaterialSet    * all_matls;
 
   // keep track of the original materials if you switch
