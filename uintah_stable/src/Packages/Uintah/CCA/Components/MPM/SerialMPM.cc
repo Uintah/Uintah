@@ -215,6 +215,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGN=2;
   }
 
+  if (flags->d_prescribeDeformation){
+    readPrescribedDeformations(flags->d_prescribedDeformationFile);
+  }
+
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
   MPMPhysicalBCFactory::create(restart_mat_ps);
@@ -484,6 +488,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleIntegrateAcceleration(          sched, patches, matls);
   scheduleExMomIntegrated(                sched, patches, matls);
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
+  scheduleSetPrescribedMotion(            sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   if(flags->d_doExplicitHeatConduction){
     scheduleComputeHeatExchange(          sched, patches, matls);
@@ -1145,6 +1150,33 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
+void SerialMPM::scheduleSetPrescribedMotion(SchedulerP& sched,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls)
+
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  if (flags->d_prescribeDeformation){
+    printSchedule(patches,cout_doing,"MPM::scheduleSetPrescribedMotion\t\t\t");
+  
+    Task* t=scinew Task("MPM::setPrescribedMotion",
+                      this, &SerialMPM::setPrescribedMotion);
+
+    const MaterialSubset* mss = matls->getUnion();
+    t->modifies(             lb->gAccelerationLabel,     mss);
+    t->modifies(             lb->gVelocityStarLabel,     mss);
+    if(!flags->d_doGridReset){
+      t->requires(Task::OldDW, lb->gDisplacementLabel,    Ghost::None);
+      t->modifies(lb->gDisplacementLabel, mss);
+    }
+
+    sched->addTask(t, patches, matls);
+   }
+}
+
 void SerialMPM::scheduleRefine(const PatchSet* patches, 
                                SchedulerP& sched)
 {
@@ -1475,8 +1507,37 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   }
 
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+
 }
 
+void SerialMPM::readPrescribedDeformations(string filename)
+{
+ if(filename!="") {
+    std::ifstream is(filename.c_str());
+    if (!is ){
+      throw ProblemSetupException("ERROR Opening prescribed deformation file '"+filename+"'\n",
+                                  __FILE__, __LINE__);
+    }
+    double t0(-1.e9);
+    while(is) {
+        double t1,U11,U12,U13,U21,U22,U23,U31,U32,U33,R11,R22,R33,R12,R13,R23;
+        is >> t1 >> U11 >> U12 >> U13 >> U21 >> U22 >> U23 >> U31 >> U32 >> U33 >> R11 >> R22 >> R33 >> R12 >> R13 >> R23;
+        if(is) {
+            if(t1<=t0){
+              throw ProblemSetupException("ERROR: Time in prescribed deformation file is not monotomically increasing", __FILE__, __LINE__);
+            }
+            d_prescribedTimes.push_back(t1);
+            d_prescribedStretch.push_back(Matrix3(U11,U12,U13,U21,U22,U23,U31,U32,U33));
+            d_prescribedRotation.push_back(Matrix3(R11,R12,R13,R12,R22,R23,R13,R23,R33));
+        }
+        t0 = t1;
+    }
+    if(d_prescribedTimes.size()<2) {
+        throw ProblemSetupException("ERROR: Failed to generate valid deformation profile",
+                                    __FILE__, __LINE__);
+    }
+  }
+}
 
 void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
                                                 const PatchSubset* patches,
@@ -2220,7 +2281,7 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
               "Doing setGridBoundaryConditions\t\t\t");
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    
+
     delt_vartype delT;            
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
@@ -2264,6 +2325,89 @@ void SerialMPM::setGridBoundaryConditions(const ProcessorGroup*,
       }  // d_doGridReset
     } // matl loop
   }  // patch loop
+}
+
+void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing, "Doing setPrescribedMotion\t\t\t");
+
+    // Get the current time
+    double time = d_sharedState->getElapsedTime();
+    delt_vartype delT;            
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      NCVariable<Vector> gvelocity_star, gacceleration;
+
+      new_dw->getModifiable(gvelocity_star,lb->gVelocityStarLabel,  dwi,patch);
+      new_dw->getModifiable(gacceleration, lb->gAccelerationLabel,  dwi,patch);
+
+      gacceleration.initialize(Vector(0.0));
+      Matrix3 Fdot(0.);
+
+      // Get U and R from file by interpolating between available times
+      int s;  // This time index will be the lower of the two we interpolate from
+      int smin = 0;
+      int smax = (int) (d_prescribedTimes.size()-1);
+      double tmin = d_prescribedTimes[smin];
+      double tmax = d_prescribedTimes[smax];
+
+      if(time<=tmin) {
+          s=smin;
+      } else if(time>=tmax) {
+          s=smax;
+      } else {
+        while (smax>smin+1) {
+          int smid = (smin+smax)/2;
+          if(d_prescribedTimes[smid]<time){
+            smin = smid;
+          } else{
+            smax = smid;
+          }
+        }
+        s = smin;
+      }
+
+      Matrix3 U_high = d_prescribedStretch[s+1];
+      Matrix3 U_low  = d_prescribedStretch[s];
+      Matrix3 R_high = d_prescribedRotation[s+1];
+      Matrix3 R_low  = d_prescribedRotation[s];
+      Matrix3 F_high = R_high*U_high;
+      Matrix3 F_low  = R_low*U_low;
+
+      Fdot = (F_high - F_low)/(d_prescribedTimes[s+1] - d_prescribedTimes[s]);
+
+      for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();
+                                                                iter++){
+        IntVector n = *iter;
+        Vector NodePosition = patch->getNodePosition(n).asVector();
+        gvelocity_star[n] = Fdot*NodePosition;
+      } // Node Iterator
+      if(!flags->d_doGridReset){
+        NCVariable<Vector> displacement;
+        constNCVariable<Vector> displacementOld;
+        new_dw->allocateAndPut(displacement,lb->gDisplacementLabel,dwi,patch);
+        old_dw->get(displacementOld,        lb->gDisplacementLabel,dwi,patch,
+                                                               Ghost::None,0);
+        for(NodeIterator iter=patch->getExtraNodeIterator__New();
+                         !iter.done();iter++){
+           IntVector c = *iter;
+           displacement[c] = displacementOld[c] + gvelocity_star[c] * delT;
+        }
+      }  // d_doGridReset
+    }   // matl loop
+  }     // patch loop
 }
 
 void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
