@@ -65,7 +65,6 @@
    <MaterialProperties>
 	<MPM>
            <material name = "Cylinder" >
-              <burn type = "null" />
               <density>   2489.0   </density>
 	      <constitutive_model type="comp_mooney_rivlin"> 
                  <he_constant_1>5.0</he_constant_1>
