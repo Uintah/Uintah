@@ -29,10 +29,12 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/VirtualSurface.h>
+#include <Packages/Uintah/CCA/Components/Arches/MCRT/ArchesRMCRT/Consts.h>
 
 #include <iostream>
 #include <cstdlib>
-#include "Consts.h"
+
+using namespace std;
 
 VirtualSurface::VirtualSurface(){
 }
@@ -41,7 +43,9 @@ VirtualSurface::~VirtualSurface(){
 }
 
 
-void VirtualSurface::getTheta(const double &random){
+
+  
+void VirtualSurface::set_theta(const double &random){
   if (PhFunc==ISOTROPIC){
     theta = acos( 1 - 2 * random);
   }
@@ -61,7 +65,6 @@ void VirtualSurface::getTheta(const double &random){
   }
   
 }
-
 
 
 // get_e1, sIn = sIn ( incoming direction vector)
@@ -107,15 +110,12 @@ void VirtualSurface::get_e2(const double *sIn){
 
 void VirtualSurface::get_s(MTRand &MTrng, const double *sIn, double *s){
 
-   //  get_sIn(sIncoming);
-  
   get_e1(MTrng.randExc(),MTrng.randExc(), MTrng.randExc(), sIn);
   get_e2(sIn);
 
-  this->getTheta(MTrng.randExc());
-
-  getPhi(MTrng.randExc());
-
+  this->set_theta(MTrng.randExc());   
+  set_phi(MTrng.randExc());
+    
   for ( int i = 0; i < 3; i ++ ) 
     s[i] = sin(theta) * ( cos(phi) * e1[i] + sin(phi) * e2[i] )
       + cos(theta) * sIn[i] ;
