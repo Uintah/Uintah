@@ -455,7 +455,7 @@
       -->
       <MMS                              spec="OPTIONAL NO_DATA"
                                           attribute1="whichMMS REQUIRED STRING 'constantMMS, almgrenMMS'" >
-        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L'" />  <!-- FIXME: is 'L' valid (almgrenMMS.ups)? -->
+        <mmsErrorType                   spec="REQUIRED STRING 'Linf, L2'" />  <!-- FIXME: is 'L' valid (almgrenMMS.ups)? -->
         <constantMMS                    spec="OPTIONAL NO_DATA" need_applies_to="whichMMS constantMMS" >
           <cu                           spec="REQUIRED DOUBLE" />
           <cv                           spec="REQUIRED DOUBLE" />
