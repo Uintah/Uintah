@@ -138,13 +138,7 @@ public:
   virtual void    print() const;
   virtual void    print(ostream&) const;
   
-  //! Persistent representation...
-  virtual string type_name() { return "DenseMatrix"; }
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
-
   //! Friend functions
-  
 
 };
 

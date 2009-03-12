@@ -51,7 +51,7 @@ namespace SCIRun {
 
 /////////
 // Structure to hold NrrdData
-class SCISHARE NrrdData : public PropertyManager {
+class SCISHARE NrrdData : public Datatype {
 public:  
   // GROUP: public data
   //////////
@@ -65,9 +65,6 @@ public:
   virtual ~NrrdData();
 
   virtual NrrdData* clone();
-
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
 
   // Separate raw files.
   void set_embed_object(bool v) { embed_object_ = v; }
@@ -89,8 +86,6 @@ protected:
 
   // To help with pio
   string                nrrd_fname_;
-
-  static Persistent *maker();
 };
 
 
