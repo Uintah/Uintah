@@ -2,8 +2,8 @@
 #define Uintah_Component_SpatialOps_ConstSrcTerm_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
-#include <CCA/Components/SpatialOps/SourceTermBase.h>
-#include <CCA/Components/SpatialOps/SourceTermFactory.h>
+#include <CCA/Components/SpatialOps/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
 
 //===========================================================================
 

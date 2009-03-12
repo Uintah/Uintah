@@ -1,46 +1,44 @@
-#include <CCA/Components/SpatialOps/SourceTermFactory.h>
-#include <CCA/Components/SpatialOps/SourceTermBase.h> 
+#include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
+#include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h> 
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
 
 //===========================================================================
 
-using namespace Uintah;
+using namespace Uintah; 
 
-SourceTermFactory::SourceTermFactory()
+EqnFactory::EqnFactory()
 {}
 
-SourceTermFactory::~SourceTermFactory()
+EqnFactory::~EqnFactory()
 {
   // delete the builders
   for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
-    //delete *i;
+    //not sure why this doesn't work...
+    //delete i->second; // This isn't exiting gracefully when this is uncommented
     }
 
   // delete all constructed solvers
-  for( SourceMap::iterator i=sources_.begin(); i!=sources_.end(); ++i ){
-    //delete *i;
+  for( EqnMap::iterator i=eqns_.begin(); i!=eqns_.end(); ++i ){
+    delete i->second;
   }
 }
-
 //---------------------------------------------------------------------------
-// Method: Return a reference to itself. 
+// Method: Self, Returns an instance of itself
 //---------------------------------------------------------------------------
-SourceTermFactory&
-SourceTermFactory::self()
+EqnFactory& 
+EqnFactory::self()
 {
-  static SourceTermFactory s;
-  return s;
+  static EqnFactory s; 
+  return s; 
 }
 //---------------------------------------------------------------------------
-// Method: Register a source term  
+// Method: Register a scalar Eqn. 
 //---------------------------------------------------------------------------
-void
-SourceTermFactory::register_source_term( const std::string name,
-                                         SourceTermBuilder* builder )
+void 
+EqnFactory::register_scalar_eqn( const std::string name, EqnBuilder* builder ) 
 {
-
   ASSERT( builder != NULL );
 
   BuildMap::iterator i = builders_.find( name );
@@ -49,20 +47,20 @@ SourceTermFactory::register_source_term( const std::string name,
   }
   else{
     std::ostringstream errmsg;
-    std::cout << "ERROR: A duplicate SourceTermBuilder object was loaded: " << std::endl
-     << "       " << name << ".  This is forbidden." << std::endl;
+    std::cout << "ERROR: A duplicate EqnBuilder object was loaded on equation: " << std::endl
+	   << "       " << name << ".  This is forbidden." << std::endl;
     throw std::runtime_error( errmsg.str() );
   }
 }
 //---------------------------------------------------------------------------
-// Method: Retrieve a source term from the map. 
+// Method: Retrieve a scalar Eqn. 
 //---------------------------------------------------------------------------
-SourceTermBase&
-SourceTermFactory::retrieve_source_term( const std::string name )
+EqnBase&
+EqnFactory::retrieve_scalar_eqn( const std::string name )
 {
-  const SourceMap::iterator isource= sources_.find( name );
+  const EqnMap::iterator ieqn= eqns_.find( name );
 
-  if( isource != sources_.end() ) return *(isource->second);
+  if( ieqn != eqns_.end() ) return *(ieqn->second);
 
   const BuildMap::iterator ibuilder = builders_.find( name );
 
@@ -72,9 +70,11 @@ SourceTermFactory::retrieve_source_term( const std::string name )
     throw std::runtime_error( errmsg.str() );
   }
 
-  SourceTermBuilder* builder = ibuilder->second;
-  SourceTermBase* src = builder->build();
-  sources_[name] = src;
+  EqnBuilder* builder = ibuilder->second;
+  EqnBase* eqn = builder->build();
+  eqns_[name] = eqn;
 
-  return *src;
+  return *eqn;
 }
+
+

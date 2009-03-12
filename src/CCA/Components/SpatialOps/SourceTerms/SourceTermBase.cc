@@ -1,6 +1,6 @@
 
-#include <CCA/Components/SpatialOps/SourceTermBase.h>
-#include <CCA/Components/SpatialOps/SourceTermFactory.h>
+#include <CCA/Components/SpatialOps/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 using namespace std;

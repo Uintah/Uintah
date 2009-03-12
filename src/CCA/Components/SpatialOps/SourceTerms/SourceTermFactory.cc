@@ -1,5 +1,5 @@
-#include <CCA/Components/SpatialOps/ModelFactory.h>
-#include <CCA/Components/SpatialOps/ModelBase.h> 
+#include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/SpatialOps/SourceTerms/SourceTermBase.h> 
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
@@ -8,10 +8,10 @@
 
 using namespace Uintah;
 
-ModelFactory::ModelFactory()
+SourceTermFactory::SourceTermFactory()
 {}
 
-ModelFactory::~ModelFactory()
+SourceTermFactory::~SourceTermFactory()
 {
   // delete the builders
   for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
@@ -19,7 +19,7 @@ ModelFactory::~ModelFactory()
     }
 
   // delete all constructed solvers
-  for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
+  for( SourceMap::iterator i=sources_.begin(); i!=sources_.end(); ++i ){
     //delete *i;
   }
 }
@@ -27,18 +27,18 @@ ModelFactory::~ModelFactory()
 //---------------------------------------------------------------------------
 // Method: Return a reference to itself. 
 //---------------------------------------------------------------------------
-ModelFactory&
-ModelFactory::self()
+SourceTermFactory&
+SourceTermFactory::self()
 {
-  static ModelFactory s;
+  static SourceTermFactory s;
   return s;
 }
 //---------------------------------------------------------------------------
-// Method: Register a model  
+// Method: Register a source term  
 //---------------------------------------------------------------------------
 void
-ModelFactory::register_model( const std::string name,
-                              ModelBuilder* builder )
+SourceTermFactory::register_source_term( const std::string name,
+                                         SourceTermBuilder* builder )
 {
 
   ASSERT( builder != NULL );
@@ -49,32 +49,32 @@ ModelFactory::register_model( const std::string name,
   }
   else{
     std::ostringstream errmsg;
-    std::cout << "ERROR: A duplicate ModelBuilder object was loaded: " << std::endl
+    std::cout << "ERROR: A duplicate SourceTermBuilder object was loaded: " << std::endl
      << "       " << name << ".  This is forbidden." << std::endl;
     throw std::runtime_error( errmsg.str() );
   }
 }
 //---------------------------------------------------------------------------
-// Method: Retrieve a model from the map. 
+// Method: Retrieve a source term from the map. 
 //---------------------------------------------------------------------------
-ModelBase&
-ModelFactory::retrieve_model( const std::string name )
+SourceTermBase&
+SourceTermFactory::retrieve_source_term( const std::string name )
 {
-  const ModelMap::iterator imodel= models_.find( name );
+  const SourceMap::iterator isource= sources_.find( name );
 
-  if( imodel != models_.end() ) return *(imodel->second);
+  if( isource != sources_.end() ) return *(isource->second);
 
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
     std::ostringstream errmsg;
-    errmsg << "ERROR: No model registered for " << name << std::endl;
+    errmsg << "ERROR: No source term registered for " << name << std::endl;
     throw std::runtime_error( errmsg.str() );
   }
 
-  ModelBuilder* builder = ibuilder->second;
-  ModelBase* model = builder->build();
-  models_[name] = model;
+  SourceTermBuilder* builder = ibuilder->second;
+  SourceTermBase* src = builder->build();
+  sources_[name] = src;
 
-  return *model;
+  return *src;
 }

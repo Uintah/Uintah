@@ -10,7 +10,7 @@
 #include <CCA/Components/SpatialOps/BoundaryCond.h>
 #include <CCA/Components/SpatialOps/ExplicitTimeInt.h>
 
-#include <CCA/Components/SpatialOps/EqnBase.h>
+#include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
 
 using namespace std;
 using namespace Uintah;
