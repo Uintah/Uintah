@@ -1,44 +1,46 @@
-#include <CCA/Components/SpatialOps/EqnFactory.h>
-#include <CCA/Components/SpatialOps/EqnBase.h> 
+#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/ModelBase.h> 
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
 
 //===========================================================================
 
-using namespace Uintah; 
+using namespace Uintah;
 
-EqnFactory::EqnFactory()
+ModelFactory::ModelFactory()
 {}
 
-EqnFactory::~EqnFactory()
+ModelFactory::~ModelFactory()
 {
   // delete the builders
   for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
-    //not sure why this doesn't work...
-    //delete i->second; // This isn't exiting gracefully when this is uncommented
+    //delete *i;
     }
 
   // delete all constructed solvers
-  for( EqnMap::iterator i=eqns_.begin(); i!=eqns_.end(); ++i ){
-    delete i->second;
+  for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
+    //delete *i;
   }
 }
+
 //---------------------------------------------------------------------------
-// Method: Self, Returns an instance of itself
+// Method: Return a reference to itself. 
 //---------------------------------------------------------------------------
-EqnFactory& 
-EqnFactory::self()
+ModelFactory&
+ModelFactory::self()
 {
-  static EqnFactory s; 
-  return s; 
+  static ModelFactory s;
+  return s;
 }
 //---------------------------------------------------------------------------
-// Method: Register a scalar Eqn. 
+// Method: Register a model  
 //---------------------------------------------------------------------------
-void 
-EqnFactory::register_scalar_eqn( const std::string name, EqnBuilder* builder ) 
+void
+ModelFactory::register_model( const std::string name,
+                              ModelBuilder* builder )
 {
+
   ASSERT( builder != NULL );
 
   BuildMap::iterator i = builders_.find( name );
@@ -47,34 +49,32 @@ EqnFactory::register_scalar_eqn( const std::string name, EqnBuilder* builder )
   }
   else{
     std::ostringstream errmsg;
-    std::cout << "ERROR: A duplicate EqnBuilder object was loaded on equation: " << std::endl
-	   << "       " << name << ".  This is forbidden." << std::endl;
+    std::cout << "ERROR: A duplicate ModelBuilder object was loaded: " << std::endl
+     << "       " << name << ".  This is forbidden." << std::endl;
     throw std::runtime_error( errmsg.str() );
   }
 }
 //---------------------------------------------------------------------------
-// Method: Retrieve a scalar Eqn. 
+// Method: Retrieve a model from the map. 
 //---------------------------------------------------------------------------
-EqnBase&
-EqnFactory::retrieve_scalar_eqn( const std::string name )
+ModelBase&
+ModelFactory::retrieve_model( const std::string name )
 {
-  const EqnMap::iterator ieqn= eqns_.find( name );
+  const ModelMap::iterator imodel= models_.find( name );
 
-  if( ieqn != eqns_.end() ) return *(ieqn->second);
+  if( imodel != models_.end() ) return *(imodel->second);
 
   const BuildMap::iterator ibuilder = builders_.find( name );
 
   if( ibuilder == builders_.end() ){
     std::ostringstream errmsg;
-    errmsg << "ERROR: No source term registered for " << name << std::endl;
+    errmsg << "ERROR: No model registered for " << name << std::endl;
     throw std::runtime_error( errmsg.str() );
   }
 
-  EqnBuilder* builder = ibuilder->second;
-  EqnBase* eqn = builder->build();
-  eqns_[name] = eqn;
+  ModelBuilder* builder = ibuilder->second;
+  ModelBase* model = builder->build();
+  models_[name] = model;
 
-  return *eqn;
+  return *model;
 }
-
-

@@ -6,20 +6,13 @@ SRCDIR   := CCA/Components/SpatialOps
 
 SRCS     += $(SRCDIR)/SpatialOps.cc \
       $(SRCDIR)/Fields.cc \
-    $(SRCDIR)/EqnFactory.cc \
     $(SRCDIR)/ExplicitTimeInt.cc \
     $(SRCDIR)/BoundaryCond.cc \
-    $(SRCDIR)/EqnBase.cc \
-    $(SRCDIR)/ScalarEqn.cc \
-    $(SRCDIR)/SourceTermFactory.cc \
-    $(SRCDIR)/SourceTermBase.cc \
-    $(SRCDIR)/ModelFactory.cc \
-    $(SRCDIR)/ModelBase.cc \
-    $(SRCDIR)/ConstSrcTerm.cc \
     $(SRCDIR)/SpatialOpsMaterials.cc
 
-# SUBDIRS := $(SRCDIR)/fortran 
-# include $(SCIRUN_SCRIPTS)/recurse.mk
+SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/TransportEqns $(SRCDIR)/SourceTerms
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
         Core/ProblemSpec   \

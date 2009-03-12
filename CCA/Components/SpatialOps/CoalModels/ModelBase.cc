@@ -1,6 +1,6 @@
 
-#include <CCA/Components/SpatialOps/ModelBase.h>
-#include <CCA/Components/SpatialOps/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
+#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 using namespace std;

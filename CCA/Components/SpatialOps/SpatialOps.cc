@@ -1,11 +1,11 @@
 #include <CCA/Components/SpatialOps/SpatialOps.h>
-#include <CCA/Components/SpatialOps/SourceTermFactory.h>
-#include <CCA/Components/SpatialOps/EqnFactory.h>
+#include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
 #include <CCA/Components/SpatialOps/Fields.h>
 #include <CCA/Components/SpatialOps/ExplicitTimeInt.h>
-#include <CCA/Components/SpatialOps/EqnBase.h>
-#include <CCA/Components/SpatialOps/ConstSrcTerm.h>
-#include <CCA/Components/SpatialOps/ScalarEqn.h>
+#include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
+#include <CCA/Components/SpatialOps/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/SpatialOps/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/SpatialOps/BoundaryCond.h>
 #include <CCA/Components/SpatialOps/SpatialOpsMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
