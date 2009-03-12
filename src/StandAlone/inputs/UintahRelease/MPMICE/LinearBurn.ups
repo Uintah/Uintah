@@ -7,7 +7,7 @@
        <title> Linear Burn Test at 200 atm </title>
    </Meta>    
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
@@ -181,7 +181,6 @@
         <minimum_particle_mass>     1.e-10        </minimum_particle_mass>
         <maximum_particle_velocity> 1.e4          </maximum_particle_velocity>
         <artificial_damping_coeff>       0.0      </artificial_damping_coeff>
-        <artificial_viscosity>           true     </artificial_viscosity>
         <accumulate_strain_energy>       false    </accumulate_strain_energy>
         <use_load_curves>                false    </use_load_curves>
         <turn_on_adiabatic_heating>      false    </turn_on_adiabatic_heating>
@@ -253,7 +252,6 @@
              <Z>                      5.0e19  </Z>
              <EoverR>                 2.652e4 </EoverR>
              <dynamic_coeff_friction> 0.25    </dynamic_coeff_friction>
-             <volfracHE>                      </volfracHE> 
            </constitutive_model>
 
            <geom_object>

@@ -6,7 +6,7 @@
     <title>none</title>
   </Meta>
 
-  <SimulationComponent type="qwerty" />
+  <SimulationComponent type="rmpmice" />
 
   <!--____________________________________________________________________-->
   <!--  Special Instructions                                              -->
