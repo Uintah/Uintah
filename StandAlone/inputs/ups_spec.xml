@@ -115,12 +115,30 @@
       <top                    spec="REQUIRED VECTOR" />
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
     </cylinder>
-
+    
     <sphere                   spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <origin                 spec="REQUIRED VECTOR" />
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
     </sphere>
+
+    <sphere_membrane          spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <origin                 spec="REQUIRED VECTOR" />
+      <radius                 spec="REQUIRED DOUBLE 'positive'" />
+      <thickness              spec="REQUIRED DOUBLE 'positive'" />
+      <num_lat                spec="REQUIRED DOUBLE 'positive'" />
+      <num_long               spec="REQUIRED DOUBLE 'positive'" />
+    </sphere_membrane>
+
+    <sphere_shell             spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <origin                 spec="REQUIRED VECTOR" />
+      <radius                 spec="REQUIRED DOUBLE 'positive'" />
+      <thickness              spec="REQUIRED DOUBLE 'positive'" />
+      <num_lat                spec="REQUIRED DOUBLE 'positive'" />
+      <num_long                spec="REQUIRED DOUBLE 'positive'" />
+    </sphere_shell>
 
     <tri                      spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
@@ -136,9 +154,12 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
-      <sphere                 spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
       <intersection           spec="MULTIPLE" />
+      <sphere                 spec="MULTIPLE" />
+      <sphere_membrane        spec="MULTIPLE" />
+      <sphere_shell           spec="MULTIPLE" />
+      <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </union>
 
@@ -148,16 +169,26 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
-      <sphere                 spec="MULTIPLE" />
-      <tri                    spec="MULTIPLE" />
       <difference             spec="MULTIPLE" />
+      <intersection           spec="MULTIPLE" />
+      <sphere                 spec="MULTIPLE" />
+      <sphere_membrane        spec="MULTIPLE" />
+      <sphere_shell           spec="MULTIPLE" />
+      <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </difference>
 
     <intersection             spec="OPTIONAL NO_DATA"
                                 attribute1="label OPTIONAL STRING" >
       <box                    spec="MULTIPLE" />
+      <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <difference             spec="MULTIPLE" />
+      <intersection           spec="MULTIPLE" />
+      <sphere                 spec="MULTIPLE" />
+      <sphere_membrane        spec="MULTIPLE" />
+      <sphere_shell           spec="MULTIPLE" />
+      <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </intersection>
 
@@ -165,8 +196,17 @@
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
+      <difference             spec="MULTIPLE" />
+      <intersection           spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
+      <sphere_membrane        spec="MULTIPLE" />
+      <sphere_shell           spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
+      <union                  spec="MULTIPLE" />
+
+      <file                   spec="OPTIONAL NO_DATA" >
+        <name                 spec="REQUIRED STRING" />
+      </file>
 
       <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity               spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
@@ -174,10 +214,6 @@
       <color                  spec="OPTIONAL DOUBLE" />
       <density                spec="OPTIONAL DOUBLE" />
       <pressure               spec="OPTIONAL DOUBLE" />
-
-      <difference />
-      <intersection />
-      <union />
 
       <null                   spec="OPTIONAL NO_DATA" /> <!-- FIXME: What is this? -->
 
@@ -235,7 +271,7 @@
 
   <SimulationComponent          spec="REQUIRED NO_DATA"
                                   attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                    poisson1, poisson2, poisson3, rmpmice, smpm, smpmice, switcher'" >
+                                                                    poisson1, poisson2, poisson3, rmpmice, smpm, smpmice, switcher, wave'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
     <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -243,7 +279,7 @@
                                   attribute3="level OPTIONAL STRING 'finest'" />
     <subcomponent               spec="MULTIPLE NO_DATA"
                                   attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                    poisson1, poisson2, poisson3, rigidmpmice, smpmice, smpm, switcher'" >
+                                                                    poisson1, poisson2, poisson3, rigidmpmice, smpmice, smpm, switcher, wave'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
       <input_file               spec="REQUIRED STRING" />
       <SwitchCriteria           spec="OPTIONAL NO_DATA" 
@@ -386,12 +422,13 @@
 
     <Level              spec="MULTIPLE NO_DATA">
       <Box              spec="REQUIRED NO_DATA"
-                           attribute1="label     REQUIRED STRING">
+                          attribute1="label     OPTIONAL STRING" 
+                          children1="ONE_OF(autoPatch,patches)">
         <autoPatch      spec="OPTIONAL INTEGER 'positive'" />
         <lower          spec="REQUIRED VECTOR" />
         <upper          spec="REQUIRED VECTOR" />
         <resolution     spec="OPTIONAL VECTOR" />
-        <patches        spec="REQUIRED VECTOR" />
+        <patches        spec="OPTIONAL VECTOR" />
         <extraCells     spec="OPTIONAL VECTOR" />  <!-- FIXME: is this optional?  Arches doesn't need it?  or should everyone say 0,0,0? -->
       </Box>
       <spacing          spec="OPTIONAL VECTOR" /> <!-- ????????? -->
@@ -456,7 +493,7 @@
           <criteria                     spec="OPTIONAL STRING 'Absolute'" />  <!-- FIXME: Is this really optional?  If so, what does it default to? -->
           <jump                         spec="OPTIONAL INTEGER" />
           <logging                      spec="OPTIONAL INTEGER 'positive'" />
-          <maxiterations                spec="REQUIRED INTEGER" />
+          <maxiterations                spec="OPTIONAL INTEGER 'positive'" />
           <norm                         spec="OPTIONAL STRING 'LInfinity'" /> <!-- FIXME: Is this really optional?  If so, what does it default to? -->
           <npost                        spec="REQUIRED INTEGER" />
           <npre                         spec="REQUIRED INTEGER" />
@@ -491,6 +528,7 @@
       <set_initial_condition            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires init_cond_input_file-->
       <init_cond_input_file             spec="OPTIONAL STRING" /> <!-- Should be required if set_intial_condition is true-->
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" />
+      <reacting_flow                    spec="OPTIONAL BOOLEAN" />
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
       <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
       <EKTCorrection                    spec="OPTIONAL BOOLEAN" />
@@ -914,12 +952,13 @@
         <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
         <constitutive_model              spec="REQUIRED NO_DATA"
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, comp_neo_hook, comp_neo_hook_plastic,
-                                                                        elastic_plastic, hypo_elastic, hypoelastic_plastic,
+                                                                        elastic_plastic, hypo_elastic, hypoelastic_plastic, 
                                                                         ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH,
-                                                                        small_strain_plastic, trans_iso_hyper, visco_scram, water, kayenta, cnh_mms'">
+                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic, visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms'">
           <alpha                         spec="OPTIONAL DOUBLE" />
           <Beta                          spec="OPTIONAL DOUBLE" />
           <bulk_modulus                  spec="OPTIONAL DOUBLE" />
+          <c1                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
           <C1                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <C2                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <check_max_stress_failure      spec="OPTIONAL BOOLEAN" />
@@ -1092,8 +1131,9 @@
             <T_0                         spec="OPTIONAL DOUBLE" />
             <zeta                        spec="OPTIONAL DOUBLE" />
           </shear_modulus_model>
+          <specific_heat                 spec="OPTIONAL DOUBLE" />
           <specific_heat_model           spec="OPTIONAL NO_DATA" 
-                                           attribute1="type REQUIRED STRING 'constant_Cp, steel_Cp'" />
+                                           attribute1="type REQUIRED STRING 'constant_Cp, copper_Cp, steel_Cp'" />
           <stability_check               spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'acoustic, becker, drucker, drucker_becker, none'" />
           <stddevstrain_nucleation       spec="OPTIONAL DOUBLE" />
@@ -1226,7 +1266,7 @@
                                 attribute1="name OPTIONAL STRING" >
         <dynamic_viscosity    spec="REQUIRED DOUBLE 'positive'" />
         <EOS                  spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, JWL JWLC Murnahan'" >
+                                attribute1="type REQUIRED STRING 'ideal_gas, hard_sphere_gas, TST, Thomsen_Hartka_water, JWL JWLC Murnahan'" >
           <!--  TST  -->
           <a                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
           <b                  spec="REQUIRED DOUBLE" need_applies_to='type  TST' />
@@ -1275,9 +1315,11 @@
 
   <Models                     spec="OPTIONAL NO_DATA" >
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, JWLpp, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" >
-     
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, IandG, JWLpp, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" >
+
+      <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn" />
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
+      <G                      spec="REQUIRED DOUBLE" need_applies_to="type JWLpp" />
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <momentum_src           spec="REQUIRED VECTOR" need_applies_to="type mass_momentum_energy_src"/>
       
@@ -1419,6 +1461,13 @@
   <Solver                     spec="OPTIONAL NO_DATA" 
                                 attribute1="type REQUIRED STRING 'CGSolver, direct, hypre, hypreamr'" />
 
+  <SolverTest                 spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+    <X_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Y_Laplacian              spec="OPTIONAL NO_DATA" />
+    <Z_Laplacian              spec="OPTIONAL NO_DATA" />
+  </SolverTest>
+
   <Poisson                    spec="OPTIONAL NO_DATA" >
     <delt                     spec="REQUIRED DOUBLE" />
     <maxresidual              spec="REQUIRED DOUBLE" />
@@ -1437,19 +1486,20 @@
     </exchange_properties>
     <ICE                                   spec="OPTIONAL NO_DATA" >
       <material                            spec="OPTIONAL NO_DATA" 
-                                             attribute1="name REQUIRED STRING 'PBXproductGases'" >
+                                             attribute1="name REQUIRED STRING" >
         <EOS                               spec="OPTIONAL NO_DATA" 
-                                             attribute1="type REQUIRED STRING 'JWLC'" >
-          <A                               spec="REQUIRED DOUBLE" />
-          <B                               spec="REQUIRED DOUBLE" />
-          <C                               spec="REQUIRED DOUBLE" />
-          <R1                              spec="REQUIRED DOUBLE" />
-          <R2                              spec="REQUIRED DOUBLE" />
-          <om                              spec="REQUIRED DOUBLE" />
-          <rho0                            spec="REQUIRED DOUBLE" />
+                                             attribute1="type REQUIRED STRING 'Gruneisen JWL JWLC ideal_gas Tillotson'" >
+          <A                               spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC Tillotson" />
+          <B                               spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC Tillotson" />
+          <C                               spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC Tillotson" />
+          <R1                              spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC Tillotson" />
+          <R2                              spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC Tillotson" />
+          <om                              spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC Tillotson" />
+          <rho0                            spec="REQUIRED DOUBLE" need_applies_to="type Gruneisen JWL JWLC Tillotson" />
         </EOS>
         <includeFlowWork                   spec="REQUIRED BOOLEAN" />
         <dynamic_viscosity                 spec="REQUIRED DOUBLE" />
+        <name                              spec="OPTIONAL STRING" />
         <thermal_conductivity              spec="REQUIRED DOUBLE" />
         <specific_heat                     spec="REQUIRED DOUBLE" />
         <gamma                             spec="REQUIRED DOUBLE" />
