@@ -17,7 +17,6 @@
         <levelIndependent>      true  </levelIndependent>
         <doSpaceCurve>          true  </doSpaceCurve>
         <outputNthProc>         8     </outputNthProc>
-        <timeRefinementWeight> false </timeRefinementWeight>
    </LoadBalancer>
 
 

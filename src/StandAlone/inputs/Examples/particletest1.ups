@@ -26,7 +26,8 @@
    </DataArchiver>
 
    <LoadBalancer type="DLB">
-        <timestepInterval>2</timestepInterval>
+     <timestepInterval>2</timestepInterval>
+     <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
    </LoadBalancer>
 
    <ParticleTest1>
