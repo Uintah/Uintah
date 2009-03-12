@@ -39,39 +39,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/DenseColMajMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseColMajMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
 
 namespace SCIRun {
 
-PersistentTypeID Matrix::type_id("Matrix", "PropertyManager", 0);
-
-#define MATRIX_VERSION 3
-
-
 Matrix::~Matrix()
 {
 }
-
-void
-Matrix::io(Piostream& stream)
-{
-  int version = stream.begin_class("Matrix", MATRIX_VERSION);
-  if (version < 2) {
-    int tmpsym;
-    stream.io(tmpsym);
-  }
-  if (version > 2) {
-    PropertyManager::io(stream);
-  }
-  stream.end_class();
-}
-
 
 void
 Matrix::scalar_multiply(double s)

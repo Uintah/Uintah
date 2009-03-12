@@ -32,10 +32,7 @@
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/BBox.h>
 
-namespace SCIRun{
-
-// initialize the static member type_id
-PersistentTypeID Mesh::type_id("Mesh", "PropertyManager", NULL);
+namespace SCIRun {
 
 Mesh::Mesh() :
   MIN_ELEMENT_VAL(1.0e-12)
@@ -44,32 +41,6 @@ Mesh::Mesh() :
 
 Mesh::~Mesh() 
 {
-}
-
-
-const int MESHBASE_VERSION = 2;
-
-void 
-Mesh::io(Piostream& stream)
-{
-  if (stream.reading() && stream.peek_class() == "MeshBase")
-  {
-    stream.begin_class("MeshBase", 1);
-  }
-  else
-  {
-    stream.begin_class("Mesh", MESHBASE_VERSION);
-  }
-  PropertyManager::io(stream);
-  stream.end_class();
-}
-
-const string 
-Mesh::type_name(int n)
-{
-  ASSERT(n >= -1 && n <= 0);
-  static const string name = "Mesh";
-  return name;
 }
 
 //! Return the transformation that takes a 0-1 space bounding box 

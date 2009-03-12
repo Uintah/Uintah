@@ -30,20 +30,22 @@
 #ifndef Datatypes_Mesh_h
 #define Datatypes_Mesh_h
 
+#include <vector>
+#include <set>
+
 #include <sci_defs/hashmap_defs.h>
 
-#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/LockingHandle.h>
-
 #include <Core/Datatypes/share.h>
-#include <set>
+
+#include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
 class BBox;
 class Mesh;
 class Transform;
-class TypeDescription;
+
 typedef LockingHandle<Mesh> MeshHandle;
 
 // Maximum number of weights get_weights will return.
@@ -56,7 +58,7 @@ typedef LockingHandle<Mesh> MeshHandle;
 #define MESH_INVALID_INDEX ((unsigned int)-1)
 #define MESH_NO_NEIGHBOR MESH_INVALID_INDEX
 
-class SCISHARE Mesh : public PropertyManager {
+class SCISHARE Mesh {
 public:
 
   virtual Mesh *clone() = 0;
@@ -106,16 +108,10 @@ public:
   virtual bool is_editable() const { return false; } // supports add_elem(...)
   virtual int  dimensionality() const = 0;
   virtual int  topology_geometry() const = 0;
-  virtual bool get_dim(vector<unsigned int>&) const { return false;  }
+  virtual bool get_dim(std::vector<unsigned int>&) const { return false;  }
   virtual bool get_search_grid_info(int &/*i*/, int &/*j*/, int &/*k*/,
                                     Transform &/*trans*/) { return false; }
   // Required interfaces
-  
-  //! Persistent I/O.
-  void    io(Piostream &stream);
-  static  PersistentTypeID type_id;
-  static  const string type_name(int n = -1);
-  virtual const TypeDescription *get_type_description() const = 0;
 
   // The minimum value for elemental checking
   double MIN_ELEMENT_VAL;
@@ -129,7 +125,7 @@ bool elem_locate(typename Msh::Elem::index_type &elem,
   typename Msh::Elem::iterator iter, end;
   msh.begin(iter);
   msh.end(end);
-  vector<double> coords(msh.dimensionality());
+  std::vector<double> coords(msh.dimensionality());
   while (iter != end) {
     if (msh.get_coords(coords, p, *iter)) {
       elem = *iter;
@@ -146,7 +142,7 @@ void get_faces( Msh *mesh, typename Msh::Face::array_type &faces, typename Msh::
   typename Msh::Elem::array_type elems;
   mesh->get_elems(elems, edge);
 
-  set<typename Msh::Face::index_type> unique;
+  std::set<typename Msh::Face::index_type> unique;
 
   for (unsigned int i = 0; i < elems.size(); i++)
   {

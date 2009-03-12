@@ -44,9 +44,6 @@
 #define Datatypes_FieldIndex_h
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/Persistent/Persistent.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Datatypes/TypeName.h>
 #include <vector>
 
 namespace SCIRun {
@@ -124,95 +121,6 @@ vector<CellIndex<T> >
 operator+=(const vector<CellIndex<T> >& l, const vector<CellIndex<T> >& r) {
   ASSERTFAIL("FieldIndex.h Bogus operator");
   return l;
-}
-
-template <class T>
-const TypeDescription* get_type_description(NodeIndex<T>*)
-{
-  static TypeDescription* td = 0;
-
-  if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription("NodeIndex", subs, __FILE__, "SCIRun");
-  }
-  return td;
-}
-
-template <class T>
-const TypeDescription* get_type_description(EdgeIndex<T>*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription("EdgeIndex", subs, __FILE__, "SCIRun");
-  }
-  return td;
-}
-
-template <class T>
-const TypeDescription* get_type_description(FaceIndex<T>*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription("FaceIndex", subs, __FILE__, "SCIRun");
-  }
-  return td;
-}
-
-template <class T>
-const TypeDescription* get_type_description(CellIndex<T>*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew TypeDescription("CellIndex", subs, __FILE__, "SCIRun");
-  }
-  return td;
-}
-
-#define FIELDINDEXBASE_VERSION 1
-
-template<class T>
-void Pio(Piostream& stream, FieldIndexBase<T>& data)
-{
-  Pio(stream, data.index_);
-}
-
-template <class T> const string find_type_name(NodeIndex<T> *)
-{
-  static const string name =
-    string("NodeIndex") + FTNS + find_type_name((T *)0) + FTNE;
-  return name;
-}
-
-template <class T> const string find_type_name(EdgeIndex<T> *)
-{
-  static const string name =
-    string("EdgeIndex") + FTNS + find_type_name((T *)0) + FTNE;
-  return name;
-}
-
-template <class T> const string find_type_name(FaceIndex<T> *)
-{
-  static const string name =
-    string("FaceIndex") + FTNS + find_type_name((T *)0) + FTNE;
-  return name;
-}
-
-template <class T> const string find_type_name(CellIndex<T> *)
-{
-  static const string name =
-    string("CellIndex") + FTNS + find_type_name((T *)0) + FTNE;
-  return name;
 }
 
 } // end namespace SCIRun

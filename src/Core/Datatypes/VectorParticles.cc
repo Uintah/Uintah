@@ -34,7 +34,6 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
 
-#include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 
 using std::vector;
@@ -42,20 +41,6 @@ using std::vector;
 namespace Uintah {
 
 using namespace SCIRun;
-
-
-static Persistent* maker()
-{
-    return scinew VectorParticles;
-}
-
-PersistentTypeID VectorParticles::type_id("VectorParticles", "ParticleSet", maker);
-
-#define VectorParticles_VERSION 3
-void VectorParticles::io(Piostream&)
-{
-    NOT_FINISHED("VectorParticles::io(Piostream&)");
-}
 
 VectorParticles::VectorParticles()
   : have_minmax(false), psetH(0)
