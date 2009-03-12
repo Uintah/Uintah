@@ -1,0 +1,97 @@
+#!/bin/bash
+
+#usage
+#assumes unmodified code
+
+#svn_safe_up -r revision      updates current directory to revision number
+#svn_safe_up -r revision target        updates target to revision number
+
+usage="svn_safe_up -r revision# [target]"
+
+RESDONE=43545
+RESSTART=43465
+if [ $# -lt 2 ]; then
+  echo "$usage"
+  exit
+fi
+
+#if [ $# -eq 0 ]; then
+#  torevision=HEAD
+#  target="."
+#elif [ $# -eq 1 ]; then
+#  torevision=HEAD
+#  #parameter is file name
+#  if [ -e $1 ]; then
+#    target=$1;
+#  else
+#    echo "Target '$1' does not exist"
+#    exit
+#  fi
+#  
+if [ $# -eq 2 ]; then
+  #parameter is revision number
+  if [ "$1" != "-r" ]; then
+    echo "$usage"
+    exit
+  fi
+  torevision=`echo $2 | grep "^[0-9]*$"`
+  target="."
+elif [ $# -eq 3 ]; then
+  #1st parameter is revision number
+  if [ "$1" != "-r" ]; then
+    echo "$usage"
+    exit
+  fi
+  torevision=`echo $2 | grep "^[0-9]*$"`
+  #2nd parameter is file name
+  if [ -e $3 ]; then
+    target=$3;
+  else
+    echo "Target '$1' does not exist"
+    exit
+  fi
+else
+  echo "$usage"
+  exit
+fi
+
+if [ "$torevision" == "" ]; then
+  echo "Invalid revision number"
+  echo "$usage"
+  exit
+fi
+
+echo "WARNING:"
+echo "This script merges changes across the restructuring.  Changes that occured during the code restructure are ignored."
+echo "This script is meant for debugging by removing old changes and using it on modified code is dubious."
+echo " "
+svn_revision=`svn info $target | grep Revision | cut -f 2 -d " "`
+echo "Current svn revision: $svn_revision"
+echo "Target svn revision number: $torevision"
+
+if [ $torevision -gt $svn_revision ]; then
+  echo "Error target revision is greater than the current revision.  This script only merges backwards."
+  exit
+fi
+
+svn_path=`svn info validateUda | grep URL | cut -f2 -d " "`
+
+if [ $svn_revision -gt $RESDONE -a $torevision -lt $RESDONE ]; then
+  #merge everything prior to restructure
+  echo "svn merge --ignore-ancestry -r$svn_revision:$RESDONE $svn_path $target"
+  svn merge --ignore-ancestry -r$svn_revision:$RESDONE $svn_path $target
+  #merge everything after restructure
+  echo "svn merge --ignore-ancestry -r$RESSTART:$torevision $svn_path $target"
+  svn merge --ignore-ancestry -r$RESSTART:$torevision $svn_path $target
+elif [ $svn_revision -gt $RESDONE -a $torevision -ge $RESDONE ]; then
+  #merge everything after to restructure only (there is nothing prior)
+  echo "svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target"
+  svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target
+elif [ $svn_revision -lt $RESSTART ]; then
+  #merge everything prior to restructure only (there is nothing after)
+  echo "svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target"
+  svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target
+fi
+
+#svn merge --ignore-ancestry -rHEAD:43465 https://code.sci.utah.edu/svn/SCIRun/trunk/src/scripts/validateUda scripts/validateUda
+#svn merge --ignore-ancestry -rLastSCIRun:42129 https://code.sci.utah.edu/svn/SCIRun/trunk/src/scripts/validateUda scripts/validateUda
