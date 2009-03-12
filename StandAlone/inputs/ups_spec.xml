@@ -454,7 +454,7 @@
         <Parameters                     spec="OPTIONAL NO_DATA"
                                           attribute1="variable OPTIONAL STRING 'implicitPressure'" >
           <criteria                     spec="OPTIONAL STRING 'Absolute'" />  <!-- FIXME: Is this really optional?  If so, what does it default to? -->
-          <jump                         spec="REQUIRED INTEGER" />
+          <jump                         spec="OPTIONAL INTEGER" />
           <logging                      spec="OPTIONAL INTEGER 'positive'" />
           <maxiterations                spec="REQUIRED INTEGER" />
           <norm                         spec="OPTIONAL STRING 'LInfinity'" /> <!-- FIXME: Is this really optional?  If so, what does it default to? -->
