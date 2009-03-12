@@ -11,9 +11,7 @@
 
    <SimulationComponent type="ice" />
 
-   <Solver>
-        <type> hypreamr </type>
-   </Solver>
+   <Solver type="hypreamr" />
    <doAMR>true</doAMR>
    
     <!--____________________________________________________________________-->

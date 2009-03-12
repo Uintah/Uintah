@@ -188,7 +188,6 @@
          <Enthalpy>              0.0                     </Enthalpy>
          <BurnCoeff>             1.0                     </BurnCoeff>
          <refPressure>           1.0                     </refPressure>
-         </burn>
          
          <density>              1.789990995722571500e+00  </density>
          <constitutive_model type="comp_neo_hook">
