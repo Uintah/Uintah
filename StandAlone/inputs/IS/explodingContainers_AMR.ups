@@ -9,7 +9,7 @@
 
    <doAMR>true</doAMR>
    
-   <LoadBalancer type="PLB">
+   <LoadBalancer type="DLB">
         <timestepInterval>      1000  </timestepInterval>
         <dynamicAlgorithm>      patchFactorParticles</dynamicAlgorithm>
         <cellFactor>            1.25  </cellFactor>

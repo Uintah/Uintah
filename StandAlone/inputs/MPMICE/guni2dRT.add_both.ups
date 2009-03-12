@@ -134,7 +134,6 @@
 
     <MPM>
         <time_integrator>explicit</time_integrator>
-        <artificial_viscosity>true</artificial_viscosity>
         <interpolator>                   gimp       </interpolator>
         <minimum_particle_mass>3.e-15</minimum_particle_mass>
         <maximum_particle_velocity>3.e4</maximum_particle_velocity>

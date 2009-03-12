@@ -146,6 +146,7 @@
     <difference               spec="OPTIONAL NO_DATA" 
                                 attribute1="label OPTIONAL STRING" >
       <box                    spec="MULTIPLE" />
+      <cone                   spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
       <sphere                 spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
@@ -381,6 +382,7 @@
     <Level              spec="MULTIPLE NO_DATA">
       <Box              spec="REQUIRED NO_DATA"
                            attribute1="label     REQUIRED STRING">
+        <autoPatch      spec="OPTIONAL INTEGER 'positive'" />
         <lower          spec="REQUIRED VECTOR" />
         <upper          spec="REQUIRED VECTOR" />
         <resolution     spec="OPTIONAL VECTOR" />
@@ -409,6 +411,12 @@
       <advection                        spec="REQUIRED NO_DATA" 
                                           attribute1="type                REQUIRED STRING 'FirstOrder, SecondOrder'" 
                                           attribute2="useCompatibleFluxes OPTIONAL BOOLEAN" />
+      <ADD_HEAT                        spec="OPTIONAL NO_DATA" >
+       <add_heat_matls                 spec="REQUIRED STRING" />
+       <add_heat_coeff                 spec="REQUIRED STRING" />
+       <add_heat_t_start               spec="REQUIRED DOUBLE" />
+       <add_heat_t_final                 spec="REQUIRED DOUBLE" />
+      </ADD_HEAT>                                        
       <ClampSpecificVolume              spec="OPTIONAL BOOLEAN" />
       
       <turbulence    spec="OPTIONAL NO_DATA"
@@ -880,6 +888,7 @@
     <solver                             spec="OPTIONAL STRING 'petsc, simple'" />
     <convergence_criteria_disp          spec="OPTIONAL DOUBLE 'positive'"/>
     <convergence_criteria_energy        spec="OPTIONAL DOUBLE 'positive'"/>
+    <withColor                          spec="OPTIONAL BOOLEAN" />
   </MPM>
 
   <MaterialProperties                    spec="OPTIONAL NO_DATA">
@@ -1261,7 +1270,7 @@
 
   <Models                     spec="OPTIONAL NO_DATA" >
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" >
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, JWLpp, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, PassiveScalar'" >
      
       <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
       <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
