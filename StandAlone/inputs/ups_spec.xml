@@ -940,10 +940,11 @@
         <direction                       spec="OPTIONAL VECTOR" />
         <mu                              spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
-        <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- FIXME: What does this do? -->
+        <stop_time                       spec="OPTIONAL DOUBLE" /> <!-- Time at which to make the velocity of the rigid body have the value of velocity_after_stop -->
         <type                            spec="REQUIRED STRING 'null, single_velocity, rigid, specified, friction, approach'" />
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
+        <filename                        spec="OPTIONAL STRING" />
       </contact>
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
@@ -1454,6 +1455,16 @@
         <upper                spec="REQUIRED VECTOR" />
         <force_density        spec="REQUIRED VECTOR" />
       </force>
+      <pressure                  spec="MULTIPLE NO_DATA" >
+        <geom_object />
+        <load_curve             spec="REQUIRED NO_DATA" >
+          <id                   spec="REQUIRED INTEGER" />
+          <time_point           spec="MULTIPLE NO_DATA" >
+            <time               spec="REQUIRED INTEGER" />
+            <load               spec="REQUIRED INTEGER" />
+          </time_point>
+        </load_curve>
+      </pressure>
     </MPM>
   </PhysicalBC>
 
