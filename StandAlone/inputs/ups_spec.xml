@@ -208,6 +208,10 @@
   <!-- End Common Block -->
   <!--===========================================================-->
 
+  <Burger                 spec="OPTIONAL NO_DATA">
+    <delt                 spec="REQUIRED DOUBLE 'positive'" />
+  </Burger>
+
   <Meta                   spec="OPTIONAL NO_DATA">
     <title                spec="OPTIONAL STRING" />
   </Meta>
