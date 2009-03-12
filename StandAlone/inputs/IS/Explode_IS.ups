@@ -541,7 +541,7 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
                  <difference>
-                  <box label>
+                  <box>
                       <min>           [-1.1,-1.1,-1.1]    </min>
                       <max>           [ 1.1, 1.1, 1.1]    </max>
                   </box>
@@ -655,7 +655,7 @@
           </constants>
           <geom_object>
             <difference>
-             <box label>
+             <box>
                  <min>           [-1.1,-1.1,-1.1]    </min>
                  <max>           [ 1.1, 1.1, 1.1]    </max>
              </box>

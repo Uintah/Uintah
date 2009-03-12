@@ -147,9 +147,9 @@
                                 attribute1="label OPTIONAL STRING" >
       <box                    spec="MULTIPLE" />
       <cylinder               spec="MULTIPLE" />
-      <sphere/>
-      <tri/>
-      <difference/>
+      <sphere                 spec="MULTIPLE" />
+      <tri                    spec="MULTIPLE" />
+      <difference             spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </difference>
 
@@ -163,9 +163,9 @@
     <geom_object              spec="REQUIRED NO_DATA" >
       <box                    spec="MULTIPLE" />
       <cone                   spec="MULTIPLE" />
-      <cylinder/>
-      <sphere/>
-      <tri/>
+      <cylinder               spec="MULTIPLE" />
+      <sphere                 spec="MULTIPLE" />
+      <tri                    spec="MULTIPLE" />
 
       <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity               spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
@@ -229,7 +229,7 @@
 
   <SimulationComponent          spec="REQUIRED NO_DATA"
                                   attribute1="type REQUIRED STRING 'arches, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                    poisson1, poisson2, rmpmice, switcher, '" >
+                                                                    poisson1, poisson2, rmpmice, smpm, smpmice, switcher'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
     <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
@@ -237,7 +237,7 @@
                                   attribute3="level OPTIONAL STRING 'finest'" />
     <subcomponent               spec="MULTIPLE NO_DATA"
                                   attribute1="type REQUIRED STRING 'arches, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                    poisson1, poisson2, rigidmpmice, switcher'" >
+                                                                    poisson1, poisson2, rigidmpmice, smpmice, smpm, switcher'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
       <input_file               spec="REQUIRED STRING" />
       <SwitchCriteria           spec="OPTIONAL NO_DATA" 

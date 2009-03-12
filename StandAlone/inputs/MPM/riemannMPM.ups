@@ -72,7 +72,7 @@
       <save label = "g.mass"/>
       <!-- needed for regression tester dat comparisons -->       
       <save label="KineticEnergy"/>
-      <checkpoint interval="0.0005" cycle="2"/>"
+      <checkpoint interval="0.0005" cycle="2"/>
    </DataArchiver>
 
     <MPM>

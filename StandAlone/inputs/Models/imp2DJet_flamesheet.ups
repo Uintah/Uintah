@@ -137,7 +137,7 @@
       <save label="temp_CC"/>
       <save label= "modelEng_src"/>
       <save label= "scalar-f"/>
-      <checkpoint interval="0.001" cycle="2"/>"
+      <checkpoint interval="0.001" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
