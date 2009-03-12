@@ -63,8 +63,6 @@
     <do_contact_friction_heating> false    </do_contact_friction_heating>
     <create_new_particles>        false    </create_new_particles>
     <erosion algorithm = "none"/>
-    <min_grid_level>              0        </min_grid_level>
-    <max_grid_level>              1000     </max_grid_level>
   </MPM>
 
   <PhysicalConstants>

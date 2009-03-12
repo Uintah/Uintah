@@ -39,8 +39,6 @@
        <interpolator>linear</interpolator>
        <do_grid_reset>false</do_grid_reset>
        <solver>petsc</solver>
-       <min_grid_level>0</min_grid_level>
-       <max_grid_level>1000</max_grid_level>
        <iters_before_timestep_restart>15</iters_before_timestep_restart>
        <num_iters_to_decrease_delT>12</num_iters_to_decrease_delT>
        <num_iters_to_increase_delT>4</num_iters_to_increase_delT>
