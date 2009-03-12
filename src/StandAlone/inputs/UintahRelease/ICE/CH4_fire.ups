@@ -3,9 +3,7 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
   <SimulationComponent type="ice" />
-   <Solver>
-        <type> hypre </type>
-   </Solver>
+  <Solver type="hypre" />
 
    <Meta>
        <title>none</title>
