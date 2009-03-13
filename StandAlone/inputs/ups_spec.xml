@@ -237,8 +237,37 @@
       <sinusoidalInitialize      spec="OPTIONAL BOOLEAN"/>
       <slope                     spec="OPTIONAL VECTOR"/>
       <triangularInitialize      spec="OPTIONAL BOOLEAN"/>
-     
     </geom_object>
+      
+    <SimulationComponent          spec="REQUIRED NO_DATA"
+                                    attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, 
+                                                                      mpmf, mpmice,  
+                                                                      poisson1, poisson2, poisson3, rigidmpmice, 
+                                                                      rmpmice, smpm, smpmice, switcher, wave'" >
+                                  <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
+        <carry_over                 spec="MULTIPLE NO_DATA"
+                                  attribute1="var   REQUIRED STRING"
+                                  attribute2="matls OPTIONAL INTEGER"
+                                  attribute3="level OPTIONAL STRING 'finest'" />
+        <subcomponent               spec="MULTIPLE NO_DATA"
+                                  attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
+                                                                    poisson1, poisson2, poisson3, rigidmpmice, smpmice, smpm, switcher, wave'" >
+                                  <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
+          <input_file               spec="REQUIRED STRING" />
+          <SwitchCriteria           spec="OPTIONAL NO_DATA" 
+                                  attribute1="type REQUIRED STRING 'steadyBurn, Timestep'" >
+            <timestep               spec="REQUIRED INTEGER" need_applies_to="type Timestep"   />
+            <reactant_material      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
+            <BoundaryParticles      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
+            <ThresholdTemperature   spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
+          </SwitchCriteria>
+          <init                     spec="MULTIPLE NO_DATA" 
+                                    attribute1="var    REQUIRED STRING"
+                                    attribute2="matls  REQUIRED STRING" />
+          <SimulationComponent          spec="OPTIONAL" />
+        </subcomponent>
+    </SimulationComponent>
+     
 
   </CommonTags>
   <!-- End Common Block -->
@@ -269,32 +298,6 @@
     <timestep_multiplier  spec="REQUIRED DOUBLE  'positive'" />
   </Time>
 
-  <SimulationComponent          spec="REQUIRED NO_DATA"
-                                  attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                    poisson1, poisson2, poisson3, rmpmice, smpm, smpmice, switcher, wave'" >
-                                  <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
-    <carry_over                 spec="MULTIPLE NO_DATA"
-                                  attribute1="var   REQUIRED STRING"
-                                  attribute2="matls OPTIONAL INTEGER"
-                                  attribute3="level OPTIONAL STRING 'finest'" />
-    <subcomponent               spec="MULTIPLE NO_DATA"
-                                  attribute1="type REQUIRED STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice,
-                                                                    poisson1, poisson2, poisson3, rigidmpmice, smpmice, smpm, switcher, wave'" >
-                                  <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
-      <input_file               spec="REQUIRED STRING" />
-      <SwitchCriteria           spec="OPTIONAL NO_DATA" 
-                                  attribute1="type REQUIRED STRING 'steadyBurn, Timestep'" >
-        <timestep               spec="REQUIRED INTEGER" need_applies_to="type Timestep"   />
-        <reactant_material      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
-        <BoundaryParticles      spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
-        <ThresholdTemperature   spec="REQUIRED INTEGER" need_applies_to="type steadyBurn" />
-      </SwitchCriteria>
-      <init                     spec="MULTIPLE NO_DATA" 
-                                  attribute1="var    REQUIRED STRING"
-                                  attribute2="matls  REQUIRED STRING"
-                                  attribute3="levels OPTIONAL INTEGER" /> <!-- FIXME: Is this optional?  What is the default? -->
-    </subcomponent>
-  </SimulationComponent>
 
   <doAMR                spec="OPTIONAL BOOLEAN" />  <!-- defaults to TRUE -->
 
@@ -1472,6 +1475,8 @@
       </pressure>
     </MPM>
   </PhysicalBC>
+  
+  <SimulationComponent          spec="REQUIRED" />
 
   <!-- FIXME: why is this at the top level?  Shouldn't it be under a component or some such?  Todd? -->
   <Solver                     spec="OPTIONAL NO_DATA" 
