@@ -16608,7 +16608,7 @@ _sci_lib=
 
 if test "$with_libxml2"; then
    # If --with-libxml2 has a parameter, then use it
-   _sci_lib="$with_libxml2/lib"
+   _sci_lib="$with_libxml2"
 
 ##
 ## BASE_LIB_PATH:
