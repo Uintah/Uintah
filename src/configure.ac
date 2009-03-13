@@ -1654,7 +1654,7 @@ AC_SUBST(M_LIB_DIR_FLAG)
 ##  --  check for the 'rt' library  ---------------------------
 
 SCI_TRY_LINK(RT,rt library,,,rt,,,,optional)
-AC_SUBST( RT_LIB_FLAG )
+AC_SUBST(RT_LIB_FLAG)
 
 MPI_EXTRA_LIB_FLAG="$MPI_EXTRA_LIB_FLAG $RT_LIB_FLAG"
 
@@ -1768,9 +1768,9 @@ if test "$with_visit"; then
    VISIT_INSTALL_DIR=$with_visit
 fi
 
-AC_SUBST( BUILD_VISIT )
-AC_SUBST( UINTAH_UDA_TO_VIS_LIB )
-AC_SUBST( VISIT_INSTALL_DIR )
+AC_SUBST(BUILD_VISIT)
+AC_SUBST(UINTAH_UDA_TO_VIS_LIB)
+AC_SUBST(VISIT_INSTALL_DIR)
 
 ##  --  search for OFED (Infiniband Drivers) -----------------------------
 
@@ -1934,7 +1934,7 @@ _sci_lib=
 
 if test "$with_libxml2"; then
    # If --with-libxml2 has a parameter, then use it
-   _sci_lib="$with_libxml2/lib"
+   _sci_lib="$with_libxml2"
    BASE_LIB_PATH(_sci_lib,$_sci_lib)
    _sci_optional=specific
 fi
