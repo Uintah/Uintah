@@ -5,7 +5,7 @@
 
   <Meta>
     <title>Pressurization of a container via burning w/o fracture</title>
-  </Meta>&gt;  
+  </Meta>
 
   <SimulationComponent type="mpmice" />
   <!--____________________________________________________________________-->
