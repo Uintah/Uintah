@@ -95,8 +95,8 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]\n";
     cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]\n";
     cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int) [defaults to 0]\n";
-    cerr << "  -istart,   --indexs:        <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
-    cerr << "  -iend,     --indexe:        <x> <y> <z> (cell index) [defaults to 0,0,0]\n";
+    cerr << "  -istart,   --indexs:        <x> <y> <z> (cell index) [defaults to 0 0 0]\n";
+    cerr << "  -iend,     --indexe:        <x> <y> <z> (cell index) [defaults to 0 0 0]\n";
     cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
     cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
     cerr << "  -vv,       --verbose:       (prints status of output)\n";
