@@ -914,6 +914,7 @@
     <time_integrator                    spec="REQUIRED STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
     <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" /> <!-- FIXME:  Is this really optional?  If so, what is the default? -->
     <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
+    <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
     <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
     <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
     <temperature_solve                  spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
