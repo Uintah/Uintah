@@ -60,6 +60,17 @@ using std::endl;
 
 namespace SCIRun {
 
+Persistent*
+SparseRowMatrix::maker()
+{
+  return scinew SparseRowMatrix;
+}
+
+
+PersistentTypeID SparseRowMatrix::type_id("SparseRowMatrix", "Matrix",
+					  SparseRowMatrix::maker);
+
+
 SparseRowMatrix*
 SparseRowMatrix::clone()
 {
@@ -700,6 +711,54 @@ void SparseRowMatrix::print(std::ostream&) const
 {
 
 }
+
+
+#define SPARSEROWMATRIX_VERSION 1
+
+void
+SparseRowMatrix::io(Piostream& stream)
+{
+  stream.begin_class("SparseRowMatrix", SPARSEROWMATRIX_VERSION);
+  // Do the base class first...
+  Matrix::io(stream);
+
+  stream.io(nrows_);
+  stream.io(ncols_);
+  stream.io(nnz);
+  if (stream.reading())
+  {
+    a = scinew double[nnz];
+    columns = scinew int[nnz];
+    rows = scinew int[nrows_+1];
+  }
+  int i;
+  stream.begin_cheap_delim();
+  if (!stream.block_io(rows, sizeof(int), nrows_+1))
+  {
+    for (i=0;i<=nrows_;i++)
+      stream.io(rows[i]);
+  }
+  stream.end_cheap_delim();
+
+  stream.begin_cheap_delim();
+  if (!stream.block_io(columns, sizeof(int), nnz))
+  {
+    for (i=0;i<nnz;i++)
+      stream.io(columns[i]);
+  }
+  stream.end_cheap_delim();
+
+  stream.begin_cheap_delim();
+  if (!stream.block_io(a, sizeof(double), nnz))
+  {
+    for (i=0;i<nnz;i++)
+      stream.io(a[i]);
+  }
+  stream.end_cheap_delim();
+
+  stream.end_class();
+}
+
 
 SparseRowMatrix *
 AddSparse(const SparseRowMatrix &a, const SparseRowMatrix &b)

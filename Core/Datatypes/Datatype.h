@@ -43,6 +43,7 @@
 #ifndef SCI_project_Datatype_h
 #define SCI_project_Datatype_h 1
 
+#include <Core/Persistent/Persistent.h>
 #include <Core/Thread/Mutex.h>
 
 #include <Core/Datatypes/share.h>
@@ -50,7 +51,7 @@
 namespace SCIRun {
 
 
-class SCISHARE Datatype {
+class SCISHARE Datatype : public Persistent {
 public:
   //! needed for our smart pointers -- LockingHandle<T>
   int ref_cnt;

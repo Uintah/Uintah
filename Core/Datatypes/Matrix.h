@@ -43,28 +43,25 @@
 #ifndef SCI_project_Matrix_h
 #define SCI_project_Matrix_h 1
 
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Datatypes/Datatype.h>
 #include <Core/Geometry/Transform.h>
-
+#include <Core/Containers/LockingHandle.h>
 #include <iosfwd>
-
 #include <Core/Datatypes/share.h>
 
 namespace SCIRun {
-
 using namespace std;
+
 
 class SparseRowMatrix;
 class DenseMatrix;
 class ColumnMatrix;
 class DenseColMajMatrix;
 class Matrix;
-
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class SCISHARE Matrix : public Datatype
+class SCISHARE Matrix : public PropertyManager
 {
 public:
   Matrix(int nrows = 0, int ncols = 0) :
@@ -170,6 +167,11 @@ public:
 
   virtual void print(ostream&) const {}
   virtual void print() const {}
+
+  // Persistent representation.
+  virtual string type_name() { return "Matrix"; }
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 
 protected:
   int      nrows_;

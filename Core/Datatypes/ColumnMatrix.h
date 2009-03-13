@@ -48,7 +48,6 @@
 #include <Core/Datatypes/Matrix.h>
 
 #include <iosfwd>  // Forward declarations for KCC C++ I/O routines
-#include <vector>
 
 #include <Core/Datatypes/share.h>
 
@@ -104,7 +103,7 @@ public:
 
 
   int solve(ColumnMatrix&);
-  int solve(std::vector<double>& sol);
+  int solve(vector<double>& sol);
   double sumOfCol(int);
 
   DenseMatrix exterior(const ColumnMatrix &) const;
@@ -116,6 +115,12 @@ public:
   virtual void print();
   virtual void print() const;
   virtual void print(std::ostream&) const;
+  
+  // Persistent representation...
+  virtual string type_name() { return "ColumnMatrix"; }
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
 
   SCISHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
   SCISHARE friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);

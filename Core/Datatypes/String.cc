@@ -26,60 +26,79 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+/*
+ *  String.cc:  String Object
+ *
+ *  Written by:
+ *   Jeroen Stinstra
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2005
+ *
+ *  Copyright (C) 2005 SCI Group
+ */
 
 
-#include <Core/Datatypes/Mesh.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Geometry/BBox.h>
+#include <Core/Datatypes/String.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCIRun{
+#include <string>
 
-// initialize the static member type_id
-PersistentTypeID Mesh::type_id("Mesh", "PropertyManager", NULL);
+namespace SCIRun {
 
-Mesh::Mesh() :
-  MIN_ELEMENT_VAL(1.0e-12)
+static Persistent*
+maker()
+{
+  return scinew String;
+}
+
+PersistentTypeID String::type_id("String", "PropertyManager", maker);
+
+
+//! constructors
+String::String()
 {
 }
 
-Mesh::~Mesh() 
+String::String(const String& s) :
+  str_(s.str_)
 {
 }
 
-
-const int MESHBASE_VERSION = 2;
-
-void 
-Mesh::io(Piostream& stream)
+String::String(const std::string& s) :
+  str_(s)
 {
-  if (stream.reading() && stream.peek_class() == "MeshBase")
-  {
-    stream.begin_class("MeshBase", 1);
-  }
-  else
-  {
-    stream.begin_class("Mesh", MESHBASE_VERSION);
-  }
+}
+
+String::String(const char* s) :
+  str_(s)
+{
+}
+
+String::~String()
+{
+}
+
+String*
+String::clone()
+{
+  return scinew String(*this);
+}
+
+#define STRING_VERSION 1
+
+void
+String::io(Piostream& stream)
+{
+  /*int version=*/stream.begin_class("String", STRING_VERSION);
+
+  // Do the base class first.
   PropertyManager::io(stream);
+
+  stream.begin_cheap_delim();
+  stream.io(str_);
+  stream.end_cheap_delim();
   stream.end_class();
 }
 
-const string 
-Mesh::type_name(int n)
-{
-  ASSERT(n >= -1 && n <= 0);
-  static const string name = "Mesh";
-  return name;
-}
-
-//! Return the transformation that takes a 0-1 space bounding box 
-//! to the current bounding box of this mesh.
-void Mesh::get_canonical_transform(Transform &t) 
-{
-  t.load_identity();
-  BBox bbox = get_bounding_box();
-  t.pre_scale(bbox.diagonal());
-  t.pre_translate(Vector(bbox.min()));
-}
-
-}
+} // End namespace SCIRun

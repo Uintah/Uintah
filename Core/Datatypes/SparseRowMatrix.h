@@ -126,10 +126,19 @@ public:
   virtual void print() const;
   virtual void print(std::ostream&) const;
  
+  //! Persistent representation...
+  virtual string type_name() { return "SparseRowMatrix"; }
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
+
   friend SparseRowMatrix *AddSparse(const SparseRowMatrix &a,
 						 const SparseRowMatrix &b);
   friend SparseRowMatrix *SubSparse(const SparseRowMatrix &a,
 						 const SparseRowMatrix &b);
+
+
+  static Persistent *maker();
 };
 
 } // End namespace SCIRun
