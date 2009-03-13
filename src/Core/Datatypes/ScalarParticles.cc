@@ -43,6 +43,18 @@ namespace Uintah {
 
 using namespace SCIRun;
 
+static Persistent* maker()
+{
+    return scinew ScalarParticles;
+}
+
+PersistentTypeID ScalarParticles::type_id("ScalarParticles", "ParticleSet", maker);
+#define ScalarParticles_VERSION 3
+void ScalarParticles::io(Piostream&)
+{
+    NOT_FINISHED("ScalarParticles::io(Piostream&)");
+}
+
 ScalarParticles::ScalarParticles()
   : have_minmax(false), psetH(0)
 {

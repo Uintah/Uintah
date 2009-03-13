@@ -31,10 +31,12 @@
 #ifndef Datatypes_Field_h
 #define Datatypes_Field_h
 
-#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Datatypes/Mesh.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Util/ProgressReporter.h>
+#include <Core/Util/DynamicCompilation.h>
 
 #include <Core/Datatypes/share.h>
 
@@ -44,7 +46,7 @@ typedef LockingHandle<ScalarFieldInterface> ScalarFieldInterfaceHandle;
 typedef LockingHandle<VectorFieldInterface> VectorFieldInterfaceHandle;
 typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 
-class SCISHARE Field: public Datatype
+class SCISHARE Field: public PropertyManager
 {
 public:
   enum  td_info_e {
@@ -61,10 +63,26 @@ public:
   virtual Field *clone() const = 0;
   
   virtual int basis_order() const = 0;
+  virtual const TypeDescription *order_type_description() const = 0;
 
   //! Required virtual functions
   virtual MeshHandle mesh() const = 0;
   virtual void mesh_detach() = 0;
+  virtual const TypeDescription* 
+  get_type_description(td_info_e td = FULL_TD_E) const = 0; 
+  
+
+  //! Required interfaces
+  virtual ScalarFieldInterfaceHandle query_scalar_interface(
+						      ProgressReporter* = 0);
+  virtual VectorFieldInterfaceHandle query_vector_interface(
+						      ProgressReporter* = 0);
+  virtual TensorFieldInterfaceHandle query_tensor_interface(
+						      ProgressReporter* = 0);
+
+  //! Persistent I/O.
+  static  PersistentTypeID type_id;
+  virtual void io(Piostream &stream);
 
   //! All instantiable classes need to define this.
   virtual bool is_scalar() const = 0;

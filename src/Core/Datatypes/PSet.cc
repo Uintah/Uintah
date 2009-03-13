@@ -34,13 +34,25 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
 
+#include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 
 using std::vector;
-
 namespace Uintah {
 
 using namespace SCIRun;
+
+static Persistent* maker()
+{
+    return scinew PSet;
+}
+
+PersistentTypeID PSet::type_id("PSet", "ParticleSet", maker);
+#define PSet_VERSION 3
+void PSet::io(Piostream&)
+{
+    NOT_FINISHED("PSet::io(Piostream&)");
+}
 
 PSet::PSet()
   : have_bounds(false)

@@ -111,6 +111,8 @@ public:
                   int i, int j, int k) const;
   double min_distance_squared(const Point &p, int i, int j, int k) const;
 
+  virtual void io(Piostream&) {}
+
 protected:
   std::vector<std::list<under_type> > bin_;
   unsigned int size_;
@@ -127,6 +129,9 @@ public:
 
   bool lookup(under_type **begin, under_type **end, const Point &p) const;
 
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
 protected:
   SearchGrid();
 
@@ -134,6 +139,8 @@ protected:
   under_type *vals_;
   unsigned int vals_size_;
 
+  // Returns a SearchGrid
+  static Persistent *maker() { return new SearchGrid(); }
 };
 
 

@@ -39,6 +39,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
 
 #include <vector>
@@ -136,6 +137,10 @@ class UINTAHSHARE PSet : public Datatype {
   // Set callback class
   void SetCallbackClass( void* cbc){ cbClass = cbc; }
  
+  // Persistant representation
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
  protected:
   bool have_bounds;
   Point bmin;

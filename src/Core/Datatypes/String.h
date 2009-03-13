@@ -29,67 +29,81 @@
 
 
 /*
- *  Datatype.cc: The Datatype Data type
+ *  String.h:  String Object
  *
  *  Written by:
- *   David Weinstein
+ *   Jeroen Stinstra
  *   Department of Computer Science
  *   University of Utah
- *   July 1994
+ *   October 2005
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2005 SCI Group
  */
 
+#ifndef CORE_DATATYPES_STRING_H
+#define CORE_DATATYPES_STRING_H 1
+
+#include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Thread/AtomicCounter.h>
+#include <Core/Datatypes/PropertyManager.h>
+
+#include <string>
+
+#include <Core/Datatypes/share.h>
 
 namespace SCIRun {
 
-static AtomicCounter* current_generation = 0;
-static Mutex init_lock("Datatypes generation counter initialization lock");
+class String;
+typedef LockingHandle<String> StringHandle;
+
+class SCISHARE String : public PropertyManager {
+
+  std::string str_;
+
+public:
+  //! Constructors
+  String();
+  String(const std::string& str);
+  String(const String& str);
+  String(const char* str);
+
+  //! Destructor
+  virtual ~String();
+  
+  //! Public member functions
+  String* clone();
+  inline void        set(std::string str);
+  inline std::string get();
+  inline void        setstring(std::string str);
+  inline std::string getstring();
+
+  //! Persistent representation...
+  virtual string type_name() { return "String"; }
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  
+};
 
 
-int
-Datatype::compute_new_generation()
+inline void String::set(std::string str)
 {
-  if(!current_generation)
-  {
-    init_lock.lock();
-    if(!current_generation)
-    {
-      current_generation = new AtomicCounter("Datatype generation counter", 1);
-      init_lock.unlock();
-    }
-  }
-  return (*current_generation)++;
+  str_ = str;
 }
 
-
-
-Datatype::Datatype()
-  : ref_cnt(0),
-    lock("Datatype ref_cnt lock"),
-    generation(compute_new_generation())
+inline std::string String::get()
 {
+  return(str_);
+}
+inline void String::setstring(std::string str)
+{
+  str_ = str;
 }
 
-Datatype::Datatype(const Datatype&)
-  : ref_cnt(0),
-    lock("Datatype ref_cnt lock"),
-    generation(compute_new_generation())
+inline std::string String::getstring()
 {
+  return(str_);
 }
-
-Datatype& Datatype::operator=(const Datatype&)
-{
-  ASSERT(ref_cnt == 1);
-  generation = compute_new_generation();
-  return *this;
-}
-
-Datatype::~Datatype()
-{
-}
-
+    
 } // End namespace SCIRun
 
+#endif

@@ -236,6 +236,10 @@ SearchGridConstructor::min_distance_squared(const Point &p,
   return (p - q).length2();
 }
 
+
+PersistentTypeID SearchGrid::type_id("SearchGrid", "Datatype", maker);
+
+
 SearchGrid::SearchGrid()
   : SearchGridBase(1, 1, 1, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
     vals_(0),
@@ -314,6 +318,28 @@ SearchGrid::lookup(under_type **begin, under_type **end, const Point &p) const
   }
   return false;
 }
+
+
+#define SEARCHGRID_VERSION 1
+
+void
+SearchGrid::io(Piostream& stream)
+{
+  stream.begin_class("SearchGrid", SEARCHGRID_VERSION);
+
+  // IO data members, in order
+  Pio(stream, ni_);
+  Pio(stream, nj_);
+  Pio(stream, nk_);
+
+  Pio(stream, transform_);
+
+  //Pio(stream, accum_);
+  //Pio(stream, vals_);
+
+  stream.end_class();
+}
+
 
 } // namespace SCIRun
 

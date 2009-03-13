@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Persistent/Persistent.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
@@ -119,6 +120,11 @@ public:
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
 	       
+
+  // Persistant representation
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
   void get_minmax(double& v0, double& v1);
   void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}
 

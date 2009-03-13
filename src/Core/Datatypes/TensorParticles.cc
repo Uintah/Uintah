@@ -34,6 +34,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
 
+#include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 
 using std::vector;
@@ -41,6 +42,18 @@ using std::vector;
 namespace Uintah {
 
 using namespace SCIRun;
+
+static Persistent* maker()
+{
+    return scinew TensorParticles;
+}
+
+PersistentTypeID TensorParticles::type_id("TensorParticles", "ParticleSet", maker);
+#define TensorParticles_VERSION 3
+void TensorParticles::io(Piostream&)
+{
+    NOT_FINISHED("TensorParticles::io(Piostream&)");
+}
 
 TensorParticles::TensorParticles()
   : have_minmax(false), psetH(0)

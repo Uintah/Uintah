@@ -44,8 +44,12 @@ SRCS += $(SRCDIR)/Clipper.cc                    \
         $(SRCDIR)/Matrix.cc                     \
         $(SRCDIR)/MatrixOperations.cc           \
         $(SRCDIR)/Mesh.cc                       \
+        $(SRCDIR)/PropertyManager.cc            \
         $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
+        $(SRCDIR)/String.cc                     \
+	$(SRCDIR)/FieldInterfaceAux.cc          \
+        $(SRCDIR)/TypeName.cc                   \
       	$(SRCDIR)/Archive.cc \
         $(SRCDIR)/ScalarParticles.cc \
         $(SRCDIR)/VectorParticles.cc \
@@ -61,6 +65,7 @@ ifeq ($(HAVE_TEEM),yes)
 endif
 
 PSELIBS := \
+        Core/Basis        \
         Core/Containers   \
         Core/Disclosure   \
         Core/Exceptions   \
