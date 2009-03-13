@@ -227,42 +227,48 @@ ProblemSpec::removeChild(ProblemSpecP child)
 //______________________________________________________________________
 //
 void
-checkForInputError(const string& stringValue, 
-                   const string& Int_or_float)
+ProblemSpec::checkForInputError( const string & stringValue, 
+                                 ProblemSpec::CheckType type )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::checkForInputError()");
   //__________________________________
   //  Make sure stringValue only contains valid characters
-  if (Int_or_float == "float") {
-    string validChars(" -+.0123456789eE");
-    string::size_type  pos = stringValue.find_first_not_of(validChars);
-    if (pos != string::npos){
-      std::ostringstream warn;
-      warn << "Input file error: I found ("<< stringValue[pos]
-           << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  switch( type ) {
+  case INT_TYPE :
+    {
+      string validChars(" -0123456789");
+      string::size_type  pos = stringValue.find_first_not_of(validChars);
+      if (pos != string::npos){
+        std::ostringstream warn;
+        warn << "Input file error Integer Number: I found ("<< stringValue[pos]
+             << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
     }
-    //__________________________________
-    // check for two or more "."
-    string::size_type p1 = stringValue.find_first_of(".");    
-    string::size_type p2 = stringValue.find_last_of(".");     
-    if (p1 != p2){
-      std::ostringstream warn;
-      warn << "Input file error: I found two (..) "
-           << "inside of "<< stringValue <<std::endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    break;
+  case FLOAT_TYPE :
+    {
+      string validChars(" -+.0123456789eE");
+      string::size_type  pos = stringValue.find_first_not_of(validChars);
+      if (pos != string::npos){
+        std::ostringstream warn;
+        warn << "Input file error: I found ("<< stringValue[pos]
+             << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+      //__________________________________
+      // check for two or more "."
+      string::size_type p1 = stringValue.find_first_of(".");    
+      string::size_type p2 = stringValue.find_last_of(".");     
+      if (p1 != p2){
+        std::ostringstream warn;
+        warn << "Input file error: I found two (..) "
+             << "inside of "<< stringValue <<std::endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
     }
-  }  
-  if (Int_or_float == "int")  {
-    string validChars(" -0123456789");
-    string::size_type  pos = stringValue.find_first_not_of(validChars);
-    if (pos != string::npos){
-      std::ostringstream warn;
-      warn << "Input file error Integer Number: I found ("<< stringValue[pos]
-           << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-  }
+    break;
+  } // end switch( type )
 } 
 
 ProblemSpecP
@@ -277,7 +283,7 @@ ProblemSpec::get(const string& name, double &value)
     return ps;
   }
   else {
-    checkForInputError(stringValue,"double"); 
+    checkForInputError( stringValue, FLOAT_TYPE ); 
     std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -301,7 +307,7 @@ ProblemSpec::get(const string& name, unsigned int &value)
     return ps;
   }
   else {
-    checkForInputError(stringValue,"int"); 
+    checkForInputError( stringValue, INT_TYPE ); 
     std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -326,7 +332,7 @@ ProblemSpec::get(const string& name, int &value)
     return ps;
   }
   else {
-    checkForInputError(stringValue,"int");
+    checkForInputError( stringValue, INT_TYPE );
     std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -351,7 +357,7 @@ ProblemSpec::get(const string& name, long &value)
     return ps;
   }
   else {
-    checkForInputError(stringValue,"int");
+    checkForInputError( stringValue, INT_TYPE );
     std::istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -468,9 +474,9 @@ ProblemSpec::get(const string& name, Vector &value)
     string y_val(stringValue,i2+1,i3-i2-1);
     string z_val(stringValue,i3+1,i4-i3-1);
     
-    checkForInputError(x_val, "double"); 
-    checkForInputError(y_val, "double");
-    checkForInputError(z_val, "double");
+    checkForInputError( x_val, FLOAT_TYPE ); 
+    checkForInputError( y_val, FLOAT_TYPE );
+    checkForInputError( z_val, FLOAT_TYPE );
     
     value.x(atof(x_val.c_str()));
     value.y(atof(y_val.c_str()));
@@ -494,7 +500,7 @@ ProblemSpec::get(const string& name, vector<double>& value)
       vit!=string_values.end();vit++) {
     const string v(*vit);
     
-    checkForInputError(v, "double"); 
+    checkForInputError( v, FLOAT_TYPE ); 
     value.push_back( atof(v.c_str()) );
   }
   
@@ -515,7 +521,7 @@ ProblemSpec::get(const string& name, vector<int>& value)
       vit!=string_values.end();vit++) {
     const string v(*vit);
     
-    checkForInputError(v, "int"); 
+    checkForInputError( v, FLOAT_TYPE ); 
     value.push_back( atoi(v.c_str()) );
   }
   
@@ -642,9 +648,9 @@ void ProblemSpec::parseIntVector(const string& string_value, IntVector& value)
   string y_val(string_value,i2+1,i3-i2-1);
   string z_val(string_value,i3+1,i4-i3-1);
 
-  checkForInputError(x_val, "int");     
-  checkForInputError(y_val, "int");     
-  checkForInputError(z_val, "int");     
+  checkForInputError( x_val, INT_TYPE );
+  checkForInputError( y_val, INT_TYPE );
+  checkForInputError( z_val, INT_TYPE );
           
   value.x(atoi(x_val.c_str()));
   value.y(atoi(y_val.c_str()));
@@ -715,9 +721,9 @@ ProblemSpec::get(Vector &value)
   string y_val(stringValue,i2+1,i3-i2-1);
   string z_val(stringValue,i3+1,i4-i3-1);
   
-  checkForInputError(x_val, "double"); 
-  checkForInputError(y_val, "double");
-  checkForInputError(z_val, "double");
+  checkForInputError( x_val, FLOAT_TYPE );
+  checkForInputError( y_val, FLOAT_TYPE );
+  checkForInputError( z_val, FLOAT_TYPE );
   
   value.x(atof(x_val.c_str()));
   value.y(atof(y_val.c_str()));
@@ -1173,7 +1179,7 @@ ProblemSpec::getAttribute(const string& name, double &value)
   string stringValue;
   if(!getAttribute(name, stringValue))
     return false;
-  checkForInputError(stringValue,"double"); 
+  checkForInputError( stringValue, FLOAT_TYPE ); 
   istringstream ss(stringValue);
   ss >> value;
   if( !ss ) {
