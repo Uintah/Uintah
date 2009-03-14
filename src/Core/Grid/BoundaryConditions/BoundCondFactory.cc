@@ -68,15 +68,21 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   double d_value;
   Vector v_value;
 
-  if (child->get("value",d_value) != 0)
-    bc = scinew BoundCond<double>(bc_attr["label"],bc_attr["var"],d_value);
-  else if (child->get("value",v_value) != 0) {
-    bc = scinew BoundCond<Vector>(bc_attr["label"],bc_attr["var"],v_value);
-    // std::cout << "v_value = " << v_value << std::endl;
-  }
-  else
-    bc = scinew BoundCond<NoValue>(bc_attr["label"],bc_attr["var"]);
-  
+  ProblemSpecP valuePS = child->findBlock( "value" );
 
+  if( valuePS != 0) { // Found <value> tag.    
+    try {
+      child->get( "value", d_value );
+      bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value );
+    }
+    catch( ... ) {
+      // If there was an exception, then the 'value' was not a double... try to get a vector...
+      child->get( "value", v_value );
+      bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value );
+    }
+  }
+  else {
+    bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
+  }
 }
 
