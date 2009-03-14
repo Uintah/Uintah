@@ -268,8 +268,12 @@ WARNING
       void require(const std::string& name, vector<IntVector>& value);
 
       //////////
-      // look for the value of tag named name and passes
-      // it back into value.  Returns 'this' if found, otherwise null
+      // Look for the child tag named 'name' and pass back its
+      // 'value'.  Returns the child ProblemSpecP if found, otherwise
+      // NULL.  Has the possiblity of throwing a ProblemSetupException
+      // if the data is not the correct type (ie: you call
+      // get(name,double) but the tag contains a string).
+      //
       ProblemSpecP get(const std::string& name, double& value);
       ProblemSpecP get(const std::string& name, int& value);
       ProblemSpecP get(const std::string& name, unsigned int& value);

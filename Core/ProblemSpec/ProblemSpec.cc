@@ -36,34 +36,19 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 
-#include   <iostream>
-#include   <iterator>
-#include   <algorithm>
-#include   <vector>
-#include   <iomanip>
-#include   <map>
-#include   <sstream>
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#  define IRIX
-#  pragma set woff 1375
-#endif
+#include <iostream>
+#include <iterator>
+#include <algorithm>
+#include <vector>
+#include <iomanip>
+#include <map>
+#include <sstream>
 
 #include <libxml/tree.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#  pragma reset woff 1375
-#endif
-
 using namespace Uintah;
 using namespace SCIRun;
-using std::ostringstream;
-using std::istringstream;
-using std::setprecision;
-
-// Forward Declarations
-//std::ostream& operator<<(std::ostream& out, const xmlNode & toWrite);
-//std::ostream& operator<<(std::ostream& out, const DOMText & toWrite);
+using namespace std;
 
 ProblemSpecP
 ProblemSpec::findBlock() const
@@ -189,7 +174,7 @@ ProblemSpec::importNode(ProblemSpecP src, bool deep)
 }
 
 void
-ProblemSpec::addComment(std::string comment)
+ProblemSpec::addComment( string comment )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::addComment()");
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
@@ -197,7 +182,7 @@ ProblemSpec::addComment(std::string comment)
 }
 
 ProblemSpecP
-ProblemSpec::makeComment(std::string comment)
+ProblemSpec::makeComment( string comment )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::makeComment()");
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
@@ -239,9 +224,9 @@ ProblemSpec::checkForInputError( const string & stringValue,
       string validChars(" -0123456789");
       string::size_type  pos = stringValue.find_first_not_of(validChars);
       if (pos != string::npos){
-        std::ostringstream warn;
-        warn << "Input file error Integer Number: I found ("<< stringValue[pos]
-             << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
+        ostringstream warn;
+        warn << "Bad Integer string: Found '"<< stringValue[pos]
+             << "' in the string \""<< stringValue<< "\" at position " << pos << ".\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
@@ -251,9 +236,9 @@ ProblemSpec::checkForInputError( const string & stringValue,
       string validChars(" -+.0123456789eE");
       string::size_type  pos = stringValue.find_first_not_of(validChars);
       if (pos != string::npos){
-        std::ostringstream warn;
-        warn << "Input file error: I found ("<< stringValue[pos]
-             << ") inside of "<< stringValue<< " at position "<< pos <<std::endl;
+        ostringstream warn;
+        warn << "Bad Float string: Found '"<< stringValue[pos]
+             << "' inside of \""<< stringValue << "\" at position " << pos << "\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
       //__________________________________
@@ -261,9 +246,9 @@ ProblemSpec::checkForInputError( const string & stringValue,
       string::size_type p1 = stringValue.find_first_of(".");    
       string::size_type p2 = stringValue.find_last_of(".");     
       if (p1 != p2){
-        std::ostringstream warn;
+        ostringstream warn;
         warn << "Input file error: I found two (..) "
-             << "inside of "<< stringValue <<std::endl;
+             << "inside of "<< stringValue << "\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
@@ -284,7 +269,7 @@ ProblemSpec::get(const string& name, double &value)
   }
   else {
     checkForInputError( stringValue, FLOAT_TYPE ); 
-    std::istringstream ss(stringValue);
+    istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       ps = 0;
@@ -308,7 +293,7 @@ ProblemSpec::get(const string& name, unsigned int &value)
   }
   else {
     checkForInputError( stringValue, INT_TYPE ); 
-    std::istringstream ss(stringValue);
+    istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, uint): stringstream failed...\n", name.c_str() );
@@ -333,7 +318,7 @@ ProblemSpec::get(const string& name, int &value)
   }
   else {
     checkForInputError( stringValue, INT_TYPE );
-    std::istringstream ss(stringValue);
+    istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, int): stringstream failed...\n", name.c_str() );
@@ -358,7 +343,7 @@ ProblemSpec::get(const string& name, long &value)
   }
   else {
     checkForInputError( stringValue, INT_TYPE );
-    std::istringstream ss(stringValue);
+    istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
       printf( "WARNING: ProblemSpec.cc: get(%s, long): stringstream failed...\n", name.c_str() );
@@ -382,7 +367,7 @@ ProblemSpec::get(const string& name, bool &value)
   }
   else {
     // Slurp up any spaces that were put in before or after the cmp string.
-    std::istringstream result_stream(stringValue);
+    istringstream result_stream(stringValue);
     string nospace_cmp;
     result_stream >> nospace_cmp;
 
@@ -420,10 +405,10 @@ ProblemSpec::get(const string& name, string &value)
    
     // elminate spaces from string
 
-    std::stringstream in_stream(value);
+    stringstream in_stream(value);
     vector<string> vs;
-    copy(std::istream_iterator<string>(in_stream),
-         std::istream_iterator<string>(),back_inserter(vs));
+    copy( istream_iterator<string>(in_stream),
+          istream_iterator<string>(),back_inserter(vs) );
     string out_string;
     for (vector<string>::const_iterator it = vs.begin(); it != vs.end();
          ++it) {
@@ -541,7 +526,7 @@ ProblemSpec::get(const string& name, vector<string>& value)
     return ps;
   }
   else {
-    std::istringstream in(stringValue);
+    istringstream in(stringValue);
     char c,next;
     string result;
     while (!in.eof()) {
@@ -590,7 +575,7 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
     return ps;
   }
   else {
-    std::istringstream in(stringValue);
+    istringstream in(stringValue);
     char c;
     bool first_bracket = false;
     bool inner_bracket = false;
@@ -698,7 +683,7 @@ ProblemSpec::get(string &value)
   string tmp = getNodeValue();
   if (tmp == "")
     return false;
-  std::istringstream tmp_str(tmp);
+  istringstream tmp_str(tmp);
   string w;
   while(tmp_str>>w) value += w;
   return true;
@@ -931,7 +916,7 @@ ProblemSpec::appendElement(const char* name, const char* value)
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, int value)
 {
-  std::ostringstream val;
+  ostringstream val;
   val << value;
   return appendElement(name, val.str());
 }
@@ -939,17 +924,17 @@ ProblemSpec::appendElement(const char* name, int value)
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, long value)
 {
-  std::ostringstream val;
-   val << value;
-   return appendElement(name, val.str());
+  ostringstream val;
+  val << value;
+  return appendElement(name, val.str());
 }
 
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, const IntVector& value)
 {
-  std::ostringstream val;
-   val << '[' << value.x() << ", " << value.y() << ", " << value.z() << ']';
-   return appendElement(name, val.str());
+  ostringstream val;
+  val << '[' << value.x() << ", " << value.y() << ", " << value.z() << ']';
+  return appendElement(name, val.str());
 }
 
 ProblemSpecP
@@ -1177,8 +1162,9 @@ bool
 ProblemSpec::getAttribute(const string& name, double &value)
 {
   string stringValue;
-  if(!getAttribute(name, stringValue))
+  if(!getAttribute(name, stringValue)) {
     return false;
+  }
   checkForInputError( stringValue, FLOAT_TYPE ); 
   istringstream ss(stringValue);
   ss >> value;
