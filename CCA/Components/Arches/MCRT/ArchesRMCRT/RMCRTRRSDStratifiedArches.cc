@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
-#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTnoInterpolation.h>
+#include <CCA/Components/Arches/MCRT/ArchesRMCRT/RMCRTRRSDStratified.h>
 #include <CCA/Components/Arches/MCRT/ArchesRMCRT/Surface.h>
 #include <CCA/Components/Arches/MCRT/ArchesRMCRT/RealSurface.h>
 #include <CCA/Components/Arches/MCRT/ArchesRMCRT/TopRealSurface.h>
@@ -88,17 +88,22 @@ using namespace std;
 
 // PathIndex -- tracking index along the path
 
-// the ReverseMCRT.cc is the last updated program
+
+// The standard deviation sigma of a probability distribution is
+// defined as the square root of the variance
+// where SD = sqrt(variance)
+// variance = sum((xi-ave)^2)/(N-1) // to be divided by N-1, cuz, the ave itself is estimate
+// and to devide by N-1 is then unbiased.
 
 // Constructor
-RMCRTnoInterpolation::
-RMCRTnoInterpolation(){}
+RMCRTRRSDStratified::
+RMCRTRRSDStratified(){}
 
 //Destructor
-RMCRTnoInterpolation::
-~RMCRTnoInterpolation(){}
+RMCRTRRSDStratified::
+~RMCRTRRSDStratified(){}
 
-void RMCRTnoInterpolation::
+void RMCRTRRSDStratified::
 ToArray(int size, double *array, char *_argv){
 
   ifstream in(_argv); // open table
@@ -114,7 +119,7 @@ ToArray(int size, double *array, char *_argv){
 }
 
 
-double RMCRTnoInterpolation::
+double RMCRTRRSDStratified::
 MeshSize(int &Nchalf, double &Lhalf, double &ratio){
   double dcenter;
   double pp;
@@ -130,7 +135,7 @@ MeshSize(int &Nchalf, double &Lhalf, double &ratio){
 }
 
 
-
+// to see if SD will reduce as rayNo increases
 template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
 		 RealSurface *RealPointer,
@@ -150,34 +155,70 @@ void rayfromSurf(SurfaceType &obSurface,
 		 const double *X, const double *Y, const double *Z,
 		 const double *kl_Vol, const double *scatter_Vol,
 		 const int *VolFeature,
-		 const int &thisRayNo,
 		 const int &iIndex,
 		 const int &jIndex,
 		 const int &kIndex,
 		 const double &StopLowerBound,
+		 const double &varianceBound,
+		 const int &i_n, const int &j_n, const int &k_n,
+		 const int &theta_n, const int &phi_n, const int &p_n,
+		 const int &straSize,
 		 double *netInten_surface[],
+		 int ***stratifyM, int ***stratifyM_flag,
+		 double ***sumIncomInten, double ***sumIncomInten_sq,
+		 double ***straVar, double ***aveIncomInten,
 		 double *s){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
   double PathLeft, PathSurfaceLeft, weight, traceProbability;
-  double OutIntenSur, sumIncomInten, aveIncomInten;
+  double OutIntenSur,IncomingIntenSur;
+    //sumIncomInten, aveIncomInten, sumIncomInten_sq, aveIncomInten_sq;
   int rayCounter, hitSurfaceFlag, hitSurfaceIndex;
+
+  // sumVar -- summatioin of all variances from all strata
+  // sumSD -- sumSD = sqrt(sumVar) standard deviation of variable x
+  // sumSDave -- sumSDave = sqrt(sumVar/N) standard deviation of average of x 
+  // Var(x) = <x^2> - <x>^2 = sum[ (x_i - <x>)^2 ]/N-1
+  // to get the same N-1 unbiased variance
+  // Var(x) = ( sum(x_i^2) - N * <x>^2 ) / (N-1) otherwise,will produce negative Var(x)
+  // use the first expression is better, it doesnot need to store x_i, just the summation of it
+  double sumVar, sumSD, sumSDave;
+  double R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss;
+  int sMx, sMy, sMz, sMtheta, sMphi, sMp;
+  double tempV, sumSDave_prv;
+  int anotherSize;
+   
+  sumSDave = 100000000; // initial value for sumSDave_prv
   
+  //local stratum variance is a good guidance for bias sampling (important sampling)  
   // get surface element's absorption coefficient
   alpha = alpha_surface[surfaceFlag][surfaceIndex];
   OutIntenSur = IntenArray_surface[surfaceFlag][surfaceIndex];
-   
-  double *IncomingIntenSur = new double[ thisRayNo ];
-  
-	  // loop over ray numbers on each surface element
-  for ( rayCounter = 0; rayCounter < thisRayNo; rayCounter++ ) {
+  rayCounter = 0;
+ 
+  for ( int k = 0; k < p_n; k ++ ){
+    for ( int j = 0; j < theta_n; j ++){
+      for ( int i = 0; i < phi_n; i ++){
+	sumIncomInten[k][j][i] = 0;
+	sumIncomInten_sq[k][j][i] = 0;
+	straVar[k][j][i] = 0;
+	stratifyM_flag[k][j][i] = 0;
+	stratifyM[k][j][i] = 0;
+	aveIncomInten[k][j][i] = 0;
+      }
+    }
+  }
+ 
+  // loop over ray numbers on each surface element
+  do { // shoot another ray when SD is greater than varianceBound
     
     LeftIntenFrac = 1;
     traceProbability = 1;
     weight = 1;
     previousSum = 0;
     currentSum = 0;
-    IncomingIntenSur[rayCounter] = 0;
+    IncomingIntenSur = 0;
+    anotherSize = 0;
     
     // set SurLeft = absorption coeff here is because the Intensity is
     // attenuated on the real surface by absorption.
@@ -186,17 +227,39 @@ void rayfromSurf(SurfaceType &obSurface,
     
     // get emitting ray's direction vector s
     // should watch out, the s might have previous values
-    RealPointer->get_s(MTrng, s);    
+    RealPointer->get_s(MTrng, s);
+
+    // RealPointer get limits
+    // get limits can be replaced by Point p_fx.x() etc.
     RealPointer->get_limits(X, Y, Z);
     
+    R_theta = RealPointer->get_R_theta();
+    R_phi = RealPointer->get_R_phi();
     
     // get ray's emission position, xemiss, yemiss, zemiss
-    obRay.set_emissP(MTrng,
+    // xlow = p_fx.x() etc. 
+    obRay.set_emissP(MTrng, 
 		     obSurface.get_xlow(), obSurface.get_xup(),
 		     obSurface.get_ylow(), obSurface.get_yup(),
 		     obSurface.get_zlow(), obSurface.get_zup());
     
+    R_xemiss = obRay.get_R_xemiss();
+    R_yemiss = obRay.get_R_yemiss();
+    R_zemiss = obRay.get_R_zemiss();
+    
     obRay.set_directionS(s);
+
+    sMx = int(floor(R_xemiss * i_n));
+    sMy = int(floor(R_yemiss * j_n));
+    sMz = int(floor(R_zemiss * k_n));
+
+    sMtheta = int(floor(R_theta * theta_n));
+    sMphi = int(floor(R_phi * phi_n));
+    sMp = sMz * (i_n * j_n) + sMy * i_n + sMx;
+
+    stratifyM[sMp][sMtheta][sMphi] ++ ;
+    stratifyM_flag[sMp][sMtheta][sMphi] = 1;
+    
     obRay.set_currentvIndex(iIndex, jIndex, kIndex);
     obRay.dirChange = 1;
     
@@ -216,24 +279,17 @@ void rayfromSurf(SurfaceType &obSurface,
       
       // the upper bound of the segment
       currentSum = previousSum + PathLeft;
-      
-      IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] + 
-	IntenArray_Vol[obRay.get_currentvIndex()] 
-	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
-	* weight;
-      
-//       cout << "previousSum = " << previousSum << endl;
-//       cout << "currentSum = " << currentSum << endl;
-      
-      // 	      	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
-      // 	      cout << "IntenArray_Vol = " << IntenArray_Vol[obRay.get_currentvIndex()] << endl;
-      
+       
+      IncomingIntenSur += 
+ 	IntenArray_Vol[obRay.get_currentvIndex()] 
+ 	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+ 	* weight;
+
       if ( !obRay.VIRTUAL ) {
 	
 	hitSurfaceFlag = obRay.get_surfaceFlag();
 	hitSurfaceIndex = obRay.get_hitSurfaceIndex();
-// 	cout << "hitSurfaceFlag = " << hitSurfaceFlag << endl;
-// 	cout << "hitSurfaceIndex = " << hitSurfaceIndex << endl;
+
 	// PathSurfaceLeft is updated here
 	// and it comes into effect for next travelling step.
 	obRay.hitRealSurfaceInten(MTrng,
@@ -242,14 +298,12 @@ void rayfromSurf(SurfaceType &obSurface,
 				  rd_surface[hitSurfaceFlag],
 				  PathSurfaceLeft);
 		
-	// 		cout << "obRay.get_surfaceFlag() = " << obRay.get_surfaceFlag() << endl;
-	// 		cout << "surfaceFlag = " << surfaceFlag << endl;
-	
-	IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
-	  IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
-	  exp ( -currentSum ) * SurLeft
-	  * weight;
-	//	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
+
+	IncomingIntenSur += 
+ 	  IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
+ 	  exp ( -currentSum ) * SurLeft
+ 	  * weight;
+      
       }
       
       
@@ -263,32 +317,173 @@ void rayfromSurf(SurfaceType &obSurface,
       LeftIntenFrac = exp( -currentSum) * SurLeft;
       traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
       
-    }while (  MTrng.randExc() < traceProbability); // continue the path
+    }while ( MTrng.randExc() < traceProbability); // continue the path
+
+    // straSize should be the total number of elements of stratifyM is not zero
+    // when straSize too large, but sample is small, most of the stratum is empty
+    // which cause aveIncomInten not correct acutally.
+   
+ 
+    // tempV =  IncomingIntenSur/straSize;
+
+    // tempV should be divided by real size stratifyM ( non-zero elemement count )
+    tempV =  IncomingIntenSur;
+    sumIncomInten[sMp][sMtheta][sMphi] +=  tempV;
+    sumIncomInten_sq[sMp][sMtheta][sMphi] += tempV * tempV;
+
+    aveIncomInten[sMp][sMtheta][sMphi] =
+       sumIncomInten[sMp][sMtheta][sMphi] / stratifyM[sMp][sMtheta][sMphi];
+
+    //  cout << "ave = " <<  aveIncomInten[sMp][sMtheta][sMphi] << endl;
+     // when stratifyM[sMp][sMtheta][sMphi] == 1, straVar[sMp][sMtheta][sMphi] = 0
     
-  } // rayCounter loop
-	  
   
-  sumIncomInten = 0;
-  for ( int aaa = 0; aaa < thisRayNo; aaa ++ )
-    sumIncomInten = sumIncomInten + IncomingIntenSur[aaa];
-  //	  cout << "sumIncomInten = " << sumIncomInten << endl;
-  delete[] IncomingIntenSur;
+  //   if ( stratifyM[sMp][sMtheta][sMphi] != 1 ) 
+//       straVar[sMp][sMtheta][sMphi] =
+// 	( sumIncomInten_sq[sMp][sMtheta][sMphi] -
+// 	  sumIncomInten[sMp][sMtheta][sMphi] *
+// 	  sumIncomInten[sMp][sMtheta][sMphi] /
+// 	  stratifyM[sMp][sMtheta][sMphi]) /
+// 	(stratifyM[sMp][sMtheta][sMphi]-1) ;
+    
+ rayCounter ++;
+
+ 
+    /*
+  if ( stratifyM[sMp][sMtheta][sMphi] != 1 ) 
+      straVar[sMp][sMtheta][sMphi] =
+	( sumIncomInten_sq[sMp][sMtheta][sMphi] -
+	  sumIncomInten[sMp][sMtheta][sMphi] *
+	   aveIncomInten[sMp][sMtheta][sMphi] ) /
+	(stratifyM[sMp][sMtheta][sMphi]-1) ;
+
   
-  aveIncomInten = sumIncomInten / thisRayNo;
+ //    cout << "----------- the variance ------------------ " << endl;
+//     cout << "sMp = " << sMp << endl;
+//     cout << "sMtheta = " << sMtheta << endl;
+//     cout << "sMphi = " << sMphi << endl;
+    
+//     cout << "straVar = " << straVar[sMp][sMtheta][sMphi]<< endl;
+
+
+     
+     //  sumSDave_prv = sumSDave;
+
+    // after all the rays are over, sum all the non-empty element counts in stratifyM
+  // which is the real number of stratifyM
+  // thus dont choose too large straSize, and too small sample,
+  // if not really count the real size of stratifyM, will result in error
+  // choose appropriate straSize, so that almost all of the stratifyM are filled.
+    
+     for ( int k = 0; k < p_n; k ++ )
+       for ( int j = 0; j < theta_n; j ++)
+ 	for ( int i = 0; i < phi_n; i ++){
+ 	  anotherSize += stratifyM_flag[k][j][i];
+ 	}
+
+     
+    sumVar = 0;
+    sumSDave = 0;
+    for ( int k = 0; k < p_n; k ++ )
+      for ( int j = 0; j < theta_n; j ++)
+	for ( int i = 0; i < phi_n; i ++){
+	  sumVar += straVar[k][j][i];
+	  if ( stratifyM[k][j][i] != 0 ) 
+	    sumSDave += straVar[k][j][i]/ stratifyM[k][j][i];
+	}
+    
+    
+    sumVar = sumVar / anotherSize / anotherSize;
+    sumSD = sqrt(sumVar);    
+    sumSDave = sqrt(sumSDave )/anotherSize;
+
+    */
+
+    
+    /*
+    cout << "surfaceflag = " << surfaceFlag <<
+    " ; surfaceIndex = " << surfaceIndex <<
+      " ; sumVar = " << sumVar <<
+      "; sumSD = " << sumSD << 
+      " ; sumSDave = "  << sumSDave <<
+      "; rayNo = " << rayCounter << endl;
+    */
+    
+  } while(rayCounter < 1500); // rayCounter loop
+
+    for ( int k = 0; k < p_n; k ++ )
+    for ( int j = 0; j < theta_n; j ++)
+      for ( int i = 0; i < phi_n; i ++){
+	anotherSize += stratifyM_flag[k][j][i];
+      }
+
+  /*
+  if ( stratifyM[sMp][sMtheta][sMphi] != 1 ) 
+    straVar[sMp][sMtheta][sMphi] =
+      ( sumIncomInten_sq[sMp][sMtheta][sMphi] -
+	sumIncomInten[sMp][sMtheta][sMphi] *
+	aveIncomInten[sMp][sMtheta][sMphi] ) /
+      (stratifyM[sMp][sMtheta][sMphi]-1) ;
   
+  sumVar = 0;
+  sumSDave = 0;
+  for ( int k = 0; k < p_n; k ++ )
+      for ( int j = 0; j < theta_n; j ++)
+	for ( int i = 0; i < phi_n; i ++){
+	  sumVar += straVar[k][j][i];
+	  if ( stratifyM[k][j][i] != 0 ) 
+	    sumSDave += straVar[k][j][i]/ stratifyM[k][j][i];
+	}
+  
+  
+  sumVar = sumVar / anotherSize / anotherSize;
+  sumSD = sqrt(sumVar);    
+  sumSDave = sqrt(sumSDave )/anotherSize;
+   cout << "surfaceflag = " << surfaceFlag <<
+    " ; surfaceIndex = " << surfaceIndex <<
+      " ; sumVar = " << sumVar <<
+      "; sumSD = " << sumSD << 
+      " ; sumSDave = "  << sumSDave <<
+      "; rayNo = " << rayCounter << endl;
+  */
+  
+  double ttaveIncomInten;
+  ttaveIncomInten = 0;
+  
+  for ( int k = 0; k < p_n; k ++ )
+    for ( int j = 0; j < theta_n; j ++)
+      for ( int i = 0; i < phi_n; i ++){
+	ttaveIncomInten += aveIncomInten[k][j][i];
+      }
+  
+  /*
+    for ( int k = 0; k < p_n; k++){
+    cout << endl;
+    cout << "p_n = " << k << endl;
+    cout << "----------------------------------------" << endl;
+    for ( int j = 0; j < theta_n; j ++)
+      for ( int i = 0; i < phi_n; i++){
+	cout << stratifyM[k][j][i] << " " ;
+	if ( i == (phi_n-1) ) cout << endl;
+      }
+  }
+  */
+  
+    
   netInten_surface[surfaceFlag][surfaceIndex] =
-    OutIntenSur - aveIncomInten;
-  
-  //	  cout << "netInten_surface = " << netInten_surface[surfaceFlag][surfaceIndex] << endl;
+    OutIntenSur - ttaveIncomInten/anotherSize;
+ 
+
   
 }
+  
 
 
 
 
-int RMCRTnoInterpolation::
+int RMCRTRRSDStratified::
 RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
-	    const int& theta_n, const int& phi_){
+	    const int& theta_n, const int& phi_n){
 
   
 //   int my_rank; // rank of process
@@ -296,6 +491,27 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   time_t time_start, time_end;
   time (&time_start);
 
+  // stratified sampling
+  //  int i_n, j_n, k_n, theta_n, phi_n
+  int straSize;
+  int p_n; // position number
+  //  cout << " Please enter i_n, j_n, k_n, theta_n, phi_n" << endl;
+  //  cin >> i_n >> j_n >> k_n >> theta_n >> phi_n ;
+
+  //   i_n = 3;
+  //  j_n = 3;
+  // k_n = 1;
+  // theta_n = 10;
+//   phi_n = 10;
+  
+  p_n = i_n * j_n * k_n;
+  straSize = p_n * theta_n * phi_n;
+  cout << "i_n = " << i_n << endl;
+  cout << "j_n = " << j_n << endl;
+  cout << "k_n = " << k_n << endl;
+  cout << "theta_n = " << theta_n << endl;
+  cout << "phi_n = " << phi_n << endl;
+  
   int casePlates;
   //  cout << " Please enter plates case " << endl;
   //  cin >> casePlates;
@@ -330,20 +546,18 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   int BottomStartNo, FrontStartNo, BackStartNo, LeftStartNo, RightStartNo; 
   int VolElementNo, TopBottomNo, FrontBackNo, LeftRightNo;
   int surfaceElementNo;
-  //  double EnergyAmount; // set as customer self-set-up later
-  //  double sumIncomInten, aveIncomInten;  
-  double StopLowerBound;
+  double StopLowerBound, varianceBound;
   double linear_b, eddington_f, eddington_g;
   int PhFunc;
   double scat;
-
-  scat = 9.0;
+ 
+  scat = 1.0;
   linear_b = 1;
   eddington_f = 0;
   eddington_g = 0;
-  PhFunc = ISOTROPIC;
-  
-  StopLowerBound = 1e-3;
+  PhFunc = LINEAR_SCATTER;
+   
+  varianceBound = 0.015; // set arbitrary
   rayNoSurface = 1;
   rayNoVol = 1;  
   Ncx = 10;
@@ -492,7 +706,6 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
     for ( int j = 0; j < Ncy; j ++ )
       for ( int i = 0; i < Ncx; i ++ )
 	VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
-
   
   // get coordinates arrays
   double *X = new double [Npx]; // i 
@@ -812,14 +1025,15 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   Y[Ncyhalf] = 0;
   Z[Nczhalf] = 0;   
  
-
+  StopLowerBound = 1e-20;
+  
 // initial as all volume elements ray no zeros first.
   // initial volume ray numbers
   // following x, y, z, so now from left to right, then front to back , and finally bottom to top
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1000; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1; 
    // TopBottomNo = Ncx * Ncy;
 
 
@@ -829,16 +1043,17 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 1000;
-       rayNo_bottom_surface[iSurface] = 1000;
+       rayNo_top_surface[iSurface] = 1;
+       rayNo_bottom_surface[iSurface] = 1;
      }
-
+   
+     
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 1000;
-       rayNo_back_surface[iSurface] = 1000;
+       rayNo_front_surface[iSurface] = 1;
+       rayNo_back_surface[iSurface] = 1;
      }   
 
 
@@ -846,30 +1061,35 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 1000;
-       rayNo_right_surface[iSurface] = 1000;
+       rayNo_left_surface[iSurface] = 1;
+       rayNo_right_surface[iSurface] = 1;
      }
 
-
-   // case set up-- dont put these upfront , put them here. otherwise return compile errors
-   //  #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmark.cc>
-    #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmarkSurf.cc>
-   //   #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputNonblackSurf.cc>
-   // #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputScattering.cc>   
      
-   MTRand MTrng;
+   // case set up-- dont put these upfront , put them here. otherwise return compile errors
+  #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmark.cc>
+   //  #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputBenchmarkSurf.cc>
+   //   #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputNonblackSurf.cc>
+   // #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputScattering.cc>
+   //  #include <CCA/Components/Arches/MCRT/ArchesRMCRT/inputScatteringAniso.cc> 
+   
+   
+   MTRand MTrng;   
    VolElement obVol;
    VirtualSurface obVirtual;
    obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);
+
+   // VolElementNo is not necessary
+   // ray obRay(IntVector &currCell)
    ray obRay(VolElementNo,Ncx, Ncy, Ncz);
-   
-   double OutIntenVol, traceProbability, LeftIntenFrac, sumIncomInten, aveIncomInten;
+      
+   double OutIntenVol, traceProbability, LeftIntenFrac;
+   //sumIncomInten, aveIncomInten;
    double PathLeft, PathSurfaceLeft, weight;
    double previousSum, currentSum;
    double SurLeft;
 
-   // double theta, phi;
-   //  double random1, random2;
+   double theta, phi;
    double s[3];
   
    double sumQsurface = 0;
@@ -965,8 +1185,9 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   int hitSurfaceIndex, hitSurfaceFlag;
   int surfaceFlag;
   int surfaceIndex;
-  // int rayCounter;
-  MakeTableFunction obTable;    
+  int rayCounter;
+  MakeTableFunction obTable;
+  
  //// =============================== Calculation starts ========================
   
   // when surfaces are cold, set local_rayNoSurface = 0
@@ -974,8 +1195,44 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   int iIndex, jIndex, kIndex;
   int thisRayNo;
   
+   // stratifyM(p_n, theta_n, phi_n)
+  int ***stratifyM, ***stratifyM_flag;
+  double ***sumIncomInten, ***sumIncomInten_sq, ***straVar, ***aveIncomInten;
+     
+  stratifyM = new int **[p_n];
+  stratifyM_flag = new int **[p_n];
+  sumIncomInten = new double **[p_n];
+  sumIncomInten_sq = new double **[p_n];
+  aveIncomInten = new double **[p_n];
+  straVar = new double **[p_n]; 
+
+  for ( int k = 0; k < p_n ; k ++ ){
+    stratifyM[k] = new int *[theta_n];
+    stratifyM_flag[k] = new int *[theta_n];
+    sumIncomInten[k] = new double *[theta_n];
+    sumIncomInten_sq[k] = new double *[theta_n];
+    aveIncomInten[k] = new double *[theta_n];
+    straVar[k] = new double *[theta_n];
+  }
+  
+  for ( int k = 0; k < p_n; k ++)
+    for ( int j = 0; j < theta_n; j++){
+      stratifyM[k][j] = new int [phi_n];
+      stratifyM_flag[k][j] = new int [phi_n];
+      sumIncomInten[k][j] = new double[phi_n];
+      sumIncomInten_sq[k][j] = new double [phi_n];
+      aveIncomInten[k][j] = new double [phi_n];
+      straVar[k][j] = new double [phi_n];
+    }
+    
+  
   if ( rayNoSurface != 0 ) { // have rays emitting from surface elements
 
+    // stratificaty sampling
+    // for surface elements: position (spatial ) and directional -- theta and phi
+    // matrix (spa, the, phi)
+    // spa = 9; the or cos(theta)? use theta first,10, phi = 10
+    // once a ray is picked, from its location and direction we find out which bin it belongs to.
 
     // ------------- top surface -------------------
   surfaceFlag = TOP;
@@ -992,6 +1249,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
 	  
 	  MTrng.seed(surfaceIndex);
+	  
 	  TopRealSurface obTop(iIndex, jIndex, kIndex, Ncx);
 	  RealPointer = &obTop;
 
@@ -1013,12 +1271,18 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,
+		      i_n, j_n, k_n,
+		      theta_n, phi_n, p_n,
+		      straSize,
 		      netInten_surface,
+		      stratifyM, stratifyM_flag,
+		      sumIncomInten, sumIncomInten_sq,
+		      straVar, aveIncomInten,
 		      s);
 	 
 	}
@@ -1032,6 +1296,8 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
     // cout << "done with top" << endl;
     
     // ------------- bottom surface -------------------
+ 
+   
   surfaceFlag = BOTTOM;
     
     // consider Z[] array from 0 to Npz -1 = Ncz
@@ -1045,7 +1311,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 
 	if ( thisRayNo != 0 ) { // rays emitted from this surface
 	  
-	  MTrng.seed(surfaceIndex + BottomStartNo);
+	  MTrng.seed(surfaceIndex+BottomStartNo);
 	  BottomRealSurface obBottom(iIndex, jIndex, kIndex, Ncx);
 	  RealPointer = &obBottom;
 
@@ -1067,12 +1333,17 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,
+		      i_n, j_n, k_n,
+		      theta_n, phi_n, p_n, straSize,
 		      netInten_surface,
+		      stratifyM, stratifyM_flag,
+		      sumIncomInten, sumIncomInten_sq,
+		      straVar, aveIncomInten,
 		      s);
 	}
 
@@ -1087,6 +1358,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 
 
    // ------------- front surface -------------------
+ 
   surfaceFlag = FRONT;
     
     // consider Z[] array from 0 to Npz -1 = Ncz
@@ -1122,12 +1394,18 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,
+		       i_n, j_n, k_n,
+		      theta_n, phi_n, p_n,
+		      straSize,
 		      netInten_surface,
+		      stratifyM, stratifyM_flag,
+		      sumIncomInten, sumIncomInten_sq,
+		      straVar, aveIncomInten,
 		      s);
 	}
 
@@ -1176,12 +1454,18 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,
+		       i_n, j_n, k_n,
+		      theta_n, phi_n, p_n,
+		      straSize,
 		      netInten_surface,
+		      stratifyM, stratifyM_flag,
+		      sumIncomInten, sumIncomInten_sq,
+		      straVar, aveIncomInten,
 		      s);
 	}
 
@@ -1231,12 +1515,18 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,
+		       i_n, j_n, k_n,
+		      theta_n, phi_n, p_n,
+		      straSize,
 		      netInten_surface,
+		      stratifyM, stratifyM_flag,
+		      sumIncomInten, sumIncomInten_sq,
+		      straVar, aveIncomInten,
 		      s);
 	}
 
@@ -1286,12 +1576,18 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
-		      thisRayNo,
 		      iIndex,
 		      jIndex,
 		      kIndex,
 		      StopLowerBound,
+		      varianceBound,
+		       i_n, j_n, k_n,
+		      theta_n, phi_n, p_n,
+		      straSize,
 		      netInten_surface,
+		      stratifyM, stratifyM_flag,
+		      sumIncomInten, sumIncomInten_sq,
+		      straVar, aveIncomInten,
 		      s);
 	}
 
@@ -1317,7 +1613,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceBenchmarkRay500RR1e-4", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfacePlatesRay500SDRR1e-4", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
   
@@ -1326,11 +1622,14 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    
 	  
  
-
+  
   //  cout << " i am here after one iggNo" << endl;
   if ( rayNoVol != 0 ) { // emitting ray from volume
     //    cout << "start from Vol" << endl;
     int rayCounter, VolIndex;
+    int sMx, sMy, sMz, sMp, sMtheta, sMphi, anotherSize;
+    double IncomingIntenVol, R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss;
+    double tempV, sumVar, sumSD, sumSDave, sumSDave_prv;
     
     for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
       for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {
@@ -1342,30 +1641,43 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 	    
 	    MTrng.seed(VolIndex);	    
 	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
-
-	    // VolIndex = obVol.get_VolIndex();
-	    
 	    OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
+	    rayCounter = 0;
+	    sumSDave = 1000000000000000; // a very large value
 	    
-// 	    OutIntenVol = obVol.VolumeIntensity(VolIndex,
-// 						kl_Vol, T_Vol, a_Vol);
+	    for ( int k = 0; k < p_n; k ++ ){
+	      for ( int j = 0; j < theta_n; j ++){
+		for ( int i = 0; i < phi_n; i ++){
+		  sumIncomInten[k][j][i] = 0;
+		  sumIncomInten_sq[k][j][i] = 0;
+		  straVar[k][j][i] = 0;
+		  stratifyM_flag[k][j][i] = 0;
+		  stratifyM[k][j][i] = 0;
+		  aveIncomInten[k][j][i] = 0;
+		}
+	      }
+	    }
 	    
-	    double *IncomingIntenVol = new double [ rayNo_Vol[VolIndex] ];
 	  
-	    for ( rayCounter = 0; rayCounter < rayNo_Vol[VolIndex]; rayCounter ++) {
+	   do {
 	      
 	      LeftIntenFrac = 1;
 	      weight = 1;
 	      traceProbability = 1;
 	      previousSum = 0;
 	      currentSum = 0;
-	      IncomingIntenVol[rayCounter] = 0;
+	      IncomingIntenVol = 0;
+	      anotherSize = 0;
 	      
 	      // when absorbed by this emitting volume, only absorbed by kl_Vol portion.
 	      SurLeft = kl_Vol[VolIndex];
 	      
 	      // get emitting ray's direction vector s
 	      obRay.set_emissS_vol(MTrng, s);
+	      
+	      R_theta = obRay.get_R_theta();
+	      R_phi = obRay.get_R_phi();
+	      
 	      obRay.set_directionS(s); // put s into directionVector ( private )
 	      obVol.get_limits(X, Y, Z);
 	      
@@ -1376,6 +1688,21 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 			       obVol.get_xlow(), obVol.get_xup(),
 			       obVol.get_ylow(), obVol.get_yup(),
 			       obVol.get_zlow(), obVol.get_zup());
+
+	      R_xemiss = obRay.get_R_xemiss();
+	      R_yemiss = obRay.get_R_yemiss();
+	      R_zemiss = obRay.get_R_zemiss();
+
+	      sMx = int(floor(R_xemiss * i_n));
+	      sMy = int(floor(R_yemiss * j_n));
+	      sMz = int(floor(R_zemiss * k_n));
+	      
+	      sMtheta = int(floor(R_theta * theta_n));
+	      sMphi = int(floor(R_phi * phi_n));
+	      sMp = sMz * (i_n * j_n) + sMy * i_n + sMx;
+	      
+	      stratifyM[sMp][sMtheta][sMphi] ++ ;
+	      stratifyM_flag[sMp][sMtheta][sMphi] = 1;
 	      
 	      obRay.set_currentvIndex(iVolIndex, jVolIndex, kVolIndex);
 	      
@@ -1383,7 +1710,6 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 	      
 	      // only one criteria for now ( the left energy percentage )
 	      //   vectorIndex = 0;
-
 	      obRay.dirChange = 1;
 	      
 	      do {
@@ -1404,7 +1730,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		// use the previous SurLeft here.
 		// SurLeft is not updated yet.
 		
-		IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] + 
+		IncomingIntenVol +=
 		  IntenArray_Vol[obRay.get_currentvIndex()]
 		  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
 		  * weight;
@@ -1424,7 +1750,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 					    rd_surface[hitSurfaceFlag],
 					    PathSurfaceLeft);
 		  
-		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
+		  IncomingIntenVol +=
 		    IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
 		    exp ( -currentSum ) * SurLeft
 		    * weight;
@@ -1439,29 +1765,107 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 		SurLeft = SurLeft * PathSurfaceLeft;		
 		LeftIntenFrac = exp(-currentSum) * SurLeft;
 		traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
-
+	
 	      }while ( MTrng.randExc() < traceProbability ); // continue the path
 	      
+	      tempV =  IncomingIntenVol;
+	      sumIncomInten[sMp][sMtheta][sMphi] +=  tempV;
+	      sumIncomInten_sq[sMp][sMtheta][sMphi] += tempV * tempV;
+	      
+	      aveIncomInten[sMp][sMtheta][sMphi] =
+		sumIncomInten[sMp][sMtheta][sMphi] / stratifyM[sMp][sMtheta][sMphi];
 
-	    } // rayCounter loop
+	      rayCounter ++;
+	      
+	      /*
+	      if ( stratifyM[sMp][sMtheta][sMphi] != 1 ) 
+		straVar[sMp][sMtheta][sMphi] =
+		  ( sumIncomInten_sq[sMp][sMtheta][sMphi] -
+		    sumIncomInten[sMp][sMtheta][sMphi] *
+		    aveIncomInten[sMp][sMtheta][sMphi] ) /
+		  (stratifyM[sMp][sMtheta][sMphi]-1) ;
+	      
+	     
+	       sumSDave_prv = sumSDave;
+
+	       for ( int k = 0; k < p_n; k ++ )
+		 for ( int j = 0; j < theta_n; j ++)
+		   for ( int i = 0; i < phi_n; i ++){
+		     anotherSize += stratifyM_flag[k][j][i];
+		   }
+	       
+	       
+	       sumVar = 0;
+	       sumSDave = 0;
+	       for ( int k = 0; k < p_n; k ++ )
+		 for ( int j = 0; j < theta_n; j ++)
+		   for ( int i = 0; i < phi_n; i ++){
+		     sumVar += straVar[k][j][i];
+		     if ( stratifyM[k][j][i] != 0 ) 
+		       sumSDave += straVar[k][j][i]/ stratifyM[k][j][i];
+		           
+		     // cout << "straVar = " << straVar[k][j][i] << endl;
+		   }
+
+	       sumVar = sumVar / anotherSize / anotherSize;
+	       sumSD = sqrt(sumVar);    
+	       sumSDave = sqrt(sumSDave )/anotherSize;  
+	      */
+	      
+	   }while( rayCounter < 1500 ); // rayCounter loop
 	    
 	  
 	    // deal with the current control volume
 	    // isotropic emission, weighting factors are all the same on all directions
 	    // net = OutInten - averaged_IncomingIntenDir
 	    // div q = 4 * pi * netInten
+	   
+	   for ( int k = 0; k < p_n; k ++ )
+	     for ( int j = 0; j < theta_n; j ++)
+	       for ( int i = 0; i < phi_n; i ++){
+		 anotherSize += stratifyM_flag[k][j][i];
+	       }
+
+	   /*
+	     if ( stratifyM[sMp][sMtheta][sMphi] != 1 ) 
+	     straVar[sMp][sMtheta][sMphi] =
+	     ( sumIncomInten_sq[sMp][sMtheta][sMphi] -
+	     sumIncomInten[sMp][sMtheta][sMphi] *
+	     aveIncomInten[sMp][sMtheta][sMphi] ) /
+	     (stratifyM[sMp][sMtheta][sMphi]-1) ;
+	     
+	     sumVar = 0;
+	     sumSDave = 0;
+	     for ( int k = 0; k < p_n; k ++ )
+	     for ( int j = 0; j < theta_n; j ++)
+	     for ( int i = 0; i < phi_n; i ++){
+	     sumVar += straVar[k][j][i];
+	     if ( stratifyM[k][j][i] != 0 ) 
+	     sumSDave += straVar[k][j][i]/ stratifyM[k][j][i];
+	     }
+	     
+	     
+	     sumVar = sumVar / anotherSize / anotherSize;
+	     sumSD = sqrt(sumVar);    
+	     sumSDave = sqrt(sumSDave )/anotherSize;
+	     cout << "surfaceflag = " << surfaceFlag <<
+	     " ; surfaceIndex = " << surfaceIndex <<
+	     " ; sumVar = " << sumVar <<
+	     "; sumSD = " << sumSD << 
+	     " ; sumSDave = "  << sumSDave <<
+	     "; rayNo = " << rayCounter << endl;
+	   */
+	   
+	   double ttaveIncomInten;
+	   ttaveIncomInten = 0;
+	   
+	   for ( int k = 0; k < p_n; k ++ )
+	     for ( int j = 0; j < theta_n; j ++)
+	       for ( int i = 0; i < phi_n; i ++){
+		 ttaveIncomInten += aveIncomInten[k][j][i];
+	       }
 	    
-	    sumIncomInten = 0;
-	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]; aaa ++ )
-	      sumIncomInten = sumIncomInten + IncomingIntenVol[aaa];
-	    
-	    
-	    delete[] IncomingIntenVol;
-	    
-	    aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
-	    // cout << "aveIncomInten = " << aveIncomInten << endl;
-	    
-	    netInten_Vol[VolIndex] = OutIntenVol - aveIncomInten;
+	   netInten_Vol[VolIndex] = OutIntenVol - ttaveIncomInten/anotherSize;
 	    
 	    
 	  } // if rayNo_Vol[VolIndex] != 0
@@ -1481,7 +1885,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolBenchmarkRay500RR1e-4",
+  obTable.vtkVolTableMake("vtkVolPlates500SDRR1e-4",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
@@ -1490,12 +1894,17 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   } // end rayNoVol!= 0 
     
 
-
+  
 
   
   
 
-
+  cout << "i_n = " << i_n << endl;
+  cout << "j_n = " << j_n << endl;
+  cout << "k_n = " << k_n << endl;
+  cout << "theta_n = " << theta_n << endl;
+  cout << "phi_n = " << phi_n << endl;
+  
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;
   
@@ -1510,7 +1919,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   cout << " Lx = " << Lx << "; Ly = " << Ly << " ; Lz = " << Lz << endl;
   cout << " Ncx = " << Ncx << " ; Ncy = " << Ncy << "; Ncz = " << Ncz << endl;
   cout << " ratioBCx = " << ratioBCx << "; ratioBCy = " << ratioBCy <<
-    "; ratioBCz = " << ratioBCz << endl;
+    ";  ratioBCz = " <<  ratioBCz << endl;
   
   time (&time_end);
   timeused = difftime (time_end,time_start);
@@ -1606,6 +2015,12 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   delete[] global_qsurface;
   delete[] global_Qsurface;
 
+  delete[] stratifyM;
+  delete[] sumIncomInten;
+  delete[] sumIncomInten_sq;
+  delete[] straVar;
+  delete[] aveIncomInten;
+  delete[] stratifyM_flag;
   
   return 0;
 
