@@ -162,8 +162,8 @@
     <!--____________________________________________________________________-->
     <MaterialProperties>
        <ICE>
-         <material Rx = "product" >
-           <EOS type = "ideal_gas">                     </EOS>
+         <material >
+           <EOS type="ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      652.9                   </specific_heat>
@@ -179,16 +179,16 @@
                     <max>       [ 3.0, 3.0, 3.0 ]       </max>
                 </box>
              </difference>
-               <res>                 [2,2,2]                  </res>
+               <res>          [2,2,2]                   </res>
                <velocity>      [0,0,0]                  </velocity>
                <density>       1.7899909957225715000e+00</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
            </geom_object>
          </material>
-         <material Rx = "reactant" >
-           <EOS type = "ideal_gas">                     </EOS>
-           <dynamic_viscosity>   0.0                    </dynamic_viscosity>
+         <material name="reactant" >
+           <EOS type="ideal_gas">                      </EOS>
+           <dynamic_viscosity>   0.0                   </dynamic_viscosity>
            <thermal_conductivity>0.0                   </thermal_conductivity>
            <specific_heat>      652.9                   </specific_heat>
            <gamma>              1.289                   </gamma>
@@ -210,8 +210,17 @@
          </exchange_coefficients>
        </exchange_properties>
 
-    </MaterialProperties>           
-       
+    </MaterialProperties>       
+    
+        
+    <Models>
+      <Model type="mass_momentum_energy_src">
+        <material> reactant   </material>
+        <momentum_src>  [0,0,0]   </momentum_src>
+        <mass_src>      1         </mass_src>
+        <energy_src>    1         </energy_src>
+      </Model>
+    </Models>       
 </Uintah_specification>
 
 
