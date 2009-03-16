@@ -5,7 +5,6 @@ The MIT License
 Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
 Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
-
 License for the specific language governing rights and limitations under
 Permission is hereby granted, free of charge, to any person obtaining a 
 copy of this software and associated documentation files (the "Software"),
@@ -394,77 +393,96 @@ int main(int argc, char *argv[]){
   surfaceNo[4] = LeftRightNo;
   surfaceNo[5] = LeftRightNo;
 
-  int ghostTotalNo = (Ncx+2) * (Ncy+2) * (Ncz+2);
+  int ghostX, ghostY, ghostZ;
+  ghostX = Ncx +2;
+  ghostY = Ncy +2;
+  ghostZ = Ncz +2;
+  
+  int ghostTotalNo =  ghostX * ghostY * ghostZ;
   int FLOW = 1;
   int WALL = 0;
   int *VolFeature = new int [ghostTotalNo];
   int ghosti, ghostj, ghostk;
   int ghostTB, ghostFB, ghostLR;
 
-  ghostTB = (Ncx +2) *( Ncy + 2);
-  ghostFB = (Ncx +2) * (Ncz+2);
-  ghostLR = (Ncy+2) *(Ncz+2);
+  ghostTB = ghostX * ghostY;
+  ghostFB = ghostX * ghostZ;
+  ghostLR = ghostY * ghostZ;
 
-  int offset;
-  offset = (1) + (1) * (Ncx+2) + (1) * ghostTB;
-   
+
+  // Numbering start from bottom, front left corner
+  
+  //  cout << "===== top ======" << endl;
   // top ghost cells
   ghostk = Ncz; // Npz - 1 
   for ( ghostj = -1; ghostj < Npy; ghostj ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostTB + offset]= WALL;
-    }    
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
+    }
+    
   }
 
-  
+
+  //   cout << " ==== bottom === " << endl;
   // bottom ghost cells
   ghostk = -1;
   for ( ghostj = -1; ghostj < Npy; ghostj ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostTB + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1)* ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
+  //   cout << " ===== front ==== " << endl;
   // front ghost cells
   ghostj = -1;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostFB + offset]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+     
     }    
   }
 
-
+  //  cout << " ===== back ====" << endl;
   // back ghost cells
   ghostj = Ncy;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostFB + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      //  cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB  << endl;
     }    
   }
 
-
+  // cout << "===== left ===== " << endl;
+  
   // left ghost cells
   ghosti = -1;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghostj = -1; ghostj < Npy; ghostj ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostLR + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
 
+  //  cout << " ======= right ===== " << endl;
   // right ghost cells
   ghosti = Ncx; // if normal , it is Ncx - 1
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghostj = -1; ghostj < Npy; ghostj ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostLR + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      //  cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
-
+  
   for ( int k = 0; k < Ncz; k ++ )
     for ( int j = 0; j < Ncy; j ++ )
       for ( int i = 0; i < Ncx; i ++ )
-	VolFeature[i + j * (Ncx+2) + k * ghostTB + offset] = FLOW;
+	VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
+ 
 
   
   // get coordinates arrays
@@ -838,7 +856,7 @@ int main(int argc, char *argv[]){
    VolElement obVol;
    VirtualSurface obVirtual;
    obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);   
-   ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
+   ray obRay(VolElementNo,Ncx, Ncy, Ncz);
    
    double OutIntenVol, traceProbability, LeftIntenFrac, sumIncomInten, aveIncomInten;
    double PathLeft, PathSurfaceLeft, weight;
