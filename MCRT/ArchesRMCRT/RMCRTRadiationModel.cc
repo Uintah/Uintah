@@ -59,7 +59,6 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah; 
 using namespace std;
 
-
 //---------------------------------------------------------------------------
 //  Constructor
 //---------------------------------------------------------------------------
@@ -366,11 +365,24 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     // to be able to follow currCell,
     // i have to change all of the variables???
     // cuz my indexes are different from Arches.
+
+    /*  // error in here, seems cannot get to Ttest[currCell]
+	// because i just claim it myself, and it doesnot have the dimension
+	// it is supposed to have from datawarehouse???
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector currCell = *iter;
-      
-      if ( currCell.x() == idxLo.x() )  // left side boundary
+       cout << "i am in the patch" << endl;
+       cout << "currCell = " << currCell << endl;
+       
+       if ( currCell.x() == idxLo.x() )  {
+	 // left side boundary
+	 cout << "currcellx() o the left face" << endl;
+	 cout << "Ttest[currCell] = " << Ttest[currCell] << endl;
+	  cout << "Ttest[currCell - IntVector(1,0,0)] = " <<
+ 	   Ttest[currCell - IntVector(1,0,0)] << endl;	 
 	Ttest[currCell - IntVector(1, 0, 0)] = Tleft;
+	cout << " i am on the left surface " << endl;
+       }
       else if ( currCell.x() == idxHi.x() ) // right side 
 	Ttest[currCell + IntVector(1, 0, 0)] = Tright;
       
@@ -386,17 +398,21 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
       
       
       Ttest[currCell] = 64.80721904;
-        
+      
+      cout << "i am before point p " << endl;
       Point p = patch->cellPosition(*iter);
-
+      cout << "i am after point p " << endl;
       // the p.x(), p.y(), p.z() are the cell centered x, y, z.
       absorpCoeftest[currCell] = 0.9 * ( 1 - 2 * abs ( p.x() ) )
 	* ( 1 - 2 * abs ( p.y() ) )
 	* ( 1 - 2 * abs ( p.z() ) ) + 0.1;
+      // cout << "i am in the patch" << endl;
 				     
     }
-
-
+    */
+    // concluseion set my own Ttest, wont work.
+    // seems have to get it from DW
+    /*
     // interpolate temperatures to FC
     // changed T to Ttest
     IntVector dir(1,0,0);
@@ -407,7 +423,7 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     dir += IntVector(0,-1,1); 
     interpCCTemperatureToFC( cellType, Tz, dir, highIdx, Ttest, patch );
  
-
+    */
     // where does the currCell starts? for b.c. cells and ghost cells
     
     cout << "GOING TO CALL STAND ALONE SOLVER!\n"; 

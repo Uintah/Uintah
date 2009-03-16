@@ -53,7 +53,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Grid/Variables/CellIterator.h>
-
+#include <Core/Thread/Time.h>
 #include <cmath>
 #include <iostream>
 #include <ctime>
@@ -227,17 +227,13 @@ void rayfromSurf(SurfaceType &obSurface,
     
     // get emitting ray's direction vector s
     // should watch out, the s might have previous values
-    RealPointer->get_s(MTrng, s);
-
-    // RealPointer get limits
-    // get limits can be replaced by Point p_fx.x() etc.
+    RealPointer->get_s(MTrng, s);    
     RealPointer->get_limits(X, Y, Z);
     
     R_theta = RealPointer->get_R_theta();
     R_phi = RealPointer->get_R_phi();
     
     // get ray's emission position, xemiss, yemiss, zemiss
-    // xlow = p_fx.x() etc. 
     obRay.set_emissP(MTrng, 
 		     obSurface.get_xlow(), obSurface.get_xup(),
 		     obSurface.get_ylow(), obSurface.get_yup(),
@@ -485,7 +481,7 @@ int RMCRTRRSDStratified::
 RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 	    const int& theta_n, const int& phi_n){
 
-  
+  cout << "calling RMCRTRRSD" << endl;
 //   int my_rank; // rank of process
 //   int np; // number of processes
   time_t time_start, time_end;
@@ -560,9 +556,9 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   varianceBound = 0.015; // set arbitrary
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
+  Ncx = 40;
+  Ncy = 40;
+  Ncz = 40;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
@@ -616,79 +612,97 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   surfaceNo[4] = LeftRightNo;
   surfaceNo[5] = LeftRightNo;
 
-  int ghostTotalNo = (Ncx+2) * (Ncy+2) * (Ncz+2);
+  int ghostX, ghostY, ghostZ;
+  ghostX = Ncx +2;
+  ghostY = Ncy +2;
+  ghostZ = Ncz +2;
+  
+  int ghostTotalNo =  ghostX * ghostY * ghostZ;
   int FLOW = 1;
   int WALL = 0;
   int *VolFeature = new int [ghostTotalNo];
   int ghosti, ghostj, ghostk;
   int ghostTB, ghostFB, ghostLR;
 
-  ghostTB = (Ncx +2) *( Ncy + 2);
-  ghostFB = (Ncx +2) * (Ncz+2);
-  ghostLR = (Ncy+2) *(Ncz+2);
+  ghostTB = ghostX * ghostY;
+  ghostFB = ghostX * ghostZ;
+  ghostLR = ghostY * ghostZ;
+
+
+  // Numbering start from bottom, front left corner
   
-  int offset;
-  offset = (1) + (1) * (Ncx+2) + (1) * ghostTB;
-   
+  //  cout << "===== top ======" << endl;
   // top ghost cells
   ghostk = Ncz; // Npz - 1 
   for ( ghostj = -1; ghostj < Npy; ghostj ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostTB + offset]= WALL;
-    }    
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
+    }
+    
   }
 
-  
+
+  //   cout << " ==== bottom === " << endl;
   // bottom ghost cells
   ghostk = -1;
   for ( ghostj = -1; ghostj < Npy; ghostj ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostTB + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1)* ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
+  //   cout << " ===== front ==== " << endl;
   // front ghost cells
   ghostj = -1;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostFB + offset]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+     
     }    
   }
 
-
+  //  cout << " ===== back ====" << endl;
   // back ghost cells
   ghostj = Ncy;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostFB + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      //  cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB  << endl;
     }    
   }
 
-
+  // cout << "===== left ===== " << endl;
+  
   // left ghost cells
   ghosti = -1;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghostj = -1; ghostj < Npy; ghostj ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostLR + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
 
+  //  cout << " ======= right ===== " << endl;
   // right ghost cells
   ghosti = Ncx; // if normal , it is Ncx - 1
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghostj = -1; ghostj < Npy; ghostj ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostLR + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      //  cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
-
+  
   for ( int k = 0; k < Ncz; k ++ )
     for ( int j = 0; j < Ncy; j ++ )
       for ( int i = 0; i < Ncx; i ++ )
-	VolFeature[i + j * (Ncx+2) + k * ghostTB + offset] = FLOW;
+	VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
 
-  
+ 
   // get coordinates arrays
   double *X = new double [Npx]; // i 
   double *Y = new double [Npy]; // j 
@@ -1060,10 +1074,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    VolElement obVol;
    VirtualSurface obVirtual;
    obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);
-
-   // VolElementNo is not necessary
-   // ray obRay(IntVector &currCell)
-   ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
+   ray obRay(VolElementNo,Ncx, Ncy, Ncz);
       
    double OutIntenVol, traceProbability, LeftIntenFrac;
    //sumIncomInten, aveIncomInten;
@@ -1206,8 +1217,11 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
       aveIncomInten[k][j] = new double [phi_n];
       straVar[k][j] = new double [phi_n];
     }
-    
+
+  // tracking time for surface elements and volume elements use Time.h
+  double surface_start, volume_start, surface_time, volume_time;
   
+  surface_start = SCIRun::Time::currentSeconds();  
   if ( rayNoSurface != 0 ) { // have rays emitting from surface elements
 
     // stratificaty sampling
@@ -1581,6 +1595,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
     // ----------------- end of right surface -----------------------
     //  cout << "done with right " << endl;
 
+    surface_time = SCIRun::Time::currentSeconds() - surface_start;
     
   // surface cell
  
@@ -1604,6 +1619,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
    
 	  
  
+  volume_start = SCIRun::Time::currentSeconds();
   
   //  cout << " i am here after one iggNo" << endl;
   if ( rayNoVol != 0 ) { // emitting ray from volume
@@ -1861,6 +1877,8 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 
   // Vol cell
 
+    volume_time= SCIRun::Time::currentSeconds() - volume_start;
+    
   for (int i = 0 ; i < VolElementNo; i ++ ) {
     global_qdiv[i] = 4 * pi * netInten_Vol[i];
     global_Qdiv[i] = global_qdiv[i] * ElementVol[i];
@@ -1906,7 +1924,9 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   time (&time_end);
   timeused = difftime (time_end,time_start);
   cout << " time used up (S) = " << timeused << "sec." << endl;
-
+  cout << " time for sovling surfaes (s) = " << surface_time << endl;
+  cout << "time for sovling volumes (s) = " << volume_time << endl;
+  cout << "time used up (s) = " << volume_time + surface_time << endl;
   
   delete[] T_Vol;
   delete[] kl_Vol;   
