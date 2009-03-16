@@ -959,7 +959,7 @@
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, comp_neo_hook, comp_neo_hook_plastic,
                                                                         elastic_plastic, hypo_elastic, hypoelastic_plastic, 
                                                                         ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH,
-                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic, visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms hyperelastic_plastic'">
+                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic, visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms '">
           <alpha                         spec="OPTIONAL DOUBLE" />
           <Beta                          spec="OPTIONAL DOUBLE" />
           <bulk_modulus                  spec="OPTIONAL DOUBLE" />
