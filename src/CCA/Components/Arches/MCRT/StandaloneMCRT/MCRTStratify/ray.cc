@@ -41,15 +41,12 @@ using namespace std;
 ray::ray(const int &VolElementNo_,
 	 const int &Ncx_,
 	 const int &Ncy_,
-	 const int &Ncz_,
-	 const int &offset_){
-  
+	 const int &Ncz_){  
   
   VolElementNo = VolElementNo_;
   Ncx = Ncx_;
   Ncy = Ncy_;
   Ncz = Ncz_;
-  offset = offset_;
   ghostX = Ncx + 2;
   ghostY = Ncy + 2;
   ghostTB = ghostX * ghostY;
@@ -154,10 +151,9 @@ ray::surfaceIntersect( const double *X,
     zhit = Z[hitSurfacekIndex];
         
     // hit on top virtual surface
-    if (VolFeature[hitSurfaceiIndex +
-		   hitSurfacejIndex * ghostX +
-		   hitSurfacekIndex *ghostTB +
-		   offset]){
+    if (VolFeature[(hitSurfaceiIndex+1) +
+		   (hitSurfacejIndex+1) * ghostX +
+		   (hitSurfacekIndex+1) *ghostTB]){
       
       // update next step's volume index i, j, k,
       // but note, not updating currentvIndex yet
@@ -205,10 +201,9 @@ ray::surfaceIntersect( const double *X,
     zhit = Z[hitSurfacekIndex];
 
     // hit on bottom virtual surface
-    if (VolFeature[hitSurfaceiIndex +
-		   hitSurfacejIndex *ghostX +
-		   (hitSurfacekIndex-1) *ghostTB +
-		   offset]){
+    if (VolFeature[(hitSurfaceiIndex+1) +
+		   (hitSurfacejIndex+1) *ghostX +
+		   (hitSurfacekIndex-1+1) *ghostTB]){
       
       set_futurevIndex(hitSurfaceiIndex,
 		       hitSurfacejIndex,
@@ -250,10 +245,9 @@ ray::surfaceIntersect( const double *X,
     zhit = directionVector[2] * disMin + zemiss;
        
     // hit on front virtual surface
-    if (VolFeature[hitSurfaceiIndex +
-		   (hitSurfacejIndex-1) *ghostX +
-		   hitSurfacekIndex *ghostTB +
-		   offset]){
+    if (VolFeature[(hitSurfaceiIndex+1) +
+		   (hitSurfacejIndex-1+1) *ghostX +
+		   (hitSurfacekIndex+1) *ghostTB]){
       
       set_futurevIndex(hitSurfaceiIndex,
 		       hitSurfacejIndex-1,
@@ -294,10 +288,9 @@ ray::surfaceIntersect( const double *X,
     zhit = directionVector[2] * disMin + zemiss;
         
     // hit on back virtual surface
-    if (VolFeature[hitSurfaceiIndex +
-		   hitSurfacejIndex *ghostX +
-		   hitSurfacekIndex *ghostTB +
-		   offset]){
+    if (VolFeature[(hitSurfaceiIndex+1) +
+		   (hitSurfacejIndex+1) *ghostX +
+		   (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex,
 		       hitSurfacejIndex,
@@ -338,10 +331,9 @@ ray::surfaceIntersect( const double *X,
     zhit = directionVector[2] * disMin + zemiss;
        
     // hit on left virtual surface
-    if (VolFeature[(hitSurfaceiIndex-1) +
-		   hitSurfacejIndex *ghostX +
-		   hitSurfacekIndex *ghostTB +
-		   offset]){
+    if (VolFeature[(hitSurfaceiIndex-1+1) +
+		   (hitSurfacejIndex+1) *ghostX +
+		   (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex-1,
 		       hitSurfacejIndex,
@@ -383,10 +375,9 @@ ray::surfaceIntersect( const double *X,
     zhit = directionVector[2] * disMin + zemiss;
     
     // hit on right virtual surface
-    if (VolFeature[hitSurfaceiIndex +
-		   hitSurfacejIndex *ghostX +
-		   hitSurfacekIndex *ghostTB +
-		   offset]){
+    if (VolFeature[(hitSurfaceiIndex+1) +
+		   (hitSurfacejIndex+1) *ghostX +
+		   (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex,
 		       hitSurfacejIndex,
