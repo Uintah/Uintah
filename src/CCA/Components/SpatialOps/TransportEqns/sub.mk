@@ -4,7 +4,8 @@ SRCDIR   := CCA/Components/SpatialOps/TransportEqns
 
 SRCS     += $(SRCDIR)/EqnFactory.cc \
 	$(SRCDIR)/EqnBase.cc \
-	$(SRCDIR)/ScalarEqn.cc 
+	$(SRCDIR)/ScalarEqn.cc \
+  $(SRCDIR)/DQMOMEqn.cc
 
 PSELIBS := \
 	CCA/Ports \

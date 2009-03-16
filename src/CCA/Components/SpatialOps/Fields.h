@@ -72,6 +72,9 @@ public:
   PhysicalPropLabels propLabels;
   VelocityLabels     velocityLabels;  
 
+  typedef map<string, const VarLabel* > LabelMap;
+  LabelMap d_labelMap;
+
   /** @brief Interpolate a variable from it's storage point to the face of its
              respective volume.  XDIR */
   inline void interpToFace( CCVariable<double> ccVar, SFCXVariable<double> fcVar, Patch* patch )
