@@ -147,6 +147,9 @@ public:
   template <class phiT, class gradT> void
   gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G ); 
 
+  inline const vector<string> getSourcesList(){
+    return d_sources; };
+
 private:
 
   BoundaryCond* d_boundaryCond;
