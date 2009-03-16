@@ -70,15 +70,15 @@
                </geom_object>
            </material>
            <material>
-                <include href="../MaterialData/MaterialConst4340Steel.xml"/>
+                <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
               <constitutive_model type="hypoelastic_plastic">
                    <tolerance>1.0e-10</tolerance>
-                   <include href="../MaterialData/IsotropicElastic4340Steel.xml"/>
-          <include href="../MaterialData/VonMisesYield.xml"/>
-          <include href="../MaterialData/NoStabilityCheck.xml"/>
-                   <include href="../MaterialData/MTSPlastic4340Steel.xml"/>
-                   <include href="../MaterialData/JohnsonCookDamage4340Steel.xml"/>
-                   <include href="../MaterialData/DefaultHypoEOS.xml"/>
+                   <include href="inputs/MPM/MaterialData/IsotropicElastic4340Steel.xml"/>
+          <include href="inputs/MPM/MaterialData/VonMisesYield.xml"/>
+          <include href="inputs/MPM/MaterialData/NoStabilityCheck.xml"/>
+                   <include href="inputs/MPM/MaterialData/MTSPlastic4340Steel.xml"/>
+                   <include href="inputs/MPM/MaterialData/JohnsonCookDamage4340Steel.xml"/>
+                   <include href="inputs/MPM/MaterialData/DefaultHypoEOS.xml"/>
                </constitutive_model>
               <geom_object>
                   <cylinder label = "Cylinder">

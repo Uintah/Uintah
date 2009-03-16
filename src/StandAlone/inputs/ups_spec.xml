@@ -906,7 +906,7 @@
     <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
     <delT_increase_factor               spec="OPTIONAL DOUBLE" />
     <erosion                            spec="OPTIONAL NO_DATA"
-                                          attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress'" />
+                                          attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress RemoveMass'" />
     <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- FIXME: default is? Default? -->
     <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? Default? -->
     <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />
@@ -914,7 +914,7 @@
     <iters_before_timestep_restart      spec="OPTIONAL INTEGER" />
     <boundary_traction_faces            spec="OPTIONAL STRING" />
     <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />  <!-- FIXME: What is the default? -->
-    <time_integrator                    spec="REQUIRED STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
+    <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" /> <!-- FIXME: is 'fracture' valid? -->
     <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" /> <!-- FIXME:  Is this really optional?  If so, what is the default? -->
     <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
     <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
@@ -959,7 +959,7 @@
                                            attribute1="type REQUIRED STRING 'comp_mooney_rivlin, comp_neo_hook, comp_neo_hook_plastic,
                                                                         elastic_plastic, hypo_elastic, hypoelastic_plastic, 
                                                                         ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH,
-                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic, visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms'">
+                                                                        small_strain_plastic, trans_iso_hyper, visco_plastic, visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms hyperelastic_plastic'">
           <alpha                         spec="OPTIONAL DOUBLE" />
           <Beta                          spec="OPTIONAL DOUBLE" />
           <bulk_modulus                  spec="OPTIONAL DOUBLE" />
@@ -1023,6 +1023,7 @@
           <G4                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <G5                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <Gamma                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
+          <gamma                         spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <hardening_modulus             spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
           <he_constant_1                 spec="OPTIONAL DOUBLE 'positive'" />
           <he_constant_2                 spec="OPTIONAL DOUBLE 'positive'" />
@@ -1114,6 +1115,29 @@
             <y2                          spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
             <yinf                        spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
           </plasticity_model>
+          <visco_plasticity_model              spec="OPTIONAL NO_DATA"
+                                           attribute1="type REQUIRED STRING 'suvic_i'" >
+            <coeff_backstress_evol       spec="OPTIONAL DOUBLE" />
+	    <exponent_backstress_evol    spec="OPTIONAL DOUBLE" />
+	    <normalizing_backstress      spec="OPTIONAL DOUBLE" />
+	    <coeff_saturation_backstress spec="OPTIONAL DOUBLE" />
+	    <exponent_backstress         spec="OPTIONAL DOUBLE" />
+	    <ref_strainrate              spec="OPTIONAL DOUBLE" />
+            <normalizing_inelastic_strainrate spec="OPTIONAL DOUBLE" />
+	    <activation_energy           spec="OPTIONAL DOUBLE" />
+	    <universal_gas_constant      spec="OPTIONAL DOUBLE" />
+	    <temperature                 spec="OPTIONAL DOUBLE" />
+	    <exponent_inelastic_strainrate spec="OPTIONAL DOUBLE" />
+	    <coeff_yieldstress_saturation  spec="OPTIONAL DOUBLE" />
+	    <exponent_yieldstress          spec="OPTIONAL DOUBLE" />
+	    <coeff_yieldstress_evol        spec="OPTIONAL DOUBLE" />
+	    <exponent_dragstress         spec="OPTIONAL DOUBLE" />
+	    <coeff_dragstress_evol       spec="OPTIONAL DOUBLE" />
+	    <coeff_stress_saturation     spec="OPTIONAL DOUBLE" />
+	    <intial_drag                 spec="OPTIONAL DOUBLE" />
+	    <initial_yield               spec="OPTIONAL DOUBLE" />
+	    <integration_parameter_theta spec="OPTIONAL DOUBLE" />
+          </visco_plasticity_model>
           <PR                            spec="OPTIONAL DOUBLE" />
           <remove_particles              spec="OPTIONAL BOOLEAN" />
           <randomize_parameters          spec="OPTIONAL BOOLEAN" />
