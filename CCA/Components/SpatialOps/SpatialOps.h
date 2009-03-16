@@ -99,8 +99,6 @@ private:
   EqnBase* d_transportEqn; 
   EqnFactory* d_scalarFactory; 
 
-  typedef map<string, const VarLabel* > LabelMap;
-  LabelMap d_labelMap;
 }; // end class SpatialOps 
 } // end namespace Uintah
 

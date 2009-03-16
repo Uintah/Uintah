@@ -28,6 +28,7 @@
 #include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Box.h>
+#include <Core/Thread/Time.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -160,7 +161,7 @@ SpatialOps::scheduleInitialize(const LevelP& level,
 #endif
   tsk->computes( d_fieldLabels->velocityLabels.ccVelocity ); 
 
-  for (LabelMap::iterator iLabel = d_labelMap.begin(); iLabel != d_labelMap.end(); iLabel++){
+  for (Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.begin(); iLabel != d_fieldLabels->d_labelMap.end(); iLabel++){
     tsk->computes((*iLabel).second);
   }
 
@@ -181,7 +182,6 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
   // should this be only for general variable initialization?
   for (int p = 0; p < patches->size(); p++) {
     //assume only one material for now.
-    int SOIndex = 0;
     int matlIndex = 0;
     const Patch* patch=patches->get(p);
 
@@ -231,7 +231,7 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
 
     }
 
-    for (LabelMap::iterator iLabel = d_labelMap.begin(); iLabel != d_labelMap.end(); iLabel++){
+    for (Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.begin(); iLabel != d_fieldLabels->d_labelMap.end(); iLabel++){
       CCVariable<double> tempVar; 
       new_dw->allocateAndPut( tempVar, 
               (*iLabel).second, 
@@ -307,6 +307,8 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
   // Copy old data to new data
   d_fieldLabels->schedCopyOldToNew( level, sched ); 
 
+  double start_time = Time::currentSeconds();
+
   for (int i = 0; i < d_tOrder; i++){
 
     for (vector<string>::iterator ieqn = d_scalarEqnNames.begin(); ieqn != d_scalarEqnNames.end(); ieqn++){
@@ -325,6 +327,8 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
       }
     } 
   }
+  double end_time = Time::currentSeconds();
+  cout << "Solution time = " << end_time - start_time << endl;
 }
 //---------------------------------------------------------------------------
 // Method: Need Recompile
@@ -416,9 +420,9 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
       cout << " \n"; // white space for output 
 
       const VarLabel* tempVarLabel = VarLabel::create(eqn_name, CCVariable<double>::getTypeDescription());
-      LabelMap::iterator iLabel = d_labelMap.find(eqn_name); 
-      if (iLabel == d_labelMap.end()){
-        iLabel = d_labelMap.insert(make_pair(eqn_name, tempVarLabel)).first;
+      Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.find(eqn_name); 
+      if (iLabel == d_fieldLabels->d_labelMap.end()){
+        iLabel = d_fieldLabels->d_labelMap.insert(make_pair(eqn_name, tempVarLabel)).first;
       } else {
         throw InvalidValue("Two scalar equations registered with the same transport variable label!", __FILE__, __LINE__);
       }

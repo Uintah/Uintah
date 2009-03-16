@@ -73,9 +73,6 @@ public:
   inline const VarLabel* getTransportEqnLabel(){
     return d_transportVarLabel; };
 
-  inline const vector<string> getModelsList(){
-    return d_models; };
-
 protected:
 
   template<class T> 
@@ -99,8 +96,6 @@ protected:
   const VarLabel* d_FdiffLabel;
   const VarLabel* d_FconvLabel; 
   const VarLabel* d_RHSLabel;
-
-  std::vector<std::string> d_models; 
 
   int d_timeSubStep; 
 
