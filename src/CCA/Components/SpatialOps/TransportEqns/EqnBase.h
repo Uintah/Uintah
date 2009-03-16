@@ -70,6 +70,12 @@ public:
   d_timeIntegrator = timeIntegrator; 
   }
 
+  inline const VarLabel* getTransportEqnLabel(){
+    return d_transportVarLabel; };
+
+  inline const vector<string> getModelsList(){
+    return d_models; };
+
 protected:
 
   template<class T> 
