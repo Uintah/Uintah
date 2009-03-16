@@ -74,7 +74,7 @@ if [ $torevision -gt $svn_revision ]; then
   exit
 fi
 
-svn_path=`svn info validateUda | grep URL | cut -f2 -d " "`
+svn_path=`svn info $target | grep URL | cut -f2 -d " "`
 
 if [ $svn_revision -gt $RESDONE -a $torevision -lt $RESDONE ]; then
   #merge everything prior to restructure
@@ -93,5 +93,3 @@ elif [ $svn_revision -lt $RESSTART ]; then
   svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target
 fi
 
-#svn merge --ignore-ancestry -rHEAD:43465 https://code.sci.utah.edu/svn/SCIRun/trunk/src/scripts/validateUda scripts/validateUda
-#svn merge --ignore-ancestry -rLastSCIRun:42129 https://code.sci.utah.edu/svn/SCIRun/trunk/src/scripts/validateUda scripts/validateUda
