@@ -55,12 +55,14 @@ SolverTest1::SolverTest1(const ProcessorGroup* myworld)
 {
   lb_ = scinew ExamplesLabel();
 }
-
+//__________________________________
+//
 SolverTest1::~SolverTest1()
 {
   delete lb_;
 }
-
+//__________________________________
+//
 void SolverTest1::problemSetup(const ProblemSpecP& prob_spec, 
                                const ProblemSpecP& restart_prob_spec, 
                                GridP&, SimulationStateP& sharedState)
@@ -69,32 +71,24 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
   if(!solver) {
     throw InternalError("ST1:couldn't get solver port", __FILE__, __LINE__);
   }
-  // TODO - get SolverParameters?
-  // I copied this out of ICE.cc
-  // Pull out implicit solver parameters
-  ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
-  ProblemSpecP cfd_st_ps = cfd_ps->findBlock("SolverTest");
   
-  ProblemSpecP impSolver = cfd_st_ps->findBlock("ImplicitSolver");
-  if (impSolver) {
-    //d_delT_knob = 0.5;      // default value when running implicit
-    solver_parameters = solver->readParameters(impSolver, "implicitPressure");
-    solver_parameters->setSolveOnExtraCells(false);
-  }
+  ProblemSpecP st_ps = prob_spec->findBlock("SolverTest");
+  solver_parameters = solver->readParameters(st_ps, "implicitPressure");
+  solver_parameters->setSolveOnExtraCells(false);
+    
   sharedState_ = sharedState;
-  ProblemSpecP ST = prob_spec->findBlock("SolverTest");
-  ST->require("delt", delt_);
+  st_ps->require("delt", delt_);
 
   // whether or not to do laplacian in x,y,or z direction
-  if (ST->findBlock("X_Laplacian"))
+  if (st_ps->findBlock("X_Laplacian"))
     x_laplacian = true;
   else
     x_laplacian = false;
-  if (ST->findBlock("Y_Laplacian"))
+  if (st_ps->findBlock("Y_Laplacian"))
     y_laplacian = true;
   else
     y_laplacian = false;
-  if (ST->findBlock("Z_Laplacian"))
+  if (st_ps->findBlock("Z_Laplacian"))
     z_laplacian = true;
   else
     z_laplacian = false;
@@ -105,12 +99,14 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
   mymat_ = scinew SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
- 
+//__________________________________
+// 
 void SolverTest1::scheduleInitialize(const LevelP& level,
 			       SchedulerP& sched)
 {
 }
- 
+//__________________________________
+// 
 void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
 					  SchedulerP& sched)
 {
@@ -119,7 +115,8 @@ void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
   task->computes(sharedState_->get_delt_label());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
-
+//__________________________________
+//
 void
 SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
@@ -134,7 +131,8 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     Task::NewDW, lb_->pressure, false, lb_->pressure_rhs, Task::NewDW, 0, Task::OldDW, solver_parameters);
 
 }
-
+//__________________________________
+//
 void SolverTest1::computeStableTimestep(const ProcessorGroup*,
 				  const PatchSubset*,
 				  const MaterialSubset*,
@@ -142,29 +140,22 @@ void SolverTest1::computeStableTimestep(const ProcessorGroup*,
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label());
 }
-
+//__________________________________
+//
 void SolverTest1::initialize(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset* matls,
 		       DataWarehouse*, DataWarehouse* new_dw)
 {
 }
-
-double rand_double()
-{
-  return ((double)rand())/RAND_MAX*10.0;
-}
-
+//______________________________________________________________________
+//
 void SolverTest1::timeAdvance(const ProcessorGroup* pg,
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw, DataWarehouse* new_dw,
 			   LevelP level, Scheduler* sched)
 {
-  static int time = 0;
-  time += (int) delt_*100;
-  srand(time);
-
   int center = 0;
   int n=0, s=0, e=0, w=0, t=0, b=0;
 
@@ -183,8 +174,7 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
     t = -1;
     b = -1;
   }
-
-
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
@@ -192,8 +182,8 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
 
       CCVariable<Stencil7> A;
       CCVariable<double> rhs;
-      new_dw->allocateAndPut(A, lb_->pressure_matrix, matl, patch);
-      new_dw->allocateAndPut(rhs, lb_->pressure_rhs, matl, patch);
+      new_dw->allocateAndPut(A,   lb_->pressure_matrix, matl, patch);
+      new_dw->allocateAndPut(rhs, lb_->pressure_rhs,    matl, patch);
 
       //bool first = true;
       for(CellIterator iter(patch->getExtraCellIterator__New()); !iter.done(); iter++){
@@ -210,8 +200,6 @@ void SolverTest1::timeAdvance(const ProcessorGroup* pg,
         else
           rhs[c] = 0;
       }
-
     }
   }
-
 }
