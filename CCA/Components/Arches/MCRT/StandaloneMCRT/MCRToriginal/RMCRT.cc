@@ -227,87 +227,97 @@ main(int argc, char *argv[]){
   surfaceNo[4] = LeftRightNo;
   surfaceNo[5] = LeftRightNo;
 
-  int ghostTotalNo = (Ncx+2) * (Ncy+2) * (Ncz+2);
+  int ghostX, ghostY, ghostZ;
+  ghostX = Ncx +2;
+  ghostY = Ncy +2;
+  ghostZ = Ncz +2;
+  
+  int ghostTotalNo =  ghostX * ghostY * ghostZ;
   int FLOW = 1;
   int WALL = 0;
   int *VolFeature = new int [ghostTotalNo];
   int ghosti, ghostj, ghostk;
   int ghostTB, ghostFB, ghostLR;
 
-  ghostTB = (Ncx +2) *( Ncy + 2);
-  ghostFB = (Ncx +2) * (Ncz+2);
-  ghostLR = (Ncy+2) *(Ncz+2);
+  ghostTB = ghostX * ghostY;
+  ghostFB = ghostX * ghostZ;
+  ghostLR = ghostY * ghostZ;
 
-  int offset;
-  offset = (1) + (1) * (Ncx+2) + (1) * ghostTB;
+
+  // Numbering start from bottom, front left corner
   
+  //  cout << "===== top ======" << endl;
   // top ghost cells
   ghostk = Ncz; // Npz - 1 
   for ( ghostj = -1; ghostj < Npy; ghostj ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostTB + offset]= WALL;
-    }    
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
+    }
+    
   }
 
-  
+
+  //   cout << " ==== bottom === " << endl;
   // bottom ghost cells
   ghostk = -1;
   for ( ghostj = -1; ghostj < Npy; ghostj ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostTB + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1)* ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
+  //   cout << " ===== front ==== " << endl;
   // front ghost cells
   ghostj = -1;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostFB + offset]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+     
     }    
   }
 
-
+  //  cout << " ===== back ====" << endl;
   // back ghost cells
   ghostj = Ncy;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghosti = -1; ghosti < Npx; ghosti ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostFB + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      //  cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB  << endl;
     }    
   }
 
-
+  // cout << "===== left ===== " << endl;
+  
   // left ghost cells
   ghosti = -1;
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghostj = -1; ghostj < Npy; ghostj ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostLR + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      // cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
 
+  //  cout << " ======= right ===== " << endl;
   // right ghost cells
   ghosti = Ncx; // if normal , it is Ncx - 1
   for ( ghostk = -1; ghostk < Npz; ghostk ++ ){
     for ( ghostj = -1; ghostj < Npy; ghostj ++){
-      VolFeature[ghosti + ghostj * (Ncx+2) + ghostk * ghostLR + offset]= WALL;
+      VolFeature[(ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB]= WALL;
+      //  cout << (ghosti+1) + (ghostj+1) * ghostX + (ghostk+1) * ghostTB << endl;
     }    
   }
 
-
+  
   for ( int k = 0; k < Ncz; k ++ )
     for ( int j = 0; j < Ncy; j ++ )
       for ( int i = 0; i < Ncx; i ++ )
-	VolFeature[i + j * (Ncx+2) + k * ghostTB + offset] = FLOW;
+	VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
+ 
 
-  // for ( int k = -1; k < Npz; k ++ )
-//     for ( int j = -1; j < Npy; j ++ )
-//       for ( int i = -1; i < Npx; i ++ )
-// 	cout << "VolFeature[" << i << ", " << j << ", "
-// 	     << k << "] = " 
-// 	     << VolFeature[i + j * (Ncx+2) + k * ( Ncx+2) * (Ncy+2)]
-// 	     << "with index = " << i + j * (Ncx+2) + k * ( Ncx+2) * (Ncy+2)
-// 	     << endl;
-  
   // get coordinates arrays
   double *X = new double [Npx]; // i 
   double *Y = new double [Npy]; // j 
@@ -694,7 +704,7 @@ main(int argc, char *argv[]){
    
    //   srand48 ( time ( NULL )); // Set the random number seed for drand48
 
-   ray obRay(VolElementNo,Ncx, Ncy, Ncz, offset);
+   ray obRay(VolElementNo,Ncx, Ncy, Ncz);
    
    double theta, phi;
    double random1, random2;
