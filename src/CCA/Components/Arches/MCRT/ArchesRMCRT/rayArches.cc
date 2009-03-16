@@ -92,6 +92,7 @@ ray::surfaceIntersect( const double *X,
                        const double *Y,
                        const double *Z,
                        const int *VolFeature ) {
+  // const Vector &dx
 
   // s[0] = sin(theta) cos(phi)
   // s[1] = sin(theta) sin(phi)
@@ -101,7 +102,45 @@ ray::surfaceIntersect( const double *X,
   double xlow, xup, ylow, yup, zlow, zup;
   double cc;
 
-  xx[0] = X[iIndex];
+  // iter=patch->getSFCX
+    
+  /*
+  Vector dx = patch->dCell(); // dx is a vector??
+  // what happen for non-uniform mesh?
+
+  // dx.x() = ddx
+  // dx.y() = ddy
+  // dx.z() = ddz
+  
+  Point p_fx(p.x()-dx.x()/2.,p.y(),p.z()); // minus x-face
+  Point p_fy(p.x(),p.y()-dx.y()/2.,p.z()); // minus y-face
+  Point p_fz(p.x(),p.y(),p.z()-dx.z()/2.); // minus z-face
+
+  // VolFeature is the cellType
+  // How large is cellType, does it include extra boundary cells tooo?
+  
+  // Top surface to check cellType is
+  cellType[currCell + IntVector(0,0,1)]
+  
+  // if hit on virtual top surface, the future index is
+  IntVector futureCell = currCell + IntVector(0,0,1);
+
+  // if hit on real surface, the future index of cv is the same as current
+  futureCell = currCell;
+
+  // get the cell top face index, in order to get rs, rd, absorb on the surface
+  SFCZVariable<> ? ;
+  or the top face index is currCell + IntVector(0,0,1)?
+  use this index to get rs, rd, absorb??
+
+  
+  // Bottom surface
+  cellType[currCell - IntVector(0,0,1)]
+
+  // etc.
+    
+  */
+  xx[0] = X[iIndex]; // p_fx.x() or p.x()-dx.x()/2
   xx[1] = X[iIndex+1];
   yy[0] = Y[jIndex];
   yy[1] = Y[jIndex+1];
@@ -464,6 +503,8 @@ void ray::TravelInMediumInten(MTRand &MTrng,
   // look up vol property array for kl_m, and scat_m
   // got the currentvIndex from ray.cc function get_currentvIndex()
   // and this is based on iIndex, jIndex, kIndex
+
+  // currentvIndex is currCell
   kl_m = kl_Vol[currentvIndex];
   scat_m = scatter_Vol[currentvIndex];
   dirChange = 0; 
@@ -559,7 +600,8 @@ void ray::hitRealSurfaceInten(MTRand &MTrng,
   //  currentIndex = hitSurfaceIndex; // very important
   
   dirChange = 1;
-  
+
+  // get the surfaceIndex
   alpha = absorb_surface[hitSurfaceIndex];
   rhos = rs_surface[hitSurfaceIndex];
   rhod = rd_surface[hitSurfaceIndex];
