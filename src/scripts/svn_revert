@@ -6,54 +6,22 @@
 #svn_safe_up -r revision      updates current directory to revision number
 #svn_safe_up -r revision target        updates target to revision number
 
-usage="svn_safe_up -r revision# [target]"
+usage="svn_safe_up -r revision# target"
 
 RESDONE=43545
 RESSTART=43465
-if [ $# -lt 2 ]; then
+if [ $# -ne 3 ]; then
   echo "$usage"
   exit
 fi
 
-#if [ $# -eq 0 ]; then
-#  torevision=HEAD
-#  target="."
-#elif [ $# -eq 1 ]; then
-#  torevision=HEAD
-#  #parameter is file name
-#  if [ -e $1 ]; then
-#    target=$1;
-#  else
-#    echo "Target '$1' does not exist"
-#    exit
-#  fi
-#  
-if [ $# -eq 2 ]; then
-  #parameter is revision number
-  if [ "$1" != "-r" ]; then
-    echo "$usage"
-    exit
-  fi
-  torevision=`echo $2 | grep "^[0-9]*$"`
-  target="."
-elif [ $# -eq 3 ]; then
-  #1st parameter is revision number
-  if [ "$1" != "-r" ]; then
-    echo "$usage"
-    exit
-  fi
-  torevision=`echo $2 | grep "^[0-9]*$"`
-  #2nd parameter is file name
-  if [ -e $3 ]; then
-    target=$3;
-  else
-    echo "Target '$1' does not exist"
-    exit
-  fi
-else
+#1st parameter is revision number
+if [ "$1" != "-r" ]; then
   echo "$usage"
   exit
 fi
+
+torevision=`echo $2 | grep "^[0-9]*$"`
 
 if [ "$torevision" == "" ]; then
   echo "Invalid revision number"
@@ -61,35 +29,45 @@ if [ "$torevision" == "" ]; then
   exit
 fi
 
-echo "WARNING:"
-echo "This script merges changes across the restructuring.  Changes that occured during the code restructure are ignored."
-echo "This script is meant for debugging by removing old changes and using it on modified code is dubious."
-echo " "
+target="$3"
 svn_revision=`svn info $target | grep Revision | cut -f 2 -d " "`
 echo "Current svn revision: $svn_revision"
 echo "Target svn revision number: $torevision"
 
-if [ $torevision -gt $svn_revision ]; then
-  echo "Error target revision is greater than the current revision.  This script only merges backwards."
+#make Packages directory and symbolic link for Uintah
+pwd &>.test
+path=`sed -e 's/src\/.*/src/g' .test`
+
+mkdir $path/Packages &> /dev/null
+ln -s $path $path/Packages/Uintah &> /dev/null
+
+#compute svn paths
+svn_path=`svn info $target | grep URL | cut -f2 -d " "`
+echo "$svn_path" &> .test
+old_svn_path=`sed -e 's/src/src\/Packages\/Uintah/g' .test`
+rm -f .test
+
+#echo $svn_path
+#echo $old_svn_path
+
+echo "WARNING this script will delete any changes to files within the target"
+
+#remove current target
+rm -Rf $target
+
+if [ $? -ne 0 ]; then
+  echo "Error deleting target"
   exit
 fi
 
-svn_path=`svn info $target | grep URL | cut -f2 -d " "`
-
-if [ $svn_revision -gt $RESDONE -a $torevision -lt $RESDONE ]; then
-  #merge everything prior to restructure
-  echo "svn merge --ignore-ancestry -r$svn_revision:$RESDONE $svn_path $target"
-  svn merge --ignore-ancestry -r$svn_revision:$RESDONE $svn_path $target
-  #merge everything after restructure
-  echo "svn merge --ignore-ancestry -r$RESSTART:$torevision $svn_path $target"
-  svn merge --ignore-ancestry -r$RESSTART:$torevision $svn_path $target
-elif [ $svn_revision -gt $RESDONE -a $torevision -ge $RESDONE ]; then
-  #merge everything after to restructure only (there is nothing prior)
-  echo "svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target"
-  svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target
-elif [ $svn_revision -lt $RESSTART ]; then
-  #merge everything prior to restructure only (there is nothing after)
-  echo "svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target"
-  svn merge --ignore-ancestry -r$svn_revision:$torevision $svn_path $target
+#attempt to checkout target in old path
+echo "svn co -r $torevision $old_svn_path@$torevision"
+svn co -r $torevision $old_svn_path@$torevision
+    
+#if not successful
+if [ $? -ne 0 ]; then
+  #attempt to checkout target in new path
+  svn co -r $torevision $svn_path@$torevision
 fi
+
 
