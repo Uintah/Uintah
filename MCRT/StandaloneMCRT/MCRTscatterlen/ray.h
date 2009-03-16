@@ -64,7 +64,6 @@ public:
 
   ray(const int &_VolElementNo,
       const int &Ncx_, const int &Ncy_, const int &Ncz_,
-      const int &offset_,
       const double &scat_threshold_);
 
   inline
@@ -297,7 +296,6 @@ public:
   
 private:
   int VolElementNo;
-  int offset;
   int currentvIndex; // for volume index
   int futurevIndex;
   int hitSurfaceIndex;
