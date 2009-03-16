@@ -140,6 +140,25 @@
       <num_long                spec="REQUIRED DOUBLE 'positive'" />
     </sphere_shell>
 
+    <cylinder_shell             spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <top                    spec="REQUIRED VECTOR" />
+      <bottom                 spec="REQUIRED VECTOR" />
+      <radius                 spec="REQUIRED DOUBLE 'positive'" />
+      <thickness              spec="REQUIRED DOUBLE 'positive'" />
+      <num_axis               spec="REQUIRED DOUBLE 'positive'" />
+      <num_circum             spec="REQUIRED DOUBLE 'positive'" />
+    </cylinder_shell>
+
+    <plane_shell              spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <center                    spec="REQUIRED VECTOR" />
+      <normal                 spec="REQUIRED VECTOR" />
+      <radius                 spec="REQUIRED DOUBLE 'positive'" />
+      <thickness              spec="REQUIRED DOUBLE 'positive'" />
+      <num_radius             spec="REQUIRED DOUBLE 'positive'" />
+    </plane_shell>
+
     <tri                      spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <name                   spec="REQUIRED STRING" />
@@ -159,6 +178,8 @@
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
+      <cylinder_shell         spec="MULTIPLE" />
+      <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </union>
@@ -174,6 +195,8 @@
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
+      <cylinder_shell         spec="MULTIPLE" />
+      <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </difference>
@@ -188,6 +211,8 @@
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
+      <cylinder_shell         spec="MULTIPLE" />
+      <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
     </intersection>
@@ -201,6 +226,8 @@
       <sphere                 spec="MULTIPLE" />
       <sphere_membrane        spec="MULTIPLE" />
       <sphere_shell           spec="MULTIPLE" />
+      <cylinder_shell         spec="MULTIPLE" />
+      <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
 
@@ -279,6 +306,7 @@
 
   <Meta                   spec="OPTIONAL NO_DATA">
     <title                spec="OPTIONAL STRING" />
+    <info                 spec="OPTIONAL STRING" />
   </Meta>
 
   <Unit                   spec="OPTIONAL NO_DATA"
@@ -960,11 +988,19 @@
                                                                         elastic_plastic, hypo_elastic, hypoelastic_plastic, 
                                                                         ideal_gas, membrane, mw_visco_elastic, rigid, shell_CNH, 
 									small_strain_plastic, trans_iso_hyper, visco_plastic, 
-									visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms '">
+									visco_scram, visco_trans_iso_hyper, water, kayenta, cnh_mms cnh_damage '">
           <alpha                         spec="OPTIONAL DOUBLE" />
           <Beta                          spec="OPTIONAL DOUBLE" />
           <bulk_modulus                  spec="OPTIONAL DOUBLE" />
           <c1                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <c2                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <c3                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <c4                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <c5                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <fiber_stretch                 spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <max_fiber_strain              spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <max_matrix_strain             spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <failure_option                spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
           <C1                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <C2                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <check_max_stress_failure      spec="OPTIONAL BOOLEAN" />
@@ -994,9 +1030,11 @@
           </damage_model>
           <DCp_DTemperature              spec="OPTIONAL DOUBLE" />
           <delH                          spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
+          <direction_of_symm             spec="OPTIONAL VECTOR" />
           <do_melting                    spec="OPTIONAL BOOLEAN" />
           <dynamic_coeff_friction        spec="OPTIONAL DOUBLE" />
           <e_shear_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
+          <e_bulk_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
           <EoverR                        spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
           <equation_of_state             spec="OPTIONAL NO_DATA" 
                                            attribute1="type REQUIRED STRING 'default_hyper, default_hypo, mie_gruneisen'" > <!-- FIXME: Is default_hypo valid? is hyper spelled hypre? -->
@@ -1006,6 +1044,10 @@
           </equation_of_state>
           <evolve_damage                 spec="OPTIONAL BOOLEAN" />
           <evolve_porosity               spec="OPTIONAL BOOLEAN" />
+          <failure_strain_mean           spec="OPTIONAL DOUBLE" />
+          <failure_strain_std            spec="OPTIONAL DOUBLE" />
+          <failure_strain_distrib        spec="OPTIONAL STRING" />
+          <failure_by_stress             spec="OPTIONAL BOOLEAN" />
           <frac_nucleation               spec="OPTIONAL DOUBLE" />
           <fracture_toughness_curve      spec="OPTIONAL NO_DATA" >
             <crack_propagation_criterion spec="REQUIRED STRING 'empirical_criterion'" />
@@ -1175,6 +1217,7 @@
           <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
           <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
           <use_time_temperature_equation spec="OPTIONAL BOOLEAN" />   <!-- FIXME: What is the default -->
+          <viscosity                     spec="OPTIONAL DOUBLE" />
           <volfracHE                     spec="OPTIONAL DOUBLE" />
           <yield_condition               spec="OPTIONAL NO_DATA" 
                                            attribute1="type REQUIRED STRING 'gurson, rousselier, vonMises'" >
