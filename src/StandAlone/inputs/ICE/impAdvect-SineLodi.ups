@@ -171,7 +171,7 @@
       <checkpoint interval="0.005" cycle="2"/>     
    </DataArchiver>
 
-  <debug>
+  <Debug>
       <dbg_timeStart>       0.00   </dbg_timeStart>
       <dbg_timeStop>        10.0   </dbg_timeStop>
       <dbg_outputInterval>  1e-9   </dbg_outputInterval>
@@ -196,7 +196,7 @@
        <debug label = "switchDebug_Source_Sink"/>     
        <debug label = "switchDebug_advance_advect"/> 
     -->
-    </debug>
+    </Debug>
     
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
