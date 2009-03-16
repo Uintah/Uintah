@@ -32,10 +32,10 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
-    <boundary_traction_faces>[yminus]</boundary_traction_faces>
+       <boundary_traction_faces>[yminus]</boundary_traction_faces>
 
-<!-- choices are: "RemoveMass", "AllowNoTension", "ZeroStress" -->
-   <erosion algorithm="ZeroStress"> true </erosion> 
+       <!-- choices are: "RemoveMass", "AllowNoTension", "ZeroStress" -->
+       <erosion algorithm="ZeroStress"/> 
     </MPM>
 
     <PhysicalConstants>
