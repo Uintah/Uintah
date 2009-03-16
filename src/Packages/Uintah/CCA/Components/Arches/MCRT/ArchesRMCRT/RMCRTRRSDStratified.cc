@@ -1625,7 +1625,7 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
 	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
 	    OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
 	    rayCounter = 0;
-	    sumSDave = 1000000000000000; // a very large value
+	    sumSDave = DBL_MAX; // a very large value
 	    
 	    for ( int k = 0; k < p_n; k ++ ){
 	      for ( int j = 0; j < theta_n; j ++){
