@@ -1754,6 +1754,9 @@ AC_SUBST(CFLAGS)
 ##  --  Enable VisIt -----------------------------
 
 if test "$with_visit"; then
+   if test -z "$with_teem"; then
+      AC_MSG_ERROR( You must specify --with-teem=DIR when using --with-visit. )
+   fi                
    if test "$with_visit" == "yes"; then 
       AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
    fi
