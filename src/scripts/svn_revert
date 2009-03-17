@@ -61,13 +61,14 @@ if [ $? -ne 0 ]; then
 fi
 
 #attempt to checkout target in old path
-echo "svn co -r $torevision $old_svn_path@$torevision"
-svn co -r $torevision $old_svn_path@$torevision
+echo "svn export -r $torevision $old_svn_path@$torevision"
+svn export -r $torevision $old_svn_path@$torevision
     
 #if not successful
 if [ $? -ne 0 ]; then
   #attempt to checkout target in new path
-  svn co -r $torevision $svn_path@$torevision
+  echo "svn export -r $torevision $svn_path@$torevision"
+  svn export -r $torevision $svn_path@$torevision
 fi
 
 
