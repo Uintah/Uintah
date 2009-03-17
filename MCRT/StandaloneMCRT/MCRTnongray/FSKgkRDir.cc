@@ -9,7 +9,7 @@
 
 using namespace std;
 
-
+// this code is to smooth out the same R's in R-g relations.
   void ToArray(int size, double *array, char *_argv){
 
   ifstream in(_argv); // open table
