@@ -11,7 +11,7 @@
        <subcomponent>
            <SimulationComponent type="impm" />
            <input_file> inputs/IMPM/4disks_2d.1mat.ups</input_file>
-           <init var = "g.mass" />
+           <init var = "g.mass" matls = "mpm_matls" />
            <SwitchCriteria type = "Timestep">
              <timestep> 5 </timestep>
            </SwitchCriteria>
