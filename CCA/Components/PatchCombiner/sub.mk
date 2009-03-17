@@ -49,7 +49,9 @@ PSELIBS := \
 	Core/Exceptions  \
 	Core/Containers  \
 	Core/Thread      \
-	Core/Util
+	Core/Util \
+	\
+	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

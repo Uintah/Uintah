@@ -43,7 +43,9 @@ PSELIBS := \
 	Core/Geometry \
 	Core/Thread \
 	Core/Containers \
-	testprograms/TestSuite
+	testprograms/TestSuite \
+	\
+	Core/Math
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
 

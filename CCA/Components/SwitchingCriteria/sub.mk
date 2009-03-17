@@ -54,7 +54,9 @@ PSELIBS := \
 	Core/Labels      \
 	Core/Parallel    \
 	Core/Util        \
-	Core/ProblemSpec 
+	Core/ProblemSpec \
+	\
+	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 

@@ -58,7 +58,9 @@ PSELIBS := \
         Core/Util                            \
         testprograms/TestConsecutiveRangeSet \
         testprograms/TestRangeTree           \
-        testprograms/TestBoxGrouper
+        testprograms/TestBoxGrouper \
+	\
+	Core/Math
 
 LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
 

@@ -68,7 +68,9 @@ PSELIBS := \
 	Core/Geometry                    \
 	Core/OS                          \
 	Core/Thread                      \
-	Core/Util
+	Core/Util \
+	\
+	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(PERFEX_LIBRARY)
 

@@ -59,7 +59,9 @@ PSELIBS :=              \
         Core/GeometryPiece \
         Core/Labels        \
         Core/Parallel      \
-        Core/ProblemSpec
+        Core/ProblemSpec   \
+	\
+	Core/Math
 
 ifneq ($(BUILD_ICE),no)
   PSELIBS += CCA/Components/ICE
