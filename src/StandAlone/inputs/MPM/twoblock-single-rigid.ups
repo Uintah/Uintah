@@ -115,13 +115,13 @@
                 <materials>[1,2]</materials>
             </contact>
             
-<!--            <contact>
+            <contact>
                 <type>specified</type>
                 <filename>prof.txt</filename>
                 <stop_time>1.0</stop_time>
                 <direction>[0, 0, 1]</direction>
             </contact>
--->            
+
         </MPM>
     </MaterialProperties>
     <Grid>

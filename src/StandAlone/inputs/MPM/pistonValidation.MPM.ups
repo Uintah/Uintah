@@ -196,7 +196,7 @@
               <thermal_conductivity> 1000.0           </thermal_conductivity>
               <specific_heat>         717.5           </specific_heat>
               <geom_object>
-                <box label = "">                       
+                <box label = "gas">                       
                  <min>   [-0.1, -0.5, -0.1]        </min>      
                  <max>   [ 0.1,  0.10, 0.1]      </max>    
                 </box>                                          
@@ -221,7 +221,7 @@
            <specific_heat>              716.0           </specific_heat>
            <gamma>                      1.4             </gamma>           
            <geom_object>
-                    <box label = "">
+                    <box label = "air_above_piston">
                      <min>   [-0.1, 0.15, -0.1]     </min>
                      <max>   [ 0.1, 0.30,  0.1]     </max>
                     </box>

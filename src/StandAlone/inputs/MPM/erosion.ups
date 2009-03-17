@@ -45,7 +45,7 @@
      <accumulate_strain_energy> true </accumulate_strain_energy>
      <use_load_curves> true </use_load_curves>
 <!--     <erosion algorithm = "MakeRigid"/>  -->
-     <erosion algorithm = "None"/>
+     <erosion algorithm = "none"/>
 <!--
      <erosion algorithm = "RemoveMass"/>
      <erosion algorithm = "AllowNoTension"/>

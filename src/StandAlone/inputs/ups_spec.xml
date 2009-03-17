@@ -968,7 +968,7 @@
 
   <MaterialProperties                    spec="OPTIONAL NO_DATA">
     <MPM                                 spec="OPTIONAL NO_DATA">
-      <contact                           spec="REQUIRED NO_DATA" >
+      <contact                           spec="MULTIPLE NO_DATA" >
         <direction                       spec="OPTIONAL VECTOR" />
         <mu                              spec="OPTIONAL DOUBLE 'positive'" /> <!-- ONLY USED FOR FRICTION OR APPROACH -->
         <materials                       spec="OPTIONAL MULTIPLE_INTEGERS" />
@@ -980,6 +980,10 @@
       </contact>
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
+        <fracture                          spec="OPTIONAL NO_DATA">
+                                          attribute1="type REQUIRED STRING 'normal'">
+         <constraint                      spec="OPTIONAL DOUBLE" />
+        </fracture>
         <C_p                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
         
         <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
@@ -992,19 +996,24 @@
           <alpha                         spec="OPTIONAL DOUBLE" />
           <Beta                          spec="OPTIONAL DOUBLE" />
           <bulk_modulus                  spec="OPTIONAL DOUBLE" />
-          <c1                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <c2                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <c3                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <c4                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <c5                            spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <fiber_stretch                 spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <max_fiber_strain              spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <max_matrix_strain             spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
-          <failure_option                spec="REQUIRED DOUBLE" need_applies_to="type trans_iso_hyper visco_trans_iso_hyper" />
+          <c1                            spec="OPTIONAL DOUBLE" />
+          <c2                            spec="OPTIONAL DOUBLE" />
+          <c3                            spec="OPTIONAL DOUBLE" />
+          <c4                            spec="OPTIONAL DOUBLE" />
+          <c5                            spec="OPTIONAL DOUBLE" />
+          <fiber_stretch                 spec="OPTIONAL DOUBLE" />
+          <max_fiber_strain              spec="OPTIONAL DOUBLE" />
+          <max_matrix_strain             spec="OPTIONAL DOUBLE" />
+          <failure_option                spec="OPTIONAL DOUBLE" />
           <C1                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <C2                            spec="OPTIONAL DOUBLE" />    <!-- FIXME: what is this? -->
           <check_max_stress_failure      spec="OPTIONAL BOOLEAN" />
           <check_TEPLA_failure_criterion spec="OPTIONAL BOOLEAN" />
+          <check_failure                 spec="OPTIONAL BOOLEAN" />
+          <failure_by_stress             spec="OPTIONAL BOOLEAN" />
+          <failure_variable_mean         spec="OPTIONAL DOUBLE" />
+          <failure_variable_std          spec="OPTIONAL DOUBLE" />
+          <failure_variable_distrib      spec="OPTIONAL STRING" />
           <Chi                           spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? -->
           <coeff_thermal_expansion       spec="OPTIONAL DOUBLE" />
           <CoeffThermalExpansion         spec="OPTIONAL DOUBLE" />
@@ -1034,7 +1043,11 @@
           <do_melting                    spec="OPTIONAL BOOLEAN" />
           <dynamic_coeff_friction        spec="OPTIONAL DOUBLE" />
           <e_shear_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
-          <e_bulk_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
+          <e_bulk_modulus                spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
+          <ve_bulk_modulus               spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
+          <ve_shear_modulus              spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
+          <ve_volumetric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
+          <ve_deviatoric_viscosity       spec="OPTIONAL DOUBLE" /> <!-- qwerty need_applies_to='type ALL' --> 
           <EoverR                        spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is this for? -->
           <equation_of_state             spec="OPTIONAL NO_DATA" 
                                            attribute1="type REQUIRED STRING 'default_hyper, default_hypo, mie_gruneisen'" > <!-- FIXME: Is default_hypo valid? is hyper spelled hypre? -->
@@ -1212,10 +1225,17 @@
           <strain_limit                  spec="OPTIONAL DOUBLE" />
           <StressIntensityF              spec="OPTIONAL DOUBLE" />
           <T0                            spec="OPTIONAL DOUBLE" />
+          <t1                            spec="OPTIONAL DOUBLE" />
+          <t2                            spec="OPTIONAL DOUBLE" />
+          <t3                            spec="OPTIONAL DOUBLE" />
+          <t4                            spec="OPTIONAL DOUBLE" />
+          <t5                            spec="OPTIONAL DOUBLE" />
+          <t6                            spec="OPTIONAL DOUBLE" />
           <taylor_quinney_coeff          spec="OPTIONAL DOUBLE" />
           <tolerance                     spec="OPTIONAL DOUBLE" />
           <useModifiedEOS                spec="OPTIONAL BOOLEAN" />
           <useObjectiveRate              spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
+          <UseArtificialViscosity        spec="OPTIONAL BOOLEAN" />        <!-- FIXME: What is the default -->
           <use_time_temperature_equation spec="OPTIONAL BOOLEAN" />   <!-- FIXME: What is the default -->
           <viscosity                     spec="OPTIONAL DOUBLE" />
           <volfracHE                     spec="OPTIONAL DOUBLE" />
@@ -1228,6 +1248,12 @@
             <q3                          spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
           </yield_condition>
           <yield_stress                  spec="OPTIONAL DOUBLE" />
+          <y1                            spec="OPTIONAL DOUBLE" />
+          <y2                            spec="OPTIONAL DOUBLE" />
+          <y3                            spec="OPTIONAL DOUBLE" />
+          <y4                            spec="OPTIONAL DOUBLE" />
+          <y5                            spec="OPTIONAL DOUBLE" />
+          <y6                            spec="OPTIONAL DOUBLE" />
           <Z                             spec="OPTIONAL DOUBLE" />   <!-- FIXME: what is this for? -->
           <zero_stress_upon_failure      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: what is this for? -->
 

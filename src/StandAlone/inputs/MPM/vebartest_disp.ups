@@ -109,7 +109,7 @@
     <Grid>
        <Level>
            <Box label="1">
-              <lower>[  .0 ,-0.4, -1.5 ]</lower>
+              <lower>[  0.0, -0.4, -1.5 ]</lower>
               <upper>[  0.1, 0.4,  1.5 ]</upper>
                <resolution>[1,8,30]</resolution>
               <patches>[1,1,2]</patches>
