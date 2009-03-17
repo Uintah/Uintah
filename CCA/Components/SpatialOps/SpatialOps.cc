@@ -309,21 +309,24 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
 
   double start_time = Time::currentSeconds();
 
+  // Get a reference to all the equations
+  EqnFactory::EqnMap eqns = scalarFactory.retrieve_all_eqns(); 
+
   for (int i = 0; i < d_tOrder; i++){
 
-    for (vector<string>::iterator ieqn = d_scalarEqnNames.begin(); ieqn != d_scalarEqnNames.end(); ieqn++){
+    for (EqnFactory::EqnMap::iterator ieqn = eqns.begin(); ieqn != eqns.end(); ieqn++){
 
-      // Get current equation
-      string currname = *ieqn; 
+      // Get current equation name
+      std::string currname = ieqn->first; 
       cout << "Scheduling equation: "<< currname << " to be solved." << endl;
-      EqnBase& eqn = scalarFactory.retrieve_scalar_eqn( currname );
+      EqnBase* eqn = ieqn->second; 
 
       // Schedule the evaluation of this equation (build and compute) 
-      eqn.sched_evalTransportEqn( level, sched, i );
+      eqn->sched_evalTransportEqn( level, sched, i );
 
       if (i == d_tOrder-1){
         //last time sub-step so cleanup. 
-        eqn.sched_cleanUp( level, sched ); 
+        eqn->sched_cleanUp( level, sched ); 
       }
     } 
   }
