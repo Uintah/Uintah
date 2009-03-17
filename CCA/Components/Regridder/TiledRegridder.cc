@@ -216,8 +216,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
             //if dimension is not equal to 1 and is smaller than the other dimensions
             if(d_minTileSize[l+1][d]>1 && (min_dim==-1 || d_tileSize[l+1][d]<d_tileSize[l+1][min_dim]))
             {
-              //don't allow tiles to be bigger than the coarser tile
-              if(d_tileSize[l+1][d]*2<=d_tileSize[l][d]*d_cellRefinementRatio[l][d])
+              //don't allow tiles to be bigger than the coarser tile and make sure tiles will divide evenly into coarse tiles
+              if(d_tileSize[l+1][d]*2<=d_tileSize[l][d]*d_cellRefinementRatio[l][d] && d_tileSize[l][d]%(d_tileSize[l+1][d]*2)==0) 
                 min_dim=d;
             }
           }
