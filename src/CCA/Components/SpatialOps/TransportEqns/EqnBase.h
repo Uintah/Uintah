@@ -69,9 +69,10 @@ public:
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
   d_timeIntegrator = timeIntegrator; 
   }
-
   inline const VarLabel* getTransportEqnLabel(){
     return d_transportVarLabel; };
+  inline const std::string getEqnName(){
+    return d_eqnName; };
 
 protected:
 

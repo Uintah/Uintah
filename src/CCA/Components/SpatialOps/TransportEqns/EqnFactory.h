@@ -54,6 +54,9 @@ protected:
 class EqnFactory
 {
 public:
+
+  typedef std::map< std::string, EqnBase* >     EqnMap; 
+
   /** @brief Return an instance of the factory.  */
   static EqnFactory& self(); 
   /** @brief Register a scalar eqn with the builder.    */
@@ -62,9 +65,11 @@ public:
   /** @brief Retrieve a given scalar eqn.    */
   EqnBase& retrieve_scalar_eqn( const std::string name ); 
 
+  /** @brief Get access to the eqn map */ 
+  EqnMap retrieve_all_eqns(){
+    return eqns_; };
 private:
   typedef std::map< std::string, EqnBuilder* >  BuildMap; 
-  typedef std::map< std::string, EqnBase* >     EqnMap; 
 
   BuildMap builders_; 
   EqnMap eqns_; 
