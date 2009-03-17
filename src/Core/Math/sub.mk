@@ -48,37 +48,57 @@ $(TARGDIR)/fnparser.cc $(TARGDIR)/fnparser.h:	$(FNSRCDIR)/fnparser.y
 $(TARGDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(TARGDIR)/fnparser.cc
 	$(LEX) -Pfn -o$(TARGDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
 
-SRCS     += $(SRCDIR)/CubicPWI.cc              \
-            $(SRCDIR)/Gaussian.cc	       \
-            $(SRCDIR)/LinAlg.c		       \
-            $(SRCDIR)/LinearPWI.cc	       \
-            $(SRCDIR)/Mat.c		       \
-            $(SRCDIR)/MiscMath.cc	       \
-            $(SRCDIR)/MusilRNG.cc	       \
-            $(SRCDIR)/PiecewiseInterp.cc       \
-            $(SRCDIR)/TrigTable.cc	       \
-            $(SRCDIR)/sci_lapack.cc	       \
-            $(SRCDIR)/fft.c		       \
-            $(SRCDIR)/ssmult.c			\
-	$(SRCDIR)/FastMatrix.cc \
-	$(SRCDIR)/Primes.cc     \
-	$(SRCDIR)/Matrix3.cc    \
-	$(SRCDIR)/SymmMatrix3.cc    \
-	$(SRCDIR)/CubeRoot.cc	\
-	$(SRCDIR)/Sparse.cc	\
-	$(SRCDIR)/Short27.cc \
-	$(SRCDIR)/TangentModulusTensor.cc 
+SRCS += \
+        $(SRCDIR)/CubicPWI.cc          \
+        $(SRCDIR)/Gaussian.cc          \
+        $(SRCDIR)/LinAlg.c             \
+        $(SRCDIR)/LinearPWI.cc         \
+        $(SRCDIR)/Mat.c                \
+        $(SRCDIR)/MiscMath.cc          \
+        $(SRCDIR)/MusilRNG.cc          \
+        $(SRCDIR)/PiecewiseInterp.cc   \
+        $(SRCDIR)/TrigTable.cc         \
+        $(SRCDIR)/sci_lapack.cc        \
+        $(SRCDIR)/fft.c                \
+        $(SRCDIR)/ssmult.c             \
+        $(SRCDIR)/FastMatrix.cc        \
+        $(SRCDIR)/Primes.cc            \
+        $(SRCDIR)/Matrix3.cc           \
+        $(SRCDIR)/SymmMatrix3.cc       \
+        $(SRCDIR)/CubeRoot.cc          \
+        $(SRCDIR)/Sparse.cc            \
+        $(SRCDIR)/Short27.cc           \
+        $(SRCDIR)/TangentModulusTensor.cc  \
+	\
+        Core/Geometry/BBox.cc \
+        Core/Geometry/CompGeom.cc \
+        Core/Geometry/Grid.cc \
+        Core/Geometry/IntVector.cc \
+        Core/Geometry/Plane.cc \
+        Core/Geometry/Point.cc \
+        Core/Geometry/Polygon.cc \
+        Core/Geometry/Quaternion.cc \
+        Core/Geometry/Ray.cc \
+        Core/Geometry/Tensor.cc \
+        Core/Geometry/Transform.cc \
+        Core/Geometry/Vector.cc \
+	\
+        Core/Disclosure/TypeDescription.cc \
+        Core/Disclosure/TypeUtils.cc 
 
 ifeq ($(IS_WIN),yes)
   SRCS += $(SRCDIR)/Rand48.cc
 endif
 
 
-PSELIBS := Core/Exceptions Core/Containers \
-	Core/Util                       \
-	Core/Geometry                   \
-	Core/Thread			\
-	Core/Disclosure 
+PSELIBS := \
+	Core/Exceptions Core/Containers \
+        Core/Util                       \
+        Core/Geometry                   \
+        Core/Thread                     \
+        Core/Disclosure                 \
+	\
+	Core/Persistent
 
 LIBS := $(M_LIBRARY) $(DL_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY)
 

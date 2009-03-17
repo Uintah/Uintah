@@ -44,7 +44,9 @@ PSELIBS := \
         Core/Disclosure          \
         Core/Exceptions          \
         Core/Grid                \
-        Core/Util                
+        Core/Util                \
+	\
+	Core/Math
 
 LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
 

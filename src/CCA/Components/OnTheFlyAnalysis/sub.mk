@@ -57,7 +57,9 @@ PSELIBS := \
 	Core/Parallel    \
 	Core/Util        \
 	Core/GeometryPiece \
-	Core/ProblemSpec 
+	Core/ProblemSpec   \
+	\
+	Core/Math
 
 LIBS := $(XML_LIBRARY) 
 

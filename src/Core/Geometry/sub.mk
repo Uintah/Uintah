@@ -35,22 +35,14 @@ INCLUDES += $(TEEM_INCLUDE)
 
 SRCDIR   := Core/Geometry
 
-SRCS     += $(SRCDIR)/BBox.cc \
-	    $(SRCDIR)/CompGeom.cc \
-	    $(SRCDIR)/Grid.cc \
-	    $(SRCDIR)/IntVector.cc \
-	    $(SRCDIR)/Plane.cc \
-	    $(SRCDIR)/Point.cc \
-	    $(SRCDIR)/Polygon.cc \
-	    $(SRCDIR)/Quaternion.cc \
-	    $(SRCDIR)/Ray.cc \
-	    $(SRCDIR)/Tensor.cc \
-	    $(SRCDIR)/Transform.cc \
-	    $(SRCDIR)/Vector.cc
+SRCS += \
+        $(SRCDIR)/dummy.cc
 
-PSELIBS := Core/Persistent Core/Containers \
-	   Core/Exceptions Core/Util 
-#	   Core/Exceptions Core/Util Core/Math
+PSELIBS :=
+# Core/Persistent Core/Containers \
+#           Core/Exceptions Core/Util \
+#           Core/Exceptions Core/Util Core/Math
+
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

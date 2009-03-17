@@ -67,7 +67,9 @@ PSELIBS := \
 	Core/Util        \
 	Core/Disclosure  \
 	Core/Parallel    \
-	Core/ProblemSpec 
+	Core/ProblemSpec \
+	\
+	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY)
 

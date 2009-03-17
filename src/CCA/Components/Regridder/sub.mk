@@ -41,8 +41,6 @@ SRCS     += $(SRCDIR)/RegridderCommon.cc \
 	    $(SRCDIR)/BNRRegridder.cc \
 	    $(SRCDIR)/PatchFixer.cc  \
 	    $(SRCDIR)/TiledRegridder.cc
-			
-			
 
 PSELIBS := \
 	CCA/Ports        \
@@ -55,7 +53,9 @@ PSELIBS := \
 	Core/Geometry			 \
 	Core/Exceptions			 \
 	Core/Thread			 \
-	Core/Util
+	Core/Util \
+	\
+	Core/Math
 
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)

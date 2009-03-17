@@ -37,10 +37,12 @@ PROGRAM := $(SRCDIR)/RegionTest
 SRCS    := $(SRCDIR)/RegionTest.cc
 
 PSELIBS := \
-        Core/Exceptions                          \
-        Core/Geometry                            \
+        Core/Exceptions          \
+        Core/Geometry            \
         Core/Grid                \
-        Core/Util                
+        Core/Util                \
+	\
+	Core/Math
 
 LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
 

@@ -34,15 +34,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Disclosure
 
-SRCS     += \
-	$(SRCDIR)/TypeDescription.cc \
-	$(SRCDIR)/TypeUtils.cc
+SRCS += \
+        $(SRCDIR)/dummy.cc
 
-PSELIBS := \
-	Core/Thread     \
-	Core/Exceptions \
-	Core/Util       \
-	Core/Geometry
+#	$(SRCDIR)/TypeDescription.cc \
+#	$(SRCDIR)/TypeUtils.cc
+
+PSELIBS := 
+#	Core/Thread     \
+#	Core/Exceptions \
+#	Core/Util       \
+#	Core/Geometry
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
