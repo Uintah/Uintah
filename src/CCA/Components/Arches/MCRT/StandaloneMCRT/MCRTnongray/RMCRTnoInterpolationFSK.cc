@@ -84,6 +84,11 @@ using namespace std;
 // the ReverseMCRT.cc is the last updated program
 
 
+//similar as RMCRTnoInterpolationNongray.cc
+// at each iggNo ( band) shoot out rays through the domain ,
+// that is, for each cell, all rays are at the same iggNo,
+// do the calculation, then move on to the next iggNo ( band ).
+// and later either sum up or do the gaussian quadrature.
 
 void ToArray(int size, double *array, char *_argv){
 
@@ -370,9 +375,9 @@ int main(int argc, char *argv[]){
   ratioBCx = 0.8;
   ratioBCy = 1;
   ratioBCz = 1;
-  Lx = 5;
-  Ly = 5;
-  Lz = 5;
+  Lx = 1;
+  Ly = 1;
+  Lz = 1;
 
   if ( ratioBCx == 1 )
     dxconst = Lx/Ncx;

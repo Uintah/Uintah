@@ -89,7 +89,7 @@ void MakeTableFunction::singleArrayTable(const double *Array,
   ofstream out( _argv);
 
   for ( int i = 0; i < ArraySize; i ++ ) {    
-    out << setw(13) << setprecision(5) << Array[i];
+    out << setw(16) << setprecision(14) << Array[i];
     if ( ( (i+1) % No ) == 0 )
       out << endl;
   }

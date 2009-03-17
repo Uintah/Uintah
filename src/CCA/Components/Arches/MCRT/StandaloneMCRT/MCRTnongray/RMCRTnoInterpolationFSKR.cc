@@ -84,7 +84,11 @@ using namespace std;
 // the ReverseMCRT.cc is the last updated program
 
 
-
+// unlike RMCRTnoInterpolationFSK.cc or RMCRTnoInterpolationNongray.cc
+// in this case, there is no calculation over iggNo times
+// just do the calculation once, but with many more rays,
+// to be able to cover all g.
+  
 void ToArray(int size, double *array, char *_argv){
 
   ifstream in(_argv); // open table
@@ -149,13 +153,14 @@ void rayfromSurf(SurfaceType &obSurface,
 		 double *s,
 		 BinarySearchTree &obBST,
 		 int *countg, const int &gSize, const int &VolElementNo,
-		 const double *Rkg, const double *gk){
+		 const double *Rkg, const double *gk,
+		 const double *kl, const double *g){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
   double PathLeft, PathSurfaceLeft, weight, traceProbability;
   double OutIntenSur, sumIncomInten, aveIncomInten;
   int rayCounter, hitSurfaceFlag, hitSurfaceIndex;
-  double Rgg, g, kl;
+  double Rgg;
   
   // get surface element's absorption coefficient
   alpha = alpha_surface[surfaceFlag][surfaceIndex];
@@ -165,7 +170,8 @@ void rayfromSurf(SurfaceType &obSurface,
   
 	  // loop over ray numbers on each surface element
   for ( rayCounter = 0; rayCounter < thisRayNo; rayCounter++ ) {
-    
+
+    /*
     Rgg =  MTrng.randExc(); // Rgg random number
     // cout << " Rgg = " << Rgg << endl;
     obBST.search(Rgg, Rkg, gSize);
@@ -175,10 +181,13 @@ void rayfromSurf(SurfaceType &obSurface,
     kl = obBST.get_k();
     // cout << "kl = " << kl << endl;
     countg[obBST.get_lowI()] ++;
-    
+
+    */
+
+
     // set absorption coeff
     for ( int ki = 0; ki < VolElementNo; ki++)
-      kl_Vol[ki] = kl * 100;
+      kl_Vol[ki] = kl[rayCounter] * 100;
 
 	     
     LeftIntenFrac = 1;
@@ -276,20 +285,28 @@ void rayfromSurf(SurfaceType &obSurface,
       traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
       
     }while (  MTrng.randExc() < traceProbability); // continue the path
-    
+
+       
   } // rayCounter loop
 	  
   
   sumIncomInten = 0;
-  for ( int aaa = 0; aaa < thisRayNo; aaa ++ )
-    sumIncomInten = sumIncomInten + IncomingIntenSur[aaa];
+  for ( int aaa = 0; aaa < thisRayNo-1; aaa ++ )
+    sumIncomInten = sumIncomInten +
+      ( IncomingIntenSur[aaa+1] + IncomingIntenSur[aaa] ) *
+      ( g[aaa+1] - g[aaa])/2.0 ;
+
   //	  cout << "sumIncomInten = " << sumIncomInten << endl;
   delete[] IncomingIntenSur;
   
   aveIncomInten = sumIncomInten / thisRayNo;
   
+  //  netInten_surface[surfaceFlag][surfaceIndex][iggNo] =
+  //    OutIntenSur - aveIncomInten;
+
   netInten_surface[surfaceFlag][surfaceIndex][iggNo] =
-    OutIntenSur - aveIncomInten;
+    OutIntenSur - sumIncomInten;
+  
   
   //	  cout << "netInten_surface = " << netInten_surface[surfaceFlag][surfaceIndex] << endl;
   
@@ -348,15 +365,16 @@ int main(int argc, char *argv[]){
   double dxconst, dyconst, dzconst; // if it is uniform mesh, dx dy dz are constant variables
   int coluwgka; // coluwgka -- size of one column of wgka array
   int gSize, gkSize, iggNo;
-  double g,kl;
+  
   
   BinarySearchTree obBST;
   gSize = 5000;
-  gkSize = gSize * 2;  
+  gkSize = gSize * 2;
+  iggNo = 0;
   int *countg = new int[gSize];  
   double *Rkg = new double [gSize];
   double *gk = new double [gkSize];
-
+  
   for ( int i = 0; i < gSize; i ++)
     countg[i] = 0;
   
@@ -371,12 +389,12 @@ int main(int argc, char *argv[]){
   StopLowerBound = 1e-10;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
-  ratioBCx = 0.8;
-  ratioBCy = 0.8;
-  ratioBCz = 0.8;
+  Ncx = 20;
+  Ncy = 20;
+  Ncz = 20;
+  ratioBCx = 0.9;
+  ratioBCy = 1.0;
+  ratioBCz = 1.0;
   Lx = 1;
   Ly = 1;
   Lz = 1;
@@ -792,6 +810,40 @@ int main(int argc, char *argv[]){
    cout <<" before inputFSK file" << endl;
    #include "inputFSKhomoWebb.cc"
    
+  int rayNouniform;
+  rayNouniform = 5000;
+  // generate uniform distributed from 0 to 1 , R same size as rayNo.
+  int Runisize;
+  Runisize = rayNouniform; // same as rayNo
+  
+  double dRuni, Rgg;
+  
+  dRuni = 1.0/Runisize; // has to be 1.0 otherwise return an integer.
+  cout<< "Runisize = " << Runisize << endl;
+  cout << "dRuni = " << dRuni << endl;
+  
+  // this section can be carried out in the loop for each element
+  // when the rayNo are not the same for every element
+  
+  double *Runi = new double[Runisize];
+  double *g = new double[Runisize];
+  double *kl = new double[Runisize];
+  
+  // make Runi not starting from 0, as R = 0-> g= 0, -> small k, not important rays
+  for ( int i = 0; i < Runisize; i ++ ){
+    Runi[i] = (i+1) * dRuni;
+    // cout << "Runi = " << Runi[i] << endl;
+    Rgg = Runi[i];
+    // Since Runi is pre-set, we can pre-calculate g and kl from Runi.    
+    obBST.search(Rgg, Rkg, gSize);
+    obBST.calculate_gk(gk, Rkg, Rgg);
+    g[i] = obBST.get_g();
+    //  cout << " g= "<< g << endl;
+    kl[i] = obBST.get_k();
+    
+  }
+
+  
    MTRand MTrng;
    VolElement obVol;
    VirtualSurface obVirtual;
@@ -848,17 +900,18 @@ int main(int argc, char *argv[]){
   int iIndex, jIndex, kIndex;
   int thisRayNo;
   RadWsgg obWsgg;
-  double Rgg; // random nubmer for wavenumber
   int RkgIndex;
-  
+    
   time (&time_start);
  
-  iggNo = 0;
+ 
  // for Volume's  Intensity
    // for volume, use black intensity
    for ( int i = 0; i < VolElementNo; i ++ )
      IntenArray_Vol[i] = obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
-   
+
+   // this is valid for gray surfaces, which in Webbhomo case is true.
+   // for gray surfaces, emiss_surface doesnot change at different g ( or wavenumbers)
    // top bottom surfaces intensity
    for ( int i = 0;  i < TopBottomNo; i ++ ) {
      RealPointer = &obTop_init;
@@ -974,7 +1027,7 @@ int main(int argc, char *argv[]){
 		      s,
 		      obBST,
 		      countg,
-		      gSize, VolElementNo, Rkg, gk);
+		      gSize, VolElementNo, Rkg, gk, kl, g);
 	 
 	}
 
@@ -1031,7 +1084,7 @@ int main(int argc, char *argv[]){
 		      s,
 		      obBST,
 		      countg,
-		      gSize, VolElementNo, Rkg, gk);
+		      gSize, VolElementNo, Rkg, gk, kl, g);
 	}
 
 
@@ -1088,7 +1141,7 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk);
+		      gSize, VolElementNo, Rkg, gk, kl, g);
 	}
 
 
@@ -1144,7 +1197,7 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk);
+		      gSize, VolElementNo, Rkg, gk, kl, g);
 	}
 
 
@@ -1201,7 +1254,7 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk);
+		      gSize, VolElementNo, Rkg, gk, kl, g);
 	}
 
 
@@ -1258,7 +1311,7 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk);
+		      gSize, VolElementNo, Rkg, gk, kl, g);
 	}
 
 
@@ -1272,8 +1325,8 @@ int main(int argc, char *argv[]){
 } // end if rayNoSurface ! = 0 ?
    
 	  
- 
-
+  iggNo = 0;
+  
   //  cout << " i am here after one iggNo" << endl;
   if ( rayNoVol != 0 ) { // emitting ray from volume
     //    cout << "start from Vol" << endl;
@@ -1294,8 +1347,10 @@ int main(int argc, char *argv[]){
 	    double *IncomingIntenVol = new double [ rayNo_Vol[VolIndex] ];
 	  
 	    for ( rayCounter = 0; rayCounter < rayNo_Vol[VolIndex]; rayCounter ++) {
-	      
-	      Rgg =  MTrng.randExc(); // Rgg random number
+
+	      /*
+	      Rgg = Runi[rayCounter];
+	      // Rgg =  MTrng.randExc(); // Rgg random number
 	      //	  cout << " Rgg = " << Rgg << endl;
 	      obBST.search(Rgg, Rkg, gSize);
 	      obBST.calculate_gk(gk, Rkg, Rgg);
@@ -1304,10 +1359,12 @@ int main(int argc, char *argv[]){
 	      kl = obBST.get_k();
 	      //  cout << "kl = " << kl << endl;
 	      countg[obBST.get_lowI()] ++;
+	      */
+
 	      
 	      // set absorption coeff
 	      for ( int ki = 0; ki < VolElementNo; ki++)
-		kl_Vol[ki] = kl * 100;
+		kl_Vol[ki] = kl[rayCounter] * 100;
 	      
 	      OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
 	      
@@ -1401,9 +1458,13 @@ int main(int argc, char *argv[]){
 		LeftIntenFrac = exp(-currentSum) * SurLeft;
 		traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
 
+		
 	      }while ( MTrng.randExc() < traceProbability ); // continue the path
 	      
-
+	      // temperory solution.
+	      // otherwise get an array of OutIntenVol[rayCounter]
+	      IncomingIntenVol[rayCounter] = OutIntenVol - IncomingIntenVol[rayCounter];
+	      
 	    } // rayCounter loop
 	    
 	  
@@ -1411,19 +1472,26 @@ int main(int argc, char *argv[]){
 	    // isotropic emission, weighting factors are all the same on all directions
 	    // net = OutInten - averaged_IncomingIntenDir
 	    // div q = 4 * pi * netInten
-	    
+
+	    // integrate over all g of incoming Intensity
+	    // here the rayNo_Vol[VolIndex] has to be the same as Runisize
+
+	    // the OutIntenVol is changing with each ray too!!!
 	    sumIncomInten = 0;
-	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]; aaa ++ )
-	      sumIncomInten = sumIncomInten + IncomingIntenVol[aaa];
+	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
+	      sumIncomInten = sumIncomInten +
+		( IncomingIntenVol[aaa+1] + IncomingIntenVol[aaa] ) *
+		( g[aaa+1] - g[aaa])/2.0;
 	    
 	    
 	    delete[] IncomingIntenVol;
 	    
-	    aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
+	    // aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
 	    // cout << "aveIncomInten = " << aveIncomInten << endl;
 	    
-	    netInten_Vol[VolIndex][iggNo] = OutIntenVol - aveIncomInten;
-	    
+	    // netInten_Vol[VolIndex][iggNo] = OutIntenVol - aveIncomInten;
+
+	     netInten_Vol[VolIndex][iggNo] = sumIncomInten;
 	    
 	  } // if rayNo_Vol[VolIndex] != 0
 	  
@@ -1438,7 +1506,7 @@ int main(int argc, char *argv[]){
   } // end rayNoVol!= 0 
     
 
-  //} // end iggNo
+  
 
   time (&time_end); 
   
@@ -1456,7 +1524,7 @@ int main(int argc, char *argv[]){
 
   for ( surfaceFlag = 0; surfaceFlag < 6; surfaceFlag++)
     for ( int elementNo = 0; elementNo < surfaceNo[surfaceFlag]; elementNo ++)
-      for ( int iggNo = 0; iggNo < coluwgka; iggNo ++)
+      for ( int iggNo = 0; iggNo < 1; iggNo ++)
 	integrIntenSurface[surfaceFlag][elementNo] = integrIntenSurface[surfaceFlag][elementNo] +
 	  netInten_surface[surfaceFlag][elementNo][iggNo];
 
@@ -1472,14 +1540,14 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceBenchmarkRay500RR1e-4", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceBenchmarkRay500RR1e-4L1", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
 
   
     // Vol cell
-
+  
    double integrIntenVol[VolElementNo];
    for ( int i = 0; i < VolElementNo; i ++)
      integrIntenVol[i] = 0;
@@ -1487,17 +1555,19 @@ int main(int argc, char *argv[]){
   // WSGG all weights are 1, sum all bands together
 
     for ( int i = 0; i < VolElementNo; i ++)
-      for ( int iggNo = 0; iggNo < coluwgka; iggNo ++)
+      for ( int iggNo = 0; iggNo < 1; iggNo ++)
 	integrIntenVol[i]= integrIntenVol[i]+
-	  netInten_Vol[i][iggNo];
- 
+	  netInten_Vol[i][iggNo] ;
+
+  
+  
   for (int i = 0 ; i < VolElementNo; i ++ ) {
     global_qdiv[i] = 4 * pi * integrIntenVol[i];
     global_Qdiv[i] = global_qdiv[i] * ElementVol[i];
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolBenchmarkRay500RR1e-4",
+  obTable.vtkVolTableMake("vtkVolBenchmarkRay500RR1e-4L1",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
@@ -1505,8 +1575,11 @@ int main(int argc, char *argv[]){
   
  
   
-  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast");
-
+  //  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast");
+  obTable.singleArrayTable(kl, Runisize, 1, "klTable");
+  obTable.singleArrayTable(g, Runisize, 1, "gTable");
+  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTable");
+  
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;
   
@@ -1525,9 +1598,6 @@ int main(int argc, char *argv[]){
   
   timeused = difftime (time_end,time_start);
   cout << " time used up (S) = " << timeused << "sec." << endl;
-
-
-  obTable.singleIntArrayTable(countg, gSize, 1, "countg");
   cout << "iggNo = " << iggNo << endl;
   
   delete[] T_Vol;
@@ -1571,6 +1641,9 @@ int main(int argc, char *argv[]){
   delete[] Rkg;
   delete[] gk;
   delete[] countg;
+  delete[] g;
+  delete[] kl;
+  delete[] Runi;
   //  delete[]integrIntenSurface; 
   
   return 0;
