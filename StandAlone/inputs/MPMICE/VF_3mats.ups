@@ -189,12 +189,24 @@
                     <max>           [ .03, .06, .01]    </max>
                </box>
                <union>
-                <tri label="leftmaterial1.0" > </tri>
-                <tri label="leftmaterial2.0" > </tri>
-                <tri label="leftmaterial3.0" > </tri>
-                <tri label="rightmaterial1.0" > </tri>
-                <tri label="rightmaterial2.0" > </tri>
-                <tri label="rightmaterial3.0" > </tri>
+                <tri label="leftmaterial1.0" >
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat1.0</name>   
+                </tri>
+                <tri label="leftmaterial2.0" >
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat2.0</name>
+                </tri>
+                <tri label="leftmaterial3.0" >
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_L_mat3.0</name>
+                </tri>
+                <tri label="rightmaterial1.0" >
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_R_mat1.0</name>   
+                </tri>
+                <tri label="rightmaterial2.0" > 
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_R_mat1.0</name>   
+               </tri>
+                <tri label="rightmaterial3.0" >
+                    <name>inputs/MPMICE/complex_MPM_geometries/VF_R_mat1.0</name>   
+                </tri>
                </union>
               </difference>
              <res>                [2,2,1]              </res>

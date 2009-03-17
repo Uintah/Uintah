@@ -985,6 +985,12 @@
          <constraint                      spec="OPTIONAL DOUBLE" />
         </fracture>
         <C_p                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
+        <gamma                           spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
+        <ThresholdTemp                   spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
+        <ThresholdPressure               spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
+        <Enthalpy                        spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
+        <BurnCoeff                       spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
+        <refPressure                     spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
         
         <!-- HOW TO DEAL WITH THE MANY OPTIONS HERE? -->
         <constitutive_model              spec="REQUIRED NO_DATA"
@@ -1618,6 +1624,7 @@
     </ICE>
     <MPM                                   spec="OPTIONAL NO_DATA" >
       <material                            spec="REQUIRED NO_DATA" >
+                                             attribute1="name REQUIRED STRING" >
         <constitutive_model                spec="REQUIRED NO_DATA" 
                                              attribute1="type REQUIRED STRING 'hypoelastic_plastic'" >
           <tolerance                       spec="REQUIRED DOUBLE" />

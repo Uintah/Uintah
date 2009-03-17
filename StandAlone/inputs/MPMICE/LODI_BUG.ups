@@ -242,7 +242,7 @@
                 <difference>   
                   <cone label = "ramp">
                     <bottom>            [0.3,0.0,0.0]   </bottom>
-                    <top>               [0.7 ,0.0,0.0]  </top>
+                    <top>               [0.7,0.0,0.0]  </top>
                     <bottom_radius>0.31</bottom_radius>
                     <top_radius>   0.71</top_radius>
                   </cone>

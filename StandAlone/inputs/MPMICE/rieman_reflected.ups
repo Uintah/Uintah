@@ -194,8 +194,8 @@
                </box>
                
                <box label="Right_MPM_Wall">
-                   <min>          [4.1,-1.0,-1.0]    </min>      
-                   <max>          [4.4 ,2.0, 2.0]    </max>       
+                   <min>          [4.1, -1.0, -1.0]    </min>      
+                   <max>          [4.4, 2.0, 2.0]    </max>       
                </box>
              </difference>
              <res>           [2,2,2]                  </res>
@@ -238,7 +238,7 @@
          <geom_object>
                <box label="Right_MPM_Wall">
                         <min>     [4.1,-1.0,-1.0]    </min>      
-                        <max>     [4.4 ,2.0, 2.0]    </max>       
+                        <max>     [4.4, 2.0, 2.0]    </max>       
               </box>         
                <res>                [2,2,2]          </res>
                <velocity>           [0.,0.,0.]       </velocity>
