@@ -6,7 +6,7 @@
        <title>none</title>
    </Meta>
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
