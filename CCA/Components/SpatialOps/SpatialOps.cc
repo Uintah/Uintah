@@ -310,7 +310,7 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
   double start_time = Time::currentSeconds();
 
   // Get a reference to all the equations
-  EqnFactory::EqnMap eqns = scalarFactory.retrieve_all_eqns(); 
+  EqnFactory::EqnMap& eqns = scalarFactory.retrieve_all_eqns(); 
 
   for (int i = 0; i < d_tOrder; i++){
 
