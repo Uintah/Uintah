@@ -66,7 +66,7 @@ public:
   EqnBase& retrieve_scalar_eqn( const std::string name ); 
 
   /** @brief Get access to the eqn map */ 
-  EqnMap retrieve_all_eqns(){
+  EqnMap& retrieve_all_eqns(){
     return eqns_; };
 private:
   typedef std::map< std::string, EqnBuilder* >  BuildMap; 
