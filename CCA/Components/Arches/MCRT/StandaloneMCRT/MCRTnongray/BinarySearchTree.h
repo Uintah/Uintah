@@ -84,6 +84,7 @@ public:
       k = gk[lowI *2 +1];
     }
     else{
+      // can set a max on (Rgg-Rkg[lowI]), in case it is too small
       A = (Rkg[highI] - Rgg)/(Rgg-Rkg[lowI]);
       g = ( gk[highI *2] + A * gk[lowI*2])/
 	(A+1);
