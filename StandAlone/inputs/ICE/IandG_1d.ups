@@ -6,7 +6,7 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title>Advection test</title>
+       <title>none</title>
    </Meta>    
 
    <SimulationComponent type="ice" />
@@ -97,16 +97,15 @@
       <save label="modelEng_src"/>
       <save label="modelVol_src"/>
       <save label="modelMom_src"/>
-      <save label="IandG::F"/>
-<!--
--->
+      <save label="IandG:F"/>
+      <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.2</cfl>
        <ICE>
         <advection type = "SecondOrder" />
         <TimeStepControl>
@@ -181,36 +180,38 @@
          </material>
       </ICE>       
 
-        <exchange_properties> 
+      <exchange_properties> 
          <exchange_coefficients>
             <momentum>          [1.e15]       </momentum>
             <heat>              [1.e15]       </heat>
         </exchange_coefficients>
-        </exchange_properties> 
+      </exchange_properties> 
     </MaterialProperties>  
                      
     <Models>
       <Model type="IandG">
-        <fromMaterial> reactant   </fromMaterial>
-        <toMaterial>   product    </toMaterial>
-        <I>    7.43e17   </I>
-        <G1> 175.0e-16   </G1>
-        <G2>  10.0e-5   </G2>
-        <a>    0.    </a>
-        <b>    0.667 </b>
-        <c>    0.667 </c>
-        <d>    0.111 </d>
-        <e>    0.667 </e>
-        <g>    0.667 </g>
-        <x>   20.    </x>
-        <y>    2.    </y>
-        <z>    1.    </z>
-        <Figmax>    0.02      </Figmax>
-        <FG1max>    0.8       </FG1max>
-        <FG2min>    0.8       </FG2min>
-        <rho0>   1835.0       </rho0>
-        <E0>        5.558e6   </E0>
-        <ThresholdPressure>      200000000.      </ThresholdPressure>
+        <IandG>
+          <fromMaterial> reactant   </fromMaterial>
+          <toMaterial>   product    </toMaterial>
+          <I>    7.43e17   </I>
+          <G1> 175.0e-16   </G1>
+          <G2>  10.0e-5   </G2>
+          <a>    0.    </a>
+          <b>    0.667 </b>
+          <c>    0.667 </c>
+          <d>    0.111 </d>
+          <e>    0.667 </e>
+          <g>    0.667 </g>
+          <x>   20.    </x>
+          <y>    2.    </y>
+          <z>    1.    </z>
+          <Figmax>    0.02      </Figmax>
+          <FG1max>    0.8       </FG1max>
+          <FG2min>    0.8       </FG2min>
+          <rho0>   1835.0       </rho0>
+          <E0>        5.558e6   </E0>
+          <ThresholdPressure>      200000000.      </ThresholdPressure>
+        </IandG>
       </Model>
     </Models>
 <!--

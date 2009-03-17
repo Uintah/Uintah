@@ -57,14 +57,14 @@ IandG::IandG(const ProcessorGroup* myworld, ProblemSpecP& params)
   Ilb  = scinew ICELabel();
   //__________________________________
   //  diagnostic labels
-  reactedFractionLabel   = VarLabel::create("F",
+  reactedFractionLabel   = VarLabel::create("IandG:F",
                      CCVariable<double>::getTypeDescription());
                      
-  IandGterm1Label   = VarLabel::create("IandGterm1",
+  IandGterm1Label   = VarLabel::create("IandG:term1",
                      CCVariable<double>::getTypeDescription());
-  IandGterm2Label   = VarLabel::create("IandGterm2",
+  IandGterm2Label   = VarLabel::create("IandG:term2",
                      CCVariable<double>::getTypeDescription());
-  IandGterm3Label   = VarLabel::create("IandGterm3",
+  IandGterm3Label   = VarLabel::create("IandG:term3",
                      CCVariable<double>::getTypeDescription());
                      
 }
@@ -85,27 +85,28 @@ IandG::~IandG()
 void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {
+  ProblemSpecP IG_ps = params->findBlock("IandG");
   d_sharedState = sharedState;
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-  params->require("I",  d_I);
-  params->require("G1", d_G1);
-  params->require("G2", d_G2);
-  params->require("a",  d_a);
-  params->require("b",  d_b);
-  params->require("c",  d_c);
-  params->require("d",  d_d);
-  params->require("e",  d_e);
-  params->require("g",  d_g);
-  params->require("x",  d_x);
-  params->require("y",  d_y);
-  params->require("z",  d_z);
-  params->require("Figmax", d_Figmax);
-  params->require("FG1max", d_FG1max);
-  params->require("FG2min", d_FG2min);
-  params->require("rho0",   d_rho0);
-  params->require("E0",     d_E0);
-  params->require("ThresholdPressure",   d_threshold_pressure);
+  matl0 = sharedState->parseAndLookupMaterial(IG_ps, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(IG_ps, "toMaterial");
+  IG_ps->require("I",  d_I);
+  IG_ps->require("G1", d_G1);
+  IG_ps->require("G2", d_G2);
+  IG_ps->require("a",  d_a);
+  IG_ps->require("b",  d_b);
+  IG_ps->require("c",  d_c);
+  IG_ps->require("d",  d_d);
+  IG_ps->require("e",  d_e);
+  IG_ps->require("g",  d_g);
+  IG_ps->require("x",  d_x);
+  IG_ps->require("y",  d_y);
+  IG_ps->require("z",  d_z);
+  IG_ps->require("Figmax", d_Figmax);
+  IG_ps->require("FG1max", d_FG1max);
+  IG_ps->require("FG2min", d_FG2min);
+  IG_ps->require("rho0",   d_rho0);
+  IG_ps->require("E0",     d_E0);
+  IG_ps->require("ThresholdPressure",   d_threshold_pressure);
 
   //__________________________________
   //  define the materialSet
@@ -134,26 +135,27 @@ void IandG::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","IandG");
 
-  model_ps->appendElement("fromMaterial",matl0->getName());
-  model_ps->appendElement("toMaterial",matl1->getName());
-  model_ps->appendElement("I",  d_I);
-  model_ps->appendElement("G1", d_G1);
-  model_ps->appendElement("G2", d_G2);
-  model_ps->appendElement("a",  d_a);
-  model_ps->appendElement("b",  d_b);
-  model_ps->appendElement("c",  d_c);
-  model_ps->appendElement("d",  d_d);
-  model_ps->appendElement("e",  d_e);
-  model_ps->appendElement("g",  d_g);
-  model_ps->appendElement("x",  d_x);
-  model_ps->appendElement("y",  d_y);
-  model_ps->appendElement("z",  d_z);
-  model_ps->appendElement("Figmax", d_Figmax);
-  model_ps->appendElement("FG1max", d_FG1max);
-  model_ps->appendElement("FG2min", d_FG2min);
-  model_ps->appendElement("rho0",   d_rho0);
-  model_ps->appendElement("E0",     d_E0);
-  model_ps->appendElement("ThresholdPressure",   d_threshold_pressure);
+  ProblemSpecP IG_ps = ps->appendChild("IandG");
+  IG_ps->appendElement("fromMaterial",matl0->getName());
+  IG_ps->appendElement("toMaterial",matl1->getName());
+  IG_ps->appendElement("I",  d_I);
+  IG_ps->appendElement("G1", d_G1);
+  IG_ps->appendElement("G2", d_G2);
+  IG_ps->appendElement("a",  d_a);
+  IG_ps->appendElement("b",  d_b);
+  IG_ps->appendElement("c",  d_c);
+  IG_ps->appendElement("d",  d_d);
+  IG_ps->appendElement("e",  d_e);
+  IG_ps->appendElement("g",  d_g);
+  IG_ps->appendElement("x",  d_x);
+  IG_ps->appendElement("y",  d_y);
+  IG_ps->appendElement("z",  d_z);
+  IG_ps->appendElement("Figmax", d_Figmax);
+  IG_ps->appendElement("FG1max", d_FG1max);
+  IG_ps->appendElement("FG2min", d_FG2min);
+  IG_ps->appendElement("rho0",   d_rho0);
+  IG_ps->appendElement("E0",     d_E0);
+  IG_ps->appendElement("ThresholdPressure",   d_threshold_pressure);
 }
 
 
