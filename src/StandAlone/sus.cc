@@ -470,7 +470,7 @@ main( int argc, char *argv[], char *env[] )
       cerr << "WARNING:  SVN DIFF is disabled.\n";
 #else
       cerr << "____SVN_____________________________________________________________\n";
-      string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Packages/Uintah";
+      string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
       if(do_svnDiff){
         string cmd = "svn diff " + sdir;
         system(cmd.c_str());
