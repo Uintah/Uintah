@@ -997,7 +997,7 @@
       </contact>
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
-        <fracture                          spec="OPTIONAL NO_DATA">
+        <fracture                          spec="OPTIONAL NO_DATA" 
                                           attribute1="type REQUIRED STRING 'normal'">
          <constraint                      spec="OPTIONAL DOUBLE" />
         </fracture>
@@ -1658,6 +1658,10 @@
         <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
         <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />  <!-- FIXME: Is this really optional?  What is default?  Units? -->
       </exchange_coefficients>
+      <exch_coef_after_MPM_add       spec="OPTIONAL NO_DATA" >
+        <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />  <!-- FIXME: Is this really optional?  What is default?  Units? -->
+      </exch_coef_after_MPM_add>
       <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
     </exchange_properties>
     <ICE                                   spec="OPTIONAL NO_DATA" >
@@ -1683,27 +1687,27 @@
       </material>
     </ICE>
     <MPM                                   spec="OPTIONAL NO_DATA" >
-      <material                            spec="OPTIONAL NO_DATA" >
-                                             attribute1="name REQUIRED STRING" >
+      <material                            spec="OPTIONAL NO_DATA" 
+                                             attribute1="name OPTIONAL STRING" >
         <constitutive_model                spec="REQUIRED NO_DATA" 
                                              attribute1="type REQUIRED STRING 'hypoelastic_plastic'" >
           <tolerance                       spec="REQUIRED DOUBLE" />
-          <remove_particles                spec="REQUIRED BOOLEAN" />
-          <zero_stress_upon_failure        spec="REQUIRED BOOLEAN" />
-          <evolve_porosity                 spec="REQUIRED BOOLEAN" />
-          <check_TEPLA_failure_criterion   spec="REQUIRED BOOLEAN" />
-          <initial_material_temperature    spec="REQUIRED DOUBLE" />
-          <initial_mean_porosity           spec="REQUIRED DOUBLE" />
-          <initial_std_porosity            spec="REQUIRED DOUBLE" />
-          <critical_porosity               spec="REQUIRED DOUBLE" />
-          <frac_nucleation                 spec="REQUIRED DOUBLE" />
-          <meanstrain_nucleation           spec="REQUIRED DOUBLE" />
-          <stddevstrain_nucleation         spec="REQUIRED DOUBLE" />
-          <initial_porosity_distrib        spec="REQUIRED STRING 'constant'" />
+          <remove_particles                spec="OPTIONAL BOOLEAN" />
+          <zero_stress_upon_failure        spec="OPTIONAL BOOLEAN" />
+          <evolve_porosity                 spec="OPTIONAL BOOLEAN" />
+          <check_TEPLA_failure_criterion   spec="OPTIONAL BOOLEAN" />
+          <initial_material_temperature    spec="OPTIONAL DOUBLE" />
+          <initial_mean_porosity           spec="OPTIONAL DOUBLE" />
+          <initial_std_porosity            spec="OPTIONAL DOUBLE" />
+          <critical_porosity               spec="OPTIONAL DOUBLE" />
+          <frac_nucleation                 spec="OPTIONAL DOUBLE" />
+          <meanstrain_nucleation           spec="OPTIONAL DOUBLE" />
+          <stddevstrain_nucleation         spec="OPTIONAL DOUBLE" />
+          <initial_porosity_distrib        spec="OPTIONAL STRING 'constant, gauss'" />
           <initial_mean_scalar_damage      spec="REQUIRED DOUBLE" />
           <initial_std_scalar_damage       spec="REQUIRED DOUBLE" />
           <critical_scalar_damage          spec="REQUIRED DOUBLE" />
-          <initial_scalar_damage_distrib   spec="REQUIRED STRING 'constant'" />
+          <initial_scalar_damage_distrib   spec="REQUIRED STRING 'constant, gauss'" />
           <shear_modulus                   spec="OPTIONAL DOUBLE" />
           <bulk_modulus                    spec="OPTIONAL DOUBLE" />
           <equation_of_state        spec="OPTIONAL NO_DATA" 
@@ -1738,7 +1742,13 @@
             <Y_max                  spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
           </plasticity_model>
           <yield_condition          spec="OPTIONAL NO_DATA" 
-                                      attribute1="type REQUIRED STRING 'gurson, rousselier, vonMises'" />
+                                      attribute1="type REQUIRED STRING 'gurson, rousselier, vonMises'" >
+            <f_c                         spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
+            <k                           spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
+            <q1                          spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
+            <q2                          spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
+            <q3                          spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
+          </yield_condition>
           <stability_check          spec="OPTIONAL NO_DATA"
                                       attribute1="type REQUIRED STRING 'acoustic, becker, drucker_becker, none'" />
           <damage_model             spec="OPTIONAL NO_DATA"
@@ -1759,7 +1769,7 @@
         <room_temp                         spec="REQUIRED DOUBLE" />
         <specific_heat                     spec="REQUIRED DOUBLE" />
         <thermal_conductivity              spec="REQUIRED DOUBLE" />
-        <toughness                         spec="REQUIRED DOUBLE" />
+        <toughness                         spec="OPTIONAL DOUBLE" />
       </material>
     </MPM>
   </AddMaterialProperties>
