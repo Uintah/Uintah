@@ -179,7 +179,6 @@
     <PhysicalConstants>
        <gravity>               [0,0,0]   </gravity>
        <reference_pressure>    1690.0    </reference_pressure>
-       <NG_nozzle_time_offset> 0.0     </NG_nozzle_time_offset>
     </PhysicalConstants>
 
     <!--____________________________________________________________________-->
