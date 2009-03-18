@@ -534,7 +534,7 @@
           <jump                         spec="OPTIONAL INTEGER" />                                        
           <logging                      spec="OPTIONAL INTEGER 'positive'" />                             
           <maxiterations                spec="OPTIONAL INTEGER 'positive'" />                             
-          <norm                         spec="REQUIRED STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
+          <norm                         spec="OPTIONAL STRING 'LInfinity linfinity L1 l1 L2 l2'" />       
           <npost                        spec="OPTIONAL INTEGER" />                                        
           <npre                         spec="OPTIONAL INTEGER" />                                        
           <preconditioner               spec="OPTIONAL STRING 'none, pfmg'" />                            
