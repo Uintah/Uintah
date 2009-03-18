@@ -6,7 +6,7 @@
        <title>none</title>
    </Meta>
 
-   <SimulationComponent type="qwerty" />
+   <SimulationComponent type="mpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -255,7 +255,6 @@
         </Box>
         <spacing>        [0.01,0.01,0.01]  </spacing>
      </Level>
-     <time_refinement_ratio>    1 </time_refinement_ratio>
     </Grid>
    
     <!--____________________________________________________________________-->
@@ -283,6 +282,19 @@
       <checkpoint cycle = "4" interval = "0.1"/>
    </DataArchiver>
 
+   <AMR>
+     <ICE>
+       <do_Refluxing>        false    </do_Refluxing>
+       <orderOfInterpolation>1        </orderOfInterpolation>
+       <Refinement_Criteria_Thresholds>
+       </Refinement_Criteria_Thresholds>
+     </ICE>
+     <MPM>
+       <min_grid_level>0</min_grid_level>
+       <max_grid_level>0</max_grid_level>
+     </MPM>
+   </AMR>
+
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
@@ -291,16 +303,6 @@
       <ICE>
         <advection type = "SecondOrder"/>
         
-        <AMR>
-          <do_Refluxing>        false    </do_Refluxing>
-          <orderOfInterpolation>1        </orderOfInterpolation>
-          <Refinement_Criteria_Thresholds>
-          </Refinement_Criteria_Thresholds>
-        </AMR>
-        
-        <min_grid_level>0</min_grid_level>
-        <max_grid_level>0</max_grid_level>
-
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive     </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00           </knob_for_speedSound>
