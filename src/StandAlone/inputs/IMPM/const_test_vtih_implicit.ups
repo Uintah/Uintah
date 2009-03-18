@@ -112,7 +112,7 @@
                   <t5>0.0</t5>
                   <t6>0.0</t6>
                 </constitutive_model>
-
+<!--
                 <constitutive_model type="visco_trans_iso_hyper">
                   <bulk_modulus>100.e5</bulk_modulus>
                   <c1>2.1e3</c1>
@@ -126,6 +126,7 @@
                   <max_matrix_strain>2.0</max_matrix_strain>
                   <failure_option>0</failure_option>
                 </constitutive_model>
+-->
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>

@@ -233,6 +233,7 @@
 
       <file                   spec="OPTIONAL NO_DATA" >
         <name                 spec="REQUIRED STRING" />
+        <var                  spec="MULTIPLE STRING" />
       </file>
 
       <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
@@ -1277,6 +1278,7 @@
           <y4                            spec="OPTIONAL DOUBLE" />
           <y5                            spec="OPTIONAL DOUBLE" />
           <y6                            spec="OPTIONAL DOUBLE" />
+          <StrainEnergy                  spec="OPTIONAL STRING" />
           <Z                             spec="OPTIONAL DOUBLE" />   <!-- FIXME: what is this for? -->
           <zero_stress_upon_failure      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: what is this for? -->
 
@@ -1622,6 +1624,15 @@
           </time_point>
         </load_curve>
       </pressure>
+      <normal_force                  spec="MULTIPLE NO_DATA" >
+        <load_curve             spec="REQUIRED NO_DATA" >
+          <id                   spec="REQUIRED INTEGER" />
+          <time_point           spec="MULTIPLE NO_DATA" >
+            <time               spec="REQUIRED INTEGER" />
+            <load               spec="REQUIRED INTEGER" />
+          </time_point>
+        </load_curve>
+      </normal_force>
     </MPM>
   </PhysicalBC>
   

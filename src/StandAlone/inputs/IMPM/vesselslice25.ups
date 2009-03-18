@@ -103,7 +103,7 @@
               <geom_object>
                     <box label="gp2">
                         <min>[  0.0,   537.6,   24]</min>
-                        <max>[  537.6, 546.0 ,  25]</max>
+                        <max>[  537.6, 546.0,  25]</max>
                     </box>
                   <res>[8,8,1]</res>
                   <velocity>[0., 5.376, 0.]</velocity>
