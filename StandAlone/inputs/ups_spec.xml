@@ -290,7 +290,8 @@
           </SwitchCriteria>
           <init                     spec="MULTIPLE NO_DATA" 
                                     attribute1="var    REQUIRED STRING"
-                                    attribute2="matls  REQUIRED STRING" />
+                                    attribute2="matls  REQUIRED STRING"
+                                    attribute3="levels OPTIONAL STRING"/>
           <SimulationComponent          spec="OPTIONAL" />
         </subcomponent>
     </SimulationComponent>
@@ -1666,7 +1667,7 @@
       </material>
     </ICE>
     <MPM                                   spec="OPTIONAL NO_DATA" >
-      <material                            spec="REQUIRED NO_DATA" >
+      <material                            spec="OPTIONAL NO_DATA" >
                                              attribute1="name REQUIRED STRING" >
         <constitutive_model                spec="REQUIRED NO_DATA" 
                                              attribute1="type REQUIRED STRING 'hypoelastic_plastic'" >
