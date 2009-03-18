@@ -1656,7 +1656,7 @@
       <do_convective_heat_transfer spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What is the default? -->
       <exchange_coefficients       spec="REQUIRED NO_DATA" >
         <momentum                  spec="REQUIRED MULTIPLE_DOUBLES" />
-        <heapt                      spec="OPTIONAL MULTIPLE_DOUBLES" />  <!-- FIXME: Is this really optional?  What is default?  Units? -->
+        <heat                      spec="OPTIONAL MULTIPLE_DOUBLES" />  <!-- FIXME: Is this really optional?  What is default?  Units? -->
       </exchange_coefficients>
       <heatExchangeCoeff           spec="OPTIONAL STRING 'variable'" />
     </exchange_properties>
