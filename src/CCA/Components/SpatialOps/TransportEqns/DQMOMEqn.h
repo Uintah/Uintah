@@ -6,7 +6,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 
 #include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
-#include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
+#include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqnFactory.h>
 
 #define YDIM
 //#DEFINE ZDIM
@@ -28,7 +28,7 @@ namespace Uintah{
 //---------------------------------------------------------------------------
 // Builder 
 class DQMOMEqn; 
-class DQMOMEqnBuilder: public EqnBuilder
+class DQMOMEqnBuilder: public DQMOMEqnBuilderBase
 {
 public:
   DQMOMEqnBuilder( const Fields* fieldLabels, 
@@ -57,7 +57,9 @@ public:
   ~DQMOMEqn();
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
-  void problemSetup(const ProblemSpecP& inputdb);
+  void problemSetup(const ProblemSpecP& inputdb, int qn);
+  void problemSetup(const ProblemSpecP& inputdb){};
+
   
   /** @brief Schedule a transport equation to be built and solved */
   void sched_evalTransportEqn( const LevelP&, 
