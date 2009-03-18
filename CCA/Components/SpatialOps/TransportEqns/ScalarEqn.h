@@ -57,6 +57,7 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   void problemSetup(const ProblemSpecP& inputdb);
+  void problemSetup(const ProblemSpecP& inputdb, int qn){};
   
   /** @brief Schedule a transport equation to be built and solved */
   void sched_evalTransportEqn( const LevelP&, 

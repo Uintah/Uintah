@@ -15,7 +15,7 @@ using namespace Uintah;
 DQMOMEqnBuilder::DQMOMEqnBuilder( const Fields* fieldLabels, 
                                         const VarLabel* transportVarLabel, 
                                         string eqnName ) : 
-EqnBuilder( fieldLabels, transportVarLabel, eqnName )
+DQMOMEqnBuilderBase( fieldLabels, transportVarLabel, eqnName )
 {}
 DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
 
@@ -61,9 +61,10 @@ DQMOMEqn::~DQMOMEqn()
 // Method: Problem Setup 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
+DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
   ProblemSpecP db = inputdb; 
+  d_quadNode = qn; 
   
   // Now look for other things:
   db->getWithDefault( "doConv", d_doConv, false);

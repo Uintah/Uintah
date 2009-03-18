@@ -30,6 +30,7 @@ public:
 
   /** @brief Set any parameters from input file, initialize any constants, etc.. */
   virtual void problemSetup(const ProblemSpecP& inputdb) = 0;
+  virtual void problemSetup(const ProblemSpecP& inputdb, int qn) = 0;
 
   /** @brief Creates instances of variables in the new_dw at the begining of the timestep 
              and copies old data into the new variable */

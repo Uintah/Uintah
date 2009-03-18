@@ -1,11 +1,13 @@
 #include <CCA/Components/SpatialOps/SpatialOps.h>
 #include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
+#include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/SpatialOps/Fields.h>
 #include <CCA/Components/SpatialOps/ExplicitTimeInt.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
 #include <CCA/Components/SpatialOps/SourceTerms/ConstSrcTerm.h>
 #include <CCA/Components/SpatialOps/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/SpatialOps/BoundaryCond.h>
 #include <CCA/Components/SpatialOps/SpatialOpsMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -130,6 +132,48 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
         SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
         a_src.problemSetup( src_db );  
       
+      }
+    }
+  }
+
+  ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
+  if (dqmom_db) {
+    // Do through and initialze all DQMOM equations and call their respective problem setups. 
+    DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
+    const int numQuadNodes = eqn_factory.get_quad_nodes();  
+
+    ProblemSpecP w_db = dqmom_db->findBlock("Weights");
+
+    // do all weights
+    for (int iqn = 0; iqn < numQuadNodes; iqn++){
+      std::string wght_name = "w_qn";
+      std::string node;  
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      wght_name += node; 
+
+      EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( wght_name );
+      a_weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
+    }
+    
+    // loop for all ic's
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
+      std::string ic_name;
+      ic_db->getAttribute("label", ic_name); 
+      //loop for all quad nodes for this internal coordinate 
+      for (int iqn = 0; iqn < numQuadNodes; iqn++){
+
+        std::string final_name = ic_name + "_qn"; 
+        std::string node; 
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        final_name += node; 
+
+        EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
+        an_ic.problemSetup( ic_db, iqn );  
+
       }
     }
   } 
@@ -447,6 +491,81 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
         throw InvalidValue("This equation type not recognized or not supported! ", __FILE__, __LINE__);
       }
     }
-  }
+  }  
+
+  // Now do the same for DQMOM equations. 
+  ProblemSpecP dqmom_db = db->findBlock("DQMOM");
+
+  // Get reference to the source factory
+  DQMOMEqnFactory& dqmom_eqnFactory = DQMOMEqnFactory::self();
+
+  if (dqmom_db) {
+    
+    int n_quad_nodes; 
+    dqmom_db->require("number_quad_nodes", n_quad_nodes);
+    dqmom_eqnFactory.set_quad_nodes( n_quad_nodes ); 
+
+    cout << "******* DQMOM Equation Registration ********" << endl; 
+    cout << " \n"; // white space for output 
+
+    // Make the weight transport equations
+    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
+
+      std::string wght_name = "w_qn";
+      std::string node;  
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      wght_name += node; 
+
+      cout << "creating a weight for: " << wght_name << endl;
+
+      const VarLabel* tempVarLabel = VarLabel::create(wght_name, CCVariable<double>::getTypeDescription());
+      Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.find(wght_name); 
+      if (iLabel == d_fieldLabels->d_labelMap.end()){
+        iLabel = d_fieldLabels->d_labelMap.insert(make_pair(wght_name, tempVarLabel)).first;
+      } else {
+        throw InvalidValue("Two weight equations registered with the same transport variable label!", __FILE__, __LINE__);
+      }
+
+      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, iLabel->second, wght_name ); 
+      dqmom_eqnFactory.register_scalar_eqn( wght_name, eqnBuilder );     
+      
+    }
+    // Make the weighted abscissa 
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
+      std::string ic_name;
+      ic_db->getAttribute("label", ic_name);
+      std::string eqn_type = "dqmom"; // by default 
+
+      cout << "Found  an internal coordinate: " << ic_name << endl;
+
+      // loop over quad nodes. 
+      for (int iqn = 0; iqn < n_quad_nodes; iqn++){
+
+        // need to make a name on the fly for this ic and quad node. 
+        std::string final_name = ic_name + "_qn"; 
+        std::string node; 
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        final_name += node; 
+
+        cout << "created a weighted abscissa for: " << final_name << endl; 
+
+        const VarLabel* tempVarLabel = VarLabel::create(final_name, CCVariable<double>::getTypeDescription());
+        Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.find(final_name); 
+        if (iLabel == d_fieldLabels->d_labelMap.end()){
+          iLabel = d_fieldLabels->d_labelMap.insert(make_pair(final_name, tempVarLabel)).first;
+        } else {
+          throw InvalidValue("Two internal coordinate equations registered with the same transport variable label!", __FILE__, __LINE__);
+        }
+
+        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, iLabel->second, final_name ); 
+        dqmom_eqnFactory.register_scalar_eqn( final_name, eqnBuilder );     
+
+      } 
+    }
+  }  
 }
 } //namespace Uintah
