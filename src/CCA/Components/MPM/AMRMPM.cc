@@ -184,7 +184,7 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
   flags->outputProblemSpec(flags_ps);
 
   ProblemSpecP mat_ps = 0;
-  mat_ps = root->findBlock("MaterialProperties");
+  mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");

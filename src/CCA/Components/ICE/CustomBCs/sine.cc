@@ -92,7 +92,8 @@ bool read_Sine_BC_inputs(const ProblemSpecP& prob_spec,
     sine->require("omega", sine_vb->omega);
     sine->require("A",     sine_vb->A);
     
-    ProblemSpecP mat_ps= prob_spec->findBlock("MaterialProperties");
+    ProblemSpecP mat_ps= 
+      prob_spec->findBlockWithOutAttribute("MaterialProperties");
     ProblemSpecP ice_ps= mat_ps->findBlock("ICE")->findBlock("material");
 
     ice_ps->require("gamma",        sine_vb->gamma);

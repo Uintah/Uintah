@@ -172,7 +172,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    ProblemSpecP mpm_ps = 0;
    ProblemSpecP restart_mat_ps = 0;
 
-  ProblemSpecP prob_spec_mat_ps = prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP prob_spec_mat_ps = 
+    prob_spec->findBlockWithOutAttribute("MaterialProperties");
   if (prob_spec_mat_ps)
     restart_mat_ps = prob_spec;
   else if (restart_prob_spec)
@@ -232,7 +233,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
   }
 
    //Search for the MaterialProperties block and then get the MPM section
-   ProblemSpecP mat_ps =  restart_mat_ps->findBlock("MaterialProperties");
+   ProblemSpecP mat_ps =  
+     restart_mat_ps->findBlockWithOutAttribute("MaterialProperties");
 
    ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
 
@@ -317,7 +319,7 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
   flags->outputProblemSpec(flags_ps);
 
   ProblemSpecP mat_ps = 0;
-  mat_ps = root->findBlock("MaterialProperties");
+  mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");

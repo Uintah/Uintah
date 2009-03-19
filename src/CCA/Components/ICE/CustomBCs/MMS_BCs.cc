@@ -88,7 +88,8 @@ bool read_MMS_BC_inputs(const ProblemSpecP& prob_spec,
   //  read in variables from ICE 
   if(usingMMS ){
     if(mms_vb->whichMMS == "MMS_1"){
-      ProblemSpecP mat_ps= prob_spec->findBlock("MaterialProperties");
+      ProblemSpecP mat_ps= 
+        prob_spec->findBlockWithOutAttribute("MaterialProperties");
       ProblemSpecP ice_ps= mat_ps->findBlock("ICE")->findBlock("material");
 
       ice_ps->require("gamma",mms_vb->gamma);

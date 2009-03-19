@@ -134,6 +134,10 @@ WARNING
                                           const std::string& attribute) const;
 
       //////////
+      // find the first child node with given node name and attribute 
+      ProblemSpecP findBlockWithOutAttribute(const std::string& name) const;
+
+      //////////
       // finds the first non-text child node
       ProblemSpecP findBlock() const;
 
