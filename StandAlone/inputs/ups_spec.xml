@@ -159,6 +159,17 @@
       <num_radius             spec="REQUIRED DOUBLE 'positive'" />
     </plane_shell>
 
+    <smoothcyl                spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <bottom                 spec="REQUIRED VECTOR" />
+      <top                    spec="REQUIRED VECTOR" />
+      <radius                 spec="REQUIRED DOUBLE 'positive'" />
+      <thickness              spec="REQUIRED DOUBLE 'positive'" />
+      <num_radial             spec="REQUIRED DOUBLE 'positive'" />
+      <num_axial              spec="REQUIRED DOUBLE 'positive'" />
+    </smoothcyl>
+
+
     <tri                      spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
       <name                   spec="REQUIRED STRING" />
@@ -228,6 +239,7 @@
       <sphere_shell           spec="MULTIPLE" />
       <cylinder_shell         spec="MULTIPLE" />
       <plane_shell            spec="MULTIPLE" />
+      <smoothcyl              spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
 
