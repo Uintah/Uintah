@@ -158,9 +158,9 @@ void MakeTableFunction::twoArrayTable(const int  &arraySize,
 
   for ( int arrayCounter = 0; arrayCounter < arraySize; arrayCounter ++ ) {
     
-      out << setw(16) << setprecision(5) << arrayCounter; // VolIndex
-      out << setw(16) << setprecision(5) << array1[arrayCounter]; // temp
-      out << setw(16) << setprecision(5) << array2[arrayCounter]; // absorb coeff
+      out << setw(18) << setprecision(10) << arrayCounter; // VolIndex
+      out << setw(18) << setprecision(10) << array1[arrayCounter]; // temp
+      out << setw(18) << setprecision(10) << array2[arrayCounter]; // absorb coeff
       out << endl;
 
   }

@@ -99,7 +99,8 @@
 
 // read in Random number with g and k
 cout << "read in data" << endl;
-ToArray(gSize, Rkg, "afterInterpolationRkg"); // get Rkg from file
-ToArray(gkSize, gk, "HITEMPoldLBLkgT1000Trad1000-CO201H2O02CO003.dat");
+//ToArray(gSize, Rkg, "afterInterpolationRkg"); // get Rkg from file
+//ToArray(gkSize, gk, "HITEMPoldLBLkgT1000Trad1000-CO201H2O02CO003.dat");
 
-
+ToArray(gSize, Rkg, "RwvnabcsNosorting2.dat"); // get Rwvn
+ToArray(gkSize, gk, "LBLabsc-wvnm-T1000Trad1000-CO201H2O02CO003.dat"); // get abcswvnm

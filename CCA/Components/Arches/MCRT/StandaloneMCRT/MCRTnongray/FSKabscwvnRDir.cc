@@ -46,6 +46,8 @@ int main(){
   //% watchout unit
 
   //% wvnm -- cm-1,  absc -- cm-1
+  //% Ebeta -- W/m
+
   double T, C1, C2, Ebeta1, Ebeta2, Ibeta1, Ibeta2, pi;
   pi = atan(1) * 4;
   T = 1000;
@@ -58,11 +60,11 @@ int main(){
   C2 = 1.4388; //%[cm K]
 
 
-  //% LBLHITEMPabcswvnm(:,1) == g
-  //% LBLHITEMPabcswvnm(:,2) == k
+  //% LBLHITEMPabcswvnm(:,1) == wvnm
+  //% LBLHITEMPabcswvnm(:,2) == absc
  
   int abcsSize, abcswvnmSize;
-  abcsSize = 5000; // get the number which is huge
+  abcsSize = 1495100; // get the number which is huge
   abcswvnmSize = abcsSize * 2;
   double *abcswvnm = new double[abcswvnmSize];
   double *Rwvnabcs = new double[abcsSize];
@@ -83,14 +85,18 @@ int main(){
 
   for ( int i = 0; i < abcsSize-1; i ++) {
     
-    Ebeta2 = C1 * abcswvnm[(i+1)*2] *  abcswvnm[(i+1)*2] *  abcswvnm[(i+1)*2] * 1e6/...
+    Ebeta2 = C1 *
+      abcswvnm[(i+1)*2] *  abcswvnm[(i+1)*2] *  abcswvnm[(i+1)*2] * 1e6 /
       ( exp( C2*  abcswvnm[(i+1)*2]  / T ) - 1);
     
     Ibeta2 = Ebeta2 / pi;
-    
+
+    // convert absc from cm-1 to m-1
+    // convert wvnm from cm-1 to m-1
+    // but this should not change Rwvnabcs
     sumR = sumR +
-      (  abcswvnm[i * 2 + 1] * Ibeta2 + abcswvnm[(i+1)*2 + 1] * Ibeta1 ) *
-      ( abcswvnm[(i+1) * 2] -abcswvnm[(i)*2] ) /2;
+      (  abcswvnm[i * 2 + 1] * Ibeta2 + abcswvnm[(i+1)*2 + 1] * Ibeta1 ) * 100 * 
+      ( abcswvnm[(i+1) * 2] -abcswvnm[(i)*2] ) * 100 /2;
     
     Ibeta1 = Ibeta2;
     
@@ -103,7 +109,9 @@ int main(){
     Rwvnabcs[i] = Rwvnabcs[i] / sumR;
     //  cout << Rwvnabcs[i] << endl;
   }
-
+  
+  singleArrayTable(Rwvnabcs, abcsSize, 1, "RwvnabcsNosorting2.dat");
+  
   /*
   // sort Rwvnabcs to ascending order
   vector<double> RIter (Rwvnabcs, Rwvnabcs+abcsSize);
@@ -185,6 +193,8 @@ int main(){
   
   return 0;
   */
+
+  return 0;
 }
 
 
