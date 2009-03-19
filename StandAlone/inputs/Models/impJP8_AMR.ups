@@ -285,9 +285,9 @@
     <!--    A M R   G R I D                                                 -->
     <!--____________________________________________________________________--> 
     <AMR>
+      <useLockStep>         true  </useLockStep> <!--needed for impAMRICE -->
       <ICE>
         <orderOfInterpolation>1     </orderOfInterpolation>
-        <useLockStep>         true  </useLockStep> <!--needed for impAMRICE -->
         <do_Refluxing>        false </do_Refluxing>
         <Refinement_Criteria_Thresholds>
           <!-- none defined. see Models -->

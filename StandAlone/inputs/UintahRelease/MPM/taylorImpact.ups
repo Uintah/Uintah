@@ -199,9 +199,10 @@
         <vel_fields>[0,0,0]</vel_fields>
         <direction>[0,1,0]</direction>
         <stop_time>999999.9</stop_time>
-      
-       <master_material>0</master_material>
-       <velocity_after_stop>[0, 0, 0]</velocity_after_stop></contact>
+        
+        <master_material>0</master_material>
+        <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
+      </contact>
       <!--
       <contact>
         <type> friction </type>
