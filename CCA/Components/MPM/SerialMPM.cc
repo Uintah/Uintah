@@ -147,7 +147,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   ProblemSpecP restart_mat_ps = 0;
   ProblemSpecP prob_spec_mat_ps = prob_spec->findBlock("MaterialProperties");
-  if (prob_spec_mat_ps)
+
+  string attr("");
+  prob_spec_mat_ps->getAttribute("add",attr);
+  // Check if we didn't find the "add" MaterialProperties 
+  if (attr.length() == 0)
     restart_mat_ps = prob_spec;
   else if (restart_prob_spec)
     restart_mat_ps = restart_prob_spec;
