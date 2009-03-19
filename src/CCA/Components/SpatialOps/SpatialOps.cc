@@ -1,5 +1,7 @@
 #include <CCA/Components/SpatialOps/SpatialOps.h>
 #include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/SpatialOps/Fields.h>
@@ -96,6 +98,9 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
   //register all equations
   SpatialOps::registerTransportEqns(db); 
 
+  //register all models
+  SpatialOps::registerModels(db); 
+
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   //create user specified transport eqns
   if (transportEqn_db) {
@@ -175,6 +180,28 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
         an_ic.problemSetup( ic_db, iqn );  
 
       }
+    }
+    // Now go through models and initialize all defined models and call 
+    // their respective problemSetup
+    ProblemSpecP models_db = dqmom_db->findBlock("Models"); 
+    if (models_db) { 
+      ModelFactory& model_factory = ModelFactory::self();
+      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")){
+        std::string model_name; 
+        m_db->getAttribute("label", model_name); 
+        for (int iqn = 0; iqn < numQuadNodes; iqn++){
+          std::string temp_model_name = model_name; 
+          std::string node;  
+          std::stringstream out; 
+          out << iqn; 
+          node = out.str(); 
+          temp_model_name += node; 
+
+          ModelBase& a_model = model_factory.retrieve_model( temp_model_name ); 
+          a_model.problemSetup( m_db, iqn ); 
+
+        }
+      } 
     }
   } 
 
@@ -446,6 +473,84 @@ void SpatialOps::registerSources(ProblemSpecP& db)
   }
 }
 //---------------------------------------------------------------------------
+// Method: Register Models 
+//---------------------------------------------------------------------------
+void SpatialOps::registerModels(ProblemSpecP& db)
+{
+  ProblemSpecP models_db = db->findBlock("DQMOM")->findBlock("Models");
+
+  // Get reference to the model factory
+  ModelFactory& model_factory = ModelFactory::self();
+  // Get reference to the dqmom factory
+  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
+
+  cout << "******* Model Registration ********" << endl; 
+
+  // There are three kind of variables to worry about:
+  // 1) internal coordinates
+  // 2) other "extra" scalars
+  // 3) standard flow variables
+  // We want the model to have access to all three.  
+  // Thus, for 1) you just set the internal coordinate name and the "_qn#" is attached.  This means the models are reproduced qn times
+  // for 2) you specify this in the <otherVars> tag
+  // for 3) you specify this in the implementation of the model itself (ie, no user input)
+
+  if (models_db) {
+    for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != 0; model_db = model_db->findNextBlock("model")){
+      std::string model_name;
+      model_db->getAttribute("label", model_name);
+      std::string model_type;
+      model_db->getAttribute("type", model_type);
+
+      // The model must be reproduced for each quadrature node.
+      const int numQuadNodes = dqmom_factory.get_quad_nodes();  
+
+      vector<string> required_varLabels;
+      ProblemSpecP icvar_db = model_db->findBlock("ICVars"); 
+
+      cout << "Found  a model: " << model_name << endl;
+      cout << "Requires the following internal coordinates: " << endl;
+      cout << " \n"; // white space for output 
+
+      if ( icvar_db ) {
+        // These variables are only those that are specifically defined from the input file
+        for (ProblemSpecP var = icvar_db->findBlock("variable"); var !=0; var = icvar_db->findNextBlock("variable")){
+
+          std::string label_name; 
+          var->getAttribute("label", label_name);
+
+          cout << "label = " << label_name << endl; 
+          // This map hold the labels that are required to compute this source term. 
+          required_varLabels.push_back(label_name);  
+        }
+      }
+
+      // --- looping over quadrature nodes ---
+      // This will make a model for each quadrature node. 
+      for (int iqn = 0; iqn < numQuadNodes; iqn++){
+        std::string temp_model_name = model_name; 
+        std::string node;  
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        temp_model_name += node; 
+
+        if ( model_type == "fill this in wih a specific model" ) {
+          // Adds a constant to RHS
+          ModelBuilder* modelBuilder;// = scinew ConstSrcTermBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState); 
+          model_factory.register_model( temp_model_name, modelBuilder ); 
+
+        } else {
+          cout << "For model named: " << temp_model_name << endl;
+          cout << "with type: " << model_type << endl;
+          //throw InvalidValue("This model type not recognized or not supported! ", __FILE__, __LINE__);
+        }
+      }
+    }
+  }
+}
+
+//---------------------------------------------------------------------------
 // Method: Register Eqns
 //---------------------------------------------------------------------------
 void SpatialOps::registerTransportEqns(ProblemSpecP& db)
@@ -456,13 +561,15 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
   EqnFactory& eqnFactory = EqnFactory::self();
 
   if (eqns_db) {
+
+    cout << "******* Equation Registration ********" << endl; 
+
     for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
       std::string eqn_name;
       eqn_db->getAttribute("label", eqn_name);
       std::string eqn_type;
       eqn_db->getAttribute("type", eqn_type);
 
-      cout << "******* Equation Registration ********" << endl; 
       cout << "Found  an equation: " << eqn_name << endl;
       cout << " \n"; // white space for output 
 

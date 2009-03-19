@@ -73,6 +73,20 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   // Set some things:
   d_addSources = true; 
 
+  // Get the list of models:
+  for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db->findNextBlock("model")){
+    std::string model_name; 
+    m_db->getAttribute("label", model_name); 
+
+    // now tag on the internal coordinate
+    std::string node;  
+    std::stringstream out; 
+    out << d_quadNode; 
+    node = out.str(); 
+    model_name += node; 
+    // put it in the list
+    d_models.push_back(model_name); 
+  }  
 }
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 

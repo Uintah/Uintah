@@ -78,6 +78,9 @@ private:
   /** @brief Registers all possible source terms by instantiating a builder in the factory */     
   void registerSources(ProblemSpecP& db);
 
+  /** @brief Registers all possible models for DQMOM */ 
+  void registerModels( ProblemSpecP& db ); 
+
   /** @brief Registers all possible equations by instantiating a builder in the factory */     
   void registerTransportEqns(ProblemSpecP& db);
 

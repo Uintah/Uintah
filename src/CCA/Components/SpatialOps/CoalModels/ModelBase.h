@@ -29,7 +29,7 @@ public:
   virtual ~ModelBase();
 
   /** @brief Input file interface */
-  virtual void problemSetup(const ProblemSpecP& db) = 0;  
+  virtual void problemSetup(const ProblemSpecP& db, int qn) = 0;  
 
   /** @brief Returns a list of required variables from the DW for scheduling */
   //virtual void getDwVariableList() = 0;
