@@ -170,12 +170,13 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.35</cfl>
+      <cfl>0.35</cfl>
+
+      <ICE>
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.0            </knob_for_speedSound>
         </TimeStepControl>
-       <ICE>
         <advection type = "SecondOrder"/>
      
         <ImplicitSolver>

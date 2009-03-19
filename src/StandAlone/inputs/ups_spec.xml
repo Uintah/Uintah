@@ -466,7 +466,7 @@
                               attribute9="lower          OPTIONAL MULTIPLE_DOUBLES" 
                               attribute10="upper          OPTIONAL MULTIPLE_DOUBLES" >
         <BCType             spec="MULTIPLE NO_DATA"
-                              attribute1="id        REQUIRED STRING '0,1,2,3,5,6,all'"
+                              attribute1="id        REQUIRED STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom'"
                               attribute3="label     REQUIRED STRING 'cumulativeEnergyReleased, Density, Phi, Pressure, scalar-f,
                                                                  SpecificVol, Symmetric, Temperature, Velocity'" >
@@ -964,6 +964,17 @@
     <stairstep                                       spec="REQUIRED BOOLEAN" />
   </Multimaterial>
 
+  <Angio                                spec="OPTIONAL NO_DATA" >
+    <time_integrator                    spec="OPTIONAL STRING 'explicit'" />
+    <interpolator                       spec="OPTIONAL STRING 'linear'" />
+    <Growth_Parameter_a                 spec="OPTIONAL DOUBLE" />
+    <Growth_Parameter_b                 spec="OPTIONAL DOUBLE" />
+    <Growth_Parameter_x0                spec="OPTIONAL DOUBLE" />
+    <Growth_Parameter_y0                spec="OPTIONAL DOUBLE" />
+    <Branch_Parameter_a1                spec="OPTIONAL DOUBLE" />
+    <Branch_Parameter_a2                spec="OPTIONAL DOUBLE" />
+    <Branch_Parameter_a3                spec="OPTIONAL DOUBLE" />
+  </Angio>
   <MPM                                  spec="OPTIONAL NO_DATA" >
     <accumulate_strain_energy           spec="OPTIONAL BOOLEAN" />
     <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
@@ -1020,6 +1031,12 @@
 
   <MaterialProperties                    spec="MULTIPLE NO_DATA"
                                          attribute1="add OPTIONAL STRING" >
+    <Angio                               spec="OPTIONAL NO_DATA">
+      <material                          spec="REQUIRED NO_DATA">
+        <density                         spec="REQUIRED DOUBLE" />
+        <fragment_file                   spec="REQUIRED STRING"/>
+      </material>
+    </Angio>
     <MPM                                 spec="OPTIONAL NO_DATA">
       <contact                           spec="MULTIPLE NO_DATA" >
         <direction                       spec="OPTIONAL VECTOR" />
@@ -1030,6 +1047,7 @@
         <vel_fields                      spec="OPTIONAL MULTIPLE_INTEGERS" />
         <velocity_after_stop             spec="OPTIONAL VECTOR" />
         <filename                        spec="OPTIONAL STRING" />
+        <master_material                 spec="OPTIONAL INTEGER" />
       </contact>
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
@@ -1459,6 +1477,7 @@
         </EOS>
         <gamma                spec="REQUIRED DOUBLE 'positive'" />
         <geom_object          spec="MULTIPLE" />
+        <includeFlowWork                 spec="OPTIONAL BOOLEAN" />
         <isSurroundingMatl    spec="OPTIONAL BOOLEAN" />  <!-- FIXME: What is the default? -->
         <specific_heat        spec="REQUIRED DOUBLE 'positive'" />
         <thermal_conductivity spec="REQUIRED DOUBLE 'positive'" />
@@ -1485,7 +1504,7 @@
   <!--__________________________________-->
   <Models                     spec="OPTIONAL NO_DATA" >
     <Model                    spec="MULTIPLE NO_DATA"
-                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnahan PassiveScalar Thomsen_Hartka_water Tillotson'" >
+                                attribute1="type REQUIRED STRING 'SimpleRxn, AdiabaticTable, Gruneisen, hard_sphere_gas, IandG, JWL, JWLC, JWLpp, LightTime, Radiation, Simple_Burn, Steady_Burn, Test, Unsteady_Burn, mass_momentum_energy_src, Murnahan PassiveScalar Thomsen_Hartka_water Tillotson, flameSheet_rxn'" >
 
       <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp Simple_Burn" />
       <b                      spec="REQUIRED DOUBLE" need_applies_to="type hard_sphere_gas JWLpp Thomsen_Hartka_water Tillotson" />
@@ -1547,13 +1566,15 @@
         <absorbingSolid             spec="OPTIONAL STRING"/>
         <calcFreq                   spec="OPTIONAL INTEGER" />
         <calcInterval               spec="OPTIONAL DOUBLE" /> 
-        <table_or_ice_temp_density  spec="REQUIRED STRING 'ice table'" />
-        <useTableValues             spec="REQUIRED BOOLEAN" />
+        <table_or_ice_temp_density  spec="OPTIONAL STRING 'ice table'" />
+        <useTableValues             spec="OPTIONAL BOOLEAN" />
         <DORadiationModel           spec="OPTIONAL NO_DATA" >
           <ordinates                spec="REQUIRED INTEGER '2,8'" />
           <opl                      spec="REQUIRED DOUBLE  '0,1'"/>
           <property_model           spec="REQUIRED STRING 'radcoef patchmean wsggm'" />
           <spherical_harmonics      spec="REQUIRED BOOLEAN" />
+          <test_problem             spec="OPTIONAL BOOLEAN" />
+          <test_problem_number      spec="OPTIONAL INTEGER" />
           <linear_solver            spec="REQUIRED STRING 'hypre petsc'" />
           <LinearSolver             spec="OPTIONAL NO_DATA" >
             <solver                 spec="REQUIRED STRING 'gmres'" />
@@ -1575,11 +1596,19 @@
                                        attribute1="name REQUIRED STRING" >
         <material                    spec="OPTIONAL STRING"/>
         <test_conservation           spec="OPTIONAL BOOLEAN"/>
-        <constants                   spec="REQUIRED NO_DATA" >
+        <doTableTest                 spec="OPTIONAL BOOLEAN" />
+        <constants                   spec="OPTIONAL NO_DATA" >
           <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
           <diffusivity               spec="OPTIONAL DOUBLE" />
           <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
         </constants>
+        <reaction_constants          spec="OPTIONAL NO_DATA" >
+          <f_stoichometric           spec="REQUIRED DOUBLE" />
+          <delta_H_combustion        spec="REQUIRED DOUBLE" />
+          <oxidizer_temp_infinity    spec="REQUIRED DOUBLE" />
+          <initial_fuel_temp         spec="REQUIRED DOUBLE" />
+          <diffusivity               spec="REQUIRED DOUBLE" />
+        </reaction_constants>
         
         <geom_object                 spec="MULTIPLE" />
       </scalar>
@@ -1599,7 +1628,7 @@
                                 attribute1="name REQUIRED STRING 'viscosity, thermal_conductivity, reference_Temp'" />
         <filename             spec="REQUIRED STRING" />
       </table>
-      <tableValue             spec="MULTIPLE STRING 'CO2, H2O'" />
+      <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" />
       <toMaterial             spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
       <ThresholdPressure      spec="OPTIONAL DOUBLE" />
       <ThresholdTemp          spec="OPTIONAL DOUBLE" />
@@ -1628,8 +1657,6 @@
         <E0                   spec="REQUIRED DOUBLE 'positive'" />
         <ThresholdPressure    spec="REQUIRED DOUBLE 'positive'" />
       </IandG>
-      
-      
     </Model>
   </Models>
   <!--__________________________________-->

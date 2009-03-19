@@ -236,25 +236,25 @@
       <Model type="flameSheet_rxn">
         <material>source</material>
         <scalar name="f">
-        <reaction_constants>
-          <f_stoichometric>        0.06207  </f_stoichometric>
-          <delta_H_combustion>     1000     </delta_H_combustion>
-          <oxidizer_temp_infinity> 300      </oxidizer_temp_infinity>
-          <initial_fuel_temp>      300      </initial_fuel_temp>
-          <diffusivity>            22.5e-6  </diffusivity>
-        </reaction_constants>
-           <geom_object>
-              <difference>
-                <box label="world">           </box>
-                <cylinder label = "fuelSlug"> </cylinder>
-              </difference>
-              <scalar>    0.00   </scalar>
-           </geom_object>
-           <geom_object>
-             <cylinder label = "fuelSlug">  </cylinder>
-             <scalar>    1.00   </scalar>
-           </geom_object>
-       </scalar>
+          <reaction_constants>
+            <f_stoichometric>        0.06207  </f_stoichometric>
+            <delta_H_combustion>     1000     </delta_H_combustion>
+            <oxidizer_temp_infinity> 300      </oxidizer_temp_infinity>
+            <initial_fuel_temp>      300      </initial_fuel_temp>
+            <diffusivity>            22.5e-6  </diffusivity>
+          </reaction_constants>
+          <geom_object>
+            <difference>
+              <box label="world">           </box>
+              <cylinder label = "fuelSlug"> </cylinder>
+            </difference>
+            <scalar>    0.00   </scalar>
+          </geom_object>
+          <geom_object>
+            <cylinder label = "fuelSlug">  </cylinder>
+            <scalar>    1.00   </scalar>
+          </geom_object>
+        </scalar>
       </Model>
 
     </Models>
