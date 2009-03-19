@@ -478,6 +478,16 @@
       </Box>
       <spacing          spec="OPTIONAL VECTOR" /> <!-- ????????? -->
       <periodic         spec="OPTIONAL VECTOR 'positive'"/>
+      <Stretch          spec="MULTIPLE NO_DATA" 
+                          attribute1="axis OPTIONAL STRING" >
+        <linear         spec="MULTIPLE NO_DATA"
+                          attribute1="to OPTIONAL STRING"
+                          attribute2="fromSpacing OPTIONAL STRING"
+                          attribute3="toSpacing OPTIONAL STRING" />
+        <uniform        spec="MULTIPLE NO_DATA"
+                          attribute1="to OPTIONAL STRING"
+                          attribute2="spacing OPTIONAL STRING" />
+      </Stretch>
     </Level>
 
   </Grid>
@@ -894,6 +904,19 @@
                             attribute3="after_exec  OPTIONAL BOOLEAN" />
     </VarTracker>
   </Scheduler>
+
+  <ParticleTest1          spec="OPTIONAL NO_DATA" >
+    <doOutput             spec="OPTIONAL INTEGER" />
+    <doGhostCells         spec="OPTIONAL INTEGER" />
+  </ParticleTest1>
+
+  <Wave                   spec="OPTIONAL NO_DATA" >
+    <radius               spec="OPTIONAL DOUBLE 'positive'" />
+    <initial_condition    spec="OPTIONAL STRING" />
+    <integration          spec="OPTIONAL STRING" />
+    <refine_threshold     spec="OPTIONAL INTEGER" />
+  </Wave>
+             
 
   <LoadBalancer            spec="OPTIONAL NO_DATA" 
                              attribute1="type REQUIRED STRING 'DLB'" >
