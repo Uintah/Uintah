@@ -107,7 +107,8 @@ void Angio::problemSetup(const ProblemSpecP& prob_spec,
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
   ProblemSpecP restart_mat_ps = 0;
-  ProblemSpecP prob_spec_mat_ps = prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP prob_spec_mat_ps =
+    prob_spec->findBlockWithOutAttribute("MaterialProperties");
   if (prob_spec_mat_ps)
     restart_mat_ps = prob_spec;
   else if (restart_prob_spec)
@@ -150,7 +151,7 @@ void Angio::outputProblemSpec(ProblemSpecP& root_ps)
   flags->outputProblemSpec(flags_ps);
 
   ProblemSpecP mat_ps = 0;
-  mat_ps = root->findBlock("MaterialProperties");
+  mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");
@@ -1895,7 +1896,8 @@ void Angio::materialProblemSetup(const ProblemSpecP& prob_spec,
                                  AngioFlags* flags)
 {
   //Search for the MaterialProperties block and then get the Angio section
-  ProblemSpecP mat_ps =  prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP mat_ps =  
+    prob_spec->findBlockWithOutAttribute("MaterialProperties");
   ProblemSpecP angio_mat_ps = mat_ps->findBlock("Angio");
   for (ProblemSpecP ps = angio_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {

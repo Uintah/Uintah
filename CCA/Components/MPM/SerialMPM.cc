@@ -146,12 +146,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
   ProblemSpecP restart_mat_ps = 0;
-  ProblemSpecP prob_spec_mat_ps = prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP prob_spec_mat_ps = 
+    prob_spec->findBlockWithOutAttribute("MaterialProperties");
 
-  string attr("");
-  prob_spec_mat_ps->getAttribute("add",attr);
-  // Check if we didn't find the "add" MaterialProperties 
-  if (attr.length() == 0)
+  if (prob_spec_mat_ps)
     restart_mat_ps = prob_spec;
   else if (restart_prob_spec)
     restart_mat_ps = restart_prob_spec;
@@ -268,7 +266,7 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
   flags->outputProblemSpec(flags_ps);
 
   ProblemSpecP mat_ps = 0;
-  mat_ps = root->findBlock("MaterialProperties");
+  mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");

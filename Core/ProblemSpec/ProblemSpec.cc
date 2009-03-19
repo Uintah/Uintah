@@ -95,7 +95,7 @@ ProblemSpecP
 ProblemSpec::findBlockWithAttribute(const string& name,
                                     const string& attribute) const 
 {
-  //MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithAttribute(string,string)");
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithAttribute(string,string)");
   
   for (ProblemSpecP ps = this->findBlock(name); ps != 0;
        ps = ps->findNextBlock(name) ) {
@@ -103,6 +103,26 @@ ProblemSpec::findBlockWithAttribute(const string& name,
     string attr="";
     ps->getAttribute(attribute,attr);
     if (attr.length() > 0) 
+      return ps;
+    else
+      continue;
+  }
+
+  return 0;
+}
+
+ProblemSpecP 
+ProblemSpec::findBlockWithOutAttribute(const string& name) const
+
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithOutAttribute(string)");
+  
+  for (ProblemSpecP ps = this->findBlock(name); ps != 0;
+       ps = ps->findNextBlock(name) ) {
+
+    map<string,string> attributes;
+    ps->getAttributes(attributes);
+    if (attributes.empty()) 
       return ps;
     else
       continue;
@@ -133,7 +153,7 @@ ProblemSpecP ProblemSpec::findNextBlock() const
 ProblemSpecP
 ProblemSpec::findNextBlock(const string& name) const 
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findNextBlock(string)");
+  MALLOC_TRACE_TAG_SCOPE("findNextBlock(string)");
   // Iterate through all of the child nodes of the next node
   // until one is found that has this name
 

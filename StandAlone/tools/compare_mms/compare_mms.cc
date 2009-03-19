@@ -218,7 +218,7 @@ main( int argc, char *argv[] )
       exit(1);                                                                                                         
     }                                                                                                                   
                                                                                                                         
-    ProblemSpecP matBlock = ((docTop->findBlock("MaterialProperties"))->findBlock("ICE"))->findBlock("material");       
+    ProblemSpecP matBlock = ((docTop->findBlockWithOutAttribute("MaterialProperties"))->findBlock("ICE"))->findBlock("material");       
 
     if(matBlock == 0 ) {                                                                                                
       printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");                                 

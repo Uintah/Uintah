@@ -158,7 +158,8 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   // Task 3: Allocate memory for crack geometrical data
  
   int numMPMMatls=0;
-  ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
+  ProblemSpecP mpm_ps = 
+    ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
   for(ProblemSpecP mat_ps=mpm_ps->findBlock("material"); mat_ps!=0;
                    mat_ps=mat_ps->findNextBlock("material") ) numMPMMatls++;
   // Physical properties of cracks

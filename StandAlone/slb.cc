@@ -353,7 +353,7 @@ main(int argc, char *argv[])
       weights.initialize(weight);
       
       // Parse the geometry from the UPS
-      ProblemSpecP mp = ups->findBlock("MaterialProperties");
+      ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
       ProblemSpecP mpm = mp->findBlock("MPM");
       for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
            child = child->findNextBlock("material")) {

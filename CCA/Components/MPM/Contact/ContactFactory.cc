@@ -51,7 +51,8 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
 				MPMLabel* lb, MPMFlags* flag)
 {
 
-   ProblemSpecP mpm_ps = ps->findBlock("MaterialProperties")->findBlock("MPM");
+   ProblemSpecP mpm_ps = 
+     ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
    
    
    if(!mpm_ps){

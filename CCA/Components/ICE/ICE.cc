@@ -340,10 +340,11 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   // Pull out Initial Conditions
   ProblemSpecP mat_ps = 0;
 
-  if (prob_spec->findBlock("MaterialProperties")){
-    mat_ps = prob_spec->findBlock("MaterialProperties");
+  if (prob_spec->findBlockWithOutAttribute("MaterialProperties")){
+    mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }else if (restart_prob_spec){
-    mat_ps = restart_prob_spec->findBlock("MaterialProperties");
+    mat_ps = 
+      restart_prob_spec->findBlockWithOutAttribute("MaterialProperties");
   }
   
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
@@ -447,7 +448,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //  Load Model info.
   // If we are doing a restart, then use the "timestep.xml" 
   ProblemSpecP orig_or_restart_ps = 0;
-  if (prob_spec->findBlock("MaterialProperties")){
+  if (prob_spec->findBlockWithOutAttribute("MaterialProperties")){
     orig_or_restart_ps = prob_spec;
   }else if (restart_prob_spec){
     orig_or_restart_ps = restart_prob_spec;
@@ -562,7 +563,7 @@ void ICE::outputProblemSpec(ProblemSpecP& root_ps)
   ProblemSpecP root = root_ps->getRootNode();
 
   ProblemSpecP mat_ps = 0;
-  mat_ps = root->findBlock("MaterialProperties");
+  mat_ps = root->findBlockWithOutAttribute("MaterialProperties");
 
   if (mat_ps == 0)
     mat_ps = root->appendChild("MaterialProperties");
