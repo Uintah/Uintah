@@ -187,7 +187,7 @@ void rayfromSurf(SurfaceType &obSurface,
 
     // set absorption coeff
     for ( int ki = 0; ki < VolElementNo; ki++)
-      kl_Vol[ki] = kl[rayCounter] * 100;
+      kl_Vol[ki] = kl[rayCounter];
 
 	     
     LeftIntenFrac = 1;
@@ -291,10 +291,19 @@ void rayfromSurf(SurfaceType &obSurface,
 	  
   
   sumIncomInten = 0;
+
+  /*
+  for ( int aaa = 0; aaa < thisRayNo-1; aaa ++ )
+    sumIncomInten = sumIncomInten +
+      IncomingIntenSur[aaa] ;
+  */
+  
+  
   for ( int aaa = 0; aaa < thisRayNo-1; aaa ++ )
     sumIncomInten = sumIncomInten +
       ( IncomingIntenSur[aaa+1] + IncomingIntenSur[aaa] ) *
-      ( g[aaa+1] - g[aaa])/2.0 ;
+         ( g[aaa+1] - g[aaa])/2.0;
+  
 
   //	  cout << "sumIncomInten = " << sumIncomInten << endl;
   delete[] IncomingIntenSur;
@@ -368,7 +377,7 @@ int main(int argc, char *argv[]){
   
   
   BinarySearchTree obBST;
-  gSize = 5000;
+  gSize = 1495100; //5000;
   gkSize = gSize * 2;
   iggNo = 0;
   int *countg = new int[gSize];  
@@ -389,9 +398,9 @@ int main(int argc, char *argv[]){
   StopLowerBound = 1e-10;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 20;
-  Ncy = 20;
-  Ncz = 20;
+  Ncx = 10;
+  Ncy = 10;
+  Ncz = 10;
   ratioBCx = 0.9;
   ratioBCy = 1.0;
   ratioBCz = 1.0;
@@ -760,9 +769,10 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 5000; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
    // TopBottomNo = Ncx * Ncy;
 
+   rayNo_Vol[454] = 60000;
 
    int iSurface;
    // initial all surface elements ray no = 0
@@ -770,16 +780,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_surface[TOP][iSurface] = 5000;
-       rayNo_surface[BOTTOM][iSurface] = 5000;
+       rayNo_surface[TOP][iSurface] = 0;
+       rayNo_surface[BOTTOM][iSurface] = 0;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_surface[FRONT][iSurface] = 5000;
-       rayNo_surface[BACK][iSurface] = 5000;
+       rayNo_surface[FRONT][iSurface] = 0;
+       rayNo_surface[BACK][iSurface] = 0;
      }   
 
 
@@ -787,8 +797,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_surface[LEFT][iSurface] = 5000;
-       rayNo_surface[RIGHT][iSurface] = 5000;
+       rayNo_surface[LEFT][iSurface] = 0;
+       rayNo_surface[RIGHT][iSurface] = 0;
      }
 
    MakeTableFunction obTable;    
@@ -811,7 +821,7 @@ int main(int argc, char *argv[]){
    #include "inputFSKhomoWebb.cc"
    
   int rayNouniform;
-  rayNouniform = 5000;
+  rayNouniform = 60000;
   // generate uniform distributed from 0 to 1 , R same size as rayNo.
   int Runisize;
   Runisize = rayNouniform; // same as rayNo
@@ -837,9 +847,9 @@ int main(int argc, char *argv[]){
     // Since Runi is pre-set, we can pre-calculate g and kl from Runi.    
     obBST.search(Rgg, Rkg, gSize);
     obBST.calculate_gk(gk, Rkg, Rgg);
-    g[i] = obBST.get_g();
+    g[i] = obBST.get_g(); // for Reta, convert wavenumber unit from cm-1 to m-1
     //  cout << " g= "<< g << endl;
-    kl[i] = obBST.get_k();
+    kl[i] = obBST.get_k()*100; // convert unit from cm-1 to m-1
     
   }
 
@@ -1364,7 +1374,7 @@ int main(int argc, char *argv[]){
 	      
 	      // set absorption coeff
 	      for ( int ki = 0; ki < VolElementNo; ki++)
-		kl_Vol[ki] = kl[rayCounter] * 100;
+		kl_Vol[ki] = kl[rayCounter];
 	      
 	      OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
 	      
@@ -1478,6 +1488,15 @@ int main(int argc, char *argv[]){
 
 	    // the OutIntenVol is changing with each ray too!!!
 	    sumIncomInten = 0;
+	    obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ietaeta60000.dat");
+
+	    /*
+	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
+	      sumIncomInten = sumIncomInten +
+		IncomingIntenVol[aaa] ;
+	    */
+	    
+	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
 	      sumIncomInten = sumIncomInten +
 		( IncomingIntenVol[aaa+1] + IncomingIntenVol[aaa] ) *
@@ -1540,7 +1559,7 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceBenchmarkRay500RR1e-4L1", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta60000-L1-101010", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
@@ -1567,7 +1586,7 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolBenchmarkRay500RR1e-4L1",
+  obTable.vtkVolTableMake("vtkVolWebbHomoReta60000-L1-101010",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
@@ -1575,10 +1594,10 @@ int main(int argc, char *argv[]){
   
  
   
-  //  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast");
-  obTable.singleArrayTable(kl, Runisize, 1, "klTable");
-  obTable.singleArrayTable(g, Runisize, 1, "gTable");
-  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTable");
+  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
+  obTable.singleArrayTable(kl, Runisize, 1, "abcsTable.dat");
+  obTable.singleArrayTable(g, Runisize, 1, "wvnTable.dat");
+  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTable.dat");
   
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;

@@ -77,7 +77,7 @@ public:
   void calculate_gk(const double *gk,
 		    const double *Rkg,
 		    const double &Rgg){
-    double A;
+    double A,B;
      
     if ( lowI == highI ) {// find the Rgg exactly there
       g = gk[lowI *2];
@@ -85,14 +85,30 @@ public:
     }
     else{
       // can set a max on (Rgg-Rkg[lowI]), in case it is too small
+      // R--g relation or R-eta
+      
       A = (Rkg[highI] - Rgg)/(Rgg-Rkg[lowI]);
       g = ( gk[highI *2] + A * gk[lowI*2])/
-	(A+1);
-      k = ( gk[highI *2+1] + A * gk[lowI*2+1])/
-	(A+1); 
+	max( (A+1), 1e-9);
+      
+      // cout << "lowI = " << lowI << "; highI = " << highI << endl;
+      // cout << " A = " << A << "; g = " << g << endl;
+
+      // B and A are always the same.
+      
+	// then from the index get k-g or k-eta
+      //   B =  (gk[highI*2] - g)/(g-gk[lowI*2]);
+	
+	k = ( gk[highI *2+1] + A * gk[lowI*2+1])/
+	  max ( (A+1), 1e-9);
+	
+      
+	//	cout << " k = " << k << endl;
+      
     }
     
   }
+
 
   
   inline
