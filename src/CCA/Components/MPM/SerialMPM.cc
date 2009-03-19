@@ -239,13 +239,20 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
 {
   // For adding materials mid-Simulation
   d_recompile = true;
-  ProblemSpecP mat_ps =  prob_spec->findBlock("AddMaterialProperties");
-  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
-  for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState, flags);
-    sharedState->registerMPMMaterial(mat);
+  ProblemSpecP mat_ps =  
+    prob_spec->findBlockWithAttribute("MaterialProperties","add");
+
+  string attr = "";
+  mat_ps->getAttribute("add",attr);
+  
+  if (attr == "true") {
+    ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
+         ps = ps->findNextBlock("material") ) {
+      //Create and register as an MPM material
+      MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState, flags);
+      sharedState->registerMPMMaterial(mat);
+    }
   }
 }
 

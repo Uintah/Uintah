@@ -91,6 +91,26 @@ ProblemSpec::findBlock(const string& name) const
   return 0;
 }
 
+ProblemSpecP 
+ProblemSpec::findBlockWithAttribute(const string& name,
+                                    const string& attribute) const 
+{
+  //MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithAttribute(string,string)");
+  
+  for (ProblemSpecP ps = this->findBlock(name); ps != 0;
+       ps = ps->findNextBlock(name) ) {
+
+    string attr="";
+    ps->getAttribute(attribute,attr);
+    if (attr.length() > 0) 
+      return ps;
+    else
+      continue;
+  }
+
+  return 0;
+}
+
 ProblemSpecP ProblemSpec::findNextBlock() const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findNextBlock()");

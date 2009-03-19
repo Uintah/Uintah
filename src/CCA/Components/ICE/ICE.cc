@@ -508,21 +508,28 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec,
 {
   cout_doing << d_myworld->myrank() << " Doing ICE::addMaterial " << "\t\t\t ICE" << endl;
   d_recompile = true;
-  ProblemSpecP mat_ps       =  prob_spec->findBlock("AddMaterialProperties");
-  ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
+  ProblemSpecP mat_ps =   
+    prob_spec->findBlockWithAttribute("MaterialProperties","add");
 
-  for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
-    ps = ps->findNextBlock("material") ) {
-    ICEMaterial *mat = scinew ICEMaterial(ps);
-    sharedState->registerICEMaterial(mat);
-  }
-
-  d_exchCoeff->problemSetup(mat_ps, sharedState);
-
-  // problem setup for each model  
-  for(vector<ModelInterface*>::iterator iter = d_models.begin();
-     iter != d_models.end(); iter++){
-    (*iter)->activateModel(grid, sharedState, d_modelSetup);
+  string attr = "";
+  mat_ps->getAttribute("add",attr);
+  
+  if (attr == "true") {
+    ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
+    
+    for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
+         ps = ps->findNextBlock("material") ) {
+      ICEMaterial *mat = scinew ICEMaterial(ps);
+      sharedState->registerICEMaterial(mat);
+    }
+    
+    d_exchCoeff->problemSetup(mat_ps, sharedState);
+    
+    // problem setup for each model  
+    for(vector<ModelInterface*>::iterator iter = d_models.begin();
+        iter != d_models.end(); iter++){
+      (*iter)->activateModel(grid, sharedState, d_modelSetup);
+    }
   }
 }
 /*______________________________________________________________________
@@ -535,9 +542,14 @@ void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec,
                                      SimulationStateP&  sharedState)
 {
   cout << "Updating Ex Coefficients" << endl;
-  ProblemSpecP mat_ps  =  prob_spec->findBlock("AddMaterialProperties");
+  ProblemSpecP mat_ps  =  
+    prob_spec->findBlockWithAttribute("MaterialProperties","add");
+
+  string attr = "";
+  mat_ps->getAttribute("add",attr);
   
-  d_exchCoeff->problemSetup(mat_ps, sharedState);
+  if (attr == "true")
+    d_exchCoeff->problemSetup(mat_ps, sharedState);
 }
 /*______________________________________________________________________
  Function~  ICE::outputProblemSpec--

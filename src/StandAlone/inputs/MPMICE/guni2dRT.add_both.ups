@@ -307,7 +307,7 @@
       </exchange_properties> 
     </MaterialProperties>
 
-    <AddMaterialProperties>  
+    <MaterialProperties add="true">  
       <ICE>
          <material name = "product">
            <EOS type = "ideal_gas">
@@ -409,7 +409,7 @@
         <heat>    [0, 1e10, 1e10, 0, 1e10, 1e10, 0, 1e10, 1e10, 1e10]</heat>
        </exch_coef_after_MPM_add>
       </exchange_properties>
-    </AddMaterialProperties>
+    </MaterialProperties>
 
 
     <Models>

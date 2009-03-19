@@ -566,7 +566,7 @@
       </exchange_properties> 
     </MaterialProperties>
 
-    <AddMaterialProperties>  
+    <MaterialProperties add="true">  
       <ICE>
          <material name = "PBXproductGases">  <!-- MATL 4 -->
            <EOS type = "JWLC">
@@ -612,7 +612,7 @@
         <convective_fluid>3</convective_fluid>
         <convective_solid>0</convective_solid>
       </exchange_properties> 
-    </AddMaterialProperties>
+    </MaterialProperties>
     <!--____________________________________________________________________-->
     <!--      M O D E L S                                                   -->
     <!--____________________________________________________________________-->

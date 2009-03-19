@@ -108,7 +108,7 @@
       </MPM>
     </MaterialProperties>
 
-    <AddMaterialProperties>
+    <MaterialProperties add="true">
       <MPM>
         <material>
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
@@ -145,7 +145,7 @@
           </geom_object>
         </material>
       </MPM>
-    </AddMaterialProperties>
+    </MaterialProperties>
     
     <Grid>
     <Level>
