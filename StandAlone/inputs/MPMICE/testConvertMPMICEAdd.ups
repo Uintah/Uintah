@@ -154,7 +154,7 @@
        </exchange_properties>
     </MaterialProperties>
 
-    <AddMaterialProperties>
+    <MaterialProperties add="true">
       <MPM>
         <material>
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
@@ -198,7 +198,7 @@
               <heat>      [1e10, 0, 1e10]   </heat>
           </exchange_coefficients>
        </exchange_properties>
-    </AddMaterialProperties>
+    </MaterialProperties>
     
     <Grid>
     <Level>

@@ -129,6 +129,11 @@ WARNING
       ProblemSpecP findBlock(const std::string& name) const;
 
       //////////
+      // find the first child node with given node name and attribute 
+      ProblemSpecP findBlockWithAttribute(const std::string& name,
+                                          const std::string& attribute) const;
+
+      //////////
       // finds the first non-text child node
       ProblemSpecP findBlock() const;
 

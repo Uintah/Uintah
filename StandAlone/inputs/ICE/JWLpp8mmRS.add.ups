@@ -206,7 +206,7 @@
         </exchange_properties> 
     </MaterialProperties>  
 
-    <AddMaterialProperties>
+    <MaterialProperties add="true">
       <ICE>       
          <material name = "product">
            <EOS type = "JWLC">
@@ -241,7 +241,7 @@
             <heat>              [1.e15,1.e15,1.e15]       </heat>
         </exchange_coefficients>
         </exchange_properties> 
-    </AddMaterialProperties>  
+    </MaterialProperties>  
 
                      
     <Models>
