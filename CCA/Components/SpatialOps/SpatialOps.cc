@@ -2,6 +2,7 @@
 #include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
+#include <CCA/Components/SpatialOps/CoalModels/BadHawkDevol.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/SpatialOps/Fields.h>
@@ -535,9 +536,9 @@ void SpatialOps::registerModels(ProblemSpecP& db)
         node = out.str(); 
         temp_model_name += node; 
 
-        if ( model_type == "fill this in wih a specific model" ) {
-          // Adds a constant to RHS
-          ModelBuilder* modelBuilder;// = scinew MyModelBuilder(model_name, required_varLabels, d_fieldLabels->d_sharedState); 
+        if ( model_type == "BadHawkDevol" ) {
+          //Badzioch and Hawksley 1st order Devol.
+          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, required_varLabels, d_fieldLabels->d_sharedState, iqn); 
           model_factory.register_model( temp_model_name, modelBuilder ); 
 
         } else {

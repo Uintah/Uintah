@@ -96,14 +96,11 @@ BadHawkDevol::computeModel( const ProcessorGroup* pc,
 
 
     CCVariable<double> model; 
-    if (!d_labelActualInit) {
+    if (new_dw->exists( d_modelLabel, matlIndex, patch )){
+      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
+    } else {
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
       model.initialize(0.0);
-      d_labelActualInit = true; 
-
-    } else {
-      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
-
     }
 
     for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 

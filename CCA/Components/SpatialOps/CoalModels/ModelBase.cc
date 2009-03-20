@@ -14,7 +14,6 @@ d_modelName(modelName), d_sharedState( sharedState ), d_requiredLabels(reqLabelN
   d_modelLabel = VarLabel::create(modelName, CCVariable<double>::getTypeDescription()); 
 
   d_labelSchedInit  = false; 
-  d_labelActualInit = false; 
 }
 
 ModelBase::~ModelBase()
