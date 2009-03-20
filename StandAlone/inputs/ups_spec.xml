@@ -695,6 +695,11 @@
             <geom_object />
           </Prefill>
           <geom_object />
+          <ExtraScalars                  spec="OPTIONAL NO_DATA">
+            <scalar                      spec="MULTIPLE NO_DATA"
+                                         attribute1="label REQUIRED STRING"
+                                         attribute2="value REQUIRED STRING"/>
+          </ExtraScalars>
         </FlowInlet>
 
         <intrusions                     spec="OPTIONAL NO_DATA" >
@@ -704,15 +709,22 @@
         <PressureBC                     spec="OPTIONAL NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
           <geom_object/>
+          <ExtraScalars                  spec="OPTIONAL NO_DATA">
+          </ExtraScalars>
+
         </PressureBC>
 
         <OutletBC                       spec="OPTIONAL NO_DATA" >
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
           <geom_object/>
+          <ExtraScalars                  spec="OPTIONAL NO_DATA">
+          </ExtraScalars>
+
         </OutletBC>
 
         <WallBC                         spec="OPTIONAL NO_DATA" >
           <geom_object/>
+
         </WallBC>
       </BoundaryConditions>
 
@@ -725,18 +737,18 @@
       </PhysicalConstants>
 
       <ExtraScalars                     spec="OPTIONAL NO_DATA" >
-        <scalar                         spec="REQUIRED NO_DATA" >
+        <scalar                         spec="MULTIPLE NO_DATA" 
+                                        attribute="label REQUIRED STRING">
           <carbon_balance               spec="OPTIONAL BOOLEAN" />
           <clip_value                   spec="OPTIONAL DOUBLE" />
-          <name                         spec="REQUIRED STRING" />
           <noisy_clipping               spec="OPTIONAL BOOLEAN" />
           <initial_value                spec="REQUIRED DOUBLE" />
           <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
           <PrecompTabSrcName            spec="OPTIONAL STRING" />
-          <diffusion                    spec="REQUIRED BOOLEAN" />
-          <turbulentPrandtlNumber       spec="REQUIRED DOUBLE" />
-          <density_weighted             spec="REQUIRED BOOLEAN" />
-          <sources                      spec="REQUIRED NO_DATA" >
+          <diffusion                    spec="OPTIONAL BOOLEAN" />
+          <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
+          <density_weighted             spec="OPTIONAL BOOLEAN" />
+          <sources                      spec="OPTIONAL NO_DATA" >
             <source                     spec="MULTIPLE NO_DATA" >
               <name                     spec="REQUIRED STRING" />
             </source>
@@ -773,11 +785,11 @@
             <opl                        spec="REQUIRED DOUBLE" />
             <ordinates                  spec="OPTIONAL INTEGER" />
             <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
-            <linear_solver              spec="REQUIRED STRING 'hypre'" />
+            <linear_solver              spec="REQUIRED STRING 'hypre, petsc'" />
             <LinearSolver               spec="OPTIONAL NO_DATA" >
               <res_tol                  spec="REQUIRED DOUBLE" />
               <ksptype                  spec="REQUIRED STRING 'gmres'" />
-              <pctype                   spec="REQUIRED STRING 'jacobi'" />
+              <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
               <max_iter                 spec="REQUIRED INTEGER" />
             </LinearSolver>
             <spherical_harmonics        spec="OPTIONAL BOOLEAN" />
