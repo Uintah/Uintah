@@ -6,7 +6,7 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title>Advection test</title>
+       <title>shock tube</title>
    </Meta>    
 
    <SimulationComponent type="ice" />
@@ -21,6 +21,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-6      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
+       <end_on_max_time_exactly>true</end_on_max_time_exactly>
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -56,65 +57,40 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0. </value>
-        </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0  </value>
-        </BCType>
-      </Face>                  
+      </Face> 
       <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0. </value>
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-        <BCType id = "0"   label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-        <BCType id = "0"   label = "Temperature"  var = "Neumann">
-                              <value> 0. </value>
+      </Face> 
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
         </BCType>
-        <BCType id = "0"   label = "Density"      var = "Neumann">
-                              <value> 0  </value>
-        </BCType>
-        </Face>
-        <Face side = "z-">
-          <BCType id = "0"   label = "Symmetric" var = "symmetry">
-          </BCType>
-        </Face> 
-        <Face side = "z+">
-          <BCType id = "0"   label = "Symmetric" var = "symmetry">
-          </BCType>
-        </Face>
+      </Face>
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]    </lower>
-              <upper>        [1,1,1]    </upper>
+              <lower>        [0,0,0]          </lower>
+              <upper>        [1,0.001,0.001]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
-              <resolution>   [100,1,1]  </resolution>
+              <resolution>   [1000,1,1]  </resolution>
            </Box>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
-   <DataArchiver>
+    <DataArchiver>
       <filebase>shockTube.uda</filebase>
-      <outputTimestepInterval>10</outputTimestepInterval>
-      <save label="press_equil_CC"/>
-      <save label="uvel_FCME"/>
-      <save label="vvel_FCME"/>
-      <save label="wvel_FCME"/>
+      <outputInterval> 0.0005 </outputInterval>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
-      <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/>
       <save label="temp_CC"/>
@@ -129,7 +105,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.45</cfl>
+       <cfl>0.25</cfl>
        <ICE>
         <advection type = "SecondOrder" />
       </ICE>        
