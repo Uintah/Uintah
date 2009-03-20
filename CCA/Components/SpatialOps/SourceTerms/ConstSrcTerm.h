@@ -10,7 +10,6 @@
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
-class SourceTerm; 
 class ConstSrcTermBuilder: public SourceTermBuilder
 {
 public: 

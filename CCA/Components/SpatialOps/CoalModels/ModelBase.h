@@ -25,7 +25,7 @@ class ModelBase{
 public: 
 
   ModelBase( std::string modelName, SimulationStateP& sharedState, 
-             vector<std::string> reqLabelNames );
+             vector<std::string> reqLabelNames, int qn );
   virtual ~ModelBase();
 
   /** @brief Input file interface */
@@ -62,6 +62,8 @@ protected:
 
   bool d_labelSchedInit;
   bool d_labelActualInit;   
+
+  int d_quadNode; 
 
 }; // end ModelBase
 }  // end namespace Uintah

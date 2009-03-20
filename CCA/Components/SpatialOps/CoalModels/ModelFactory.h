@@ -32,9 +32,9 @@ class ModelBuilder
 {
 public:
   ModelBuilder(std::string model_name, vector<std::string> reqLabelNames, 
-               SimulationStateP& sharedState) : 
+               SimulationStateP& sharedState, int qn) : 
                d_modelName(model_name), d_requiredLabels(reqLabelNames), 
-               d_sharedState(sharedState){};
+               d_sharedState(sharedState), d_quadNode(qn){};
   virtual ~ModelBuilder(){};
 
   /**
@@ -46,7 +46,7 @@ protected:
   std::string d_modelName;
   vector<string> d_requiredLabels; 
   SimulationStateP& d_sharedState; 
-
+  int d_quadNode; 
 private: 
 };
 // End Builder

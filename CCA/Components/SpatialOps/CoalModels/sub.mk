@@ -3,7 +3,8 @@
 SRCDIR   := CCA/Components/SpatialOps/CoalModels
 
 SRCS     += $(SRCDIR)/ModelFactory.cc \
-	$(SRCDIR)/ModelBase.cc 
+	$(SRCDIR)/ModelBase.cc \
+  $(SRCDIR)/BadHawkDevol.cc
 
 PSELIBS := \
 	CCA/Ports \
