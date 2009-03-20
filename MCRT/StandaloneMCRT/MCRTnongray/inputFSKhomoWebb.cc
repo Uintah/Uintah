@@ -96,6 +96,16 @@
         
     
   }
+// for FSK fix g
+
+//int wgkaSize;
+//wgkaSize = coluwgka * 4;
+//double *wgka = new double[wgkaSize];
+
+//ToArray(wgkaSize,wgka,"wgkaAlpha25EvenrankWebbhomo");
+
+
+// for R CDF with g r wavenumber
 
 // read in Random number with g and k
 cout << "read in data" << endl;

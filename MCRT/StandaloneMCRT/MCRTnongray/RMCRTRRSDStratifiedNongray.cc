@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
 //------- BackwardMCRTSolver.cc-----
 // ------ Backward (Reverse ) Monte Carlo Ray-Tracing Radiation Model------
+// FSK using fix g space 
 #include "Surface.h"
 #include "RealSurface.h"
 #include "TopRealSurface.h"
@@ -46,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include "Consts.h"
 #include "RadWsgg.h"
 #include "RadCoeff.h"
+//#include "BinarySearchTree.h"
 
 #include <cmath>
 #include <iostream>
@@ -145,7 +147,7 @@ void rayfromSurf(SurfaceType &obSurface,
 		 const int &i_n, const int &j_n, const int &k_n,
 		 const int &theta_n, const int &phi_n, const int &p_n,
 		 const int &straSize, const int &iggNo,
-		 double *netInten_surface[],
+		 double ***netInten_surface,
 		 int ***stratifyM, int ***stratifyM_flag,
 		 double ***sumIncomInten, double ***sumIncomInten_sq,
 		 double ***straVar, double ***aveIncomInten,
@@ -387,7 +389,7 @@ void rayfromSurf(SurfaceType &obSurface,
       "; rayNo = " << rayCounter << endl;
     */
     
-  } while(rayCounter < 1500); // rayCounter loop
+  } while(rayCounter < 1000); // rayCounter loop
 
     for ( int k = 0; k < p_n; k ++ )
     for ( int j = 0; j < theta_n; j ++)
@@ -475,7 +477,7 @@ int main(int argc, char *argv[]){
   
   cout << " Please enter i_n, j_n, k_n, theta_n, phi_n" << endl;
   cin >> i_n >> j_n >> k_n >> theta_n >> phi_n ;
-  coluwgka = 3;
+  coluwgka = 12;
   
 //   i_n = 3;
 //   j_n = 3;
@@ -529,7 +531,7 @@ int main(int argc, char *argv[]){
   linear_b = 1;
   eddington_f = 0;
   eddington_g = 0;
-  PhFunc = LINEAR_SCATTER;
+  PhFunc = ISOTROPIC;
    
   varianceBound = 0.015; // set arbitrary
   rayNoSurface = 1;
@@ -537,9 +539,9 @@ int main(int argc, char *argv[]){
   Ncx = 10;
   Ncy = 10;
   Ncz = 10;
-  ratioBCx = 1;
-  ratioBCy = 1;
-  ratioBCz = 1;
+  ratioBCx = 0.8;
+  ratioBCy = 0.8;
+  ratioBCz = 0.8;
   Lx = 1;
   Ly = 1;
   Lz = 1;
@@ -720,7 +722,7 @@ int main(int argc, char *argv[]){
     T_surface[i] = new double [surfaceNo[i]];
     emiss_surface[i] = new double [surfaceNo[i]];
     a_surface[i] = new double [surfaceNo[i]];
-    rayNo_surface[i] = new double [surfaceNo[i]];
+    rayNo_surface[i] = new int [surfaceNo[i]];
     IntenArray_surface[i] = new double [surfaceNo[i]];
     netInten_surface[i] = new double *[surfaceNo[i]];
   }
@@ -906,7 +908,7 @@ int main(int argc, char *argv[]){
   Y[Ncyhalf] = 0;
   Z[Nczhalf] = 0;   
  
-  StopLowerBound = 1e-20;
+  StopLowerBound = 1e-10;
   
 // initial as all volume elements ray no zeros first.
   // initial volume ray numbers
@@ -949,6 +951,10 @@ int main(int argc, char *argv[]){
    //   rayNo_surface[TOP][20] = 1;
    
    MakeTableFunction obTable;
+
+   double *CO2 = new double [VolElementNo];
+   double *H2O = new double [VolElementNo];
+   double *SFV = new double [VolElementNo];
    
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
    //  #include "inputBenchmark.cc"
@@ -956,9 +962,10 @@ int main(int argc, char *argv[]){
    // #include "inputNonblackSurf.cc"
    //#include "inputScattering.cc"
    //    #include "inputScatteringAniso.cc"
-     #include "inputLiuWsgg.cc"
-     //  #include "inputBressloffRadCoeff.cc"
-   
+   // #include "inputLiuWsgg.cc"
+   //   #include "inputBressloffRadCoeff.cc"
+   #include "inputFSKhomoWebb.cc"
+
    MTRand MTrng;   
    VolElement obVol;
    VirtualSurface obVirtual;
@@ -966,7 +973,6 @@ int main(int argc, char *argv[]){
    ray obRay(VolElementNo,Ncx, Ncy, Ncz);
       
    double OutIntenVol, traceProbability, LeftIntenFrac;
-   //sumIncomInten, aveIncomInten;
    double PathLeft, PathSurfaceLeft, weight;
    double previousSum, currentSum;
    double SurLeft;
@@ -1008,7 +1014,7 @@ int main(int argc, char *argv[]){
   int surfaceFlag;
   int surfaceIndex;
   int rayCounter;
-  RadWsgg obWsgg;
+  // RadWsgg obWsgg;
   
  //// =============================== Calculation starts ========================
   
@@ -1051,19 +1057,29 @@ int main(int argc, char *argv[]){
   
   for ( int iggNo = 0; iggNo < coluwgka; iggNo ++ ) {
 
-    cout << "iggNo -= " << iggNo << endl;
-    // for each band, recalculate VolIntensity, and surfaceIntensity.
+    cout << "iggNo = " << iggNo << endl;
     
-   // update a_surface, a_Vol for each different gas band   
-   obWsgg.WsggkVolwEmiss(CO2, H2O,iggNo+1, T_Vol, SFV, VolElementNo, kl_Vol, a_Vol);
-
-   for ( int i = 0; i < 6; i ++)
-   obWsgg.WsggwEmissSurface(i, surfaceNo[i], T_surface, iggNo+1, a_surface);
+    // for each band, recalculate VolIntensity, and surfaceIntensity.
+    for ( int i = 0; i < VolElementNo; i ++ ) {
+      
+      kl_Vol[i] = wgka[iggNo*4+2] * 100; // into meter
+      // cout << "kl_Vol[i] = " << kl_Vol[i] << endl;
+      
+      a_Vol[i] = wgka[iggNo*4+3];
+      // cout << "a_Vol[i] = " << a_Vol[i] << endl;
+      
+    }
+    
+    // update a_surface, a_Vol for each different gas band   
+    // obWsgg.WsggkVolwEmiss(CO2, H2O,iggNo+1, T_Vol, SFV, VolElementNo, kl_Vol, a_Vol);
+    
+    // for ( int i = 0; i < 6; i ++)
+    //  obWsgg.WsggwEmissSurface(i, surfaceNo[i], T_surface, iggNo+1, a_surface);
    
- // for Volume's  Intensity
+    // for Volume's  Intensity
    // for volume, use black intensity
-   for ( int i = 0; i < VolElementNo; i ++ )
-     IntenArray_Vol[i] = obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
+    for ( int i = 0; i < VolElementNo; i ++ )
+      IntenArray_Vol[i] = obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
    
    // top bottom surfaces intensity
    for ( int i = 0;  i < TopBottomNo; i ++ ) {
@@ -1693,14 +1709,16 @@ int main(int argc, char *argv[]){
 	       sumSDave = sqrt(sumSDave )/anotherSize;  
 	      */
 	      
-	   }while( rayCounter < 1500 ); // rayCounter loop
+	   }while( rayCounter < 1000 ); // rayCounter loop
 	    
 	  
 	    // deal with the current control volume
 	    // isotropic emission, weighting factors are all the same on all directions
 	    // net = OutInten - averaged_IncomingIntenDir
 	    // div q = 4 * pi * netInten
-	   
+
+	   //if sample is too small, which bins are too many, some of stratifyM_flag is empty.
+	   // so count how many stratifyM is not an empty bin.
 	   for ( int k = 0; k < p_n; k ++ )
 	     for ( int j = 0; j < theta_n; j ++)
 	       for ( int i = 0; i < phi_n; i ++){
@@ -1779,7 +1797,7 @@ int main(int argc, char *argv[]){
     for ( int elementNo = 0; elementNo < surfaceNo[surfaceFlag]; elementNo ++)
       for ( int iggNo = 0; iggNo < coluwgka; iggNo ++)
 	integrIntenSurface[surfaceFlag][elementNo] = integrIntenSurface[surfaceFlag][elementNo] +
-	  netInten_surface[surfaceFlag][elementNo][iggNo];
+	  netInten_surface[surfaceFlag][elementNo][iggNo]* wgka[iggNo*4];
 
   
   iSurface = 0;
@@ -1808,7 +1826,7 @@ int main(int argc, char *argv[]){
     for ( int i = 0; i < VolElementNo; i ++)
       for ( int iggNo = 0; iggNo < coluwgka; iggNo ++)
 	integrIntenVol[i]= integrIntenVol[i]+
-	  netInten_Vol[i][iggNo];
+	  netInten_Vol[i][iggNo]* wgka[iggNo*4];
     
   for (int i = 0 ; i < VolElementNo; i ++ ) {
     global_qdiv[i] = 4 * pi * integrIntenVol[i];
@@ -1856,7 +1874,7 @@ int main(int argc, char *argv[]){
   delete[] IntenArray_Vol;
   delete[] a_Vol;
   delete[] netInten_Vol;
-
+  
   /*
   delete[] a_surface;
   delete[] T_surface;
@@ -1883,6 +1901,7 @@ int main(int argc, char *argv[]){
   delete[] CO2;
   delete[] H2O;
   delete[] SFV;
+  delete[] wgka;
   
   delete[] global_qdiv;
   delete[] global_Qdiv;
