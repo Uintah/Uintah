@@ -1616,6 +1616,7 @@ int main(int argc, char *argv[]){
     "; ratioBCz = " << ratioBCz << endl;
   
   timeused = difftime (time_end,time_start);
+  
   cout << " time used up (S) = " << timeused << "sec." << endl;
   cout << "iggNo = " << iggNo << endl;
   
