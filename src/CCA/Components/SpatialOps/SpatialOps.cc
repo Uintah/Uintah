@@ -537,7 +537,7 @@ void SpatialOps::registerModels(ProblemSpecP& db)
 
         if ( model_type == "fill this in wih a specific model" ) {
           // Adds a constant to RHS
-          ModelBuilder* modelBuilder;// = scinew ConstSrcTermBuilder(src_name, required_varLabels, d_fieldLabels->d_sharedState); 
+          ModelBuilder* modelBuilder;// = scinew MyModelBuilder(model_name, required_varLabels, d_fieldLabels->d_sharedState); 
           model_factory.register_model( temp_model_name, modelBuilder ); 
 
         } else {
