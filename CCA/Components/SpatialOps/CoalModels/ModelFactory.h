@@ -31,9 +31,9 @@ class ModelBase;
 class ModelBuilder
 {
 public:
-  ModelBuilder(std::string model_name, vector<std::string> reqLabelNames, 
+  ModelBuilder(std::string model_name, vector<std::string> icLabelNames, 
                SimulationStateP& sharedState, int qn) : 
-               d_modelName(model_name), d_requiredLabels(reqLabelNames), 
+               d_modelName(model_name), d_icLabels(icLabelNames), 
                d_sharedState(sharedState), d_quadNode(qn){};
   virtual ~ModelBuilder(){};
 
@@ -44,7 +44,7 @@ public:
   virtual ModelBase* build() = 0;
 protected: 
   std::string d_modelName;
-  vector<string> d_requiredLabels; 
+  vector<string> d_icLabels; 
   SimulationStateP& d_sharedState; 
   int d_quadNode; 
 private: 
