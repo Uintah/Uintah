@@ -286,6 +286,9 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     CCVariable<double> Ttest;
     CCVariable<double> absorpCoeftest;
 
+    new_dw->allocateTemporary(Ttest, patch);
+    new_dw->allocateTemporary(absorpCoeftest, patch);
+    
     // what about absorb_surface, rs_surface, and rd_surface?
     // work the same way as T ?
     // but there are no rs, rd for media at all.
@@ -366,9 +369,10 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     // i have to change all of the variables???
     // cuz my indexes are different from Arches.
 
-    /*  // error in here, seems cannot get to Ttest[currCell]
+      // error in here, seems cannot get to Ttest[currCell]
 	// because i just claim it myself, and it doesnot have the dimension
 	// it is supposed to have from datawarehouse???
+	
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector currCell = *iter;
        cout << "i am in the patch" << endl;
@@ -409,10 +413,11 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
       // cout << "i am in the patch" << endl;
 				     
     }
-    */
+    
     // concluseion set my own Ttest, wont work.
     // seems have to get it from DW
-    /*
+    
+      
     // interpolate temperatures to FC
     // changed T to Ttest
     IntVector dir(1,0,0);
@@ -423,7 +428,7 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     dir += IntVector(0,-1,1); 
     interpCCTemperatureToFC( cellType, Tz, dir, highIdx, Ttest, patch );
  
-    */
+    
     // where does the currCell starts? for b.c. cells and ghost cells
     
     cout << "GOING TO CALL STAND ALONE SOLVER!\n"; 

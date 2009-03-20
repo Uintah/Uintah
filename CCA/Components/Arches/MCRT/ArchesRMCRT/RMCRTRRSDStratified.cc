@@ -556,9 +556,9 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   varianceBound = 0.015; // set arbitrary
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 40;
-  Ncy = 40;
-  Ncz = 40;
+  Ncx = 10;
+  Ncy = 10;
+  Ncz = 10;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
