@@ -96,17 +96,13 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int matlIndex = 0;
 
-
     CCVariable<double> constSrc; 
-    if (!d_labelActualInit) {
+    if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
+      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
+    } else {
       new_dw->allocateAndPut( constSrc, d_srcLabel, matlIndex, patch );
       constSrc.initialize(0.0);
-      d_labelActualInit = true; 
-
-    } else {
-      new_dw->getModifiable( constSrc, d_srcLabel, matlIndex, patch ); 
-
-    }
+    } 
 
     for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
          iter != d_requiredLabels.end(); iter++) { 

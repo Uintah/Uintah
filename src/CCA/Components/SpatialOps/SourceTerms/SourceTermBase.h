@@ -47,8 +47,7 @@ public:
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
   inline void reinitializeLabel(){ 
-    d_labelSchedInit  = false;
-    d_labelActualInit = false;  };
+    d_labelSchedInit  = false; };
 
   inline const VarLabel* getSrcLabel(){
     return d_srcLabel; };
@@ -61,7 +60,6 @@ protected:
   SimulationStateP& d_sharedState; 
 
   bool d_labelSchedInit;
-  bool d_labelActualInit;   
 
 }; // end SourceTermBase
 }  // end namespace Uintah

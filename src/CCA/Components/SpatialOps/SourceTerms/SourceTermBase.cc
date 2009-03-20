@@ -14,7 +14,6 @@ d_srcName(srcName), d_sharedState( sharedState ), d_requiredLabels(reqLabelNames
   d_srcLabel = VarLabel::create(srcName, CCVariable<double>::getTypeDescription()); 
 
   d_labelSchedInit  = false; 
-  d_labelActualInit = false; 
 }
 
 SourceTermBase::~SourceTermBase()
