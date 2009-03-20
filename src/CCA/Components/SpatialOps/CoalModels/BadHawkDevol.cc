@@ -13,23 +13,24 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Builder:
 BadHawkDevolBuilder::BadHawkDevolBuilder(std::string srcName, 
-                                         vector<std::string> reqLabelNames, 
+                                         vector<std::string> icLabelNames, 
                                          SimulationStateP& sharedState, int qn)
-: ModelBuilder(srcName, reqLabelNames, sharedState, qn)
+: ModelBuilder(srcName, icLabelNames, sharedState, qn)
 {}
 
 BadHawkDevolBuilder::~BadHawkDevolBuilder(){}
 
 ModelBase*
 BadHawkDevolBuilder::build(){
-  return scinew BadHawkDevol( d_modelName, d_sharedState, d_requiredLabels, d_quadNode );
+  return scinew BadHawkDevol( d_modelName, d_sharedState, d_icLabels, 
+                              d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
 BadHawkDevol::BadHawkDevol( std::string srcName, SimulationStateP& sharedState,
-                            vector<std::string> reqLabelNames, int qn ) 
-: ModelBase(srcName, sharedState, reqLabelNames, qn)
+                            vector<std::string> icLabelNames, int qn ) 
+: ModelBase(srcName, sharedState, icLabelNames, qn)
 {}
 
 BadHawkDevol::~BadHawkDevol()
@@ -56,7 +57,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   d_timeSubStep = timeSubStep; 
 
   if (d_timeSubStep == 0 && !d_labelSchedInit) {
-    // Every source term needs to set this flag after the varLabel is computed. 
+    // Every model term needs to set this flag after the varLabel is computed. 
     // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
     d_labelSchedInit = true;
 
@@ -65,8 +66,8 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
     tsk->modifies(d_modelLabel); 
   }
 
-  for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-       iter != d_requiredLabels.end(); iter++) { 
+  for (vector<std::string>::iterator iter = d_icLabels.begin(); 
+       iter != d_icLabels.end(); iter++) { 
     // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE MODEL
     //tsk->requires( Task::OldDW, .... ); 
   }
@@ -103,8 +104,8 @@ BadHawkDevol::computeModel( const ProcessorGroup* pc,
       model.initialize(0.0);
     }
 
-    for (vector<std::string>::iterator iter = d_requiredLabels.begin(); 
-         iter != d_requiredLabels.end(); iter++) { 
+    for (vector<std::string>::iterator iter = d_icLabels.begin(); 
+         iter != d_icLabels.end(); iter++) { 
       //CCVariable<double> temp; 
       //old_dw->get( *iter.... ); 
     }

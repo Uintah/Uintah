@@ -196,6 +196,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
           std::stringstream out; 
           out << iqn; 
           node = out.str(); 
+          temp_model_name += "_qn";
           temp_model_name += node; 
 
           ModelBase& a_model = model_factory.retrieve_model( temp_model_name ); 
@@ -506,7 +507,7 @@ void SpatialOps::registerModels(ProblemSpecP& db)
       // The model must be reproduced for each quadrature node.
       const int numQuadNodes = dqmom_factory.get_quad_nodes();  
 
-      vector<string> required_varLabels;
+      vector<string> requiredIC_varLabels;
       ProblemSpecP icvar_db = model_db->findBlock("ICVars"); 
 
       cout << "Found  a model: " << model_name << endl;
@@ -522,7 +523,7 @@ void SpatialOps::registerModels(ProblemSpecP& db)
 
           cout << "label = " << label_name << endl; 
           // This map hold the labels that are required to compute this source term. 
-          required_varLabels.push_back(label_name);  
+          requiredIC_varLabels.push_back(label_name);  
         }
       }
 
@@ -534,11 +535,12 @@ void SpatialOps::registerModels(ProblemSpecP& db)
         std::stringstream out; 
         out << iqn; 
         node = out.str(); 
+        temp_model_name += "_qn";
         temp_model_name += node; 
 
         if ( model_type == "BadHawkDevol" ) {
           //Badzioch and Hawksley 1st order Devol.
-          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, required_varLabels, d_fieldLabels->d_sharedState, iqn); 
+          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels->d_sharedState, iqn); 
           model_factory.register_model( temp_model_name, modelBuilder ); 
 
         } else {
