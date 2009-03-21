@@ -50,6 +50,7 @@ SRCS += \
         $(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/ProgressiveWarning.cc \
 	$(SRCDIR)/RefCounted.cc 	\
+	$(SRCDIR)/Assert.cc 	\
 	$(SRCDIR)/Util.cc
 
 ifneq ($(IS_REDSTORM),yes)
