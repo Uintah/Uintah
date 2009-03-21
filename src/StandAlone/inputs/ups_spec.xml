@@ -710,6 +710,10 @@
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
           <geom_object/>
           <ExtraScalars                  spec="OPTIONAL NO_DATA">
+            <scalar                      spec="MULTIPLE NO_DATA"
+                                         attribute1="label REQUIRED STRING"
+                                         attribute2="value REQUIRED STRING"/>
+
           </ExtraScalars>
 
         </PressureBC>
@@ -718,6 +722,10 @@
           <mixture_fraction             spec="REQUIRED DOUBLE 'positive'" />
           <geom_object/>
           <ExtraScalars                  spec="OPTIONAL NO_DATA">
+            <scalar                      spec="MULTIPLE NO_DATA"
+                                         attribute1="label REQUIRED STRING"
+                                         attribute2="value REQUIRED STRING"/>
+
           </ExtraScalars>
 
         </OutletBC>
@@ -737,21 +745,20 @@
       </PhysicalConstants>
 
       <ExtraScalars                     spec="OPTIONAL NO_DATA" >
-        <scalar                         spec="MULTIPLE NO_DATA" >
-          <name                         spec="REQUIRED STRING" />
+        <scalar                         spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING">
           <carbon_balance               spec="OPTIONAL BOOLEAN" />
           <clip_value                   spec="OPTIONAL DOUBLE" />
           <noisy_clipping               spec="OPTIONAL BOOLEAN" />
           <initial_value                spec="REQUIRED DOUBLE" />
-          <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
+          <convection_scheme            spec="REQUIRED STRING 'central-upwind flux_limited'" />
           <PrecompTabSrcName            spec="OPTIONAL STRING" />
           <diffusion                    spec="OPTIONAL BOOLEAN" />
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <density_weighted             spec="OPTIONAL BOOLEAN" />
           <sources                      spec="OPTIONAL NO_DATA" >
-            <source                     spec="MULTIPLE NO_DATA" >
-              <name                     spec="REQUIRED STRING" />
-            </source>
+            <source                     spec="MULTIPLE NO_DATA" 
+                                        attribute1="label REQUIRED STRING"/>
           </sources>
           <sulfur_balance               spec="OPTIONAL BOOLEAN" />
           <useforDensity                spec="OPTIONAL BOOLEAN" />
@@ -801,7 +808,8 @@
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
         <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
-          <convection_scheme            spec="REQUIRED STRING 'central-upwind'" />
+          <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
+          <limiter_type                 spec="OPTIONAL STRING 'superbee'"/>
         </MixtureFractionSolver>
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
