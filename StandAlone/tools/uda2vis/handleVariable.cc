@@ -391,10 +391,9 @@ handlePatchData( QueryInfo& qinfo, IntVector& offset,
     }
   } // if (remove_boundary)
 
-    // Rewindow the data if we need only a subset.  This should never
-    // get bigger (thus requiring reallocation).  rewindow returns
-    // true iff no reallocation is needed.
-  ASSERT(patch_data.rewindow( patch_low, patch_high ));
+  // Rewindow the data if we need only a subset.  This should never
+  // get bigger (thus requiring reallocation).
+  patch_data.rewindow( patch_low, patch_high );
     
   PatchToFieldThread<T, FIELD> *worker = 
     scinew PatchToFieldThread<T, FIELD>(sfield, &patch_data, offset,
