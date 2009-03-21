@@ -215,16 +215,34 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
         }
         if (d_calcExtraScalars) {
+
           ProblemSpecP extra_scalar_db = inlet_db->findBlock("ExtraScalars");
           for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
-            double value;
-            string name = d_extraScalars->at(i)->getScalarName();
-            extra_scalar_db->require(name, value);
-            d_extraScalarBC* bc = scinew d_extraScalarBC;
-            bc->d_scalar_name = name;
-            bc->d_scalarBC_value = value;
-            bc->d_BC_ID = total_cellTypes;
-            d_extraScalarBCs.push_back(bc);
+
+            string curr_name = d_extraScalars->at(i)->getScalarName();
+  
+            for (ProblemSpecP scalar_db = extra_scalar_db->findBlock("scalar"); 
+                 scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")){
+
+              std::string scalar_name;
+              scalar_db->getAttribute("label",scalar_name);
+
+              if (scalar_name == curr_name){
+
+                char* value;
+                string svalue;  
+                double dvalue = 0; 
+                scalar_db->getAttribute("value", svalue);
+                value = &svalue[0]; 
+                dvalue = std::atof(value);                 
+
+                d_extraScalarBC* bc = scinew d_extraScalarBC;
+                bc->d_scalar_name = curr_name;
+                bc->d_scalarBC_value = dvalue;
+                bc->d_BC_ID = total_cellTypes;
+                d_extraScalarBCs.push_back(bc);
+              }
+            }
           }
         }
         ++total_cellTypes;
@@ -258,6 +276,36 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_props->computeInletProperties(d_pressureBC->streamMixturefraction, 
           d_pressureBC->calcStream);
       if (d_calcExtraScalars) {
+
+        ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
+        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+
+          string curr_name = d_extraScalars->at(i)->getScalarName();
+
+          for (ProblemSpecP scalar_db = extra_scalar_db->findBlock("scalar"); 
+               scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")){
+            std::string scalar_name;
+            scalar_db->getAttribute("label",scalar_name);
+
+            if (scalar_name == curr_name){
+              char* value;
+              string svalue;  
+              double dvalue = 0; 
+              scalar_db->getAttribute("value", svalue);
+              value = &svalue[0]; 
+              dvalue = std::atof(value);                 
+
+              d_extraScalarBC* bc = scinew d_extraScalarBC;
+              bc->d_scalar_name = curr_name;
+              bc->d_scalarBC_value = dvalue;
+              bc->d_BC_ID = total_cellTypes;
+              d_extraScalarBCs.push_back(bc);
+
+            }
+          }
+        }
+      }
+/*      if (d_calcExtraScalars) {
         ProblemSpecP extra_scalar_db = press_db->findBlock("ExtraScalars");
         for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
           double value;
@@ -269,7 +317,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           bc->d_BC_ID = total_cellTypes;
           d_extraScalarBCs.push_back(bc);
         }
-      }
+      }*/
       ++total_cellTypes;
     }
     else {
@@ -288,6 +336,36 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       d_props->computeInletProperties(d_outletBC->streamMixturefraction, 
           d_outletBC->calcStream);
       if (d_calcExtraScalars) {
+
+        ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");
+        for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
+
+          string curr_name = d_extraScalars->at(i)->getScalarName();
+
+          for (ProblemSpecP scalar_db = extra_scalar_db->findBlock("scalar"); 
+               scalar_db != 0; scalar_db = scalar_db->findNextBlock("scalar")){
+            std::string scalar_name;
+            scalar_db->getAttribute("label",scalar_name);
+
+            if (scalar_name == curr_name){
+              char* value;
+              string svalue;  
+              double dvalue = 0; 
+              scalar_db->getAttribute("value", svalue);
+              value = &svalue[0]; 
+              dvalue = std::atof(value);                 
+
+              d_extraScalarBC* bc = scinew d_extraScalarBC;
+              bc->d_scalar_name = curr_name;
+              bc->d_scalarBC_value = dvalue;
+              bc->d_BC_ID = total_cellTypes;
+              d_extraScalarBCs.push_back(bc);
+
+            }
+          }
+        }
+      }
+/*      if (d_calcExtraScalars) {
         ProblemSpecP extra_scalar_db = outlet_db->findBlock("ExtraScalars");
         for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
           double value;
@@ -299,7 +377,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
           bc->d_BC_ID = total_cellTypes;
           d_extraScalarBCs.push_back(bc);
         }
-      }
+      }*/
       ++total_cellTypes;
     }
     else {

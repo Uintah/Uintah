@@ -99,8 +99,8 @@
                     <Flow_rate>0.04527</Flow_rate>
                     <mixture_fraction>1.0</mixture_fraction>
                     <ExtraScalars>
-                        <test1>1.0</test1>
-                        <test2>0.0</test2>
+                      <scalar label="test1" value="0.0"/>
+                      <scalar label="test2" value="1.0"/>
                     </ExtraScalars>
                     <geom_object>
                       <cylinder label = "inlet">
@@ -123,8 +123,8 @@
                 <PressureBC>
                     <mixture_fraction>0.0</mixture_fraction>
                     <ExtraScalars>
-                        <test1>0.0</test1>
-                        <test2>1.0</test2>
+                      <scalar label="test1" value="0.0"/>
+                      <scalar label="test2" value="0.0"/>
                     </ExtraScalars>
                     <geom_object>
                       <box label = "posY_xzWall">
@@ -149,8 +149,8 @@
                 <OutletBC>
                     <mixture_fraction>0.0</mixture_fraction>
                     <ExtraScalars>
-                        <test1>0.0</test1>
-                        <test2>1.0</test2>
+                      <scalar label="test1" value="0.0"/>
+                      <scalar label="test2" value="0.0"/>
                     </ExtraScalars>
                     <geom_object>
                       <box label = "topWall">
@@ -168,32 +168,24 @@
             </PhysicalConstants>
 
             <ExtraScalars>
-               <scalar>
-                 <name>test1</name>
+               <scalar label = "test1">
                  <initial_value>0.0</initial_value>
                  <convection_scheme>central-upwind</convection_scheme>
                  <diffusion>true</diffusion>
                  <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
                  <density_weighted>true</density_weighted>
                  <sources>
-                   <source>
-                     <name>zero_src</name>
-                   </source>
-                   <source>
-                     <name>zero_src</name>
-                   </source>
+                   <source label="zero_src"/>
+                   <source label="zero_src"/>
                  </sources>
                </scalar>
-               <scalar>
-                 <name>test2</name>
+               <scalar label = "test2">
                  <initial_value>1.0</initial_value>
                  <convection_scheme>central-upwind</convection_scheme>
                  <diffusion>false</diffusion>
                  <density_weighted>false</density_weighted>
                  <sources>
-                   <source>
-                     <name>zero_src</name>
-                   </source>
+                   <source label="zero_src"/>
                  </sources>
                </scalar>
             </ExtraScalars>

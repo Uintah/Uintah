@@ -113,17 +113,14 @@
       </PhysicalConstants>
 
       <ExtraScalars>
-        <scalar>
-          <name>test1</name>
+        <scalar label="test1">
           <initial_value>.0</initial_value>
           <convection_scheme>central-upwind</convection_scheme>
           <diffusion>true</diffusion>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <density_weighted>false</density_weighted>
           <sources>
-            <source>
-              <name>zero_src</name>
-            </source>
+            <source label="zero_src"/>
           </sources>
         </scalar>
       </ExtraScalars>

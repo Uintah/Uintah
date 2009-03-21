@@ -232,7 +232,7 @@
                         </box>
                     </geom_object>
                     <ExtraScalars>
-                        <CO2scalar>0.</CO2scalar>
+                        <scalar label="CO2scalar" value="0.0"/>
                     </ExtraScalars>
                     
                 </FlowInlet>
@@ -248,7 +248,7 @@
                         </cylinder>
                     </geom_object>
                     <ExtraScalars>
-                        <CO2scalar>.1665</CO2scalar>
+                        <scalar label="CO2scalar" value="0.1665"/>
                     </ExtraScalars>
                     <Prefill direction="X">
                         <geom_object>
@@ -278,7 +278,7 @@
                         </box>
                     </geom_object>
                     <ExtraScalars>
-                        <CO2scalar>.0</CO2scalar>
+                      <scalar label="CO2scalar" value="0.0"/>
                     </ExtraScalars>
                 </PressureBC>
                 
@@ -291,7 +291,7 @@
                         </box>
                     </geom_object>
                     <ExtraScalars>
-                        <CO2scalar>.0</CO2scalar>
+                      <scalar label="CO2scalar" value="0.0"/>
                     </ExtraScalars>
                 </OutletBC>
             </BoundaryConditions>
@@ -304,8 +304,7 @@
             </PhysicalConstants>
             
             <ExtraScalars>
-                <scalar>
-                    <name>CO2scalar</name>
+                <scalar label="CO2scalar">
                     <useforDensity>false</useforDensity>
                     <initial_value>0.0</initial_value>
                     <convection_scheme>central-upwind</convection_scheme>
@@ -314,9 +313,7 @@
                     <density_weighted>true</density_weighted>
                     <clip_value>1.0</clip_value>  
                     <sources>
-                        <source>
-                            <name>zero_src</name>
-                        </source>
+                        <source label="zero_src"/>
                     </sources>
                 </scalar>
             </ExtraScalars>
