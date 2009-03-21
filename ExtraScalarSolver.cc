@@ -106,7 +106,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
 
   d_discretize = scinew Discretization();
   
-  db->require("name",d_scalar_name);
+  db->getAttribute("label",d_scalar_name);
   
   d_scalar_label = VarLabel::create(d_scalar_name,
                                     CCVariable<double>::getTypeDescription());
@@ -157,8 +157,7 @@ ExtraScalarSolver::problemSetup(const ProblemSpecP& params)
     for (ProblemSpecP src_db = extra_sc_src_db->findBlock("source");
          src_db != 0; src_db = src_db->findNextBlock("source")) {
       string src_name;
-      src_db->require("name",src_name);
-        //cout << d_scalar_name << " " << src_name << endl;
+      src_db->getAttribute("label",src_name);
       d_extraScalarSrc = ExtraScalarSrcFactory::create(d_lab, d_MAlab,
                          d_scalar_nonlin_src_label, src_name);
       d_extraScalarSrc->problemSetup(src_db);
