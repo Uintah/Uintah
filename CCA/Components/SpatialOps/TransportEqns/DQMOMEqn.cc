@@ -74,7 +74,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   d_addSources = true; 
 
   // Get the list of models:
-  for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db->findNextBlock("model")){
+  for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
     std::string model_name; 
     m_db->getAttribute("label", model_name); 
 

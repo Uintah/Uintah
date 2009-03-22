@@ -161,6 +161,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
 
       EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( wght_name );
       a_weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
+      a_weight.setAsWeight(); 
     }
     
     // loop for all ic's
@@ -375,17 +376,34 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
   double time = d_sharedState->getElapsedTime();
   nofTimeSteps++;
 
-  EqnFactory& scalarFactory = EqnFactory::self();
+  EqnFactory&   scalarFactory = EqnFactory::self();
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
 
   // Copy old data to new data
   d_fieldLabels->schedCopyOldToNew( level, sched ); 
 
   double start_time = Time::currentSeconds();
 
-  // Get a reference to all the equations
+  // Get a reference to all the scalar equations
   EqnFactory::EqnMap& eqns = scalarFactory.retrieve_all_eqns(); 
+  // Get a reference to all the DQMOM equations
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
 
   for (int i = 0; i < d_tOrder; i++){
+
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+      // Get current equation:
+      std::string currname = ieqn->first; 
+      cout << "Scheduling dqmom eqn: " << currname << " to be solved." << endl;
+      EqnBase* eqn = ieqn->second; 
+
+      // Check to see if this is a weight 
+      bool isWght = eqn->weight(); 
+
+      if (isWght) 
+        cout << "I AM A WEIGHT!" << endl;  
+
+    }
 
     for (EqnFactory::EqnMap::iterator ieqn = eqns.begin(); ieqn != eqns.end(); ieqn++){
 
