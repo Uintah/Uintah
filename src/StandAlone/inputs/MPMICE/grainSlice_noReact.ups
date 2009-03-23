@@ -197,7 +197,7 @@
            <specific_heat>              716.0e-8        </specific_heat>
            <gamma>                      1.4             </gamma>           
            <geom_object> 
-               <sphere label = "void">               </sphere>                             
+               <sphere label = "void" />
 
                <res>                  [2,2,2]           </res>
                <velocity>             [0.0,0.0,0.0]     </velocity>

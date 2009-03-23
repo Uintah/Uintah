@@ -1167,7 +1167,7 @@ ProblemSpec::require(const string& name, Point  &value)
 }
 
 void
-ProblemSpec::getAttributes(map<string,string>& attributes)
+ProblemSpec::getAttributes(map<string,string>& attributes) const
 {
   attributes.clear();
 
@@ -1181,7 +1181,7 @@ ProblemSpec::getAttributes(map<string,string>& attributes)
 }
 
 bool
-ProblemSpec::getAttribute(const string& attribute, string& result)
+ProblemSpec::getAttribute(const string& attribute, string& result) const
 {
 
   map<string, string> attributes;
@@ -1199,7 +1199,7 @@ ProblemSpec::getAttribute(const string& attribute, string& result)
 }
 
 bool
-ProblemSpec::getAttribute(const string& name, double &value)
+ProblemSpec::getAttribute(const string& name, double &value) const
 {
   string stringValue;
   if(!getAttribute(name, stringValue)) {

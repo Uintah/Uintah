@@ -198,17 +198,17 @@ WARNING
 
       //////////
       // passes back a map of the attributes of this node into value
-      void getAttributes(std::map<std::string,std::string>& value);
+      void getAttributes(std::map<std::string,std::string>& value) const;
 
       //////////
       // passes back the string associated with value of this node's
       // attributes into result
-      bool getAttribute(const std::string& value, std::string& result);
+      bool getAttribute(const std::string& value, std::string& result) const;
 
       //////////
       // passes back the double value associated with value of this node's
       // attributes into result
-      bool getAttribute(const std::string& value, double& result);
+      bool getAttribute(const std::string& value, double& result) const;
 
       //////////
       // adds an attribute of specified name and value to this node's 

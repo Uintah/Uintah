@@ -390,7 +390,6 @@
         <RadiationModel>
           <radiatingGas>          BackgroundGas</radiatingGas>
           <absorbingSolid>            steelBall</absorbingSolid>
-          <absorbingSolid>            true  </absorbingSolid>
           <calcFreq>                  1     </calcFreq>
           <table_or_ice_temp_density> ice   </table_or_ice_temp_density>
           <useTableValues>            false </useTableValues>

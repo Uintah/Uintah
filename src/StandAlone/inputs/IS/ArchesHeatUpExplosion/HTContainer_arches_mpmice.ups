@@ -89,8 +89,8 @@
   <!--____________________________________________________________________-->
   <DataArchiver>  
     <filebase>HTContainer_arches_mpmice.uda</filebase>
+    <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
   </DataArchiver>
-
 
   <MPM>
     <time_integrator>               implicit </time_integrator>

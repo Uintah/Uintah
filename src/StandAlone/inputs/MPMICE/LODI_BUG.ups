@@ -131,10 +131,10 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]          </lower>
-              <upper>        [1.0,1.0,0.001]    </upper>
-              <extraCells> [1,1,1]            </extraCells>
-              <patches>    [1,1,1]            </patches>
+              <lower>      [0,   0,   0]     </lower>
+              <upper>      [1.0, 1.0, 0.001] </upper>
+              <extraCells> [1,   1,   1]     </extraCells>
+              <patches>    [1,   1,   1]     </patches>
            </Box>
            <spacing>        [0.01,0.01,0.001]     </spacing>
        </Level>
@@ -274,23 +274,21 @@
            <specific_heat>              716.0           </specific_heat>
            <gamma>                      1.4             </gamma>           
            <geom_object>
-              <difference>
-                <box label="wholeDomain">
-                    <min>           [-1.0,-1.0,-1.0]    </min>
-                    <max>           [4.0,4.0,4.0 ]      </max>
-                </box>
-                <union>
-                  <difference>
-                  <cone label="ramp">  </cone>
-                  <cone label="ramp2">  </cone>
-                  </difference>
-                </union>
-              </difference>
-               <res>                      [2,2,2]       </res>
-               <velocity>           [1.0,1.0,0.0]       </velocity>
-               <temperature>        300.0               </temperature>
-               <density>    1.1792946927374306000e+00   </density>
-               <pressure>           101325.0            </pressure>
+             <difference>
+               <box label="wholeDomain">
+                 <min>           [-1.0,-1.0,-1.0]    </min>
+                 <max>           [4.0,4.0,4.0 ]      </max>
+               </box>
+               <difference>
+                 <cone label="ramp" />
+                 <cone label="ramp2" />
+               </difference>
+             </difference>
+             <res>                      [2,2,2]       </res>
+             <velocity>           [1.0,1.0,0.0]       </velocity>
+             <temperature>        300.0               </temperature>
+             <density>    1.1792946927374306000e+00   </density>
+             <pressure>           101325.0            </pressure>
            </geom_object>
          </material>
       </ICE>       

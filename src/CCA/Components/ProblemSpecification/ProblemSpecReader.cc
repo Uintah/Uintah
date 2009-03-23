@@ -63,11 +63,11 @@ using namespace SCIRun;
 namespace Uintah {
 
   struct Attribute;
-  struct ChildRequirements;
+  struct ChildRequirement;
 
-  typedef Handle<Tag>               TagP;
-  typedef Handle<Attribute>         AttributeP;
-  typedef Handle<ChildRequirements> ChildRequirementsP;
+  typedef Handle<Tag>              TagP;
+  typedef Handle<Attribute>        AttributeP;
+  typedef Handle<ChildRequirement> ChildRequirementP;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,11 +224,43 @@ struct NeedAppliesTo {
   vector< string > validValues_; //     the value of "type" might be 'hard_sphere_gas'.  If that value
 };                               //     is in the validValues_ array, then the 'need' of the tag applies.
 
-struct ChildRequirements : public RefCounted {
-  enum Req { ONE_OF }; // Only one type of requirement right now, but perhaps others in the future...
+struct ChildRequirement : public RefCounted {
+  enum Req { ONE_OF, ALL_OR_NONE_OF };
+
   Req              typeOfRequirement; 
-  vector< string > oneOfChildrenList;
+  bool             appliesToAttribute; // 'false' if requirement applies to a child tag.
+  vector< string > childrenList;       // used for ONE_OF and ALL_OR_NONE_OF
 };
+
+ostream &
+operator<<( ostream & out, const ChildRequirement::Req & req )
+{
+  if(      req == ChildRequirement::ONE_OF )         { out << "ONE_OF"; }
+  else if( req == ChildRequirement::ALL_OR_NONE_OF ) { out << "ALL_OR_NONE_OF"; }
+  else {
+    out << "Error in req '<<' operator: value of 'req': " << (int)req << ", is invalid... \n";
+  }
+  return out;
+}
+
+ostream &
+operator<<( ostream & out, const ChildRequirement & chreq )
+{
+  if(      chreq.typeOfRequirement == ChildRequirement::ALL_OR_NONE_OF ){ out << "ALL_OR_NONE_OF( "; }
+  else if( chreq.typeOfRequirement == ChildRequirement::ONE_OF )        { out << "ONE_OF( "; }
+  else {
+    ostringstream error;
+    error << "Error in ChildRequirement::Req '<<' operator: value of 'chreq': " << (int)chreq.typeOfRequirement << ", is invalid... \n";
+    throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
+  }
+  for( unsigned int pos = 0; pos < chreq.childrenList.size(); pos++ ) {
+    out << chreq.childrenList[ pos ] << " ";
+  }
+  if( chreq.childrenList.size() > 0 ) {
+    out << ")";
+  }
+  return out;
+}
 
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -346,7 +378,7 @@ struct Tag : public AttributeAndTagBase {
   vector< AttributeP >         attributes_;
   vector< TagP >               subTags_;
 
-  vector< ChildRequirementsP > childReqs_;
+  vector< ChildRequirementP >  childReqs_;
 
   bool                         forwardDeclaration_;
   bool                         isCommonTag_;
@@ -377,8 +409,9 @@ struct Tag : public AttributeAndTagBase {
       dbg << "Notice: need changed to " << need << "\n";
       need_ = need;
     }
-    subTags_     = commonTag->subTags_;
     attributes_  = commonTag->attributes_;
+    subTags_     = commonTag->subTags_;
+    childReqs_   = commonTag->childReqs_;
     isCommonTag_ = true;
   }
 
@@ -411,14 +444,13 @@ struct Tag : public AttributeAndTagBase {
         *iter = 0;
       }
     }
-
-    for( vector< ChildRequirementsP >::iterator iter = childReqs_.begin(); iter != childReqs_.end(); iter++ ) {
+    for( vector< ChildRequirementP >::iterator iter = childReqs_.begin(); iter != childReqs_.end(); iter++ ) {
       *iter = 0;
     }
   }
 
   AttributeP findAttribute( const string & attrName );
-  TagP       findSubTag( const string & tagName );
+  TagP       findChildTag( const string & tagName );
   void       validateAttribute( xmlAttr * attr );
 
   // User most likely should not use the 'depth' parameter.
@@ -426,6 +458,8 @@ struct Tag : public AttributeAndTagBase {
   void        validate( const ProblemSpec * ps, unsigned int depth = 0 );
   void        parseXmlTag( const xmlNode * xmlTag );
 
+  // Updates an incomplete tag that was referencing a forwardly declared tag.  Used when
+  // the forwardly declared tag is actually finalized and information exists to do the update.
   void        update( TagP tag );
 
   virtual void print( bool recursively = false, unsigned int depth = 0, bool isTag = true ) {
@@ -436,6 +470,13 @@ struct Tag : public AttributeAndTagBase {
         << "(common: " << isCommonTag_ << ")\n";
 
     if( isCommonTag_ ) { return; }
+
+    if( childReqs_.size() > 0 ) {
+      for( unsigned int pos = 0; pos < childReqs_.size(); pos++ ) {
+        indent( dbg, depth + 1 ); 
+        dbg << ": " << *(childReqs_[ pos ].get_rep()) << "\n";
+      }
+    }
 
     for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
       attributes_[ pos ]->print( recursively, depth+1 );
@@ -492,7 +533,7 @@ Tag::findAttribute( const string & attrName )
 }
 
 TagP
-Tag::findSubTag( const string & tagName )
+Tag::findChildTag( const string & tagName )
 {
   for( unsigned int pos = 0; pos < subTags_.size(); pos++ ) {
     if( subTags_[ pos ]->name_ == tagName ) {
@@ -605,8 +646,8 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   }
 
   if( needType.size() != 2 ) {
-    throw ProblemSetupException( string( "Error: need/type '" ) + concatStrings( needType ) + 
-                                 "'did not parse correctly...", __FILE__, __LINE__ );
+    throw ProblemSetupException( string( "Error: need/type specification '" ) + concatStrings( needType ) + 
+                                 "' did not parse correctly...", __FILE__, __LINE__ );
   }
 
   need = getNeed( needType[ 0 ] );
@@ -715,13 +756,13 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   else {
     if( name != "CommonTags" ) {
       if( xmlTag->properties == NULL ) {
-        TagP tag = commonTags_g->findSubTag( name );
+        TagP tag = commonTags_g->findChildTag( name );
         if( tag ) {
           dbg << "Found common tag for " << name << "\n";
           hasSpecString = false;
         }
         else {
-          throw ProblemSetupException( "Error (a)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\")." +
+          throw ProblemSetupException( "Error (a)... <" + name + "> does not have required 'spec' attribute (eg: spec=\"REQUIRED NO_DATA\").\n" +
                                        "              or couldn't find in CommonTags.", __FILE__, __LINE__ );
         }
       }
@@ -777,7 +818,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
   }
   else if( common ) {
     // Find this tag in the list of common tags... 
-    commonTag = commonTags_g->findSubTag( name );
+    commonTag = commonTags_g->findChildTag( name );
     if( !commonTag ) {
       throw ProblemSetupException( "Error, commonTag <" + name + "> not found... was looking for a common tag " +
                                    "because spec string only had one entry.", __FILE__, __LINE__ );
@@ -845,24 +886,44 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
           strings = split_string( attrStr, separators );
 
+          ChildRequirement * chreq = new ChildRequirement();
+
           if( strings[0] == "ONE_OF" ) {
-            ChildRequirements * chreq = new ChildRequirements();
-
-            chreq->typeOfRequirement = ChildRequirements::ONE_OF;
-
-            for( unsigned int pos = 1; pos < strings.size(); pos++ ) {
-              chreq->oneOfChildrenList.push_back( strings[ pos ] );
-            }
-            newTag->childReqs_.push_back( chreq );
-            
+            chreq->typeOfRequirement = ChildRequirement::ONE_OF;
           }
           else if( strings[0] == "ALL_OR_NONE_OF" ) {
-            dbg << "WARNING: ALL_OR_NONE_OF not implemented...\n"; 
+            chreq->typeOfRequirement = ChildRequirement::ALL_OR_NONE_OF;
           }
           else {
             throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  'children' tag does not support: " + 
                                          strings[0] + "...", __FILE__, __LINE__ );
           }
+
+          if( strings.size() < 3 ) {
+            stringstream error;
+            error << "ERROR in parsing " << chreq->typeOfRequirement << "().  Not enough fields."
+                  <<  getErrorInfo( xmlTag );
+            throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
+          }
+
+          if( strings[1] == "ATTRIBUTE" ) {
+            chreq->appliesToAttribute = true;
+          }
+          else if( strings[1] == "CHILD" ) {
+            chreq->appliesToAttribute = false;
+          }
+          else {
+            stringstream error;
+            error << "ERROR in parsing " << chreq->typeOfRequirement << "().  First field must be either ATTRIBUTE or CHILD, but found: '"
+                  << strings[1] << "', " 
+                  << getErrorInfo( xmlTag );
+            throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
+          }
+
+          for( unsigned int pos = 2; pos < strings.size(); pos++ ) {
+            chreq->childrenList.push_back( strings[ pos ] );
+          }
+          newTag->childReqs_.push_back( chreq );
         }
         else if( attrName.find( "need_applies_to") == 0 ) {  // attribute string begins with "children"
 
@@ -938,6 +999,48 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
     }
   }
 
+  /////////////////////////////////////////////////////////////////////
+  // Validate that any child requirements that have been specified
+  // point at valid child tags/attributes.
+
+  for( unsigned int pos = 0; pos < newTag->childReqs_.size(); pos++ ) {
+
+    ChildRequirementP chreq = newTag->childReqs_[ pos ];
+    if( chreq->typeOfRequirement == ChildRequirement::ONE_OF ||
+        chreq->typeOfRequirement == ChildRequirement::ALL_OR_NONE_OF ) {
+
+      for( unsigned int pos = 0; pos < chreq->childrenList.size(); pos++ ) {
+        string childName = chreq->childrenList[ pos ];
+        string theType;
+        bool   valid = true;
+        if( chreq->appliesToAttribute ) {
+          AttributeP attributeTag = newTag->findAttribute( childName );
+          if( !attributeTag ) {
+            valid = false;
+            theType = "ATTRIBUTE";
+          }
+        }
+        else {
+          TagP childTag = newTag->findChildTag( childName );
+          if( !childTag ) {
+            valid = false;
+            theType = "CHILD";
+          }
+        }
+        if( !valid ) {
+          stringstream error;
+          error << newTag->getCompleteName() << ": " << chreq->typeOfRequirement << " has nonexistent " 
+                << theType << ": '" << childName << "'\n" 
+                << getErrorInfo( xmlTag );
+          throw ProblemSetupException( error.str(), __FILE__, __LINE__ );          
+        }
+      }
+    }
+    else {
+      throw ProblemSetupException( "Unknown ChildRequirement type...", __FILE__, __LINE__ );
+    }
+  }
+
   if( updateForwardDecls ) {
     // This is the real definition of the tag, update the place holder (common) tag with the real data...
     commonTag->update( newTag );
@@ -981,7 +1084,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
         iter++;
       }
     }
-  }
+  } // end if( updateForwardDecls )
 
 } // end parseXmlTag()
 
@@ -990,19 +1093,27 @@ ProblemSpecReader::parseValidationFile()
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::parseValidationFile");
 
-  dbg << "parsing ups_spec.xml\n";
+  dbg << "\n";
+  dbg << "-------------------------------------------------------------------\n";
+  dbg << "- Parsing ups_spec.xml\n";
+  dbg << "- \n";
 
   xmlDocPtr doc; /* the resulting document tree */
   
-  const string valFile = string(sci_getenv("SCIRUN_SRCDIR")) +  "/StandAlone/inputs/ups_spec.xml";
+  string * valFile = scinew string( string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml" );
 
-  doc = xmlReadFile( valFile.c_str(), 0, XML_PARSE_PEDANTIC );
+  doc = xmlReadFile( valFile->c_str(), 0, XML_PARSE_PEDANTIC );
 
   if (doc == 0) {
-    throw ProblemSetupException( "Error opening .ups validation specification file: " + valFile, __FILE__, __LINE__ );
+    throw ProblemSetupException( "Error opening .ups validation specification file: " + *valFile, __FILE__, __LINE__ );
   }
 
   xmlNode * root = xmlDocGetRootElement( doc );
+
+  // FYI, We are hijacking the '_private' to be used as application data... specifically the name of the file
+  // that this node came from.
+  root->_private = (void*)valFile;
+  resolveIncludes( root->children, root );
 
   uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL );
   commonTags_g = new Tag( "CommonTags", REQUIRED, NO_DATA, "", NULL );
@@ -1011,7 +1122,7 @@ ProblemSpecReader::parseValidationFile()
   string tagName = (const char *)( root->name );
 
   if( tagName != "Uintah_specification" ) {
-    throw ProblemSetupException( valFile + " does not appear to be valid... First tag should be\n" +
+    throw ProblemSetupException( *valFile + " does not appear to be valid... First tag should be\n" +
                                  + "<Uintah_specification>, but found: " + tagName,
                                  __FILE__, __LINE__ );
   }
@@ -1350,7 +1461,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
     else {
       // Handle sub tag
       const char * childName = (const char *)( child->name );
-      TagP         childTag  = findSubTag( childName );
+      TagP         childTag  = findChildTag( childName );
 
       if( !childTag ) {
         throw ProblemSetupException( string( "Tag '" ) + childName + "' not valid (for <" + getCompleteName() + 
@@ -1413,40 +1524,96 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
   
   validateText( text, textNode );
 
-
   // Verify that all REQUIRED attributes were found:
   for( unsigned int pos = 0; pos < attributes_.size(); pos++ ) {
     AttributeP attr = attributes_[ pos ];
     if( attr->need_ == REQUIRED && attr->occurrences_ == 0 ) {
       throw ProblemSetupException( string( "Required attribute '" ) + attr->getCompleteName() +
-                                   "' missing.  Please fix XML in .ups file or correct validation Attribute list.",
+                                   "' missing.  Please fix XML in .ups file or correct validation Attribute list.\n" +
+                                   getErrorInfo( ps->getNode() ),
                                    __FILE__, __LINE__ );
     }
   }
 
   /////////////////////////////////////////////////////////////////////
-  // Verify any child requirements that have been specified...
+  // Validate the child requirements
 
-  for( unsigned int pos = 0; pos < childReqs_.size(); pos++ ) {
-    ChildRequirementsP chreq = childReqs_[ pos ];
-    if( chreq->typeOfRequirement == ChildRequirements::ONE_OF ) {
-      vector<string> children;
-      for( unsigned int pos = 0; pos < chreq->oneOfChildrenList.size() && children.size() < 2; pos++ ) {
+  dbg << "validate child requirements for " << name << ": " << childReqs_.size() << "\n";
 
-        vector<string>::const_iterator iter = find( currentChildrenTags_.begin(), currentChildrenTags_.end(),
-                                                    chreq->oneOfChildrenList[ pos ] );
-        if( iter != currentChildrenTags_.end() ) {
-          children.push_back( *iter );
+  for( int pos = 0; pos < childReqs_.size(); pos++ ) {
+    string theType = (childReqs_[ pos ]->typeOfRequirement) ? "ATTRIBUTE" : "CHILD";
+    switch( childReqs_[ pos ]->typeOfRequirement ) {
+    case ChildRequirement::ONE_OF :  // Verify that the ONE_OF is valid
+      {
+        bool   foundIt = false;
+        for( int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
+          string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
+
+          if( childReqs_[ pos ]->appliesToAttribute ) {
+            string dummy;
+            bool foundAttribute = ps->getAttribute( childName, dummy );
+            if( foundAttribute ) {
+              if( foundIt ) {
+                throw ProblemSetupException( "Error with " + getCompleteName() + ": ONE_OF child.  More than one child found!\n" +
+                                             "Should only be one of: " +  concatStrings( childReqs_[pos]->childrenList ) + ".\n" + 
+                                             getErrorInfo( ps->getNode() ),
+                                             __FILE__, __LINE__ );
+              }
+              foundIt = true;
+            }
+          }
+          else {
+            ProblemSpecP childPs = ps->findBlock( childName );
+            if( childPs ) {
+              if( foundIt ) {
+                throw ProblemSetupException( "Error with " + getCompleteName() + ": ONE_OF child.  More than one child found!\n" +
+                                             "Should only be one of: " +  concatStrings( childReqs_[pos]->childrenList ) + ".\n" + 
+                                             getErrorInfo( ps->getNode() ),
+                                             __FILE__, __LINE__ );
+              }
+              foundIt = true;
+            }
+          }
+        } //end for
+        if( !foundIt ) {
+          throw ProblemSetupException( "Error with " + getCompleteName() + ":\nONE_OF( " + theType + " " + 
+                                       concatStrings( childReqs_[pos]->childrenList ) + " )" + 
+                                       "' does not have a required " + theType + " tag.\n" +
+                                       getErrorInfo( textNode ),
+                                       __FILE__, __LINE__ );
         }
       }
-      if( children.size() >= 2 ) {
-        ostringstream error;
-        error << getCompleteName() + " tag has invalid set of children (should have only one of these): " << concatStrings( children );
-        throw ProblemSetupException( error.str(), __FILE__, __LINE__ );
+      break;
+    case ChildRequirement::ALL_OR_NONE_OF :
+      {
+        vector<bool> found( childReqs_[ pos ]->childrenList.size() );
+        for( int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
+          string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
+          if( childReqs_[ pos ]->appliesToAttribute ) {
+            string dummy;
+            found[ childNamePos ] = ps->getAttribute( childName, dummy );
+          }
+          else {
+            ProblemSpecP childPs = ps->findBlock( childName );
+            found[ childNamePos ] = (childPs.get_rep() != NULL);
+          }
+        }
+        bool valuesMustAllBe = found[ 0 ];
+        for( int childNamePos = 1; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
+          if( found[ childNamePos ] != valuesMustAllBe ) {
+            throw ProblemSetupException( "Error with " + getCompleteName() + ": " + "ALL_OR_NONE_OF.\n" +
+                                         "Need all or none, but found some of: '" +
+                                         concatStrings( childReqs_[pos]->childrenList ) + "'\n" +
+                                         getErrorInfo( textNode ),
+                                         __FILE__, __LINE__ );
+          }
+        }
       }
-    }
-    else {
-      throw ProblemSetupException( "Unknown ChildRequirements type...", __FILE__, __LINE__ );
+      break;
+    default:
+      throw ProblemSetupException( "Error with " + getCompleteName() + ": Unknown type of child requirement..." +
+                                   getErrorInfo( textNode ),
+                                   __FILE__, __LINE__ );
     }
   }
 
@@ -1500,7 +1667,8 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
       }
 
       throw ProblemSetupException( string( "Required tag '" ) + tag->getCompleteName() +
-                                   "' missing.  Please fix .ups file (or update ups_spec.xml).\n",
+                                   "' missing.  Please fix .ups file (or update ups_spec.xml).\n" +
+                                   getErrorInfo( textNode ),
                                    __FILE__, __LINE__ );
     }
   }
@@ -1745,9 +1913,6 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
 
     if( child->type == XML_ELEMENT_NODE ) {
       string name1 = (const char *)(child->name);
-      indent( dbg, depth );
-      dbg << " - " << name1 << "\n";
-
       if( name1 == "include" ) {
 
         ProblemSpec temp( child );
@@ -1756,7 +1921,8 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
 
         xmlNode * prevChild = child->prev;
         
-        string    filename;
+        string filename;
+        string section = attributes[ "section" ];
 
         if( child->_private ) {
           filename = validateFilename( attributes["href"], child );
@@ -1777,7 +1943,39 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
 
         string name = (const char *)( include->name );
         if( name == "Uintah_Include" || name == "Uintah_specification" ) {
+
           xmlNode * incChild = include->children;
+
+          if( section != "" ) {  // Find the right section of the included file (to include).
+
+            vector<string> sections;
+            vector<char>   separators;
+            separators.push_back( '/' );
+            sections = split_string( section, separators );
+
+            for( unsigned int pos = 0; pos < sections.size(); pos++ ) {
+              bool done = false;
+              while( !done ) {
+
+                if( incChild == NULL ) {
+                  throw ProblemSetupException("Error parsing included file '" + filename + "' section '" + section + "'", __FILE__, __LINE__);
+                }
+
+                string childName = (const char *)(incChild->name);
+                
+                if( ( incChild->type == XML_ELEMENT_NODE ) && ( childName == sections[ pos ] ) ) {
+                  if( pos != sections.size()-1 ) { // Not the last section, so descend.
+                    incChild = incChild->children;
+                  }
+                  done = true;
+                }
+                else {
+                  incChild = incChild->next;
+                }
+              }
+            }
+          }
+
           while( incChild != 0 ) {
 
             // Make include be created from same document that created params...
@@ -1809,6 +2007,9 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
         xmlFreeDoc( doc );
       }
       else { // !"include"
+        indent( dbg, depth );
+        dbg << " * " << name1 << "\n";
+
         if( child->_private == NULL ) {
           child->_private = parent->_private;
         }
