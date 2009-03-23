@@ -198,7 +198,6 @@
 
 	    <Properties>
 	        <empirical_soot>true</empirical_soot>
-                <SootFactor>1.0</SootFactor>
 	        <mixing_model>NewStaticMixingTable</mixing_model>
 	        <NewStaticMixingTable>
                   <inputfile>inputs/ARCHES/NewStaticMixingTables/jp8/jp8_equil_clipped.mxn</inputfile>
@@ -232,7 +231,6 @@
                       </cylinder>
 		    </geom_object>
 		    <InletVelocity>0</InletVelocity>
-                    <CarbonMassFractionInFuel>0</CarbonMassFractionInFuel>
                 </FlowInlet>
 
                 <FlowInlet>
@@ -242,7 +240,6 @@
                     <geom_object>
                     </geom_object>
                     <Flow_rate>0</Flow_rate>
-                    <CarbonMassFractionInFuel>0</CarbonMassFractionInFuel>
                 </FlowInlet>
 		
                 <WallBC>
@@ -298,8 +295,8 @@
 	    <ExplicitSolver>
 		<timeIntegratorType>RK2SSP</timeIntegratorType>	
                 <restartOnNegativeDensityGuess>true</restartOnNegativeDensityGuess>
-		<probe_data>false</probe_data>
-      	        <ProbePoints>
+ 
+     	        <ProbePoints>
 	           <probe_point>[60,60,60]</probe_point>
 		</ProbePoints>
 		<PressureSolver>

@@ -128,8 +128,9 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   // MultiMaterialInterface* mmInterface
 {
   ProblemSpecP db = params->findBlock("ExplicitSolver");
-  db->require("probe_data", d_probe_data);
-  if (d_probe_data) {
+  ProblemSpecP test_probe_db = db->findBlock("ProbePoints"); 
+  if ( test_probe_db ) {
+    d_probe_data = true; 
     IntVector prbPoint;
     for (ProblemSpecP probe_db = db->findBlock("ProbePoints");
          probe_db;

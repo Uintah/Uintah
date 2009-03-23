@@ -270,7 +270,6 @@
             <ExplicitSolver>
                 <timeIntegratorType>RK2SSP</timeIntegratorType>
                 <restartOnNegativeDensityGuess>true</restartOnNegativeDensityGuess>
-                <probe_data>false</probe_data>
                 
                 <PressureSolver>
                     <linear_solver>petsc</linear_solver>

@@ -597,7 +597,6 @@
       <set_initial_condition            spec="OPTIONAL BOOLEAN" /> <!-- IF TRUE, then requires init_cond_input_file-->
       <init_cond_input_file             spec="OPTIONAL STRING" /> <!-- Should be required if set_intial_condition is true-->
       <turnonMixedModel                 spec="OPTIONAL BOOLEAN" />
-      <reacting_flow                    spec="OPTIONAL BOOLEAN" />
       <recompileTaskgraph               spec="OPTIONAL BOOLEAN" />
       <scalarUnderflowCheck             spec="OPTIONAL BOOLEAN" />
       <EKTCorrection                    spec="OPTIONAL BOOLEAN" />
@@ -636,7 +635,7 @@
         <filter_variance_limit_scalar   spec="OPTIONAL BOOLEAN" />
         <filter_cs_squared              spec="OPTIONAL BOOLEAN" />
         <!-- going to leave complocal out based on the 'this model is a mess' comment-->
-        <turbulentPrandtlNumber         spec="REQUIRED DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
+        <turbulentPrandtlNumber         spec="OPTIONAL DOUBLE 'positive'" /> <!--currently set to default in code to 0.4-->
 
         <var_const                      spec="OPTIONAL DOUBLE" /> <!-- FIXME: What is this? Does it have a range? -->
       </Turbulence>
@@ -685,6 +684,7 @@
         <carbon_balance_es              spec="OPTIONAL BOOLEAN" />
         <sulfur_balance                 spec="OPTIONAL BOOLEAN" />
         <sulfur_balance_es              spec="OPTIONAL BOOLEAN" />
+        <ramping_inlet_flowrate         spec="OPTIONAL BOOLEAN" />
         <FlowInlet                      spec="MULTIPLE NO_DATA" >
           <ramping_inlet_flowrate       spec="OPTIONAL BOOLEAN" />
           <SulfurMassFractionInFuel     spec="OPTIONAL DOUBLE '0,1'" />
@@ -805,6 +805,10 @@
         </EnthalpySolver>
 
         <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
+
+        <ProbePoints                    spec="OPTIONAL NO_DATA" >
+          <probe_point                  spec="MULTIPLE VECTOR" />
+        </ProbePoints>
         
         <maxDensityLag                  spec="OPTIONAL DOUBLE" />
 
@@ -833,7 +837,6 @@
           </parameters>
         </PressureSolver>
 
-        <probe_data                     spec="REQUIRED BOOLEAN" />
         <restartOnNegativeDensityGuess  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is default? -->
         <timeIntegratorType             spec="REQUIRED STRING 'RK2SSP, FE'" />
         <turbModelCalcForAllRKSteps     spec="OPTIONAL BOOLEAN" />
