@@ -194,6 +194,28 @@ void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   cm_ps->appendElement("A4PF",UI[36]);  // flow potential analog of A4
   cm_ps->appendElement("CRPF",UI[37]);  // flow potential analog of CR
   cm_ps->appendElement("RKPF",UI[38]);  // flow potential analog of RK
+  cm_ps->appendElement("SUBX",UI[39]);// subcycle control exponent (dim. less)
+  cm_ps->appendElement("DEJAVU",UI[40]);//
+  cm_ps->appendElement("FSPEED",UI[41]);//
+  cm_ps->appendElement("PEAKI1I",UI[42]);//
+  cm_ps->appendElement("STRENI", UI[43]);//
+  cm_ps->appendElement("FSLOPEI",UI[44]);//
+  cm_ps->appendElement("PEAKI1F",UI[45]);//
+  cm_ps->appendElement("STRENF", UI[46]);//
+  cm_ps->appendElement("JOBFAIL",UI[47]);//
+  cm_ps->appendElement("FSLOPEF",UI[48]);//
+  cm_ps->appendElement("FAILSTAT",UI[49]);//
+  cm_ps->appendElement("FREE01",UI[50]);//
+  cm_ps->appendElement("FREE02",UI[51]);//
+  cm_ps->appendElement("FREE03",UI[52]);//
+  cm_ps->appendElement("FREE04",UI[53]);//
+  cm_ps->appendElement("FREE05",UI[54]);//
+  cm_ps->appendElement("FREE06",UI[55]);//
+  cm_ps->appendElement("FREE07",UI[56]);//
+  cm_ps->appendElement("FREE08",UI[57]);//
+  cm_ps->appendElement("YSLOPEI",UI[58]);//
+  cm_ps->appendElement("YSLOPEF",UI[59]);//
+
 }
 
 Kayenta* Kayenta::clone()
