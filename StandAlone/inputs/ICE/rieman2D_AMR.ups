@@ -17,10 +17,10 @@
 
    <doAMR>true</doAMR>
    <LoadBalancer type="DLB">
-     <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
-     <levelIndependent>true</levelIndependent>
-     <doSpaceCurve>true</doSpaceCurve>
-     <timestepInterval>200</timestepInterval>
+     <dynamicAlgorithm>   patchFactor</dynamicAlgorithm>
+     <levelIndependent>   true        </levelIndependent>
+     <doSpaceCurve>       true        </doSpaceCurve>
+     <timestepInterval>   200         </timestepInterval>
    </LoadBalancer>
 
     <!--____________________________________________________________________-->
@@ -33,6 +33,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-6      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
+       <end_on_max_time_exactly>true</end_on_max_time_exactly>
    </Time>
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
@@ -120,20 +121,19 @@
 
        <Level>
            <Box label="1">
-              <lower>        [-.5, -.5,-0.05]    </lower>
-              <upper>        [0.5, 0.5,  0.05]  </upper>
-              <extraCells>   [1,1,1]          </extraCells>
-              <patches>      [2,2,1]          </patches>
-              <resolution>   [200,200,1]      </resolution>
+              <lower>        [-.5, -.5,-0.05]  </lower>
+              <upper>        [0.5, 0.5, 0.05]  </upper>
+              <extraCells>   [1,1,1]           </extraCells>
+              <patches>      [4,4,1]           </patches>
            </Box>
-           <!--<spacing>        [0.05,0.05,0.1]  </spacing> -->
+           <spacing>        [0.1,0.1,0.1]  </spacing>
        </Level>    
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>shockTube2D_t2_AMR.BNR.uda</filebase>
+      <filebase>shockTube2D_AMR.uda</filebase>
       <outputTimestepInterval>5</outputTimestepInterval>
       <save label="delP_Dilatate"/>
       <save label="press_CC"/>
@@ -155,7 +155,7 @@
     <CFD>
        <cfl>0.25</cfl>
       <ICE>
-        <advection type = "FirstOrder"/>
+        <advection type = "SecondOrder"/>
       </ICE>        
     </CFD>
 
@@ -164,29 +164,27 @@
         <orderOfInterpolation>1  </orderOfInterpolation>
         <do_Refluxing>  false    </do_Refluxing>
         <Refinement_Criteria_Thresholds>
-          <Variable name = "rho_CC"    value = "20" matl = "0" />
-          <Variable name = "temp_CC"   value = "15" matl = "0" />
+          <Variable name = "rho_CC"    value = "5" matl = "0" />
+          <Variable name = "temp_CC"   value = "5" matl = "0" />
         </Refinement_Criteria_Thresholds>
       </ICE>
+       
+      <Regridder type="BNR">
+        <max_levels>3</max_levels>
+        <cell_refinement_ratio>    [[4,4,1]]   </cell_refinement_ratio>
+        <cell_stability_dilation>   [1,1,0]    </cell_stability_dilation>   
+        <min_boundary_cells>       [1,1,0]     </min_boundary_cells>
+ 
+
+        <patch_split_tolerance>     1          </patch_split_tolerance>
+        <patch_combine_tolerance>   1          </patch_combine_tolerance>
+        <patches_per_level_per_proc> 8         </patches_per_level_per_proc>
+        <cell_regrid_dilation>     [1,1,0]     </cell_regrid_dilation>
+        <min_patch_size>        [[8,8,1]]      </min_patch_size>
+        <dynamic_dilation>      false          </dynamic_dilation>
+  
+      </Regridder>
       
-      <Regridder type="Hierarchical"> 
-        <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <cell_stability_dilation>   [2,2,0]   </cell_stability_dilation>   
-        <min_boundary_cells>       [1,1,0]   </min_boundary_cells> 
-        
-        
-        <!--  Hierarchical Specific -->
-        <lattice_refinement_ratio> [[10,10,1],[2,2,1]]  </lattice_refinement_ratio>
-        
-        <!-- BNR Specific -->
-        <!--
-        <min_patch_size>           [[20,20,1]] </min_patch_size>
-        <patch_split_tolerance>    1       </patch_split_tolerance>
-        <patch_combine_tolerance>  1       </patch_combine_tolerance>
-        <patches_per_level_per_proc> 8     </patches_per_level_per_proc> 
-        -->
-      </Regridder> 
     </AMR>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
