@@ -75,20 +75,20 @@ public:
   inline const std::string getEqnName(){
     return d_eqnName; };
 
-  /** @brief return a bool to tell if this equation is a weight.
-   if false, it is understood that this eqn is a weighted 
-   abscissa */
-  inline bool weight(){
-    return d_weight; };
+//  /** @brief return a bool to tell if this equation is a weight.
+//   if false, it is understood that this eqn is a weighted 
+//   abscissa */
+//  inline bool weight(){
+//    return d_weight; };
 
-  /** @brief Sets this equation as a weight.
-   this seems a little dangerous.  Is there a better way? */
-  inline void setAsWeight(){
-    d_weight = true; }; 
+//  /** @brief Sets this equation as a weight.
+//   this seems a little dangerous.  Is there a better way? */
+//  inline void setAsWeight(){
+//    d_weight = true; }; 
 
-  /** @brief Set the quadrature node value */
-  inline void setQuadNode(int node){
-    d_quadNode = node; };
+//  /** @brief Set the quadrature node value */
+//  inline void setQuadNode(int node){
+//    d_quadNode = node; };
  
 
 protected:
@@ -120,9 +120,9 @@ protected:
   BoundaryCond* d_boundaryCond;
   ExplicitTimeInt* d_timeIntegrator; 
 
-  bool d_weight; // if true then this is a weight (as opposed to a weighted abscissa)
+//  bool d_weight; // if true then this is a weight (as opposed to a weighted abscissa)
 
-  int d_quadNode; // The quadrature node for this transport eqn. 
+//  int d_quadNode; // The quadrature node for this transport eqn. 
 
 
 private:
