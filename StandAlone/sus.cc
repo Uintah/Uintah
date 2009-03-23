@@ -184,6 +184,7 @@ usage( const std::string & message,
       cerr << "-move                : Move from old uda when restarting\n";
       cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
       cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
+      cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
       cerr << "-track               : Turns on (external) simulation tracking... continues w/o tracking if connection fails.\n";
       cerr << "-TRACK               : Turns on (external) simulation tracking... dies if connection fails.\n";
       cerr << "\n\n";
@@ -250,7 +251,7 @@ main( int argc, char *argv[], char *env[] )
   string filename;
   string solver;
   IntVector layout(1,1,1);
-  bool   onlyValidateUps = false;
+  bool   validateUps = true, onlyValidateUps = false;
   bool   track = false, track_or_die = false;
 
   // Checks to see if user is running an MPI version of sus.
@@ -340,6 +341,12 @@ main( int argc, char *argv[], char *env[] )
       do_svnStat = true;
     } else if(arg == "-validate") {
       onlyValidateUps = true;
+    } else if(arg == "-do_not_validate") {
+      cout << "\n";
+      cout << "WARNING: You have turned OFF .ups file validation... this may cause many unforseen problems\n";
+      cout << "         with your simulation run.  It is highly suggested that you do not use this flag!\n";
+      cout << "\n";
+      validateUps = false;
     } else if(arg == "-track") {
       track = true;
     } else if(arg == "-TRACK") {
@@ -508,7 +515,7 @@ main( int argc, char *argv[], char *env[] )
 #endif
     //__________________________________
     // Read input file
-    ProblemSpecP ups = ProblemSpecReader().readInputFile( filename, true );
+    ProblemSpecP ups = ProblemSpecReader().readInputFile( filename, validateUps );
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";

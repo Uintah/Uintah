@@ -329,10 +329,15 @@ DataArchiver::problemSetup(const ProblemSpecP& params,
 void
 DataArchiver::initializeOutput(const ProblemSpecP& params) 
 {
-   if (d_outputInterval == 0.0 && d_outputTimestepInterval == 0 && d_checkpointInterval == 0.0 && d_checkpointTimestepInterval == 0 && d_checkpointWalltimeInterval == 0) 
-        return;
+   if( d_outputInterval == 0.0 && 
+       d_outputTimestepInterval == 0 && 
+       d_checkpointInterval == 0.0 && 
+       d_checkpointTimestepInterval == 0 && 
+       d_checkpointWalltimeInterval == 0) {
+     return;
+   }
 
-   if(Parallel::usingMPI()){
+   if( Parallel::usingMPI() ){
      // See how many shared filesystems that we have
      double start=Time::currentSeconds();
      string basename;
