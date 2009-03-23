@@ -158,6 +158,22 @@ public:
   inline const VarLabel* getSourceLabel(){
     return d_sourceLabel; };
 
+  /** @brief return a bool to tell if this equation is a weight.
+   if false, it is understood that this eqn is a weighted 
+   abscissa */
+  inline bool weight(){
+    return d_weight; };
+
+  /** @brief Sets this equation as a weight.
+   this seems a little dangerous.  Is there a better way? */
+  inline void setAsWeight(){
+    d_weight = true; }; 
+
+  /** @brief Set the quadrature node value */
+  inline void setQuadNode(int node){
+    d_quadNode = node; };
+ 
+
 private:
 
   BoundaryCond* d_boundaryCond;
@@ -165,6 +181,12 @@ private:
 
   const VarLabel* d_sourceLabel; //DQMOM Eqns only have ONE source term.  
   std::vector<string> d_models;  //This is the list of models for this internal coord. 
+
+  bool d_weight; // if true then this is a weight (as opposed to a weighted abscissa)
+
+  int d_quadNode; // The quadrature node for this transport eqn. 
+
+
 
 }; // class DQMOMEqn
 } // namespace Uintah

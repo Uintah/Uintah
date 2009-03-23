@@ -160,8 +160,9 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
       wght_name += node; 
 
       EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( wght_name );
-      a_weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
-      a_weight.setAsWeight(); 
+      DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
+      weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
+      weight.setAsWeight(); 
     }
     
     // loop for all ic's
@@ -395,7 +396,8 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
       // Get current equation:
       std::string currname = ieqn->first; 
       cout << "Scheduling dqmom eqn: " << currname << " to be solved." << endl;
-      EqnBase* eqn = ieqn->second; 
+      EqnBase* temp_eqn = ieqn->second; 
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
 
       // Check to see if this is a weight 
       bool isWght = eqn->weight(); 
