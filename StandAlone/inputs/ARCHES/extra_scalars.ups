@@ -192,7 +192,6 @@
 
             <ExplicitSolver>
                 <timeIntegratorType>RK2SSP</timeIntegratorType>
-                <probe_data>false</probe_data>
 
                 <PressureSolver>
                     <linear_solver>petsc</linear_solver>

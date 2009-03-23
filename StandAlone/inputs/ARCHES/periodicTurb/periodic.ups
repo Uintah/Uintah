@@ -90,7 +90,6 @@
     <ExplicitSolver>
       <timeIntegratorType>  RK2SSP  </timeIntegratorType>
       <kineticEnergy_fromFC>true    </kineticEnergy_fromFC>
-      <probe_data>false</probe_data>
 
       <PressureSolver>
         <normalize_pressure>true    </normalize_pressure>
