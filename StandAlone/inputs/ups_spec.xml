@@ -809,7 +809,9 @@
 
         <MixtureFractionSolver          spec="REQUIRED NO_DATA" >
           <convection_scheme            spec="REQUIRED STRING 'central-upwind, flux_limited'" />
-          <limiter_type                 spec="OPTIONAL STRING 'superbee'"/>
+          <limiter_type                 spec="OPTIONAL STRING 'superbee, vanLeer, upwind, none'"/>
+          <boundary_limiter_type        spec="OPTIONAL STRING 'central-upwind, upwind'" />
+          <central_limiter              spec="OPTIONAL BOOLEAN" />
         </MixtureFractionSolver>
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
