@@ -1715,7 +1715,6 @@ ProblemSpecReader::readInputFile( const string & filename, bool validate /* = fa
   // Debugging prints:
   //   cout << "------------------------------------------------------------------\n";
   //   printDoc( prob_spec->getNode(), 0 );
-
   if( validate ) {
     validateProblemSpec( prob_spec );
   }
