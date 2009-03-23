@@ -54,7 +54,7 @@
     <grow_dt>                   1           </grow_dt>
     <variable_dt>               true        </variable_dt>
     <set_initial_condition>     true        </set_initial_condition>
-    <init_cond_input_file>      inputs/ARCHES/periodic/iso_ini_32.dat</init_cond_input_file>
+    <init_cond_input_file>      inputs/ARCHES/periodicTurb/iso_ini_32.dat</init_cond_input_file>
     <nonlinear_solver>          explicit    </nonlinear_solver>
     <turbulence_model>          compdynamicprocedure</turbulence_model>
     <transport_mixture_fraction>true        </transport_mixture_fraction>
