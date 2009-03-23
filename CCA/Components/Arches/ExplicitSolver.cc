@@ -102,6 +102,7 @@ ExplicitSolver(const ArchesLabel* label,
   d_reactingScalarSolver = 0;
   d_enthalpySolver = 0;
   nosolve_timelabels_allocated = false;
+  d_probe_data = false;
 }
 
 // ****************************************************************************
