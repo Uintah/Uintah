@@ -1540,13 +1540,13 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 
   dbg << "validate child requirements for " << name << ": " << childReqs_.size() << "\n";
 
-  for( int pos = 0; pos < childReqs_.size(); pos++ ) {
+  for( unsigned int pos = 0; pos < childReqs_.size(); pos++ ) {
     string theType = (childReqs_[ pos ]->typeOfRequirement) ? "ATTRIBUTE" : "CHILD";
     switch( childReqs_[ pos ]->typeOfRequirement ) {
     case ChildRequirement::ONE_OF :  // Verify that the ONE_OF is valid
       {
         bool   foundIt = false;
-        for( int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
+        for( unsigned int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
           string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
 
           if( childReqs_[ pos ]->appliesToAttribute ) {
@@ -1587,7 +1587,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
     case ChildRequirement::ALL_OR_NONE_OF :
       {
         vector<bool> found( childReqs_[ pos ]->childrenList.size() );
-        for( int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
+        for( unsigned int childNamePos = 0; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
           string & childName = childReqs_[ pos ]->childrenList[ childNamePos ];
           if( childReqs_[ pos ]->appliesToAttribute ) {
             string dummy;
@@ -1599,7 +1599,7 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
           }
         }
         bool valuesMustAllBe = found[ 0 ];
-        for( int childNamePos = 1; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
+        for( unsigned int childNamePos = 1; childNamePos < childReqs_[ pos ]->childrenList.size(); childNamePos++ ) {
           if( found[ childNamePos ] != valuesMustAllBe ) {
             throw ProblemSetupException( "Error with " + getCompleteName() + ": " + "ALL_OR_NONE_OF.\n" +
                                          "Need all or none, but found some of: '" +
@@ -1763,24 +1763,18 @@ validateFilename( const string & filename, const xmlNode * parent )
 
     if( !parent || !validFile( fullFilename ) ) { // Check to see if the file is relative to where the program was run... 
 
-      string newFilename;
-              
       char buffer[2000];
       char * str = getcwd( buffer, 2000 );
       if( str == NULL ) {
         proc0cout << "WARNING: Directory not returned by getcwd()...\n";
       }
       else {
-        newFilename = string(buffer) + "/" + filename;
+        fullFilename = string(buffer) + "/" + filename;
       }
-      if( !validFile( newFilename ) ) {
+      if( !validFile( fullFilename ) ) {
         filenameIsBad = true;
         errorMsg = "Couldn't find include file: '" + fullFilename + 
-                   "' or '" + newFilename + "'\n";
-      }
-      else {
-        fullFilename = newFilename;
-        inc_dbg << "2) filename: " << fullFilename << "\n";
+                   "' or '" + fullFilename + "'\n";
       }
     }
   }
