@@ -302,7 +302,13 @@ lam_status () {
         fi
     fi
 }
-        
+    
+check_output () {
+
+    grep "Sus: going down successfully" $n.out
+    return $?
+
+}    
 
 run_test () {
 
@@ -331,7 +337,9 @@ run_test () {
 
     echo; echo "Running: $MPI sus $opts $n.ups"
     $MPI ../sus $opts $n.ups &> $n.out
-    
+
+    check_output
+
     if [ $? -eq 0 ]; then
         echo "Success running sus . . ."
         run_test_return=0
