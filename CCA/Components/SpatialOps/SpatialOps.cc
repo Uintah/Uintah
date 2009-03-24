@@ -77,7 +77,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
   d_sharedState = sharedState;
 
   // Input
-  ProblemSpecP db = params->findBlock("SpatialOps");
+  ProblemSpecP db = params->findBlock("CFD")->findBlock("SPATIALOPS");
   db->require("lambda", d_initlambda);  
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
   time_db->getWithDefault("tOrder",d_tOrder,1); 
@@ -404,6 +404,13 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
 
       if (isWght) 
         cout << "I AM A WEIGHT!" << endl;  
+
+      eqn->sched_evalTransportEqn( level, sched, i ); 
+      
+      if (i == d_tOrder-1){
+        //last time sub-step so cleanup.
+        eqn->sched_cleanUp( level, sched ); 
+      }
 
     }
 

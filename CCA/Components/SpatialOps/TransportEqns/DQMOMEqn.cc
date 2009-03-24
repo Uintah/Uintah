@@ -244,6 +244,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw )
 {
+
+  cout << "BUILDING TRANSPORT EQN: " << d_eqnName << endl; 
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
