@@ -279,18 +279,22 @@ mem_check () {
     /usr/local/MallocTrace/bin/parser mallocTrace-0 flat &> $n.mem
 
     grep Location ${n}.mem | grep -v unspecified-file > $n.leak
+
+    echo
+    echo Testing for Memory Leaks . . . 
+
     if test -n $n.leak; then
         echo 
-        echo MEMORY LEAKS
+        echo Found memory leaks . . .
         echo
         cat $n.leak
         echo 
-        echo
-        
+        return 1
     else
         echo
         echo "No memory leaks"
         echo
+        return 0
     fi
     
 
@@ -356,7 +360,14 @@ run_test () {
         run_test_return=1
     fi
 
-    mem_check
+    if [ $run_test_return -eq 0 ]; then
+        mem_check
+        if [ $? -eq 0 ]; then
+            run_test_return=0
+        else
+            run_test_return=1
+        fi
+    fi
 
     rm $n.ups
 
