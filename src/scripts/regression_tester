@@ -283,7 +283,7 @@ mem_check () {
     echo
     echo Testing for Memory Leaks . . . 
 
-    if test -n $n.leak; then
+    if test -s $n.leak; then
         echo 
         echo Found memory leaks . . .
         echo
