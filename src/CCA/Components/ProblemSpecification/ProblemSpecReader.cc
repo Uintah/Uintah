@@ -1102,6 +1102,8 @@ ProblemSpecReader::parseValidationFile()
   
   string * valFile = scinew string( string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml" );
 
+  d_upsFilename.push_back( valFile );
+
   doc = xmlReadFile( valFile->c_str(), 0, XML_PARSE_PEDANTIC );
 
   if (doc == 0) {
