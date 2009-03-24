@@ -50,6 +50,7 @@
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkFieldData.h>
+#include <vtkCellData.h>
 #include <vtkFloatArray.h>
 #include <vtkIntArray.h>
 #include <vtkRectilinearGrid.h>
@@ -210,10 +211,10 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   // callDomainNesting = false;
   // patchInfoReq = true;
   // levelInfoReq = true;
-  
+
   currTimeStep = -1;
   lastTimeStep = -1;
-  
+
   ccMesh = false;
   ncMesh = false;
   sfcxMesh = false;
@@ -269,10 +270,10 @@ avtudaReaderMTMDFileFormat::GetNTimesteps(void)
 //
 // ****************************************************************************
 
-double 
+  double 
 avtudaReaderMTMDFileFormat::GetTime(int ts)
 {
-    return (*timeStepInfo)[ts];
+  return (*timeStepInfo)[ts];
 }
 
 
@@ -409,7 +410,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
   // if (patchInfoVecPtr !=  NULL) // just a pre-cautionary measure
   // delete patchInfoVecPtr;    
-  
+
   lastTimeStep = currTimeStep;
   currTimeStep = timeState;
 
@@ -501,52 +502,53 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
       bool addMeshToMetadata = false;
 
       if  ((vartype.find("NC") != string::npos) && ncMesh == false) {
-        ncMesh = true;
+	ncMesh = true;
 	addMeshToMetadata = true;
       }	
       else if ((vartype.find("CC") != string::npos) && ccMesh == false) {
-        ccMesh = true;
+	ccMesh = true;
 	addMeshToMetadata = true;
       }
       else if ((vartype.find("SFCX") != string::npos) && sfcxMesh == false) {
-        sfcxMesh = true;
+	sfcxMesh = true;
 	addMeshToMetadata = true;
       }	
       else if ((vartype.find("SFCY") != string::npos) && sfcyMesh == false) {
-        sfcyMesh = true;
+	sfcyMesh = true;
 	addMeshToMetadata = true;
       }	
       else if ((vartype.find("SFCZ") != string::npos) && sfczMesh == false) {
-        sfczMesh = true;
-        addMeshToMetadata = true;	   
+	sfczMesh = true;
+	addMeshToMetadata = true;	   
       }	   
 
       if (addMeshToMetadata) {
-        strcpy(tmpArray, mesh_for_this_var.c_str());
-        avtMeshMetaData *mesh = new avtMeshMetaData;
+	strcpy(tmpArray, mesh_for_this_var.c_str());
+	avtMeshMetaData *mesh = new avtMeshMetaData;
 
-        mesh->name = tmpArray;
-        mesh->meshType = AVT_AMR_MESH;
-        mesh->topologicalDimension = 3;
-        mesh->spatialDimension = 3;
+	mesh->name = tmpArray;
+	mesh->meshType = AVT_AMR_MESH;
+	mesh->topologicalDimension = 3;
+	mesh->spatialDimension = 3;
 
-        mesh->numBlocks = totalPatches;
-        mesh->blockTitle = "patches";
-        mesh->blockPieceName = "patch";
-        mesh->numGroups = numLevels;
-        mesh->groupTitle = "levels";
-        mesh->groupPieceName = "level";
-        mesh->blockNames = pieceNames;
+	mesh->numBlocks = totalPatches;
+	mesh->blockTitle = "patches";
+	mesh->blockPieceName = "patch";
+	mesh->numGroups = numLevels;
+	mesh->groupTitle = "levels";
+	mesh->groupPieceName = "level";
+	mesh->blockNames = pieceNames;
+	mesh->containsExteriorBoundaryGhosts = true;
 
-        mesh->hasSpatialExtents = true; 
-        mesh->minSpatialExtents[0] = minMaxArr[0];
-        mesh->maxSpatialExtents[0] = minMaxArr[3];
-        mesh->minSpatialExtents[1] = minMaxArr[1];
-        mesh->maxSpatialExtents[1] = minMaxArr[4];
-        mesh->minSpatialExtents[2] = minMaxArr[2];
-        mesh->maxSpatialExtents[2] = minMaxArr[5];
+	mesh->hasSpatialExtents = true; 
+	mesh->minSpatialExtents[0] = minMaxArr[0];
+	mesh->maxSpatialExtents[0] = minMaxArr[3];
+	mesh->minSpatialExtents[1] = minMaxArr[1];
+	mesh->maxSpatialExtents[1] = minMaxArr[4];
+	mesh->minSpatialExtents[2] = minMaxArr[2];
+	mesh->maxSpatialExtents[2] = minMaxArr[5];
 
-        md->Add(mesh); 
+	md->Add(mesh); 
       }
 
       varMatls* varMatlsPtr = (*getMaterials)(folder, varname, timeState);
@@ -572,24 +574,24 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 	/*if (vartype.find("NC") != string::npos) {
 	  cent = AVT_NODECENT;
 	  mesh_for_this_var.assign("NC"); 
-	}  
-	else if (vartype.find("CC") != string::npos) {  
+	  }  
+	  else if (vartype.find("CC") != string::npos) {  
 	  cent = AVT_ZONECENT;
 	  mesh_for_this_var.assign("CC"); 
-	}
-	else if (vartype.find("SFC") != string::npos) { 
+	  }
+	  else if (vartype.find("SFC") != string::npos) { 
 	  cent = AVT_ZONECENT;
 
 	  if (vartype.find("SFCX") != string::npos)             
-	    mesh_for_this_var.assign("SFCX");
+	  mesh_for_this_var.assign("SFCX");
 	  else if (vartype.find("SFCY") != string::npos)                
-	    mesh_for_this_var.assign("SFCY");
+	  mesh_for_this_var.assign("SFCY");
 	  else if (vartype.find("SFCZ") != string::npos)                
-	    mesh_for_this_var.assign("SFCZ");
-	}  
+	  mesh_for_this_var.assign("SFCZ");
+	  }  
 
-	mesh_for_this_var.append("mesh_");
-	mesh_for_this_var.append(newVarname);*/
+	  mesh_for_this_var.append("mesh_");
+	  mesh_for_this_var.append(newVarname);*/
 
 	// cout << newVarname << " " << mesh_for_this_var << endl;
 
@@ -600,30 +602,30 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
 	/*avtMeshMetaData *mesh = new avtMeshMetaData;
 
-	mesh->name = buffer;
-	mesh->meshType = AVT_AMR_MESH;
-	mesh->topologicalDimension = 3;
-	mesh->spatialDimension = 3;
-	mesh->blockOrigin = 0;
+	  mesh->name = buffer;
+	  mesh->meshType = AVT_AMR_MESH;
+	  mesh->topologicalDimension = 3;
+	  mesh->spatialDimension = 3;
+	  mesh->blockOrigin = 0;
 
-	mesh->numBlocks = totalPatches;
-	mesh->blockTitle = "patches";
-	mesh->blockPieceName = "patch";
-	mesh->numGroups = numLevels;
-	mesh->groupTitle = "levels";
-	mesh->groupPieceName = "level";
+	  mesh->numBlocks = totalPatches;
+	  mesh->blockTitle = "patches";
+	  mesh->blockPieceName = "patch";
+	  mesh->numGroups = numLevels;
+	  mesh->groupTitle = "levels";
+	  mesh->groupPieceName = "level";
 
-	mesh->hasSpatialExtents = true; 
-	mesh->minSpatialExtents[0] = minMaxArr[0];
-	mesh->maxSpatialExtents[0] = minMaxArr[3];
-	mesh->minSpatialExtents[1] = minMaxArr[1];
-	mesh->maxSpatialExtents[1] = minMaxArr[4];
-	mesh->minSpatialExtents[2] = minMaxArr[2];
-	mesh->maxSpatialExtents[2] = minMaxArr[5];
+	  mesh->hasSpatialExtents = true; 
+	  mesh->minSpatialExtents[0] = minMaxArr[0];
+	  mesh->maxSpatialExtents[0] = minMaxArr[3];
+	  mesh->minSpatialExtents[1] = minMaxArr[1];
+	  mesh->maxSpatialExtents[1] = minMaxArr[4];
+	  mesh->minSpatialExtents[2] = minMaxArr[2];
+	  mesh->maxSpatialExtents[2] = minMaxArr[5];
 
-	mesh->blockNames = pieceNames;
+	  mesh->blockNames = pieceNames;
 
-	md->Add(mesh); */
+	  md->Add(mesh); */
 
 	if (vartype.find("Vector") != string::npos) 
 	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
@@ -634,7 +636,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
       }
     }   
   }
-  
+
   ccMesh = false;
   ncMesh = false;
   sfcxMesh = false;
@@ -902,13 +904,13 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
     logExts[2] = patchInfoVecObj[i].indexArr[2]; 
     logExts[5] = patchInfoVecObj[i].indexArr[5] - 1;
 
-    if (childPatches[i].size() > 0) {
+    /*if (childPatches[i].size() > 0) {
       cout << "Parent: " << i << " Child patches: ";
       for (int j = 0; j < childPatches[i].size(); j++) {
 	cout << childPatches[i][j] << " ";
       }
       cout << endl;
-    }   
+    }*/   
 
     dn->SetNestingForDomain(i, my_level, childPatches[i], logExts);
   }
@@ -959,9 +961,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
   if (meshName.find("mesh_particle") == string::npos) { // volume data
     cout << "\nIn GetMesh, timestate: " << timestate << "\n";
 
-    cout << "domain: " << domain << endl;
-
-    cout << meshName << " ";
+    // cout << "domain: " << domain << endl;
+    // cout << meshName << " ";
 
     size_t found1 = meshName.find("_");
     size_t found2 = meshName.find("/");
@@ -969,11 +970,11 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     string varName = meshName.substr(found1 + 1, found2 - (found1 + 1));
     string matlNo = meshName.substr(found2 + 1);
 
-    cout << varName << endl;
-    cout << matlNo << endl;
+    // cout << varName << endl;
+    // cout << matlNo << endl;
 
     if (currMesh.compare(varName) != 0) {
-      cout << "Making the much required call to getPatchInfo\n";
+      // cout << "Making the much required call to getPatchInfo\n";
       patchInfoVecPtr = (*getPatchInfo)(folder, timestate, meshname, true);
       levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
       int numLevels = levelPatchVecObj.size();
@@ -989,13 +990,13 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
 
-    // int level, local_patch;
-
-    // GetLevelAndLocalPatchNumber(domain, timestate, level, local_patch);
-    // double* minMaxArr = (*getPatchBBox)(folder, timestate, level, local_patch);
+    int level, local_patch;
+    GetLevelAndLocalPatchNumber(domain, timestate, level, local_patch);
 
     double* minMaxArr = patchInfoVecObj[domain].minMaxArr;
-    int* indexArr = patchInfoVecObj[domain].indexArr;
+
+    int indexArr[6];
+    std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
 
     // cout << level << " " << local_patch << endl; 
 
@@ -1023,11 +1024,14 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     int cellValColln_y = indexArr[4] - indexArr[1];
     int cellValColln_z = indexArr[5] - indexArr[2];
 
-    cout << cellValColln_x << " " << cellValColln_y << " " << cellValColln_z << endl;
+    int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
 
-    // cout << cellValColln_x << " " << cellValColln_y << " " << cellValColln_z << endl;
-    /*for (int i = 0; i < 6; i++)
-      cout << minMaxArr[i] <<  endl;*/
+    indexArr[0] = indexArr[0] - hiLoArr[0]; 
+    indexArr[1] = indexArr[1] - hiLoArr[1]; 
+    indexArr[2] = indexArr[2] - hiLoArr[2];
+    indexArr[3] = indexArr[3] - hiLoArr[0]; 
+    indexArr[4] = indexArr[4] - hiLoArr[1]; 
+    indexArr[5] = indexArr[5] - hiLoArr[2];
 
     int ndims = 3; 
     int dims[3] = {cellValColln_x + 1, cellValColln_y + 1, cellValColln_z + 1}; // for node centered -> remove +1
@@ -1042,7 +1046,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     dtdx = dtdy = dtdz = 0.;
 
     if (meshName.find("NC") != string::npos) {
-      cout << "NC Mesh\n";
       dims[0] = cellValColln_x;
       dims[1] = cellValColln_y;
       dims[2] = cellValColln_z;
@@ -1052,7 +1055,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       dz = (minMaxArr[5] - minMaxArr[2]) / (cellValColln_z - 1);
     }  
     else if (meshName.find("SFC") != string::npos) {
-      cout << "SFC Mesh\n";
       dims[0] = cellValColln_x + 1;
       dims[1] = cellValColln_y + 1;
       dims[2] = cellValColln_z + 1;
@@ -1060,56 +1062,45 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       dx = (minMaxArr[3] - minMaxArr[0]) / cellValColln_x;
       dy = (minMaxArr[4] - minMaxArr[1]) / cellValColln_y;
       dz = (minMaxArr[5] - minMaxArr[2]) / cellValColln_z;
-
-      if (meshName.find("SFCX") != string::npos) {
-	cout << "SFCX\n";
-	dims[0] = dims[0] - 1;
-	dx = (minMaxArr[3] - minMaxArr[0]) / (cellValColln_x - 1);
-	// dtdy = dy / 2.;
-	// dtdz = dz / 2.;
-      }
-      else if (meshName.find("SFCY") != string::npos) {
-	cout << "SFCY\n";
-	dims[1] = dims[1] - 1;
-	dy = (minMaxArr[4] - minMaxArr[1]) / (cellValColln_y - 1);
-	// dtdx = dx / 2.;
-	// dtdz = dz / 2.;
-      }
-      else if (meshName.find("SFCZ") != string::npos) {
-	cout << "SFCZ\n";
-	dims[2] = dims[2] - 1;
-	dz = (minMaxArr[5] - minMaxArr[2]) / (cellValColln_z - 1);
-	// dtdx = dx / 2.;
-	// dtdy = dy / 2.;
-      }                 
     }
+
+    int oldDims[3];
+
+    oldDims[0] = dims[0];
+    oldDims[1] = dims[1];
+    oldDims[2] = dims[2];
+
+    dims[0] = dims[0] + 2;
+    dims[1] = dims[1] + 2;
+    dims[2] = dims[2] + 2;
+
+    vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
+    rgrid->SetDimensions(dims);
 
     // Read the X coordinates from the file. 
     coords[0] = vtkFloatArray::New(); 
     coords[0]->SetNumberOfTuples(dims[0]); 
     float *xarray = (float *)coords[0]->GetVoidPointer(0); 
-    for (int i = 0; i < dims[0]; i++) {
-      xarray[i] =  (minMaxArr[0] + dtdx) + i * dx;
+    for (int i = -1; i < oldDims[0] + 1; i++) {
+      xarray[i+1] =  (minMaxArr[0] + dtdx) + i * dx;
     }
 
     // Read the Y coordinates from the file. 
     coords[1] = vtkFloatArray::New(); 
     coords[1]->SetNumberOfTuples(dims[1]); 
     float *yarray = (float *)coords[1]->GetVoidPointer(0); 
-    for (int i = 0; i < dims[1]; i++) {
-      yarray[i] =  (minMaxArr[1] + dtdy) + i * dy;
+    for (int i = -1; i < oldDims[1] + 1; i++) {
+      yarray[i+1] =  (minMaxArr[1] + dtdy) + i * dy;
     }
 
     // Read the Z coordinates from the file. 
     coords[2] = vtkFloatArray::New(); 
     coords[2]->SetNumberOfTuples(dims[2]); 
     float *zarray = (float *)coords[2]->GetVoidPointer(0); 
-    for (int i = 0; i < dims[2]; i++) {
-      zarray[i] =  (minMaxArr[2] + dtdz) + i * dz;
+    for (int i = -1; i < oldDims[2] + 1; i++) {
+      zarray[i+1] =  (minMaxArr[2] + dtdz) + i * dz;
     }
 
-    vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New(); 
-    rgrid->SetDimensions(dims); 
     rgrid->SetXCoordinates(coords[0]); 
     coords[0]->Delete(); 
     rgrid->SetYCoordinates(coords[1]); 
@@ -1122,8 +1113,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     // VTK dataset as field data.
     //
 
-    // int* indexArr = (*getPatchIndex)(folder, timestate, level, local_patch, meshName); // Add variable/ meshname
-
     vtkIntArray *arr = vtkIntArray::New();
     arr->SetNumberOfTuples(3);
     arr->SetValue(0, indexArr[0]);
@@ -1133,9 +1122,60 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     rgrid->GetFieldData()->AddArray(arr);
     arr->Delete();
 
-    // delete minMaxArr;
-    // delete timeStepObjPtr;
-    // delete indexArr;
+    arr = vtkIntArray::New();
+    arr->SetNumberOfTuples(6);
+    arr->SetValue(0, 1);
+    arr->SetValue(1, dims[0] - 2);
+    arr->SetValue(2, 1);
+    arr->SetValue(3, dims[1] - 2);
+    arr->SetValue(4, 1);
+    arr->SetValue(5, dims[2] - 2);
+    arr->SetName("avtRealDims");
+    rgrid->GetFieldData()->AddArray(arr);
+    arr->Delete();
+
+    // Generate ghost zone information
+    //
+
+    unsigned char realVal = 0, ghostInternal = 0, ghostExternal = 0;
+    avtGhostData::AddGhostZoneType(ghostInternal, 
+	DUPLICATED_ZONE_INTERNAL_TO_PROBLEM);
+    avtGhostData::AddGhostZoneType(ghostExternal, 
+	ZONE_EXTERIOR_TO_PROBLEM);
+
+    vtkUnsignedCharArray *ghostCells = vtkUnsignedCharArray::New();
+    ghostCells->SetName("avtGhostZones");
+
+    ghostCells->Allocate(rgrid->GetNumberOfCells());
+
+    for (int k = indexArr[2] - 1; k < indexArr[5] + 1; ++k)
+      for (int j = indexArr[1] - 1; j < indexArr[4] + 1; ++j)
+	for (int i = indexArr[0] - 1; i < indexArr[3] + 1; ++i)
+	{
+	  if (i >= indexArr[0] && i < indexArr[3] &&
+	      j >= indexArr[1] && j < indexArr[4] && 
+	      k >= indexArr[2] && k < indexArr[5])  
+	  {
+	    ghostCells->InsertNextValue(realVal);
+	  }
+	  else
+	  {
+	    if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) &&
+		j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
+		k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
+	    {
+	      ghostCells->InsertNextValue(ghostInternal);
+	    }
+	    else
+	    {
+	      ghostCells->InsertNextValue(ghostExternal);
+	    }
+	  }
+	}
+
+    rgrid->GetCellData()->AddArray(ghostCells);
+    rgrid->SetUpdateGhostLevel(level);
+    ghostCells->Delete();
 
     cout << "Out GetMesh\n";
 
@@ -1143,7 +1183,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
   }
   else if (meshName.find("mesh_particle") != string::npos) { // particle data
     cout << "\nIn GetMesh\n";
-    cout << meshName << endl;
+    // cout << meshName << endl;
 
     size_t found = meshName.find("/");
     string matl = meshName.substr(found + 1);
@@ -1153,7 +1193,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    cout << matlNo << endl;
+    // cout << matlNo << endl;
 
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
@@ -1202,7 +1242,6 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
       *xc++ = varRef.x;
       *yc++ = varRef.y;
       *zc++ = varRef.z;
-      // cout << varRef.x << " " << varRef.y << " " << varRef.z << endl;
     }
 
     // 
@@ -1299,7 +1338,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
   //
 
   cout << "\nIn GetVar, timestate: " << timestate << "\n";
-  
+
   if (currTimeStep != timestate) {
     levelPatchVecPtr = (*getTotalNumPatches)(folder, timestate);
     currTimeStep = timestate; 
@@ -1316,8 +1355,8 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     string matlNo = varName.substr(found + 1);
     varName = varName.substr(0, found);
 
-    cout << varName << endl;
-    cout << matlNo << endl;
+    // cout << varName << endl;
+    // cout << matlNo << endl;
 
     int level, local_patch;
 
@@ -1356,15 +1395,13 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       strcpy(arr2d[8], buffer); 
       strcpy(arr2d[9], "-o");
       strcpy(arr2d[10], "test"); // anything will do
-      strcpy(arr2d[11], "-nbc"); // boundary cells not required
+      // strcpy(arr2d[11], "-nbc"); // boundary cells not required
 
-      timeStep* timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, local_patch);
+      timeStep* timeStepObjPtr = (*processData)(11, arr2d, timestate, true, 0, false, local_patch);
       timeStep &timeStepObj = *timeStepObjPtr;
 
       cellVals& cellValColln = *(timeStepObj.cellValColln);
       typeDouble& cellValVec = *(cellValColln.cellValVec);
-
-      cout << cellValColln.x << " " << cellValColln.y << " " << cellValColln.z << endl;
 
       // if (refMatrix != NULL)
       // delete [] refMatrix;
@@ -1395,13 +1432,14 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       delete timeStepObjPtr;
     }  
 
-    patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
-    // int* indexArr = patchInfoVecObj[domain].indexArr;
+    patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr);
+
     int indexArr[6];
     std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
-    int cellValColln_x = indexArr[3] - indexArr[0];
-    int cellValColln_y = indexArr[4] - indexArr[1];
-    int cellValColln_z = indexArr[5] - indexArr[2];
+
+    int cellValColln_x = indexArr[3] - indexArr[0] + 2;
+    int cellValColln_y = indexArr[4] - indexArr[1] + 2;
+    int cellValColln_z = indexArr[5] - indexArr[2] + 2;
 
     int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
 
@@ -1412,15 +1450,12 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     indexArr[4] = indexArr[4] - hiLoArr[1]; 
     indexArr[5] = indexArr[5] - hiLoArr[2];
 
-    cout << "[ " << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << " ] " ;
-    cout << "[ " << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << " ] "  << endl;
-
     rv->SetNumberOfTuples(cellValColln_x * cellValColln_y * cellValColln_z);
     count = 0;
 
-    for (int i = indexArr[2]; i < indexArr[5]; i++) {
-      for (int j = indexArr[1]; j < indexArr[4]; j++) {
-	for (int k = indexArr[0]; k < indexArr[3]; k++) {
+    for (int i = indexArr[2]; i < indexArr[5] + 2; i++) {
+      for (int j = indexArr[1]; j < indexArr[4] + 2; j++) {
+	for (int k = indexArr[0]; k < indexArr[3] + 2; k++) {
 	  rv->SetTuple1(count++, refMatrix[k][j][i]);
 	}
       }
@@ -1443,8 +1478,8 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    cout << varName << endl;
-    cout << matlNo << endl;
+    // cout << varName << endl;
+    // cout << matlNo << endl;
 
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
@@ -1532,7 +1567,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
   // EXCEPTION1(InvalidVariableException, varname);
   //
 
-  cout << "\nIn GetVectorVar, timestate: " << timestate << "\n";
+  cout << "\nIn GetVectorVar " << timestate << "\n";
 
   string varName(varname);
 
@@ -1545,13 +1580,12 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     string matlNo = varName.substr(found + 1);
     varName = varName.substr(0, found);
 
-    cout << varName << endl;
-    cout << matlNo << endl;
+    // cout << varName << endl;
+    // cout << matlNo << endl;
 
     int level, local_patch;
 
     GetLevelAndLocalPatchNumber(domain, timestate, level, local_patch);
-    // double* minMaxArr = (*getPatchBBox)(folder, timestate, level, local_patch);
 
     unsigned int count = 0;
 
@@ -1574,14 +1608,16 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
       strcpy(arr2d[8], buffer);
       strcpy(arr2d[9], "-o"); // this is not required
       strcpy(arr2d[10], "test"); // this is not required
-      strcpy(arr2d[11], "-nbc");
+      // strcpy(arr2d[11], "-nbc");
 
-      timeStep *timeStepObjPtr = (*processData)(12, arr2d, timestate, true, 0, false, local_patch);
+      timeStep *timeStepObjPtr = (*processData)(11, arr2d, timestate, true, 0, false, local_patch);
       timeStep &timeStepObj = *timeStepObjPtr;
 
       cellVals& cellValColln = *(timeStepObj.cellValColln);
       typeDouble& cellValVec = *(cellValColln.cellValVec);
       int dim = cellValColln.dim;
+
+      cout << dim << endl;
 
       if (dim == 5) // Tensors
 	ncomps = 9;
@@ -1639,9 +1675,9 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	      for (int p = 0; p < 3; p++) {
 		for (int q = 0; q < 3; q++) {
 		  tenValRef.mat[p][q] = cellValVec[count++];
-		  if (k == 9 && j == 5 && i == 1) {
+		  /*if (k == 9 && j == 5 && i == 1) {
 		    cout << tenValRef.mat[p][q] << " ";
-		  }   
+		    }*/   
 		}
 	      }   
 	    }
@@ -1655,24 +1691,22 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     }  
 
     patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
-    // int* indexArr = patchInfoVecObj[domain].indexArr;
+
     int indexArr[6];
     std::memcpy(indexArr, patchInfoVecObj[domain].indexArr, sizeof(int) * 6);
-    int cellValColln_x = indexArr[3] - indexArr[0];
-    int cellValColln_y = indexArr[4] - indexArr[1];
-    int cellValColln_z = indexArr[5] - indexArr[2];
+
+    int cellValColln_x = indexArr[3] - indexArr[0] + 2; 
+    int cellValColln_y = indexArr[4] - indexArr[1] + 2; 
+    int cellValColln_z = indexArr[5] - indexArr[2] + 2;
 
     int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
-
+    
     indexArr[0] = indexArr[0] - hiLoArr[0]; 
     indexArr[1] = indexArr[1] - hiLoArr[1]; 
     indexArr[2] = indexArr[2] - hiLoArr[2];
     indexArr[3] = indexArr[3] - hiLoArr[0]; 
     indexArr[4] = indexArr[4] - hiLoArr[1]; 
     indexArr[5] = indexArr[5] - hiLoArr[2];
-
-    cout << "[ " << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << " ] " ;
-    cout << "[ " << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << " ] "  << endl;
 
     rv->SetNumberOfComponents(ncomps);
     rv->SetNumberOfTuples(cellValColln_x * cellValColln_y * cellValColln_z);
@@ -1681,9 +1715,9 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     count = 0;
 
     if (ncomps == 3) {
-      for (int i = indexArr[2]; i < indexArr[5]; i++) {
-	for (int j = indexArr[1]; j < indexArr[4]; j++) {
-	  for (int k = indexArr[0]; k < indexArr[3]; k++) {
+      for (int i = indexArr[2]; i < indexArr[5] + 2; i++) {
+	for (int j = indexArr[1]; j < indexArr[4] + 2; j++) {
+	  for (int k = indexArr[0]; k < indexArr[3] + 2; k++) {
 	    vecVal& vecValRef = vecValMatrix[k][j][i];
 	    one_entry[0] = vecValRef.x;
 	    one_entry[1] = vecValRef.y;
@@ -1694,9 +1728,9 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
       }
     }
     else if (ncomps == 9) {
-      for (int i = indexArr[2]; i < indexArr[5]; i++) {
-	for (int j = indexArr[1]; j < indexArr[4]; j++) {
-	  for (int k = indexArr[0]; k < indexArr[3]; k++) {
+      for (int i = indexArr[2]; i < indexArr[5] + 2; i++) {
+	for (int j = indexArr[1]; j < indexArr[4] + 2; j++) {
+	  for (int k = indexArr[0]; k < indexArr[3] + 2; k++) {
 	    tenVal& tenValRef = tenValMatrix[k][j][i];
 	    one_entry[0] = tenValRef.mat[0][0];
 	    one_entry[1] = tenValRef.mat[0][1];
@@ -1708,11 +1742,11 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	    one_entry[7] = tenValRef.mat[2][1];
 	    one_entry[8] = tenValRef.mat[2][2];
 	    rv->SetTuple(count++, one_entry);
-	    if (k == 9 && j == 5 && i == 1) {
+	    /*if (k == 9 && j == 5 && i == 1) {
 	      cout << one_entry[0] << " " << one_entry[1] << " " << one_entry[2] << endl;
 	      cout << one_entry[3] << " " << one_entry[4] << " " << one_entry[5] << endl;
 	      cout << one_entry[6] << " " << one_entry[7] << " " << one_entry[8] << endl;
-	    }
+	      }*/
 	  }
 	}
       }
@@ -1731,8 +1765,8 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     if (matl.compare("*") != 0)
       matlNo = atoi(matl.c_str());
 
-    cout << varName << endl;
-    cout << matlNo << endl;
+    // cout << varName << endl;
+    // cout << matlNo << endl;
 
     strcpy(arr2d[0], "uda2nrrd"); // anything will do
     strcpy(arr2d[1], "-uda");
