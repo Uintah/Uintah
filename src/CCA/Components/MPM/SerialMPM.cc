@@ -535,8 +535,10 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   Task* t=scinew Task("MPM::applyExternalLoads",
                     this, &SerialMPM::applyExternalLoads);
                   
-  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pDispLabel,             Ghost::None);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
   if (flags->d_useLoadCurves) {
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
