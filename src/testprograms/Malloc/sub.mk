@@ -32,7 +32,7 @@
 SRCDIR := testprograms/Malloc
 
 PSELIBS :=
-LIBS := $(XML_LIBRARY)
+LIBS := $(XML_LIBRARY) 
 
 PROGRAM := $(SRCDIR)/test1
 SRCS := $(SRCDIR)/test1.cc
@@ -87,7 +87,7 @@ SRCS := $(SRCDIR)/test14.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PSELIBS := Core/Util Core/Containers Core/Exceptions Core/Thread
-LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(XML_LIBRARY) $(DL_LIBRARY) $(THREAD_LIBRARY) 
 PROGRAM := $(SRCDIR)/test15
 SRCS := $(SRCDIR)/test15.cc
 include $(SCIRUN_SCRIPTS)/program.mk

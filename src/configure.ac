@@ -979,11 +979,13 @@ if test "$pkg_Uintah" = "yes"; then
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
-    MALLOC_TRACE_LIB_FLAG="-lMallocTrace -lMallocTraceMPI"
+    MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
+    MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
   AC_SUBST(DEF_MALLOC_TRACE)
   AC_SUBST(INC_MALLOC_TRACE_H)
   AC_SUBST(MALLOC_TRACE_LIB_FLAG)
+  AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
   AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
 
 
@@ -2866,13 +2868,16 @@ EOF
           AC_MSG_ERROR(One or more of the MPI components is missing.)
           echo
         fi
-
+	
   esac
   
   if test ! "$DEF_MPI"; then
      echo
      SCI_MSG_ERROR(one or more of the MPI components is missing.)
   fi
+
+  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
+  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
 fi #end sci_required_mpi
 
 AC_SUBST(HAVE_MPI)
