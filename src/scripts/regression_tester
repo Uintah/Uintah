@@ -285,11 +285,11 @@ mem_check () {
 
     if test -s $n.leak; then
         echo 
-        echo Found memory leaks . . .
+        echo warning:  memory leaks . . .
         echo
         cat $n.leak
         echo 
-        return 1
+        return 0
     else
         echo
         echo "No memory leaks"
