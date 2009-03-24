@@ -64,7 +64,7 @@ int main(){
   //% LBLHITEMPabcswvnm(:,2) == absc
  
   int abcsSize, abcswvnmSize;
-  abcsSize = 1495100; // get the number which is huge
+  abcsSize = 1495001; // get the number which is huge
   abcswvnmSize = abcsSize * 2;
   double *abcswvnm = new double[abcswvnmSize];
   double *Rwvnabcs = new double[abcsSize];
@@ -76,8 +76,7 @@ int main(){
   // R = \frac{int_0^g k(g)}{int_0^1 k(g)}
 
   double sumR = 0;
-  double smallNo = 1e-8;
-  
+ 
   Ebeta1 = C1 * abcswvnm[0] *  abcswvnm[0] *  abcswvnm[0]  * 1e6 /
       ( exp( C2*  abcswvnm[0] / T )- 1);
   
@@ -95,7 +94,7 @@ int main(){
     // convert wvnm from cm-1 to m-1
     // but this should not change Rwvnabcs
     sumR = sumR +
-      (  abcswvnm[i * 2 + 1] * Ibeta2 + abcswvnm[(i+1)*2 + 1] * Ibeta1 ) * 100 * 
+      (  abcswvnm[i * 2 + 1] * Ibeta1 + abcswvnm[(i+1)*2 + 1] * Ibeta2 ) * 100 * 
       ( abcswvnm[(i+1) * 2] -abcswvnm[(i)*2] ) * 100 /2;
     
     Ibeta1 = Ibeta2;

@@ -47,6 +47,7 @@ DEALINGS IN THE SOFTWARE.
 #include "RadCoeff.h"
 #include "RadWsgg.h"
 #include "BinarySearchTree.h"
+#include "mpi.h"
 
 #include <cmath>
 #include <iostream>
@@ -138,7 +139,7 @@ void rayfromSurf(SurfaceType &obSurface,
 		 const double * const a_surface[],
 		 const double * const rs_surface[],
 		 const double * const rd_surface[],
-		 const double *IntenArray_Vol,
+		 double *IntenArray_Vol,
 		 const double * const IntenArray_surface[],
 		 const double *X, const double *Y, const double *Z,
 		 double *kl_Vol, const double *scatter_Vol,
@@ -154,7 +155,7 @@ void rayfromSurf(SurfaceType &obSurface,
 		 BinarySearchTree &obBST,
 		 int *countg, const int &gSize, const int &VolElementNo,
 		 const double *Rkg, const double *gk,
-		 const double *kl, const double *g){
+		 const double *kl, const double *g, const double *Ibeta){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
   double PathLeft, PathSurfaceLeft, weight, traceProbability;
@@ -186,10 +187,11 @@ void rayfromSurf(SurfaceType &obSurface,
 
 
     // set absorption coeff
-    for ( int ki = 0; ki < VolElementNo; ki++)
+   for ( int ki = 0; ki < VolElementNo; ki++){
+     IntenArray_Vol[ki] = Ibeta[rayCounter];
       kl_Vol[ki] = kl[rayCounter];
-
-	     
+   }
+   
     LeftIntenFrac = 1;
     traceProbability = 1;
     weight = 1;
@@ -318,18 +320,20 @@ void rayfromSurf(SurfaceType &obSurface,
 
 int main(int argc, char *argv[]){
 
+    time_t time_start, time_end;
+
   
-//   int my_rank; // rank of process
-//   int np; // number of processes
-  time_t time_start, time_end;
+   int my_rank; // rank of process
+   int np; // number of processes
+
 
   //  int casePlates;
   //  cout << " Please enter plates case " << endl;
   //  cin >> casePlates;
 
 //   // starting up MPI
-//   MPI_Init(&argc, &argv);
-//   MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Init(&argc, &argv);
+    MPI_Barrier(MPI_COMM_WORLD);
   
 //   precision = MPI_Wtick();
   
@@ -339,8 +343,8 @@ int main(int argc, char *argv[]){
 //    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
 //   // Find out number of processes
-//   MPI_Comm_size(MPI_COMM_WORLD, &np);
-
+   //  MPI_Comm_size(MPI_COMM_WORLD, &np);
+  
 
   int rayNoSurface, rayNoVol;
 
@@ -369,7 +373,7 @@ int main(int argc, char *argv[]){
   
   
   BinarySearchTree obBST;
-  gSize = 1495001; //5000;
+  gSize = 1495001; //60000;
   gkSize = gSize * 2;
   iggNo = 0;
   int *countg = new int[gSize];  
@@ -761,10 +765,10 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 600000; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 60000; 
    // TopBottomNo = Ncx * Ncy;
 
-   //  rayNo_Vol[454] = 1000000;
+   //  rayNo_Vol[454] = 60000;
 
    int iSurface;
    // initial all surface elements ray no = 0
@@ -772,16 +776,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_surface[TOP][iSurface] = 600000;
-       rayNo_surface[BOTTOM][iSurface] = 600000;
+       rayNo_surface[TOP][iSurface] = 60000;
+       rayNo_surface[BOTTOM][iSurface] = 60000;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_surface[FRONT][iSurface] = 600000;
-       rayNo_surface[BACK][iSurface] = 600000;
+       rayNo_surface[FRONT][iSurface] = 60000;
+       rayNo_surface[BACK][iSurface] = 60000;
      }   
 
 
@@ -789,8 +793,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_surface[LEFT][iSurface] = 600000;
-       rayNo_surface[RIGHT][iSurface] = 600000;
+       rayNo_surface[LEFT][iSurface] = 60000;
+       rayNo_surface[RIGHT][iSurface] = 60000;
      }
 
    MakeTableFunction obTable;    
@@ -813,7 +817,7 @@ int main(int argc, char *argv[]){
    #include "inputFSKhomoWebb.cc"
    
   int rayNouniform;
-  rayNouniform = 600000;
+  rayNouniform = 60000;
   // generate uniform distributed from 0 to 1 , R same size as rayNo.
   int Runisize;
   Runisize = rayNouniform; // same as rayNo
@@ -857,8 +861,12 @@ int main(int argc, char *argv[]){
     
   }
 
-  
-   MTRand MTrng;
+    //  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
+  obTable.singleArrayTable(kl, Runisize, 1, "abcsTableReta60000noIbCDF.dat");
+  obTable.singleArrayTable(g, Runisize, 1, "wvnTableReta60000noIbCDF.dat");
+  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableReta60000noIbCDF.dat");
+
+    MTRand MTrng;
    VolElement obVol;
    VirtualSurface obVirtual;
    obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);   
@@ -916,14 +924,14 @@ int main(int argc, char *argv[]){
   RadWsgg obWsgg;
   int RkgIndex;
     
-  time (&time_start);
+
  
  
  // for Volume's  Intensity
    // for volume, use black intensity per wavenumber Ibeta,
   // note in I-eta, it is not the total black body intensity integrated over whole wavenumber
    for ( int i = 0; i < VolElementNo; i ++ )
-     IntenArray_Vol[i] = Ibeta[i]; //obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
+     IntenArray_Vol[i] = 0; //obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
 
    // this is valid for gray surfaces, which in Webbhomo case is true.
    // for gray surfaces, emiss_surface doesnot change at different g ( or wavenumbers)
@@ -985,7 +993,8 @@ int main(int argc, char *argv[]){
  
   // end of recalculate Intensity
   
-
+  time (&time_start);
+  
   if ( rayNoSurface != 0 ) { // have rays emitting from surface elements
 
 
@@ -1042,7 +1051,8 @@ int main(int argc, char *argv[]){
 		      s,
 		      obBST,
 		      countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkg, gk, kl, g,
+		      Ibeta);
 	 
 	}
 
@@ -1099,7 +1109,8 @@ int main(int argc, char *argv[]){
 		      s,
 		      obBST,
 		      countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkg, gk, kl, g,
+		      Ibeta);
 	}
 
 
@@ -1156,7 +1167,8 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkg, gk, kl, g,
+		      Ibeta);
 	}
 
 
@@ -1212,7 +1224,8 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkg, gk, kl, g,
+		      Ibeta);
 	}
 
 
@@ -1269,7 +1282,8 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkg, gk, kl, g,
+		      Ibeta);
 	}
 
 
@@ -1326,7 +1340,8 @@ int main(int argc, char *argv[]){
 		      StopLowerBound,
 		      netInten_surface,
 		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkg, gk, kl, g,
+		      Ibeta);
 	}
 
 
@@ -1378,8 +1393,10 @@ int main(int argc, char *argv[]){
 
 	      
 	      // set absorption coeff
-	      for ( int ki = 0; ki < VolElementNo; ki++)
+	      for ( int ki = 0; ki < VolElementNo; ki++){
+		IntenArray_Vol[ki] = Ibeta[rayCounter];
 		kl_Vol[ki] = kl[rayCounter];
+	      }
 	      
 	      OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
 	      
@@ -1493,8 +1510,9 @@ int main(int argc, char *argv[]){
 
 	    // the OutIntenVol is changing with each ray too!!!
 	    sumIncomInten = 0;
-	    
-	    //      obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ietaeta1000000.dat");
+
+	    if ( VolIndex==454) 
+	      obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ieta60000cell454noIbCDF.dat");
 
 	 	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
@@ -1559,7 +1577,7 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta600000-L1-101010", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta60000-L1-101010noIbCDF", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
@@ -1586,19 +1604,13 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolWebbHomoReta600000-L1-101010",
+  obTable.vtkVolTableMake("vtkVolWebbHomoReta60000-L1-101010noIbCDF",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
 
   
  
-  
-  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
-  obTable.singleArrayTable(kl, Runisize, 1, "abcsTable.dat");
-  obTable.singleArrayTable(g, Runisize, 1, "wvnTable.dat");
-  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTable.dat");
-  
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;
   
@@ -1666,7 +1678,8 @@ int main(int argc, char *argv[]){
   delete[] Runi;
   delete[] Ibeta;
   //  delete[]integrIntenSurface; 
-  
+    MPI_Finalize();
+
   return 0;
 
 

@@ -1,5 +1,5 @@
-CXX = g++
-CFLAGS = 
+CXX = /usr/bin/mpicxx
+CFLAGS =  -g
 # CFLAGS = -pg -O3 -MD
 
 SRCS = RMCRTnoInterpolationFSKRIeta.cc Surface.cc RealSurface.cc TopRealSurface.cc BottomRealSurface.cc \

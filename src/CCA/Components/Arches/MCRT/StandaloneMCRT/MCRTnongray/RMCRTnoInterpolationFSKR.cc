@@ -377,7 +377,7 @@ int main(int argc, char *argv[]){
   
   
   BinarySearchTree obBST;
-  gSize = 1495100; //5000;
+  gSize = 5000;
   gkSize = gSize * 2;
   iggNo = 0;
   int *countg = new int[gSize];  
@@ -769,10 +769,10 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1000; 
    // TopBottomNo = Ncx * Ncy;
 
-   rayNo_Vol[454] = 60000;
+   // rayNo_Vol[454] = 60000;
 
    int iSurface;
    // initial all surface elements ray no = 0
@@ -780,16 +780,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_surface[TOP][iSurface] = 0;
-       rayNo_surface[BOTTOM][iSurface] = 0;
+       rayNo_surface[TOP][iSurface] = 1000;
+       rayNo_surface[BOTTOM][iSurface] = 1000;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_surface[FRONT][iSurface] = 0;
-       rayNo_surface[BACK][iSurface] = 0;
+       rayNo_surface[FRONT][iSurface] = 1000;
+       rayNo_surface[BACK][iSurface] = 1000;
      }   
 
 
@@ -797,8 +797,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_surface[LEFT][iSurface] = 0;
-       rayNo_surface[RIGHT][iSurface] = 0;
+       rayNo_surface[LEFT][iSurface] = 1000;
+       rayNo_surface[RIGHT][iSurface] = 1000;
      }
 
    MakeTableFunction obTable;    
@@ -821,7 +821,7 @@ int main(int argc, char *argv[]){
    #include "inputFSKhomoWebb.cc"
    
   int rayNouniform;
-  rayNouniform = 60000;
+  rayNouniform = 1000;
   // generate uniform distributed from 0 to 1 , R same size as rayNo.
   int Runisize;
   Runisize = rayNouniform; // same as rayNo
@@ -1488,7 +1488,7 @@ int main(int argc, char *argv[]){
 
 	    // the OutIntenVol is changing with each ray too!!!
 	    sumIncomInten = 0;
-	    obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ietaeta60000.dat");
+	    // obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ietaeta60000.dat");
 
 	    /*
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
@@ -1559,7 +1559,7 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta60000-L1-101010", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoRg1000-L1-101010", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
@@ -1586,18 +1586,16 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolWebbHomoReta60000-L1-101010",
+  obTable.vtkVolTableMake("vtkVolWebbHomoRg1000-L1-101010",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
 
-  
- 
-  
-  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
-  obTable.singleArrayTable(kl, Runisize, 1, "abcsTable.dat");
-  obTable.singleArrayTable(g, Runisize, 1, "wvnTable.dat");
-  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTable.dat");
+    
+  // obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
+  obTable.singleArrayTable(kl, Runisize, 1, "abcsTableRg1000.dat");
+  obTable.singleArrayTable(g, Runisize, 1, "wvnTableRg1000.dat");
+  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableRg1000.dat");
   
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;
