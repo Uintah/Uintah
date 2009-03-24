@@ -816,6 +816,7 @@ ZOLTAN_LIB_FLAG
 INC_ZOLTAN_H
 DEF_ZOLTAN
 MALLOC_TRACE_LIB_DIR_FLAG
+MALLOC_TRACE_LIB_MPI_FLAG
 MALLOC_TRACE_LIB_FLAG
 INC_MALLOC_TRACE_H
 DEF_MALLOC_TRACE
@@ -7469,8 +7470,10 @@ $as_echo "yes" >&6; }
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
     INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
     MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
-    MALLOC_TRACE_LIB_FLAG="-lMallocTrace -lMallocTraceMPI"
+    MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
+    MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
+
 
 
 
@@ -39493,6 +39496,9 @@ $as_echo "$as_me: error: one or more of the MPI components is missing." >&2;}
    { (exit 1); exit 1; }; }
 
   fi
+
+  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
+  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
 fi #end sci_required_mpi
 
 

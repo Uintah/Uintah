@@ -273,17 +273,24 @@ num_proc () {
 mem_check () {
     
     if test $do_mem -eq 0; then
-        return;
+        return 0;
     fi
 
-    echo $n
-    MALLOC_STATS=$n.mem
+    /usr/local/MallocTrace/bin/parser mallocTrace-0 flat &> $n.mem
 
-    leak=`grep src $MALLOC_STATS`
-    if test -n "$leak"; then
-        echo $leak
+    grep Location ${n}.mem | grep -v unspecified-file > $n.leak
+    if test -n $n.leak; then
+        echo 
+        echo MEMORY LEAKS
+        echo
+        cat $n.leak
+        echo 
+        echo
+        
     else
+        echo
         echo "No memory leaks"
+        echo
     fi
     
 
@@ -333,7 +340,7 @@ run_test () {
         MPI=""
     fi
 
-    mem_check
+
 
     echo; echo "Running: $MPI sus $opts $n.ups"
     $MPI ../sus $opts $n.ups &> $n.out
@@ -348,6 +355,8 @@ run_test () {
         cat $n.out
         run_test_return=1
     fi
+
+    mem_check
 
     rm $n.ups
 
