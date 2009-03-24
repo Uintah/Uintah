@@ -112,5 +112,8 @@ cout << "read in data" << endl;
 //ToArray(gSize, Rkg, "afterInterpolationRkg"); // get Rkg from file
 //ToArray(gkSize, gk, "HITEMPoldLBLkgT1000Trad1000-CO201H2O02CO003.dat");
 
-ToArray(gSize, Rkg, "RwvnabcsNosorting2.dat"); // get Rwvn
+
+ToArray(gSize, Rkg, "RwvnabcsNoIb.dat"); // get Rwvn --no planck function weighting
+
+//ToArray(gSize, Rkg, "RwvnabcsNosorting2.dat"); // get Rwvn -- CDF obtained from planck function weighted
 ToArray(gkSize, gk, "LBLabsc-wvnm-T1000Trad1000-CO201H2O02CO003.dat"); // get abcswvnm
