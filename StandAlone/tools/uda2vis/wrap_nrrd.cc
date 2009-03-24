@@ -87,6 +87,8 @@ bool
 // wrap_copy( Vector* fdata, double*& datap, unsigned int size, Matrix_Op matrix_op ){
 wrap_copy( Vector* fdata, typeDouble* cellValVecPtr, unsigned int size, Matrix_Op matrix_op ){
 
+  cout << "Pushed in " << size << " elements\n"; 
+
   // Copy the data
   for(unsigned int i = 0; i < size; i++) {
     // *datap++ = fdata->x();
