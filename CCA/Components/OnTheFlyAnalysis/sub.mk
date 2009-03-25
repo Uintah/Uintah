@@ -36,10 +36,11 @@ SRCDIR   := CCA/Components/OnTheFlyAnalysis
 
 SRCS     += \
 	$(SRCDIR)/AnalysisModuleFactory.cc \
-	$(SRCDIR)/AnalysisModule.cc	\
-	$(SRCDIR)/lineExtract.cc	\
+	$(SRCDIR)/AnalysisModule.cc	       \
+	$(SRCDIR)/lineExtract.cc	       \
 	$(SRCDIR)/flatPlate_heatFlux.cc	\
-	$(SRCDIR)/pointExtract.cc	\
+	$(SRCDIR)/pointExtract.cc	       \
+	$(SRCDIR)/particleExtract.cc	       \
 	$(SRCDIR)/containerExtract.cc	\
 	$(SRCDIR)/vorticity.cc
 
