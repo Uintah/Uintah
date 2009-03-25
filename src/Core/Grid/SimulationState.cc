@@ -255,7 +255,9 @@ void SimulationState::finalizeMaterials()
   all_spatialops_matls = scinew MaterialSet();
   all_spatialops_matls->addReference();
   vector<int> tmp_spatialops_matls(spatialops_matls.size());
+#if 0
   cout << "spatial ops materials= " << (int)spatialops_matls.size()<< endl; 
+#endif
   for (int i = 0; i<(int)spatialops_matls.size();i++)
     tmp_spatialops_matls[i] = spatialops_matls[i]->getDWIndex();
   all_spatialops_matls->addAll(tmp_spatialops_matls);
