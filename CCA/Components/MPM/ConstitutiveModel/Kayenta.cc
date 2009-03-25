@@ -497,7 +497,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
 
       // Unload ISVs from 1D array into ISVs_new 
       for(int i=0;i<d_NINSV;i++){
-        ISVs_new[i][idx]=svarg[i-1];
+        ISVs_new[i][idx]=svarg[i];
       }
 
       // This is the Cauchy stress, still unrotated
