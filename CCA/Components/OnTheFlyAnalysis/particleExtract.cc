@@ -227,9 +227,16 @@ void particleExtract::restartInitialize()
 void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
                                          const LevelP& level)
 {
+  // only schedule task on the finest level
+  int L_indx = level->getIndex();
+  if(!doMPMOnLevel(L_indx,level->getGrid()->numLevels())){
+    return;
+  }
+
   cout_doing << "particleExtract::scheduleDoAnalysis " << endl;
   Task* t = scinew Task("particleExtract::doAnalysis", 
                    this,&particleExtract::doAnalysis);
+                     
                      
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   
@@ -305,11 +312,13 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       ParticleSubset* pset = new_dw->getParticleSubset(indx, patch,
                                                  gn, NGP, M_lb->pXLabel);
      
-      // extra particle data needed
+      // additional particle data
       new_dw->get(pid,    M_lb->pParticleIDLabel, pset);
       new_dw->get(px,     M_lb->pXLabel,          pset);
       new_dw->get(pColor, M_lb->pColorLabel,      pset);
       
+      //__________________________________
+      //  Put particle data into arrays <double,int,....>_data
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
         
         // bulletproofing
@@ -323,7 +332,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
         const TypeDescription* subtype = td->getSubType();
         
         switch(td->getType()){
-          case TypeDescription::ParticleVariable:      // Particle Variables
+          case TypeDescription::ParticleVariable:    
             switch(subtype->getType()) {
             
             case TypeDescription::double_type:
@@ -368,7 +377,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       createDirectory(pPath, levelIndex);  
 
       //__________________________________
-      // loop over each particle
+      // loop over the particle
       for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
@@ -378,12 +387,13 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
           fname<<path<<"/"<<pid[idx];
           string filename = fname.str();
 
-          //create file and write the file header  
+          //create file and write the file header if the file doesn't exist
           ifstream test(filename.c_str());
           if (!test){
             createFile(filename);
           }
-
+          
+          // open the file
           FILE *fp;
           fp = fopen(filename.c_str(), "a");
           if (!fp){
@@ -510,4 +520,14 @@ particleExtract::createDirectory(string& dirName, string& levelIndex)
   } else {
     closedir(check);
   }
+}
+//______________________________________________________________________
+//
+bool
+particleExtract::doMPMOnLevel(int level, int numLevels)
+{
+  int minGridLevel = 0;
+  int maxGridLevel = 1000;
+  return (level >= minGridLevel && level <= maxGridLevel) ||
+          (minGridLevel < 0 && level == numLevels + minGridLevel);
 }
