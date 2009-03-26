@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_SpatialOps_BadHawkDevol_h
-#define Uintah_Component_SpatialOps_BadHawkDevol_h
+#ifndef Uintah_Component_SpatialOps_KobayashiSarofimDevol_h
+#define Uintah_Component_SpatialOps_KobayashiSarofimDevol_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
@@ -10,13 +10,13 @@
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
-class BadHawkDevolBuilder: public ModelBuilder
+class KobayashiSarofimDevolBuilder: public ModelBuilder
 {
 public: 
-  BadHawkDevolBuilder(std::string modelName, 
+  KobayashiSarofimDevolBuilder(std::string modelName, 
                       vector<std::string> reqLabelNames, 
                       SimulationStateP& sharedState, int qn);
-  ~BadHawkDevolBuilder(); 
+  ~KobayashiSarofimDevolBuilder(); 
 
   ModelBase* build(); 
 
@@ -26,14 +26,14 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class BadHawkDevol: public ModelBase {
+class KobayashiSarofimDevol: public ModelBase {
 public: 
 
-  BadHawkDevol( std::string modelName, SimulationStateP& shared_state, 
+  KobayashiSarofimDevol( std::string modelName, SimulationStateP& shared_state, 
                 const Fields* fieldLabels,
                 vector<std::string> reqLabelNames, int qn );
 
-  ~BadHawkDevol();
+  ~KobayashiSarofimDevol();
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
   /** @brief Schedule the calculation of the source term */ 
