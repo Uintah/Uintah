@@ -26,6 +26,7 @@
        <save label = "TotalMomentum"/>
        <save label = "p.x"/>
        <save label = "p.volume"/>
+       <save label = "p.color"/>
        <save label = "p.stress"/>
        <save label = "g.mass"/>
        <save label = "g.stressFS"/>
@@ -36,6 +37,7 @@
     <MPM>
        <time_integrator>explicit</time_integrator>
        <interpolator>gimp</interpolator>
+       <withColor>      true      </withColor>
     </MPM>
 
     <PhysicalConstants>
@@ -44,7 +46,7 @@
 
     <MaterialProperties>
        <MPM>
-           <material>
+           <material name="disks">
               <density>1000.0</density>
               <constitutive_model type="comp_mooney_rivlin"> 
                  <he_constant_1>100000.0</he_constant_1>
@@ -62,6 +64,7 @@
                   <res>[2,2,2]</res>
                   <velocity>[2.0,2.0,0]</velocity>
                   <temperature>12</temperature>
+                  <color>             0               </color>
                </geom_object>
 
               <geom_object>
@@ -73,6 +76,7 @@
                   <res>[2,2,2]</res>
                   <velocity>[-2.0,-2.0,0]</velocity>
                   <temperature>12</temperature>
+                  <color>             1               </color>
                </geom_object>
            </material>
 
@@ -123,7 +127,25 @@
            </Box>
        </Level>
     </Grid>
-
+    <!--____________________________________________________________________-->
+    <DataAnalysis>
+       <Module name="particleExtract">
+       
+        <material>disks</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <colorThreshold>
+          0
+        </colorThreshold>
+       
+        <Variables>
+          <analyze label="p.velocity"/> 
+          <analyze label="p.stress"/>
+        </Variables>
+ 
+      </Module>
+    </DataAnalysis>  
     
 </Uintah_specification>
 
