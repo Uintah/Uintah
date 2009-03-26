@@ -2,7 +2,7 @@
 // File:          scijump_BabelPortInfo_Impl.hxx
 // Symbol:        scijump.BabelPortInfo-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BabelPortInfo
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -215,16 +215,16 @@ namespace scijump {
      */
     ::gov::cca::Port
     getPort_impl() // throws:
-    //     ::sci::cca::core::NotInitializedException
-    //     ::sidl::RuntimeException
+    //    ::sci::cca::core::NotInitializedException
+    //    ::sidl::RuntimeException
     ;
     /**
      * user defined non-static method.
      */
     ::sci::cca::core::PortInfo
     getPeer_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
     /**
      * user defined non-static method.

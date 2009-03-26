@@ -2,7 +2,7 @@
 // File:          scijump_BuilderService_Impl.cxx
 // Symbol:        scijump.BuilderService-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BuilderService
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -214,8 +214,8 @@ scijump::BuilderService_impl::createInstance_impl (
   /* in */const ::std::string& className,
   /* in */::gov::cca::TypeMap& properties ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.createInstance)
   if (instanceName.size()) {
@@ -240,8 +240,8 @@ scijump::BuilderService_impl::createInstance_impl (
 ::sidl::array< ::gov::cca::ComponentID>
 scijump::BuilderService_impl::getComponentIDs_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getComponentIDs)
@@ -260,8 +260,8 @@ scijump::BuilderService_impl::getComponentIDs_impl ()
 scijump::BuilderService_impl::getComponentProperties_impl (
   /* in */::gov::cca::ComponentID& cid ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getComponentProperties)
   std::cerr << "BuilderService::getComponentProperties is not implemented\n";
@@ -280,8 +280,8 @@ scijump::BuilderService_impl::setComponentProperties_impl (
   /* in */::gov::cca::ComponentID& cid,
   /* in */::gov::cca::TypeMap& map ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.setComponentProperties)
   // Insert-Code-Here {scijump.BuilderService.setComponentProperties} (setComponentProperties method)
@@ -308,8 +308,8 @@ scijump::BuilderService_impl::setComponentProperties_impl (
 scijump::BuilderService_impl::getDeserialization_impl (
   /* in */const ::std::string& s ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getDeserialization)
   // Insert-Code-Here {scijump.BuilderService.getDeserialization} (getDeserialization method)
@@ -336,8 +336,8 @@ scijump::BuilderService_impl::getDeserialization_impl (
 scijump::BuilderService_impl::getComponentID_impl (
   /* in */const ::std::string& componentInstanceName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getComponentID)
   return framework.getComponentInstance(componentInstanceName);
@@ -357,8 +357,8 @@ scijump::BuilderService_impl::destroyInstance_impl (
   /* in */::gov::cca::ComponentID& toDie,
   /* in */float timeout ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.destroyInstance)
 
@@ -384,8 +384,8 @@ scijump::BuilderService_impl::destroyInstance_impl (
 scijump::BuilderService_impl::getProvidedPortNames_impl (
   /* in */::gov::cca::ComponentID& cid ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getProvidedPortNames)
   // Insert-Code-Here {scijump.BuilderService.getProvidedPortNames} (getProvidedPortNames method)
@@ -411,8 +411,8 @@ scijump::BuilderService_impl::getProvidedPortNames_impl (
 scijump::BuilderService_impl::getUsedPortNames_impl (
   /* in */::gov::cca::ComponentID& cid ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getUsedPortNames)
   // Insert-Code-Here {scijump.BuilderService.getUsedPortNames} (getUsedPortNames method)
@@ -442,8 +442,8 @@ scijump::BuilderService_impl::getPortProperties_impl (
   /* in */::gov::cca::ComponentID& cid,
   /* in */const ::std::string& portName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getPortProperties)
   // Insert-Code-Here {scijump.BuilderService.getPortProperties} (getPortProperties method)
@@ -473,8 +473,8 @@ scijump::BuilderService_impl::setPortProperties_impl (
   /* in */const ::std::string& portName,
   /* in */::gov::cca::TypeMap& map ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.setPortProperties)
   // Insert-Code-Here {scijump.BuilderService.setPortProperties} (setPortProperties method)
@@ -509,8 +509,8 @@ scijump::BuilderService_impl::connect_impl (
   /* in */::gov::cca::ComponentID& provider,
   /* in */const ::std::string& providingPortName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.connect)
   ::sci::cca::core::ComponentInfo ciUser = ::sidl::babel_cast< ::sci::cca::core::ComponentInfo>(user);
@@ -578,8 +578,8 @@ scijump::BuilderService_impl::getConnectionIDs_impl (
   /* in array<gov.cca.ComponentID> */::sidl::array< ::gov::cca::ComponentID>& 
     componentList ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getConnectionIDs)
   return framework.getConnectionInstances(componentList);
@@ -595,8 +595,8 @@ scijump::BuilderService_impl::getConnectionIDs_impl (
 scijump::BuilderService_impl::getConnectionProperties_impl (
   /* in */::gov::cca::ConnectionID& connID ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.getConnectionProperties)
   // Insert-Code-Here {scijump.BuilderService.getConnectionProperties} (getConnectionProperties method)
@@ -624,8 +624,8 @@ scijump::BuilderService_impl::setConnectionProperties_impl (
   /* in */::gov::cca::ConnectionID& connID,
   /* in */::gov::cca::TypeMap& map ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.setConnectionProperties)
   // Insert-Code-Here {scijump.BuilderService.setConnectionProperties} (setConnectionProperties method)
@@ -659,8 +659,8 @@ scijump::BuilderService_impl::disconnect_impl (
   /* in */::gov::cca::ConnectionID& connID,
   /* in */float timeout ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.disconnect)
 
@@ -734,8 +734,8 @@ scijump::BuilderService_impl::disconnectAll_impl (
   /* in */::gov::cca::ComponentID& id2,
   /* in */float timeout ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BuilderService.disconnectAll)
   // Insert-Code-Here {scijump.BuilderService.disconnectAll} (disconnectAll method)

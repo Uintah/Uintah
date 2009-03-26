@@ -2,7 +2,7 @@
 // File:          scijump_EventService_Impl.hxx
 // Symbol:        scijump.EventService-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.EventService
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -162,8 +162,8 @@ namespace scijump {
       /* in */const ::std::string& topicName
     )
     // throws:
-    //     ::sci::cca::EventServiceException
-    //     ::sidl::RuntimeException
+    //    ::sci::cca::EventServiceException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -190,8 +190,8 @@ namespace scijump {
       /* in */const ::std::string& subscriptionName
     )
     // throws:
-    //     ::sci::cca::EventServiceException
-    //     ::sidl::RuntimeException
+    //    ::sci::cca::EventServiceException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -203,8 +203,8 @@ namespace scijump {
      */
     void
     processEvents_impl() // throws:
-    //     ::sci::cca::EventServiceException
-    //     ::sidl::RuntimeException
+    //    ::sci::cca::EventServiceException
+    //    ::sidl::RuntimeException
     ;
   };  // end class EventService_impl
 

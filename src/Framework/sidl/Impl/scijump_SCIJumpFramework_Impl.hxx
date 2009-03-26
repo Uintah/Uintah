@@ -2,7 +2,7 @@
 // File:          scijump_SCIJumpFramework_Impl.hxx
 // Symbol:        scijump.SCIJumpFramework-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.SCIJumpFramework
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -185,7 +185,8 @@ namespace scijump {
     ::scijump::core::ServiceInfo
     getFrameworkService_impl (
       /* in */const ::std::string& serviceName,
-      /* in */::sci::cca::core::PortInfo& requesterPort
+      /* in */::sci::cca::core::PortInfo& requesterPort,
+      /* in */bool connect
     )
     ;
 
@@ -249,8 +250,8 @@ namespace scijump {
       /* in */const ::std::string& name
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -258,8 +259,8 @@ namespace scijump {
      */
     ::sidl::array< ::gov::cca::ComponentID>
     getComponentInstances_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
     /**
      * user defined non-static method.
@@ -292,8 +293,8 @@ namespace scijump {
         ::gov::cca::ComponentID>& componentList
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -347,8 +348,8 @@ namespace scijump {
      */
     ::gov::cca::TypeMap
     createTypeMap_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -386,8 +387,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& selfProperties
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -410,8 +411,8 @@ namespace scijump {
       /* in */::gov::cca::Services& services
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -422,8 +423,8 @@ namespace scijump {
      */
     void
     shutdownFramework_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -442,8 +443,8 @@ namespace scijump {
      */
     ::gov::cca::AbstractFramework
     createEmptyFramework_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
   };  // end class SCIJumpFramework_impl
 

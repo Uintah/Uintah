@@ -2,7 +2,7 @@
 // File:          scijump_BabelServices_Impl.cxx
 // Symbol:        scijump.BabelServices-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BabelServices
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -207,8 +207,8 @@ scijump::BabelServices_impl::callReleaseCallback_impl ()
 scijump::BabelServices_impl::getPort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPort)
 
@@ -233,17 +233,35 @@ scijump::BabelServices_impl::getPort_impl (
 
   // scijump framework connects framework services to uses ports
   if (! pi.isConnected() ) {
-    if ( ! framework.isFrameworkService( pi.getClass() ) ) {
+    if ( framework.isFrameworkService( pi.getClass() ) ) {
+      // (from Plume) ask for the service: the framework will also make the connection
+      ::sci::cca::core::ServiceInfo service = framework.getFrameworkService(pi.getClass(), pi, true);
+      Guard guard(lock_services);
+      servicePorts[portName] = service;      
+    }
+    else if ( framework.isFrameworkService("cca.ServiceRegistry") ) {
+      // Check the service registry ; service registry will connect
+      ::sci::cca::core::ServiceInfo si = framework.getFrameworkService("cca.ServiceRegistry", pi, false);
+      gov::cca::Port p = si.getServicePort().getPort();
+      scijump::ServiceRegistry sr = babel_cast<scijump::ServiceRegistry>(p);
+      if ( sr._not_nil() ) {
+	::sci::cca::core::ServiceInfo service = sr.getService(pi.getClass(),pi);
+	if ( service._is_nil() ) goto PORT_NOT_FOUND;
+	Guard guard(lock_services);
+	servicePorts[portName] = service;      
+      }
+      else {
+	goto PORT_NOT_FOUND;
+      }
+    }
+    else {
+PORT_NOT_FOUND:
       scijump::CCAException ex = scijump::CCAException::_create();
       ex.initialize(::gov::cca::CCAExceptionType_PortNotConnected);
       ex.setNote("Port [" + portName + "] is not connected");
       ex.add(__FILE__, __LINE__, "getPort");
       throw ex;
     }
-    // (from Plume) ask for the service: the framework will also make the connection
-    ::sci::cca::core::ServiceInfo service = framework.getFrameworkService(pi.getClass(), pi);
-    Guard guard(lock_services);
-    servicePorts[portName] = service;
   }
 
   // port is connected
@@ -272,8 +290,8 @@ scijump::BabelServices_impl::getPort_impl (
 scijump::BabelServices_impl::getPortNonblocking_impl (
   /* in */const ::std::string& portName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPortNonblocking)
   // Insert-Code-Here {scijump.BabelServices.getPortNonblocking} (getPortNonblocking method)
@@ -305,8 +323,8 @@ void
 scijump::BabelServices_impl::releasePort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.releasePort)
   ::sci::cca::core::PortInfo pi;
@@ -362,8 +380,8 @@ scijump::BabelServices_impl::releasePort_impl (
 ::gov::cca::TypeMap
 scijump::BabelServices_impl::createTypeMap_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.createTypeMap)
@@ -409,8 +427,8 @@ scijump::BabelServices_impl::registerUsesPort_impl (
   /* in */const ::std::string& type,
   /* in */::gov::cca::TypeMap& properties ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.registerUsesPort)
 
@@ -445,8 +463,8 @@ void
 scijump::BabelServices_impl::unregisterUsesPort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.unregisterUsesPort)
 
@@ -520,8 +538,8 @@ scijump::BabelServices_impl::addProvidesPort_impl (
   /* in */const ::std::string& type,
   /* in */::gov::cca::TypeMap& properties ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.addProvidesPort)
 
@@ -582,8 +600,8 @@ void
 scijump::BabelServices_impl::removeProvidesPort_impl (
   /* in */const ::std::string& portName ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.removeProvidesPort)
 
@@ -638,8 +656,8 @@ void
 scijump::BabelServices_impl::registerForRelease_impl (
   /* in */::gov::cca::ComponentRelease& callBack ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.registerForRelease)
   this->callback = callBack;

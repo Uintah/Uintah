@@ -2,7 +2,7 @@
 // File:          scijump_BabelComponentInfo_Impl.cxx
 // Symbol:        scijump.BabelComponentInfo-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BabelComponentInfo
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -358,8 +358,8 @@ scijump::BabelComponentInfo_impl::invalidate_impl ()
 ::std::string
 scijump::BabelComponentInfo_impl::getInstanceName_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getInstanceName)
@@ -382,8 +382,8 @@ scijump::BabelComponentInfo_impl::getInstanceName_impl ()
 ::std::string
 scijump::BabelComponentInfo_impl::getSerialization_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelComponentInfo.getSerialization)

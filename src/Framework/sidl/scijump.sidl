@@ -59,10 +59,20 @@ package scijump version 0.2.1 {
 
   class TypeMap implements-all gov.cca.TypeMap {}
 
+  class ServiceProvider implements-all gov.cca.ports.ServiceProvider {}  
+
+  class ServiceRegistry implements-all gov.cca.ports.ServiceRegistry,
+                                       sci.cca.core.FrameworkService {
+
+    static sci.cca.core.FrameworkService create(in sci.cca.AbstractFramework framework);
+    void initialize(in sci.cca.AbstractFramework framework);
+    core.ServiceInfo getService(in string serviceName, in sci.cca.core.PortInfo requesterPort);
+  }
+
   class SCIJumpFramework implements-all sci.cca.AbstractFramework {
       // from Plume framework
       bool isFrameworkService(in string name);
-      core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort);
+      core.ServiceInfo getFrameworkService(in string serviceName, in sci.cca.core.PortInfo requesterPort, in bool connect);
       void releaseFrameworkService(in sci.cca.core.ServiceInfo info);
 
       /** Eliminates the component instance ``cid'' from the scope of the

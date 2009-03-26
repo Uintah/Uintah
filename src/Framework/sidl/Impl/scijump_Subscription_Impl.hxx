@@ -2,7 +2,7 @@
 // File:          scijump_Subscription_Impl.hxx
 // Symbol:        scijump.Subscription-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.Subscription
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -143,8 +143,8 @@ namespace scijump {
       /* in */::sci::cca::EventListener& theListener
     )
     // throws:
-    //     ::sci::cca::EventServiceException
-    //     ::sidl::RuntimeException
+    //    ::sci::cca::EventServiceException
+    //    ::sidl::RuntimeException
     ;
 
 

@@ -2,7 +2,7 @@
 // File:          scijump_BabelServices_Impl.hxx
 // Symbol:        scijump.BabelServices-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BabelServices
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -199,8 +199,8 @@ namespace scijump {
       /* in */const ::std::string& portName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -225,8 +225,8 @@ namespace scijump {
       /* in */const ::std::string& portName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -247,8 +247,8 @@ namespace scijump {
       /* in */const ::std::string& portName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -258,8 +258,8 @@ namespace scijump {
      */
     ::gov::cca::TypeMap
     createTypeMap_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -301,8 +301,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& properties
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -321,8 +321,8 @@ namespace scijump {
       /* in */const ::std::string& portName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -373,8 +373,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& properties
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -408,8 +408,8 @@ namespace scijump {
       /* in */const ::std::string& portName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -437,8 +437,8 @@ namespace scijump {
       /* in */::gov::cca::ComponentRelease& callBack
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
   };  // end class BabelServices_impl

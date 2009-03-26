@@ -2,7 +2,7 @@
 // File:          scijump_TypeMap_Impl.hxx
 // Symbol:        scijump.TypeMap-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.TypeMap
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -169,8 +169,8 @@ namespace scijump {
       /* in */int32_t dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -182,8 +182,8 @@ namespace scijump {
       /* in */int64_t dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -195,8 +195,8 @@ namespace scijump {
       /* in */float dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -208,8 +208,8 @@ namespace scijump {
       /* in */double dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -221,8 +221,8 @@ namespace scijump {
       /* in */const ::std::complex<float>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -234,8 +234,8 @@ namespace scijump {
       /* in */const ::std::complex<double>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -247,8 +247,8 @@ namespace scijump {
       /* in */const ::std::string& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -260,8 +260,8 @@ namespace scijump {
       /* in */bool dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -273,8 +273,8 @@ namespace scijump {
       /* in array<int> */::sidl::array<int32_t>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -286,8 +286,8 @@ namespace scijump {
       /* in array<long> */::sidl::array<int64_t>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -299,8 +299,8 @@ namespace scijump {
       /* in array<float> */::sidl::array<float>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -312,8 +312,8 @@ namespace scijump {
       /* in array<double> */::sidl::array<double>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -325,8 +325,8 @@ namespace scijump {
       /* in array<fcomplex> */::sidl::array< ::sidl::fcomplex>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -338,8 +338,8 @@ namespace scijump {
       /* in array<dcomplex> */::sidl::array< ::sidl::dcomplex>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -351,8 +351,8 @@ namespace scijump {
       /* in array<string> */::sidl::array< ::std::string>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -364,8 +364,8 @@ namespace scijump {
       /* in array<bool> */::sidl::array<bool>& dflt
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -381,8 +381,8 @@ namespace scijump {
       /* in */int32_t value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -394,8 +394,8 @@ namespace scijump {
       /* in */int64_t value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -407,8 +407,8 @@ namespace scijump {
       /* in */float value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -420,8 +420,8 @@ namespace scijump {
       /* in */double value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -433,8 +433,8 @@ namespace scijump {
       /* in */const ::std::complex<float>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -446,8 +446,8 @@ namespace scijump {
       /* in */const ::std::complex<double>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -459,8 +459,8 @@ namespace scijump {
       /* in */const ::std::string& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -472,8 +472,8 @@ namespace scijump {
       /* in */bool value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -485,8 +485,8 @@ namespace scijump {
       /* in array<int> */::sidl::array<int32_t>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -498,8 +498,8 @@ namespace scijump {
       /* in array<long> */::sidl::array<int64_t>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -511,8 +511,8 @@ namespace scijump {
       /* in array<float> */::sidl::array<float>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -524,8 +524,8 @@ namespace scijump {
       /* in array<double> */::sidl::array<double>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -537,8 +537,8 @@ namespace scijump {
       /* in array<fcomplex> */::sidl::array< ::sidl::fcomplex>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -550,8 +550,8 @@ namespace scijump {
       /* in array<dcomplex> */::sidl::array< ::sidl::dcomplex>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -563,8 +563,8 @@ namespace scijump {
       /* in array<string> */::sidl::array< ::std::string>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -576,8 +576,8 @@ namespace scijump {
       /* in array<bool> */::sidl::array<bool>& value
     )
     // throws:
-    //     ::gov::cca::TypeMismatchException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::TypeMismatchException
+    //    ::sidl::RuntimeException
     ;
 
 
