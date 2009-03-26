@@ -55,7 +55,8 @@ namespace Uintah {
     // Create datatype for failure strains
     struct FailureStrainData {
       double mean;      /*< Mean failure strain */
-      double std;       /*< Standard deviation of failure strain */
+      double std;       /*< Standard deviation of failure strain or Weibull modulus */
+      double scale;     /*< Scale parameter for Weibull distribution*/
       std::string dist; /*< Failure strain distrinution */
       bool failureByStress; /*<Failure by strain (default) or stress */
     };

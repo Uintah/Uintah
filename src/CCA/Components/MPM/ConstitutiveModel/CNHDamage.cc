@@ -48,6 +48,7 @@ DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
+#include <Core/Math/Weibull.h>
 #include <Core/Math/Short27.h> //for Fracture
 
 using std::cerr;
@@ -108,6 +109,7 @@ void CNHDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
   cm_ps->appendElement("failure_strain_mean",d_epsf.mean);
   cm_ps->appendElement("failure_strain_std",d_epsf.std);
+  cm_ps->appendElement("failure_strain_scale",d_epsf.scale);
   cm_ps->appendElement("failure_strain_distrib",d_epsf.dist);
   cm_ps->appendElement("failure_by_stress",d_epsf.failureByStress);
 
@@ -145,10 +147,12 @@ CNHDamage::getFailureStrainData(ProblemSpecP& ps)
 {
   d_epsf.mean = 10.0; // Mean failure strain
   d_epsf.std = 0.0;  // STD failure strain
+  d_epsf.scale = 1.0; // Scale Parameter for Weibull Distribution
   d_epsf.dist = "constant";
   d_epsf.failureByStress = false; // failure by strain default
   ps->get("failure_strain_mean",    d_epsf.mean);
   ps->get("failure_strain_std",     d_epsf.std);
+  ps->get("failure_strain_scale",   d_epsf.scale);
   ps->get("failure_strain_distrib", d_epsf.dist);
   ps->get("failure_by_stress", d_epsf.failureByStress);
 }
@@ -158,6 +162,7 @@ CNHDamage::setFailureStrainData(const CNHDamage* cm)
 {
   d_epsf.mean = cm->d_epsf.mean;
   d_epsf.std = cm->d_epsf.std;
+  d_epsf.scale = cm->d_epsf.scale;
   d_epsf.dist = cm->d_epsf.dist;
   d_epsf.failureByStress = cm->d_epsf.failureByStress;
 }
@@ -234,13 +239,22 @@ CNHDamage::initializeCMData(const Patch* patch,
       pFailureStrain[*iter] = d_epsf.mean;
       pFailed[*iter] = 0;
     }
-  } else {
+  } else if (d_epsf.dist == "gauss"){
     // Initialize a gaussian random number generator
     SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, 0);
 
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;
       pFailureStrain[*iter] = fabs(gaussGen.rand());
+      pFailed[*iter] = 0;
+    }
+  } else {
+    // Initialize a weibull random number generator
+    SCIRun::Weibull weibGen(d_epsf.mean, d_epsf.std, d_epsf.scale, 0);
+
+    for(;iter != pset->end();iter++){
+      pBeBar[*iter] = Id;
+      pFailureStrain[*iter] = weibGen.rand();
       pFailed[*iter] = 0;
     }
   }
