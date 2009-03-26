@@ -74,6 +74,7 @@
     <failure_strain_mean           spec="OPTIONAL DOUBLE" />
     <failure_strain_std            spec="OPTIONAL DOUBLE" />
     <failure_strain_distrib        spec="OPTIONAL STRING" />
+    <failure_strain_scale          spec="OPTIONAL DOUBLE" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
     <frac_nucleation               spec="OPTIONAL DOUBLE" />
     <fracture_toughness_curve      spec="OPTIONAL NO_DATA" >
