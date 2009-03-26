@@ -236,6 +236,16 @@ SpatialOps::scheduleInitialize(const LevelP& level,
 #endif
   tsk->computes( d_fieldLabels->velocityLabels.ccVelocity ); 
 
+  // Source terms for DQMOM
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+    EqnBase* temp_eqn = ieqn->second; 
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+    const VarLabel* temp = eqn->getSourceLabel();
+    tsk->computes( temp ); 
+  } 
+
   for (Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.begin(); iLabel != d_fieldLabels->d_labelMap.end(); iLabel++){
     tsk->computes((*iLabel).second);
   }
@@ -283,6 +293,18 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
     wVel.initialize( 0.0 ); 
 #endif
     new_dw->allocateAndPut( ccVel, d_fieldLabels->velocityLabels.ccVelocity, matlIndex, patch ); 
+
+    // --- DQMOM Sources
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+      EqnBase* temp_eqn = ieqn->second; 
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+      const VarLabel* tempLabel = eqn->getSourceLabel();
+      CCVariable<double> tempVar;
+      new_dw->allocateAndPut( tempVar, tempLabel, matlIndex, patch ); 
+      tempVar.initialize(0.0); 
+    } 
 
     // --- TRANSPORTED VARIABLES
     for (CellIterator iter=patch->getSFCXIterator__New(); !iter.done(); iter++){
