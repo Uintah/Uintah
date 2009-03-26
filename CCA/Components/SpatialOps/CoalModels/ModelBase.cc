@@ -1,13 +1,15 @@
 
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/Fields.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 using namespace std;
 using namespace Uintah; 
 
 ModelBase::ModelBase( std::string modelName, SimulationStateP& sharedState,
-                        vector<std::string> icLabelNames, int qn ) : 
+                      const Fields* fieldLabels
+                      vector<std::string> icLabelNames, int qn ) : 
 d_modelName(modelName), d_sharedState( sharedState ), d_icLabels(icLabelNames), d_quadNode(qn)
 {
   //Create a label for this source term. 

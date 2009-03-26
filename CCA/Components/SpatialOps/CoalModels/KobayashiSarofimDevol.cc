@@ -3,7 +3,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/SpatialOps/CoalModels/BadHawkDevol.h>
+#include <CCA/Components/SpatialOps/CoalModels/KobayashiSarofimDevol.h>
 
 //===========================================================================
 
@@ -12,35 +12,35 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-BadHawkDevolBuilder::BadHawkDevolBuilder(std::string srcName, 
+KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder(std::string srcName, 
                                          vector<std::string> icLabelNames, 
                                          SimulationStateP& sharedState, int qn)
 : ModelBuilder(srcName, icLabelNames, sharedState, qn)
 {}
 
-BadHawkDevolBuilder::~BadHawkDevolBuilder(){}
+KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
 
 ModelBase*
-BadHawkDevolBuilder::build(){
-  return scinew BadHawkDevol( d_modelName, d_sharedState, d_icLabels, 
+KobayashiSarofimDevolBuilder::build(){
+  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_icLabels, 
                               d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-BadHawkDevol::BadHawkDevol( std::string srcName, SimulationStateP& sharedState,
+KobayashiSarofimDevol::KobayashiSarofimDevol( std::string srcName, SimulationStateP& sharedState,
                             const Fields* fieldLabels,
                             vector<std::string> icLabelNames, int qn ) 
 : ModelBase(srcName, sharedState, icLabelNames, qn),d_fieldLabels(fieldLabels)
 {}
 
-BadHawkDevol::~BadHawkDevol()
+KobayashiSarofimDevol::~KobayashiSarofimDevol()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-BadHawkDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
+KobayashiSarofimDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
 
   ProblemSpecP db = inputdb; 
@@ -50,10 +50,10 @@ BadHawkDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
 void 
-BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "BadHawkDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::computeModel);
+  std::string taskname = "KobayashiSarofimDevol::computeModel";
+  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
 
   d_timeSubStep = timeSubStep; 
 
@@ -80,7 +80,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-BadHawkDevol::computeModel( const ProcessorGroup* pc, 
+KobayashiSarofimDevol::computeModel( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
