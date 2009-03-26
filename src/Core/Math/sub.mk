@@ -51,6 +51,7 @@ $(TARGDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(TARGDIR)/fnparser.cc
 SRCS += \
         $(SRCDIR)/CubicPWI.cc          \
         $(SRCDIR)/Gaussian.cc          \
+        $(SRCDIR)/Weibull.cc           \
         $(SRCDIR)/LinAlg.c             \
         $(SRCDIR)/LinearPWI.cc         \
         $(SRCDIR)/Mat.c                \
