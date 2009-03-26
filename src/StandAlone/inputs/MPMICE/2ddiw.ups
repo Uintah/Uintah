@@ -17,7 +17,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <max_Timesteps>       100        </max_Timesteps>
+
        <timestep_multiplier>0.3         </timestep_multiplier>
    </Time>
    
@@ -132,7 +132,6 @@
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
       <save label = "p.temperature"/>
-      <checkpoint timestepInterval="10" cycle="2"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
