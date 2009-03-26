@@ -124,6 +124,8 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
 
   d_fileSystemRetrys = 10;
   d_numLevelsInOutput = 0;
+
+  d_writeMeta = false;
 }
 
 DataArchiver::~DataArchiver()
@@ -522,93 +524,91 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
                            int timestep, double time, bool fromScratch,
                            bool removeOldDir)
 {
-   d_outputInitTimestep = false;
-   if (d_writeMeta && !fromScratch) {
-      // partial copy of dat files
-      copyDatFiles(restartFromDir, d_dir, startTimestep,
-                   timestep, removeOldDir);
+  d_outputInitTimestep = false;
+  if( d_writeMeta && !fromScratch ) {
+    // partial copy of dat files
+    copyDatFiles( restartFromDir, d_dir, startTimestep, timestep, removeOldDir );
 
-      copySection(restartFromDir, d_dir, "restarts");
-      copySection(restartFromDir, d_dir, "variables");
-      copySection(restartFromDir, d_dir, "globals");
+    copySection( restartFromDir, d_dir, "restarts" );
+    copySection( restartFromDir, d_dir, "variables" );
+    copySection( restartFromDir, d_dir, "globals" );
 
-      // partial copy of index.xml and timestep directories and
-      // similarly for checkpoints
-      copyTimesteps(restartFromDir, d_dir, startTimestep, timestep,
-                    removeOldDir);
-      Dir checkpointsFromDir = restartFromDir.getSubdir("checkpoints");
-      bool areCheckpoints = true;
-      if (time > 0) {
-        // the restart_merger doesn't need checkpoints, and calls this with time=0.
-        copyTimesteps(checkpointsFromDir, d_checkpointsDir, startTimestep,
-                      timestep, removeOldDir, areCheckpoints);
-        copySection(checkpointsFromDir, d_checkpointsDir, "variables");
-        copySection(checkpointsFromDir, d_checkpointsDir, "globals");
-      }
-      if (removeOldDir) {
-        // Try to remove the old dir...
-        if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
-          // Something strange happened... let's test the filesystem...
-          stringstream error_stream;          
-          if( !testFilesystem( restartFromDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
+    // partial copy of index.xml and timestep directories and
+    // similarly for checkpoints
+    copyTimesteps(restartFromDir, d_dir, startTimestep, timestep, removeOldDir);
+    Dir checkpointsFromDir = restartFromDir.getSubdir("checkpoints");
+    bool areCheckpoints = true;
+    if (time > 0) {
+      // the restart_merger doesn't need checkpoints, and calls this with time=0.
+      copyTimesteps( checkpointsFromDir, d_checkpointsDir, startTimestep,
+                     timestep, removeOldDir, areCheckpoints );
+      copySection( checkpointsFromDir, d_checkpointsDir, "variables" );
+      copySection( checkpointsFromDir, d_checkpointsDir, "globals" );
+    }
+    if (removeOldDir) {
+      // Try to remove the old dir...
+      if( !Dir::removeDir( restartFromDir.getName().c_str() ) ) {
+        // Something strange happened... let's test the filesystem...
+        stringstream error_stream;          
+        if( !testFilesystem( restartFromDir.getName(), error_stream, Parallel::getMPIRank() ) ) {
 
-            cout << error_stream.str();
-            cout.flush();
+          cout << error_stream.str();
+          cout.flush();
 
-            // The file system just gave us some problems...
-            if( Parallel::usingMPI() ) {
-              printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
-            } else {
-              printf( "WARNING: The filesystem appears to be flaky...\n" );
-            }
-          }
-          // Verify that "system works"
-          int code = system( "echo how_are_you" );
-          if (code != 0) {
-            printf( "WARNING: test of system call failed\n" );
+          // The file system just gave us some problems...
+          if( Parallel::usingMPI() ) {
+            printf( "WARNING: Filesystem check failed on processor %d\n", Parallel::getMPIRank() );
+          } else {
+            printf( "WARNING: The filesystem appears to be flaky...\n" );
           }
         }
+        // Verify that "system works"
+        int code = system( "echo how_are_you" );
+        if (code != 0) {
+          printf( "WARNING: test of system call failed\n" );
+        }
       }
-   }
-   else if (d_writeMeta) {
-     // just add <restart from = ".." timestep = ".."> tag.
-     copySection(restartFromDir, d_dir, "restarts");
-     string iname = d_dir.getName()+"/index.xml";
-     ProblemSpecP indexDoc = loadDocument(iname);
-     if (timestep >= 0)
-       addRestartStamp(indexDoc, restartFromDir, timestep);
-
-     indexDoc->output(iname.c_str());
-     //indexDoc->releaseDocument();
-   }
+    }
+  }
+  else if( d_writeMeta ) { // Just add <restart from = ".." timestep = ".."> tag.
+    copySection(restartFromDir, d_dir, "restarts");
+    string iname = d_dir.getName()+"/index.xml";
+    ProblemSpecP indexDoc = loadDocument(iname);
+    if (timestep >= 0) {
+      addRestartStamp(indexDoc, restartFromDir, timestep);
+    }
+    indexDoc->output(iname.c_str());
+    //indexDoc->releaseDocument();
+  }
    
-   // set time and timestep variables appropriately
-   //d_currentTimestep = timestep;
+  // set time and timestep variables appropriately
+  //d_currentTimestep = timestep;
    
-   if (d_outputInterval > 0)
-      d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
-   else if (d_outputTimestepInterval > 0)
-   {
-      d_nextOutputTimestep = (timestep/d_outputTimestepInterval)*d_outputTimestepInterval+1;
-      while(d_nextOutputTimestep<=timestep)
-        d_nextOutputTimestep+=d_outputTimestepInterval;
-   }
+  if( d_outputInterval > 0 ) {
+    d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
+  }
+  else if( d_outputTimestepInterval > 0 ) {
+    d_nextOutputTimestep = (timestep/d_outputTimestepInterval) * d_outputTimestepInterval + 1;
+    while( d_nextOutputTimestep <= timestep ) {
+      d_nextOutputTimestep+=d_outputTimestepInterval;
+    }
+  }
    
-   if (d_checkpointInterval > 0)
-      d_nextCheckpointTime = d_checkpointInterval * ceil(time / d_checkpointInterval);
-   else if (d_checkpointTimestepInterval > 0)
-   {
-      d_nextCheckpointTimestep = (timestep/d_checkpointTimestepInterval)*d_checkpointTimestepInterval+1;
-      while(d_nextCheckpointTimestep<=timestep)
-        d_nextCheckpointTimestep+=d_checkpointTimestepInterval;
-   }
-   if (d_checkpointWalltimeInterval > 0) {
-     d_nextCheckpointWalltime = d_checkpointWalltimeInterval + 
-       (int)Time::currentSeconds();
-     if(Parallel::usingMPI()){
-       MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
-     }
-   }
+  if( d_checkpointInterval > 0 ) {
+    d_nextCheckpointTime = d_checkpointInterval * ceil(time / d_checkpointInterval);
+  }
+  else if( d_checkpointTimestepInterval > 0 ) {
+    d_nextCheckpointTimestep = (timestep/d_checkpointTimestepInterval)*d_checkpointTimestepInterval+1;
+    while( d_nextCheckpointTimestep <= timestep ) {
+      d_nextCheckpointTimestep += d_checkpointTimestepInterval;
+    }
+  }
+  if( d_checkpointWalltimeInterval > 0 ) {
+    d_nextCheckpointWalltime = d_checkpointWalltimeInterval + (int)Time::currentSeconds();
+    if(Parallel::usingMPI()){
+      MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+    }
+  }
 }
 
 //////////
