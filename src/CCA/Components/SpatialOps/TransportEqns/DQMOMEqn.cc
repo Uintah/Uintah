@@ -142,8 +142,6 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_RHSLabel); 
   tsk->computes(d_FconvLabel);
   tsk->computes(d_FdiffLabel);
-  tsk->computes(d_sourceLabel); //compute or require.  who will create this guy?!
-  //tsk->requires(d_sourceLabel); 
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
@@ -181,17 +179,14 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
-    CCVariable<double> source; 
 
     new_dw->allocateAndPut( Fdiff, d_FdiffLabel, matlIndex, patch );
     new_dw->allocateAndPut( Fconv, d_FconvLabel, matlIndex, patch );
     new_dw->allocateAndPut( RHS, d_RHSLabel, matlIndex, patch ); 
-    new_dw->allocateAndPut( source, d_sourceLabel, matlIndex, patch ); 
     
     Fdiff.initialize(0.0);
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
-    source.initialize(0.0); 
 
   }
 }
@@ -218,10 +213,9 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
-  tsk->modifies(d_sourceLabel); //probably don't need to modify  
-  
  
   //-----OLD-----
+  tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->propLabels.lambda, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->velocityLabels.uVelocity, Ghost::AroundCells, 1);   
@@ -251,7 +245,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    //Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int matlIndex = 0;
@@ -261,14 +255,15 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uVel; 
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
+    constCCVariable<double> src; 
 
     CCVariable<double> phi;
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
-    CCVariable<double> src; 
 
     old_dw->get(oldPhi, d_transportVarLabel, matlIndex, patch, gac, 1);
+    old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
     old_dw->get(lambda, d_fieldLabels->propLabels.lambda, matlIndex, patch, gac, 1);
     old_dw->get(uVel,   d_fieldLabels->velocityLabels.uVelocity, matlIndex, patch, gac, 1); 
 #ifdef YDIM
@@ -278,7 +273,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     old_dw->get(wVel,   d_fieldLabels->velocityLabels.wVelocity, matlIndex, patch, gac, 1); 
 #endif
 
-    new_dw->getModifiable(src, d_sourceLabel, matlIndex, patch);
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
