@@ -445,16 +445,13 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
 						  const std::string& name) const
 {
   string matlname;
-  if(!params->get(name, matlname))
+  if(!params->get(name, matlname)){
     throw ProblemSetupException("Cannot find material section", __FILE__, __LINE__);
+  }
+
   Material* result = getMaterialByName(matlname);
-  if(!result){
-    int matlidx;
-    if(!params->get(name, matlidx))
-      throw ProblemSetupException("Cannot find material called "+matlname, __FILE__, __LINE__);
-    if(matlidx < 0 || matlidx >= static_cast<int>(matls.size()))
-      throw ProblemSetupException("Invalid material: "+to_string(matlidx), __FILE__, __LINE__);
-    result = matls[matlidx];
+  if(!result){ 
+    throw ProblemSetupException("Cannot find a material named:"+matlname, __FILE__, __LINE__);
   }
   return result;
 }
