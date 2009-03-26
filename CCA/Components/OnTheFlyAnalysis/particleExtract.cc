@@ -92,8 +92,8 @@ particleExtract::~particleExtract()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
-                               GridP& grid,
-                               SimulationStateP& sharedState)
+                                   GridP& grid,
+                                   SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup \t\t\t\tparticleExtract" << endl;
 
@@ -107,17 +107,17 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
   m[0] = d_matl->getDWIndex();
   d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
-  d_matl_set->addReference();                               
+  d_matl_set->addReference();                          
   
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
                                             max_vartype::getTypeDescription());
-
   //__________________________________
   //  Read in timing information
   d_prob_spec->require("samplingFrequency", d_writeFreq);
   d_prob_spec->require("timeStart",         d_StartTime);            
   d_prob_spec->require("timeStop",          d_StopTime);
 
+  d_prob_spec->require("colorThreshold",    d_colorThreshold);
   //__________________________________
   //  Read in variables label names
   ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
@@ -135,19 +135,19 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
                            + name , __FILE__, __LINE__);
     }
     
-    const Uintah::TypeDescription* td = label->typeDescription();
-    const Uintah::TypeDescription* subtype = td->getSubType();
+    const TypeDescription* td = label->typeDescription();
+    const TypeDescription* subtype = td->getSubType();
     
     //__________________________________
     // Bulletproofing
     bool throwException = false;  
     
     // only certain particle types can be extracted
-    cout << td->getName() << endl;
     if(td->getType() != TypeDescription::ParticleVariable ||
        subtype->getType() != TypeDescription::double_type &&
        subtype->getType() != TypeDescription::int_type    &&
-       subtype->getType() != TypeDescription::Vector  ){
+       subtype->getType() != TypeDescription::Vector      &&
+       subtype->getType() != TypeDescription::Matrix3){
       throwException = true;
     }
     if(throwException){       
@@ -168,7 +168,7 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
 
 //______________________________________________________________________
 void particleExtract::scheduleInitialize(SchedulerP& sched,
-                                     const LevelP& level)
+                                         const LevelP& level)
 {
   cout_doing << "particleExtract::scheduleInitialize " << endl;
   Task* t = scinew Task("particleExtract::initialize", 
@@ -179,10 +179,10 @@ void particleExtract::scheduleInitialize(SchedulerP& sched,
 }
 //______________________________________________________________________
 void particleExtract::initialize(const ProcessorGroup*, 
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse*,
-                             DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse*,
+                                 DataWarehouse* new_dw)
 {
   cout_doing << "Doing Initialize \t\t\t\t\tparticleExtract" << endl;
   for(int p=0;p<patches->size();p++){
@@ -190,7 +190,18 @@ void particleExtract::initialize(const ProcessorGroup*,
      
     double tminus = -1.0/d_writeFreq;
     new_dw->put(max_vartype(tminus), ps_lb->lastWriteTimeLabel);
-
+    
+    //__________________________________
+    //bullet proofing
+    int indx = d_matl->getDWIndex();
+    if( ! new_dw->exists(M_lb->pColorLabel, indx, patch ) ){
+      ostringstream warn;
+      warn << "ERROR:particleExtract  In order to use the DataAnalysis Module particleExtract "
+           << "you must 'color' least one MPM geom_object.";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    
     if(patch->getGridIndex() == 0){   // only need to do this once
       string udaDir = d_dataArchiver->getOutputLocation();
 
@@ -214,7 +225,7 @@ void particleExtract::restartInitialize()
 
 //______________________________________________________________________
 void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
-                                     const LevelP& level)
+                                         const LevelP& level)
 {
   cout_doing << "particleExtract::scheduleDoAnalysis " << endl;
   Task* t = scinew Task("particleExtract::doAnalysis", 
@@ -232,19 +243,19 @@ void particleExtract::scheduleDoAnalysis(SchedulerP& sched,
     }
     t->requires(Task::NewDW,d_varLabels[i], gn, 0);
   }
-  t->requires(Task::OldDW,  M_lb->pXLabel,          gn);
-  t->requires(Task::OldDW,  M_lb->pParticleIDLabel, gn);
-  t->requires(Task::OldDW,  M_lb->pColorLabel,      gn);
+  t->requires(Task::NewDW,  M_lb->pXLabel,          gn);
+  t->requires(Task::NewDW,  M_lb->pParticleIDLabel, gn);
+  t->requires(Task::NewDW,  M_lb->pColorLabel,      gn);
   t->computes(ps_lb->lastWriteTimeLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
 
 //______________________________________________________________________
 void particleExtract::doAnalysis(const ProcessorGroup* pg,
-                             const PatchSubset* patches,
-                             const MaterialSubset*,
-                             DataWarehouse* old_dw,
-                             DataWarehouse* new_dw)
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw)
 {   
   UintahParallelComponent* DA = dynamic_cast<UintahParallelComponent*>(d_dataArchiver);
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>( DA->getPort("load balancer"));
@@ -278,10 +289,12 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       vector< constParticleVariable<int> >      integer_data;
       vector< constParticleVariable<double> >   double_data;
       vector< constParticleVariable<Vector> >   Vector_data;
+      vector< constParticleVariable<Matrix3> >  Matrix3_data;
       
       constParticleVariable<int>    p_integer;      
       constParticleVariable<double> p_double;
-      constParticleVariable<Vector> p_Vector;  
+      constParticleVariable<Vector> p_Vector;
+      constParticleVariable<Matrix3> p_Matrix3; 
       constParticleVariable<long64> pid;
       constParticleVariable<Point> px;  
       constParticleVariable<double>pColor;
@@ -289,13 +302,13 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       Ghost::GhostType  gn = Ghost::None;
       int NGP = 0;
       int indx = d_matl->getDWIndex(); 
-      ParticleSubset* pset = old_dw->getParticleSubset(indx, patch,
+      ParticleSubset* pset = new_dw->getParticleSubset(indx, patch,
                                                  gn, NGP, M_lb->pXLabel);
      
       // extra particle data needed
-      old_dw->get(pid,    M_lb->pParticleIDLabel, pset);
-      old_dw->get(px,     M_lb->pXLabel,          pset);
-      old_dw->get(pColor, M_lb->pColorLabel,      pset);
+      new_dw->get(pid,    M_lb->pParticleIDLabel, pset);
+      new_dw->get(px,     M_lb->pXLabel,          pset);
+      new_dw->get(pColor, M_lb->pColorLabel,      pset);
       
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
         
@@ -306,27 +319,32 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
                           + name , __FILE__, __LINE__);
         }
 
-        const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
-        const Uintah::TypeDescription* subtype = td->getSubType();
+        const TypeDescription* td = d_varLabels[i]->typeDescription();
+        const TypeDescription* subtype = td->getSubType();
         
         switch(td->getType()){
-          case Uintah::TypeDescription::ParticleVariable:      // Particle Variables
+          case TypeDescription::ParticleVariable:      // Particle Variables
             switch(subtype->getType()) {
             
-            case Uintah::TypeDescription::double_type:
+            case TypeDescription::double_type:
               new_dw->get(p_double, d_varLabels[i], pset);
               double_data.push_back(p_double);
               break;
              
-            case Uintah::TypeDescription::Vector:
+            case TypeDescription::Vector:
               new_dw->get(p_Vector, d_varLabels[i], pset);
               Vector_data.push_back(p_Vector);
               break;
               
-            case Uintah::TypeDescription::int_type:
+            case TypeDescription::int_type:
               new_dw->get(p_integer, d_varLabels[i], pset);
               integer_data.push_back(p_integer);
               break; 
+              
+            case TypeDescription::Matrix3:
+              new_dw->get(p_Matrix3, d_varLabels[i], pset);
+              Matrix3_data.push_back(p_Matrix3);
+              break;
             default:
               throw InternalError("particleExtract: invalid data type", __FILE__, __LINE__); 
             }
@@ -354,7 +372,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
       for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-        if (pColor[idx] > 0){
+        if (pColor[idx] > d_colorThreshold){
         
           ostringstream fname;
           fname<<path<<"/"<<pid[idx];
@@ -374,7 +392,7 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
 
           // write particle position and time
           double time = d_dataArchiver->getCurrentTime();
-          fprintf(fp,    "%E\t %E\t %E\t %E",px[idx].x(),px[idx].y(),px[idx].z(), time);
+          fprintf(fp,    "%E\t %E\t %E\t %E",time, px[idx].x(),px[idx].y(),px[idx].z());
 
 
            // WARNING  If you change the order that these are written out you must 
@@ -394,7 +412,16 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
                     Vector_data[i][idx].x(),
                     Vector_data[i][idx].y(),
                     Vector_data[i][idx].z() );            
-          }         
+          } 
+          // write <Matrix3> variable
+          for (unsigned int i=0 ; i <  Matrix3_data.size(); i++) {
+            for (int row = 0; row<3; row++){
+              fprintf(fp, "    % 16E      %16E      %16E",
+                      Matrix3_data[i][idx](row,0),
+                      Matrix3_data[i][idx](row,1),
+                      Matrix3_data[i][idx](row,2) );
+            }            
+          }        
 
           fprintf(fp,    "\n");
           fclose(fp);
@@ -412,39 +439,48 @@ void particleExtract::createFile(string& filename)
 { 
   FILE *fp;
   fp = fopen(filename.c_str(), "w");
-  fprintf(fp,"X      Y      Z      Time"); 
+  fprintf(fp,"Time    X      Y      Z     "); 
   
   // All ParticleVariable<int>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
-    const Uintah::TypeDescription* subtype = td->getSubType();
+    const TypeDescription* td = d_varLabels[i]->typeDescription();
+    const TypeDescription* subtype = td->getSubType();
 
-    if(td->getType()      == TypeDescription::ParticleVariable && 
-       subtype->getType() == TypeDescription::int_type){
+    if(subtype->getType() == TypeDescription::int_type){
       string name = d_varLabels[i]->getName();
       fprintf(fp,"     %s", name.c_str());
     }
   }
   // All ParticleVariable<double>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
-    const Uintah::TypeDescription* subtype = td->getSubType();
+    const TypeDescription* td = d_varLabels[i]->typeDescription();
+    const TypeDescription* subtype = td->getSubType();
 
-    if(td->getType()      == TypeDescription::ParticleVariable && 
-       subtype->getType() == TypeDescription::double_type){
+    if(subtype->getType() == TypeDescription::double_type){
       string name = d_varLabels[i]->getName();
       fprintf(fp,"     %s", name.c_str());
     }
   }
   // All ParticleVariable<Vector>
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
-    const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
-    const Uintah::TypeDescription* subtype = td->getSubType();
+    const TypeDescription* td = d_varLabels[i]->typeDescription();
+    const TypeDescription* subtype = td->getSubType();
 
-    if(td->getType()      == TypeDescription::ParticleVariable && 
-       subtype->getType() == TypeDescription::Vector){
+    if(subtype->getType() == TypeDescription::Vector){
       string name = d_varLabels[i]->getName(); 
       fprintf(fp,"     %s.x      %s.y      %s.z", name.c_str(),name.c_str(),name.c_str());
+    }
+  }
+  // All ParticleVariable<Matrix3>
+  for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
+    const TypeDescription* td = d_varLabels[i]->typeDescription();
+    const TypeDescription* subtype = td->getSubType();
+
+    if(subtype->getType() == TypeDescription::Matrix3){
+      string name = d_varLabels[i]->getName(); 
+      for (int row = 0; row<3; row++){
+        fprintf(fp,"     %s(%i,0)      %s(%i,1)      %s(%i,2)", name.c_str(),row,name.c_str(),row,name.c_str(),row);
+      }
     }
   }
   fprintf(fp,"\n");

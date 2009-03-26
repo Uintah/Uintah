@@ -128,14 +128,13 @@ WARNING
     double d_writeFreq; 
     double d_StartTime;
     double d_StopTime;
+    double d_colorThreshold;
     vector<VarLabel*> d_varLabels;
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
     MaterialSet* d_matl_set;
-    
-  
   };
 }
 
