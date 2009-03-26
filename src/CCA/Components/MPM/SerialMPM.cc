@@ -28,43 +28,45 @@ DEALINGS IN THE SOFTWARE.
 */
 
 
-#include <CCA/Components/MPM/SerialMPM.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
+#include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
+#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
-#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Grid/AMR.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/UnknownVariable.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/UnknownVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/SoleVariable.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
-#include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
@@ -125,6 +127,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_recompile = false;
   dataArchiver = 0;
   d_loadCurveIndex=0;
+  d_analysisModule = 0;
 }
 
 SerialMPM::~SerialMPM()
@@ -135,7 +138,10 @@ SerialMPM::~SerialMPM()
   delete thermalContactModel;
   delete heatConductionModel;
   MPMPhysicalBCFactory::clean();
-
+  
+  if(d_analysisModule){
+    delete d_analysisModule;
+  }
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, 
@@ -144,6 +150,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 {
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
+  
+  dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(!dataArchiver){
+    throw InternalError("MPM:couldn't get output port", __FILE__, __LINE__);
+  }
 
   ProblemSpecP restart_mat_ps = 0;
   ProblemSpecP prob_spec_mat_ps = 
@@ -234,6 +245,15 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     d_outputInterval = 1.0;
 
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+  
+  //__________________________________
+  //  create analysis modules
+  // call problemSetup
+  d_analysisModule = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+  if(d_analysisModule){
+    d_analysisModule->problemSetup(prob_spec, grid, sharedState);
+  }
+  
 }
 
 void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
@@ -358,6 +378,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     // Schedule the initialization of pressure BCs per particle
     scheduleInitializePressureBCs(level, sched);
   }
+  
+  // dataAnalysis 
+  if(d_analysisModule){
+    d_analysisModule->scheduleInitialize( sched, level);
+  }
+  
 }
 
 void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
@@ -517,6 +543,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                     lb->pXLabel, 
                                     d_sharedState->d_particleState,
                                     lb->pParticleIDLabel, matls);
+  if(d_analysisModule){                                                        
+    d_analysisModule->scheduleDoAnalysis( sched, level);
+  }  
 }
 
 void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
