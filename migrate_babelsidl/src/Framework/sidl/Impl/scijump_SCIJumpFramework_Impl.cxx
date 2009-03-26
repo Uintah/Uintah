@@ -2,7 +2,7 @@
 // File:          scijump_SCIJumpFramework_Impl.cxx
 // Symbol:        scijump.SCIJumpFramework-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.SCIJumpFramework
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -121,7 +121,9 @@ scijump::SCIJumpFramework_impl::isFrameworkService_impl (
 
   FrameworkServiceMap::const_iterator iter = frameworkServices.find(name);
 #if FWK_DEBUG
-  std::cerr << "scijump::SCIJumpFramework_impl::isFrameworkService_impl(..) service=" << iter->first << std::endl;
+  if(iter != frameworkServices.end()) {
+    std::cerr << "scijump::SCIJumpFramework_impl::isFrameworkService_impl(..) service=" << iter->first << std::endl;
+  }
 #endif
   return iter != frameworkServices.end();
   // DO-NOT-DELETE splicer.end(scijump.SCIJumpFramework.isFrameworkService)
@@ -133,7 +135,8 @@ scijump::SCIJumpFramework_impl::isFrameworkService_impl (
 ::scijump::core::ServiceInfo
 scijump::SCIJumpFramework_impl::getFrameworkService_impl (
   /* in */const ::std::string& serviceName,
-  /* in */::sci::cca::core::PortInfo& requesterPort ) 
+  /* in */::sci::cca::core::PortInfo& requesterPort,
+  /* in */bool connect ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getFrameworkService)
 
@@ -152,10 +155,12 @@ scijump::SCIJumpFramework_impl::getFrameworkService_impl (
   ::sci::cca::core::FrameworkServiceFactory f = iter->second;
   ::sci::cca::core::PortInfo servicePort = f.getService(serviceName);
 
-  // connect the requester port and the service ports (service port is always the provider)
-  if (! requesterPort.connect(servicePort)) {
-    // TODO: throw exception?
-    std::cerr << "Could not connect " << serviceName << " service." << std::endl;
+  if ( connect ) {
+    // connect the requester port and the service ports (service port is always the provider)
+    if (! requesterPort.connect(servicePort)) {
+      // TODO: throw exception?
+      std::cerr << "Could not connect " << serviceName << " service." << std::endl;
+    }
   }
 
   // do we need to maintain a reference to this connection ?
@@ -363,8 +368,8 @@ scijump::SCIJumpFramework_impl::createComponentInstance_impl (
 scijump::SCIJumpFramework_impl::getComponentInstance_impl (
   /* in */const ::std::string& name ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getComponentInstance)
   Guard g(lock_components);
@@ -383,8 +388,8 @@ scijump::SCIJumpFramework_impl::getComponentInstance_impl (
 ::sidl::array< ::gov::cca::ComponentID>
 scijump::SCIJumpFramework_impl::getComponentInstances_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getComponentInstances)
@@ -464,8 +469,8 @@ scijump::SCIJumpFramework_impl::getConnectionInstances_impl (
   /* in array<gov.cca.ComponentID> */::sidl::array< ::gov::cca::ComponentID>& 
     componentList ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getConnectionInstances)
   Guard g(lock_connections);
@@ -582,8 +587,8 @@ scijump::SCIJumpFramework_impl::unregisterLoader_impl (
 ::gov::cca::TypeMap
 scijump::SCIJumpFramework_impl::createTypeMap_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.createTypeMap)
@@ -625,8 +630,8 @@ scijump::SCIJumpFramework_impl::getServices_impl (
   /* in */const ::std::string& selfClassName,
   /* in */::gov::cca::TypeMap& selfProperties ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.getServices)
 
@@ -667,8 +672,8 @@ void
 scijump::SCIJumpFramework_impl::releaseServices_impl (
   /* in */::gov::cca::Services& services ) 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.releaseServices)
   ServicesMap::iterator pos = this->services.end();
@@ -699,8 +704,8 @@ scijump::SCIJumpFramework_impl::releaseServices_impl (
 void
 scijump::SCIJumpFramework_impl::shutdownFramework_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.shutdownFramework)
@@ -727,8 +732,8 @@ scijump::SCIJumpFramework_impl::shutdownFramework_impl ()
 ::gov::cca::AbstractFramework
 scijump::SCIJumpFramework_impl::createEmptyFramework_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.SCIJumpFramework.createEmptyFramework)
@@ -754,6 +759,10 @@ scijump::SCIJumpFramework_impl::initFrameworkServices()
   scijump::core::FrameworkServiceFactory alf = scijump::core::FrameworkServiceFactory::_create();
   alf.initialize( new scijump::core::SingletonServiceFactory<scijump::ApplicationLoaderService>(*this, "cca.ApplicationLoaderService") );
   addFrameworkService(alf, this->frameworkServices);
+
+  scijump::core::FrameworkServiceFactory sr = scijump::core::FrameworkServiceFactory::_create();
+  sr.initialize( new scijump::core::SingletonServiceFactory<scijump::ServiceRegistry>(*this, "cca.ServiceRegistry") );
+  addFrameworkService(sr, this->frameworkServices);
 }
 
 bool

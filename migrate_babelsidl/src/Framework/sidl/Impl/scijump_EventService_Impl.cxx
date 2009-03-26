@@ -2,7 +2,7 @@
 // File:          scijump_EventService_Impl.cxx
 // Symbol:        scijump.EventService-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.EventService
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -127,8 +127,8 @@ scijump::EventService_impl::initialize_impl (
 scijump::EventService_impl::getTopic_impl (
   /* in */const ::std::string& topicName ) 
 // throws:
-//     ::sci::cca::EventServiceException
-//     ::sidl::RuntimeException
+//    ::sci::cca::EventServiceException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.EventService.getTopic)
   if (topicName.empty()) {
@@ -206,8 +206,8 @@ scijump::EventService_impl::existsTopic_impl (
 scijump::EventService_impl::getSubscription_impl (
   /* in */const ::std::string& subscriptionName ) 
 // throws:
-//     ::sci::cca::EventServiceException
-//     ::sidl::RuntimeException
+//    ::sci::cca::EventServiceException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.EventService.getSubscription)
   if (subscriptionName.empty()) {
@@ -254,8 +254,8 @@ scijump::EventService_impl::getSubscription_impl (
 void
 scijump::EventService_impl::processEvents_impl () 
 // throws:
-//     ::sci::cca::EventServiceException
-//     ::sidl::RuntimeException
+//    ::sci::cca::EventServiceException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.EventService.processEvents)

@@ -2,7 +2,7 @@
 // File:          scijump_BabelPortInfo_Impl.cxx
 // Symbol:        scijump.BabelPortInfo-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BabelPortInfo
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -303,8 +303,8 @@ scijump::BabelPortInfo_impl::setProperties_impl (
 ::gov::cca::Port
 scijump::BabelPortInfo_impl::getPort_impl () 
 // throws:
-//     ::sci::cca::core::NotInitializedException
-//     ::sidl::RuntimeException
+//    ::sci::cca::core::NotInitializedException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelPortInfo.getPort)
@@ -327,8 +327,8 @@ scijump::BabelPortInfo_impl::getPort_impl ()
 ::sci::cca::core::PortInfo
 scijump::BabelPortInfo_impl::getPeer_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelPortInfo.getPeer)

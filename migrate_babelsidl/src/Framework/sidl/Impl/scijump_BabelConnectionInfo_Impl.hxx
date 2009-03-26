@@ -2,7 +2,7 @@
 // File:          scijump_BabelConnectionInfo_Impl.hxx
 // Symbol:        scijump.BabelConnectionInfo-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BabelConnectionInfo
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -159,8 +159,8 @@ namespace scijump {
      */
     ::gov::cca::ComponentID
     getProvider_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -171,8 +171,8 @@ namespace scijump {
      */
     ::gov::cca::ComponentID
     getUser_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -183,8 +183,8 @@ namespace scijump {
      */
     ::std::string
     getProviderPortName_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -196,8 +196,8 @@ namespace scijump {
      */
     ::std::string
     getUserPortName_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
   };  // end class BabelConnectionInfo_impl
 

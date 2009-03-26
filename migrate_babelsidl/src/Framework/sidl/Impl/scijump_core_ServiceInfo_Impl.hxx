@@ -2,7 +2,7 @@
 // File:          scijump_core_ServiceInfo_Impl.hxx
 // Symbol:        scijump.core.ServiceInfo-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.core.ServiceInfo
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -129,8 +129,8 @@ namespace scijump {
        */
       ::sci::cca::core::PortInfo
       getServicePort_impl() // throws:
-      //     ::sci::cca::core::NotInitializedException
-      //     ::sidl::RuntimeException
+      //    ::sci::cca::core::NotInitializedException
+      //    ::sidl::RuntimeException
       ;
       /**
        * user defined non-static method.
@@ -142,8 +142,8 @@ namespace scijump {
        */
       ::sci::cca::core::PortInfo
       getRequesterPort_impl() // throws:
-      //     ::sci::cca::core::NotInitializedException
-      //     ::sidl::RuntimeException
+      //    ::sci::cca::core::NotInitializedException
+      //    ::sidl::RuntimeException
       ;
     };  // end class ServiceInfo_impl
 

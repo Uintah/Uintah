@@ -2,7 +2,7 @@
 // File:          scijump_TypeMap_Impl.cxx
 // Symbol:        scijump.TypeMap-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.TypeMap
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -125,8 +125,8 @@ scijump::TypeMap_impl::getInt_impl (
   /* in */const ::std::string& key,
   /* in */int32_t dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getInt)
   ::gov::cca::Type t = typeOf(key);
@@ -149,8 +149,8 @@ scijump::TypeMap_impl::getLong_impl (
   /* in */const ::std::string& key,
   /* in */int64_t dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getLong)
   ::gov::cca::Type t = typeOf(key);
@@ -173,8 +173,8 @@ scijump::TypeMap_impl::getFloat_impl (
   /* in */const ::std::string& key,
   /* in */float dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getFloat)
   ::gov::cca::Type t = typeOf(key);
@@ -197,8 +197,8 @@ scijump::TypeMap_impl::getDouble_impl (
   /* in */const ::std::string& key,
   /* in */double dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getDouble)
   ::gov::cca::Type t = typeOf(key);
@@ -221,8 +221,8 @@ scijump::TypeMap_impl::getFcomplex_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::complex<float>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getFcomplex)
   ::gov::cca::Type t = typeOf(key);
@@ -245,8 +245,8 @@ scijump::TypeMap_impl::getDcomplex_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::complex<double>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getDcomplex)
   ::gov::cca::Type t = typeOf(key);
@@ -269,8 +269,8 @@ scijump::TypeMap_impl::getString_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::string& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getString)
   ::gov::cca::Type t = typeOf(key);
@@ -293,8 +293,8 @@ scijump::TypeMap_impl::getBool_impl (
   /* in */const ::std::string& key,
   /* in */bool dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getBool)
   ::gov::cca::Type t = typeOf(key);
@@ -317,8 +317,8 @@ scijump::TypeMap_impl::getIntArray_impl (
   /* in */const ::std::string& key,
   /* in array<int> */::sidl::array<int32_t>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getIntArray)
   ::gov::cca::Type t = typeOf(key);
@@ -341,8 +341,8 @@ scijump::TypeMap_impl::getLongArray_impl (
   /* in */const ::std::string& key,
   /* in array<long> */::sidl::array<int64_t>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getLongArray)
   ::gov::cca::Type t = typeOf(key);
@@ -365,8 +365,8 @@ scijump::TypeMap_impl::getFloatArray_impl (
   /* in */const ::std::string& key,
   /* in array<float> */::sidl::array<float>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getFloatArray)
   ::gov::cca::Type t = typeOf(key);
@@ -389,8 +389,8 @@ scijump::TypeMap_impl::getDoubleArray_impl (
   /* in */const ::std::string& key,
   /* in array<double> */::sidl::array<double>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getDoubleArray)
   ::gov::cca::Type t = typeOf(key);
@@ -413,8 +413,8 @@ scijump::TypeMap_impl::getFcomplexArray_impl (
   /* in */const ::std::string& key,
   /* in array<fcomplex> */::sidl::array< ::sidl::fcomplex>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getFcomplexArray)
   ::gov::cca::Type t = typeOf(key);
@@ -437,8 +437,8 @@ scijump::TypeMap_impl::getDcomplexArray_impl (
   /* in */const ::std::string& key,
   /* in array<dcomplex> */::sidl::array< ::sidl::dcomplex>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getDcomplexArray)
   ::gov::cca::Type t = typeOf(key);
@@ -461,8 +461,8 @@ scijump::TypeMap_impl::getStringArray_impl (
   /* in */const ::std::string& key,
   /* in array<string> */::sidl::array< ::std::string>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getStringArray)
   ::gov::cca::Type t = typeOf(key);
@@ -485,8 +485,8 @@ scijump::TypeMap_impl::getBoolArray_impl (
   /* in */const ::std::string& key,
   /* in array<bool> */::sidl::array<bool>& dflt ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.getBoolArray)
   ::gov::cca::Type t = typeOf(key);
@@ -512,8 +512,8 @@ scijump::TypeMap_impl::putInt_impl (
   /* in */const ::std::string& key,
   /* in */int32_t value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putInt)
   ::gov::cca::Type t = typeOf(key);
@@ -536,8 +536,8 @@ scijump::TypeMap_impl::putLong_impl (
   /* in */const ::std::string& key,
   /* in */int64_t value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putLong)
   ::gov::cca::Type t = typeOf(key);
@@ -560,8 +560,8 @@ scijump::TypeMap_impl::putFloat_impl (
   /* in */const ::std::string& key,
   /* in */float value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putFloat)
   ::gov::cca::Type t = typeOf(key);
@@ -584,8 +584,8 @@ scijump::TypeMap_impl::putDouble_impl (
   /* in */const ::std::string& key,
   /* in */double value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putDouble)
   ::gov::cca::Type t = typeOf(key);
@@ -608,8 +608,8 @@ scijump::TypeMap_impl::putFcomplex_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::complex<float>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putFcomplex)
   ::gov::cca::Type t = typeOf(key);
@@ -632,8 +632,8 @@ scijump::TypeMap_impl::putDcomplex_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::complex<double>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putDcomplex)
   ::gov::cca::Type t = typeOf(key);
@@ -656,8 +656,8 @@ scijump::TypeMap_impl::putString_impl (
   /* in */const ::std::string& key,
   /* in */const ::std::string& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putString)
   ::gov::cca::Type t = typeOf(key);
@@ -680,8 +680,8 @@ scijump::TypeMap_impl::putBool_impl (
   /* in */const ::std::string& key,
   /* in */bool value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putBool)
   ::gov::cca::Type t = typeOf(key);
@@ -704,8 +704,8 @@ scijump::TypeMap_impl::putIntArray_impl (
   /* in */const ::std::string& key,
   /* in array<int> */::sidl::array<int32_t>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putIntArray)
   ::gov::cca::Type t = typeOf(key);
@@ -728,8 +728,8 @@ scijump::TypeMap_impl::putLongArray_impl (
   /* in */const ::std::string& key,
   /* in array<long> */::sidl::array<int64_t>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putLongArray)
   ::gov::cca::Type t = typeOf(key);
@@ -752,8 +752,8 @@ scijump::TypeMap_impl::putFloatArray_impl (
   /* in */const ::std::string& key,
   /* in array<float> */::sidl::array<float>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putFloatArray)
   ::gov::cca::Type t = typeOf(key);
@@ -776,8 +776,8 @@ scijump::TypeMap_impl::putDoubleArray_impl (
   /* in */const ::std::string& key,
   /* in array<double> */::sidl::array<double>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putDoubleArray)
   ::gov::cca::Type t = typeOf(key);
@@ -800,8 +800,8 @@ scijump::TypeMap_impl::putFcomplexArray_impl (
   /* in */const ::std::string& key,
   /* in array<fcomplex> */::sidl::array< ::sidl::fcomplex>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putFcomplexArray)
   ::gov::cca::Type t = typeOf(key);
@@ -824,8 +824,8 @@ scijump::TypeMap_impl::putDcomplexArray_impl (
   /* in */const ::std::string& key,
   /* in array<dcomplex> */::sidl::array< ::sidl::dcomplex>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putDcomplexArray)
   ::gov::cca::Type t = typeOf(key);
@@ -848,8 +848,8 @@ scijump::TypeMap_impl::putStringArray_impl (
   /* in */const ::std::string& key,
   /* in array<string> */::sidl::array< ::std::string>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putStringArray)
   ::gov::cca::Type t = typeOf(key);
@@ -872,8 +872,8 @@ scijump::TypeMap_impl::putBoolArray_impl (
   /* in */const ::std::string& key,
   /* in array<bool> */::sidl::array<bool>& value ) 
 // throws:
-//     ::gov::cca::TypeMismatchException
-//     ::sidl::RuntimeException
+//    ::gov::cca::TypeMismatchException
+//    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.TypeMap.putBoolArray)
   ::gov::cca::Type t = typeOf(key);

@@ -2,7 +2,7 @@
 // File:          scijump_BuilderService_Impl.hxx
 // Symbol:        scijump.BuilderService-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BuilderService
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -208,8 +208,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& properties
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -220,8 +220,8 @@ namespace scijump {
      */
     ::sidl::array< ::gov::cca::ComponentID>
     getComponentIDs_impl() // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
     /**
@@ -236,8 +236,8 @@ namespace scijump {
       /* in */::gov::cca::ComponentID& cid
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -253,8 +253,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& map
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -270,8 +270,8 @@ namespace scijump {
       /* in */const ::std::string& s
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -287,8 +287,8 @@ namespace scijump {
       /* in */const ::std::string& componentInstanceName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -306,8 +306,8 @@ namespace scijump {
       /* in */float timeout
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -322,8 +322,8 @@ namespace scijump {
       /* in */::gov::cca::ComponentID& cid
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -338,8 +338,8 @@ namespace scijump {
       /* in */::gov::cca::ComponentID& cid
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -358,8 +358,8 @@ namespace scijump {
       /* in */const ::std::string& portName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -378,8 +378,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& map
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -403,8 +403,8 @@ namespace scijump {
       /* in */const ::std::string& providingPortName
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -423,8 +423,8 @@ namespace scijump {
         ::gov::cca::ComponentID>& componentList
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -438,8 +438,8 @@ namespace scijump {
       /* in */::gov::cca::ConnectionID& connID
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -456,8 +456,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& map
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -480,8 +480,8 @@ namespace scijump {
       /* in */float timeout
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 
@@ -501,8 +501,8 @@ namespace scijump {
       /* in */float timeout
     )
     // throws:
-    //     ::gov::cca::CCAException
-    //     ::sidl::RuntimeException
+    //    ::gov::cca::CCAException
+    //    ::sidl::RuntimeException
     ;
 
 

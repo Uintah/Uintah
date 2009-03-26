@@ -2,7 +2,7 @@
 // File:          scijump_Topic_Impl.hxx
 // Symbol:        scijump.Topic-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.Topic
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -171,8 +171,8 @@ namespace scijump {
       /* in */::gov::cca::TypeMap& eventBody
     )
     // throws:
-    //     ::sci::cca::EventServiceException
-    //     ::sidl::RuntimeException
+    //    ::sci::cca::EventServiceException
+    //    ::sidl::RuntimeException
     ;
 
   };  // end class Topic_impl

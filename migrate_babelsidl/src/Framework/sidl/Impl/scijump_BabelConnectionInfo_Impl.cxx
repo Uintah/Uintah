@@ -2,7 +2,7 @@
 // File:          scijump_BabelConnectionInfo_Impl.cxx
 // Symbol:        scijump.BabelConnectionInfo-v0.2.1
 // Symbol Type:   class
-// Babel Version: 1.2.0
+// Babel Version: 1.4.0 (Revision: 6574 release-1-4-0)
 // Description:   Server-side implementation for scijump.BabelConnectionInfo
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
@@ -170,8 +170,8 @@ scijump::BabelConnectionInfo_impl::invalidate_impl ()
 ::gov::cca::ComponentID
 scijump::BabelConnectionInfo_impl::getProvider_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getProvider)
@@ -197,8 +197,8 @@ scijump::BabelConnectionInfo_impl::getProvider_impl ()
 ::gov::cca::ComponentID
 scijump::BabelConnectionInfo_impl::getUser_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getUser)
@@ -224,8 +224,8 @@ scijump::BabelConnectionInfo_impl::getUser_impl ()
 ::std::string
 scijump::BabelConnectionInfo_impl::getProviderPortName_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getProviderPortName)
@@ -252,8 +252,8 @@ scijump::BabelConnectionInfo_impl::getProviderPortName_impl ()
 ::std::string
 scijump::BabelConnectionInfo_impl::getUserPortName_impl () 
 // throws:
-//     ::gov::cca::CCAException
-//     ::sidl::RuntimeException
+//    ::gov::cca::CCAException
+//    ::sidl::RuntimeException
 
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelConnectionInfo.getUserPortName)
