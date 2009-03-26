@@ -2561,8 +2561,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         message << " Computed pressure is < 0 ";
       }
       
-      for (int m = 0; m < numMatls; m++){
-        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0 && !tsr) {
+      for( int m = 0; m < numMatls; m++ ) {
+        if( (rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) && !tsr ) {
           allTestsPassed = false;
           message <<" rho_micro < 0 || vol_frac < 0";
         }
@@ -3863,7 +3863,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     constSFCZVariable<double> pressZ_FC;
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn = Ghost::None;  
     new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch, gac, 1);
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch, gac, 1);
