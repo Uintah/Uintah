@@ -63,6 +63,7 @@ struct ParticleDataContainer {
     x( NULL ), y( NULL ), z( NULL ),
     numParticles( theNumParticles )
   {
+    type = UNKNOWN;
   }
 
   string       name;
@@ -72,7 +73,7 @@ struct ParticleDataContainer {
   
   // Addition
   matrixVec* matrixRep; // matrix repository
-  int type; // 1 -> Vectors, 2 -> Tensors
+  DataType type;
 };
 
 //

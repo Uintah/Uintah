@@ -120,6 +120,7 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
   result.x = floatArrayX;
   result.y = floatArrayY;
   result.z = floatArrayZ;
+  result.type = SCALAR;
 
   result.numParticles = dataX.size();
 
@@ -245,7 +246,7 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
   result.x = floatArrayX;
   result.y = floatArrayY;
   result.z = floatArrayZ;
-  result.type = 1;
+  result.type = VECTOR;
   result.numParticles = dataX.size();
 
   cout << "Out handleParticleData<Vector>\n";	
@@ -326,7 +327,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
   result.name = qinfo.varname;
   result.data = floatArray;
   result.matrixRep = matrixRep;
-  result.type = 2;
+  result.type = TENSOR;
   result.numParticles = data.size();
   
   cout << "Out handleParticleData<Matrix3>\n";
@@ -507,7 +508,6 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
       if( particleVars[cnt].data != NULL ) {
 
         // wrote = fwrite( &particleVars[cnt].data[particle], sizeof(float), 1, out );
-		// cout << "cnt: " << cnt << " " << particleVars[cnt].name.c_str() << " " << particleVars[cnt].data[particle] << "\n";
 		// if (cnt == 1)
 		// 	varData.volume = particleVars[cnt].data[particle];
 		// else if (cnt == 2)
@@ -557,8 +557,6 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
 		  vecDataRef.push_back(vecValObj);
 		}
-		
-        // cout << particleVars[cnt].z[particle] << " " << varData.z << endl;
 	  }
 
       /*if( wrote != 1 ) {
