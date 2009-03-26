@@ -49,8 +49,6 @@
 #include "sidl_RuntimeException.hxx"
 #endif
 
-#include "sci_cca.hxx"
-#include <iostream>
 
 // DO-NOT-DELETE splicer.begin(integrators.MonteCarlo._hincludes)
 #include "integrator_IntegratorPort.hxx"
@@ -74,8 +72,6 @@ namespace integrators {
   // descendant Impl classes
   protected:
 
-    sci::cca::Topic topic;
-    gov::cca::TypeMap typemap;
     bool _wrapped;
 
     // DO-NOT-DELETE splicer.begin(integrators.MonteCarlo._implementation)
@@ -127,29 +123,6 @@ namespace integrators {
     ;
 
     /**
-     * User Defined static method pre-hook
-     */
-    void
-    integrate_pre_impl (
-      /* in */double lowBound,
-      /* in */double upBound,
-      /* in */int32_t count
-    )
-    ;
-
-    /**
-     * user defined static method post-hook
-     */
-    void
-    integrate_post_impl (
-      /* in */double lowBound,
-      /* in */double upBound,
-      /* in */int32_t count,
-      /* in */double _retval
-    )
-    ;
-
-    /**
      * user defined non-static method.
      */
     void
@@ -162,58 +135,10 @@ namespace integrators {
     ;
 
     /**
-     * User Defined static method pre-hook
-     */
-    void
-    setServices_pre_impl (
-      /* in */::gov::cca::Services& services
-    )
-    // throws:
-    //    ::gov::cca::CCAException
-    //    ::sidl::RuntimeException
-    ;
-
-    /**
-     * user defined static method post-hook
-     */
-    void
-    setServices_post_impl (
-      /* in */::gov::cca::Services& services
-    )
-    // throws:
-    //    ::gov::cca::CCAException
-    //    ::sidl::RuntimeException
-    ;
-
-    /**
      * user defined non-static method.
      */
     void
     releaseServices_impl (
-      /* in */::gov::cca::Services& services
-    )
-    // throws:
-    //    ::gov::cca::CCAException
-    //    ::sidl::RuntimeException
-    ;
-
-    /**
-     * User Defined static method pre-hook
-     */
-    void
-    releaseServices_pre_impl (
-      /* in */::gov::cca::Services& services
-    )
-    // throws:
-    //    ::gov::cca::CCAException
-    //    ::sidl::RuntimeException
-    ;
-
-    /**
-     * user defined static method post-hook
-     */
-    void
-    releaseServices_post_impl (
       /* in */::gov::cca::Services& services
     )
     // throws:

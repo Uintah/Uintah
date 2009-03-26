@@ -39,7 +39,7 @@ include $(SCIRUN_SCRIPTS)/babel_prologue.mk
 
 SERVER_SIDL := $(SRCDIR)/drivers.sidl
 
-include $(SCIRUN_SCRIPTS)/babel_server_log.mk
+include $(SCIRUN_SCRIPTS)/babel_server.mk
 
 #
 # For languages other than C++, include a babel language makefile fragement here.
@@ -48,7 +48,7 @@ include $(SCIRUN_SCRIPTS)/babel_server_log.mk
 
 #CLIENT_SIDL := 
 
-#include $(SCIRUN_SCRIPTS)/babel_client_log.mk
+#include $(SCIRUN_SCRIPTS)/babel_client.mk
 
 #
 # Put component-specific SCIRun libraries (PSELIBS), third-party libraries
