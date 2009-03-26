@@ -31,7 +31,6 @@ class BadHawkDevol: public ModelBase {
 public: 
 
   BadHawkDevol( std::string modelName, SimulationStateP& shared_state, 
-                const Fields* fieldLabels,
                 vector<std::string> reqLabelNames, int qn );
 
   ~BadHawkDevol();
@@ -50,11 +49,6 @@ public:
 private:
 
   const Fields* d_fieldLabels; 
-  const A1 = 1;
-  const E1 = 1;
-  const A2 = 1;
-  const E2 = 1;
-  const R = 1;
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

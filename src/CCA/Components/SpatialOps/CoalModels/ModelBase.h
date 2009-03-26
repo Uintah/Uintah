@@ -27,7 +27,6 @@ class ModelBase{
 public: 
 
   ModelBase( std::string modelName, SimulationStateP& sharedState, 
-             const Fields* fieldLabels,
              vector<std::string> reqLabelNames, int qn );
   virtual ~ModelBase();
 

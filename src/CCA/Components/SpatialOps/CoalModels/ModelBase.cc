@@ -9,7 +9,6 @@ using namespace Uintah;
 
 
 ModelBase::ModelBase( std::string modelName, SimulationStateP& sharedState,
-                      const Fields* fieldLabels
                       vector<std::string> icLabelNames, int qn ) : 
 d_modelName(modelName), d_sharedState( sharedState ), d_icLabels(icLabelNames), d_quadNode(qn)
 {

@@ -30,9 +30,8 @@ BadHawkDevolBuilder::build(){
 //---------------------------------------------------------------------------
 
 BadHawkDevol::BadHawkDevol( std::string srcName, SimulationStateP& sharedState,
-                            const Fields* fieldLabels,
                             vector<std::string> icLabelNames, int qn ) 
-: ModelBase(srcName, sharedState, icLabelNames, qn),d_fieldLabels(fieldLabels)
+: ModelBase(srcName, sharedState, icLabelNames, qn)
 {}
 
 BadHawkDevol::~BadHawkDevol()
@@ -71,7 +70,6 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
        iter != d_icLabels.end(); iter++) { 
     // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE MODEL
-    tsk->requires(Task::OldDW, d_fieldLabels->d_temperature, Ghost::AroundCells, 1);
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allSpatialOpsMaterials()); 
@@ -105,22 +103,14 @@ BadHawkDevol::computeModel( const ProcessorGroup* pc,
       model.initialize(0.0);
     }
 
-    const CCVariable<double> temperature;
-    const CCVariable<double> alphac;
-    new_dw->get(temperature, d_fieldLabels->d_temperature, matlIndex, patch);
-    new_dw->get(alphac, "coal_mass_fraction", matlIndex, patch);
-    
     for (vector<std::string>::iterator iter = d_icLabels.begin(); 
          iter != d_icLabels.end(); iter++) { 
-      // how to differentiate between different internal coordinates?
+    
     }
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
-      k1 = A1*exp(-E1/(R*temperature[c]));
-      k2 = A2*exp(-E2/(R*temperature[c]));
-
-      model[c] = -(k1+k2)*alphac;//change this to the function 
+      //model[c] =
     }
   }
 }
