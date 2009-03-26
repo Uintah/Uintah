@@ -49,7 +49,9 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
+#include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+
 
 #include <CCA/Components/MPM/uintahshare.h>
 
@@ -59,6 +61,7 @@ using namespace SCIRun;
 
 class ThermalContact;
 class HeatConduction;
+class AnalysisModule;
 
 /**************************************
 
@@ -480,6 +483,8 @@ protected:
   bool             d_recompile;
   IntegratorType   d_integrator;
   MaterialSubset*  d_loadCurveIndex;
+  
+  AnalysisModule* d_analysisModule;
 private:
 
   SerialMPM(const SerialMPM&);
