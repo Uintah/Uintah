@@ -68,15 +68,28 @@
                </geom_object>
 
               <geom_object>
+                <difference>
                   <cylinder label = "gp2">
                      <bottom>[.75,.75,.05]</bottom>
                      <top>[.75,.75,.1]</top>
                      <radius> .2 </radius>
                   </cylinder>
-                  <res>[2,2,2]</res>
-                  <velocity>[-2.0,-2.0,0]</velocity>
-                  <temperature>12</temperature>
-                  <color>             1               </color>
+                  <box label="gp3">
+                     <min>[ 0.725, 0.725, 0.05 ]</min>
+                     <max>[ 0.775, 0.775, 0.10 ]</max>
+                  </box>
+                </difference>
+                <res>[2,2,2]</res>
+                <velocity>[-2.0,-2.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>             0               </color>
+               </geom_object>
+              <geom_object>
+                <box label="gp3"/>
+                <res>[2,2,2]</res>
+                <velocity>[-2.0,-2.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>             1               </color>
                </geom_object>
            </material>
 
