@@ -7,6 +7,7 @@
 using namespace std;
 using namespace Uintah; 
 
+
 ModelBase::ModelBase( std::string modelName, SimulationStateP& sharedState,
                       const Fields* fieldLabels
                       vector<std::string> icLabelNames, int qn ) : 
