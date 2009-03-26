@@ -5,6 +5,7 @@
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
 
+
 //===========================================================================
 
 //---------------------------------------------------------------------------

@@ -5,6 +5,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/SpatialOps/CoalModels/BadHawkDevol.h>
 
+
 //===========================================================================
 
 using namespace std;
