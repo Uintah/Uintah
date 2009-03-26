@@ -7,13 +7,15 @@
 
 #include <CCA/Components/SpatialOps/SpatialOps.h>
 #include <CCA/Components/SpatialOps/Fields.h>
+#include <CCA/Components/SpatialOps/LU.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
 #include <CCA/Components/SpatialOps/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 
 #include <CCA/Ports/DataWarehouse.h>
-
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -57,13 +59,13 @@ public:
 
     /** @brief Obtain parameters from input file and process them, whatever that means 
     */
-    void DQMOM::problemSetup( const ProblemSpecP& params, 
-                              DQMOMEqnFactory& eqn_factory );
+    void DQMOM::problemSetup( const ProblemSpecP& params );
 
     /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system.
     */
     void DQMOM::sched_solveLinearSystem( const LevelP& level,
-                                          SchedulerP& sched );
+                                         SchedulerP& sched,
+                                         int timeSubStep );
     
     /** @brief Create linear solver object, create linear system AX=B, and solve the linear system.
     */
@@ -92,21 +94,23 @@ private:
   // weights and weighted abscissa labels, IN SAME ORDER AS GIVEN IN INPUT FILE
   //    vector weightEqns[1] = weight, quad node 1
   //    vector weightEqns[2] = weight, quad node 2
-  //    vector weightedAbscissaEqns[1][1] = weighted abscissa 1, quad node 1
-  //    vector weightedAbscissaEqns[1][2] = weighted abscissa 1, quad node 2
-  //    vector weightedAbscissaEqns[2][1] = weighted abscissa 2, quad node 1
+  //    vector weightedAbscissaEqns[(1-1)N + 1] = weighted abscissa 1, quad node 1
+  //    vector weightedAbscissaEqns[(1-1)N + 2] = weighted abscissa 1, quad node 2
+  //    vector weightedAbscissaEqns[(2-1)N + 1] = weighted abscissa 2, quad node 1
   //vector<DQMOMEqn&> weightEqns;
   //vector< vector<DQMOMEqn&> > weightedAbscissaEqns;
   vector<DQMOMEqn> weightEqns;
   vector<DQMOMEqn> weightedAbscissaEqns;
 
-  // number of internal coordinates
-  int N_xi;
+  vector< vector<ModelBase> > weightedAbscissaModels;
 
-  // number of quadrature nodes or environments
+  // # of internal coordinates
+  int N_xi;
+  // # of quadrature nodes
   int N;
 
   const Fields* d_fieldLabels;
+  int d_timeSubStep;
 
 }; // end class DQMOM
 
