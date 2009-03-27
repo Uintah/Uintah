@@ -248,12 +248,20 @@ SpatialOps::scheduleInitialize(const LevelP& level,
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
     EqnBase* temp_eqn = ieqn->second; 
     DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
-    const VarLabel* temp = eqn->getSourceLabel();
-    tsk->computes( temp ); 
+    const VarLabel* tempSource = eqn->getSourceLabel();
+    tsk->computes( tempSource ); 
+    const VarLabel* tempVar = eqn->getTransportEqnLabel();
+    cout << "VAR = " << *tempVar << endl; 
+    tsk->computes( tempVar );  
   } 
 
-  for (Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.begin(); iLabel != d_fieldLabels->d_labelMap.end(); iLabel++){
-    tsk->computes((*iLabel).second);
+  EqnFactory& eqnFactory = EqnFactory::self(); 
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+    EqnBase* temp_eqn = ieqn->second; 
+    const VarLabel* tempVar = temp_eqn->getTransportEqnLabel(); 
+    cout << "THIS LABEL = " << *tempVar << endl;
+    tsk->computes( tempVar );
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allSpatialOpsMaterials());
@@ -303,19 +311,53 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
 #endif
     new_dw->allocateAndPut( ccVel, d_fieldLabels->velocityLabels.ccVelocity, matlIndex, patch ); 
 
-    // --- DQMOM Sources
+    // --- DQMOM Variables
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       EqnBase* temp_eqn = ieqn->second; 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
-      const VarLabel* tempLabel = eqn->getSourceLabel();
-      CCVariable<double> tempVar;
-      new_dw->allocateAndPut( tempVar, tempLabel, matlIndex, patch ); 
-      tempVar.initialize(0.0); 
+      const VarLabel* tempSourceLabel = eqn->getSourceLabel();
+      const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
+      
+      CCVariable<double> tempSource;
+      CCVariable<double> tempVar; 
+      new_dw->allocateAndPut( tempSource, tempSourceLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
+      tempSource.initialize(0.0); 
+      tempVar.initialize(1.0); 
+      
     } 
 
-    // --- TRANSPORTED VARIABLES
+    // --- TRANSPORTED SCALAR VARIABLES
+    EqnFactory& eqnFactory = EqnFactory::self(); 
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+      EqnBase* temp_eqn = ieqn->second; 
+      const VarLabel* tempLabel = temp_eqn->getTransportEqnLabel(); 
+      CCVariable<double> tempVar; 
+      new_dw->allocateAndPut( tempVar, 
+              tempLabel, 
+              matlIndex,
+              patch);
+
+      tempVar.initialize(0.0); 
+      if (ieqn->first == "var1"){
+        for (CellIterator iter=patch->getCellIterator__New(); 
+        !iter.done(); iter++){
+          Point pt = patch->cellPosition(*iter);
+          tempVar[*iter] = sin(2*d_pi*pt.x());
+          //tempVar[*iter] = sin(2*d_pi*pt.x()) + cos(2*d_pi*pt.y());
+        }
+      }else if (ieqn->first == "var2"){
+        for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+          Point pt = patch->cellPosition(*iter);
+          tempVar[*iter] = sin(2*d_pi*pt.y());
+          //tempVar[*iter] = cos(2*d_pi*pt.x()) + sin(2*d_pi*pt.y());
+        }
+      }
+    }
+ 
     for (CellIterator iter=patch->getSFCXIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
       Point     p = patch->cellPosition(c);
@@ -335,29 +377,6 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
       double vcc = vVel[c];//0.5*( vVel[c] + vVel[c+IntVector(0,1,0)] );
       ccVel[c] = Vector(ucc,vcc,0.0);
 
-    }
-
-    for (Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.begin(); iLabel != d_fieldLabels->d_labelMap.end(); iLabel++){
-      CCVariable<double> tempVar; 
-      new_dw->allocateAndPut( tempVar, 
-              (*iLabel).second, 
-              matlIndex,
-              patch);
-      tempVar.initialize(0.0); 
-      if (iLabel->first == "var1"){
-        for (CellIterator iter=patch->getCellIterator__New(); 
-        !iter.done(); iter++){
-          Point pt = patch->cellPosition(*iter);
-          tempVar[*iter] = sin(2*d_pi*pt.x());
-          //tempVar[*iter] = sin(2*d_pi*pt.x()) + cos(2*d_pi*pt.y());
-        }
-      }else if (iLabel->first == "var2"){
-        for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
-          Point pt = patch->cellPosition(*iter);
-          tempVar[*iter] = sin(2*d_pi*pt.y());
-          //tempVar[*iter] = cos(2*d_pi*pt.x()) + sin(2*d_pi*pt.y());
-        }
-      }   
     }
   }
 }
