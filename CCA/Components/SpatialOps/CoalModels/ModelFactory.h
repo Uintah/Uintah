@@ -29,18 +29,21 @@ namespace Uintah {
 //---------------------------------------------------------------------------
 // Builder
 class ModelBase; 
+
 class ModelBuilder
 {
 public:
-  ModelBuilder(std::string model_name, 
-               const Fields* fieldLabels,
-               vector<std::string> icLabelNames, 
-               SimulationStateP& sharedState, int qn) : 
-               d_modelName(model_name), 
-               d_fieldLabels(fieldLabels), 
-               d_icLabels(icLabelNames), 
-               d_sharedState(sharedState), d_quadNode(qn){};
-  virtual ~ModelBuilder(){};
+  ModelBuilder( const std::string   & model_name, 
+                const Fields        * fieldLabels,
+                vector<std::string>   icLabelNames, 
+                SimulationStateP    & sharedState,
+                int                   qn ) : 
+    d_modelName(model_name), 
+    d_fieldLabels(fieldLabels), 
+    d_icLabels(icLabelNames), 
+    d_sharedState(sharedState), d_quadNode(qn) {}
+
+  virtual ~ModelBuilder(){}
 
   /**
    *  build the Model.  Should be implemented using the
