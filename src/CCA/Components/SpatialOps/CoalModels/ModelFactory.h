@@ -38,10 +38,10 @@ public:
                 vector<std::string>   icLabelNames, 
                 SimulationStateP    & sharedState,
                 int                   qn ) : 
-    d_modelName(model_name), 
-    d_fieldLabels(fieldLabels), 
-    d_icLabels(icLabelNames), 
-    d_sharedState(sharedState), d_quadNode(qn) {}
+    d_modelName( model_name ), 
+    d_icLabels( icLabelNames ), 
+    d_fieldLabels( fieldLabels ), 
+    d_sharedState( sharedState ), d_quadNode( qn ) {}
 
   virtual ~ModelBuilder(){}
 
@@ -51,11 +51,11 @@ public:
    */
   virtual ModelBase* build() = 0;
 protected: 
-  std::string d_modelName;
-  vector<string> d_icLabels;
-  const Fields* d_fieldLabels;
-  SimulationStateP& d_sharedState; 
-  int d_quadNode; 
+  std::string        d_modelName;
+  vector<string>     d_icLabels;
+  const Fields     * d_fieldLabels;
+  SimulationStateP & d_sharedState; 
+  int                d_quadNode; 
 private: 
 };
 // End Builder

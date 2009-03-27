@@ -424,7 +424,7 @@ void
 SpatialOps::scheduleTimeAdvance(const LevelP& level, 
                   SchedulerP& sched)
 {
-  double time = d_sharedState->getElapsedTime();
+  // double time = d_sharedState->getElapsedTime();
   nofTimeSteps++;
 
   EqnFactory&   scalarFactory = EqnFactory::self();

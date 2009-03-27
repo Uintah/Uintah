@@ -53,31 +53,28 @@ class DQMOM {
 
 public:
 
-    DQMOM( const Fields* fieldLabels );
+  DQMOM( const Fields* fieldLabels );
 
-    ~DQMOM();
+  ~DQMOM();
 
-    /** @brief Obtain parameters from input file and process them, whatever that means 
-    */
-    void DQMOM::problemSetup( const ProblemSpecP& params );
+  /** @brief Obtain parameters from input file and process them, whatever that means 
+   */
+  void problemSetup( const ProblemSpecP& params );
 
-    /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system.
-    */
-    void DQMOM::sched_solveLinearSystem( const LevelP& level,
-                                         SchedulerP& sched,
-                                         int timeSubStep );
+  /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. */
+  void sched_solveLinearSystem( const LevelP & level,
+                                SchedulerP   & sched,
+                                int            timeSubStep );
     
-    /** @brief Create linear solver object, create linear system AX=B, and solve the linear system.
-    */
-    void DQMOM::solveLinearSystem( const ProcessorGroup*,
-                                   const PatchSubset* patches,
-                                   const MaterialSubset*,
-                                   DataWarehouse* old_dw,
-                                   DataWarehouse* new_dw );
+  /** @brief Create linear solver object, create linear system AX=B, and solve the linear system. */
+  void solveLinearSystem( const ProcessorGroup *,
+                          const PatchSubset    * patches,
+                          const MaterialSubset *,
+                          DataWarehouse        * old_dw,
+                          DataWarehouse        * new_dw );
 
-    /** @brief Destroy A, X, B, and solver object 
-    */
-    void DQMOM::destroyLinearSystem();
+    /** @brief Destroy A, X, B, and solver object  */
+    void destroyLinearSystem();
 
     //-------------------------------------------------------------------
 
@@ -105,9 +102,9 @@ private:
   vector< vector<ModelBase> > weightedAbscissaModels;
 
   // # of internal coordinates
-  int N_xi;
+  unsigned int N_xi;
   // # of quadrature nodes
-  int N;
+  unsigned int N_;
 
   const Fields* d_fieldLabels;
   int d_timeSubStep;
