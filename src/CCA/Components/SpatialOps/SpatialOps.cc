@@ -79,6 +79,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
   // Input
   ProblemSpecP db = params->findBlock("CFD")->findBlock("SPATIALOPS");
   db->require("lambda", d_initlambda);  
+  db->getWithDefault("temperature", d_initTemperature,298.0);
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
   time_db->getWithDefault("tOrder",d_tOrder,1); 
 
@@ -225,6 +226,7 @@ SpatialOps::scheduleInitialize(const LevelP& level,
   // --- Physical Properties --- 
   tsk->computes( d_fieldLabels->propLabels.lambda ); 
   tsk->computes( d_fieldLabels->propLabels.density ); 
+  tsk->computes( d_fieldLabels->propLabels.temperature );
 
   // --- Velocities ---
   tsk->computes( d_fieldLabels->velocityLabels.uVelocity ); 
@@ -272,6 +274,7 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
 
     CCVariable<double> lambda;
     CCVariable<double> density;  
+    CCVariable<double> temperature;
     SFCXVariable<double> uVel;
     SFCYVariable<double> vVel; 
     SFCZVariable<double> wVel; 
@@ -281,6 +284,8 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
     lambda.initialize( d_initlambda );
     new_dw->allocateAndPut( density, d_fieldLabels->propLabels.density, matlIndex, patch ); 
     density.initialize( 1.0 );  
+    new_dw->allocateAndPut( temperature, d_fieldLabels->propLabels.temperature, matlIndex, patch );
+    temperature.initialize( d_initTemperature );
 
     new_dw->allocateAndPut( uVel, d_fieldLabels->velocityLabels.uVelocity, matlIndex, patch );
     uVel.initialize( 0.0 ); 

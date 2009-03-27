@@ -94,6 +94,7 @@ private:
   int nofTimeSteps;
   double d_pi;
   double d_initlambda;
+  double d_initTemperature;
   int d_tOrder;
   vector<string> d_scalarEqnNames; 
 
