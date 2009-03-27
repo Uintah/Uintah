@@ -46,6 +46,7 @@ public:
 
     const VarLabel* lambda; 
     const VarLabel* density; 
+    const VarLabel* temperature;
 
     // These may come in handy ..
     vector<const VarLabel*> myVec;

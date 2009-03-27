@@ -26,6 +26,10 @@ Fields::Fields()
   propLabels.density = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
 
+  varname = "temperature";
+  propLabels.temperature = VarLabel::create(varname,
+            CCVariable<double>::getTypeDescription());
+
   // --- Velocities ---
   varname = "uVelocity"; 
   velocityLabels.uVelocity = VarLabel::create(varname, 
@@ -40,7 +44,6 @@ Fields::Fields()
   varname = "ccVelocity"; 
   velocityLabels.ccVelocity = VarLabel::create(varname, 
             CCVariable<Vector>::getTypeDescription());
-
 
 }
 
@@ -69,6 +72,7 @@ Fields::schedCopyOldToNew( const LevelP& level, SchedulerP& sched )
   //--New
   tsk->computes(propLabels.lambda); 
   tsk->computes(propLabels.density); 
+  tsk->computes(propLabels.temperature);
   tsk->computes(velocityLabels.uVelocity); 
   tsk->computes(velocityLabels.vVelocity); 
   tsk->computes(velocityLabels.wVelocity);
@@ -77,6 +81,7 @@ Fields::schedCopyOldToNew( const LevelP& level, SchedulerP& sched )
   //--Old
   tsk->requires(Task::OldDW, propLabels.lambda, Ghost::None, 0);
   tsk->requires(Task::OldDW, propLabels.density, Ghost::None, 0);  
+  tsk->requires(Task::OldDW, propLabels.temperature, Ghost::None, 0);
   tsk->requires(Task::OldDW, velocityLabels.uVelocity, Ghost::None, 0);  
   tsk->requires(Task::OldDW, velocityLabels.vVelocity, Ghost::None, 0);  
   tsk->requires(Task::OldDW, velocityLabels.wVelocity, Ghost::None, 0);
@@ -105,6 +110,7 @@ void Fields::CopyOldToNew( const ProcessorGroup* pc,
 
     CCVariable<double> lambda; 
     CCVariable<double> density;
+    CCVariable<double> temperature;
     SFCXVariable<double> uVelocity; 
     SFCYVariable<double> vVelocity; 
     SFCZVariable<double> wVelocity; 
@@ -112,6 +118,7 @@ void Fields::CopyOldToNew( const ProcessorGroup* pc,
 
     constCCVariable<double> old_lambda;
     constCCVariable<double> old_density;  
+    constCCVariable<double> old_temperature;
     constSFCXVariable<double> old_uVelocity; 
     constSFCYVariable<double> old_vVelocity; 
     constSFCZVariable<double> old_wVelocity; 
@@ -124,6 +131,10 @@ void Fields::CopyOldToNew( const ProcessorGroup* pc,
     new_dw->allocateAndPut( density, propLabels.density, matlIndex, patch ); 
     old_dw->get(old_density, propLabels.density, matlIndex, patch, gn, 0); 
     density.copy(old_density); 
+
+    new_dw->allocateAndPut( temperature, propLabels.temperature, matlIndex, patch );
+    old_dw->get(old_temperature, propLabels.temperature, matlIndex, patch, gn, 0);
+    temperature.copy(old_temperature);
 
     new_dw->allocateAndPut( uVelocity, velocityLabels.uVelocity, matlIndex, patch ); 
     old_dw->get(old_uVelocity, velocityLabels.uVelocity, matlIndex, patch, gn, 0); 
