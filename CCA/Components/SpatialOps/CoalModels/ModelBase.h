@@ -27,6 +27,7 @@ class ModelBase{
 public: 
 
   ModelBase( std::string modelName, SimulationStateP& sharedState, 
+             const Fields* fieldLabels,
              vector<std::string> reqLabelNames, int qn );
   virtual ~ModelBase();
 
@@ -66,6 +67,8 @@ protected:
   bool d_labelActualInit;   
 
   int d_quadNode; 
+
+  const Fields* d_fieldLabels;
 
 }; // end ModelBase
 }  // end namespace Uintah

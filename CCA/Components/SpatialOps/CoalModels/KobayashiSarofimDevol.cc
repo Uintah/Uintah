@@ -3,8 +3,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/SpatialOps/CoalModels/BadHawkDevol.h>
-
+#include <CCA/Components/SpatialOps/CoalModels/KobayashiSarofimDevol.h>
 
 //===========================================================================
 
@@ -13,36 +12,35 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-BadHawkDevolBuilder::BadHawkDevolBuilder(std::string srcName, 
+KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder(std::string srcName, 
                                          vector<std::string> icLabelNames, 
-                                         const Fields* fieldLabels,
                                          SimulationStateP& sharedState, int qn)
-: ModelBuilder(srcName, icLabelNames, fieldLabels, sharedState, qn)
+: ModelBuilder(srcName, icLabelNames, sharedState, qn)
 {}
 
-BadHawkDevolBuilder::~BadHawkDevolBuilder(){}
+KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
 
 ModelBase*
-BadHawkDevolBuilder::build(){
-  return scinew BadHawkDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, 
+KobayashiSarofimDevolBuilder::build(){
+  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_icLabels, 
                               d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-BadHawkDevol::BadHawkDevol( std::string srcName, SimulationStateP& sharedState,
+KobayashiSarofimDevol::KobayashiSarofimDevol( std::string srcName, SimulationStateP& sharedState,
                             const Fields* fieldLabels,
                             vector<std::string> icLabelNames, int qn ) 
-: ModelBase(srcName, sharedState, fieldLabels, icLabelNames, qn)
+: ModelBase(srcName, sharedState, icLabelNames, qn),d_fieldLabels(fieldLabels)
 {}
 
-BadHawkDevol::~BadHawkDevol()
+KobayashiSarofimDevol::~KobayashiSarofimDevol()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-BadHawkDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
+KobayashiSarofimDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
 
   ProblemSpecP db = inputdb; 
@@ -52,10 +50,10 @@ BadHawkDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
 void 
-BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "BadHawkDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::computeModel);
+  std::string taskname = "KobayashiSarofimDevol::computeModel";
+  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
 
   d_timeSubStep = timeSubStep; 
 
@@ -72,6 +70,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
        iter != d_icLabels.end(); iter++) { 
     // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE MODEL
+    tsk->requires(Task::OldDW, d_fieldLabels->propLabels.temperature, Ghost::AroundCells, 1);
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allSpatialOpsMaterials()); 
@@ -81,7 +80,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-BadHawkDevol::computeModel( const ProcessorGroup* pc, 
+KobayashiSarofimDevol::computeModel( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -105,14 +104,27 @@ BadHawkDevol::computeModel( const ProcessorGroup* pc,
       model.initialize(0.0);
     }
 
+    EqnFactory& eqn_factory = EqnFactory::self();
+    EqnBase& temp_IC_eqn = eqn_factory->retrieve_scalar_eqn("CoalMassFraction");
+    DQMOMEqn& temp_IC_eqnD = dynamic_cast<DQMOMEqn&>(temp_IC_eqn);
+    VarLabel* temp_IC_label = temp_IC_eqnD->getTransportEqnLabel();
+
+    const CCVariable<double> temperature;
+    const CCVariable<double> alphac;
+    new_dw->get(temperature, d_fieldLabels->d_temperature, matlIndex, patch);
+    new_dw->get(alphac, temp_IC_label, matlIndex, patch);
+    
     for (vector<std::string>::iterator iter = d_icLabels.begin(); 
          iter != d_icLabels.end(); iter++) { 
-    
+      // how to differentiate between different internal coordinates?
     }
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
-      //model[c] =
+      k1 = A1*exp(-E1/(R*temperature[c]));
+      k2 = A2*exp(-E2/(R*temperature[c]));
+
+      model[c] = -(k1+k2)*alphac;//change this to the function 
     }
   }
 }
