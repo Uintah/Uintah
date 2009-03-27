@@ -640,11 +640,8 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
     cerr << "Error opening file: " << dataurl.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (open call)", errno, __FILE__, __LINE__);
   }
-#ifdef __sgi
-  off64_t ls = lseek64(fd, dfi->start, SEEK_SET);
-#else
   off_t ls = lseek(fd, dfi->start, SEEK_SET);
-#endif
+
   if(ls == -1) {
     cerr << "Error lseek - file: " << dataurl.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (lseek call)", errno, __FILE__, __LINE__);

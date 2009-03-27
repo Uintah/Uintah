@@ -161,11 +161,6 @@ using namespace std;
 const int RANGE_LEFT = 0;
 const int RANGE_RIGHT = 1;
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424
-#pragma set woff 1209
-#endif
-
 template<class TPoint, class TPointElem,
   bool ALLOW_NEAREST_NEIGHBOR_QUERY=false>
 class RangeTree
@@ -1813,10 +1808,5 @@ setDiagonalDirections()
 }
 
 } // End namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#pragma reset woff 1209
-#endif
 
 #endif // ndef Core_Containers_RangeTree_h

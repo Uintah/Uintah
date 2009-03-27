@@ -31,10 +31,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef UINTAH_HOMEBREW_OutputContext_H
 #define UINTAH_HOMEBREW_OutputContext_H
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#define IRIX
-#pragma set woff 1375
-#endif
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {

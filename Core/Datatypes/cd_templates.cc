@@ -46,9 +46,6 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 
 
 using namespace SCIRun;
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1468
-#endif
 
 #include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/ColumnMatrix.h>
@@ -155,6 +152,3 @@ get_vsize(Tensor*)
 
 } // end namespace SCIRun
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#  pragma reset woff 1468
-#endif

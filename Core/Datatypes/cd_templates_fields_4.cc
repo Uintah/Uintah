@@ -37,15 +37,6 @@
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-/*
-cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line = 11
-  Inline function "SCIRun::FData3d<SCIRun::Tensor>::end" cannot be explicitly
-          instantiated.
-*/
-#pragma set woff 1468
-#endif
-
 using namespace SCIRun;
 
 //NoData
@@ -292,6 +283,3 @@ backwards_compat_CFul("CurveField<unsigned_long>", "Field",
 		      GenericField<CMesh, CFDulongBasis, 
 		      vector<unsigned long> >::maker);
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1468
-#endif

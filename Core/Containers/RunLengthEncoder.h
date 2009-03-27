@@ -329,9 +329,7 @@ public:
   void testPrint(ostream& out);
 
 private:
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424 // template parameter not used in declaring arguments
-#endif
+
   // should optimize itself when no conversion is needed
   template <bool needConversion>
   long readPriv(istream& in, bool swapBytes, int nByteMode)
@@ -341,9 +339,6 @@ private:
   static T seekPriv(int fd /* file descriptor */, unsigned long index,
 		    bool swapBytes, int nByteMode)
     throw(InternalError);
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#endif  
 
   template<class SIZE_T>
   inline void readSizeType(istream& in, bool needConversion, bool swapBytes,
@@ -365,20 +360,12 @@ private:
 
   inline static ssize_t pread(int fd, void* buf, size_t nbyte, off_t offset)
   {
-#ifdef __sgi
-    return pread64(fd, buf, nbyte, offset);
-#else
     return pread(fd, buf, nbyte, offset);
-#endif
   }
 
   inline static off_t lseek(int fd, off_t offset, int whence)
   {
-#ifdef __sgi
-    return ::lseek64(fd, offset, whence);
-#else
     return ::lseek(fd, offset, whence);
-#endif
   }
 
   inline static unsigned long getMinRunLength(bool isDefaultRuleRun)
@@ -468,10 +455,6 @@ private:
 template <class T, class Tdiff>
 Tdiff EqualIntervalSequencer<T, Tdiff>::defaultSequenceRule(0);
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1375
-#endif
-
 /* Default Sequencer with specializations for basic types */
 template <class T>
 class DefaultRunLengthSequencer : public EqualElementSequencer<T>
@@ -497,10 +480,6 @@ class DefaultRunLengthSequencer<float> : public EqualIntervalSequencer<float>
 template<>
 class DefaultRunLengthSequencer<double> : public EqualIntervalSequencer<double>
 { };
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#endif
 
 
 template<class T, class Sequencer>
@@ -733,10 +712,6 @@ long RunLengthEncoder<T, Sequencer>::write(ostream& out) throw(ErrnoException)
   return data_pos; // returns the number of bytes written
 }
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424 // template parameter not used in declaring arguments
-#pragma set woff 1209 // constant controlling expressions (needConversion)
-#endif  
 
 template<class T, class Sequencer>
 template<class SIZE_T> // should either be unsigned long or ssize_t
@@ -969,11 +944,6 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     return item;
   }
 }
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424 
-#pragma reset woff 1209 
-#endif  
 
 template<class T, class Sequencer>
 void RunLengthEncoder<T, Sequencer>::testPrint(ostream& out)

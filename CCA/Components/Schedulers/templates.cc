@@ -44,9 +44,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1468
-#endif
 
 using namespace Uintah;
 using std::vector;

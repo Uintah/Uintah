@@ -44,9 +44,6 @@
 #include <Core/Math/Expon.h>
 #include <cmath>
 
-#ifdef __sgi
-#  include <ieeefp.h>
-#endif
 #ifdef __digital__
 #  include <fp_class.h>
 #endif

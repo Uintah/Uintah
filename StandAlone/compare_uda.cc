@@ -683,9 +683,6 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
   }
 }
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424 // template parameter not used in declaring arguments
-#endif  
 //__________________________________
 template <class T>
 void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
@@ -728,10 +725,6 @@ void compareParticles(DataArchive* da1, DataArchive* da2, const string& var,
   // this should be true if both sets are the same size
   ASSERT(iter1 == pset1->end() && iter2 == pset2->end());
 }
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#endif  
 
 /*
   template <class Field, class Iterator>

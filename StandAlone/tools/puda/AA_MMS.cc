@@ -54,7 +54,7 @@ Uintah::AA_MMS( DataArchive * da, CommandLineFlags & clf )
       LevelP level = grid->getLevel(l);
       for(Level::const_patchIterator iter = level->patchesBegin();
           iter != level->patchesEnd(); iter++){
-        particleIndex worst_idx;
+        particleIndex worst_idx = 0;
         const Patch* patch = *iter;
         int matl = clf.matl_jim;
         //__________________________________

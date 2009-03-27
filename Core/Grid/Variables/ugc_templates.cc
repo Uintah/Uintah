@@ -43,9 +43,6 @@ DEALINGS IN THE SOFTWARE.
 
 #include <utility>
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#  pragma set woff 1468
-#endif
 
 template class Uintah::ParticleVariable<SCIRun::Vector>;
 template class Uintah::ParticleVariable<Uintah::Matrix3>;
@@ -94,6 +91,3 @@ template class Uintah::SFCZVariable<Uintah::long64>;
 
 template class Uintah::ReductionVariable<double, Uintah::Reductions::Min<double> >;
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#  pragma reset woff 1468
-#endif
