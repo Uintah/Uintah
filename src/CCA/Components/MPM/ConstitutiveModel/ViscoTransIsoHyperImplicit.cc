@@ -1273,9 +1273,6 @@ double ViscoTransIsoHyperImplicit::getCompressibility()
   return 1.0/d_initialData.Bulk;
 }
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
-#endif
 
 namespace Uintah {
   

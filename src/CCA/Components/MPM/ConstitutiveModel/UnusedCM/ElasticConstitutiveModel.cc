@@ -477,10 +477,6 @@ void ElasticConstitutiveModel::printParameterNames(ofstream& out) const
       << "Pois. Rat" << endl;
 }
 
-#ifdef __sgi
-#define IRIX
-#pragma set woff 1209
-#endif
 
 namespace Uintah {
 

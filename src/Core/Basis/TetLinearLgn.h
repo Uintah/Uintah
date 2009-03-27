@@ -35,10 +35,6 @@
 #include <Core/Basis/TriLinearLgn.h>
 
 #include <Core/Basis/share.h>
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn off 'implicit conversion... loss of accuracy' messages.
-#  pragma set woff 1506
-#endif
 
 namespace SCIRun {
 
@@ -493,11 +489,6 @@ TetLinearLgn<T>::io(Piostream &stream)
 
 
 } //namespace SCIRun
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-// Turn back on 'implicit conversion... loss of accuracy' messages.
-#  pragma reset woff 1506
-#endif
 
 
 #endif // TetLinearLgn_h

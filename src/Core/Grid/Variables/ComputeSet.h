@@ -177,18 +177,14 @@ namespace Uintah {
         static bool compareElems(T e1, T e2);
       private:
         // May pass back Handles to same sets that came in.
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424 // template parameter not used in declaring arguments
-#endif  
+
         template <bool passBackDifferences>
           static constHandle< ComputeSubset<T> >
           intersectionAndMaybeDifferences(const constHandle< ComputeSubset<T> >& s1,
               const constHandle< ComputeSubset<T> >& s2,
               constHandle< ComputeSubset<T> >& setDifference1,
               constHandle< ComputeSubset<T> >& setDifference2);
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#endif      
+
         vector<T> items;
 
         ComputeSubset(const ComputeSubset&);
@@ -357,11 +353,6 @@ namespace Uintah {
     { return e1 < e2; }
 
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424 // template parameter not used in declaring arguments
-#pragma set woff 1209 // constant controlling expressions (passBackDifference)
-#endif  
-
   template<class T>
     template<bool passBackDifferences>
     constHandle< ComputeSubset<T> > ComputeSubset<T>::
@@ -470,10 +461,6 @@ namespace Uintah {
       }
     }
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#pragma reset woff 1209  
-#endif  
 
   template<class T>
     bool ComputeSubset<T>::overlaps(const ComputeSubset<T>* s1,

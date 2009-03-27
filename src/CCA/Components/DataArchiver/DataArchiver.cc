@@ -1849,11 +1849,8 @@ DataArchiver::output(const ProcessorGroup*,
             pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
 
 #if 0          
-#ifdef __sgi
-          off64_t ls = lseek64(fd, cur, SEEK_SET);
-#else
           off_t ls = lseek(fd, cur, SEEK_SET);
-#endif
+
           if(ls == -1) {
             cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
             throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);

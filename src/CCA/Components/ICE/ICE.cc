@@ -5965,10 +5965,6 @@ void ICE::setNeedAddMaterialFlag(const ProcessorGroup*,
  }
 
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
-#endif
-
 
 /*______________________________________________________________________
           S C H E M A T I C   D I A G R A M S

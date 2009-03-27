@@ -41,15 +41,6 @@
 //#include <Core/Datatypes/MaskedLatVolField.h>
 
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-/*
-cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line = 11
-  Inline function "SCIRun::FData3d<SCIRun::Tensor>::end" cannot be explicitly
-          instantiated.
-*/
-#pragma set woff 1468
-#endif
-
 using namespace SCIRun;
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 PersistentTypeID backwards_compat_LVM("LatVolMesh", "Mesh",
@@ -357,6 +348,3 @@ template class MultiLevelField<LVMesh, FDulongBasis,
 
 
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1468
-#endif

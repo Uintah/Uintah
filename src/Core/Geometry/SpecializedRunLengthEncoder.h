@@ -38,9 +38,6 @@
 // EqualElementSequencer version with the EqualIntervalSequencer
 
 namespace SCIRun {
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1375
-#endif
 
   template<>
   class DefaultRunLengthSequencer<Vector>
@@ -52,9 +49,6 @@ namespace SCIRun {
     public EqualIntervalSequencer<Point, Vector>
   { };
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#endif  
 }
 
 #endif

@@ -45,9 +45,6 @@ namespace Uintah {
     T d_data[6];
   };
   
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424 // Template parameter not used in declaring arguments.
-#endif                // This turns off SGI compiler warning.
   template<class T>
   MPI_Datatype makeMPI_facedata()
   {
@@ -58,9 +55,6 @@ namespace Uintah {
     MPI_Type_commit(&mpitype);
     return mpitype;
   }
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#endif
   
   template<class T>
   const TypeDescription* fun_getTypeDescription(facedata<T>*)
@@ -83,9 +77,6 @@ namespace Uintah {
     T d_vrtx[8];
   };
   
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424 // Template parameter not used in declaring arguments.
-#endif                // This turns off SGI compiler warning.
   template<class T>
   MPI_Datatype makeMPI_vertex()
   {
@@ -96,9 +87,6 @@ namespace Uintah {
     MPI_Type_commit(&mpitype);
     return mpitype;
   }
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#endif
   
   template<class T>
   const TypeDescription* fun_getTypeDescription(vertex<T>*)

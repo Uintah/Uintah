@@ -372,11 +372,7 @@ Thread::niceAbort(void* context /* = 0 */)
       if(getenv("SCI_DBXCOMMAND")){
 	sprintf(command, getenv("SCI_DBXCOMMAND"), getpid());
       } else {
-#ifdef __sgi
-	sprintf(command, "winterm -c dbx -p %d &", getpid());
-#else
 	sprintf(command, "xterm -e gdb %d &", getpid());
-#endif
       }
       system(command);
       smode = "ask";

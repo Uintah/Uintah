@@ -46,10 +46,6 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 
 using namespace SCIRun;
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1468
-#endif
-
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Basis/NoData.h>
@@ -438,8 +434,5 @@ backwards_compat_SHVFul("StructHexVolField<unsigned_long>", "Field",
 			GenericField<SHMesh, CFDulongBasis, 
 			FData3d<unsigned long, SHMesh> >::maker);
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1468
-#endif
 
 

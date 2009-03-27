@@ -1002,10 +1002,6 @@ protected:
   unsigned int               synchronized_;
   Basis                      basis_;
 
-#if defined(__sgi)
-  Edge::HESallocator_type edge_allocator_;
-  Face::HFSallocator_type face_allocator_;
-#endif
 
 }; // end class PrismVolMesh
 

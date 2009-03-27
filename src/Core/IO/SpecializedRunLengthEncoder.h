@@ -42,19 +42,11 @@ DEALINGS IN THE SOFTWARE.
 namespace SCIRun {
   using namespace Uintah;
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1375
-#endif
-  
   // specialize for the Matrix3 class
   template<>
   class DefaultRunLengthSequencer<Matrix3>
     : public EqualIntervalSequencer<Matrix3>
   { };
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1375
-#endif
 
 }
 

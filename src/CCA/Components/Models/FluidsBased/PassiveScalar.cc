@@ -416,7 +416,7 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             
             // This is a 2-D profile        
             if(region->exponentialInitialize_2D) {
-              double coeff1, coeff2, d1, d2;
+              double coeff1 = 0., coeff2 = 0. ,  d1 = 0. , d2= 0.;
               if (coeff.x()==0) {
                 coeff1 = coeff.y();
                 coeff2 = coeff.z();

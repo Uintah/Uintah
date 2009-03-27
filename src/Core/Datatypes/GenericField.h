@@ -489,9 +489,6 @@ GenericField<Mesh, Basis, FData>::data_size() const
 
 
 // Turn off warning for CHECKARRAYBOUNDS
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1183 1506
-#endif
 
 template <class Mesh, class Basis, class FData>
 bool
@@ -614,9 +611,6 @@ value(typename mesh_type::Cell::index_type i) const
 }
 
 // Reenable warning for CHECKARRAYBOUNDS
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1183 1506
-#endif
 
 template <class Mesh, class Basis, class FData>
 typename GenericField<Mesh, Basis, FData>::fdata_type &
