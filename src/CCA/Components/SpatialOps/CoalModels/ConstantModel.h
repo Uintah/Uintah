@@ -14,10 +14,11 @@ namespace Uintah{
 class ConstantModelBuilder: public ModelBuilder
 {
 public: 
-  ConstantModelBuilder(std::string modelName, 
-                      vector<std::string> reqLabelNames, 
-                      const Fields* fieldLabels,
-                      SimulationStateP& sharedState, int qn);
+  ConstantModelBuilder( const std::string         & modelName, 
+                        const vector<std::string> & reqLabelNames, 
+                        const Fields              * fieldLabels,
+                        SimulationStateP          & sharedState,
+                        int                         qn );
   ~ConstantModelBuilder(); 
 
   ModelBase* build(); 

@@ -14,10 +14,11 @@ namespace Uintah{
 class BadHawkDevolBuilder: public ModelBuilder
 {
 public: 
-  BadHawkDevolBuilder(std::string modelName, 
-                      vector<std::string> reqLabelNames, 
-                      const Fields* fieldLabels,
-                      SimulationStateP& sharedState, int qn);
+  BadHawkDevolBuilder( const std::string         & modelName, 
+                       const vector<std::string> & reqLabelNames, 
+                       const Fields              * fieldLabels,
+                       SimulationStateP          & sharedState,
+                       int                         qn );
   ~BadHawkDevolBuilder(); 
 
   ModelBase* build(); 

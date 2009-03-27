@@ -13,10 +13,11 @@ namespace Uintah{
 class KobayashiSarofimDevolBuilder: public ModelBuilder
 {
 public: 
-  KobayashiSarofimDevolBuilder(std::string modelName, 
-                      const Fields* fieldLabels,
-                      vector<std::string> reqLabelNames, 
-                      SimulationStateP& sharedState, int qn);
+  KobayashiSarofimDevolBuilder( const std::string          & modelName,
+                                const vector<std::string>  & reqLabelNames,
+                                const Fields               * fieldLabels,
+                                SimulationStateP           & sharedState,
+                                int qn );
   ~KobayashiSarofimDevolBuilder(); 
 
   ModelBase* build(); 

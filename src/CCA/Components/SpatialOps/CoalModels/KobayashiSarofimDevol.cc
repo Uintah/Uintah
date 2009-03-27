@@ -17,11 +17,12 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder(std::string srcName, 
-                                         const Fields* fieldLabels,
-                                         vector<std::string> icLabelNames, 
-                                         SimulationStateP& sharedState, int qn)
-: ModelBuilder(srcName, fieldLabels, icLabelNames, sharedState, qn)
+KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string         & modelName,
+                                                            const vector<std::string> & reqLabelNames,
+                                                            const Fields              * fieldLabels,
+                                                            SimulationStateP          & sharedState,
+                                                            int qn ) :
+  ModelBuilder( modelName, fieldLabels, reqLabelNames, sharedState, qn )
 {}
 
 KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
@@ -91,14 +92,14 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-KobayashiSarofimDevol::computeModel( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw )
+KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc, 
+                                     const PatchSubset    * patches, 
+                                     const MaterialSubset * matls, 
+                                     DataWarehouse        * old_dw, 
+                                     DataWarehouse        * new_dw )
 {
-  //patch loop
-  for (int p=0; p < patches->size(); p++){
+#if 0
+  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -115,15 +116,15 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup* pc,
       model.initialize(0.0);
     }
 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnBase& temp_IC_eqn = &eqn_factory->retrieve_scalar_eqn("CoalMassFraction");
-    DQMOMEqn& temp_IC_eqnD = dynamic_cast<DQMOMEqn&>(temp_IC_eqn);
-    VarLabel* temp_IC_label = temp_IC_eqnD->getTransportEqnLabel();
+    EqnFactory     & eqn_factory   = EqnFactory::self();
+    EqnBase        & temp_IC_eqn   = eqn_factory.retrieve_scalar_eqn( "CoalMassFraction" );
+    DQMOMEqn       & temp_IC_eqnD  = dynamic_cast<DQMOMEqn&>(temp_IC_eqn);
+    const VarLabel * temp_IC_label = temp_IC_eqnD.getTransportEqnLabel();
 
     const CCVariable<double> temperature;
     const CCVariable<double> alphac;
-    new_dw->get(temperature, d_fieldLabels->propLables.temperature, matlIndex, patch);
-    new_dw->get(alphac, temp_IC_label, matlIndex, patch);
+    new_dw->get( temperature, d_fieldLabels->propLabels.temperature, matlIndex, patch );
+    new_dw->get( alphac, temp_IC_label, matlIndex, patch );
     
     for (vector<std::string>::iterator iter = d_icLabels.begin(); 
          iter != d_icLabels.end(); iter++) { 
@@ -138,4 +139,5 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup* pc,
       model[c] = -(k1+k2)*alphac;//change this to the function 
     }
   }
+#endif
 }

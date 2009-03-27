@@ -13,11 +13,12 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-ConstantModelBuilder::ConstantModelBuilder(std::string srcName, 
-                                         vector<std::string> icLabelNames, 
-                                         const Fields* fieldLabels,
-                                         SimulationStateP& sharedState, int qn)
-: ModelBuilder(srcName, icLabelNames, fieldLabels, sharedState, qn)
+ConstantModelBuilder::ConstantModelBuilder( const std::string         & modelName, 
+                                            const vector<std::string> & icLabelNames, 
+                                            const Fields              * fieldLabels,
+                                            SimulationStateP          & sharedState,
+                                            int qn ) :
+  ModelBuilder( modelName, fieldLabels, icLabelNames, sharedState, qn )
 {}
 
 ConstantModelBuilder::~ConstantModelBuilder(){}
