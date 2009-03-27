@@ -1,3 +1,6 @@
+#ifndef UDA2NRRD_UPDATE_MESH_HANDLE_H
+#define UDA2NRRD_UPDATE_MESH_HANDLE_H
+
 /*
 
 The MIT License
@@ -27,10 +30,6 @@ DEALINGS IN THE SOFTWARE.
 
 */
 
-
-#ifndef UDA2NRRD_UPDATE_MESH_HANDLE_H
-#define UDA2NRRD_UPDATE_MESH_HANDLE_H
-
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
 
@@ -40,9 +39,11 @@ DEALINGS IN THE SOFTWARE.
 
 #include <StandAlone/tools/uda2nrrd/Args.h>
 
-class SCIRun::BBox;
-class SCIRun::IntVector;
-class SCIRun::Point;
+namespace SCIRun {
+  class BBox;
+  class IntVector;
+  class Point;
+}
 
 typedef SCIRun::LatVolMesh<SCIRun::HexTrilinearLgn<SCIRun::Point> > LVMesh;
 typedef LVMesh::handle_type LVMeshHandle;
