@@ -87,14 +87,14 @@ DQMOM::problemSetup( const ProblemSpecP& params )
   // This for block is not necessary if the map includes weighted abscissas/internal coordinats 
   // in the same order as is given in the input file (b/c of the moment indexes)
   // Reason: this block puts the labels in the same order as the input file, so the moment indexes match up OK
-  DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self();
-  ModelFactory& model_factory = ModelFactory::self();
-  N = eqn_factory.get_quad_nodes();
+  DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
+  //ModelFactory & model_factory = ModelFactory::self();
+  N_ = eqn_factory.get_quad_nodes();
   
-  for (int alpha = 0; alpha < N; ++alpha){
-    std::string wght_name = "w_qn";
-    std::string node;
-    std::stringstream out;
+  for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+    string wght_name = "w_qn";
+    string node;
+    stringstream out;
     out << alpha;
     node = out.str();
     wght_name += node;
@@ -109,10 +109,10 @@ DQMOM::problemSetup( const ProblemSpecP& params )
     string ic_name;
     vector<string> modelsList;
     db_ic->getAttribute("label", ic_name);
-    for (int alpha = 1; alpha <= N; ++alpha) {
-      std::string final_name = ic_name + "_qn";
-      std::string node;
-      std::stringstream out;
+    for( unsigned int alpha = 1; alpha <= N_; ++alpha ) {
+      string final_name = ic_name + "_qn";
+      string node;
+      stringstream out;
       out << alpha;
       node = out.str();
       final_name += node;
@@ -280,15 +280,15 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for ( CellIterator iter = patch->getCellIterator__New();
           !iter.done(); ++iter) {
       
-      LU A( (N_xi+1)*N, 1); //bandwidth doesn't matter b/c A is being stored densely
-      vector<double> B( (N_xi+1)*N, 0.0 );
+      LU A( (N_xi+1)*N_, 1); //bandwidth doesn't matter b/c A is being stored densely
+      vector<double> B( (N_xi+1)*N_, 0.0 );
       IntVector c = *iter;
  
       for ( unsigned int k = 1; k <= momentIndexes.size(); ++k) {
         MomentVector thisMoment = momentIndexes[k];
         
         // weights
-        for ( unsigned int alpha = 1; alpha <= N; ++alpha) {
+        for ( unsigned int alpha = 1; alpha <= N_; ++alpha) {
           double prefixA = 1;
           double productA = 1;
           for ( unsigned int i = 1; i <= thisMoment.size(); ++i) {
@@ -303,12 +303,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
         // weighted abscissas
         double totalsumB = 0;
-        for (unsigned int j = 1; j <= N_xi; ++j) {
+        for( unsigned int j = 1; j <= N_xi; ++j ) {
           double prefixA = 1;
           double productA = 1;
           double productB = 1;
           double modelsumB = 0;
-          for (unsigned int alpha = 1; alpha <= N; ++alpha) {
+          for( unsigned int alpha = 1; alpha <= N_; ++alpha ) {
             double w_temp_doub = (*weightCCVars[alpha])[c];
             double wa_temp_doub = (*weightedAbscissaCCVars[(j-1)*alpha+alpha])[c];
             // Appendix C, C.11 (A_j+1 matrix)
