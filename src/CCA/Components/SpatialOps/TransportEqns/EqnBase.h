@@ -24,7 +24,7 @@ class EqnBase{
 
 public:
 
-  EqnBase( const Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
+  EqnBase( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
 
   virtual ~EqnBase();
 
@@ -90,7 +90,7 @@ protected:
     T b;
   };
 
-  const Fields* d_fieldLabels;
+  Fields* d_fieldLabels;
   const VarLabel* d_transportVarLabel;
   std::string d_eqnName;  
   bool d_doConv, d_doDiff, d_addSources;

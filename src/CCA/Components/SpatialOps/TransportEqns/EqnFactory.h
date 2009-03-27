@@ -24,7 +24,7 @@ class EqnBase;
 class EqnBuilder
 {
 public:
-  EqnBuilder( const Fields* fieldLabels, 
+  EqnBuilder( Fields* fieldLabels, 
               const VarLabel* transportVarLabel, 
               string eqnName ) : 
               d_fieldLabels(fieldLabels), 
@@ -35,7 +35,7 @@ public:
   virtual EqnBase* build() = 0;  
 
 protected: 
-  const Fields* d_fieldLabels; 
+  Fields* d_fieldLabels; 
   const VarLabel* d_transportVarLabel; 
   string d_eqnName; 
 }; // class EqnBuilder

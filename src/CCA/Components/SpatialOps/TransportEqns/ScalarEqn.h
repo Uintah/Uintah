@@ -30,7 +30,7 @@ class ScalarEqn;
 class CCScalarEqnBuilder: public EqnBuilder
 {
 public:
-  CCScalarEqnBuilder( const Fields* fieldLabels, 
+  CCScalarEqnBuilder( Fields* fieldLabels, 
                       const VarLabel* transportVarLabel, 
                       string eqnName );
   ~CCScalarEqnBuilder();
@@ -51,7 +51,7 @@ public EqnBase{
 
 public: 
 
-  ScalarEqn( const Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
+  ScalarEqn( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
 
   ~ScalarEqn();
 

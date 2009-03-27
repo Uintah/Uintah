@@ -15,7 +15,7 @@
 using namespace std;
 using namespace Uintah;
 
-EqnBase::EqnBase(const Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName):
+EqnBase::EqnBase(Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName):
 d_fieldLabels(fieldLabels), d_transportVarLabel(transportVarLabel), d_eqnName(eqnName)
 {
   //needed?

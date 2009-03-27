@@ -12,9 +12,9 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-DQMOMEqnBuilder::DQMOMEqnBuilder( const Fields* fieldLabels, 
-                                        const VarLabel* transportVarLabel, 
-                                        string eqnName ) : 
+DQMOMEqnBuilder::DQMOMEqnBuilder( Fields* fieldLabels, 
+                                  const VarLabel* transportVarLabel, 
+                                  string eqnName ) : 
 DQMOMEqnBuilderBase( fieldLabels, transportVarLabel, eqnName )
 {}
 DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
@@ -26,7 +26,7 @@ DQMOMEqnBuilder::build(){
 // End Builder
 //---------------------------------------------------------------------------
 
-DQMOMEqn::DQMOMEqn( const Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName )
+DQMOMEqn::DQMOMEqn( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName )
 : 
 EqnBase( fieldLabels, transportVarLabel, eqnName )
 {
@@ -213,9 +213,11 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
+  Fields::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
+  tsk->requires(Task::NewDW, iter->second, Ghost::AroundCells, 1); 
  
   //-----OLD-----
-  tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
+  //tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->propLabels.lambda, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->velocityLabels.uVelocity, Ghost::AroundCells, 1);   
@@ -256,6 +258,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCYVariable<double> vVel; 
     constSFCZVariable<double> wVel; 
     constCCVariable<double> src; 
+    constCCVariable<Vector> partVel; 
 
     CCVariable<double> phi;
     CCVariable<double> Fdiff; 
@@ -263,7 +266,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> RHS; 
 
     old_dw->get(oldPhi, d_transportVarLabel, matlIndex, patch, gac, 1);
-    old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
+    //old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
     old_dw->get(lambda, d_fieldLabels->propLabels.lambda, matlIndex, patch, gac, 1);
     old_dw->get(uVel,   d_fieldLabels->velocityLabels.uVelocity, matlIndex, patch, gac, 1); 
 #ifdef YDIM
@@ -272,7 +275,9 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 #ifdef ZDIM
     old_dw->get(wVel,   d_fieldLabels->velocityLabels.wVelocity, matlIndex, patch, gac, 1); 
 #endif
-
+    Fields::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
+    new_dw->get( partVel, iter->second, matlIndex, patch, gac, 1 ); 
+ 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(Fdiff, d_FdiffLabel, matlIndex, patch);
     new_dw->getModifiable(Fconv, d_FconvLabel, matlIndex, patch); 
@@ -283,7 +288,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //----CONVECTION
     if (d_doConv)
-      computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel );
+      computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, partVel );
   
     //----DIFFUSION
     if (d_doDiff)
@@ -296,7 +301,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] + Fconv[c];
 
       if (d_addSources) {
-        RHS[c] += src[c];           
+        //RHS[c] += src[c];           
       }
     } 
   }
@@ -356,7 +361,7 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 template <class fT, class oldPhiT> void
 DQMOMEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi, 
                        constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-                       constSFCZVariable<double>& wVel) 
+                       constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel ) 
 {
   Vector Dx = p->dCell(); 
   FaceData<double> F;
@@ -365,18 +370,31 @@ DQMOMEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
 
     IntVector c = *iter;
     IntVector cxp = *iter + IntVector(1,0,0);
+    IntVector cxm = *iter - IntVector(1,0,0);
     IntVector cyp = *iter + IntVector(0,1,0);
+    IntVector cym = *iter - IntVector(0,1,0);
     IntVector czp = *iter + IntVector(0,0,1);
+    IntVector czm = *iter - IntVector(0,0,1);
 
     interpPtoF( oldPhi, c, F ); 
 
   // THIS ISN'T FINISHED...
-    Fconv[c] = Dx.y()*Dx.z()*( F.e * uVel[cxp] - F.w * uVel[c] );
+    double xmpVel = ( partVel[c].x() + partVel[cxm].x() )/2.0;
+    double xppVel = ( partVel[c].x() + partVel[cxp].x() )/2.0;
+
+   // Fconv[c] = Dx.y()*Dx.z()*( F.e * uVel[cxp] - F.w * uVel[c] );
+    Fconv[c] = Dx.y()*Dx.z()*( F.e * xppVel - F.w * xmpVel );
 #ifdef YDIM
-    Fconv[c] = Dx.x()*Dx.z()*( F.n * vVel[cyp] - F.s * vVel[c] );
+    double ympVel = ( partVel[c].y() + partVel[cym].y() )/2.0;
+    double yppVel = ( partVel[c].y() + partVel[cyp].y() )/2.0;
+    //Fconv[c] += Dx.x()*Dx.z()*( F.n * vVel[cyp] - F.s * vVel[c] );
+    Fconv[c] += Dx.x()*Dx.z()*( F.n * yppVel - F.s * ympVel ); 
 #endif
 #ifdef ZDIM
-    Fconv[c] = Dx.x()*Dx.y()*( F.t * wVel[czp] - F.b * wVel[c] ); 
+    double zmpVel = ( partVel[c].z() + partVel[czm].z() )/2.0;
+    double zppVel = ( partVel[c].z() + partVel[czp].z() )/2.0;
+    //Fconv[c] += Dx.x()*Dx.y()*( F.t * wVel[czp] - F.b * wVel[c] ); 
+    Fconv[c] += Dx.x()*Dx.y()*( F.t * zppVel - F.b * zmpVel ); 
 #endif
 
   }

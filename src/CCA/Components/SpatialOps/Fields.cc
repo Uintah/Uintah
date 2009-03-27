@@ -154,5 +154,8 @@ void Fields::CopyOldToNew( const ProcessorGroup* pc,
     ccVelocity.copy(old_ccVelocity); 
   } 
 }
+//---------------------------------------------------------------------------
+// Method: Compute velocities for DQMOM transport
+//---------------------------------------------------------------------------
 
 
