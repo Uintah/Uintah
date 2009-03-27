@@ -14,7 +14,7 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-CCScalarEqnBuilder::CCScalarEqnBuilder( const Fields* fieldLabels, 
+CCScalarEqnBuilder::CCScalarEqnBuilder( Fields* fieldLabels, 
                                         const VarLabel* transportVarLabel, 
                                         string eqnName ) : 
 EqnBuilder( fieldLabels, transportVarLabel, eqnName )
@@ -28,7 +28,7 @@ CCScalarEqnBuilder::build(){
 // End Builder
 //---------------------------------------------------------------------------
 
-ScalarEqn::ScalarEqn( const Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName )
+ScalarEqn::ScalarEqn( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName )
 : 
 EqnBase( fieldLabels, transportVarLabel, eqnName )
 {

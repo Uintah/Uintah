@@ -31,7 +31,7 @@ class DQMOMEqn;
 class DQMOMEqnBuilder: public DQMOMEqnBuilderBase
 {
 public:
-  DQMOMEqnBuilder( const Fields* fieldLabels, 
+  DQMOMEqnBuilder( Fields* fieldLabels, 
                    const VarLabel* transportVarLabel, 
                    string eqnName );
   ~DQMOMEqnBuilder();
@@ -52,7 +52,7 @@ public EqnBase{
 
 public: 
 
-  DQMOMEqn( const Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
+  DQMOMEqn( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
 
   ~DQMOMEqn();
 
@@ -101,7 +101,7 @@ public:
   template <class fT, class oldPhiT> void
   computeConv(const Patch* patch, fT& Fconv, oldPhiT& oldPhi, 
               constSFCXVariable<double>& uVel, constSFCYVariable<double>& vVel, 
-              constSFCZVariable<double>& wVel);
+              constSFCZVariable<double>& wVel, constCCVariable<Vector>& partVel);
 
   /** @brief Compute the diffusion terms */
   template <class fT, class oldPhiT, class lambdaT> 

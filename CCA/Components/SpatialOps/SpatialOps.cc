@@ -2,6 +2,7 @@
 #include <CCA/Components/SpatialOps/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
+#include <CCA/Components/SpatialOps/CoalModels/PartVel.h>
 #include <CCA/Components/SpatialOps/CoalModels/BadHawkDevol.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqnFactory.h>
@@ -145,6 +146,9 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
+    // Create a velocity model 
+    d_partVel = scinew PartVel( d_fieldLabels ); 
+    d_partVel->problemSetup( dqmom_db ); 
     // Do through and initialze all DQMOM equations and call their respective problem setups. 
     DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
     const int numQuadNodes = eqn_factory.get_quad_nodes();  
@@ -418,6 +422,9 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
 
   for (int i = 0; i < d_tOrder; i++){
+
+    // Compute the particle velocities
+    d_partVel->schedComputePartVel( level, sched, i ); 
 
     for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       // Get current equation:
@@ -729,6 +736,20 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
         dqmom_eqnFactory.register_scalar_eqn( final_name, eqnBuilder );     
 
       } 
+    }
+    // Make the velocities for each quadrature node
+    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
+      string name = "vel_qn"; 
+      std::string node; 
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      name += node; 
+
+      const VarLabel* tempVarLabel = VarLabel::create(name, CCVariable<Vector>::getTypeDescription());
+      d_fieldLabels->partVel.insert(make_pair(iqn, tempVarLabel)).first; 
+      //d_fieldLabels->partVel.push_back(tempVarLabel); 
+ 
     }
   }  
 }
