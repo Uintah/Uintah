@@ -315,12 +315,12 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
     for (CellIterator iter=patch->getSFCXIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
       Point     p = patch->cellPosition(c);
-      uVel[c] = 0.1*(sin(2*d_pi*p.x()) + cos(2*d_pi*p.y()));
+      uVel[c] = sin( 2*d_pi*p.x() )*cos( 2*d_pi*p.y() );
     }
     for (CellIterator iter=patch->getSFCYIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
       Point     p = patch->cellPosition(c);
-      vVel[c] = 0.1*(cos(2*d_pi*p.x()) + sin(2*d_pi*p.y()));
+      vVel[c] = -cos( 2*d_pi*p.x() )*sin( 2*d_pi*p.y() );
     }
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
@@ -594,7 +594,7 @@ void SpatialOps::registerModels(ProblemSpecP& db)
 
         if ( model_type == "BadHawkDevol" ) {
           //Badzioch and Hawksley 1st order Devol.
-          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels->d_sharedState, iqn); 
+          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn); 
           model_factory.register_model( temp_model_name, modelBuilder ); 
 
         } else {

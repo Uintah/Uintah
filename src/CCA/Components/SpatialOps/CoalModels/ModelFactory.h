@@ -1,6 +1,7 @@
 #ifndef UT_ModelFactory_h
 #define UT_ModelFactory_h
 
+#include <CCA/Components/SpatialOps/Fields.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -32,8 +33,10 @@ class ModelBuilder
 {
 public:
   ModelBuilder(std::string model_name, vector<std::string> icLabelNames, 
+               const Fields* fieldLabels,
                SimulationStateP& sharedState, int qn) : 
                d_modelName(model_name), d_icLabels(icLabelNames), 
+               d_fieldLabels(fieldLabels), 
                d_sharedState(sharedState), d_quadNode(qn){};
   virtual ~ModelBuilder(){};
 
@@ -44,7 +47,8 @@ public:
   virtual ModelBase* build() = 0;
 protected: 
   std::string d_modelName;
-  vector<string> d_icLabels; 
+  vector<string> d_icLabels;
+  const Fields* d_fieldLabels;
   SimulationStateP& d_sharedState; 
   int d_quadNode; 
 private: 
