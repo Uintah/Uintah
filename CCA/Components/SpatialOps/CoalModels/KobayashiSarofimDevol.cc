@@ -98,7 +98,6 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
                                      DataWarehouse        * old_dw, 
                                      DataWarehouse        * new_dw )
 {
-#if 0
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -121,10 +120,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     DQMOMEqn       & temp_IC_eqnD  = dynamic_cast<DQMOMEqn&>(temp_IC_eqn);
     const VarLabel * temp_IC_label = temp_IC_eqnD.getTransportEqnLabel();
 
-    const CCVariable<double> temperature;
-    const CCVariable<double> alphac;
-    new_dw->get( temperature, d_fieldLabels->propLabels.temperature, matlIndex, patch );
-    new_dw->get( alphac, temp_IC_label, matlIndex, patch );
+    constCCVariable<double> temperature;
+    constCCVariable<double> alphac;
+
+    new_dw->get( temperature, d_fieldLabels->propLabels.temperature, matlIndex, patch, gn, 0 );
+    new_dw->get( alphac, temp_IC_label, matlIndex, patch, gn, 0 );
     
     for (vector<std::string>::iterator iter = d_icLabels.begin(); 
          iter != d_icLabels.end(); iter++) { 
@@ -133,11 +133,10 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
-      k1 = A1*exp(-E1/(R*temperature[c]));
-      k2 = A2*exp(-E2/(R*temperature[c]));
+      double k1 = A1*exp(-E1/(R*temperature[c]));
+      double k2 = A2*exp(-E2/(R*temperature[c]));
 
-      model[c] = -(k1+k2)*alphac;//change this to the function 
+      // FIXME:  model[c] = -(k1+k2)*alphac;//change this to the function 
     }
   }
-#endif
 }
