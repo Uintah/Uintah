@@ -1,14 +1,10 @@
-#include <CCA/Components/SpatialOps/CoalModels/KobayashiSarofimDevol.h>
-#include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
-#include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
-#include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
-#include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqn.h>
-
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <CCA/Components/SpatialOps/CoalModels/ConstantModel.h>
+
 
 //===========================================================================
 
@@ -17,41 +13,36 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder(std::string srcName, 
-                                         const Fields* fieldLabels,
+ConstantModelBuilder::ConstantModelBuilder(std::string srcName, 
                                          vector<std::string> icLabelNames, 
+                                         const Fields* fieldLabels,
                                          SimulationStateP& sharedState, int qn)
-: ModelBuilder(srcName, fieldLabels, icLabelNames, sharedState, qn)
+: ModelBuilder(srcName, icLabelNames, fieldLabels, sharedState, qn)
 {}
 
-KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
+ConstantModelBuilder::~ConstantModelBuilder(){}
 
 ModelBase*
-KobayashiSarofimDevolBuilder::build(){
-  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_quadNode );
+ConstantModelBuilder::build(){
+  return scinew ConstantModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, 
+                              d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-KobayashiSarofimDevol::KobayashiSarofimDevol( std::string srcName, SimulationStateP& sharedState,
+ConstantModel::ConstantModel( std::string srcName, SimulationStateP& sharedState,
                             const Fields* fieldLabels,
                             vector<std::string> icLabelNames, int qn ) 
-: ModelBase(srcName, sharedState, fieldLabels, icLabelNames, qn),d_fieldLabels(fieldLabels)
-{
-  A1 = 1.0;
-  E1 = 1.0;
-  A2 = 1.0;
-  E2 = 1.0;
-  R = 1.0;
-}
+: ModelBase(srcName, sharedState, fieldLabels, icLabelNames, qn)
+{}
 
-KobayashiSarofimDevol::~KobayashiSarofimDevol()
+ConstantModel::~ConstantModel()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
 void 
-KobayashiSarofimDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
+ConstantModel::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
 
   ProblemSpecP db = inputdb; 
@@ -61,10 +52,10 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& inputdb, int qn)
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
 void 
-KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+ConstantModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "KobayashiSarofimDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
+  std::string taskname = "ConstantModel::computeModel";
+  Task* tsk = scinew Task(taskname, this, &ConstantModel::computeModel);
 
   d_timeSubStep = timeSubStep; 
 
@@ -81,7 +72,6 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
        iter != d_icLabels.end(); iter++) { 
     // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE MODEL
-    tsk->requires(Task::OldDW, d_fieldLabels->propLabels.temperature, Ghost::AroundCells, 1);
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allSpatialOpsMaterials()); 
@@ -91,7 +81,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-KobayashiSarofimDevol::computeModel( const ProcessorGroup* pc, 
+ConstantModel::computeModel( const ProcessorGroup* pc, 
                    const PatchSubset* patches, 
                    const MaterialSubset* matls, 
                    DataWarehouse* old_dw, 
@@ -115,27 +105,9 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup* pc,
       model.initialize(0.0);
     }
 
-    EqnFactory& eqn_factory = EqnFactory::self();
-    EqnBase& temp_IC_eqn = &eqn_factory->retrieve_scalar_eqn("CoalMassFraction");
-    DQMOMEqn& temp_IC_eqnD = dynamic_cast<DQMOMEqn&>(temp_IC_eqn);
-    VarLabel* temp_IC_label = temp_IC_eqnD->getTransportEqnLabel();
-
-    const CCVariable<double> temperature;
-    const CCVariable<double> alphac;
-    new_dw->get(temperature, d_fieldLabels->propLables.temperature, matlIndex, patch);
-    new_dw->get(alphac, temp_IC_label, matlIndex, patch);
-    
-    for (vector<std::string>::iterator iter = d_icLabels.begin(); 
-         iter != d_icLabels.end(); iter++) { 
-      // how to differentiate between different internal coordinates?
-    }
-
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
-      k1 = A1*exp(-E1/(R*temperature[c]));
-      k2 = A2*exp(-E2/(R*temperature[c]));
-
-      model[c] = -(k1+k2)*alphac;//change this to the function 
+      model[c] =1;
     }
   }
 }
