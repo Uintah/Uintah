@@ -132,7 +132,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       double k1 = A1*exp(-E1/(R*temperature[c]));
       double k2 = A2*exp(-E2/(R*temperature[c]));
 
-      model[c] = -(k1+k2)*alphac; 
+      model[c] = -(k1+k2)*alphac[c]; 
     }
   }
 }
