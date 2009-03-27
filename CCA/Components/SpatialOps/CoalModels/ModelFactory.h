@@ -32,11 +32,13 @@ class ModelBase;
 class ModelBuilder
 {
 public:
-  ModelBuilder(std::string model_name, vector<std::string> icLabelNames, 
+  ModelBuilder(std::string model_name, 
                const Fields* fieldLabels,
+               vector<std::string> icLabelNames, 
                SimulationStateP& sharedState, int qn) : 
-               d_modelName(model_name), d_icLabels(icLabelNames), 
+               d_modelName(model_name), 
                d_fieldLabels(fieldLabels), 
+               d_icLabels(icLabelNames), 
                d_sharedState(sharedState), d_quadNode(qn){};
   virtual ~ModelBuilder(){};
 

@@ -1,23 +1,24 @@
-#ifndef Uintah_Component_SpatialOps_KobayashiSarofimDevol_h
-#define Uintah_Component_SpatialOps_KobayashiSarofimDevol_h
+#ifndef Uintah_Component_SpatialOps_ConstantModel_h
+#define Uintah_Component_SpatialOps_ConstantModel_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+
 
 //===========================================================================
 
 //---------------------------------------------------------------------------
 // Builder
 namespace Uintah{
-class KobayashiSarofimDevolBuilder: public ModelBuilder
+class ConstantModelBuilder: public ModelBuilder
 {
 public: 
-  KobayashiSarofimDevolBuilder(std::string modelName, 
-                      const Fields* fieldLabels,
+  ConstantModelBuilder(std::string modelName, 
                       vector<std::string> reqLabelNames, 
+                      const Fields* fieldLabels,
                       SimulationStateP& sharedState, int qn);
-  ~KobayashiSarofimDevolBuilder(); 
+  ~ConstantModelBuilder(); 
 
   ModelBase* build(); 
 
@@ -27,14 +28,14 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class KobayashiSarofimDevol: public ModelBase {
+class ConstantModel: public ModelBase {
 public: 
 
-  KobayashiSarofimDevol( std::string modelName, SimulationStateP& shared_state, 
+  ConstantModel( std::string modelName, SimulationStateP& shared_state, 
                 const Fields* fieldLabels,
                 vector<std::string> reqLabelNames, int qn );
 
-  ~KobayashiSarofimDevol();
+  ~ConstantModel();
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
   /** @brief Schedule the calculation of the source term */ 
@@ -48,13 +49,6 @@ public:
                      DataWarehouse* new_dw );
 
 private:
-
-  const Fields* d_fieldLabels; 
-  double A1;
-  double E1;
-  double A2;
-  double E2;
-  double R;
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

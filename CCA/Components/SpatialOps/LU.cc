@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include <LU.h>
+#include <CCA/Components/SpatialOps/LU.h>
 
 //--------------------------------------------------------------------
 LU::LU( const int dim, const int bandwidth )

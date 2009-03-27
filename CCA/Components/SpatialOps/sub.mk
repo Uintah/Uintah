@@ -8,7 +8,9 @@ SRCS     += $(SRCDIR)/SpatialOps.cc \
       $(SRCDIR)/Fields.cc \
     $(SRCDIR)/ExplicitTimeInt.cc \
     $(SRCDIR)/BoundaryCond.cc \
-    $(SRCDIR)/SpatialOpsMaterials.cc
+    $(SRCDIR)/SpatialOpsMaterials.cc \
+    $(SRCDIR)/LU.cc \
+    $(SRCDIR)/DQMOM.cc
 
 SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/TransportEqns $(SRCDIR)/SourceTerms
 

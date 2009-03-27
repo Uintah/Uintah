@@ -146,8 +146,8 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = iEqn->getTransportEqnLabel();
     
     // require weights
-    cout << "The linear system requires weight " << tmepLabel << endl;
-    tsk->requires( tempLabel );
+    cout << "The linear system requires weight " << tempLabel << endl;
+    tsk->requires( Task::OldDW, tempLabel, Ghost::AroundCells, 1 );
   }
   
   for (vector<DQMOMEqn>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
@@ -156,14 +156,14 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     
     // require weighted abscissas
     cout << "The linear system requires weighted abscissa " << tempLabel << endl;
-    tsk->computes( tempLabel );
+    tsk->computes(tempLabel);
 
     if (d_timeSubStep == 0) {
       cout << "The linear system computes weighted abscissa: " << tempLabel << endl;
-      tsk->computes( tempLabel );
+      tsk->computes(tempLabel);
     } else {
       cout << "The linear system modifies weighted abscissa: " << tempLabel << endl;
-      tsk->modifies( tempLabel );
+      tsk->modifies(tempLabel);
     }
     
     // compute or modify source terms
@@ -171,10 +171,10 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     const VarLabel* sourceterm_label = sourceterm_base.getSrcLabel();
     if (d_timeSubStep == 0) {
       cout << "The linear system computes source term " << sourceterm_label << endl;
-      tsk->computes( Task::OldDW, sourceterm_label, Ghost::AroundCells, 1 );
+      tsk->computes(sourceterm_label);
     } else {
       cout << "The linear system modifies source term " << sourceterm_label << endl;
-      tsk->modifies( Task::OldDW, sourceterm_label, Ghost::AroundCells, 1 );
+      tsk->modifies(sourceterm_label);
     }
     
     // require model terms
@@ -200,9 +200,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw)
 {
-  vector< CCVariable<double>* > weightCCVars;
-  vector< CCVariable<double>* > weightedAbscissaCCVars;
-  vector< vector< CCVariable<double>* > > weightedAbscissaModelCCVars;
+  vector< constCCVariable<double>* > weightCCVars;
+  vector< constCCVariable<double>* > weightedAbscissaCCVars;
+  vector< vector< constCCVariable<double>* > > weightedAbscissaModelCCVars;
   vector< CCVariable<double>* > sourceCCVars;
   
   SourceTermFactory& sourceterm_factory = SourceTermFactory::self();
@@ -211,6 +211,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
   // patch loop
   for (int p=0; p < patches->size(); ++p) {
     const Patch* patch = patches->get(p);
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
     int matlIndex = 0;
 
     // getModifiable/allocateAndPut calls:
@@ -220,8 +222,9 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       
       // transported variables are already allocated at beginning of timestep/exist in warehouse
       const VarLabel* equation_label = iEqn->getTransportEqnLabel();
-      CCVariable<double> equation_ccvar;
-      new_dw->get( equation_ccvar, equation_label, matlIndex, patch );
+      constCCVariable<double> equation_ccvar;
+      
+      new_dw->get( equation_ccvar, equation_label, matlIndex, patch, gac, 0 );
       weightCCVars.push_back(&equation_ccvar);
       
       SourceTermBase& source_base = sourceterm_factory.retrieve_source_term( iEqn->getEqnName() );
@@ -243,8 +246,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       
       // transported variables already allcoated/exist in warehouse
       const VarLabel* equation_label = iEqn->getTransportEqnLabel();
-      CCVariable<double> equation_ccvar;
-      new_dw->get( equation_ccvar, equation_label, matlIndex, patch );
+      constCCVariable<double> equation_ccvar;
+      new_dw->get( equation_ccvar, equation_label, matlIndex, patch, gac, 0 );
       weightedAbscissaCCVars.push_back(&equation_ccvar);
 
       SourceTermBase& source_base = sourceterm_factory.retrieve_source_term( iEqn->getEqnName() );
@@ -257,15 +260,15 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       }
       sourceCCVars.push_back(&source_ccvar);
 
-      vector< CCVariable<double>* > eqnModels;
+      vector< constCCVariable<double>* > eqnModels;
       vector<string> modelsList = iEqn->getModelsList();
       for ( vector<string>::iterator iModels = modelsList.begin();
             iModels != modelsList.end(); ++iModels) {
         // model terms have already been allocated/computed/exist in DW
         ModelBase& model_base = model_factory.retrieve_model(*iModels);
         const VarLabel* model_label = model_base.getModelLabel();
-        CCVariable<double> model_ccvar;
-        new_dw->get( model_ccvar, model_label, matlIndex, patch );
+        constCCVariable<double> model_ccvar;
+        new_dw->get( model_ccvar, model_label, matlIndex, patch, gac, 0 );
         eqnModels.push_back(&model_ccvar);
       }
       weightedAbscissaModelCCVars.push_back(eqnModels);
