@@ -66,19 +66,19 @@ SUBDIRS := \
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
-	CCA/Ports        \
-	Core/Grid        \
-	Core/Util        \
-	Core/Disclosure  \
-	Core/Labels      \
-	Core/ProblemSpec \
-	Core/Parallel    \
-	Core/Exceptions  \
+	CCA/Components/OnTheFlyAnalysis \
+	CCA/Ports           \
+	Core/Disclosure     \
+	Core/Exceptions     \
+	Core/Geometry       \
 	Core/GeometryPiece  \
-	Core/Math        \
-	Core/Exceptions Core/Thread      \
-	Core/Geometry Core/Util          \
-	Core/Math
+	Core/Grid           \
+	Core/Labels         \
+	Core/Math           \
+	Core/Parallel       \
+	Core/ProblemSpec    \
+	Core/Thread         \
+	Core/Util           
 
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 	$(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY)
