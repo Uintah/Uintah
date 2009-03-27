@@ -391,10 +391,10 @@ ScalarEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
   // THIS ISN'T FINISHED...
     Fconv[c] = Dx.y()*Dx.z()*( F.e * uVel[cxp] - F.w * uVel[c] );
 #ifdef YDIM
-    Fconv[c] = Dx.x()*Dx.z()*( F.n * vVel[cyp] - F.s * vVel[c] );
+    Fconv[c] += Dx.x()*Dx.z()*( F.n * vVel[cyp] - F.s * vVel[c] );
 #endif
 #ifdef ZDIM
-    Fconv[c] = Dx.x()*Dx.y()*( F.t * wVel[czp] - F.b * wVel[c] ); 
+    Fconv[c] += Dx.x()*Dx.y()*( F.t * wVel[czp] - F.b * wVel[c] ); 
 #endif
 
   }
