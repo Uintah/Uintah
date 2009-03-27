@@ -81,7 +81,6 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
 
   for (vector<std::string>::iterator iter = d_icLabels.begin(); 
        iter != d_icLabels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE MODEL
     tsk->requires(Task::OldDW, d_fieldLabels->propLabels.temperature, Ghost::AroundCells, 1);
   }
 
@@ -126,17 +125,14 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     new_dw->get( temperature, d_fieldLabels->propLabels.temperature, matlIndex, patch, gn, 0 );
     new_dw->get( alphac, temp_IC_label, matlIndex, patch, gn, 0 );
     
-    for (vector<std::string>::iterator iter = d_icLabels.begin(); 
-         iter != d_icLabels.end(); iter++) { 
-      // how to differentiate between different internal coordinates?
-    }
+    // still need a way to differentiate between internal coordinates (hard-coding labels for now, ln 119)
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
       double k1 = A1*exp(-E1/(R*temperature[c]));
       double k2 = A2*exp(-E2/(R*temperature[c]));
 
-      // FIXME:  model[c] = -(k1+k2)*alphac;//change this to the function 
+      model[c] = -(k1+k2)*alphac; 
     }
   }
 }
