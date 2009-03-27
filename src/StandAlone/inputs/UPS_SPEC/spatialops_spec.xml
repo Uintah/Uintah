@@ -61,6 +61,16 @@
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
         </Ic>
+
+        <VelModel                       spec="REQUIRED NO_DATA">
+          <regime                       spec="REQUIRED INTEGER '1,3'"/>
+          <Re                           spec="REQUIRED DOUBLE 'positive'"/>
+          <eta                          spec="REQUIRED DOUBLE 'positive'"/>
+          <rhof                         spec="REQUIRED DOUBLE 'positive'"/>
+          <beta                         spec="REQUIRED DOUBLE 'positive'"/>
+          <eps                          spec="REQUIRED DOUBLE 'positive'"/>
+          <part_mass                     spec="REQUIRED DOUBLE 'positive'"/>
+        </VelModel>
       </DQMOM>
 
       <lambda                           spec="REQUIRED DOUBLE 'positive'"/>
