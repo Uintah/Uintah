@@ -3,7 +3,9 @@
 #include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 #include <CCA/Components/SpatialOps/CoalModels/PartVel.h>
+#include <CCA/Components/SpatialOps/CoalModels/ConstantModel.h>
 #include <CCA/Components/SpatialOps/CoalModels/BadHawkDevol.h>
+#include <CCA/Components/SpatialOps/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/SpatialOps/Fields.h>
@@ -625,11 +627,18 @@ void SpatialOps::registerModels(ProblemSpecP& db)
         temp_model_name += "_qn";
         temp_model_name += node; 
 
-        if ( model_type == "BadHawkDevol" ) {
+        if ( model_type == "ConstantModel" ) {
+          // Model term G = constant (G = 1)
+          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "BadHawkDevol" ) {
           //Badzioch and Hawksley 1st order Devol.
-          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn); 
-          model_factory.register_model( temp_model_name, modelBuilder ); 
-
+          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "KobayashiSarofimDevol" ) {
+          // Kobayashi Sarofim devolatilization model
+          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           cout << "For model named: " << temp_model_name << endl;
           cout << "with type: " << model_type << endl;
