@@ -7,6 +7,7 @@
 #include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/SpatialOps/Fields.h>
+#include <CCA/Components/SpatialOps/DQMOM.h>
 #include <CCA/Components/SpatialOps/ExplicitTimeInt.h>
 #include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
 #include <CCA/Components/SpatialOps/SourceTerms/ConstSrcTerm.h>
@@ -481,8 +482,14 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
         //last time sub-step so cleanup. 
         eqn->sched_cleanUp( level, sched ); 
       }
-    } 
+    }
+
+    // schedule DQMOM linear solve
+    DQMOM* the_dqmom = scinew DQMOM(d_fieldLabels);
+    the_dqmom->sched_solveLinearSystem( level, sched, i );
+
   }
+
   double end_time = Time::currentSeconds();
   cout << "Solution time = " << end_time - start_time << endl;
 }
