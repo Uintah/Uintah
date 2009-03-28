@@ -57,18 +57,18 @@ public:
 
 protected:
   std::string d_modelName; 
+  
+  SimulationStateP& d_sharedState; 
+  const Fields* d_fieldLabels;
   vector<string> d_icLabels; //All internal coordinate labels (from DQMOM factory) needed to compute this model
   vector<string> d_scalarLabels; // All scalar labels (from scalarFactory) needed to compute this model
   const VarLabel* d_modelLabel; //The label storing the value of this model
   int d_timeSubStep;
-  SimulationStateP& d_sharedState; 
 
   bool d_labelSchedInit;
   bool d_labelActualInit;   
 
   int d_quadNode; 
-
-  const Fields* d_fieldLabels;
 
 }; // end ModelBase
 }  // end namespace Uintah

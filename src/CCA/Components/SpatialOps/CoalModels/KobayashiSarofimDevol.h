@@ -4,6 +4,8 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
 #include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
+#include <vector>
+#include <string>
 
 //===========================================================================
 
@@ -51,6 +53,14 @@ public:
 private:
 
   const Fields* d_fieldLabels; 
+
+  map<string, string> LabelToRoleMap;
+
+  // put VarLabels in correct order to differentiate between internal coordinates:
+  // 1. temperature VarLabel
+  // 2. coal_mass_fraction VarLabel
+  vector<const VarLabel*> orderedLabels;
+
   double A1;
   double E1;
   double A2;
