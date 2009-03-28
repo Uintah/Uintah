@@ -91,9 +91,9 @@ BadHawkDevol::computeModel( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
+    //Ghost::GhostType  gaf = Ghost::AroundFaces;
+    //Ghost::GhostType  gac = Ghost::AroundCells;
+    //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int matlIndex = 0;

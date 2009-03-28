@@ -76,5 +76,22 @@ EqnFactory::retrieve_scalar_eqn( const std::string name )
 
   return *eqn;
 }
+//-----------------------------------------------------------------------------
+// Method: Determine if scalar eqn. is contained in the factory
+//-----------------------------------------------------------------------------
+bool
+EqnFactory::find_scalar_eqn( const std::string name )
+{
+  bool return_value;
+  
+  const EqnMap::iterator ieqn = eqns_.find(name);
 
+  if ( ieqn != eqns_.end() ) {
+    return_value = true;
+  } else {
+    return_value = false;
+  }
+
+  return return_value;
+}
 

@@ -108,8 +108,8 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
 
-    Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
+    //Ghost::GhostType  gaf = Ghost::AroundFaces;
+    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -149,7 +149,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         // for now the density will only be a function of length.
         double rhop = partMass / ( 4./3.*pi*length[c]*length[c]*length[c] );
         double denRatio = rhop/rhof;
-        double rePow = ( Re, 0.687 );
+        double rePow = pow( Re, 0.687 );
         double phi = 1 + 0.15*rePow; 
         double uk = eta*eps; 
         uk = pow( uk, 1./3. );  

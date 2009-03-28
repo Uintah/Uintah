@@ -65,6 +65,9 @@ public:
   /** @brief Retrieve a given scalar eqn.    */
   EqnBase& retrieve_scalar_eqn( const std::string name ); 
 
+  /** @brief Determine if a given scalar eqn is contained in the factory. */
+  bool find_scalar_eqn( const std::string name );
+
   /** @brief Get access to the eqn map */ 
   EqnMap& retrieve_all_eqns(){
     return eqns_; };

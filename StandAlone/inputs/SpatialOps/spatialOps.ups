@@ -83,12 +83,21 @@
       <number_quad_nodes>1</number_quad_nodes>
 
       <Models>
+
         <model label = "d" type = "BadHawkDevol">
           <ICVars>
             <variable label="temperature"/>
             <variable label="something_else"/>
           </ICVars>
         </model>
+
+        <model label="ks" type="KobayashiSarofimDevol">
+          <ICVars>
+            <variable label="temperature" role="temperature"/>
+            <variable label="something_else" role="coal_mass_fraction"/>
+          </ICVars>
+        </model>
+
       </Models>
 
       <Weights>
@@ -103,7 +112,7 @@
         <doDiff>true</doDiff>
         <doConv>true</doConv>
 
-        <model label = "d"/>
+        <model label = "ks"/>
       </Ic>
     </DQMOM>
 
