@@ -294,5 +294,18 @@ string_tolower( const string & str )
   return temp;
 }
 
+unsigned int
+count_substrs( const string & str, const string & substr )
+{
+  unsigned int num = 0;
+  size_t       loc = 0;
+
+  while( (loc = str.find(substr, loc)) != string::npos ) {
+    loc++;
+    num++;
+  }
+  return num;
+}
+
 } // End namespace SCIRun
 
