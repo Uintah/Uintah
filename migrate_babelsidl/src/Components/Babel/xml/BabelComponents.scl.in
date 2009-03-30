@@ -34,4 +34,10 @@
   <library uri="BUILDDIR/lib/libComponents_Babel_pde_linsolver.LIBEXT" scope="global" resolution="now" >
     <class name="pde.LinSolver" desc="ior/impl" />
   </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_mpiservice_MPICommSource.LIBEXT" scope="global" resolution="now" >
+    <class name="gob.cca.common.MPICommSource" desc="ior/impl" />
+  </library>
+  <library uri="BUILDDIR/lib/libComponents_Babel_mpiservice_MPITest.LIBEXT" scope="global" resolution="now" >
+    <class name="gob.cca.common.MPITest" desc="ior/impl" />
+  </library>
 </scl>
