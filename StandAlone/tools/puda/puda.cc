@@ -190,9 +190,12 @@ gridstats( DataArchive* da,
       LevelP level = grid->getLevel(l);
       cout << "Level: index " << level->getIndex() << ", id " << level->getID() << "\n";
       
+      IntVector rr(level->getRefinementRatio());
+      cout << "       refinement ratio: " << rr << "\n";
+      
       BBox lbox;
       level->getInteriorSpatialRange( lbox );
-      cout << "\n       Interior Spatial Range: " << lbox << "\n";
+      cout << "       Interior Spatial Range: " << lbox << "\n";
       
       level->getSpatialRange( lbox );
       cout << "       Spatial Range:          " << lbox << "\n\n";
