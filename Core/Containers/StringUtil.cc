@@ -251,10 +251,10 @@ collapse( string & str )
 
 
 // replaces all occurances of 'substr' in 'str' with 'replacement'
-string 
-replace_substring(string str, 
-		  const string &substr, 
-		  const string &replacement) 
+void
+replace_substring( string & str,
+                   const string & substr, 
+                   const string & replacement )
 {
   string::size_type pos;
   do {
@@ -264,7 +264,6 @@ replace_substring(string str,
                         str.begin()+pos+substr.length(), 
                         replacement);
   } while (pos != string::npos);
-  return str;
 }
 
 
@@ -276,24 +275,24 @@ ends_with(const string &str, const string &substr)
 
 
 string
-string_toupper(string str) 
+string_toupper( const string & str ) 
 {
-  for (unsigned int i = 0; i < str.length(); ++i)
-    str[i] = toupper(str[i]);
-  return str;
+  string temp = str;
+  for (unsigned int i = 0; i < temp.length(); ++i) {
+    temp[i] = toupper(str[i]);
+  }
+  return temp;
 }
 
 string
-string_tolower(string str) 
+string_tolower( const string & str ) 
 {
-  for (unsigned int i = 0; i < str.length(); ++i)
-    str[i] = tolower(str[i]);
-  return str;
+  string temp = str;
+  for (unsigned int i = 0; i < temp.length(); ++i) {
+    temp[i] = tolower(str[i]);
+  }
+  return temp;
 }
-
-  
-
-
 
 } // End namespace SCIRun
 
