@@ -83,6 +83,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
     std::stringstream out; 
     out << d_quadNode; 
     node = out.str(); 
+    model_name += "_qn";
     model_name += node; 
     // put it in the list
     d_models.push_back(model_name); 
@@ -119,14 +120,12 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
 {
   d_timeSubStep = timeSubStep; 
 
-  sched_initializeVariables( level, sched );
+  if (d_timeSubStep == 0) 
+    sched_initializeVariables( level, sched );
 
-  if (d_addSources) 
-    sched_computeSources( level, sched ); 
+  sched_buildTransportEqn( level, sched );
 
-    sched_buildTransportEqn( level, sched );
-
-    sched_solveTransportEqn( level, sched );
+  sched_solveTransportEqn( level, sched );
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -334,6 +333,8 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw )
 {
+
+  cout << "SOLVING TRANSPORT EQN: " << d_eqnName << endl;
   //patch loop
   for (int p=0; p < patches->size(); p++){
 

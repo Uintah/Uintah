@@ -149,6 +149,10 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
+
+    d_dqmomSolver = scinew DQMOM(d_fieldLabels);
+    d_dqmomSolver->problemSetup( dqmom_db ); 
+
     // Create a velocity model 
     d_partVel = scinew PartVel( d_fieldLabels ); 
     d_partVel->problemSetup( dqmom_db ); 
@@ -432,6 +436,7 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
 
   EqnFactory&   scalarFactory = EqnFactory::self();
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+  ModelFactory& modelFactory = ModelFactory::self(); 
 
   // Copy old data to new data
   d_fieldLabels->schedCopyOldToNew( level, sched ); 
@@ -454,12 +459,6 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
       cout << "Scheduling dqmom eqn: " << currname << " to be solved." << endl;
       EqnBase* temp_eqn = ieqn->second; 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
-
-      // Check to see if this is a weight 
-      bool isWght = eqn->weight(); 
-
-      if (isWght) 
-        cout << "I AM A WEIGHT!" << endl;  
 
       eqn->sched_evalTransportEqn( level, sched, i ); 
       
@@ -486,9 +485,14 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
       }
     }
 
+    // schedule the models for evaluation
+    ModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+    for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+      imodel->second->sched_computeModel( level, sched, i );  
+    }
+
     // schedule DQMOM linear solve
-    DQMOM* the_dqmom = scinew DQMOM(d_fieldLabels);
-    the_dqmom->sched_solveLinearSystem( level, sched, i );
+    d_dqmomSolver->sched_solveLinearSystem( level, sched, i );
 
   }
 
@@ -629,15 +633,15 @@ void SpatialOps::registerModels(ProblemSpecP& db)
 
         if ( model_type == "ConstantModel" ) {
           // Model term G = constant (G = 1)
-          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "BadHawkDevol" ) {
           //Badzioch and Hawksley 1st order Devol.
-          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(temp_model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           // Kobayashi Sarofim devolatilization model
-          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredIC_varLabels, d_fieldLabels, d_fieldLabels->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           cout << "For model named: " << temp_model_name << endl;

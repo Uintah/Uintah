@@ -4,17 +4,6 @@
 #define Uintah_Components_Arches_DQMOMLinearSolver_h
 
 #include <sci_defs/petsc_defs.h>
-
-#include <CCA/Components/SpatialOps/SpatialOps.h>
-#include <CCA/Components/SpatialOps/Fields.h>
-#include <CCA/Components/SpatialOps/LU.h>
-#include <CCA/Components/SpatialOps/TransportEqns/EqnFactory.h>
-#include <CCA/Components/SpatialOps/TransportEqns/EqnBase.h>
-#include <CCA/Components/SpatialOps/TransportEqns/ScalarEqn.h>
-#include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/SpatialOps/CoalModels/ModelFactory.h>
-#include <CCA/Components/SpatialOps/CoalModels/ModelBase.h>
-
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/CellIterator.h>
@@ -48,7 +37,9 @@ namespace Uintah {
 */
 
 //-------------------------------------------------------
-
+class Fields; 
+class DQMOMEqn; 
+class ModelBase; 
 class DQMOM {
 
 public:
@@ -76,10 +67,6 @@ public:
     /** @brief Destroy A, X, B, and solver object  */
     void destroyLinearSystem();
 
-    //-------------------------------------------------------------------
-
-protected:
-
 private:
 
   vector<string> InternalCoordinateEqnNames;
@@ -96,8 +83,8 @@ private:
   //    vector weightedAbscissaEqns[(2-1)N + 1] = weighted abscissa 2, quad node 1
   //vector<DQMOMEqn&> weightEqns;
   //vector< vector<DQMOMEqn&> > weightedAbscissaEqns;
-  vector<DQMOMEqn> weightEqns;
-  vector<DQMOMEqn> weightedAbscissaEqns;
+  std::vector<DQMOMEqn* > weightEqns;
+  std::vector<DQMOMEqn* > weightedAbscissaEqns;
 
   vector< vector<ModelBase> > weightedAbscissaModels;
 
