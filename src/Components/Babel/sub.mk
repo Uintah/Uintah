@@ -38,5 +38,9 @@ SUBDIRS := \
            $(SRCDIR)/tutorial \
            $(SRCDIR)/pde
 
+ifeq ($(HAVE_MPI),yes)
+  SUBDIRS += $(SRCDIR)/mpiservice
+endif
+
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
