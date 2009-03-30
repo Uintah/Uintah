@@ -653,17 +653,27 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
       d_minPatchSize.push_back(lastSize);
   }
    
-  //calculate the minimum patch size on level 0
-  IntVector min_size(INT_MAX,INT_MAX,INT_MAX);
 
   LevelP level=oldGrid->getLevel(0);
+  
+  //calculate the patch size on level 0
+  IntVector patch_size(0,0,0);
 
   for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
   {
     IntVector size=(*patch)->getCellHighIndex__New()-(*patch)->getCellLowIndex__New();
-    min_size=Min(min_size,size);
+    if(patch_size==IntVector(0,0,0))
+      patch_size=size;
+    if(size!=patch_size)
+    {
+      ostringstream msg;
+      msg << "Problem Setup Error: The patch size on level 0 is not constant. \n"
+          << "The BNR Regridder requires all patches on level 0 to be constant. \n"
+          << "Please update your input file so that the number of patches divides into the resolution evenly. \n";
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
   }
-  d_minPatchSize.insert(d_minPatchSize.begin(),min_size);
+  d_minPatchSize.insert(d_minPatchSize.begin(),patch_size);
 
 
   regrid_spec->get("patch_split_tolerance", tola_);
