@@ -393,8 +393,8 @@
     <dbg_timeStart            spec="REQUIRED DOUBLE" />
     <dbg_timeStop             spec="REQUIRED DOUBLE" />
     <dbg_outputInterval       spec="REQUIRED DOUBLE" />
-    <dbg_BeginIndex           spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
-    <dbg_EndIndex             spec="REQUIRED STRING" /> <!-- FIXME: HOW TO HANDLE VALUES LIKE: [[0,0,0]] -->
+    <dbg_BeginIndex           spec="REQUIRED MULTIPLE_VECTORS" />
+    <dbg_EndIndex             spec="REQUIRED MULTIPLE_VECTORS" />
     <dbg_Matls                spec="REQUIRED MULTIPLE_INTEGERS" />
     <dbg_SigFigs              spec="OPTIONAL INTEGER '1, 20'" />
     <dbg_Level                spec="OPTIONAL INTEGER '0, 20'" />

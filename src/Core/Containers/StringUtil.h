@@ -96,6 +96,9 @@ SCISHARE void replace_substring( string & str,
 // Returns true if 'str' ends with the string 'substr'
 SCISHARE bool ends_with( const string & str, const string & substr );
 
+// Returns the number of 'substr' in 'str'.  (ie: if str is 'aaaa' and substr is 'aaa', then 2 is returned.)
+SCISHARE unsigned int count_substrs( const string & str, const string & substr );
+
 } // End namespace SCIRun
 
 #endif

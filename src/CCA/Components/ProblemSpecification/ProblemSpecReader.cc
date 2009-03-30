@@ -618,6 +618,11 @@ AttributeAndTagBase::validateDouble( double value ) const
 bool
 AttributeAndTagBase::validateVector( const string & text ) const
 {
+  int numCommas = count_substrs( text, "," );
+  if( numCommas != 2 ) {
+    return false;
+  }
+
   double val1, val2, val3;
   int    num = sscanf( text.c_str(), "[%lf,%lf,%lf]", &val1, &val2, &val3 );
   if( num != 3 ) {
