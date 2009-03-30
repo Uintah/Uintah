@@ -17,12 +17,12 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1e-5        </delt_max>
        <delt_init>          1.0e-9      </delt_init>
-       <timestep_multiplier>0.8         </timestep_multiplier>
+       <timestep_multiplier>0.1         </timestep_multiplier>
    </Time>    
 
    <DataArchiver>
       <filebase>thickCylinderMPM.uda</filebase>
-      <outputInterval> 1.0e-4 </outputInterval>
+      <outputInterval> 1.0e-5 </outputInterval>
       <save label = "p.x"/>
       <save label = "p.volume"/>
       <save label = "p.stress"/>
@@ -59,9 +59,6 @@
    <MaterialProperties>
      <MPM>
        <material>
-         <EOS type = "ideal_gas">
-           <gas_constant>      287               </gas_constant>
-         </EOS>
          <include href="MaterialData/MaterialConst4340Steel.xml"/>
          <constitutive_model type="hypoelastic_plastic">
            <tolerance>1.0e-10</tolerance>
