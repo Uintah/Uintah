@@ -96,6 +96,7 @@ public:
                        ModelBuilder* builder );
 
 
+  typedef std::map< std::string, ModelBase*        > ModelMap;
   /**
    *  @brief Retrieve a vector of pointers to all Model
    *  objects that have been assigned to the transport equation with
@@ -107,10 +108,15 @@ public:
    */
   ModelBase& retrieve_model( const std::string name );
 
+  // get all models
+  ModelMap& retrieve_all_models(){
+    return models_; }; 
+
+
+
 private:
 
   typedef std::map< std::string, ModelBuilder* > BuildMap;
-  typedef std::map< std::string, ModelBase*        > ModelMap;
 
   BuildMap builders_;
   ModelMap models_;
