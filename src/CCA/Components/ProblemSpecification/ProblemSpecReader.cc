@@ -132,8 +132,9 @@ namespace Uintah {
 
 // MULTIPLE = 0 or more occurrences
 enum need_e { OPTIONAL, REQUIRED, MULTIPLE, INVALID_NEED };
-// VECTORs are specified as [0.0, 0.0, 0.0]
-enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, MULTIPLE_DOUBLES, MULTIPLE_INTEGERS, INVALID_TYPE };
+// VECTORs are specified as [0.0, 0.0, 0.0] (ie: 3 numbers: used for IntVector)... Note, IntVectors are integer vectors, so
+//   probably should have a separate validation that 'integers' are used, but don't do that now...
+enum type_e { DOUBLE, INTEGER, STRING, VECTOR, BOOLEAN, NO_DATA, MULTIPLE_DOUBLES, MULTIPLE_INTEGERS, MULTIPLE_VECTORS, INVALID_TYPE };
 
 ostream &
 operator<<( ostream & out, const need_e & need )
@@ -159,6 +160,7 @@ operator<<( ostream & out, const type_e & type )
   else if( type == NO_DATA ) { out << "NO_DATA"; }
   else if( type == MULTIPLE_INTEGERS ) { out << "MULTIPLE_INTEGERS"; }
   else if( type == MULTIPLE_DOUBLES )  { out << "MULTIPLE_DOUBLES"; }
+  else if( type == MULTIPLE_VECTORS )  { out << "MULTIPLE_VECTORS"; }
   else {                       out << "Error: type_e '<<' operator.  Value of " << (int)type << " is invalid... \n"; }
   return out;
 }
@@ -209,10 +211,14 @@ getType( const string & typeStr )
   else if( typeStr == "MULTIPLE_INTEGERS" ) {
     return MULTIPLE_INTEGERS;
   }
+  else if( typeStr == "MULTIPLE_VECTORS" ) {
+    return MULTIPLE_VECTORS;
+  }
   else {
-    cout << "Error: ProblemSpecReader.cc: type (" << typeStr << ") did not parse correctly... "
-         << "should be 'REQUIRED', 'OPTIONAL', or 'MULTIPLE'.\n";
-    return INVALID_TYPE;
+    throw ProblemSetupException( "Error: ProblemSpecReader.cc: type '" + typeStr + "' did not parse correctly...\n" +
+                                 "should be 'DOUBLE', 'INTEGER', 'STRING', 'VECTOR', 'BOOLEAN', 'NO_DATA', 'MULTIPLE_DOUBLES',\n" +
+                                 "'MULTIPLE_INTEGERS', or 'MULTIPLE_VECTORS'.\n",
+                                 __FILE__, __LINE__ );
   }
 }
 
@@ -323,6 +329,7 @@ struct AttributeAndTagBase :  public RefCounted {
   bool   validateString(  const string & value ) const;
   bool   validateBoolean( const string & value ) const;
   void   validateDouble(  double value         ) const;
+  bool   validateVector(  const string & text ) const; // text should be "[#, #, #]" to be valid.
 
   virtual void cleanUp( bool force = false ) = 0;
 
@@ -608,11 +615,16 @@ AttributeAndTagBase::validateDouble( double value ) const
   }
 }
 
-//// For now, validValues doesn't mean anything... so it must be "".
-//string
-//validateVector( string value, const string & validValues )
-//{
-//}
+bool
+AttributeAndTagBase::validateVector( const string & text ) const
+{
+  double val1, val2, val3;
+  int    num = sscanf( text.c_str(), "[%lf,%lf,%lf]", &val1, &val2, &val3 );
+  if( num != 3 ) {
+    return false;
+  }
+  return true;
+}
 
 // Returns false if 'specStr' does not include the 'need' and 'type'
 // (etc).  In this case, the tag is a common tag and needs to be found
@@ -1268,9 +1280,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
     break;
   case VECTOR:
     {
-      double val1, val2, val3;
-      int    num = sscanf( text.c_str(), "[%lf,%lf,%lf]", &val1, &val2, &val3 );
-      if( num != 3 ) {
+      if( !validateVector( text ) ) {
         throw ProblemSetupException( classType + " ('" + completeName + "') should have a Vector value (but has: '" +
                                      text + "').  Please fix XML in .ups file or correct validation Tag list.\n" +
                                      getErrorInfo( node ),
@@ -1327,6 +1337,34 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
       }
     }
     break;
+  case MULTIPLE_VECTORS:
+    {
+      string tempText = text;
+      replace_substring( tempText, " ", "" );
+      replace_substring( tempText, "\t", "" );
+      collapse( tempText );
+
+      // Vector of Vectors starts with [[ and ends with ]]... verify this...
+      if( tempText.substr(0,2) != "[[" || tempText.substr( tempText.length() - 2, 2 ) != "]]" ) {
+        throw ProblemSetupException( "This does not look like a Vector of Vectors.  Expected to find [[ and ]] but have this: '" + tempText + "'",
+                                     __FILE__, __LINE__ );
+      }
+
+      unsigned int pos = 1; // start at first vectors '['
+
+      while( pos < tempText.length()-2 ) {
+
+        string vectorStr = tempText.substr( pos, tempText.find( "]", pos ) - pos + 1 );
+        if( !validateVector( vectorStr ) ) {
+          throw ProblemSetupException( classType + " ('" + completeName + "') should have a MULTIPLE_VECTOR value (but has: '" +
+                                       text + "').  Please fix XML in .ups file or correct validation Tag list.\n" +
+                                       getErrorInfo( node ),
+                                       __FILE__, __LINE__ );
+        }
+        pos = tempText.find( "[", pos+1 );
+      }
+    }
+    break;
   case NO_DATA:
     // Already handled above...
   case INVALID_TYPE:
@@ -1342,7 +1380,6 @@ Tag::validateAttribute( xmlAttr * attr )
     throw ProblemSetupException( "Error... attr is NULL", __FILE__, __LINE__ );
   }
 
-  //  const string attrName = to_char_ptr( attr->name );
   const string attrName = (const char *)( attr->name );
 
   AttributeP   attribute = findAttribute( attrName );
@@ -1438,7 +1475,6 @@ Tag::validate( const ProblemSpec * ps, unsigned int depth /* = 0 */ )
 
     if (child->type == XML_TEXT_NODE) {
 
-      //      string tempText = to_char_ptr( child->content );
       string tempText = (const char *)( child->content );
       collapse( tempText );
 

@@ -43,8 +43,8 @@
 #ifndef SCI_Core_StringUtil_h
 #define SCI_Core_StringUtil_h 1
 
-#include   <string>
-#include   <vector>
+#include <string>
+#include <vector>
 
 #include <Core/Containers/share.h>
 
@@ -61,8 +61,8 @@ SCISHARE string to_string(unsigned int val);
 SCISHARE string to_string(unsigned long val);
 SCISHARE string to_string(double val);
 
-SCISHARE string string_toupper(string);
-SCISHARE string string_tolower(string);
+SCISHARE string string_toupper( const string & inString );
+SCISHARE string string_tolower( const string & inString );
 
 //////////
 // Remove directory name
@@ -86,16 +86,15 @@ SCISHARE void collapse( string & str );
 
 //////////
 // Unsafe cast from string to char *, used to export strings to C functions.
-SCISHARE char* ccast_unsafe(const string &str);
+SCISHARE char* ccast_unsafe( const string & str );
 
-// replaces all occurances of 'substr' in 'str' with 'replacement'
-SCISHARE string replace_substring(string str, 
-                                  const string &substr, 
-                                  const string &replacement);
+// replaces all occurances of 'substr' in 'str' with 'replacement'.  'str' is updated in place.
+SCISHARE void replace_substring( string & str, 
+                                 const string &substr, 
+                                 const string &replacement );
 
 // Returns true if 'str' ends with the string 'substr'
-SCISHARE bool ends_with(const string &str, const string &substr);
-
+SCISHARE bool ends_with( const string & str, const string & substr );
 
 } // End namespace SCIRun
 

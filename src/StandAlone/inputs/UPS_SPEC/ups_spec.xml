@@ -50,7 +50,7 @@
                                           data (text) but can have attributes and/or
                                           sub-tags.)
          - MULTIPLE_INTEGERS:  [ #... ]
-         - VECTOR:             [ #, #, # ]
+         - VECTOR:             [ #, #, # ] // 3 numbers (ie: an IntVector)
 
        * validValues: an optional _single_ string (see below for how it is parsed) that contains valid values
                       or the value of the tag.  The specification of valid values depends on the
@@ -590,7 +590,7 @@
       <min_timestep_interval            spec="OPTIONAL INTEGER" />   
 
       <!--Required BNR Regridder & Tiled Regridder Options-->
-      <min_patch_size                   spec="REQUIRED STRING" need_applies_to="type BNR Tiled"/>
+      <min_patch_size                   spec="REQUIRED MULTIPLE_VECTORS" need_applies_to="type BNR Tiled"/>
 
       <!--       Optional Options-->
       <patch_split_tolerance            spec="OPTIONAL DOUBLE '0,1'" need_applies_to="type BNR" />

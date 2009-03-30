@@ -485,8 +485,8 @@ canonicalize(const string & fname )
   string filename = substituteTilde( fname );
 
   // use unix paths internally to keep things simpler
-  convertToUnixPath(filename);
-  filename = replace_substring(filename, "//", "/");
+  convertToUnixPath( filename );
+  replace_substring( filename, "//", "/" );
 
   vector<char> separators;
   separators.push_back( '\'' );
