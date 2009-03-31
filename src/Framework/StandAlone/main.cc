@@ -149,6 +149,38 @@ component_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
   builder.destroyInstance(helloServer, 0);
 }
 
+
+void
+mpiservice_component_test(scijump::BuilderService& builder, ::gov::cca::Services& svc)
+{
+  // test framework's unique name function
+  gov::cca::ComponentID mpicommsource = builder.createInstance("", "gob.cca.common.MPICommSource", NULL);
+  if (mpicommsource._is_nil()) {
+    std::cerr << "Cannot create component: babel:mpicommsource\n";
+    return;
+  }
+  gov::cca::ComponentID mpitest = builder.createInstance("", "gob.cca.common.MPITest", NULL);
+  if (mpitest._is_nil()) {
+    std::cerr << "Cannot create component: babel:mpitest\n";
+    return;
+  }
+
+  ::gov::cca::ConnectionID mpiSetupConn = builder.connect(mpicommsource, "MPISetup", mpitest, "commsetup");
+
+  svc.registerUsesPort("goport-up", "gov.cca.ports.GoPort", 0);
+  ::gov::cca::ConnectionID goConnID = builder.connect(svc.getComponentID(), "goport-up", mpitest, "go");
+  ::gov::cca::Port port = svc.getPort("goport-up");
+  ::gov::cca::ports::GoPort goPort = ::sidl::babel_cast< ::gov::cca::ports::GoPort>(port);
+  goPort.go();
+
+  builder.disconnect(mpiSetupConn, 0);
+  svc.releasePort("goport-up");
+
+  builder.destroyInstance(mpitest, 0);
+  builder.destroyInstance(mpicommsource, 0);
+}
+
+
 void
 local_framework_test(scijump::BuilderService& builder, ::gov::cca::Services& svc, scijump::ApplicationLoaderService& als)
 {
@@ -238,7 +270,7 @@ main(int argc, char *argv[], char **environment) {
   int orb_port_num = 22222;
 
   // Create a new framework
-  try {
+  //  try {
     sidlx::rmi::SimpleOrb echo = sidlx::rmi::SimpleOrb::_create();
     int tid = orbStart(echo,orb_port_num);
     SCIJumpFramework sj;
@@ -318,8 +350,9 @@ main(int argc, char *argv[], char **environment) {
     std::cout << "\nSCIJump " << SCIJUMP_VERSION << " started..." << std::endl;
 
     // test instantiation and connection
-    component_test(builder, mainServices);
-    local_framework_test(builder, mainServices, als);
+    //component_test(builder, mainServices);
+    //local_framework_test(builder, mainServices, als);
+    mpiservice_component_test(builder, mainServices);
     mainServices.releasePort("mainBuilder");
 
     //broadcast, listen to URL periodically
@@ -329,6 +362,7 @@ main(int argc, char *argv[], char **environment) {
     sj.releaseServices(mainServices);
     sj.shutdownFramework();
     // test, although should be in cleanup code
+    /*
   }
   catch (sidl::RuntimeException& e) {
     std::cerr << "Caught a SIDL runtime exception with note: " << e.getNote() << std::endl;
@@ -344,5 +378,6 @@ main(int argc, char *argv[], char **environment) {
     std::cerr << "Caught unexpected exception!\n";
     abort();
   }
+    */
   return 0;
 }
