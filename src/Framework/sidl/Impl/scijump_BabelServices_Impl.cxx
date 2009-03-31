@@ -211,7 +211,6 @@ scijump::BabelServices_impl::getPort_impl (
 //    ::sidl::RuntimeException
 {
   // DO-NOT-DELETE splicer.begin(scijump.BabelServices.getPort)
-  std::cerr << "**** getPort(" << portName << ")\n";
 
   Guard guard(lock_ports);
 
@@ -234,7 +233,6 @@ scijump::BabelServices_impl::getPort_impl (
 
   // scijump framework connects framework services to uses ports
   if (! pi.isConnected() ) {
-    std::cerr << "pi.getClass=" << pi.getClass() << "\n";
     if ( framework.isFrameworkService( pi.getClass() ) ) {
       // (from Plume) ask for the service: the framework will also make the connection
       ::sci::cca::core::ServiceInfo service = framework.getFrameworkService(pi.getClass(), pi, true);
