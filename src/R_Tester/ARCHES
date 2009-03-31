@@ -7,8 +7,7 @@ from helpers.modUPS import modUPS
 
 methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
                            "methane_explicit_table.ups", \
-                           ["<patches>[2,2,2]</patches>", \
-                            "<maxTime>10.0</maxTime>"])
+                           ["<patches>[2,2,2]</patches>"]) 
                             
 #  Test syntax: ( "name", "input file", # processors, "OS", ["flags1","flag2"])
 #  flags: 
