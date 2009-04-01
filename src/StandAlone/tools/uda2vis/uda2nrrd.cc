@@ -430,7 +430,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	      else if(varType.find("SFCZ") != string::npos)
 		patch_hi = patch->getHighIndex(Patch::ZFaceBased);
 	      else if(varType.find("NC") != string::npos)
-		patch_hi = patch->getExtraNodeHighIndex__New();
+		patch_hi = patch->getNodeHighIndex__New();
+		// patch_hi = patch->getExtraNodeHighIndex__New();
 	    }
 	  }
 	  else { // don't remove the boundary
@@ -447,7 +448,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	      else if(varType.find("SFCZ") != string::npos)
 		patch_hi = patch->getSFCZHighIndex__New();
 	      else if(varType.find("NC") != string::npos)
-		patch_hi = patch->getNodeHighIndex__New();
+		patch_hi = patch->getExtraNodeHighIndex__New();
+		// patch_hi = patch->getNodeHighIndex__New();
 	    }
 	  }
 
