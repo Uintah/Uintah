@@ -49,19 +49,18 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     std::vector<int> temp_moment_index;
     //db_moments->get("Moment",temp_moment_index);
 
+    // creates A matrix that looks like [-1,1,1; 0,-1,0; 0,0,1]
     if ( counter == 0 ) {
-
       temp_moment_index.push_back(1);
-      temp_moment_index.push_back(0);
-
+      temp_moment_index.push_back(1);
     } else if (counter == 1) {
+      temp_moment_index.push_back(1);
       temp_moment_index.push_back(0);
-      temp_moment_index.push_back(1);
     } else if (counter == 2) {
-      temp_moment_index.push_back(1);
+      temp_moment_index.push_back(0);
       temp_moment_index.push_back(1);
     }
-      
+    ++counter;
 
     
     // put moment index into map of moment indexes
@@ -184,14 +183,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
 
     Ghost::GhostType  gn  = Ghost::None; 
-    Ghost::GhostType  gac = Ghost::AroundCells;
     int matlIndex = 0;
 
-    //vector< constCCVariable<double>* > weightCCVars;
-    //vector< constCCVariable<double>* > weightedAbscissaCCVars;
-    //vector< vector< constCCVariable<double>* > > weightedAbscissaModelCCVars;
-    //vector< CCVariable<double>* > sourceCCVars;
-  
     SourceTermFactory& sourceterm_factory = SourceTermFactory::self();
     ModelFactory& model_factory = ModelFactory::self();
 
@@ -208,13 +201,12 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       vector<double> models;
 
       // store weights
-      vector<double> tempStorage;
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
            iEqn != weightEqns.end(); ++iEqn) {
        constCCVariable<double> temp;
        const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
        new_dw->get( temp, equation_label, matlIndex, patch, gn, 0);
-       tempStorage.push_back(temp[c]);
+       weights.push_back(temp[c]);
       }
 
       // store abscissas
@@ -242,6 +234,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       // construct AX=B
       for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
+        cout << k << endl;
         MomentVector thisMoment = momentIndexes[k];
         
         // weights
@@ -253,7 +246,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             prefixA = prefixA - (thisMoment[i]);
             productA = productA*( pow((weightedAbscissas[i*(alpha+1)+alpha]/weights[alpha]),thisMoment[i]) );
           }
-          A(alpha,k)=prefixA*productA;
+          A(k,alpha)=prefixA*productA;
         } //end weights matrix
 
         // weighted abscissas
@@ -265,38 +258,35 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           double modelsumB = 0;
           for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
             // Appendix C, C.11 (A_j+1 matrix)
-            prefixA = (thisMoment[j]-1)*( pow((weightedAbscissas[j*(alpha+1)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
+            prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
             productA = 1;
 
           // Appendix C, C.16 (B matrix)
             productB = weights[alpha];
-            productB = productB*( -(thisMoment[j])*( pow((weightedAbscissas[j*(alpha+1)+alpha]/weights[alpha]),(thisMoment[j]-1)) ) );
+            productB = productB*( -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) ) );
         
             for (unsigned int n = 0; n < N_xi; ++n) {
               if (n != j) {
                 // A_j+1 matrix:
-                productA = productA*( pow( (weightedAbscissas[n*(alpha+1)+alpha]/weights[alpha]), thisMoment[n] ));
+                productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
                 // B matrix:
-                productB = productB*( pow( (weightedAbscissas[n*(alpha+1)+alpha]/weights[alpha]), thisMoment[n] ));
+                productB = productB*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
               }
             }
 
-            modelsumB = modelsumB + models[j*(alpha+1)+alpha];
+            modelsumB = modelsumB + models[j*(N_)+alpha];
              
-            A(j*(alpha+1) + alpha, k)=prefixA*productA;
+            A(k,(j+1)*N_ + alpha)=prefixA*productA;
 
           }//end quad nodes
           totalsumB = totalsumB + (productB)*(modelsumB);
         }//end int coords
         B[k] = totalsumB;
       } // end moments
-    
+      
       A.decompose();
       A.back_subs( &B[0] );
       
-      //cout << "Size of B = " << B.size() << endl;
-      //cout << "Size of sourceCCVars = " << sourceCCVars.size() << endl;
-
       // set sources equal to result
       unsigned int z = 0;
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
