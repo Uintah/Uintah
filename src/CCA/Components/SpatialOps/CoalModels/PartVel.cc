@@ -87,6 +87,20 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
     const VarLabel* myLabel = eqn.getTransportEqnLabel();  
     
     tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
+  }
+
+  for (int i = 0; i < N; i++){
+    std::string name = "w_qn"; 
+    std::string node; 
+    std::stringstream out; 
+    out << i; 
+    node = out.str(); 
+    name += node; 
+
+    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name ); 
+    const VarLabel* myLabel = eqn.getTransportEqnLabel(); 
+  
+    tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
 
   }
 
@@ -128,10 +142,18 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       out << iqn; 
       node = out.str(); 
       name += node; 
+
       EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
-      constCCVariable<double> length;  
-      const VarLabel* myLabel = eqn.getTransportEqnLabel();  
-      old_dw->get(length, myLabel, matlIndex, patch, gn, 0); 
+      constCCVariable<double> wlength;  
+      const VarLabel* mylLabel = eqn.getTransportEqnLabel();  
+      old_dw->get(wlength, mylLabel, matlIndex, patch, gn, 0); 
+
+      name = "w_qn"; 
+      name += node; 
+      EqnBase& eqn2 = dqmomFactory.retrieve_scalar_eqn( name );
+      constCCVariable<double> weight;  
+      const VarLabel* mywLabel = eqn2.getTransportEqnLabel();  
+      old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
 
       Fields::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
 
@@ -144,10 +166,11 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
   
-        IntVector c = *iter; 
+        IntVector c = *iter;
+        double length = wlength[c]/weight[c]; 
 
         // for now the density will only be a function of length.
-        double rhop = partMass / ( 4./3.*pi*length[c]*length[c]*length[c] );
+        double rhop = partMass / ( 4./3.*pi*length*length*length );
         double denRatio = rhop/rhof;
         double rePow = pow( Re, 0.687 );
         double phi = 1 + 0.15*rePow; 
@@ -158,14 +181,21 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         double v_comp = 0.0;
         double w_comp = 0.0; 
         
-        u_comp = gasVel[c].x() - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length[c]/eta*length[c]/eta ; 
+        u_comp = gasVel[c].x() - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length/eta*length/eta ; 
 #ifdef YDIM
-        v_comp = gasVel[c].y() - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length[c]/eta*length[c]/eta ; 
+        v_comp = gasVel[c].y() - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length/eta*length/eta ; 
 #endif
 #ifdef ZDIM
-        z_comp = 0 - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length[c]/eta*length[c]/eta ; 
+        z_comp = 0 - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length[c]/eta*length/eta ; 
 #endif
         partVel[c] = Vector(u_comp,v_comp,w_comp);
+
+        double L = u_comp*u_comp;
+        L += v_comp*v_comp; 
+        L += w_comp*w_comp; 
+        L = pow(L,0.5);
+        if (L > 10 )
+          cout << " FUNNY VEL AT : " << c << endl;
       }
     }
   } 
