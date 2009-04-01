@@ -740,8 +740,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     // make it a separate task later
     //-----new Explicit solver interface:
     // same interface for Arches with or without intrusions
-    int intrusionVal = d_boundaryCondition->getMMWallId();
-    bool doingMM = d_MAlab;
+    //int intrusionVal = d_boundaryCondition->getMMWallId();
+    //bool doingMM = d_MAlab;
     //d_rhsSolver->scalarExplicitUpdate(pc, patch, delta_t, &scalarVars, &constScalarVars, cellinfo, doingMM, intrusionVal);
 
     if (d_MAlab){
@@ -942,9 +942,9 @@ ScalarSolver::calculateScalarCoeff__new( const ProcessorGroup*,
       double coefT = vars->scalarDiffCoef[curr].t - 0.5*abs(vars->scalarConvCoef[curr].t);
       double coefB = vars->scalarDiffCoef[curr].b - 0.5*abs(vars->scalarConvCoef[curr].b);
       
-      double tew = coefE < 0 | coefW < 0 ? 0.0:1.0;
-      double tns = coefN < 0 | coefS < 0 ? 0.0:1.0;
-      double ttb = coefT < 0 | coefB < 0 ? 0.0:1.0;
+      double tew = ( coefE < 0 || coefW < 0 ) ? 0.0 : 1.0;
+      double tns = ( coefN < 0 || coefS < 0 ) ? 0.0 : 1.0;
+      double ttb = ( coefT < 0 || coefB < 0 ) ? 0.0 : 1.0;
 
       double cpe = constvars->density[curr]*
                   (cellinfo->efac[curr.x()]*constvars->uVelocity[curr+IntVector(1,0,0)] +
