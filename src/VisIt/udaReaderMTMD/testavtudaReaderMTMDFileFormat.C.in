@@ -907,10 +907,10 @@ avtudaReaderMTMDFileFormat::CalculateDomainNesting(int timestate)
     /*if (childPatches[i].size() > 0) {
       cout << "Parent: " << i << " Child patches: ";
       for (int j = 0; j < childPatches[i].size(); j++) {
-	cout << childPatches[i][j] << " ";
+      cout << childPatches[i][j] << " ";
       }
       cout << endl;
-    }*/   
+      }*/   
 
     dn->SetNestingForDomain(i, my_level, childPatches[i], logExts);
   }
@@ -964,16 +964,16 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     // cout << "domain: " << domain << endl;
     // cout << meshName << " ";
 
-    size_t found1 = meshName.find("_");
-    size_t found2 = meshName.find("/");
+    // size_t found1 = meshName.find("_");
+    // size_t found2 = meshName.find("/");
 
-    string varName = meshName.substr(found1 + 1, found2 - (found1 + 1));
-    string matlNo = meshName.substr(found2 + 1);
+    // string varName = meshName.substr(found1 + 1, found2 - (found1 + 1));
+    // string matlNo = meshName.substr(found2 + 1);
 
     // cout << varName << endl;
     // cout << matlNo << endl;
 
-    if (currMesh.compare(varName) != 0) {
+    if (currMesh.compare(meshName) != 0) {
       // cout << "Making the much required call to getPatchInfo\n";
       patchInfoVecPtr = (*getPatchInfo)(folder, timestate, meshname, true);
       levelPatchVec& levelPatchVecObj = *levelPatchVecPtr;
@@ -985,7 +985,8 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 	CalculateDomainNesting(timestate);
       }
 
-      currMesh.assign(varName);
+      currMesh.assign(meshName);
+      // cout << currMesh << endl;
     }    
 
     patchInfoVec& patchInfoVecObj = *(patchInfoVecPtr); 
@@ -1033,6 +1034,12 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     indexArr[4] = indexArr[4] - hiLoArr[1]; 
     indexArr[5] = indexArr[5] - hiLoArr[2];
 
+    int indexRangeNC[3];
+
+    indexRangeNC[0] = hiLoArr[3] - hiLoArr[0] - 1;
+    indexRangeNC[1] = hiLoArr[4] - hiLoArr[1] - 1;
+    indexRangeNC[2] = hiLoArr[5] - hiLoArr[2] - 1;
+
     int ndims = 3; 
     int dims[3] = {cellValColln_x + 1, cellValColln_y + 1, cellValColln_z + 1}; // for node centered -> remove +1
     vtkFloatArray *coords[3] = {0,0,0};
@@ -1046,6 +1053,15 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     dtdx = dtdy = dtdz = 0.;
 
     if (meshName.find("NC") != string::npos) {
+      if (indexArr[3] < indexRangeNC[0])
+	cellValColln_x += 1;
+
+      if (indexArr[4] < indexRangeNC[1])
+	cellValColln_y += 1;
+
+      if (indexArr[5] < indexRangeNC[2])
+	cellValColln_z += 1;
+
       dims[0] = cellValColln_x;
       dims[1] = cellValColln_y;
       dims[2] = cellValColln_z;
@@ -1073,6 +1089,9 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     dims[0] = dims[0] + 2;
     dims[1] = dims[1] + 2;
     dims[2] = dims[2] + 2;
+
+    // cout << "dims test\n"; 
+    // cout << dims[0] << " " << dims[1] << " " << dims[2] << endl;
 
     vtkRectilinearGrid *rgrid = vtkRectilinearGrid::New();
     rgrid->SetDimensions(dims);
@@ -1148,30 +1167,92 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     ghostCells->Allocate(rgrid->GetNumberOfCells());
 
-    for (int k = indexArr[2] - 1; k < indexArr[5] + 1; ++k)
-      for (int j = indexArr[1] - 1; j < indexArr[4] + 1; ++j)
-	for (int i = indexArr[0] - 1; i < indexArr[3] + 1; ++i)
-	{
-	  if (i >= indexArr[0] && i < indexArr[3] &&
-	      j >= indexArr[1] && j < indexArr[4] && 
-	      k >= indexArr[2] && k < indexArr[5])  
+    if (meshName.find("CC") != string::npos) {
+      for (int k = indexArr[2] - 1; k < indexArr[5] + 1; ++k)
+	for (int j = indexArr[1] - 1; j < indexArr[4] + 1; ++j)
+	  for (int i = indexArr[0] - 1; i < indexArr[3] + 1; ++i)
 	  {
-	    ghostCells->InsertNextValue(realVal);
-	  }
-	  else
-	  {
-	    if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) &&
-		j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
-		k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
+	    if (i >= indexArr[0] && i < indexArr[3] &&
+		j >= indexArr[1] && j < indexArr[4] && 
+		k >= indexArr[2] && k < indexArr[5])  
 	    {
-	      ghostCells->InsertNextValue(ghostInternal);
+	      ghostCells->InsertNextValue(realVal);
 	    }
 	    else
 	    {
-	      ghostCells->InsertNextValue(ghostExternal);
+	      if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) &&
+		  j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
+		  k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
+	      {
+		ghostCells->InsertNextValue(ghostInternal);
+	      }
+	      else
+	      {
+		ghostCells->InsertNextValue(ghostExternal);
+	      }
 	    }
 	  }
-	}
+    }
+    else if (meshName.find("NC") != string::npos) {
+      // int realCells, intCells, extCells, cellCount;
+
+      // realCells = 0;
+      // intCells = 0;
+      // extCells = 0; 
+      // cellCount = 0;
+
+      int actualHiArr[3];
+
+      if (indexArr[3] < indexRangeNC[0])
+	actualHiArr[0] = indexArr[3] + 1;
+      else  
+	actualHiArr[0] = indexArr[3];
+
+      if (indexArr[4] < indexRangeNC[1])
+	actualHiArr[1] = indexArr[4] + 1;
+      else  
+	actualHiArr[1] = indexArr[4];
+
+      if (indexArr[5] < indexRangeNC[2])
+	actualHiArr[2] = indexArr[5] + 1;
+      else  
+	actualHiArr[2] = indexArr[5];
+
+      // cout << actualHiArr[0] << " " << actualHiArr[1] << " " << actualHiArr[2]  << endl; 
+
+      for (int k = (indexArr[2] - 1); k < /*indexArr[5]*/ actualHiArr[2]; k++)
+	for (int j = (indexArr[1] - 1); j < /*indexArr[4]*/ actualHiArr[1]; j++)
+	  for (int i = (indexArr[0] - 1); i < /*indexArr[3]*/ actualHiArr[0]; i++)
+	  {
+	    // cellCount++;
+	    if (i >= indexArr[0] && i < (/*indexArr[3]*/ actualHiArr[0] - 1) &&
+		j >= indexArr[1] && j < (/*indexArr[4]*/ actualHiArr[1] - 1) && 
+		k >= indexArr[2] && k < (/*indexArr[5]*/ actualHiArr[2] - 1))  
+	    {
+	      ghostCells->InsertNextValue(realVal);
+	      // realCells++;
+	    }
+	    else
+	    {
+	      if (i >= 0 && i < (hiLoArr[3] - hiLoArr[0] - 1) &&
+		  j >= 0 && j < (hiLoArr[4] - hiLoArr[1] - 1) &&
+		  k >= 0 && k < (hiLoArr[5] - hiLoArr[2] - 1))
+	      {
+		ghostCells->InsertNextValue(ghostInternal);
+		// intCells++;
+	      }
+	      else
+	      {
+		ghostCells->InsertNextValue(ghostExternal);
+		// extCells++;
+	      }
+	    }
+	  }
+    }
+
+    // cout << dims[0] << " " << dims[1] << " " << dims[2] << endl;
+    // cout << cellCount << " " << realCells << " " << intCells << " " << extCells << endl;
+    // cout << rgrid->GetNumberOfCells() << endl;
 
     rgrid->GetCellData()->AddArray(ghostCells);
     rgrid->SetUpdateGhostLevel(level);
@@ -1450,16 +1531,70 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     indexArr[4] = indexArr[4] - hiLoArr[1]; 
     indexArr[5] = indexArr[5] - hiLoArr[2];
 
+    int indexRangeNC[3];
+    int actualHiArr[3];
+
+    indexRangeNC[0] = hiLoArr[3] - hiLoArr[0] - 1;
+    indexRangeNC[1] = hiLoArr[4] - hiLoArr[1] - 1;
+    indexRangeNC[2] = hiLoArr[5] - hiLoArr[2] - 1;
+
+    actualHiArr[0] = indexArr[3];
+    actualHiArr[1] = indexArr[4];
+    actualHiArr[2] = indexArr[5];
+
+    if (currMesh.find("NC") != string::npos) {
+      if (indexArr[3] < indexRangeNC[0]) {
+	cellValColln_x += 1;
+	actualHiArr[0] = indexArr[3] + 1;
+      }  
+      //  else  
+      // actualHiArr[0] = indexArr[3];
+
+      if (indexArr[4] < indexRangeNC[1]) {
+	cellValColln_y += 1;
+	actualHiArr[1] = indexArr[4] + 1;
+      }  
+      // else  
+      // actualHiArr[1] = indexArr[4];
+
+      if (indexArr[5] < indexRangeNC[2]) {
+	cellValColln_z += 1;
+	actualHiArr[2] = indexArr[5] + 1;
+      }  
+      // else  
+      // actualHiArr[2] = indexArr[5];
+    }  
+
+
+    // cout << hiLoArr[0] << " " << hiLoArr[1] << " " << hiLoArr[2] << endl;
+    // cout << hiLoArr[3] << " " << hiLoArr[4] << " " << hiLoArr[5] << endl;
+
+    // cout << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << endl;
+    // cout << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << endl;
+
     rv->SetNumberOfTuples(cellValColln_x * cellValColln_y * cellValColln_z);
     count = 0;
 
-    for (int i = indexArr[2]; i < indexArr[5] + 2; i++) {
-      for (int j = indexArr[1]; j < indexArr[4] + 2; j++) {
-	for (int k = indexArr[0]; k < indexArr[3] + 2; k++) {
+    for (int i = indexArr[2]; i < actualHiArr[2] + 2; i++) {
+      for (int j = indexArr[1]; j < actualHiArr[1] + 2; j++) {
+	for (int k = indexArr[0]; k < actualHiArr[0] + 2; k++) {
+
+	  /*if ((k + hiLoArr[0] == 1) && (j + hiLoArr[1] == 62) && (i + hiLoArr[2] == 56)) {
+	    cout << "DATA_CHECK\n";
+	    cout << k + hiLoArr[0] << " " << j + 1 + hiLoArr[1] << " " << i + hiLoArr[2] << " " << refMatrix[k][j+1][i]   << endl;
+	    }*/
+
+	  /*if ((k + hiLoArr[0] == 1) && (j + hiLoArr[1] == 63) && (i + hiLoArr[2] == 56)) {
+	    cout << "DATA_CHECK\n";
+	    cout << k + hiLoArr[0] << " " << j - 1 + hiLoArr[1] << " " << i + hiLoArr[2] << " " << refMatrix[k][j-1][i]   << endl;
+	    }*/
+
 	  rv->SetTuple1(count++, refMatrix[k][j][i]);
 	}
       }
     }
+
+    // cout << "Values populated: " << count << endl;
 
     /*for (unsigned int i = 0; i < cellValVec.size(); ++i) {
       rv->SetTuple1(i, cellValVec[i]);  // you must determine value for ith entry.
@@ -1700,7 +1835,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     int cellValColln_z = indexArr[5] - indexArr[2] + 2;
 
     int* hiLoArr = patchInfoVecObj[domain].hiLoArr;
-    
+
     indexArr[0] = indexArr[0] - hiLoArr[0]; 
     indexArr[1] = indexArr[1] - hiLoArr[1]; 
     indexArr[2] = indexArr[2] - hiLoArr[2];
