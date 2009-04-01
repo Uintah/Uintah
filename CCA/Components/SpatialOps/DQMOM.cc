@@ -145,7 +145,6 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
 
     // compute or modify source terms
     cout << " current eqn  = " << (*iEqn)->getEqnName() << endl;
-    //SourceTermBase& sourceterm_base = sourceterm_factory.retrieve_source_term( (*iEqn)->getEqnName() );
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     if (timeSubStep == 0) {
       cout << "The linear system computes source term " << *sourceterm_label << endl;
@@ -179,97 +178,69 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw )
 {
+  cout << "Now entering DQMOM linear solver.\n";
   // patch loop
   for (int p=0; p < patches->size(); ++p) {
     const Patch* patch = patches->get(p);
 
-    Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None; 
+    Ghost::GhostType  gac = Ghost::AroundCells;
     int matlIndex = 0;
 
-    vector< constCCVariable<double>* > weightCCVars;
-    vector< constCCVariable<double>* > weightedAbscissaCCVars;
-    vector< vector< constCCVariable<double>* > > weightedAbscissaModelCCVars;
-    vector< CCVariable<double>* > sourceCCVars;
-    std::map< int, CCVariable<double>* > sourceMap;
+    //vector< constCCVariable<double>* > weightCCVars;
+    //vector< constCCVariable<double>* > weightedAbscissaCCVars;
+    //vector< vector< constCCVariable<double>* > > weightedAbscissaModelCCVars;
+    //vector< CCVariable<double>* > sourceCCVars;
   
     SourceTermFactory& sourceterm_factory = SourceTermFactory::self();
     ModelFactory& model_factory = ModelFactory::self();
 
-    // getModifiable/allocateAndPut calls:
-
-
-    // loop over all weight equations
-    int z = 0;
-    for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
-      
-      // transported variables are already allocated at beginning of timestep/exist in warehouse
-      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      constCCVariable<double> equation_ccvar;
-      
-      new_dw->get( equation_ccvar, equation_label, matlIndex, patch, gn, 0 );
-      weightCCVars.push_back(&equation_ccvar);
-      
-      CCVariable<double> source_ccvar;
-      const VarLabel* source_label = (*iEqn)->getSourceLabel();
-      // source terms are not allocated in new DW at beginning of timestep
-      if (new_dw->exists(source_label, matlIndex, patch) ) {
-        new_dw->getModifiable( source_ccvar, source_label, matlIndex, patch );
-      } else {
-        new_dw->allocateAndPut( source_ccvar, source_label, matlIndex, patch );
-      }
-      sourceCCVars.push_back(&source_ccvar);
-
-      sourceMap[z] = &source_ccvar; 
-      z++; 
-    }//end for weight eqns
-
-
-    // loop over all weighted abscissa eqns
-    for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); 
-         iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-      
-      // transported variables already allcoated/exist in warehouse
-      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      constCCVariable<double> equation_ccvar;
-      new_dw->get( equation_ccvar, equation_label, matlIndex, patch, gn, 0 );
-      weightedAbscissaCCVars.push_back(&equation_ccvar);
-
-      CCVariable<double> source_ccvar;
-      const VarLabel* source_label = (*iEqn)->getSourceLabel();
-      if (new_dw->exists(source_label, matlIndex, patch) ) {
-        new_dw->getModifiable( source_ccvar, source_label, matlIndex, patch );
-      } else {
-        new_dw->allocateAndPut( source_ccvar, source_label, matlIndex, patch );
-      }
-      sourceCCVars.push_back(&source_ccvar);
-
-      sourceMap[z] = &source_ccvar; 
-      z++; 
-      vector< constCCVariable<double>* > eqnModels;
-      vector<string> modelsList = (*iEqn)->getModelsList();
-      for ( vector<string>::iterator iModels = modelsList.begin();
-            iModels != modelsList.end(); ++iModels) {
-        // model terms have already been allocated/computed/exist in DW
-        ModelBase& model_base = model_factory.retrieve_model(*iModels);
-        const VarLabel* model_label = model_base.getModelLabel();
-        constCCVariable<double> model_ccvar;
-        new_dw->get( model_ccvar, model_label, matlIndex, patch, gac, 0 );
-        eqnModels.push_back(&model_ccvar);
-      }
-      weightedAbscissaModelCCVars.push_back(eqnModels);
-    }//end for weighted abscissa eqns
-
-
     // Cell iterator
-
     for ( CellIterator iter = patch->getCellIterator__New();
           !iter.done(); ++iter) {
       
-      LU A( (N_xi+1)*N_, 1); //bandwidth doesn't matter b/c A is being stored densely
+      LU A( (N_xi+1)*N_, 1); // bandwidth doesn't matter b/c A is being stored densely
       vector<double> B( (N_xi+1)*N_, 0.0 );
       IntVector c = *iter;
- 
+
+      vector<double> weights;
+      vector<double> weightedAbscissas;
+      vector<double> models;
+
+      // store weights
+      vector<double> tempStorage;
+      for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
+           iEqn != weightEqns.end(); ++iEqn) {
+       constCCVariable<double> temp;
+       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+       new_dw->get( temp, equation_label, matlIndex, patch, gn, 0);
+       tempStorage.push_back(temp[c]);
+      }
+
+      // store abscissas
+      for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+           iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+        const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+        constCCVariable<double> temp;
+        new_dw->get(temp, equation_label, matlIndex, patch, gn, 0);
+        weightedAbscissas.push_back(temp[c]);
+
+        double runningsum = 0;
+        vector<string> modelsList = (*iEqn)->getModelsList();
+        for ( vector<string>::iterator iModels = modelsList.begin();
+              iModels != modelsList.end(); ++iModels) {
+          ModelBase& model_base = model_factory.retrieve_model(*iModels);
+          const VarLabel* model_label = model_base.getModelLabel();
+          constCCVariable<double> tempCCVar;
+          new_dw->get(tempCCVar, model_label, matlIndex, patch, gn, 0);
+          runningsum = runningsum + tempCCVar[c];
+        }
+
+        models.push_back(runningsum);
+      }
+
+
+      // construct AX=B
       for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
         MomentVector thisMoment = momentIndexes[k];
         
@@ -280,9 +251,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
             // Appendix C, C.9 (A1 matrix)
             prefixA = prefixA - (thisMoment[i]);
-            double w_temp_doub = (*weightCCVars[alpha])[c];
-            double wa_temp_doub = (*weightedAbscissaCCVars[(i-1)*alpha+alpha])[c];
-            productA = productA*( pow((wa_temp_doub/w_temp_doub),thisMoment[i]) );
+            productA = productA*( pow((weightedAbscissas[i*(alpha+1)+alpha]/weights[alpha]),thisMoment[i]) );
           }
           A(alpha,k)=prefixA*productA;
         } //end weights matrix
@@ -295,55 +264,55 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           double productB = 1;
           double modelsumB = 0;
           for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-            double w_temp_doub = (*weightCCVars[alpha])[c];
-            double wa_temp_doub = (*weightedAbscissaCCVars[(j-1)*alpha+alpha])[c];
             // Appendix C, C.11 (A_j+1 matrix)
-            prefixA = (thisMoment[j]-1)*( pow((wa_temp_doub/w_temp_doub),(thisMoment[j]-1)) );
+            prefixA = (thisMoment[j]-1)*( pow((weightedAbscissas[j*(alpha+1)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
             productA = 1;
-            // Appendix C, C.16 (B matrix)
-            productB = w_temp_doub;
-            productB = productB*( -(thisMoment[j])*( pow((wa_temp_doub/w_temp_doub),(thisMoment[j]-1)) ) );
+
+          // Appendix C, C.16 (B matrix)
+            productB = weights[alpha];
+            productB = productB*( -(thisMoment[j])*( pow((weightedAbscissas[j*(alpha+1)+alpha]/weights[alpha]),(thisMoment[j]-1)) ) );
         
             for (unsigned int n = 0; n < N_xi; ++n) {
               if (n != j) {
-                double w_temp_doub = (*weightCCVars[alpha])[c];
-                double wa_temp_doub = (*weightedAbscissaCCVars[(n-1)*alpha+alpha])[c];
                 // A_j+1 matrix:
-                productA = productA*( pow((wa_temp_doub/w_temp_doub),thisMoment[n]) );
+                productA = productA*( pow( (weightedAbscissas[n*(alpha+1)+alpha]/weights[alpha]), thisMoment[n] ));
                 // B matrix:
-                productB = productB*( pow((wa_temp_doub/w_temp_doub),thisMoment[n]) );
+                productB = productB*( pow( (weightedAbscissas[n*(alpha+1)+alpha]/weights[alpha]), thisMoment[n] ));
               }
             }
 
-            // for given quad node, get model source term
-            for (unsigned int z = 0; z < weightedAbscissaModelCCVars[j].size(); ++z) {
-              modelsumB = modelsumB + (*weightedAbscissaModelCCVars[j][z])[c];
-            }
+            modelsumB = modelsumB + models[j*(alpha+1)+alpha];
              
-            A(j*alpha + alpha, k)=prefixA*productA;
+            A(j*(alpha+1) + alpha, k)=prefixA*productA;
 
           }//end quad nodes
           totalsumB = totalsumB + (productB)*(modelsumB);
         }//end int coords
         B[k] = totalsumB;
       } // end moments
-
+    
       A.decompose();
       A.back_subs( &B[0] );
-      // set sources equal to result
-      cout << "Size of B = " << B.size() << endl;
-      cout << "Size of sourceCCVars = " << sourceCCVars.size() << endl;
-      for (unsigned int z = 0; z < sourceCCVars.size(); ++z) {
-        (*sourceCCVars[z])[c]=B[z];
-      }
-      //for (int z=0; z < sourceMap.size(); z++){
-      //  std::map<int, CCVariable<double>* >::iterator i = sourceMap.find(z);
-      //  CCVariable<double>* temp = i->second;
-      //  (*temp)[c] = B[z];
-        //i = sourceMap.find(z);
-        //*i->second[c] = B[z];
-      //}
+      
+      //cout << "Size of B = " << B.size() << endl;
+      //cout << "Size of sourceCCVars = " << sourceCCVars.size() << endl;
 
+      // set sources equal to result
+      unsigned int z = 0;
+      for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+           iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+        const VarLabel* source_label = (*iEqn)->getSourceLabel();
+        CCVariable<double> tempCCVar;
+        if (new_dw->exists(source_label, matlIndex, patch)) {
+          new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
+        } else {
+          new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+        }
+
+        tempCCVar[c] = B[z];
+        ++z;
+      }
+     
     }//end for cells
 
   }//end per patch
