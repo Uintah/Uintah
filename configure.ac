@@ -55,13 +55,6 @@
 ##  PLEASE DO NOT COMMIT ANY CHANGES WITH OUT HAVING ONE OF THE 
 ##  ABOVE REVIEW YOUR CHANGES.
 ##
-##  It used to be the case that the SCIRun make system tried to run
-##  autconf automatically if configure.ac had changed.  This caused a
-##  number of problems and has been removed.  Therefore the order
-##  of committing configure and configure.ac no longer matters.  I
-##  suggest committing them both at the same time now.
-##    - Dav
-##
 ##  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ##  --------------------------------------------------------------------
@@ -69,9 +62,9 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
+AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 
-##  require autoconf version 2.61
+##  require autoconf version 2.63
 ##     The reason to require the latest autoconf is to try and get everyone who
 ##     updates configure to use the same version.  By doing so, the SVN diffs
 ##     don't look completely different from minor changes.  (This happens
@@ -79,7 +72,7 @@ AC_INIT([SCIRun],[1.25],[scirun-users@sci.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.61)
+AC_PREREQ(2.63)
 
 AC_COPYRIGHT(
 ##
@@ -154,15 +147,7 @@ SCI_ARG_VAR(FFLAGS,Fortran 77 compiler flags)
 SCI_ARG_VAR(CPP,C preprocessor)
 SCI_ARG_VAR(CXXCPP,C++ preprocessor)
 
-#Get the host now since it is needed for the Package Checks.
 AC_CANONICAL_HOST
-
-# Initialize variables that control what optional checks to make
-## all the optional tests we have... These get set in the macro 
-# SCI_SET_PACKAGE_CHECKS found in aclocal.m4.  Each package sets the 
-# checks that they 
-INIT_PACKAGE_CHECK_VARS()
-
 
 ## find the machine's pwd, and don't use the sh built-in pwd.
 ## sh pwd can print the wd with symbolic links depending on
@@ -244,6 +229,12 @@ SCI_ARG_WITH(lapack,
   [with_lapack="$withval"
    sci_required_lapack=yes],
   [with_lapack=""])
+SCI_ARG_WITH(teem,
+  AC_HELP_STRING(--with-teem=DIR, 
+                 Use the teem installation in DIR/lib),
+  [with_teem="$withval"
+   sci_required_teem=yes],
+  [with_teem=""])
 SCI_ARG_WITH(fortran,
   AC_HELP_STRING(--with-fortran=DIR, 
                  Use the fortran (eg: g2c) installation in DIR/lib),
@@ -406,12 +397,6 @@ SCI_ARG_ENABLE(output-avg-walltime,
                  Output ellapsed wall-times),
   [output_avg_walltime="$enableval"],
   [output_avg_walltime=${output_avg_walltime='no'}])
-SCI_ARG_ENABLE(package,
-  AC_HELP_STRING(--enable-package=<list>,
-                 Use the SCIRun packages specified by list.
-                 example: --enable-package='Uintah Teem'),
-  [package="$enableval"],
-  [package=""])
 
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
@@ -491,8 +476,7 @@ fi
 
 
 ##  --------------------------------------------------------------------
-##  Save off the arguments to configure, being careful to save 
-##  Package strings for later parsing.
+##  Save off the arguments to configure...
 ##  --------------------------------------------------------------------
 
 args=`echo "$*" | sed 's% %_%g'`
@@ -504,43 +488,11 @@ myargs=`echo $args | sed 's%\^% %g'`
 ## Cut off the /configure from the configure command (eg: ../src/configure)
 path_to_src=`echo $0 | sed 's/\/configure//'`
 
-pkg_Uintah="yes"
-package="Teem"
-
-PACKAGE_DIRS=""
-for i in $package; do
-   PACKAGE_DIRS=$PACKAGE_DIRS" $i"
-   # set the package dependent checks
-   SCI_SET_PACKAGE_CHECKS($i, $host)
-done
-
-
-# Make sure the Package directories exist.
-#   Do an 'ls' of all files in the Packages directory and then grep for the
-#   package in this list.  (We used to just do a "test -d $package", but on
-#   a case-insensitive Mac file system, this fails.)
-
-packages_list=`ls $path_to_src/`
-for i in $package; do
-   found_package=`echo $packages_list | grep $i`
-   if test -z "$found_package"; then
-      if test "$i" = "TEEM"; then
-         AC_MSG_WARN(Try using 'Teem' instead of 'TEEM')
-      fi
-      AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
-   fi
-done
-
-if test "$sci_required_unipetsc" = "yes" -o "$sci_required_petsc" = "yes"; then
+if test "$sci_required_petsc" = "yes"; then
    sci_required_blas=yes
    sci_required_lapack=yes
 fi
 
-
-LOAD_PACKAGE="SCIRun"
-for i in $package; do
- LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
-done
 sci_defs_files="$sci_defs_files include/sci_defs/environment_testdefs.h"
 
 DIRNAME_IS=`type dirname | sed 's%^.* %%'`
@@ -557,8 +509,8 @@ fi
 
 ## -- Can't use uni-petsc and Uintah (as Uintah needs full mpi petsc).
 
-if test "$pkg_Uintah" = "yes" && test "$with_unipetsc"; then
-   AC_MSG_ERROR(You have requested both Uintah and Uni-Petsc.  However Uintah requires MPI petsc.)
+if test "$with_unipetsc"; then
+   AC_MSG_ERROR(However Uintah requires MPI petsc - not Uni-PETSc.)
 fi
 
 ##  --------------------------------------------------------------------
@@ -853,8 +805,6 @@ fi
 
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 AC_SUBST(NOPRINTDIR)
-AC_SUBST(PACKAGE_DIRS)
-AC_SUBST(LOAD_PACKAGE)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
@@ -927,53 +877,51 @@ if test "$IS_WIN" = "yes"; then
   with_fortran="no"
 fi
 
-if test "$pkg_Uintah" = "yes"; then
-  # enable/disable certain Uintah components
-  BUILD_ARCHES=yes
-  BUILD_ICE=yes
-  BUILD_MPM=yes
-  BUILD_RADIATION=yes
-  DEF_ARCHES=""
-  DEF_ICE=""
-  DEF_MPM=""
-  DEF_RADIATION=""
-  if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
-  if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
-  if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
-  if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
-  if test "$with_fortran" = no; then BUILD_ARCHES=no; BUILD_RADIATION=no;
-                                     DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
-  fi
+# enable/disable certain Uintah components
+BUILD_ARCHES=yes
+BUILD_ICE=yes
+BUILD_MPM=yes
+BUILD_RADIATION=yes
+DEF_ARCHES=""
+DEF_ICE=""
+DEF_MPM=""
+DEF_RADIATION=""
+if test "$USE_ARCHES" = no; then BUILD_ARCHES=no; DEF_ARCHES="#define NO_ARCHES"; fi
+if test "$USE_ICE" = no; then BUILD_ICE=no; DEF_ICE="#define NO_ICE"; fi
+if test "$USE_MPM" = no; then BUILD_MPM=no; DEF_MPM="#define NO_MPM"; fi
+if test "$USE_RADIATION" = no; then BUILD_RADIATION=no; DEF_RADIATION="#define NO_RADIATION"; fi
+if test "$with_fortran" = no; then BUILD_ARCHES=no; BUILD_RADIATION=no;
+                                   DEF_RADIATION="#define NO_RADIATION"; DEF_ARCHES="#define NO_ARCHES";
+fi
 
-  AC_SUBST(BUILD_ARCHES)
-  AC_SUBST(BUILD_ICE)
-  AC_SUBST(BUILD_MPM)
-  AC_SUBST(BUILD_RADIATION)
-  AC_SUBST(DEF_ARCHES)
-  AC_SUBST(DEF_ICE)
-  AC_SUBST(DEF_MPM)
-  AC_SUBST(DEF_RADIATION)
+AC_SUBST(BUILD_ARCHES)
+AC_SUBST(BUILD_ICE)
+AC_SUBST(BUILD_MPM)
+AC_SUBST(BUILD_RADIATION)
+AC_SUBST(DEF_ARCHES)
+AC_SUBST(DEF_ICE)
+AC_SUBST(DEF_MPM)
+AC_SUBST(DEF_RADIATION)
 
-  if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
-    sci_required_fortran=no
-  fi
-  
-  ##  --  search for MallocTrace ------------------------
+if test "$BUILD_ARCHES" = no -a "$BUILD_RADIATION" = no; then
+  sci_required_fortran=no
+fi
 
-  if test "$with_malloc_trace"; then
-    if test "$with_malloc_trace" = "yes"; then
-      AC_MSG_ERROR( --with-malloc_trace=DIR requires a Directory be provided. )
-    else
-      AC_MSG_CHECKING(for MallocTrace files (For now we are just verifying the existence of lib and .h files)) 
-      if test ! -d $with_malloc_trace; then
-        AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
-      fi
-      if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-        AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
-      fi
-      if test ! -f $with_malloc_trace/include/MallocTrace.h; then
-        AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
-      fi
+##  --  search for MallocTrace ------------------------
+
+if test "$with_malloc_trace"; then
+  if test "$with_malloc_trace" = "yes"; then
+    AC_MSG_ERROR( --with-malloc_trace=DIR requires a Directory be provided. )
+  else
+    AC_MSG_CHECKING(for MallocTrace files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_malloc_trace; then
+      AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
+    fi
+    if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
+      AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
+    fi
+    if test ! -f $with_malloc_trace/include/MallocTrace.h; then
+      AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
     fi
     AC_MSG_RESULT(yes)
     DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
@@ -982,46 +930,50 @@ if test "$pkg_Uintah" = "yes"; then
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
     MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
-  AC_SUBST(DEF_MALLOC_TRACE)
-  AC_SUBST(INC_MALLOC_TRACE_H)
-  AC_SUBST(MALLOC_TRACE_LIB_FLAG)
-  AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
-  AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
-
-
-  ##  --  search for Zoltan ------------------------
-
-  if test "$with_zoltan"; then
-    if test "$with_zoltan" = "yes"; then
-      AC_MSG_ERROR( --with-zoltan=DIR requires a DIRectory be provided. )
-    else
-      AC_MSG_CHECKING(for Zoltan files (For now we are just verifying the existence of lib and .h files)) 
-      if test ! -d $with_zoltan; then
-        AC_MSG_ERROR( '$with_zoltan' directory does not exist. )
-      fi
-      if test ! -f $with_zoltan/lib/libzoltan.a; then
-        AC_MSG_ERROR( '$with_zoltan/lib/libzoltan.a' does not exist. )
-      fi
-      if test ! -f $with_zoltan/include/zoltan_cpp.h; then
-        AC_MSG_ERROR( '$with_zoltan/include/zoltan_cpp.h' does not exist. )
-      fi
-    fi
-    AC_MSG_RESULT(yes)
-    DEF_ZOLTAN="#define HAVE_ZOLTAN 1"
-    INC_ZOLTAN_H="-I$with_zoltan/include"
-    ZOLTAN_LIB_DIR_FLAG="-L$with_zoltan/lib"
-    ZOLTAN_LIB_FLAG="-lzoltan"
-
-  fi
-  AC_SUBST(DEF_ZOLTAN)
-  AC_SUBST(INC_ZOLTAN_H)
-  AC_SUBST(ZOLTAN_LIB_FLAG)
-  AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
-
-  ## -----------------------------------------------
-
-  sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
+  AC_MSG_RESULT(yes)
+  DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
+  INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
+  MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
+  MALLOC_TRACE_LIB_FLAG="-lMallocTrace -lMallocTraceMPI"
 fi
+AC_SUBST(DEF_MALLOC_TRACE)
+AC_SUBST(INC_MALLOC_TRACE_H)
+AC_SUBST(MALLOC_TRACE_LIB_FLAG)
+AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
+AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
+
+##  --  search for Zoltan ------------------------
+
+if test "$with_zoltan"; then
+  if test "$with_zoltan" = "yes"; then
+    AC_MSG_ERROR( --with-zoltan=DIR requires a DIRectory be provided. )
+  else
+    AC_MSG_CHECKING(for Zoltan files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_zoltan; then
+      AC_MSG_ERROR( '$with_zoltan' directory does not exist. )
+    fi
+    if test ! -f $with_zoltan/lib/libzoltan.a; then
+      AC_MSG_ERROR( '$with_zoltan/lib/libzoltan.a' does not exist. )
+    fi
+    if test ! -f $with_zoltan/include/zoltan_cpp.h; then
+      AC_MSG_ERROR( '$with_zoltan/include/zoltan_cpp.h' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_ZOLTAN="#define HAVE_ZOLTAN 1"
+  INC_ZOLTAN_H="-I$with_zoltan/include"
+  ZOLTAN_LIB_DIR_FLAG="-L$with_zoltan/lib"
+  ZOLTAN_LIB_FLAG="-lzoltan"
+
+fi
+AC_SUBST(DEF_ZOLTAN)
+AC_SUBST(INC_ZOLTAN_H)
+AC_SUBST(ZOLTAN_LIB_FLAG)
+AC_SUBST(ZOLTAN_LIB_DIR_FLAG)
+
+## -----------------------------------------------
+
+sci_defs_files="$sci_defs_files include/sci_defs/uintah_testdefs.h"
 
 if test $sci_required_fortran = "yes"; then
   if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
@@ -3066,23 +3018,6 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 
     if test "$HAVE_PETSC" = "yes" ; then
       DEF_PETSC="#define HAVE_PETSC 1"
-    else
-      # Give it a shot on the old petsc version if we're not doing Uintah
-      if test "$pkg_Uintah" != "yes"; then
-        SCI_TRY_LINK(PETSC,
-                     petsc libraries and headers (petsc_arch = $petsc_arch) - old,
-                     petsc.h,
-                     $_sci_inc /usr/include/petsc,
-                     petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles,
-                     $_sci_lib_dir,
-                     $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
-                     ,
-                     optional)
-        if test "$HAVE_PETSC" = "yes"; then
-          DEF_PETSC="#define HAVE_PESC 1"
-        fi
-      fi  
-
     fi    
   done  
   if test "$with_petsc" && test ! "$DEF_PETSC"; then
@@ -3349,44 +3284,30 @@ if test "$with_teem"; then
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=required
   fi 
-fi
 
-# Determine if teem is using png.  Assume teem is either in the 3rd Party
-# or where the user has specified (as we are going to use nm to look at its
-# symbols and are not trying to link against it (at this point.))
+  # Determine if teem is using png.  Assume teem is either in the 3rd Party
+  # or where the user has specified (as we are going to use nm to look at its
+  # symbols and are not trying to link against it (at this point.))
 
-result=`nm $_sci_lib/libteem.so | grep png_write_info`
-if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != "yes"; then
-   AC_MSG_WARN(Teem was built with PNG support.  However the SCIRun configure)
-   AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
-   AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
-   AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
-   AC_MSG_ERROR(Please fix this problem and then configure again.)
-fi
+  result=`nm $_sci_lib/libteem.so | grep png_write_info`
+  if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != "yes"; then
+    AC_MSG_WARN(Teem was built with PNG support.  However the Uintah configure)
+    AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
+    AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
+    AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
+    AC_MSG_ERROR(Please fix this problem and then configure again.)
+  fi
 
+  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,$M_LIB_FLAG,[
+               float a[3], b[9], c[7];
+               tenEigensolve_f(a,b,c);
+               ]
+               ,$_sci_optional)
 
-SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,$M_LIB_FLAG,[
-float a[3], b[9], c[7];
-tenEigensolve_f(a,b,c);
-]
-,$_sci_optional)
-
-if test "$HAVE_TEEM" = "yes"; then
-   DEF_TEEM="#define HAVE_TEEM 1"
-else
-  if test "$sci_required_scirun" = "yes"; then
-
-    AC_MSG_WARN(Teem thirdparty library check failed.  This most likely)
-    AC_MSG_WARN(means one of two things.  1. Could not find the teem)
-    AC_MSG_WARN(thirdparty library files.  or 2. Your teem thirdparty)
-    AC_MSG_WARN(is too old.  Look in config.log for more information.)
-    AC_MSG_WARN(If the error message is something like:)
-    AC_MSG_WARN(`tenEigensolve_f' undeclared then you most likely)
-    AC_MSG_WARN(have too old of a thirdparty.)
-    AC_MSG_ERROR(One or more of the TEEM components is missing.)   
+  if test "$HAVE_TEEM" = "yes"; then
+     DEF_TEEM="#define HAVE_TEEM 1"
   fi
 fi
-
 
 AC_SUBST(HAVE_TEEM)
 AC_SUBST(DEF_TEEM)
@@ -3544,14 +3465,10 @@ fi
 AC_SUBST(scirun_obj_dir)
 AC_SUBST(scirun_src_dir)
 
-AC_CONFIG_FILES(configVars.mk Makefile on-the-fly-libs/Makefile 
-                disjointPackageMakefile $sci_defs_files)
+AC_CONFIG_FILES(configVars.mk Makefile disjointPackageMakefile $sci_defs_files)
 
-##   Only do the following if configuring with Uintah
-##   Add a list of Uintah specific output files.
-if test "$pkg_Uintah" = "yes" ; then
-   AC_CONFIG_FILES(tools/fspec.pl)
-fi 
+##  Add a list of Uintah specific output files.
+AC_CONFIG_FILES(tools/fspec.pl)
 
 #  ignore --no-create and --no-recursion flags
 no_create=no
