@@ -37,10 +37,10 @@ PROGRAM := $(SRCDIR)/bnrtest
 SRCS    := $(SRCDIR)/bnrtest.cc
 
 PSELIBS := \
-        Core/Exceptions                          \
-        Core/Geometry                            \
-        Core/Thread                              \
-        Core/Util                                \
+        Core/Exceptions          \
+        Core/Geometry            \
+        Core/Thread              \
+        Core/Util                \
         Core/Disclosure          \
         Core/Exceptions          \
         Core/Grid                \
@@ -49,7 +49,8 @@ PSELIBS := \
         CCA/Ports                \
         CCA/Components/Regridder
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
+        $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -54,7 +54,7 @@ else
       Core/Geometry 
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -81,7 +81,7 @@ else
      Core/Geometry
 endif
 
-LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
