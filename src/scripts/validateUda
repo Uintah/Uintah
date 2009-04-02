@@ -178,8 +178,12 @@ foreach U ($udas[*]:q)
            && $middle_bytes == "00000000000000000000000000000000" \
            &&($first_bytes  == "00000000000000000000000000000000" \
            || $endoff_bytes == "00000000000000000000000000000000" )) then
-            set passed6 = false
-            echo "            $here is empty (possible missing RAID stripe)"
+            #Only fail the test if datafiles are gzip-compressed.
+            grep gzip `echo $here | sed -e 's/data$/xml/'`
+            if ( $? == "0") then
+              set passed6 = false
+              echo "            $here is empty (possible missing RAID stripe)"
+            endif
           endif
 
 
