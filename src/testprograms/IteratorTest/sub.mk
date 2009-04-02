@@ -37,10 +37,10 @@ PROGRAM := $(SRCDIR)/IteratorTest
 SRCS    := $(SRCDIR)/IteratorTest.cc
 
 PSELIBS := \
-        Core/Exceptions                          \
-        Core/Geometry                            \
-        Core/Thread                              \
-        Core/Util                                \
+        Core/Exceptions          \
+        Core/Geometry            \
+        Core/Thread              \
+        Core/Util                \
         Core/Disclosure          \
         Core/Exceptions          \
         Core/Grid                \
@@ -48,7 +48,8 @@ PSELIBS := \
 	\
 	Core/Math
 
-LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(MPI_LIBRARY) \
+        $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

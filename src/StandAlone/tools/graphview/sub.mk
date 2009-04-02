@@ -46,7 +46,7 @@ PSELIBS := \
 	Core/Exceptions  \
 	Core/Util  
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

@@ -58,24 +58,27 @@ endif
 
 ifeq ($(IS_AIX),yes)
   LIBS := \
-        $(TCL_LIBRARY) \
-        $(TEEM_LIBRARY) \
-        $(XML2_LIBRARY) \
-        $(Z_LIBRARY) \
+        $(TCL_LIBRARY)    \
+        $(TEEM_LIBRARY)   \
+        $(PNG_LIBRARY)    \
+        $(XML2_LIBRARY)   \
+        $(Z_LIBRARY)      \
         $(THREAD_LIBRARY) \
-        $(F_LIBRARY) \
-        $(PETSC_LIBRARY) \
-        $(HYPRE_LIBRARY) \
-        $(BLAS_LIBRARY) \
+        $(F_LIBRARY)      \
+        $(PETSC_LIBRARY)  \
+        $(HYPRE_LIBRARY)  \
+        $(BLAS_LIBRARY)   \
         $(LAPACK_LIBRARY) \
-        $(MPI_LIBRARY) \
-        $(X_LIBRARY) \
-        -lld $(M_LIBRARY)
+        $(MPI_LIBRARY)    \
+        $(X_LIBRARY)      \
+        $(M_LIBRARY)      \
+        -lld
 else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
           $(PETSC_LIBRARY) $(BLAS_LIBRARY) $(LAPACK_LIBRARY) \
-          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
+          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
+          $(TEEM_LIBRARY) $(PNG_LIBRARY)
 endif
 
 ##############################################

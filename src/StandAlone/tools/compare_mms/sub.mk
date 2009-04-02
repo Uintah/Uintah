@@ -56,7 +56,8 @@ else
         CCA/Components/PatchCombiner
 endif
 
-LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)
+LIBS := $(BLAS_LIBRARY) $(LAPACK_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+
 
 ########################################################
 # compare_mms
