@@ -1041,83 +1041,8 @@ AC_DEFUN([SCI_ARG_ENABLE], [
 ## callse AC_ARG_VAR makes variables precious, and allows the vars to pass
 ## our valid check by recording it in sci_arg_var_list
 ##
-
 AC_DEFUN([SCI_ARG_VAR], [
   AC_ARG_VAR($1, $2)
   sci_arg_var_list="$sci_arg_var_list $1"
 ])
 
-##
-##  INIT_PACKAGE_CHECK_VARS
-##  
-##  Initialize all the variables that guard REQUIRED dependencies
-##  by specific configurations.
-##
-AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
-
-  # This list is alphabetical.  Please keep it that way.
-  sci_required_awk=no
-  sci_required_blas=no
-  sci_required_etags=no
-  sci_required_exc=no 
-  sci_required_fortran=no
-  sci_required_hdf5=no
-  sci_required_gmake=no 
-  sci_required_gzopen=no
-  sci_required_hypre=no
-  sci_required_jpeg=no
-  sci_required_lapack=no
-  sci_required_mpi=no
-  sci_required_perl=no
-  sci_required_petsc=no
-  sci_required_tau=no
-  sci_required_teem=no
-  sci_required_thirdparty=no
-  sci_required_tiff=no
-  sci_required_tools=no
-  sci_required_unipetc=no
-
-])
-##
-##  SCI_SET_PACKAGE_CHECKS
-##  $1 is the name of a package.
-##  
-##  Set the variables that enable configure checks required for the Package.
-##
-AC_DEFUN([SCI_SET_PACKAGE_CHECKS], [
-
-eval pkg_$1=yes
-
-case $1 in
-  Teem)
-    sci_required_teem=yes
-  ;;
-  Uintah)
-    sci_required_fortran=yes
-    sci_required_mpi=yes
-    sci_required_perl=yes
-    sci_required_tools=yes
-  ;;
-  *)
-    AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)
-  ;;
-esac
-
-])
-
-
-
-AC_DEFUN([SCI_SUBST_THIRDPARTY_DIR], [
-##
-## SCI_SUBST_THIRDPARTY_DIR:
-##
-## arguments mean:
-## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir 
-## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
-##
-  _new_path=${$1}
-  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
-  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  eval $1='"$_new_path"'
-])
