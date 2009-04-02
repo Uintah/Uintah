@@ -127,7 +127,7 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
+all:: prereqs packmaker $(ALLTARGETS)
 
 prereqs : $(MAKEFILEDIRSTAG) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
 	@if test ! -f prereqs; then \
@@ -146,11 +146,6 @@ packmaker: $(SRCTOP)/build_scripts/packmaker.in $(OBJTOP)/Makefile
               -e 's,REPLACE_SCIRUN_SRCTOP,$(SRCTOP_ABS),g' \
               $(SRCTOP)/build_scripts/packmaker.in > packmaker
 	-@chmod a+x packmaker
-
-ontheflylibs:
-	@echo Compiling on-the-fly-libs directory:
-	@mkdir -p on-the-fly-libs
-	@(cd on-the-fly-libs;$(MAKE))
 
 app: all
 	@echo making SCIRun.app in $(SCIRUN_APP_DIR)
@@ -233,7 +228,6 @@ endif
 	rm -f y.output
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
-	rm -f on-the-fly-libs/*.*
 	rm -f Uintah/VisIt/udaReaderMTMD/*
 
 distclean:: clean
