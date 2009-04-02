@@ -53,15 +53,6 @@
 #  include <windows.h>
 #endif
 
-
-#ifndef LOAD_PACKAGE
-#  error You must set a LOAD_PACKAGE or life is pretty dull
-#endif
-
-#ifndef ITCL_WIDGETS
-#  error You must set ITCL_WIDGETS to the iwidgets/scripts path
-#endif
-
 using namespace SCIRun;
 using namespace std;
 
@@ -166,55 +157,6 @@ SCIRun::sci_putenv( const string &key, const string &val )
 }  
 
 
-#ifdef _WIN32
-void
-getWin32RegistryValues(string& obj, string& src, string& thirdparty, string& packages)
-{
-  // on an installed version of SCIRun, query these values from the registry, overwriting the compiled version
-  // if not an installed version, return the compiled values unchanged
-  HKEY software, company, scirun, pack;
-  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE", 0, KEY_READ, &software) == ERROR_SUCCESS) {
-    if (RegOpenKeyEx(software, "SCI Institute", 0, KEY_READ, &company) == ERROR_SUCCESS) {
-      if (RegOpenKeyEx(company, "SCIRun", 0, KEY_READ, &scirun) == ERROR_SUCCESS) {
-        char data[512];
-        DWORD size = 512;
-        DWORD type;
-        int code = RegQueryValueEx(scirun, "InstallPath", 0, &type, (LPBYTE) data, &size);
-        if (type == REG_SZ && code == ERROR_SUCCESS) {
-          obj = string(data)+"\bin";
-          src = string(data)+"\src";
-          thirdparty = data;
-          cout << "Data: " << data << "\n";
-        }
-
-        if (RegOpenKeyEx(scirun, "Packages", 0, KEY_READ, &pack) == ERROR_SUCCESS) {
-          packages = "";
-          int code = ERROR_SUCCESS;
-          char name[128];
-          DWORD nameSize = 128;
-          FILETIME filetime;
-          int index = 0;
-          for (; code == ERROR_SUCCESS; index++) {
-            if (index > 0)
-              packages = packages + name + ",";
-            code = RegEnumKeyEx(pack, index, name, &nameSize, 0, 0, 0, &filetime);
-          }
-          // lose trailing comma
-          if (index > 0 && packages[packages.length()-1] == ',')
-            packages[packages.length()-1] = 0;
-          cout << "Packages: " << packages << "\n";
-          RegCloseKey(pack);
-        }
-        RegCloseKey(scirun);
-      }
-      RegCloseKey(company);
-    }
-    RegCloseKey(software);
-  }
-
-}
-#endif
-
 void
 SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = false */ )
 {
@@ -237,12 +179,6 @@ SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = fa
 
   string objdir = SCIRUN_OBJDIR;
   string srcdir = SCIRUN_SRCDIR;
-  string thirdpartydir = SCIRUN_THIRDPARTY_DIR;
-  string packages = LOAD_PACKAGE;
-
-#ifdef _WIN32
-  getWin32RegistryValues(objdir, srcdir, thirdpartydir, packages);
-#endif
 
   if (!sci_getenv("SCIRUN_OBJDIR")) 
   {
@@ -265,15 +201,6 @@ SCIRun::create_sci_environment(char **env, char *execname, bool beSilent /* = fa
 
   if (!sci_getenv("SCIRUN_SRCDIR"))
     sci_putenv("SCIRUN_SRCDIR", srcdir);
-  if (!sci_getenv("SCIRUN_THIRDPARTY_DIR"))
-    sci_putenv("SCIRUN_THIRDPARTY_DIR", thirdpartydir);
-  if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
-    sci_putenv("SCIRUN_LOAD_PACKAGE", packages);
-  if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
-    sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
-  char *tmp=MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS"));
-  sci_putenv("SCIRUN_ITCL_WIDGETS",tmp);
-  delete[] tmp;
 
   find_and_parse_scirunrc( beSilent );
 
