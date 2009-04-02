@@ -55,8 +55,6 @@ SRCS += \
 
 ifneq ($(IS_REDSTORM),yes)
   SRCS += \
-        $(SRCDIR)/DynamicLoader.cc      \
-        $(SRCDIR)/DynamicCompilation.cc \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/Socket.cc             
 endif
