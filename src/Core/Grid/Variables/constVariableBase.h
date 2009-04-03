@@ -78,7 +78,7 @@ WARNING
     operator const VariableBase&() const
     { return getBaseRep(); }
    
-    virtual const VariableBase& getBaseRep() = 0;
+    virtual const VariableBase& getBaseRep() const = 0;
     
     virtual void copyPointer(const VariableBase& copy) = 0;
 

@@ -144,12 +144,12 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
                     child = child->findNextBlock("save")) {
     map<string,string> var_attr;
     child->getAttributes(var_attr);
-    if (var_attr["label"] == "Li1" ||
-        var_attr["label"] == "Li2" ||
-        var_attr["label"] == "Li3" ||
-        var_attr["label"] == "Li4" ||
-        var_attr["label"] == "Li5" &&
-        usingLODI ){
+    if( ( var_attr["label"] == "Li1" ||
+          var_attr["label"] == "Li2" ||
+          var_attr["label"] == "Li3" ||
+          var_attr["label"] == "Li4" ||
+          var_attr["label"] == "Li5" )
+        && usingLODI ) {
       vb->saveLiTerms = true;
     }
   }
@@ -524,7 +524,7 @@ void debugging_Li(const IntVector c,
   }
   
   string flowDir = "outFlow";
-  if (leftFace && normalVel >= 0 || rightFace && normalVel <= 0){
+  if( ( leftFace && normalVel >= 0 ) || ( rightFace && normalVel <= 0 ) ) {
     flowDir = "inFlow";
   }
   cout << " \n ----------------- " << c << endl;
@@ -653,7 +653,7 @@ inline void Li(StaticArray<CCVariable<Vector> >& L,
   }
   
   string flowDir = "outFlow";
-  if (leftFace && normalVel >= 0 || rightFace && normalVel <= 0){
+  if( (leftFace && normalVel >= 0) || (rightFace && normalVel <= 0) ) {
     flowDir = "inFlow";
   }
   

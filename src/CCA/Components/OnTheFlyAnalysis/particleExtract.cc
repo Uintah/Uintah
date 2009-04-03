@@ -143,14 +143,14 @@ void particleExtract::problemSetup(const ProblemSpecP& prob_spec,
     bool throwException = false;  
     
     // only certain particle types can be extracted
-    if(td->getType() != TypeDescription::ParticleVariable ||
-       subtype->getType() != TypeDescription::double_type &&
-       subtype->getType() != TypeDescription::int_type    &&
-       subtype->getType() != TypeDescription::Vector      &&
-       subtype->getType() != TypeDescription::Matrix3){
+    if( td->getType() != TypeDescription::ParticleVariable ||
+        ( subtype->getType() != TypeDescription::double_type &&
+          subtype->getType() != TypeDescription::int_type    &&
+          subtype->getType() != TypeDescription::Vector      &&
+          subtype->getType() != TypeDescription::Matrix3 ) ) {
       throwException = true;
     }
-    if(throwException){       
+    if( throwException ){       
       ostringstream warn;
       warn << "ERROR:AnalysisModule:particleExtact: ("<<label->getName() << " " 
            << td->getName() << " ) is either not a particle variable "
@@ -358,10 +358,11 @@ void particleExtract::doAnalysis(const ProcessorGroup* pg,
               throw InternalError("particleExtract: invalid data type", __FILE__, __LINE__); 
             }
             break;
-            ostringstream warn;
-            warn << "ERROR:AnalysisModule:lineExtact: ("<<d_varLabels[i]->getName() << " " 
-                 << td->getName() << " ) has not been implemented" << endl;
-            throw InternalError(warn.str(), __FILE__, __LINE__);
+        default:
+          ostringstream warn;
+          warn << "ERROR:AnalysisModule:lineExtact: ("<<d_varLabels[i]->getName() << " " 
+               << td->getName() << " ) has not been implemented" << endl;
+          throw InternalError(warn.str(), __FILE__, __LINE__);
         }
       }            
       
