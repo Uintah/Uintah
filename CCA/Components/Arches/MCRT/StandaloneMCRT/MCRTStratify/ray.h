@@ -249,10 +249,10 @@ public:
   }
 
 
-//   inline
-//   double get_theta(){
-//     return theta;
-//   }
+   inline
+   double get_theta(){
+     return theta;
+   }
 
   
   inline
@@ -260,10 +260,10 @@ public:
     return R_phi;
   }
 
-//   inline
-//   double get_phi(){
-//     return phi;
-//   }
+   inline
+   double get_phi(){
+     return phi;
+   }
   
   inline
   double dotProduct(const double *s1, const double *s2){
@@ -327,6 +327,7 @@ private:
   int sign[3];
 
   double R_phi, R_theta, R_xemiss, R_yemiss, R_zemiss;
+  double theta, phi;
    
 };
 

@@ -30,7 +30,7 @@ DEALINGS IN THE SOFTWARE.
 
    // with scattering media 1D slab with cold black walls
    
-   double omega, ext, scat;
+   double omega, ext;
    double kl;
    double T;
    
