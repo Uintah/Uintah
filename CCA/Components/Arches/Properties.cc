@@ -2081,120 +2081,128 @@ Properties::averageRKProps(const ProcessorGroup*,
         for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
           IntVector currCell(colX, colY, colZ);
           
-//The following if statement is to eliminate Kumar's zero block density problem
-    if (new_density[currCell] > 0.0) {
-          double predicted_density;
-    if (old_density[currCell] > 0.0) {
-//            predicted_density = rho1_density[currCell];
-      if (d_inverse_density_average)
-              predicted_density = 1.0/((factor_old/old_density[currCell] +
-               factor_new/new_density[currCell])/factor_divide);
-      else
-              predicted_density = (factor_old*old_density[currCell] +
-               factor_new*new_density[currCell])/factor_divide;
-    }
-    else
-      predicted_density = new_density[currCell];
+          // The following if statement is to eliminate Kumar's zero block density problem
+          if (new_density[currCell] > 0.0) {
+            double predicted_density;
+            if (old_density[currCell] > 0.0) {
+              //            predicted_density = rho1_density[currCell];
+              if (d_inverse_density_average)
+                predicted_density = 1.0/((factor_old/old_density[currCell] + factor_new/new_density[currCell])/factor_divide);
+              else
+                predicted_density = (factor_old*old_density[currCell] + factor_new*new_density[currCell])/factor_divide;
+            }
+            else {
+              predicted_density = new_density[currCell];
+            }
 
-    bool average_failed = false;
-      if (d_inverse_density_average)
-        new_scalar[currCell] = (factor_old*old_scalar[currCell] +
-      factor_new*new_scalar[currCell])/factor_divide;
-      else
-        new_scalar[currCell] = (factor_old*old_density[currCell]*
-      old_scalar[currCell] + factor_new*new_density[currCell]*
-      new_scalar[currCell])/(factor_divide*predicted_density);
-// Following lines to fix density delay problem for helium.
-// One would also need to edit fortran/explicit.F to use it.
-//            (new_scalar)[currCell] = (new_scalar)[currCell]*predicted_density;
-//            (new_scalar)[currCell] = (new_scalar)[currCell]*0.133/(
-//              0.133*1.184344+(new_scalar)[currCell]*(0.133-1.184344));
+            bool average_failed = false;
+            if (d_inverse_density_average) {
+              new_scalar[currCell] = (factor_old*old_scalar[currCell] +
+                                      factor_new*new_scalar[currCell])/factor_divide;
+            }
+            else {
+              new_scalar[currCell] = (factor_old*old_density[currCell]*
+                                      old_scalar[currCell] + factor_new*new_density[currCell]*
+                                      new_scalar[currCell])/(factor_divide*predicted_density);
+            }
+            // Following lines to fix density delay problem for helium.
+            // One would also need to edit fortran/explicit.F to use it.
+            //            (new_scalar)[currCell] = (new_scalar)[currCell]*predicted_density;
+            //            (new_scalar)[currCell] = (new_scalar)[currCell]*0.133/(
+            //              0.133*1.184344+(new_scalar)[currCell]*(0.133-1.184344));
             if (new_scalar[currCell] > 1.0) {
-              if (new_scalar[currCell] < 1.0 + epsilon)
-    new_scalar[currCell] = 1.0;
-              else {
-          cout << "average failed with scalar > 1 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
-          new_scalar[currCell] = fe_scalar[currCell];
-          average_failed = true;
+              if (new_scalar[currCell] < 1.0 + epsilon) {
+                new_scalar[currCell] = 1.0;
               }
-      }
-            else if (new_scalar[currCell] < 0.0) {
-              if (new_scalar[currCell] > - epsilon)
-              new_scalar[currCell] = 0.0;
               else {
-          cout << "average failed with scalar < 0 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
-          new_scalar[currCell] = fe_scalar[currCell];
-          average_failed = true;
+                cout << "average failed with scalar > 1 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+                new_scalar[currCell] = fe_scalar[currCell];
+                average_failed = true;
+              }
+            }
+            else if (new_scalar[currCell] < 0.0) {
+              if (new_scalar[currCell] > - epsilon) {
+                new_scalar[currCell] = 0.0;
+              }
+              else {
+                cout << "average failed with scalar < 0 at " << currCell << " , average value was " << new_scalar[currCell] << endl;
+                new_scalar[currCell] = fe_scalar[currCell];
+                average_failed = true;
+              }
+            }
+            
+            if (d_calcReactingScalar) {
+              if (!average_failed) {
+                new_reactScalar[currCell] = (factor_old *
+                                             old_density[currCell]*old_reactScalar[currCell] +
+                                             factor_new*new_density[currCell]*
+                                             new_reactScalar[currCell]) / ( factor_divide*predicted_density );
+                if (new_reactScalar[currCell] > 1.0) {
+                  new_reactScalar[currCell] = 1.0;
+                }
+                else if (new_reactScalar[currCell] < 0.0) {
+                  new_reactScalar[currCell] = 0.0;
+                }
+              }
+              else {
+                new_reactScalar[currCell] = fe_reactScalar[currCell];
               }
             }
 
-    if (d_calcReactingScalar) {
-        if (!average_failed) {
-        new_reactScalar[currCell] = (factor_old *
-    old_density[currCell]*old_reactScalar[currCell] +
-    factor_new*new_density[currCell]*
-    new_reactScalar[currCell])/
-    (factor_divide*predicted_density);
-            if (new_reactScalar[currCell] > 1.0)
-    new_reactScalar[currCell] = 1.0;
-            else if (new_reactScalar[currCell] < 0.0)
-              new_reactScalar[currCell] = 0.0;
-        }
-        else
-              new_reactScalar[currCell] = fe_reactScalar[currCell];
-    }
-
-          if (d_calcEnthalpy)
-      if (!average_failed)
-      new_enthalpy[currCell] = (factor_old*old_density[currCell]*
-    old_enthalpy[currCell] + factor_new*new_density[currCell]*
-    new_enthalpy[currCell])/(factor_divide*predicted_density);
-      else
-      new_enthalpy[currCell] = fe_enthalpy[currCell];
-
-    density_guess[currCell] = predicted_density;
-
-    }
+            if( d_calcEnthalpy ) {
+              if( !average_failed ) {
+                new_enthalpy[currCell] = (factor_old*old_density[currCell]*
+                                          old_enthalpy[currCell] + factor_new*new_density[currCell]*
+                                          new_enthalpy[currCell])/(factor_divide*predicted_density);
+              }
+              else {
+                new_enthalpy[currCell] = fe_enthalpy[currCell];
+              }
+            }
+            density_guess[currCell] = predicted_density;
+          }
         }
       }
     }
 
-    if (d_calcExtraScalars)
+    if( d_calcExtraScalars ) {
       for (int i=0; i < static_cast<int>(d_extraScalars->size()); i++) {
         constCCVariable<double> old_extra_scalar;
         CCVariable<double> new_extra_scalar;
         old_dw->get(old_extra_scalar, d_extraScalars->at(i)->getScalarLabel(), 
-        indx, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+                    indx, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
         new_dw->getModifiable(new_extra_scalar,
                               d_extraScalars->at(i)->getScalarLabel(), 
-                  indx, patch);
-        bool scalar_density_weighted =
-                d_extraScalars->at(i)->isDensityWeighted();
+                              indx, patch);
+        bool scalar_density_weighted = d_extraScalars->at(i)->isDensityWeighted();
         for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
           for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
-      for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-          
-        if (new_density[currCell] > 0.0) {
-                if (scalar_density_weighted)
-            new_extra_scalar[currCell] = 
+            for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+              IntVector currCell(colX, colY, colZ);
+              
+              if (new_density[currCell] > 0.0) {
+                if (scalar_density_weighted) {
+                  new_extra_scalar[currCell] = 
                     (factor_old*old_density[currCell]*
-        old_extra_scalar[currCell] + 
-                    factor_new*new_density[currCell]*
-        new_extra_scalar[currCell])/
+                     old_extra_scalar[currCell] + 
+                     factor_new*new_density[currCell]*
+                     new_extra_scalar[currCell])/
                     (factor_divide* density_guess[currCell]);
-                else
-            new_extra_scalar[currCell] = (factor_old*
-        old_extra_scalar[currCell] + factor_new*
-        new_extra_scalar[currCell])/(factor_divide);
+                }
+                else {
+                  new_extra_scalar[currCell] = (factor_old*
+                                                old_extra_scalar[currCell] + factor_new*
+                                                new_extra_scalar[currCell])/(factor_divide);
+                }
               }
-      }
+            }
           }
         }
       }
-
+    }
   }
 }
+
 //****************************************************************************
 // Schedule saving of temp density
 //****************************************************************************

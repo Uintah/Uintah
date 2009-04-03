@@ -116,13 +116,13 @@ WARNING
 
     operator const Variable&() const
     { return this->rep_; }
-    virtual const VariableBase& getBaseRep()
+    virtual const VariableBase& getBaseRep() const
     { return this->rep_; }
 
     // It's ok for a constVariable to copyPointer of a const variable
     // (even though a non-const variable can't).
-    inline void copyPointer(const Variable& copy)
-    { this->rep_.copyPointer(const_cast<Variable&>(copy)); }
+//    inline void copyPointer(const Variable& copy)
+//    { this->rep_.copyPointer(const_cast<Variable&>(copy)); }
     virtual void copyPointer(const VariableBase& copy)
     { this->rep_.copyPointer(const_cast<VariableBase&>(copy)); }
 
