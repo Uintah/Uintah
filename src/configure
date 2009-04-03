@@ -7386,12 +7386,6 @@ $as_echo "yes" >&6; }
     MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
     MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
   fi
-  { $as_echo "$as_me:$LINENO: result: yes" >&5
-$as_echo "yes" >&6; }
-  DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
-  INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-  MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
-  MALLOC_TRACE_LIB_FLAG="-lMallocTrace -lMallocTraceMPI"
 fi
 
 
