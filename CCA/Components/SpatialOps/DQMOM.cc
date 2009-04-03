@@ -234,7 +234,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       // construct AX=B
       for ( unsigned int k = 0; k < momentIndexes.size(); ++k) {
-        cout << k << endl;
         MomentVector thisMoment = momentIndexes[k];
         
         // weights

@@ -1,7 +1,7 @@
 //------------------------ DQMOM.h -----------------------------------
 
-#ifndef Uintah_Components_Arches_DQMOMLinearSolver_h
-#define Uintah_Components_Arches_DQMOMLinearSolver_h
+#ifndef Uintah_Components_SpatialOps_DQMOM_h
+#define Uintah_Components_SpatialOps_DQMOM_h
 
 #include <sci_defs/petsc_defs.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -52,19 +52,22 @@ public:
    */
   void problemSetup( const ProblemSpecP& params );
 
-  /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. */
+  /** @brief Schedule creation of linear solver object, creation of AX=B system, and solution of linear system. 
+  */
   void sched_solveLinearSystem( const LevelP & level,
                                 SchedulerP   & sched,
                                 int            timeSubStep );
     
-  /** @brief Create linear solver object, create linear system AX=B, and solve the linear system. */
+  /** @brief Create linear solver object, create linear system AX=B, and solve the linear system. 
+  */
   void solveLinearSystem( const ProcessorGroup *,
                           const PatchSubset    * patches,
                           const MaterialSubset *,
                           DataWarehouse        * old_dw,
                           DataWarehouse        * new_dw );
 
-    /** @brief Destroy A, X, B, and solver object  */
+    /** @brief Destroy A, X, B, and solver object  
+    */
     void destroyLinearSystem();
 
 private:
@@ -81,8 +84,6 @@ private:
   //    vector weightedAbscissaEqns[(1-1)N + 1] = weighted abscissa 1, quad node 1
   //    vector weightedAbscissaEqns[(1-1)N + 2] = weighted abscissa 1, quad node 2
   //    vector weightedAbscissaEqns[(2-1)N + 1] = weighted abscissa 2, quad node 1
-  //vector<DQMOMEqn&> weightEqns;
-  //vector< vector<DQMOMEqn&> > weightedAbscissaEqns;
   std::vector<DQMOMEqn* > weightEqns;
   std::vector<DQMOMEqn* > weightedAbscissaEqns;
 
