@@ -137,12 +137,15 @@ void RMCRTRadiationModel::interpCCTemperatureToFC( constCCVariable<int>& cellTyp
 
     bool doBoundary=false; 
     // subtract 1 because of the "extra cells" used in Arches
-    if ( mydir == 0 ) 
-      if ( c.x() == highIdx.x() - 1) doBoundary = true; 
-    else if ( mydir == 1 )
-      if ( c.y() == highIdx.y() - 1) doBoundary = true; 
-    else if ( mydir == 2 )
-      if ( c.z() == highIdx.z() - 1) doBoundary = true; 
+    if ( mydir == 0 ) {
+      if ( c.x() == highIdx.x() - 1) { doBoundary = true; }
+    }
+    else if ( mydir == 1 ) {
+      if ( c.y() == highIdx.y() - 1) { doBoundary = true; }
+    }
+    else if ( mydir == 2 ) {
+      if ( c.z() == highIdx.z() - 1) { doBoundary = true; }
+    }
     
     //do + boundary
     if ( doBoundary ) {
