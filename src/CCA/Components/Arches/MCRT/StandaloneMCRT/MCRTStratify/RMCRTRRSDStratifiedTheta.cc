@@ -163,11 +163,17 @@ void rayfromSurf(SurfaceType &obSurface,
   // Var(x) = ( sum(x_i^2) - N * <x>^2 ) / (N-1) otherwise,will produce negative Var(x)
   // use the first expression is better, it doesnot need to store x_i, just the summation of it
   double sumVar, sumVarave, sumSDave;
-  double R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss;
+  double R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss, theta;
   int sMx, sMy, sMz, sMtheta, sMphi, sMp;
   double tempV;
   int anotherSize;
-   
+  double weightp, weightphi;
+  // this only works for theta divided by 3 portions
+  double weighttheta[3] = {0.25, 0.5, 0.25};
+  weightp = double(1.0 / p_n);
+  weightphi = double(1.0 / phi_n);
+
+  
   //local stratum variance is a good guidance for bias sampling (important sampling)  
   // get surface element's absorption coefficient
   alpha = alpha_surface[surfaceFlag][surfaceIndex];
@@ -186,7 +192,8 @@ void rayfromSurf(SurfaceType &obSurface,
       }
     }
   }
- 
+
+  
   // loop over ray numbers on each surface element
   do { // shoot another ray when SD is greater than varianceBound
     
@@ -207,9 +214,11 @@ void rayfromSurf(SurfaceType &obSurface,
     // should watch out, the s might have previous values
     RealPointer->get_s(MTrng, s);    
     RealPointer->get_limits(X, Y, Z);
-    
+
+    // Note: for surfaces, here is using RealSurface's function get_R_theta, get_R_phi, and get_theta
     R_theta = RealPointer->get_R_theta();
-    R_phi = RealPointer->get_R_phi();
+    R_phi = RealPointer->get_R_phi();  
+    theta = RealPointer->get_theta();
     
     // get ray's emission position, xemiss, yemiss, zemiss
     obRay.set_emissP(MTrng, 
@@ -223,12 +232,20 @@ void rayfromSurf(SurfaceType &obSurface,
     
     obRay.set_directionS(s);
 
+    // because x, y, z , and phi are all equal weights,
+    // i can set / choose which stratum it belongs to in the random number way.
+    // xemiss = xlow + ( xup - xlow ) * R_xemiss;
+    // it can also be derived as (xemiss- xlow)/ dx  * i_n = R_xemiss * i_n
     sMx = int(floor(R_xemiss * i_n));
     sMy = int(floor(R_yemiss * j_n));
     sMz = int(floor(R_zemiss * k_n));
-
-    sMtheta = int(floor(R_theta * theta_n));
     sMphi = int(floor(R_phi * phi_n));
+    
+    // but for sMtheta, theta does not have equal weights
+    // R_theta has been transfered to theta in that there will be more rays around pi/4
+    // sMtheta = int(floor(theta/ pi/2 * theta_n))
+    sMtheta = int(floor(theta/pi/2 * theta_n));
+
     sMp = sMz * (i_n * j_n) + sMy * i_n + sMx;
 
     stratifyM[sMp][sMtheta][sMphi] ++ ;
@@ -357,7 +374,7 @@ void rayfromSurf(SurfaceType &obSurface,
       "; rayNo = " << rayCounter << endl;
     */
     
-   } while(rayCounter < 800); // rayCounter loop
+   } while(rayCounter < 100); // rayCounter loop
     // } while( sumSDave >= 0.03 || rayCounter <= 5);
 
   
@@ -382,18 +399,23 @@ void rayfromSurf(SurfaceType &obSurface,
 	for ( int i = 0; i < phi_n; i ++){
 	  //	  sumVar += straVar[k][j][i];
 	  if ( stratifyM[k][j][i] != 0 ) 
-	    sumVarave += straVar[k][j][i]/ stratifyM[k][j][i];
+	    sumVarave += (weightp * weightphi * weighttheta[j]) *
+	      (weightp * weightphi * weighttheta[j]) *
+	      straVar[k][j][i]/ stratifyM[k][j][i];
 	}
   
-  sumVarave = sumVarave / anotherSize / anotherSize;    
+  // sumVarave = sumVarave / anotherSize / anotherSize;    
   sumSDave = sqrt(sumVarave);
   
- //   cout << "surfaceflag = " << surfaceFlag <<
-//     " ; surfaceIndex = " << surfaceIndex <<
-//       "; sumVarave = " << sumVarave << 
-//       " ; sumSDave = "  << sumSDave <<
-//       "; rayNo = " << rayCounter << endl;
-  
+  if ( 179 <= surfaceIndex && surfaceIndex <= 219 ){
+    cout << surfaceFlag <<
+      " " << surfaceIndex <<
+       "  "  << sumSDave <<
+       " " << stratifyM[0][0][0] <<
+       " " << stratifyM[0][1][0] <<
+       " " << stratifyM[0][0][0] <<      
+      endl;
+  }
   
   double ttaveIncomInten;
   ttaveIncomInten = 0;
@@ -401,13 +423,13 @@ void rayfromSurf(SurfaceType &obSurface,
   for ( int k = 0; k < p_n; k ++ )
     for ( int j = 0; j < theta_n; j ++)
       for ( int i = 0; i < phi_n; i ++){
-	ttaveIncomInten += aveIncomInten[k][j][i];
+	ttaveIncomInten += weightp * weightphi * weighttheta[j] * aveIncomInten[k][j][i];
       }
   
   ttSDave_surface[surfaceFlag][surfaceIndex] = sumSDave;
     
   netInten_surface[surfaceFlag][surfaceIndex] =
-    OutIntenSur - ttaveIncomInten/anotherSize;
+    OutIntenSur - ttaveIncomInten;
  
  
 }
@@ -433,9 +455,10 @@ int main(int argc, char *argv[]){
 //   i_n = 3;
 //   j_n = 3;
 //   k_n = 1;
-//   theta_n = 10;
+  // theta_n is always 3 in this case
+   theta_n = 3;
 //   phi_n = 10;
-  // wont work for theta_n case theta_n has to be one in here
+  
   p_n = i_n * j_n * k_n;
   straSize = p_n * theta_n * phi_n;
   
@@ -987,16 +1010,14 @@ int main(int argc, char *argv[]){
        rayNo_top_surface[iSurface] = 1;
        rayNo_bottom_surface[iSurface] = 1;
      }   
-
    */
-
    
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 1;
-       rayNo_back_surface[iSurface] = 1;
+       rayNo_front_surface[iSurface] = 0;
+       rayNo_back_surface[iSurface] = 0;
      }   
 
 
@@ -1004,8 +1025,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 1;
-       rayNo_right_surface[iSurface] = 1;
+       rayNo_left_surface[iSurface] = 0;
+       rayNo_right_surface[iSurface] = 0;
      }
 
    //   rayNo_top_surface[20] = 1;
@@ -1013,7 +1034,7 @@ int main(int argc, char *argv[]){
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
    //  #include "inputBenchmark.cc"
    //  #include "inputBenchmarkSurf.cc"
-   #include "inputNonblackSurf.cc"
+    #include "inputNonblackSurf.cc"
      // #include "inputScattering.cc"
    //   #include "inputScatteringAniso.cc"
    
@@ -1558,7 +1579,7 @@ int main(int argc, char *argv[]){
     //    cout << "start from Vol" << endl;
     int rayCounter, VolIndex;
     int sMx, sMy, sMz, sMp, sMtheta, sMphi, anotherSize;
-    double IncomingIntenVol, R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss;
+    double IncomingIntenVol, R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss, theta;
     double tempV, sumVar, sumSD, sumSDave, sumVarave;
     
     for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
@@ -1603,9 +1624,11 @@ int main(int argc, char *argv[]){
 	      
 	      // get emitting ray's direction vector s
 	      obRay.set_emissS_vol(MTrng, s);
-	      
+
+	      // Note: for control volumes, here is using ray.cc function get_R_theta, get_R_phi
 	      R_theta = obRay.get_R_theta();
 	      R_phi = obRay.get_R_phi();
+	      theta = obRay.get_theta();
 	      
 	      obRay.set_directionS(s); // put s into directionVector ( private )
 	      obVol.get_limits(X, Y, Z);
@@ -1625,8 +1648,9 @@ int main(int argc, char *argv[]){
 	      sMx = int(floor(R_xemiss * i_n));
 	      sMy = int(floor(R_yemiss * j_n));
 	      sMz = int(floor(R_zemiss * k_n));
+
 	      
-	      sMtheta = int(floor(R_theta * theta_n));
+	      sMtheta = int(floor(theta/pi/2 * theta_n));	      
 	      sMphi = int(floor(R_phi * phi_n));
 	      sMp = sMz * (i_n * j_n) + sMy * i_n + sMx;
 	      
@@ -1739,7 +1763,7 @@ int main(int argc, char *argv[]){
 	       sumSDave = sqrt(sumSDave )/anotherSize;  
 	      */ 
 	      
-	   }while( rayCounter < 800 ); // rayCounter loop
+	   }while( rayCounter < 100 ); // rayCounter loop
 	    
 	   //  }while(sumSDave >= 0.03 || rayCounter <= 5);
 	   
@@ -1748,7 +1772,12 @@ int main(int argc, char *argv[]){
 	    // net = OutInten - averaged_IncomingIntenDir
 	    // div q = 4 * pi * netInten
 	   
-	   
+	   double weightp, weightphi;
+	   // this only works for theta divided by 3 portions
+	   double weighttheta[3] = {0.25, 0.5, 0.25};
+	   weightp = double(1.0 / p_n);
+	    weightphi = double(1.0 / phi_n);
+	    
 	   for ( int k = 0; k < p_n; k ++ )
 	     for ( int j = 0; j < theta_n; j ++)
 	       for ( int i = 0; i < phi_n; i ++){
@@ -1770,19 +1799,33 @@ int main(int argc, char *argv[]){
 	     for ( int i = 0; i < phi_n; i ++){
 	       // sumVar += straVar[k][j][i];
 	     if ( stratifyM[k][j][i] != 0 ) 
-	     sumVarave += straVar[k][j][i]/ stratifyM[k][j][i];
+	       sumVarave += (weightp * weightphi * weighttheta[j]) *
+		 (weightp * weightphi * weighttheta[j]) *
+		 straVar[k][j][i]/ stratifyM[k][j][i];
 	     }
 	     
 
-	     sumVarave = sumVarave / anotherSize / anotherSize;    
+	     // sumVarave = sumVarave / anotherSize / anotherSize;    
 	     sumSDave = sqrt(sumVarave);
-      
-	//      cout << " VolIndex = " << VolIndex <<
-	     //"; sumVarave = " << sumVarave << 
-//  	     " ; sumSDave = "  << sumSDave <<
-//  	     "; rayNo = " << rayCounter << endl;
-	   
-	   
+
+	     /*
+	     if ( 3779 <= VolIndex && VolIndex <= 3819 )
+	       cout << " ; VolIndex = " << VolIndex <<
+		 " ; sumSDave = "  << sumSDave <<
+		 "; stratifyM[0] = " << stratifyM[0][0][0] <<
+		 "; stratifyM[1] = " << stratifyM[0][1][0] <<
+		 "; stratifyM[2] = " << stratifyM[0][0][0] <<      
+		 endl;
+        
+	     if ( 4179 <= VolIndex && VolIndex <= 4219 )
+	       cout << " ; VolIndex = " << VolIndex <<
+		 " ; sumSDave = "  << sumSDave <<
+		 "; stratifyM[0] = " << stratifyM[0][0][0] <<
+		 "; stratifyM[1] = " << stratifyM[0][1][0] <<
+		 "; stratifyM[2] = " << stratifyM[0][0][0] <<      
+	     	 endl;
+	     */
+	     
 	   double ttaveIncomInten;
 	   ttaveIncomInten = 0;
 	   
@@ -1791,11 +1834,12 @@ int main(int argc, char *argv[]){
 	   for ( int k = 0; k < p_n; k ++ )
 	     for ( int j = 0; j < theta_n; j ++)
 	       for ( int i = 0; i < phi_n; i ++){
-		 ttaveIncomInten += aveIncomInten[k][j][i];
+		 ttaveIncomInten += (weightp * weightphi * weighttheta[j]) *
+		   aveIncomInten[k][j][i];
 	       }
 
 	   // this is good only for uniform weights, which is 1/ no of strata
-	   netInten_Vol[VolIndex] = OutIntenVol - ttaveIncomInten/anotherSize;
+	   netInten_Vol[VolIndex] = OutIntenVol - ttaveIncomInten;
 	    
 	    
 	  } // if rayNo_Vol[VolIndex] != 0
@@ -1829,10 +1873,9 @@ int main(int argc, char *argv[]){
     }
   }
   
-  
-  obTable.vtkSurfaceTableMake("vtkSurfacePlates11ray800RR1e-4-202020-11111", Npx, Npy, Npz,
-			      X, Y, Z, surfaceElementNo,
-			      global_qsurface, global_Qsurface);
+//   obTable.vtkSurfaceTableMake("vtkSurfacePlates11ray100RR1e-4-202020-11131", Npx, Npy, Npz,
+// 			      X, Y, Z, surfaceElementNo,
+// 			      global_qsurface, global_Qsurface);
  }
 
  
@@ -1843,24 +1886,26 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolPlates11ray800RR1e-4-202020-11111",
-			  Npx, Npy, Npz,
-			  X, Y, Z, VolElementNo,
-			  global_qdiv, global_Qdiv);
+//   obTable.vtkVolTableMake("vtkVolPlates11ray100RR1e-4-202020-11131",
+// 			  Npx, Npy, Npz,
+// 			  X, Y, Z, VolElementNo,
+// 			  global_qdiv, global_Qdiv);
  }
 
- 
- obTable.singleArrayTable(ttSDave_surface[0], TopBottomNo, 1, "Plates11ray800RR1e-4-topsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[1], TopBottomNo, 1, "Plates11ray800RR1e-4-bottomsurfaceSDave202020-11111");
 
  /*
- obTable.singleArrayTable(ttSDave_surface[2], FrontBackNo, 1, "Plates11ray800RR1e-4-frontsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[3], FrontBackNo, 1, "Plates11ray800RR1e-4-backsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[4], LeftRightNo, 1, "Plates11ray800RR1e-4-leftsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[5], LeftRightNo, 1, "Plates11ray800RR1e-4-rightsurfaceSDave202020-11111");
+ obTable.singleArrayTable(ttSDave_surface[0], TopBottomNo, 1, "Plates11ray100RR1e-4-topsurfaceSDave202020-11131");
+ obTable.singleArrayTable(ttSDave_surface[1], TopBottomNo, 1, "Plates11ray100RR1e-4-bottomsurfaceSDave202020-11131"); 
+ obTable.singleArrayTable(ttSDave_surface[2], FrontBackNo, 1, "Plates11ray100RR1e-4-frontsurfaceSDave202020-11131");
+ obTable.singleArrayTable(ttSDave_surface[3], FrontBackNo, 1, "Plates11ray100RR1e-4-backsurfaceSDave202020-11131");
+ obTable.singleArrayTable(ttSDave_surface[4], LeftRightNo, 1, "Plates11ray100RR1e-4-leftsurfaceSDave202020-11131");
+ obTable.singleArrayTable(ttSDave_surface[5], LeftRightNo, 1, "Plates11ray100RR1e-4-rightsurfaceSDave202020-11131");
  
- obTable.singleArrayTable(ttSDave_Vol, VolElementNo, 1, "Plates11ray800RR1e-4-VolSDave202020-11111");
+ obTable.singleArrayTable(ttSDave_Vol, VolElementNo, 1, "Plates11ray100RR1e-4-VolSDave202020-11131");
  */
+   
+ 
+ 
  
   cout << "i_n = " << i_n << endl;
   cout << "j_n = " << j_n << endl;
