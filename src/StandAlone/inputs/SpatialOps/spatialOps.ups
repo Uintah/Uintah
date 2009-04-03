@@ -82,38 +82,58 @@
 
       <number_quad_nodes>1</number_quad_nodes>
 
-      <Models>
+      <Moment><m>[0,1]</m></Moment>
+      <Moment><m>[0,2]</m></Moment>
+      <Moment><m>[1,1]</m></Moment>
 
-        <model label = "d" type = "BadHawkDevol">
+      <VelModel>
+        <regime>1</regime>
+        <Re>100</Re>
+        <eta>1</eta>
+        <rhof>1</rhof>
+        <beta>0</beta>
+        <eps>1</eps>
+        <part_mass>1</part_mass>
+      </VelModel>
+
+      <Models>
+        <model label="badhawk" type="BadHawkDevol">
           <ICVars>
             <variable label="temperature"/>
             <variable label="something_else"/>
           </ICVars>
         </model>
-
-        <model label="ks" type="KobayashiSarofimDevol">
+        
+        <model label="sarofim" type="KobayashiSarofimDevol">
           <ICVars>
-            <variable label="temperature" role="temperature"/>
+          <!-- This grabs temperature from Fields.cc, not from the list of internal coordinates. 
+               This will probably be changed in the future. -->
+            <variable label="temperature" role="temperature"/> 
             <variable label="something_else" role="coal_mass_fraction"/>
           </ICVars>
         </model>
-
+        
+        <model label="constant" type="ConstantModel">
+        </model>
       </Models>
 
       <Weights>
         <doDiff>true</doDiff>
         <doConv>true</doConv>
       </Weights>
+
       <Ic label="length">
         <doDiff>true</doDiff>
         <doConv>true</doConv>
+        <model label="constant" />
       </Ic>
+      
       <Ic label="something_else">
         <doDiff>true</doDiff>
         <doConv>true</doConv>
-
-        <model label = "ks"/>
+        <model label="constant" />
       </Ic>
+    
     </DQMOM>
 
 			

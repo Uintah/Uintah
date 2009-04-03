@@ -20,6 +20,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/SpatialOps/DQMOM.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 
 //===========================================================================
 
@@ -42,31 +43,16 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   moments = 0;
 
   // obtain moment index vectors
-  int counter = 0; 
-  for (ProblemSpecP db_moments = db->findBlock("Moment");
-       db_moments != 0; db_moments = db_moments->findNextBlock("Moment")) {
-    // get moment index vector
-    std::vector<int> temp_moment_index;
-    //db_moments->get("Moment",temp_moment_index);
-
-    // creates A matrix that looks like [-1,1,1; 0,-1,0; 0,0,1]
-    if ( counter == 0 ) {
-      temp_moment_index.push_back(1);
-      temp_moment_index.push_back(1);
-    } else if (counter == 1) {
-      temp_moment_index.push_back(1);
-      temp_moment_index.push_back(0);
-    } else if (counter == 2) {
-      temp_moment_index.push_back(0);
-      temp_moment_index.push_back(1);
-    }
-    ++counter;
-
+  vector<int> temp_moment_index;
+  for ( ProblemSpecP db_moments = db->findBlock("Moment");
+        db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+   
+   db_moments->get("m", temp_moment_index);
     
-    // put moment index into map of moment indexes
+    // put moment index into vector of moment indexes:
     momentIndexes.push_back(temp_moment_index);
     
-    // keep track of total # of moments
+    // keep track of total number of moments
     ++moments;
   }
 
@@ -285,7 +271,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       
       A.decompose();
       A.back_subs( &B[0] );
-      
+
       // set sources equal to result
       unsigned int z = 0;
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
