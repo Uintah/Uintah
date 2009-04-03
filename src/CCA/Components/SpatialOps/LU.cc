@@ -1,9 +1,13 @@
+#include <CCA/Components/SpatialOps/LU.h>
+
 #include <cmath>
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
+#include <vector>
 
-#include <CCA/Components/SpatialOps/LU.h>
+using namespace std;
+using namespace Uintah;
 
 //--------------------------------------------------------------------
 LU::LU( const int dim, const int bandwidth )
@@ -19,24 +23,98 @@ LU::~LU()
 void
 LU::decompose()
 {
-  // perform the LU decomposition, storing the result in AA
-  // this currently does not take advantage of any sparsity.
-  for( int j=0; j<dim_; j++){
-    for( int i=0; i<j; i++ ){
-      double sumterm = AA_(i,j);
-      for( int k=0; k<i; k++ ) sumterm -= AA_(i,k)*AA_(k,j);
-      AA_(i,j) =  sumterm;
+
+  // Algorithm from Numerical Recipes (C)
+
+  int i, imax, j, k;
+  double big, dum, sum, temp;
+  double tiny = 1e-10;
+  vector<double> vv(dim_);
+
+  // loop over rows to get the implicit scaling information
+  for (i=1; i<=dim_; ++i) {
+    big = 0.0;
+    for (j=1; j<=dim_; ++j) {
+      temp = fabs(AA_(i-1,j-1));
+      if ( temp > big ) {
+        big = temp;
+      }
     }
-    for( int i=j; i<dim_; i++ ){
-      double sumterm = AA_(i,j);
-      for( int k=0; k<j; k++ ) sumterm -= AA_(i,k)*AA_(k,j);
-      AA_(i,j) = sumterm;
+    if (big == 0.0) {
+    // return error "Singular matrix in routine ludcmp"
     }
-    const double tmp = 1.0/AA_(j,j);
-    if( j < dim_-1 ){
-      for( int i=j+1; i<dim_; i++ ) AA_(i,j) *= tmp;
-    }
+    // save the scaling
+    vv[i]=1.0/big;
   }
+
+  // Loop over columns for Crout's method
+  for (j=1; j<=dim_; ++j) {
+
+    // Inner loop 1: solve for elements of U, beta_ij (don't do i=j)
+    if (j>1) {
+      for (i=1; i<j; ++i) {
+        sum = AA_(i-1,j-1);
+        for (k=1; k<i; ++k) {
+          sum -= AA_(i-1,k-1)*AA_(k-1,j-1);
+        }
+        AA_(i-1,j-1)=sum;
+      }
+    }
+
+    // initialize search for biggest pivot element
+    big = 0.0;
+
+    // Inner loop 2: solve for elements of L, alpha_ij (including i=1)
+    for (i=j; i<=dim_; ++i) {
+      sum = AA_(i-1,j-1);
+      if (j>1) {
+        for (k=1; k<j; ++k) {
+          sum -= AA_(i-1,k-1)*AA_(k-1,j-1);
+        }
+        AA_(i-1,j-1)=sum;
+      }
+      dum = vv[i]*fabs(sum);
+      if ( dum >= big ) {
+        // is the figure of merit for the pivot better than the best so far?
+        big = dum;
+        imax = i;
+      }
+    }
+
+    // Inner loop 3: check if you need to interchange rows
+    if (j != imax) {
+      // yes
+      for (k=1; k<=dim_; ++k) {
+        dum = AA_(imax-1,k-1);
+        AA_(imax-1,k-1) = AA_(j-1,k-1);
+        AA_(j-1,k-1)=dum;
+      }
+      // interchange scale factor too
+      vv[imax]=vv[j];
+    }
+
+    indx.push_back(imax);
+
+    // replace zero w/ tiny value
+    if (AA_(j-1,j-1) == 0.0) {
+      AA_(j-1,j-1) = tiny;
+    }
+
+    // divide by the pivot element
+    if (j != dim_)
+    {
+      dum = 1.0/AA_(j-1,j-1);
+      for (i=j+1; i<=dim_; ++i) {
+        AA_(i-1,j-1) = AA_(i-1,j-1) * dum;
+      }
+    }
+    
+  }// end loop over columns for Crout's method
+
+  if ( AA_(dim_-1,dim_-1) == 0 ) {
+    AA_(dim_-1,dim_-1) = tiny;
+  }
+
   isReady_ = true;
 }
 //--------------------------------------------------------------------
@@ -48,24 +126,39 @@ LU::back_subs( double * rhs )
 
   // AA_ now contains the LU-decomposition of the original "A" matrix.
   // rhs[0] is untouched for now since L(0,0) = 1.
-  // forward substitution:
-  for( int i=1; i<dim_; i++ ){
-    double sumterm = rhs[i];
-    for( int j=0; j<i; j++){
-      sumterm -= AA_(i,j)*rhs[j];
+
+  // algorithm from Numerical Recipes (C):
+
+  int i, j, ii=0, ip=0;
+  float sum;
+
+  // forward substitution
+  for (i=1; i<=dim_; ++i) {
+    ip = indx[i-1];
+    sum=rhs[ip-1];
+    rhs[ip-1]=rhs[i-1];
+    if (ii) {
+      for (j=ii; j<=i-1; j++) {
+        sum -= AA_(i-1,j-1)*rhs[j-1];
+      }
+    } else if (sum) {
+      // a nonzero element was encountered
+      // from now on, sum in above loop must be done
+      ii = i;
     }
-    rhs[i] = sumterm;
+    rhs[i-1] = sum;
   }
 
-  // back-substitution:
-  rhs[dim_-1] /= AA_(dim_-1,dim_-1);
-  for( int i=dim_-2; i>=0; i-- ){
-    double sumterm = rhs[i];
-    for( int j=i+1; j<dim_; j++){
-      sumterm -= AA_(i,j)*rhs[j];
-      rhs[i] = sumterm / AA_(i,i);
+  // back-substitution
+  for (i=dim_; i>=1; i--) {
+    sum = rhs[i-1];
+    for (j=i+1; j<=dim_; j++) {
+      sum -= AA_(i-1,j-1)*rhs[j-1];
     }
+    // store component of solution vector
+    rhs[i-1] = sum/AA_(i-1,i-1);
   }
+
 }
 //--------------------------------------------------------------------
 LU::SparseMatrix::SparseMatrix( const int dim,
