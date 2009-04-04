@@ -31,11 +31,13 @@ public:
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
                      constphiT& old_phi, 
-                     int step ); 
+                     int step, Vector alpha, Vector beta ); 
+
+
+    Vector d_beta, d_alpha; 
 
 private:
     const Fields* d_fieldLabels;
-    Vector d_beta, d_alpha; 
     int d_step;
 
   }; //end Class ExplicitTimeInt
@@ -63,7 +65,7 @@ private:
   void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
                                     phiT& phi, 
                                     constphiT& old_phi, 
-                                    int step )
+                                    int step, Vector alpha, Vector beta )
   {
   
 		for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){

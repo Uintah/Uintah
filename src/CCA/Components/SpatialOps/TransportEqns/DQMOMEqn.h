@@ -77,13 +77,14 @@ public:
 
   /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 
-                                SchedulerP& sched );
+                                SchedulerP& sched, int timeSubStep );
   /** @brief Solve the transport equation */ 
   void solveTransportEqn(const ProcessorGroup*, 
                          const PatchSubset* patches, 
                          const MaterialSubset*, 
                          DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw);
+                         DataWarehouse* new_dw,
+                         int timeSubStep);
   /** @brief Schedule the initialization of the variables */ 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
 

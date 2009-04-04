@@ -44,7 +44,7 @@ public:
   virtual void sched_buildTransportEqn( const LevelP&, SchedulerP& sched ) = 0;
 
   /** @brief Solve the transport equation */
-  virtual void sched_solveTransportEqn( const LevelP&, SchedulerP& sched ) = 0;
+  virtual void sched_solveTransportEqn( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0;
 
   /** @brief Compute the convective terms */ 
   template <class fT, class oldPhiT>  
@@ -72,8 +72,12 @@ public:
   }
   inline const VarLabel* getTransportEqnLabel(){
     return d_transportVarLabel; };
+  inline const VarLabel* getoldTransportEqnLabel(){
+    return d_oldtransportVarLabel; };
   inline const std::string getEqnName(){
     return d_eqnName; };
+  inline const double getInitValue(){
+    return d_initValue; };
 
 protected:
 
@@ -92,6 +96,7 @@ protected:
 
   Fields* d_fieldLabels;
   const VarLabel* d_transportVarLabel;
+  const VarLabel* d_oldtransportVarLabel; 
   std::string d_eqnName;  
   bool d_doConv, d_doDiff, d_addSources;
 
@@ -99,10 +104,12 @@ protected:
   const VarLabel* d_FconvLabel; 
   const VarLabel* d_RHSLabel;
 
-  int d_timeSubStep; 
+  std::string d_convScheme; 
 
   BoundaryCond* d_boundaryCond;
   ExplicitTimeInt* d_timeIntegrator; 
+
+  double d_initValue; // The initial value for this eqn. 
 
 private:
 

@@ -42,7 +42,8 @@ public:
                               const PatchSubset* patches, 
                               const MaterialSubset* matls, 
                               DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw ) = 0;
+                              DataWarehouse* new_dw, 
+                              int timeSubStep ) = 0;
 
   /** @brief reinitialize the flags that tells the scheduler if the varLabel needs a compute or a modifies. */
   // Note I need two of these flags; 1 for scheduling and 1 for actual execution.
@@ -56,7 +57,6 @@ protected:
   std::string d_srcName; 
   vector<string> d_requiredLabels; //All labels needed to compute this source term  
   const VarLabel* d_srcLabel; //The label storing the value of this source term
-  int d_timeSubStep;
   SimulationStateP& d_sharedState; 
 
   bool d_labelSchedInit;

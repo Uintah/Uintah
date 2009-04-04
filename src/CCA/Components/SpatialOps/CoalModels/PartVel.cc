@@ -29,13 +29,12 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   ProblemSpecP vel_db = db->findBlock("VelModel");
   if (vel_db) {
-    vel_db->getWithDefault("Re",Re,0);
+    vel_db->getWithDefault("new",nnew,1); 
     vel_db->getWithDefault("eta",eta,1); 
-    vel_db->getWithDefault("rhof",rhof,0);
-    vel_db->getWithDefault("beta",beta,0); 
+    vel_db->getWithDefault("rho_ratio",rhoRatio,0);
+    beta = 3. / (2.*rhoRatio + 1.); 
     vel_db->getWithDefault("eps",eps,0);
     vel_db->getWithDefault("regime",regime,1);      
-    vel_db->getWithDefault("part_mass", partMass,0);
   } else {
     throw InvalidValue( "A <VelModel> section is missing from your input file!",__FILE__,__LINE__);
   }
@@ -63,15 +62,14 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
       tsk->computes( i->second );
     else 
       tsk->modifies( i->second );  
+    // also get the old one
+    tsk->requires( Task::OldDW, i->second, gn, 0);
   }
 
-  //for (vector<const VarLabel>::iterator i=d_fieldLabels->partVel.begin(); i != d_fieldLabels->partVel.end(); i++){
-  //  tsk->computes( *i ); // not sure why this doesn't work with the iterator?!  
-  //} 
- 
   //--Old
   // fluid velocity
   tsk->requires( Task::OldDW, d_fieldLabels->velocityLabels.ccVelocity, gn, 0 );
+
   // environments
   // right now assume that the velocity is a function of length.
   // requires that length be an ic (with that name)  
@@ -87,6 +85,11 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
     const VarLabel* myLabel = eqn.getTransportEqnLabel();  
     
     tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
+
+    // get the initial value and store it. 
+    double initValue = eqn.getInitValue();
+    d_wlo.push_back(initValue);
+    
   }
 
   for (int i = 0; i < N; i++){
@@ -101,6 +104,9 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
     const VarLabel* myLabel = eqn.getTransportEqnLabel(); 
   
     tsk->requires( Task::OldDW, myLabel, gn, 0 ); 
+    // get the initial value and store it. 
+    double initValue = eqn.getInitValue();
+    d_wo.push_back(initValue);
 
   }
 
@@ -157,45 +163,51 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
       Fields::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
 
-      CCVariable<Vector> partVel; 
+      CCVariable<Vector> partVel;
+      constCCVariable<Vector> old_partVel;  
       if (rkStep < 1) 
         new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );  
       else  
         new_dw->getModifiable( partVel, iter->second, matlIndex, patch ); 
+      old_dw->get(old_partVel, iter->second, matlIndex, patch, gn, 0);
+      
 
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
   
         IntVector c = *iter;
-        double length = wlength[c]/weight[c]; 
+        double length = d_wlo[iqn]/d_wo[iqn];
 
-        // for now the density will only be a function of length.
-        double rhop = partMass / ( 4./3.*pi*length*length*length );
-        double denRatio = rhop/rhof;
-        double rePow = pow( Re, 0.687 );
-        double phi = 1 + 0.15*rePow; 
-        double uk = eta*eps; 
-        uk = pow( uk, 1./3. );  
+        Vector sphGas = Vector(0.,0.,0.);
+        Vector cartGas = gasVel[c]; 
+        Vector sphPart = Vector(0.,0.,0.);
+        Vector cartPart = old_partVel[c]; 
 
-        double u_comp = 0.0;
-        double v_comp = 0.0;
-        double w_comp = 0.0; 
-        
-        u_comp = gasVel[c].x() - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length/eta*length/eta ; 
-#ifdef YDIM
-        v_comp = gasVel[c].y() - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length/eta*length/eta ; 
-#endif
-#ifdef ZDIM
-        z_comp = 0 - uk * ( 2*denRatio + 1)/36*( 1 - beta )/phi * length[c]/eta*length/eta ; 
-#endif
-        partVel[c] = Vector(u_comp,v_comp,w_comp);
+        //cout << "carGas = " << cartGas << endl; 
 
-        double L = u_comp*u_comp;
-        L += v_comp*v_comp; 
-        L += w_comp*w_comp; 
-        L = pow(L,0.5);
-        if (L > 10 )
-          cout << " FUNNY VEL AT : " << c << endl;
+        sphGas = cart2sph( cartGas ); 
+        sphPart = cart2sph( cartPart ); 
+
+        //cout << "sphGas = " << sphGas << endl;
+        //cout << "old sphPart = " << sphPart << endl;
+         
+        double Re  = abs(sphGas.z() - sphPart.z())*length / nnew;
+        double phi = 1. + .15*pow(Re, 0.687);
+        double uk  = eta*eps; 
+        uk = pow(uk,1./3.);
+
+        double newPartMag = sphGas.z() - uk*(2*rhoRatio+1)/36*(1-beta)/phi*pow(length/eta,2);
+        sphPart = Vector(sphGas.x(), sphGas.y(), newPartMag);
+
+        //cout << "SPHPART NEW " << sphPart << endl;
+        // now convert back to cartesian
+        Vector newcartPart = Vector(0.,0.,0.);
+        newcartPart = sph2cart( sphPart ); 
+
+        //cout << "CARTPART = " << newcartPart << endl;
+
+        partVel[c] = newcartPart; 
+
       }
     }
   } 
