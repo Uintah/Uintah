@@ -25,5 +25,6 @@ d_fieldLabels(fieldLabels), d_transportVarLabel(transportVarLabel), d_eqnName(eq
 EqnBase::~EqnBase()
 {
   VarLabel::destroy(d_transportVarLabel);
+  VarLabel::destroy(d_oldtransportVarLabel);
 }
  

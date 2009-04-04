@@ -35,6 +35,9 @@
           <addSources                   spec="OPTIONAL BOOLEAN"/>
           <src                          spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING"/>
+
+          <initial_value                spec="OPTIONAL DOUBLE"/>
+          <convScheme                   spec="OPTIONAL STRING 'upwind,super_bee'"/>
         </Eqn>
       </TransportEqns>
 
@@ -53,6 +56,8 @@
         <Weights                        spec="REQUIRED NO_DATA">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
+          <initial_value                spec="OPTIONAL DOUBLE"/>
+          <convScheme                   spec="OPTIONAL STRING 'upwind,super_bee'"/>
         </Weights>
         <Ic                             spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING">
@@ -60,18 +65,19 @@
           <doConv                       spec="OPTIONAL BOOLEAN"/>
           <model                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING"/>
+
+          <initial_value                spec="OPTIONAL DOUBLE"/>
+          <convScheme                   spec="OPTIONAL STRING 'upwind,super_bee'"/>
         </Ic>
 
         <Moment                         spec="MULTIPLE MULTIPLE_INTEGERS" /> 
 
         <VelModel                       spec="REQUIRED NO_DATA">
           <regime                       spec="REQUIRED INTEGER '1,3'"/>
-          <Re                           spec="REQUIRED DOUBLE 'positive'"/>
+          <new                          spec="REQUIRED DOUBLE 'positive'"/>
           <eta                          spec="REQUIRED DOUBLE 'positive'"/>
-          <rhof                         spec="REQUIRED DOUBLE 'positive'"/>
-          <beta                         spec="REQUIRED DOUBLE 'positive'"/>
+          <rho_ratio                    spec="REQUIRED DOUBLE 'positive'"/>
           <eps                          spec="REQUIRED DOUBLE 'positive'"/>
-          <part_mass                    spec="REQUIRED DOUBLE 'positive'"/>
         </VelModel>
       </DQMOM>
 

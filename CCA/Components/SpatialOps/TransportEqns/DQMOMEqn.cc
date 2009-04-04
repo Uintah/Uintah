@@ -40,6 +40,9 @@ EqnBase( fieldLabels, transportVarLabel, eqnName )
   varname = eqnName+"RHS";
   d_RHSLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
+  varname = eqnName+"old";
+  d_oldtransportVarLabel = VarLabel::create(varname,
+            CCVariable<double>::getTypeDescription());
 
   // This is the source term:
   // I just tagged "_src" to the end of the transport variable name
@@ -69,6 +72,16 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   // Now look for other things:
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
+
+  // convection scheme
+  db->getWithDefault( "convScheme", d_convScheme, "upwind");
+
+  // initial value
+  db->getWithDefault( "initial_value", d_initValue, 0.0);
+  if (d_weight) 
+    d_initValue = 1;
+  else
+    d_initValue = (qn + 1)/3.5;
 
   // Set some things:
   d_addSources = true; 
@@ -118,14 +131,13 @@ void
 DQMOMEqn::sched_evalTransportEqn( const LevelP& level, 
                                    SchedulerP& sched, int timeSubStep )
 {
-  d_timeSubStep = timeSubStep; 
 
-  if (d_timeSubStep == 0) 
+  if (timeSubStep == 0) 
     sched_initializeVariables( level, sched );
 
   sched_buildTransportEqn( level, sched );
 
-  sched_solveTransportEqn( level, sched );
+  sched_solveTransportEqn( level, sched, timeSubStep );
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -138,6 +150,7 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   Ghost::GhostType gn = Ghost::None;
   //New
   tsk->computes(d_transportVarLabel);
+  tsk->computes(d_oldtransportVarLabel); // for rk sub stepping 
   tsk->computes(d_RHSLabel); 
   tsk->computes(d_FconvLabel);
   tsk->computes(d_FdiffLabel);
@@ -167,13 +180,17 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     int matlIndex = 0;
 
     CCVariable<double> newVar;
+    CCVariable<double> rkoldVar; 
     constCCVariable<double> oldVar; 
     new_dw->allocateAndPut( newVar, d_transportVarLabel, matlIndex, patch );
+    new_dw->allocateAndPut( rkoldVar, d_oldtransportVarLabel, matlIndex, patch ); 
     old_dw->get(oldVar, d_transportVarLabel, matlIndex, patch, gn, 0);
 
     newVar.initialize(0.0);
+    rkoldVar.initialize(0.0);
     // copy old into new
     newVar.copyData(oldVar);
+    rkoldVar.copyData(oldVar); 
 
     CCVariable<double> Fdiff; 
     CCVariable<double> Fconv; 
@@ -217,7 +234,7 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
  
   //-----OLD-----
   //tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->propLabels.lambda, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->velocityLabels.uVelocity, Ghost::AroundCells, 1);   
 #ifdef YDIM
@@ -240,7 +257,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
                               DataWarehouse* new_dw )
 {
 
-  cout << "BUILDING TRANSPORT EQN: " << d_eqnName << endl; 
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -264,7 +280,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
 
-    old_dw->get(oldPhi, d_transportVarLabel, matlIndex, patch, gac, 1);
+    old_dw->get(oldPhi, d_transportVarLabel, matlIndex, patch, gac, 2);
     //old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
     old_dw->get(lambda, d_fieldLabels->propLabels.lambda, matlIndex, patch, gac, 1);
     old_dw->get(uVel,   d_fieldLabels->velocityLabels.uVelocity, matlIndex, patch, gac, 1); 
@@ -297,7 +313,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
 
-      RHS[c] += Fdiff[c] + Fconv[c];
+      RHS[c] += Fdiff[c] - Fconv[c];
 
       if (d_addSources) {
         //RHS[c] += src[c];           
@@ -309,17 +325,16 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 // Method: Schedule solve the transport equation. 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched )
+DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "DQMOMEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn);
+  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep);
 
   //NEW
   tsk->modifies(d_transportVarLabel);
+  tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
-
-  // Not getting old because we have copied old var into new in the initialization step
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allSpatialOpsMaterials());
 }
@@ -331,10 +346,10 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
                               const PatchSubset* patches, 
                               const MaterialSubset* matls, 
                               DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                              DataWarehouse* new_dw, 
+                              int timeSubStep )
 {
 
-  cout << "SOLVING TRANSPORT EQN: " << d_eqnName << endl;
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
@@ -347,12 +362,20 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     double dt = DT; 
 
     CCVariable<double> phi;
+    CCVariable<double> oldphi; 
     constCCVariable<double> RHS; 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
+    new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch); 
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
 
     d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt );
+    Vector alpha = d_timeIntegrator->d_alpha; 
+    Vector beta  = d_timeIntegrator->d_beta; 
+    d_timeIntegrator->timeAvePhi( patch, phi, oldphi, timeSubStep, alpha, beta ); 
+    
+    // now copy averaged phi into oldphi
+    oldphi.copyData(phi); 
 
   }
 }
@@ -367,6 +390,9 @@ DQMOMEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
   Vector Dx = p->dCell(); 
   FaceData<double> F;
 
+  if (d_convScheme == "upwind") {
+
+  // UPWIND
   for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
 
     IntVector c = *iter;
@@ -377,30 +403,191 @@ DQMOMEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
     IntVector czp = *iter + IntVector(0,0,1);
     IntVector czm = *iter - IntVector(0,0,1);
 
-    interpPtoF( oldPhi, c, F ); 
-
-  // THIS ISN'T FINISHED...
     double xmpVel = ( partVel[c].x() + partVel[cxm].x() )/2.0;
     double xppVel = ( partVel[c].x() + partVel[cxp].x() )/2.0;
 
-   // Fconv[c] = Dx.y()*Dx.z()*( F.e * uVel[cxp] - F.w * uVel[c] );
+    if ( xmpVel >= 0.0 )
+      F.w = oldPhi[cxm];
+    else
+      F.w = oldPhi[c]; 
+
+    if ( xppVel >= 0.0 )
+      F.e = oldPhi[c];
+    else
+      F.e = oldPhi[cxp];
+
     Fconv[c] = Dx.y()*Dx.z()*( F.e * xppVel - F.w * xmpVel );
+
 #ifdef YDIM
     double ympVel = ( partVel[c].y() + partVel[cym].y() )/2.0;
     double yppVel = ( partVel[c].y() + partVel[cyp].y() )/2.0;
-    //Fconv[c] += Dx.x()*Dx.z()*( F.n * vVel[cyp] - F.s * vVel[c] );
+ 
+    if ( ympVel >= 0.0 )
+      F.s = oldPhi[cym];
+    else
+      F.s = oldPhi[c]; 
+
+    if ( yppVel >= 0.0 )
+      F.n = oldPhi[c];
+    else
+      F.n = oldPhi[cyp];
+
     Fconv[c] += Dx.x()*Dx.z()*( F.n * yppVel - F.s * ympVel ); 
 #endif
 #ifdef ZDIM
     double zmpVel = ( partVel[c].z() + partVel[czm].z() )/2.0;
     double zppVel = ( partVel[c].z() + partVel[czp].z() )/2.0;
-    //Fconv[c] += Dx.x()*Dx.y()*( F.t * wVel[czp] - F.b * wVel[c] ); 
+ 
+    if ( zmpVel >= 0.0 )
+      F.b = oldPhi[czm];
+    else
+      F.b = oldPhi[c]; 
+
+    if ( zppVel >= 0.0 )
+      F.t = oldPhi[c];
+    else
+      F.t = oldPhi[czp];
+
+    Fconv[c] += Dx.x()*Dx.y()*( F.t * zppVel - F.b * zmpVel ); 
+#endif 
+  }
+  } else if (d_convScheme == "super_bee") { 
+
+  // SUPERBEE
+  for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
+    IntVector c = *iter;
+    IntVector cxp = *iter + IntVector(1,0,0);
+    IntVector cxpp= *iter + IntVector(2,0,0);
+    IntVector cxm = *iter - IntVector(1,0,0);
+    IntVector cxmm= *iter - IntVector(2,0,0);
+    IntVector cyp = *iter + IntVector(0,1,0);
+    IntVector cypp= *iter + IntVector(0,2,0);
+    IntVector cym = *iter - IntVector(0,1,0);
+    IntVector cymm= *iter - IntVector(0,2,0);
+    IntVector czp = *iter + IntVector(0,0,1);
+    IntVector czpp= *iter + IntVector(0,0,2);
+    IntVector czm = *iter - IntVector(0,0,1);
+    IntVector czmm= *iter - IntVector(0,0,2);
+
+    interpPtoF( oldPhi, c, F ); 
+
+    double xmpVel = ( partVel[c].x() + partVel[cxm].x() )/2.0;
+    double xppVel = ( partVel[c].x() + partVel[cxp].x() )/2.0;
+
+    double r; 
+    double psi; 
+    double Sup;
+    double Sdn;
+
+    // EAST
+    if ( xppVel >= 0.0 ) {
+      r = ( oldPhi[c] - oldPhi[cxm] ) / ( oldPhi[cxp] - oldPhi[c] );
+      Sup = oldPhi[c];
+      Sdn = oldPhi[cxp];
+    } else {
+      r = ( oldPhi[cxpp] - oldPhi[cxp] ) / ( oldPhi[cxp] - oldPhi[c] );
+      Sup = oldPhi[cxp];
+      Sdn = oldPhi[c]; 
+    }
+
+    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+    psi = max( 0.0, psi );
+    F.e = Sup + 0.5*psi*( Sdn - Sup ); 
+
+    // WEST 
+    if ( xmpVel >= 0.0 ) {
+      Sup = oldPhi[cxm];
+      Sdn = oldPhi[c];
+      r = ( oldPhi[cxm] - oldPhi[cxmm] ) / ( oldPhi[c] - oldPhi[cxm] ); 
+    } else {
+      Sup = oldPhi[c];
+      Sdn = oldPhi[cxm];
+      r = ( oldPhi[cxp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cxm] ); 
+    }
+
+    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+    psi = max( 0.0, psi );
+    F.w = Sup + 0.5*psi*( Sdn - Sup ); 
+
+    Fconv[c] = Dx.y()*Dx.z()*( F.e * xppVel - F.w * xmpVel );
+#ifdef YDIM
+    double ympVel = ( partVel[c].y() + partVel[cym].y() )/2.0;
+    double yppVel = ( partVel[c].y() + partVel[cyp].y() )/2.0;
+    // NORTH
+    if ( yppVel >= 0.0 ) {
+      r = ( oldPhi[c] - oldPhi[cym] ) / ( oldPhi[cyp] - oldPhi[c] );
+      Sup = oldPhi[c];
+      Sdn = oldPhi[cyp];
+    } else {
+      r = ( oldPhi[cypp] - oldPhi[cyp] ) / ( oldPhi[cyp] - oldPhi[c] );
+      Sup = oldPhi[cyp];
+      Sdn = oldPhi[c]; 
+    }
+
+    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+    psi = max( 0.0, psi );
+    F.n = Sup + 0.5*psi*( Sdn - Sup ); 
+
+    // SOUTH 
+    if ( ympVel >= 0.0 ) {
+      Sup = oldPhi[cym];
+      Sdn = oldPhi[c];
+      r = ( oldPhi[cym] - oldPhi[cymm] ) / ( oldPhi[c] - oldPhi[cym] ); 
+    } else {
+      Sup = oldPhi[c];
+      Sdn = oldPhi[cym];
+      r = ( oldPhi[cyp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[cym] ); 
+    }
+
+    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+    psi = max( 0.0, psi );
+    F.s = Sup + 0.5*psi*( Sdn - Sup ); 
+
+    Fconv[c] += Dx.x()*Dx.z()*( F.n * yppVel - F.s * ympVel ); 
+#endif
+#ifdef ZDIM
+    double zmpVel = ( partVel[c].z() + partVel[czm].z() )/2.0;
+    double zppVel = ( partVel[c].z() + partVel[czp].z() )/2.0;
+
+    // TOP
+    if ( zppVel >= 0.0 ) {
+      r = ( oldPhi[c] - oldPhi[czm] ) / ( oldPhi[czp] - oldPhi[c] );
+      Sup = oldPhi[c];
+      Sdn = oldPhi[czp];
+    } else {
+      r = ( oldPhi[czpp] - oldPhi[czp] ) / ( oldPhi[czp] - oldPhi[c] );
+      Sup = oldPhi[czp];
+      Sdn = oldPhi[c]; 
+    }
+
+    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+    psi = max( 0.0, psi );
+    F.t = Sup + 0.5*psi*( Sdn - Sup ); 
+
+    // BOTTOM 
+    if ( zmpVel >= 0.0 ) {
+      Sup = oldPhi[czm];
+      Sdn = oldPhi[c];
+      r = ( oldPhi[czm] - oldPhi[czmm] ) / ( oldPhi[c] - oldPhi[czm] ); 
+    } else {
+      Sup = oldPhi[c];
+      Sdn = oldPhi[czm];
+      r = ( oldPhi[czp] - oldPhi[c] ) / ( oldPhi[c] - oldPhi[czm] ); 
+    }
+
+    psi = max( min(2.0*r, 1.0), min(r, 2.0) );
+    psi = max( 0.0, psi );
+    F.b = Sup + 0.5*psi*( Sdn - Sup ); 
+
     Fconv[c] += Dx.x()*Dx.y()*( F.t * zppVel - F.b * zmpVel ); 
 #endif
-
   }
 
-  // Need to fill this in.
+  } else {
+
+    cout << "Convection scheme not supported! " << endl;
+
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Compute the diffusion term. 

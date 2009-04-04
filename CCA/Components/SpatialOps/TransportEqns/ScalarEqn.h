@@ -75,25 +75,26 @@ public:
 
   /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 
-                                SchedulerP& sched );
+                                SchedulerP& sched, int timeSubStep );
   /** @brief Solve the transport equation */ 
   void solveTransportEqn(const ProcessorGroup*, 
                          const PatchSubset* patches, 
                          const MaterialSubset*, 
                          DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw);
+                         DataWarehouse* new_dw,
+                         int timeSubStep);
   /** @brief Schedule the initialization of the variables */ 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
 
   /** @brief Actually initialize the variables at the begining of a time step */ 
   void initializeVariables( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw );
+                            const PatchSubset* patches, 
+                            const MaterialSubset* matls, 
+                            DataWarehouse* old_dw, 
+                            DataWarehouse* new_dw );
 
   /** @brief Compute all source terms for this scalar eqn */
-  void sched_computeSources( const LevelP& level, SchedulerP& sched);
+  void sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep);
 
   /** @brief Compute the convective terms */ 
   template <class fT, class oldPhiT> void

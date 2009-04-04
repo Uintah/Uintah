@@ -110,8 +110,8 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   //create user specified transport eqns
   if (transportEqn_db) {
-      // Go through eqns and intialize all defined eqns and call their respective 
-      // problem setup
+    // Go through eqns and intialize all defined eqns and call their respective 
+    // problem setup
     EqnFactory& eqn_factory = EqnFactory::self();
     for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
 
@@ -123,6 +123,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
       }
       EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname ); 
       an_eqn.problemSetup( eqn_db ); 
+      an_eqn.setTimeInt( d_timeIntegrator ); 
 
     }
 
@@ -173,8 +174,9 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
 
       EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( wght_name );
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
-      weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
       weight.setAsWeight(); 
+      weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
+      weight.setTimeInt( d_timeIntegrator ); 
     }
     
     // loop for all ic's
@@ -193,6 +195,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
 
         EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
         an_ic.problemSetup( ic_db, iqn );  
+        an_ic.setTimeInt( d_timeIntegrator ); 
 
       }
     }
@@ -249,7 +252,7 @@ SpatialOps::scheduleInitialize(const LevelP& level,
 #endif
   tsk->computes( d_fieldLabels->velocityLabels.ccVelocity ); 
 
-  // Source terms for DQMOM
+  // DQMOM transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
@@ -258,16 +261,22 @@ SpatialOps::scheduleInitialize(const LevelP& level,
     const VarLabel* tempSource = eqn->getSourceLabel();
     tsk->computes( tempSource ); 
     const VarLabel* tempVar = eqn->getTransportEqnLabel();
-    cout << "VAR = " << *tempVar << endl; 
+    const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
     tsk->computes( tempVar );  
+    tsk->computes( oldtempVar ); 
   } 
+
+  // Particle Velocities
+  for (Fields::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
+        i != d_fieldLabels->partVel.end(); i++){
+    tsk->computes( i->second );
+  }
 
   EqnFactory& eqnFactory = EqnFactory::self(); 
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
     EqnBase* temp_eqn = ieqn->second; 
     const VarLabel* tempVar = temp_eqn->getTransportEqnLabel(); 
-    cout << "THIS LABEL = " << *tempVar << endl;
     tsk->computes( tempVar );
   }
 
@@ -298,6 +307,7 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
     SFCYVariable<double> vVel; 
     SFCZVariable<double> wVel; 
     CCVariable<Vector> ccVel; 
+    CCVariable<Vector> partVel; 
  
     new_dw->allocateAndPut( lambda, d_fieldLabels->propLabels.lambda, matlIndex, patch ); 
     lambda.initialize( d_initlambda );
@@ -321,20 +331,59 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
     // --- DQMOM Variables
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+    double mylength = .5;
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       EqnBase* temp_eqn = ieqn->second; 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
       const VarLabel* tempSourceLabel = eqn->getSourceLabel();
       const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
+      const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
+      double initValue = eqn->getInitValue(); 
       
       CCVariable<double> tempSource;
       CCVariable<double> tempVar; 
+      CCVariable<double> oldtempVar; 
       new_dw->allocateAndPut( tempSource, tempSourceLabel, matlIndex, patch ); 
       new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
-      tempSource.initialize(0.0); 
-      tempVar.initialize(1.0); 
-      
+      new_dw->allocateAndPut( oldtempVar, oldtempVarLabel, matlIndex, patch ); 
+    
+      tempSource.initialize(0.0);
+      oldtempVar.initialize(0.0); 
+
+      //if ( eqn->weight() )
+      //  tempVar.initialize(1);
+      //else {
+
+        for (CellIterator iter=patch->getCellIterator__New(); 
+              !iter.done(); iter++){
+          Point pt = patch->cellPosition(*iter);
+          //if (pt.x() > .25 && pt.x() < .75 && pt.y() > .25 && pt.y() < .75)
+          //if (pt.y() > .25 && pt.y() < .75 ) {
+            if (eqn->weight())
+              tempVar[*iter] = 1.0;
+            else 
+              tempVar[*iter] = initValue;
+          //}
+          //else {
+          //  tempVar[*iter] = 0;
+          //}
+        //}
+        //mylength += .10; 
+      }
     } 
+
+    // --- PARTICLE VELS
+    for (Fields::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
+          i != d_fieldLabels->partVel.end(); i++){
+      CCVariable<Vector> partVel; 
+      new_dw->allocateAndPut( partVel, i->second, matlIndex, patch ); 
+      for (CellIterator iter=patch->getCellIterator__New(); 
+           !iter.done(); iter++){
+        IntVector c = *iter; 
+        partVel[c] = Vector(0.,0.,0.);
+
+      }
+    }
 
     // --- TRANSPORTED SCALAR VARIABLES
     EqnFactory& eqnFactory = EqnFactory::self(); 
@@ -379,9 +428,11 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
      
       IntVector c = *iter;  
+      Point p = patch->cellPosition(*iter); 
 
-      double ucc = uVel[c];//0.5*( uVel[c] + uVel[c+IntVector(1,0,0)] );
-      double vcc = vVel[c];//0.5*( vVel[c] + vVel[c+IntVector(0,1,0)] );
+      double ucc = sin( 2*d_pi*p.x() )*cos( 2*d_pi*p.y() );
+      double vcc = -cos( 2*d_pi*p.x() )*sin( 2*d_pi*p.y() );
+
       ccVel[c] = Vector(ucc,vcc,0.0);
 
     }
@@ -399,6 +450,8 @@ SpatialOps::scheduleComputeStableTimestep(const LevelP& level,
               this, &SpatialOps::computeStableTimestep);
   tsk->computes(d_sharedState->get_delt_label());
 
+  tsk->requires( Task::NewDW, d_fieldLabels->velocityLabels.ccVelocity, Ghost::None, 0 );  
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allSpatialOpsMaterials());
 }
 //---------------------------------------------------------------------------
@@ -411,15 +464,34 @@ SpatialOps::computeStableTimestep(const ProcessorGroup* ,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw)
 {
-  double deltat = 0.0;
+  double deltat = 100000000.0;
   //patch loop 
   //This is redundant but we might want something 
   // more complicated in the future. Plus it is only 
   // using one grid dimension.
   for (int p = 0; p < patches->size(); p++) {
+
+    
     const Patch* patch = patches->get(p);
+    int matlIndex = 0;
+
+    constCCVariable<Vector> ccVel; 
+    new_dw->get(ccVel, d_fieldLabels->velocityLabels.ccVelocity, matlIndex, patch, Ghost::None, 0);
+
     Vector dx = patch->dCell();
-    deltat = 0.1*dx.x()*dx.x()/d_initlambda;
+
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+      IntVector c = *iter; 
+      double testdt = dx.x() / abs(ccVel[c].x()); 
+
+      if (testdt < deltat ) deltat = testdt; 
+
+      testdt = dx.y() / abs(ccVel[c].y()); 
+
+      if (testdt < deltat ) deltat = testdt; 
+    }
+
+    //deltat = 0.1*dx.x()*dx.x()/d_initlambda;
   }
 
   new_dw->put(delt_vartype(deltat), d_sharedState->get_delt_label());
@@ -459,6 +531,8 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
       cout << "Scheduling dqmom eqn: " << currname << " to be solved." << endl;
       EqnBase* temp_eqn = ieqn->second; 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+
+      eqn->setTimeInt( d_timeIntegrator );
 
       eqn->sched_evalTransportEqn( level, sched, i ); 
       

@@ -111,16 +111,16 @@ void
 ScalarEqn::sched_evalTransportEqn( const LevelP& level, 
                                    SchedulerP& sched, int timeSubStep )
 {
-  d_timeSubStep = timeSubStep; 
 
-  sched_initializeVariables( level, sched );
+  if (timeSubStep == 0)
+    sched_initializeVariables( level, sched );
 
   if (d_addSources) 
-    sched_computeSources( level, sched ); 
+    sched_computeSources( level, sched, timeSubStep ); 
 
     sched_buildTransportEqn( level, sched );
 
-    sched_solveTransportEqn( level, sched );
+    sched_solveTransportEqn( level, sched, timeSubStep );
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -188,7 +188,7 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 // Method: Schedule compute the sources. 
 //--------------------------------------------------------------------------- 
 void 
-ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched )
+ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   // This scheduler only calls other schedulers
   SourceTermFactory& factory = SourceTermFactory::self(); 
@@ -196,8 +196,8 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched )
  
     SourceTermBase& temp_src = factory.retrieve_source_term( *iter ); 
     cout << "source name  = " << *iter << endl;
-  
-    temp_src.sched_computeSource( level, sched, d_timeSubStep ); 
+   
+    temp_src.sched_computeSource( level, sched, timeSubStep ); 
 
   }
 
@@ -323,11 +323,11 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 // Method: Schedule solve the transport equation. 
 //---------------------------------------------------------------------------
 void
-ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched )
+ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "ScalarEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn);
+  Task* tsk = scinew Task(taskname, this, &ScalarEqn::solveTransportEqn, timeSubStep);
 
   //NEW
   tsk->modifies(d_transportVarLabel);
@@ -345,7 +345,8 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
                               const PatchSubset* patches, 
                               const MaterialSubset* matls, 
                               DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw )
+                              DataWarehouse* new_dw,
+                              int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
