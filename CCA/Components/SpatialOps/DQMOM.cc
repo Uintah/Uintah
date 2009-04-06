@@ -279,8 +279,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       A.decompose();
       A.back_subs( &B[0] );
 
-      // set sources equal to result
-      // missing weights here
+      // set weight/weighted abscissa transport eqn source terms equal to results
+      unsigned int z = 0;
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
            iEqn != weightEqns.end(); iEqn++) {
         const VarLabel* source_label = (*iEqn)->getSourceLabel();
@@ -290,9 +290,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         } else {
           new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
         }
+
+        tempCCVar[c] = B[z];
+        ++z;
       }
   
-      unsigned int z = 0;
       for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
            iEqn != weightedAbscissaEqns.end(); ++iEqn) {
         const VarLabel* source_label = (*iEqn)->getSourceLabel();
