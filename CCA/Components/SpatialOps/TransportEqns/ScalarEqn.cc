@@ -127,7 +127,7 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
   if (d_addSources) 
     sched_computeSources( level, sched, timeSubStep ); 
 
-    sched_buildTransportEqn( level, sched );
+    sched_buildTransportEqn( level, sched, timeSubStep );
 
     sched_solveTransportEqn( level, sched, timeSubStep );
 }
@@ -220,7 +220,7 @@ ScalarEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int tim
 // Method: Schedule build the transport equation. 
 //---------------------------------------------------------------------------
 void
-ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
+ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "ScalarEqn::buildTransportEqn"; 
 

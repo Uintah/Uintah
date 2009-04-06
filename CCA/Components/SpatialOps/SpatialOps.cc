@@ -360,14 +360,15 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
           Point pt = patch->cellPosition(*iter);
           //if (pt.x() > .25 && pt.x() < .75 && pt.y() > .25 && pt.y() < .75)
           //if (pt.y() > .25 && pt.y() < .75 ) {
+            if (pt.x() < .5){
             if (eqn->weight())
               tempVar[*iter] = 1.0;
             else 
               tempVar[*iter] = initValue;
-          //}
-          //else {
-          //  tempVar[*iter] = 0;
-          //}
+          }
+          else {
+            tempVar[*iter] = 0;
+          }
         //}
         //mylength += .10; 
       }
@@ -433,8 +434,8 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
       IntVector c = *iter;  
       Point p = patch->cellPosition(*iter); 
 
-      double ucc = sin( 2*d_pi*p.x() )*cos( 2*d_pi*p.y() );
-      double vcc = -cos( 2*d_pi*p.x() )*sin( 2*d_pi*p.y() );
+      double ucc = 1; //sin( 2*d_pi*p.x() )*cos( 2*d_pi*p.y() );
+      double vcc = 0; //-cos( 2*d_pi*p.x() )*sin( 2*d_pi*p.y() );
 
       ccVel[c] = Vector(ucc,vcc,0.0);
 

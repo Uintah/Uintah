@@ -136,7 +136,7 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
   if (timeSubStep == 0) 
     sched_initializeVariables( level, sched );
 
-  sched_buildTransportEqn( level, sched );
+  sched_buildTransportEqn( level, sched, timeSubStep );
 
   sched_solveTransportEqn( level, sched, timeSubStep );
 }
@@ -219,7 +219,7 @@ DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched )
 // Method: Schedule build the transport equation. 
 //---------------------------------------------------------------------------
 void
-DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
+DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "DQMOMEqn::buildTransportEqn"; 
 
@@ -245,6 +245,12 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
   tsk->requires(Task::OldDW, d_fieldLabels->velocityLabels.wVelocity, Ghost::AroundCells, 1); 
 #endif
 
+  if (timeSubStep == 0) {
+    tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
+  } else {
+    tsk->requires(Task::NewDW, d_sourceLabel, Ghost::None, 0); 
+  }
+
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allSpatialOpsMaterials());
 }
 //---------------------------------------------------------------------------
@@ -263,7 +269,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    //Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int matlIndex = 0;
@@ -282,7 +288,11 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> RHS; 
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
-    //old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
+    if (new_dw->exists(d_sourceLabel, matlIndex, patch)) { 
+      new_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); // only get new_dw value on rkstep > 0
+    } else {
+      old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0); 
+    }
     old_dw->get(lambda, d_fieldLabels->propLabels.lambda, matlIndex, patch, gac, 1);
     old_dw->get(uVel,   d_fieldLabels->velocityLabels.uVelocity, matlIndex, patch, gac, 1); 
 #ifdef YDIM
@@ -317,7 +327,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       if (d_addSources) {
-        //RHS[c] += src[c];           
+        RHS[c] += src[c];           
       }
     } 
   }
