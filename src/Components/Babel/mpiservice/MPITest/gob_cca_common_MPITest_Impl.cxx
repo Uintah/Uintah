@@ -507,21 +507,11 @@ gob::cca::common::MPITest_impl::go_impl ()
         goto BOCCAEXIT; // we cannot correctly continue. clean up and leave.
       }
       if (! mi ) {
-	std::cerr << "1111111111\n";
         merror = MPI_Init(NULL,NULL);
-	std::cerr << "222222222222\n";
         if (merror != MPI_SUCCESS) {
           bocca_status = -2;
           goto BOCCAEXIT; // we cannot correctly continue. clean up and leave.
         }
-      }
-
-      MPI_Initialized(&mi);
-      if (! mi) {
-	std::cerr << "I am not initialized\n";
-      }
-      else {
-	std::cerr << "I am initialized\n";
       }
 
       MPI_Fint server_fcomm = MPI_Comm_c2f(MPI_COMM_WORLD); // may be 4 or 8 bytes
@@ -544,9 +534,7 @@ gob::cca::common::MPITest_impl::go_impl ()
 #endif //_BOCCA_STDERR
           bocca_status = -2;
         } else {
-	  std::cerr << "4444444444\n";
           int64_t sComm = commsource.getComm();
-	  std::cerr << "5555555555\n";
           if (sComm == 0) {
 #ifdef _BOCCA_STDERR
             bocca_status = -2;
@@ -555,7 +543,6 @@ gob::cca::common::MPITest_impl::go_impl ()
 #endif //_BOCCA_STDERR
             goto BOCCAEXIT; // we cannot correctly continue. clean up and leave.
           }
-	  std::cerr << "66666666666\n";
           MPI_Fint fsComm = (MPI_Fint)sComm;
           MPI_Comm cComm = MPI_Comm_f2c(fsComm);
           if (cComm == MPI_COMM_NULL) {
@@ -568,9 +555,7 @@ gob::cca::common::MPITest_impl::go_impl ()
           }
 
           int srank = -1;
-	  std::cerr << "FORE RANK\n";
           merror = MPI_Comm_rank(cComm, &srank);
-	  std::cerr << "AFT RANK\n";
           if (merror != 0) {
             bocca_status = -2;
           } else {
