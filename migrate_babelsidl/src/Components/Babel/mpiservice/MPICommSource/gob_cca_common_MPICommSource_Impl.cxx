@@ -150,7 +150,6 @@ MPIService_Impl::reclaim() {
 MPI_Comm
 MPIService_Impl::getComm() {
         // check for one recyclable
-  std::cerr << "in MPIService_Impl::getComm()\n";
         if (rlist.size() > 0) {
                 CommHolder *c = rlist[(rlist.size()-1)];
                 rlist.erase(rlist.end()-1);
@@ -168,12 +167,9 @@ MPIService_Impl::getComm() {
       else {
 	std::cerr << "I am initialized\n";
       }
-	std::cerr << "AAAAAAAAAAAAAAA\n";
         mi = MPI_Comm_dup(prototype, &tmp);
-	std::cerr << "BBBBBBBBBBBBBBB\n";
         CommHolder *c2 = new CommHolder(tmp);
         ulist.push_back(c2);
-  std::cerr << "leaving MPIService_Impl::getComm()\n";
         return tmp;
 }
 
