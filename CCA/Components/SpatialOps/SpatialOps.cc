@@ -79,6 +79,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
                          SimulationStateP& sharedState)
 { 
   d_sharedState = sharedState;
+  d_doDQMOM = false; 
 
   // Input
   ProblemSpecP db = params->findBlock("CFD")->findBlock("SPATIALOPS");
@@ -104,9 +105,6 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
   //register all equations
   SpatialOps::registerTransportEqns(db); 
 
-  //register all models
-  SpatialOps::registerModels(db); 
-
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   //create user specified transport eqns
   if (transportEqn_db) {
@@ -123,7 +121,6 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
       }
       EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname ); 
       an_eqn.problemSetup( eqn_db ); 
-      an_eqn.setTimeInt( d_timeIntegrator ); 
 
     }
 
@@ -151,6 +148,11 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
   ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
   if (dqmom_db) {
 
+    d_doDQMOM = true; 
+
+    //register all models
+    SpatialOps::registerModels(dqmom_db); 
+
     d_dqmomSolver = scinew DQMOM(d_fieldLabels);
     d_dqmomSolver->problemSetup( dqmom_db ); 
 
@@ -176,7 +178,7 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
       weight.setAsWeight(); 
       weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
-      weight.setTimeInt( d_timeIntegrator ); 
+
     }
     
     // loop for all ic's
@@ -195,7 +197,6 @@ SpatialOps::problemSetup(const ProblemSpecP& params,
 
         EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
         an_ic.problemSetup( ic_db, iqn );  
-        an_ic.setTimeInt( d_timeIntegrator ); 
 
       }
     }
@@ -402,7 +403,9 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
         for (CellIterator iter=patch->getCellIterator__New(); 
         !iter.done(); iter++){
           Point pt = patch->cellPosition(*iter);
-          tempVar[*iter] = sin(2*d_pi*pt.x());
+          if (pt.x() < 0.5 ) 
+            tempVar[*iter] = 1; 
+          //tempVar[*iter] = sin(2*d_pi*pt.x());
           //tempVar[*iter] = sin(2*d_pi*pt.x()) + cos(2*d_pi*pt.y());
         }
       }else if (ieqn->first == "var2"){
@@ -523,7 +526,8 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
   for (int i = 0; i < d_tOrder; i++){
 
     // Compute the particle velocities
-    d_partVel->schedComputePartVel( level, sched, i ); 
+    if (d_doDQMOM)
+      d_partVel->schedComputePartVel( level, sched, i ); 
 
     for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       // Get current equation:
@@ -531,8 +535,6 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
       cout << "Scheduling dqmom eqn: " << currname << " to be solved." << endl;
       EqnBase* temp_eqn = ieqn->second; 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
-
-      eqn->setTimeInt( d_timeIntegrator );
 
       eqn->sched_evalTransportEqn( level, sched, i ); 
       
@@ -566,7 +568,8 @@ SpatialOps::scheduleTimeAdvance(const LevelP& level,
     }
 
     // schedule DQMOM linear solve
-    d_dqmomSolver->sched_solveLinearSystem( level, sched, i );
+    if (d_doDQMOM)
+      d_dqmomSolver->sched_solveLinearSystem( level, sched, i );
 
   }
 
@@ -646,7 +649,8 @@ void SpatialOps::registerSources(ProblemSpecP& db)
 //---------------------------------------------------------------------------
 void SpatialOps::registerModels(ProblemSpecP& db)
 {
-  ProblemSpecP models_db = db->findBlock("DQMOM")->findBlock("Models");
+  //ProblemSpecP models_db = db->findBlock("DQMOM")->findBlock("Models");
+  ProblemSpecP models_db = db->findBlock("Models");
 
   // Get reference to the model factory
   ModelFactory& model_factory = ModelFactory::self();
@@ -764,7 +768,7 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
       // The keys are currently strings which might be something we want to change if this becomes inefficient  
       if ( eqn_type == "CCscalar" ) {
 
-        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_fieldLabels, iLabel->second, eqn_name ); 
+        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_fieldLabels, d_timeIntegrator, iLabel->second, eqn_name ); 
         eqnFactory.register_scalar_eqn( eqn_name, scalarBuilder );     
 
       // ADD OTHER OPTIONS HERE if ( eqn_type == ....
@@ -812,7 +816,7 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
         throw InvalidValue("Two weight equations registered with the same transport variable label!", __FILE__, __LINE__);
       }
 
-      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, iLabel->second, wght_name ); 
+      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, iLabel->second, wght_name ); 
       dqmom_eqnFactory.register_scalar_eqn( wght_name, eqnBuilder );     
       
     }
@@ -845,7 +849,7 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
           throw InvalidValue("Two internal coordinate equations registered with the same transport variable label!", __FILE__, __LINE__);
         }
 
-        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, iLabel->second, final_name ); 
+        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, iLabel->second, final_name ); 
         dqmom_eqnFactory.register_scalar_eqn( final_name, eqnBuilder );     
 
       } 

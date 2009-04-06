@@ -2,6 +2,7 @@
 #define UT_DQMOMEqnFactory_h
 
 #include <CCA/Components/SpatialOps/Fields.h>
+#include <CCA/Components/SpatialOps/ExplicitTimeInt.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <map>
 #include <vector>
@@ -25,17 +26,20 @@ class DQMOMEqnBuilderBase
 {
 public:
   DQMOMEqnBuilderBase( Fields* fieldLabels, 
+              ExplicitTimeInt* timeIntegrator,
               const VarLabel* transportVarLabel, 
               string eqnName ) : 
               d_fieldLabels(fieldLabels), 
               d_transportVarLabel(transportVarLabel), 
-              d_eqnName(eqnName) {};
+              d_eqnName(eqnName), 
+              d_timeIntegrator(timeIntegrator) {};
   virtual ~DQMOMEqnBuilderBase(){};
 
   virtual EqnBase* build() = 0;  
 
 protected: 
   Fields* d_fieldLabels; 
+  ExplicitTimeInt* d_timeIntegrator; 
   const VarLabel* d_transportVarLabel; 
   string d_eqnName; 
 }; // class DQMOMEqnBuilder

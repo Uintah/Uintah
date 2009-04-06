@@ -3,7 +3,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/SpatialOps/BoundaryCond.h>
-#include <CCA/Components/SpatialOps/ExplicitTimeInt.h>
+//#include <CCA/Components/SpatialOps/ExplicitTimeInt.h>
 #include <CCA/Components/SpatialOps/Fields.h>
 #include <CCA/Components/SpatialOps/TransportEqns/DQMOMEqn.h>
 
@@ -13,22 +13,23 @@ using namespace Uintah;
 //---------------------------------------------------------------------------
 // Builder:
 DQMOMEqnBuilder::DQMOMEqnBuilder( Fields* fieldLabels, 
+                                  ExplicitTimeInt* timeIntegrator,
                                   const VarLabel* transportVarLabel, 
                                   string eqnName ) : 
-DQMOMEqnBuilderBase( fieldLabels, transportVarLabel, eqnName )
+DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, transportVarLabel, eqnName )
 {}
 DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
 
 EqnBase*
 DQMOMEqnBuilder::build(){
-  return scinew DQMOMEqn(d_fieldLabels, d_transportVarLabel, d_eqnName);
+  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_transportVarLabel, d_eqnName);
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-DQMOMEqn::DQMOMEqn( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName )
+DQMOMEqn::DQMOMEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName )
 : 
-EqnBase( fieldLabels, transportVarLabel, eqnName )
+EqnBase( fieldLabels, timeIntegrator, transportVarLabel, eqnName )
 {
   
   std::string varname = eqnName+"Fdiff"; 
@@ -74,7 +75,7 @@ DQMOMEqn::problemSetup(const ProblemSpecP& inputdb, int qn)
   db->getWithDefault( "doDiff", d_doDiff, false);
 
   // convection scheme
-  db->getWithDefault( "convScheme", d_convScheme, "upwind");
+  db->getWithDefault( "conv_scheme", d_convScheme, "upwind");
 
   // initial value
   db->getWithDefault( "initial_value", d_initValue, 0.0);
@@ -226,6 +227,7 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
 
   //----NEW----
   tsk->modifies(d_transportVarLabel);
+  tsk->requires(Task::NewDW, d_oldtransportVarLabel, Ghost::AroundCells, 2);
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
@@ -233,8 +235,7 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched )
   tsk->requires(Task::NewDW, iter->second, Ghost::AroundCells, 1); 
  
   //-----OLD-----
-  //tsk->requires(Task::OldDW, d_sourceLabel, Ghost::None, 0);
-  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  //tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->propLabels.lambda, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->velocityLabels.uVelocity, Ghost::AroundCells, 1);   
 #ifdef YDIM
@@ -280,7 +281,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> Fconv; 
     CCVariable<double> RHS; 
 
-    old_dw->get(oldPhi, d_transportVarLabel, matlIndex, patch, gac, 2);
+    new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
     //old_dw->get(src, d_sourceLabel, matlIndex, patch, gn, 0);
     old_dw->get(lambda, d_fieldLabels->propLabels.lambda, matlIndex, patch, gac, 1);
     old_dw->get(uVel,   d_fieldLabels->velocityLabels.uVelocity, matlIndex, patch, gac, 1); 
@@ -374,7 +375,7 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     Vector beta  = d_timeIntegrator->d_beta; 
     d_timeIntegrator->timeAvePhi( patch, phi, oldphi, timeSubStep, alpha, beta ); 
     
-    // now copy averaged phi into oldphi
+    // copy averaged phi into oldphi
     oldphi.copyData(phi); 
 
   }

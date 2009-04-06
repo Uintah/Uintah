@@ -31,6 +31,7 @@ class CCScalarEqnBuilder: public EqnBuilder
 {
 public:
   CCScalarEqnBuilder( Fields* fieldLabels, 
+                      ExplicitTimeInt* timeIntegrator, 
                       const VarLabel* transportVarLabel, 
                       string eqnName );
   ~CCScalarEqnBuilder();
@@ -51,7 +52,7 @@ public EqnBase{
 
 public: 
 
-  ScalarEqn( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
+  ScalarEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName );
 
   ~ScalarEqn();
 
@@ -155,7 +156,7 @@ public:
 private:
 
   BoundaryCond* d_boundaryCond;
-  ExplicitTimeInt* d_timeIntegrator; 
+  //ExplicitTimeInt* d_timeIntegrator; 
   vector<std::string> d_sources;
 
 }; // class ScalarEqn
