@@ -61,6 +61,7 @@
 
 // DO-NOT-DELETE splicer.begin(scijump.ServiceRegistry._hincludes)
 #include <map>
+#include <scijump_BabelPortInfo.hxx>
 // DO-NOT-DELETE splicer.end(scijump.ServiceRegistry._hincludes)
 
 namespace scijump { 
@@ -84,7 +85,7 @@ namespace scijump {
     // DO-NOT-DELETE splicer.begin(scijump.ServiceRegistry._implementation)
     sci::cca::AbstractFramework framework;
 
-    typedef std::map<std::string, gov::cca::Port> portMap;
+    typedef std::map<std::string, scijump::BabelPortInfo> portMap;
     portMap singletons;
     // DO-NOT-DELETE splicer.end(scijump.ServiceRegistry._implementation)
 
