@@ -41,7 +41,7 @@ public:
                                        SchedulerP& sched, int timeSubStep ) = 0; 
 
   /** @brief Build the terms needed in the transport equation */
-  virtual void sched_buildTransportEqn( const LevelP&, SchedulerP& sched ) = 0;
+  virtual void sched_buildTransportEqn( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0;
 
   /** @brief Solve the transport equation */
   virtual void sched_solveTransportEqn( const LevelP&, SchedulerP& sched, int timeSubStep ) = 0;
