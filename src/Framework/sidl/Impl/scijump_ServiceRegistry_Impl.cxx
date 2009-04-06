@@ -48,7 +48,6 @@
 #endif
 // DO-NOT-DELETE splicer.begin(scijump.ServiceRegistry._includes)
 #include <iostream>
-#include <scijump_BabelPortInfo.hxx>
 // DO-NOT-DELETE splicer.end(scijump.ServiceRegistry._includes)
 
 // special constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
@@ -119,6 +118,7 @@ scijump::ServiceRegistry_impl::getService_impl (
   /* in */::sci::cca::core::PortInfo& requesterPort ) 
 {
   // DO-NOT-DELETE splicer.begin(scijump.ServiceRegistry.getService)
+  std::cerr << "ServiceRegistry-getService: looking for port " << serviceName << "\n";
   portMap::iterator iter = singletons.find(serviceName);
   if (iter == singletons.end()) {
     scijump::core::ServiceInfo si = scijump::core::ServiceInfo::_create();
@@ -126,9 +126,7 @@ scijump::ServiceRegistry_impl::getService_impl (
     return si;
   }
 
-  gov::cca::Port service = iter->second;  
-  scijump::BabelPortInfo servicePort = scijump::BabelPortInfo::_create();
-  servicePort.initialize(service, serviceName, serviceName, ::sci::cca::core::PortType_ProvidesPort, NULL);
+  scijump::BabelPortInfo servicePort = iter->second;  
   if (! requesterPort.connect(servicePort)) {
     // TODO: throw exception?
     std::cerr << "Could not connect " << serviceName << " service." << std::endl;
@@ -187,7 +185,10 @@ scijump::ServiceRegistry_impl::addSingletonService_impl (
     return false;
 
   std::cerr << "Service '" << serviceType << "' now in ServiceRegistry\n";
-  singletons[serviceType] = server;
+  scijump::BabelPortInfo servicePort = scijump::BabelPortInfo::_create();
+  servicePort.initialize(server, serviceType, serviceType, ::sci::cca::core::PortType_ProvidesPort, NULL);
+  singletons[serviceType] = servicePort;
+  return true;
   // DO-NOT-DELETE splicer.end(scijump.ServiceRegistry.addSingletonService)
 }
 
@@ -205,6 +206,7 @@ scijump::ServiceRegistry_impl::removeService_impl (
   // DO-NOT-DELETE splicer.begin(scijump.ServiceRegistry.removeService)
   portMap::iterator iter = singletons.find(serviceType);
   if (iter != singletons.end()) {
+    (iter->second).decrementUseCount();
     singletons.erase(iter);
   }
   // DO-NOT-DELETE splicer.end(scijump.ServiceRegistry.removeService)

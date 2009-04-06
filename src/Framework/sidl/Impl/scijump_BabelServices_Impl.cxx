@@ -247,8 +247,6 @@ scijump::BabelServices_impl::getPort_impl (
       if ( sr._not_nil() ) {
 	::sci::cca::core::ServiceInfo service = sr.getService(pi.getClass(),pi);
 	if ( service.getServiceName() == "EMPTY" ) goto PORT_NOT_FOUND;
-	Guard guard(lock_services);
-	servicePorts[portName] = service;      
       }
       else {
 	goto PORT_NOT_FOUND;
@@ -367,6 +365,15 @@ scijump::BabelServices_impl::releasePort_impl (
         ::sci::cca::core::ServiceInfo si = iter->second;
         servicePorts.erase(iter);
         framework.releaseFrameworkService(si);
+      }
+      else {
+	//ServiceRegistry may have this port, try erasing it
+	::sci::cca::core::ServiceInfo si = framework.getFrameworkService("cca.ServiceRegistry", pi, false);
+	gov::cca::Port p = si.getServicePort().getPort();
+	scijump::ServiceRegistry sr = babel_cast<scijump::ServiceRegistry>(p);
+	if ( sr._not_nil() ) {
+	  sr.removeService(portName);
+	}
       }
     }
   }
