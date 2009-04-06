@@ -32,6 +32,7 @@ class DQMOMEqnBuilder: public DQMOMEqnBuilderBase
 {
 public:
   DQMOMEqnBuilder( Fields* fieldLabels, 
+                   ExplicitTimeInt* timeIntegrator, 
                    const VarLabel* transportVarLabel, 
                    string eqnName );
   ~DQMOMEqnBuilder();
@@ -52,7 +53,7 @@ public EqnBase{
 
 public: 
 
-  DQMOMEqn( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
+  DQMOMEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName );
 
   ~DQMOMEqn();
 
@@ -178,7 +179,7 @@ public:
 private:
 
   BoundaryCond* d_boundaryCond;
-  ExplicitTimeInt* d_timeIntegrator; 
+  //ExplicitTimeInt* d_timeIntegrator; 
 
   const VarLabel* d_sourceLabel; //DQMOM Eqns only have ONE source term.  
   std::vector<string> d_models;  //This is the list of models for this internal coord. 

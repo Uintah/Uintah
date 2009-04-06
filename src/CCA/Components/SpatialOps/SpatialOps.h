@@ -107,6 +107,8 @@ private:
   EqnBase* d_transportEqn; 
   EqnFactory* d_scalarFactory; 
 
+  bool d_doDQMOM; 
+
 }; // end class SpatialOps 
 } // end namespace Uintah
 

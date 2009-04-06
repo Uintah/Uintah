@@ -24,7 +24,7 @@ class EqnBase{
 
 public:
 
-  EqnBase( Fields* fieldLabels, const VarLabel* transportVarLabel, string eqnName );
+  EqnBase( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName );
 
   virtual ~EqnBase();
 
