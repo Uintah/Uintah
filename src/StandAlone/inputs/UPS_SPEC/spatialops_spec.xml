@@ -70,7 +70,8 @@
           <convScheme                   spec="OPTIONAL STRING 'upwind,super_bee'"/>
         </Ic>
 
-        <Moment                         spec="MULTIPLE MULTIPLE_INTEGERS" /> 
+        <Moment                         spec="MULTIPLE NO_DATA" />
+          <m                            spec="REQUIRED MULTIPLE_INTEGERS 'positive'" /> 
 
         <VelModel                       spec="REQUIRED NO_DATA">
           <regime                       spec="REQUIRED INTEGER '1,3'"/>
