@@ -45,8 +45,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   vector<int> temp_moment_index;
   for ( ProblemSpecP db_moments = db->findBlock("Moment");
         db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
-   
-   db_moments->get("m", temp_moment_index);
+    temp_moment_index.resize(0);
+    db_moments->get("m", temp_moment_index);
     
     // put moment index into vector of moment indexes:
     momentIndexes.push_back(temp_moment_index);
@@ -234,9 +234,14 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           double prefixA = 1;
           double productA = 1;
           for ( unsigned int i = 0; i < thisMoment.size(); ++i) {
-            // Appendix C, C.9 (A1 matrix)
-            prefixA = prefixA - (thisMoment[i]);
-            productA = productA*( pow((weightedAbscissas[i*(alpha+1)+alpha]/weights[alpha]),thisMoment[i]) );
+            if (weights[alpha] != 0) {
+              // Appendix C, C.9 (A1 matrix)
+              prefixA = prefixA - (thisMoment[i]);
+              productA = productA*( pow((weightedAbscissas[i*(N_)+alpha]/weights[alpha]),thisMoment[i]) );
+            } else {
+              prefixA = 0;
+              productA = 0;
+            }
           }
           A(k,alpha)=prefixA*productA;
         } //end weights matrix
@@ -249,21 +254,27 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           double productB = 1;
           double modelsumB = 0;
           for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-            // Appendix C, C.11 (A_j+1 matrix)
-            prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
-            productA = 1;
+            if (weights[alpha] != 0) {
+              // Appendix C, C.11 (A_j+1 matrix)
+              prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
+              productA = 1;
 
-          // Appendix C, C.16 (B matrix)
-            productB = weights[alpha];
-            productB = productB*( -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) ) );
+              // Appendix C, C.16 (B matrix)
+              productB = weights[alpha];
+              productB = productB*( -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) ) );
         
-            for (unsigned int n = 0; n < N_xi; ++n) {
-              if (n != j) {
-                // A_j+1 matrix:
-                productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
-                // B matrix:
-                productB = productB*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+              for (unsigned int n = 0; n < N_xi; ++n) {
+                if (n != j) {
+                  // A_j+1 matrix:
+                  productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                  // B matrix:
+                  productB = productB*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                }
               }
+            } else {
+              prefixA = 0;
+              productA = 0;
+              productB = 0;
             }
 
             modelsumB = modelsumB + models[j*(N_)+alpha];
