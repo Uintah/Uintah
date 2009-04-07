@@ -388,7 +388,7 @@ int main(int argc, char *argv[]){
     countg[i] = 0;
   
   scat = 0.0;
-  linear_b = 1;
+  linear_b = 0;
   eddington_f = 0;
   eddington_g = 0;
   PhFunc = ISOTROPIC;
@@ -398,12 +398,12 @@ int main(int argc, char *argv[]){
   StopLowerBound = 1e-10;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
-  ratioBCx = 0.9;
-  ratioBCy = 1.0;
-  ratioBCz = 1.0;
+  Ncx = 20;
+  Ncy = 20;
+  Ncz = 20;
+  ratioBCx = 0.8;
+  ratioBCy = 0.8;
+  ratioBCz = 0.8;
   Lx = 1;
   Ly = 1;
   Lz = 1;
@@ -769,27 +769,35 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1000; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
    // TopBottomNo = Ncx * Ncy;
 
-   // rayNo_Vol[454] = 60000;
+   // rayNo_Vol[454] = 60000 ;
 
+   
+   // (x,0,0) 4 lines at the center
+   
+   for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+     for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
+       for ( int i = 0; i < Ncx; i ++ )
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 5000;
+   
    int iSurface;
    // initial all surface elements ray no = 0
    // top, bottom surfaces
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_surface[TOP][iSurface] = 1000;
-       rayNo_surface[BOTTOM][iSurface] = 1000;
+       rayNo_surface[TOP][iSurface] = 0;
+       rayNo_surface[BOTTOM][iSurface] = 0;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_surface[FRONT][iSurface] = 1000;
-       rayNo_surface[BACK][iSurface] = 1000;
+       rayNo_surface[FRONT][iSurface] = 0;
+       rayNo_surface[BACK][iSurface] = 0;
      }   
 
 
@@ -797,10 +805,20 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_surface[LEFT][iSurface] = 1000;
-       rayNo_surface[RIGHT][iSurface] = 1000;
+       rayNo_surface[LEFT][iSurface] = 0;
+       rayNo_surface[RIGHT][iSurface] = 0;
      }
 
+
+   for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+     for ( int j = 0; j < Ncy; j ++){
+       iSurface = j + k*Ncy;
+       rayNo_surface[LEFT][iSurface] = 5000;
+       rayNo_surface[RIGHT][iSurface] = 5000;
+      
+     }
+
+      
    MakeTableFunction obTable;    
    double *CO2 = new double [VolElementNo];
    double *H2O = new double [VolElementNo];
@@ -818,10 +836,10 @@ int main(int argc, char *argv[]){
    //  #include "inputLiuWsgg.cc"
    //#include "inputBressloffRadCoeff.cc"
    cout <<" before inputFSK file" << endl;
-   #include "inputFSKhomoWebb.cc"
+   #include "inputFSKhomoWebbRg.cc"
    
   int rayNouniform;
-  rayNouniform = 1000;
+  rayNouniform = 5000;
   // generate uniform distributed from 0 to 1 , R same size as rayNo.
   int Runisize;
   Runisize = rayNouniform; // same as rayNo
@@ -1559,7 +1577,7 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoRg1000-L1-101010", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoRg5000-L1-202020-onlyleftright-11111", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
@@ -1586,16 +1604,16 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolWebbHomoRg1000-L1-101010",
+  obTable.vtkVolTableMake("vtkVolWebbHomoRg5000-L1-202020-onlycenter-11111",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
 
     
   // obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
-  obTable.singleArrayTable(kl, Runisize, 1, "abcsTableRg1000.dat");
-  obTable.singleArrayTable(g, Runisize, 1, "wvnTableRg1000.dat");
-  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableRg1000.dat");
+  // obTable.singleArrayTable(kl, Runisize, 1, "abcsTableRg5000.dat");
+  // obTable.singleArrayTable(g, Runisize, 1, "wvnTableRg5000.dat");
+  // obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableRg5000.dat");
   
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;

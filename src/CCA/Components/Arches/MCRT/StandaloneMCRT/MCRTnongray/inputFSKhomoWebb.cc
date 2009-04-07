@@ -4,15 +4,11 @@
 // === 1D slab, 0 to 1 m with cold black walls
      
     int fakeIndex = 0;
-  double xx, yy, zz;
   for ( int k = 0; k < Ncz; k ++ ){
     for ( int j = 0; j < Ncy; j ++) {
       for ( int i = 0; i < Ncx; i ++ ) {
 	
 	T_Vol[fakeIndex] = 1000; // k
-	xx = (X[i] + X[i+1])/2;
-	yy = (Y[j] + Y[j+1])/2;
-	zz = (Z[k] + Z[k+1])/2;
 
 	a_Vol[fakeIndex] = 1;
 	scatter_Vol[fakeIndex] = 0;
@@ -109,10 +105,11 @@
 
 // read in Random number with g and k
 cout << "read in data" << endl;
+// Rg
 //ToArray(gSize, Rkg, "afterInterpolationRkg"); // get Rkg from file
 //ToArray(gkSize, gk, "HITEMPoldLBLkgT1000Trad1000-CO201H2O02CO003.dat");
 
-
+// Reta
 ToArray(gSize, Rkg, "RwvnabcsNoIb.dat"); // get Rwvn --no planck function weighting
 
 //ToArray(gSize, Rkg, "RwvnabcsNosorting2.dat"); // get Rwvn -- CDF obtained from planck function weighted

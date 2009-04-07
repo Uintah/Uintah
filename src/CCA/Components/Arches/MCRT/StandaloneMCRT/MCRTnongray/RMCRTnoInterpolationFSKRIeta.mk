@@ -16,6 +16,6 @@ RMCRTnoInterpolationFSKRIeta : $(OBJS)
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o *.d  RMCRTnoInterpolationFSKRIeta *.out
+	rm -f *.o *.d  *.out
 
 -include $(SRCS:.cc=.d)

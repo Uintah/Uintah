@@ -63,7 +63,7 @@ ray::~ray(){
   
 void ray::set_emissS_vol(MTRand &MTrng,
 			 double *sVol){
-  double phi, theta;
+  // double phi, theta;
   R_phi =  MTrng.randExc();
   R_theta = MTrng.randExc();
   
