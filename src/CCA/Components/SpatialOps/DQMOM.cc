@@ -277,7 +277,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               productB = 0;
             }
 
-            modelsumB = modelsumB + models[j*(N_)+alpha];
+            modelsumB = modelsumB - models[j*(N_)+alpha];
              
             A(k,(j+1)*N_ + alpha)=prefixA*productA;
 
