@@ -40,7 +40,7 @@
 for ( int i = Changei+1; i < Npz; i ++ )
      Tc[i] = (-1000 * (Z[i]+2) + 6900)/3.625;
 
-   //  ob.singleArrayTable(Tc, Npz, 1, "Tctable");
+   //  obTable.singleArrayTable(Tc, Npz, 1, "Tctable");
 
    for ( int i = 0; i < Ncz; i ++ ){
      for ( int j = 0; j < Ncy; j ++ ){
