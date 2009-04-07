@@ -67,7 +67,7 @@ $(links_to_create) :
 # This creates the VisIt Makefile.  Have to move your Makefile out of
 # the way, rename VisIt's Makefile, and put ours back.
 #
-${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.so
+${VISIT_SRCDIR}/Makefile.visit : lib/libStandAlone_tools_uda2vis.${SO_OR_A_FILE}
 	@echo create visit makefile
 	@cd ${VISIT_SRCDIR}; \
 	  rm -f Makefile.visit; \
