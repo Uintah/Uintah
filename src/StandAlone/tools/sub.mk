@@ -44,13 +44,13 @@ SUBDIRS := \
 
 ifeq ($(HAVE_TEEM),yes)
   SUBDIRS += $(SRCDIR)/uda2nrrd \
-        $(SRCDIR)/radiusMaker 
+             $(SRCDIR)/radiusMaker 
 endif 
 
 ifeq ($(BUILD_VISIT),yes)
-	ifeq ($(HAVE_TEEM),yes)
-  		SUBDIRS += $(SRCDIR)/uda2vis
-	endif 
+        ifeq ($(HAVE_TEEM),yes)
+                SUBDIRS += $(SRCDIR)/uda2vis
+        endif 
 endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
