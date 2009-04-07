@@ -108,7 +108,7 @@ ConstantModel::computeModel( const ProcessorGroup* pc,
 
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter; 
-      model[c] =1;
+      model[c] =-1e-5;
     }
   }
 }

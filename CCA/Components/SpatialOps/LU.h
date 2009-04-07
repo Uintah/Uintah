@@ -59,6 +59,7 @@ class LU{
 
   const int dim_;
   bool isReady_;
+  bool isSingular_;
   SparseMatrix AA_;
 
   std::vector<int> indx;

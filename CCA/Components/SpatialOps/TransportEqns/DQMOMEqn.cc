@@ -273,6 +273,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int matlIndex = 0;
+    Vector Dx = patch->dCell(); 
 
     constCCVariable<double> oldPhi;
     constCCVariable<double> lambda;
@@ -295,11 +296,14 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     }
     old_dw->get(lambda, d_fieldLabels->propLabels.lambda, matlIndex, patch, gac, 1);
     old_dw->get(uVel,   d_fieldLabels->velocityLabels.uVelocity, matlIndex, patch, gac, 1); 
+    double vol = Dx.x();
 #ifdef YDIM
     old_dw->get(vVel,   d_fieldLabels->velocityLabels.vVelocity, matlIndex, patch, gac, 1); 
+    vol *= Dx.y();
 #endif
 #ifdef ZDIM
     old_dw->get(wVel,   d_fieldLabels->velocityLabels.wVelocity, matlIndex, patch, gac, 1); 
+    vol *= Dx.z();
 #endif
     Fields::PartVelMap::iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get( partVel, iter->second, matlIndex, patch, gac, 1 ); 
@@ -327,7 +331,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       RHS[c] += Fdiff[c] - Fconv[c];
 
       if (d_addSources) {
-        RHS[c] += src[c];           
+        RHS[c] += src[c]*vol;           
       }
     } 
   }

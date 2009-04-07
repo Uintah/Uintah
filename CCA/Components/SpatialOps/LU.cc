@@ -31,6 +31,8 @@ LU::decompose()
   double tiny = 1e-10;
   vector<double> vv(dim_);
 
+  isSingular_ = false;
+
   // loop over rows to get the implicit scaling information
   for (i=1; i<=dim_; ++i) {
     big = 0.0;
@@ -41,7 +43,10 @@ LU::decompose()
       }
     }
     if (big == 0.0) {
-    // return error "Singular matrix in routine ludcmp"
+      // return error "Singular matrix in routine ludcmp"
+      isSingular_ = true;
+      isReady_ = true;
+      return;
     }
     // save the scaling
     vv[i]=1.0/big;
@@ -123,6 +128,13 @@ LU::back_subs( double * rhs )
 {
   if( ! isReady_ )
     throw std::runtime_error( "LU::back_subs() cannot be executed until LU::decompose() has been called!" );
+
+  if( isSingular_ ) {
+    for (int i=0; i<dim_; ++i) {
+      rhs[i] = 0;
+    }
+    return;
+  }
 
   // AA_ now contains the LU-decomposition of the original "A" matrix.
   // rhs[0] is untouched for now since L(0,0) = 1.
