@@ -82,10 +82,6 @@
 
       <number_quad_nodes>1</number_quad_nodes>
 
-      <Moment><m>[0,1]</m></Moment>
-      <Moment><m>[0,2]</m></Moment>
-      <Moment><m>[1,1]</m></Moment>
-
       <VelModel>
         <regime>1</regime>
         <Re>100</Re>
@@ -123,17 +119,21 @@
       </Weights>
 
       <Ic label="length">
-        <doDiff>true</doDiff>
+        <doDiff>false</doDiff>
         <doConv>true</doConv>
         <model label="constant" />
       </Ic>
       
       <Ic label="something_else">
-        <doDiff>true</doDiff>
+        <doDiff>false</doDiff>
         <doConv>true</doConv>
         <model label="constant" />
       </Ic>
-    
+
+      <Moment><m>[0,1]</m></Moment>
+      <Moment><m>[1,0]</m></Moment>
+      <Moment><m>[1,1]</m></Moment>
+
     </DQMOM>
 
 			
