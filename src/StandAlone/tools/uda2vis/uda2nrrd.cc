@@ -409,15 +409,20 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
       LevelP level;
       for (int i = 0; i < numLevels; i++) {
 	level = grid->getLevel(i);
-	level->findIndexRange(low, hi);
+	  
+	if(remove_boundary) {
+	   level->findInteriorIndexRange(low, hi);
+	} 
+	else {
+	  level->findIndexRange(low, hi);
+	}
+
 	int numPatches = level->numPatches();
 	for (int j = 0; j < numPatches; j++) {
 	  const Patch* patch = level->getPatch(j);
 
 	  if (remove_boundary) { // this needs to be kept outside the loop, same check again and again
-	    // cout << "Remove the boundary " << varType << endl;
 	    if(varType.find("CC") != string::npos) {
-	      // cout << "In here\n";
 	      patch_lo = patch->getCellLowIndex__New();
 	      patch_hi = patch->getCellHighIndex__New();
 	    } 
@@ -429,9 +434,19 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		patch_hi = patch->getHighIndex(Patch::YFaceBased);
 	      else if(varType.find("SFCZ") != string::npos)
 		patch_hi = patch->getHighIndex(Patch::ZFaceBased);
-	      else if(varType.find("NC") != string::npos)
-		patch_hi = patch->getNodeHighIndex__New();
-		// patch_hi = patch->getExtraNodeHighIndex__New();
+	      else if(varType.find("NC") != string::npos) {
+	        patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) + IntVector(1, 1, 1);
+		if (patch_hi.x() < hi.x()) {
+		  patch_hi = IntVector(patch_hi.x() - 1, patch_hi.y(), patch_hi.z());
+		}  
+		if (patch_hi.y() < hi.y()) {
+		  patch_hi = IntVector(patch_hi.x(), patch_hi.y() - 1, patch_hi.z());
+		}  
+		if (patch_hi.z() < hi.z()) {
+		  patch_hi = IntVector(patch_hi.x(), patch_hi.y(), patch_hi.z() - 1);
+		}  
+		// patch_hi = patch->getNodeHighIndex__New();
+              }
 	    }
 	  }
 	  else { // don't remove the boundary
@@ -449,18 +464,15 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 		patch_hi = patch->getSFCZHighIndex__New();
 	      else if(varType.find("NC") != string::npos)
 		patch_hi = patch->getExtraNodeHighIndex__New();
-		// patch_hi = patch->getNodeHighIndex__New();
 	    }
 	  }
 
-	  if(remove_boundary) {
+	  /*if(remove_boundary) {
 	    level->findInteriorIndexRange(low, hi);
-	    // level->getInteriorSpatialRange(box);
 	  } 
 	  else {
 	    level->findIndexRange(low, hi);
-	    // level->getSpatialRange(box);
-	  }	
+	  }*/	
 
 	  // Moved above
 	  // level->findIndexRange(low, hi);
@@ -496,7 +508,9 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
 	  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
 
-	  patchInfo patchInfoObj(indexArr, minMaxArr, hiLoArr);
+	  int nCells = (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()).x();
+
+	  patchInfo patchInfoObj(indexArr, minMaxArr, hiLoArr, nCells);
 	  patchInfoVecPtr->push_back(patchInfoObj);
 	}
       }		
