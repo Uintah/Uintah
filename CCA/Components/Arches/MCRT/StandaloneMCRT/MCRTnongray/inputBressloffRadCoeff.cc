@@ -10,7 +10,9 @@
    double xaveg;
    // as the properties only change with x, so calculate x's first
    // then simply assign these values to ys and zs.
-   
+
+// configure A soot = 1e-7 magnitude
+// configure B soot = 1e-8 magnitude
    for ( int i = 0; i < Ncx; i ++ ) {
      
      xaveg = ( X[i] + X[i+1] + Lx )/2;

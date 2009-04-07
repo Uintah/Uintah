@@ -153,7 +153,7 @@ void rayfromSurf(SurfaceType &obSurface,
 		 double ***netInten_surface,
 		 double *s,
 		 BinarySearchTree &obBST,
-		 int *countg, const int &gSize, const int &VolElementNo,
+		 const int &gSize, const int &VolElementNo,
 		 const double *Rkg, const double *gk,
 		 const double *kl, const double *g, const double *Ibeta){
   
@@ -373,31 +373,27 @@ int main(int argc, char *argv[]){
   
   
   BinarySearchTree obBST;
-  gSize = 1495001; //60000;
+  gSize = 1495001; 
   gkSize = gSize * 2;
   iggNo = 0;
-  int *countg = new int[gSize];  
+
   double *Rkg = new double [gSize];
   double *gk = new double [gkSize];
-  
-  for ( int i = 0; i < gSize; i ++)
-    countg[i] = 0;
-  
+   
   scat = 0.0;
   linear_b = 1;
   eddington_f = 0;
   eddington_g = 0;
   PhFunc = ISOTROPIC;
   coluwgka = 1;
-
   
   StopLowerBound = 1e-10;
-  rayNoSurface = 1;
+  rayNoSurface = 0;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
-  ratioBCx = 0.9;
+  Ncx = 20;
+  Ncy = 20;
+  Ncz = 20;
+  ratioBCx = 0.8;
   ratioBCy = 1.0;
   ratioBCz = 1.0;
   Lx = 1;
@@ -765,10 +761,13 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 60000; 
-   // TopBottomNo = Ncx * Ncy;
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
 
-   //  rayNo_Vol[454] = 60000;
+   for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+      for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
+       for ( int i = 0; i < Ncx; i ++ )
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 5000;   
+   //  rayNo_Vol[454] = 100000;
 
    int iSurface;
    // initial all surface elements ray no = 0
@@ -776,16 +775,16 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_surface[TOP][iSurface] = 60000;
-       rayNo_surface[BOTTOM][iSurface] = 60000;
+       rayNo_surface[TOP][iSurface] = 0;
+       rayNo_surface[BOTTOM][iSurface] = 0;
      }
 
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_surface[FRONT][iSurface] = 60000;
-       rayNo_surface[BACK][iSurface] = 60000;
+       rayNo_surface[FRONT][iSurface] = 0;
+       rayNo_surface[BACK][iSurface] = 0;
      }   
 
 
@@ -793,10 +792,20 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_surface[LEFT][iSurface] = 60000;
-       rayNo_surface[RIGHT][iSurface] = 60000;
+       rayNo_surface[LEFT][iSurface] = 0;
+       rayNo_surface[RIGHT][iSurface] = 0;
      }
 
+
+     for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+     for ( int j = 0; j < Ncy; j ++){
+       iSurface = j + k*Ncy;
+       rayNo_surface[LEFT][iSurface] = 5000;
+       rayNo_surface[RIGHT][iSurface] = 5000;
+      
+     }
+
+     
    MakeTableFunction obTable;    
    double *CO2 = new double [VolElementNo];
    double *H2O = new double [VolElementNo];
@@ -814,10 +823,12 @@ int main(int argc, char *argv[]){
    //  #include "inputLiuWsgg.cc"
    //#include "inputBressloffRadCoeff.cc"
    cout <<" before inputFSK file" << endl;
-   #include "inputFSKhomoWebb.cc"
+   #include "inputFSKhomoWebbRetawithIb.cc"
+   //   #include "inputFSKhomoWebbRetanoIb.cc"
+    
    
   int rayNouniform;
-  rayNouniform = 60000;
+  rayNouniform = 5000;
   // generate uniform distributed from 0 to 1 , R same size as rayNo.
   int Runisize;
   Runisize = rayNouniform; // same as rayNo
@@ -862,11 +873,11 @@ int main(int argc, char *argv[]){
   }
 
     //  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
-  obTable.singleArrayTable(kl, Runisize, 1, "abcsTableReta60000noIbCDF.dat");
-  obTable.singleArrayTable(g, Runisize, 1, "wvnTableReta60000noIbCDF.dat");
-  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableReta60000noIbCDF.dat");
+  //  obTable.singleArrayTable(kl, Runisize, 1, "abcsTableReta5000IbCDF.dat");
+  // obTable.singleArrayTable(g, Runisize, 1, "wvnTableReta5000IbCDF.dat");
+  // obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableReta5000IbCDF.dat");
 
-    MTRand MTrng;
+   MTRand MTrng;
    VolElement obVol;
    VirtualSurface obVirtual;
    obVirtual.get_PhFunc(PhFunc, linear_b, eddington_f, eddington_g);   
@@ -1050,7 +1061,6 @@ int main(int argc, char *argv[]){
 		      netInten_surface,
 		      s,
 		      obBST,
-		      countg,
 		      gSize, VolElementNo, Rkg, gk, kl, g,
 		      Ibeta);
 	 
@@ -1108,7 +1118,6 @@ int main(int argc, char *argv[]){
 		      netInten_surface,
 		      s,
 		      obBST,
-		      countg,
 		      gSize, VolElementNo, Rkg, gk, kl, g,
 		      Ibeta);
 	}
@@ -1166,7 +1175,7 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
+		      s, obBST,
 		      gSize, VolElementNo, Rkg, gk, kl, g,
 		      Ibeta);
 	}
@@ -1223,7 +1232,7 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
+		      s, obBST, 
 		      gSize, VolElementNo, Rkg, gk, kl, g,
 		      Ibeta);
 	}
@@ -1281,7 +1290,7 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
+		      s, obBST, 
 		      gSize, VolElementNo, Rkg, gk, kl, g,
 		      Ibeta);
 	}
@@ -1339,7 +1348,7 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
+		      s, obBST,
 		      gSize, VolElementNo, Rkg, gk, kl, g,
 		      Ibeta);
 	}
@@ -1511,8 +1520,8 @@ int main(int argc, char *argv[]){
 	    // the OutIntenVol is changing with each ray too!!!
 	    sumIncomInten = 0;
 
-	    if ( VolIndex==454) 
-	      obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ieta60000cell454noIbCDF.dat");
+	    //    if ( VolIndex==454) 
+	    //      obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ieta5000cell454noIbCDF-L5.dat");
 
 	 	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
@@ -1548,11 +1557,13 @@ int main(int argc, char *argv[]){
   time (&time_end); 
   
   // surface cell
-
+    
   double *integrIntenSurface[6];
   for ( int i = 0; i < 6; i ++)
     integrIntenSurface[i] = new double[surfaceNo[i]];
 
+  if ( rayNoSurface != 0 ) {
+    
   for ( int i = 0; i < 6; i ++)
     for ( int j = 0; j < surfaceNo[i]; j++)
       integrIntenSurface[i][j] = 0;
@@ -1577,18 +1588,21 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta60000-L1-101010noIbCDF", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta5000-L1-202020IbCDF-11111", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
-
+    }
+    
   
     // Vol cell
   
    double integrIntenVol[VolElementNo];
    for ( int i = 0; i < VolElementNo; i ++)
      integrIntenVol[i] = 0;
-   
+
+   if ( rayNoVol != 0 ){
+     
   // WSGG all weights are 1, sum all bands together
 
     for ( int i = 0; i < VolElementNo; i ++)
@@ -1604,13 +1618,14 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolWebbHomoReta60000-L1-101010noIbCDF",
+  obTable.vtkVolTableMake("vtkVolWebbHomoReta5000-L1-202020IbCDF-11111",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
 
   
- 
+   }
+   
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;
   
@@ -1672,7 +1687,6 @@ int main(int argc, char *argv[]){
   delete[] SFV;
   delete[] Rkg;
   delete[] gk;
-  delete[] countg;
   delete[] g;
   delete[] kl;
   delete[] Runi;
