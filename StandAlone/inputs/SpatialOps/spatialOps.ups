@@ -84,12 +84,10 @@
 
       <VelModel>
         <regime>1</regime>
-        <Re>100</Re>
+        <new>1</new>
         <eta>1</eta>
-        <rhof>1</rhof>
-        <beta>0</beta>
+        <rho_ratio>0.001</rho_ratio>
         <eps>1</eps>
-        <part_mass>1</part_mass>
       </VelModel>
 
       <Models>
