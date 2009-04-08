@@ -3,6 +3,66 @@
 
 \subsection{Introduction}
 
+The Material Point Method (MPM) as described by Sulsky, et al.
+\cite{sulskycmame,sulskycpc} is a particle method for structural
+mechanics simulations.  Solid objects are represented by a
+collection of particles, or ``material points."  Each
+of these particles carries with it information for that part of the
+solid object that it represents.  This includes the position, mass, volume,
+velocity, stress and state of deformation of that material.  MPM differs from
+other so called ``mesh-free" particle methods in that, while each object
+is primarily represented by a collection of particles, a computational mesh
+is also an important part of the calculation.  Particles do not interact
+with each other directly, rather the particle information is accumulated
+to the grid, where the equations of motion are integrated forward in time.
+This time advanced solution is then used to update the particle state.
+
+The method usually uses a regular structured grid as a computational mesh.
+While this grid, in principle, deforms as the material that it is representing
+deforms, at the end of each timestep, it is reset to its original undeformed
+position, in effect providing a new computational grid for each timestep.
+The use of a regular structured grid for each time step has a number of
+computational advantages.  Computation of spatial gradients is simplified.
+Mesh entanglement, which can plague fully Lagrangian techniques, such as
+the Finite Element Method (FEM), is avoided.  MPM has also been successful
+in solving problems involving contact between colliding objects, having an
+advantage over FEM in that the use of the regular grid eliminates the
+need for doing costly searches for contact surfaces\cite{bard}.
+
+In addition to the advantages that MPM brings, as with any numerical technique, it has its own set of shortcomings.  It is computationally more
+expensive than a comparable FEM code.  Accuracy for MPM is typically lower
+than FEM, and errors associated with particles moving around the computational
+grid can introduce non-physical oscillations into the solution.  Finally,
+numerical difficulties can still arise in simulations involving large
+deformation that will prematurely terminate the simulation.  The severity of
+all of these issues (except for the expense) has been significantly reduced
+with the introduction of the Generalized Interpolation Material Point Method,
+or GIMP\cite{bardgimp}.  The basic concepts associated with GIMP will be
+described in the subsequent section.  Throughout this document, MPM (which
+ends up being a special case of GIMP) will frequently be referred to
+interchangably with GIMP.
+
+In addition, MPM can be incorporated with a multi-material CFD algorithm
+as the structural component in a fluid-structure interaction formulation.
+This capability was first demonstrated in the CFDLIB codes from
+Los Alamos by Bryan Kashiwa and co-workers\cite{kashiwa2000}.  There, as
+in the Uintah-MPMICE component,
+MPM serves as the Lagrangian description of the solid
+material in a multimaterial CFD code.  Certain elements of the
+solution procedure are based in the Eulerian CFD algorithm, including
+intermaterial heat and momentum transfer as well as satisfaction
+of a multimaterial equation of state.  The use of a Lagrangian method
+such as MPM to advance the solution of the solid material eliminates
+the diffusion typically associated with Eulerian methods.  The Uintah-MPM
+component will be described in later chapter of this manual.
+
+Subsequent sections of this chapter will first give a relatively brief
+description of the MPM and GIMP algorithms.  This will, of course, be
+focused mainly on describing the capabilities of the Uintah-MPM component.
+Following that is a description of the information that goes into an input
+file.  Finally, a number of examples are provided, along with representative
+results.
+
 \subsection{Theory - Algorithm Description}
 
 \subsection{Uintah Specification}
@@ -18,3 +78,4 @@
 \subsection{Examples}
 
 \subsection{References}
+\bibliography{mpm}
