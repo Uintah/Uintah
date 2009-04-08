@@ -12,6 +12,10 @@
 
 function X = dqmom_linear_system(w, wa, k, G)
 
+% diffusivity in phase space (of internal coordinate j at quad node alpha)
+
+Gamma_xi = 0.1;
+
 N_xi = size(wa,1);
 N = size(w,2);
 Ntot = (N_xi+1)*N;
@@ -25,6 +29,8 @@ if (Ntot ~= size(k,1) )
   return;
 end
 
+G;
+
 for K=1:Ntot
     for alpha=1:N
         prefixA=1;
@@ -36,31 +42,68 @@ for K=1:Ntot
         A(K,alpha)=prefixA*productA;
     end
     
-    totalsumB=0;
+    totalsumS = 0;
+    totalsumD = 0;
     for j=1:N_xi
-        prefixA = 1;
-        productA=1;
-        productB=1;
-        modelsumB=0;
+        prefixA    = 1;
+        productA   = 1;
+        
+        prefixS    = 1;
+        productS   = 1;
+        modelsumS  = 0;
+        
+        prefixD    = 1; %weight*diffusivity
+        prefixD_1  = 1; %k_j*(k_j-1)*<xi_j>^(kj-2)
+        productD_1 = 1; %prod_n(neq j) = 1 to N-xi of <xi_n>^(kn)
+        prefixD_2  = 1; %k_j*k_n*<xi_j>^(kj-1)*<xi_n>^(kn-1)
+        productD_2 = 1; %prod_m(neq j neq n) = 1 to N_xi of <xi_m>^(km)
+        
+        quadsumS = 0;
+        quadsumD = 0;
+        modelsumS = 0;
         for alpha=1:N
-            prefixA=(k(K,j))*(wa(j,alpha)/w(alpha))^(k(K,j)-1);
-            productA=1;
-            productB=w(alpha);
-            productB=productB*(-k(K,j)*( wa(j,alpha)/w(alpha) )^(k(K,j)-1));
+            prefixA    = k(K,j)*(wa(j,alpha)/w(alpha))^(k(K,j)-1);
+            productA   = 1;
+            
+            prefixS    = -k(K,j)*(wa(j,alpha)/w(alpha))^(k(K,j)-1);
+            productS   = 1;
+            
+            prefixD    = w(alpha)*Gamma_xi;
+            prefixD_1  = (k(K,j))*(k(K,j)-1)*(wa(j,alpha)/w(alpha))^(k(K,j)-2);
+            productD_1 = 1;
+            
             for n=1:N_xi
                 if (n ~= j)
-                    productA = productA*( wa(n,alpha)/w(alpha) )^(k(K,n));
-                    productB = productB*( wa(n,alpha)/w(alpha) )^(k(K,n));
+                    productA   = productA*( wa(n,alpha)/w(alpha) )^(k(K,n));
+                    productS   = productS*( wa(n,alpha)/w(alpha) )^(k(K,n));
+                    productD_1 = productD_1*(wa(n,alpha)/w(alpha))^(k(K,n));
+                    prefixD_2  = k(K,j)*k(K,n)*((wa(j,alpha)/w(alpha))^(k(K,j)-1))*((wa(n,alpha)/w(alpha))^(k(K,n)-1));
+                    
+                    for m=1:N_xi
+                        if (m ~= n)
+                            productD_2 = productD_2*( wa(m,alpha)/w(alpha) )^(k(K,m));
+                        end
+                    end
                 end
             end
-            modelsumB = modelsumB - G(j,alpha);
+            % sum over all models (not applicable in this case)
+            modelsumS = modelsumS - G(j,alpha);
+            
             A(K,(j)*N+alpha)=prefixA*productA;
+            
+            quadsumS = quadsumS + w(alpha)*modelsumS*prefixS*productS;
+            quadsumD = quadsumD + w(alpha)*Gamma_xi*(prefixD_1*productD_1 + prefixD_2*productD_2);
         end
-        totalsumB = totalsumB + productB*modelsumB;
+        totalsumS = totalsumS + quadsumS;
+        totalsumD = totalsumD + quadsumD;
     end
-    B(K) = totalsumB;
+    S(K) = totalsumS;
+    D(K) = totalsumD;
 end
 
+% Cmna = D_xa * wa * d(\xi_m,a)/dx_i * d(\xi_n,a)/dx_i
+
+B = S;
 B=B';
 
 %for K=1:Ntot
@@ -90,7 +133,6 @@ if (det(A) == 0)
   return;
 end
 
-A
-B
-X = A^-1*B
-
+A;
+B;
+X = A^-1*B;
