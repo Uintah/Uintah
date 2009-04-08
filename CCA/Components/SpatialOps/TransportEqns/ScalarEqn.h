@@ -32,7 +32,6 @@ class CCScalarEqnBuilder: public EqnBuilder
 public:
   CCScalarEqnBuilder( Fields* fieldLabels, 
                       ExplicitTimeInt* timeIntegrator, 
-                      const VarLabel* transportVarLabel, 
                       string eqnName );
   ~CCScalarEqnBuilder();
 
@@ -52,7 +51,7 @@ public EqnBase{
 
 public: 
 
-  ScalarEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName );
+  ScalarEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName );
 
   ~ScalarEqn();
 

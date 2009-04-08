@@ -27,10 +27,8 @@ class DQMOMEqnBuilderBase
 public:
   DQMOMEqnBuilderBase( Fields* fieldLabels, 
               ExplicitTimeInt* timeIntegrator,
-              const VarLabel* transportVarLabel, 
               string eqnName ) : 
               d_fieldLabels(fieldLabels), 
-              d_transportVarLabel(transportVarLabel), 
               d_eqnName(eqnName), 
               d_timeIntegrator(timeIntegrator) {};
   virtual ~DQMOMEqnBuilderBase(){};
@@ -40,7 +38,6 @@ public:
 protected: 
   Fields* d_fieldLabels; 
   ExplicitTimeInt* d_timeIntegrator; 
-  const VarLabel* d_transportVarLabel; 
   string d_eqnName; 
 }; // class DQMOMEqnBuilder
 

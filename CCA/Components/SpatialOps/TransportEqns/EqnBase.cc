@@ -11,16 +11,12 @@
 using namespace std;
 using namespace Uintah;
 
-EqnBase::EqnBase(Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName):
-d_fieldLabels(fieldLabels), d_timeIntegrator(timeIntegrator), d_transportVarLabel(transportVarLabel), d_eqnName(eqnName)
+EqnBase::EqnBase(Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName):
+d_fieldLabels(fieldLabels), d_timeIntegrator(timeIntegrator), d_eqnName(eqnName)
 {
-  //needed?
-  //d_transportVarLabel->addReference();
 }
 
 EqnBase::~EqnBase()
 {
-  VarLabel::destroy(d_transportVarLabel);
-  VarLabel::destroy(d_oldtransportVarLabel);
 }
  
