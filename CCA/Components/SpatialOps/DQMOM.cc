@@ -247,44 +247,49 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         } //end weights matrix
 
         // weighted abscissas
-        double totalsumB = 0;
+        double totalsumS = 0;
         for( unsigned int j = 0; j < N_xi; ++j ) {
-          double prefixA = 1;
-          double productA = 1;
-          double productB = 1;
-          double modelsumB = 0;
+          double prefixA    = 1;
+          double productA   = 1;
+          
+          double prefixS    = 1;
+          double productS   = 1;
+          double modelsumS  = 0;
+          
+          double quadsumS = 0;
           for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
             if (weights[alpha] != 0) {
               // Appendix C, C.11 (A_j+1 matrix)
               prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
               productA = 1;
 
-              // Appendix C, C.16 (B matrix)
-              productB = weights[alpha];
-              productB = productB*( -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) ) );
+              // Appendix C, C.16 (S matrix)
+              prefixS = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
+              productS = 1;
         
               for (unsigned int n = 0; n < N_xi; ++n) {
                 if (n != j) {
                   // A_j+1 matrix:
                   productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
-                  // B matrix:
-                  productB = productB*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                  // S matrix:
+                  productS = productS*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
                 }
               }
             } else {
               prefixA = 0;
               productA = 0;
-              productB = 0;
+              productS = 0;
             }
 
-            modelsumB = modelsumB - models[j*(N_)+alpha];
+            modelsumS = modelsumS - models[j*(N_)+alpha];
              
             A(k,(j+1)*N_ + alpha)=prefixA*productA;
-
+            
+            quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
           }//end quad nodes
-          totalsumB = totalsumB + (productB)*(modelsumB);
+          totalsumS = totalsumS + quadsumS;
         }//end int coords
-        B[k] = totalsumB;
+        B[k] = totalsumS;
       } // end moments
       
       A.decompose();
