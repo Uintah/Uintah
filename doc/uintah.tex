@@ -3,16 +3,17 @@
 \usepackage{amsmath}
 \usepackage[pdftex]{graphicx}
 \usepackage{fancyvrb}
+\usepackage{chapterbib}
 \pdfcompresslevel=9
 \DeclareGraphicsExtensions{{.png},{.pdf},{.jpg},{jpeg}}
 \graphicspath{ {figures/}}
 \usepackage{color}
 %__________________________________
-% new commands
+% new commands for all sections
 \newcommand{\comment}[1]{ \marginpar{{\scriptsize \color{red} #1 }}}
 \newcommand{\red}[1]{\color{red} {#1} \color{black}}
 %__________________________________
-\bibliographystyle{plain}
+
 
 \begin{document}
 
@@ -28,9 +29,6 @@
 
 \begin{abstract}
 
-
-
-
 \end{abstract}
 
 \newpage
@@ -38,10 +36,11 @@
 %%
 %% INTRODUCTION
 %%
+\include{ucf}
 \include{arches}
 \include{ice}
 \include{mpm}
 \include{mpmarches}
 \include{mpmice}
 
-\end{document}
+\end{document} 

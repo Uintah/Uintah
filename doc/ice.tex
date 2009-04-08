@@ -14,21 +14,21 @@ with the option of explicit or semi-implicit }
 \subsection{Uintah Specification}
 %______________________________________________________________________
 \subsubsection{Basic Inputs}
-\footnotesize
+
 \begin{Verbatim}[fontsize=\footnotesize]
  <SimulationComponent type="ice" />
 \end{Verbatim}
-\normalsize
+
 %______________________________________________________________________
 \subsubsection{Physical Constants}
-\footnotesize
+
 \begin{Verbatim}[fontsize=\footnotesize]
 <PhysicalConstants>
    <gravity>            [0,0,0]   </gravity>
    <reference_pressure> 101325.0  </reference_pressure>
 </PhysicalConstants>
 \end{Verbatim}
-\normalsize
+
 %______________________________________________________________________
 \subsubsection{Material Properties}
 For each ICE material the thermodynamic and transport properties must be
@@ -289,7 +289,7 @@ timestep is given by
           {\sum \limits_{{m}=1}^N \frac{\theta_m}{\rho^{o}_m c_m^2} }
 \end{equation}
 %
-which can be written in matrix form $Ax = b$ and solved.  Details on the
+which can be written in matrix form $Ax = b$ and solved with a linear solver.  Details on the
 notation, discretization of Eq. \ref{eq:delP} and the formation of $A$
 and $b$ can be found in
 %
@@ -329,14 +329,15 @@ typical values for both the Uintah:CG and hypre cg solver
 </ImplicitSolver>
 \end{Verbatim}
 %
-The primary variables that the user should be concerned with is
+If the user is interested in altering the tolerance to which the equations are solved they should look at
 \begin{Verbatim}[fontsize=\footnotesize]
-<tolerance> and <outer\_iteration\_tolerance> \\
-\end{Verbatim}
+<tolerance> and <outer\_iteration\_tolerance>
+\end{Verbatim} 
 %
 \noindent
-\begin{tabular}{l p{7cm} p{14cm}}
-\footnotesize{XML tag} &  \footnotesize{Description}\\
+\footnotesize
+\begin{tabular}{l p{8cm}}
+XML tag &  Description\\
 \hline
 \hline
 max\_outer\_iterations           &  maximum number of iterations in the outer loop of the pressure solve.\\
@@ -345,7 +346,9 @@ iters\_before\_timestep\_restart &  \footnotesize number of outer iterations bef
 tolerance                        &   XXXX\\
 \hline
 \end{tabular}
-
+\normalsize\\
+%
+Table below shows some of the
 
 \normalsize
 %______________________________________________________________________
@@ -388,6 +391,7 @@ do\_Refluxing         & boolean &              &    on/off switch for correcting
 
 
 %______________________________________________________________________
+\newpage
 \subsection{Examples}
 \section*{\center Shock Tube}
 \subsection*{\underline{Problem Description}}
@@ -625,6 +629,7 @@ doman.
 
 
 \subsection{References}
+\bibliographystyle{plain}
 \bibliography{ice}
 
 
