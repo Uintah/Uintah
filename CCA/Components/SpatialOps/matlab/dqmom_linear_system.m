@@ -53,7 +53,7 @@ for K=1:Ntot
                     productB = productB*( wa(n,alpha)/w(alpha) )^(k(K,n));
                 end
             end
-            modelsumB = modelsumB - G(n,alpha);
+            modelsumB = modelsumB - G(j,alpha);
             A(K,(j)*N+alpha)=prefixA*productA;
         end
         totalsumB = totalsumB + productB*modelsumB;
