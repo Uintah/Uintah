@@ -101,11 +101,13 @@ component will be described in later chapter of this manual.
 Subsequent sections of this chapter will first give a relatively brief
 description of the MPM and GIMP algorithms.  This will, of course, be
 focused mainly on describing the capabilities of the Uintah-MPM component.
+This is followed by a section that attempts to relate the information in
+Section~\ref{Sec:AlgDesc} to the implementation in Uintah.
 Following that is a description of the information that goes into an input
 file.  Finally, a number of examples are provided, along with representative
 results.
 
-\subsection{Algorithm Description}
+\subsection{Algorithm Description} \label{Sec:AlgDesc}
 
 Time and space prohibit an exhaustive description of the theoretical
 underpinnings of the Material Point Method.   Here we will concentrate
@@ -114,8 +116,8 @@ to the governing equations.  The interested reader should
 consult \cite{sulskycmame,sulskycpc} for the development of these discrete
 equations in MPM, and \cite{bardgimp} for the development of the equations
 for the GIMP method.  These end up being very similar, the differences in
-how the two developments affect implementation will be described as we
-proceed.
+how the two developments affect implementation will be described in
+Section~\ref{gimp_mpm}.
 
 In solving a structural mechanics problem with MPM, one begins by discretizing
 the object of interest into a suitable number of particles, or ``material
@@ -143,7 +145,12 @@ variables from the current (discrete) time $n$ to the subsequent
 time $n+1$.  Note that particle mass, $m_p$, typically remains constant
 throughout a simulation unless solid phase reaction models are utilized,
 a feature that is not present in Uintah-MPM.  (Such models are available
-in MPMICE, see Section \ref{Sec:MPMICE}.)
+in MPMICE, see Section \ref{Sec:MPMICE}.)  It is also important to point
+out that the algorithm for advancing the timestep is based on the so-called
+Update Stress Last (USL) algorithm.  The superiority of this approach over
+the Update Stress First (USF) approach was clearly demonstrated by Wallstedt
+and Guilkey \cite{WallstedtJCP}.  USF was the formulation used in Uintah
+until mid-2008.
 
 The discrete momentum equation that results from the weak form is given as:
 \begin{eqnarray}
@@ -153,20 +160,21 @@ where $\bfm$ is the mass matrix, $\bfa$ is the acceleration vector,
 $\bfF^{\rm{ext}}$ is the external force vector (sum of the body forces and
 tractions), and $\bfF^{\rm{int}}$ is the internal force vector resulting from
 the divergence of the material stresses.  The construction of each of these
-quantities will be described below.
+quantities, which are based at the nodes of the computational grid,
+will be described below.
 
 The solution begins by accumulating the particle state on the
 nodes of the computational grid, to form the mass matrix $\bfm$ and to find
 the nodal external forces $\bfF^{\rm{ext}}$, and velocities,
 $\bfv$.  In practice, a lumped mass matrix is used to avoid the need to
 invert a system of equations to solve Eq. \ref{newton2} for acceleration.
-These quantities are calculated at individual nodes by the following equations, where the
-$\sum\limits_{p}$ represents a summation over all particles:
+These quantities are calculated at individual nodes by the following equations,
+where the $\sum\limits_{p}$ represents a summation over all particles:
 \begin{eqnarray}
 m_i = \sum_{p} S_{ip} m_p,  \;\;\;\;\;\; 
 \bfv_i = \frac{\sum\limits_{p} S_{ip} m_p \bfv_p}{m_i},  \;\;\;\;\;\;
 \bfF^{\rm{ext}}_i &=& \sum_{p} S_{ip} \bfF^{\rm{ext}}_p
-\label{interpolate}
+\label{accumulate}
 \end{eqnarray}
 and $i$ refers to individual nodes of the grid.  $m_p$ is the particle
 mass, $\bfv_p$ is the particle velocity, and $\bfF^{\rm{ext}}_p$ is the
@@ -174,21 +182,116 @@ external force on the particle.  The external forces that start on the
 particles typically the result of tractions, the application of which will
 be discussed in Section \ref{PhysicalBCs}.
 $S_{ip}$ is the shape function of the $ith$ node evaluated at $\bfx_p$.
+The functional form of the shape functions differs between MPM and GIMP.
+This difference is discussed in Section \ref{gimp_mpm}.
+
+Following the operations in Eq.~\ref{accumulate}, $\bfF^{\rm{int}}$
+is still required in order to solve for acceleration at the nodes.
+This is computed at the nodes as a volume integral of the divergence
+of the stress on the particles, specifically:
+
+\begin{eqnarray}
+        \bfF^{\rm{int}}_i &=& \sum_{p} \bfG_{ip} \sig_p v_p,
+\end{eqnarray}
+where $\bfG_{ip}$ is the gradient of the shape function of the $ith$ node
+evaluated at $\bfx_p$, and $\sig_p$ and $v_p$ are the time $n$ values of
+particle stress and volume respectively.  
+
+Equation \ref{newton2} can then be solved for $\bfa$.
+\begin{eqnarray}
+\bfa_i &=& \frac{\bfF_i^{\rm{ext}} - \bfF_i^{\rm{int}}}{m_i}
+\label{MPM:acceleration}
+\end{eqnarray}
+An explicit forward Euler method is used for the time integration:
+\begin{eqnarray}
+\bfv_i^L= \bfv_i + \bfa_i \Delta{t}
+\label{MPM:euler}
+\end{eqnarray}
+
+The time advanced grid velocity, $\bfv^L$ is used to compute a velocity
+gradient at each particle according to:
+
+\begin{equation}
+\nabla \bfv_p = \sum_i \bfG_{ip} \bfv^L_i
+\label{velgrad}
+\end{equation}
+This velocity gradient is used to update the particle's deformation gradient,
+volume and stress.  First, an incremental deformation gradient is computed:
+
+\begin{equation}
+\bfF_{n_p}^{n+1} = (\bfI+\nabla \bfv_p \Delta{t})
+\label{Finc}
+\end{equation}
+Particle volume and deformation gradient are updated by:
+
+\begin{eqnarray}
+v_p^{n+1} = \rm{Det}(\bfF_{n_p}^{n+1})v_p^n,  \;\;\;\;\;\;\;\;\;
+\bfF_p^{n+1}=\bfF_{n_p}^{n+1} \bfF_{p}^{n}
+\label{p_vol}
+\end{eqnarray}
+Finally, the velocity gradient, and/or the deformation gradient are
+provided to a constitutive model, which outputs a time advanced stress
+at the particles.  Specifics of this operation will be further discussed
+in Section~\ref{ConstitutiveModels}
+
+At this point in the timestep, the particle position and velocity are explicitly
+updated by:
+\begin{eqnarray}
+\bfv_p (t + \Delta{t})  &=& \bfv_p (t)  + \sum_{i} S_{ip} \bfa_i  \Delta{t} 
+\label{MPM:updateVp}
+\end{eqnarray}
+\begin{eqnarray}
+\bfx_p (t + \Delta{t})  &=& \bfx_p (t)  + \sum_{i} S_{ip} \bfv^L_i  \Delta{t}
+\label{MPM:updateXp}
+\end{eqnarray}
+This completes one timestep, in that the update of all six of the variables
+enumerated above (with the exception of mass, which is assumed to remain
+constant) has been accomplished.  Conceptually, one can imagine that, since an
+acceleration and velocity were computed at the grid, and an interval of time
+has passed, the grid nodes also experienced a displacement.  This 
+displacement also moved the particles in an isoparametric fashion.  In
+practice, particle motion is accomplished by Eq.~\label{MPM:updateXp},
+and the grid never deforms.  So, while the MPM literature will often refer
+to resetting the grid to its original configuration, in fact, this 
+isn't necessary as the grid nodes never leave that configuration.  Regardless,
+at this point, one is ready to advance to the next timestep.
+
+The algorithm described above is the core of the Uintah-MPM implementation.
+However, it neglects a number of important considerations.  The first is
+kinematic boundary conditions on the grid for velocity and acceleration.
+The manner in which these are handled will be described in
+Section~\ref{Sec:UintahImp}.  Next, is the use of advanced contact
+algorithms.  By default, MPM enforces no-slip, no-interpenetration contact.
+This feature is extremely useful, but it also means that two bodies initially
+in ``contact" (meaning that they both contain particles whose data are
+accumulated to common nodes) behave as if they are a single body.  To enable
+multi-field simulations with frictional contact, or to impose displacement
+based boundary conditions, e.g. a rigid piston, additional steps must be
+taken.  These steps implement contact formulations such as that described
+by Bardenhagen, et al.\ref{bard_contact}.  The {\it use} of the contact
+algorithms is described in Section~\ref{Contact}, but the reader will be
+referred to the relevant literature for their development.  Lastly, heat
+conduction is also available in the explicit MPM code, although it may be
+neglected via a run time option in the input file.  Explicit MPM is typically
+used for high rate simulations in which heat conduction is negligible.
+
+\subsubsection{Shape functions for MPM and GIMP} \label{gimp_mpm}
+
 In MPM, standard tri-linear shape functions are used. In GIMP\cite{bardgimp},
 particles are assumed to have characteristic size, as opposed to MPM,
 where particles are assumed to be Dirac delta functions in space.  Thus in
 GIMP, the standard shape functions are convolved with a particle's
 characteristic function which effectively results in smoother interpolants.
-This distinction will be described in greater detail later in this section.
 
+\subsection{Uintah Implementation} \label{Sec:UintahImp}
 
 \subsection{Uintah Specification}
 
 \subsubsection{Basic Inputs}
 \subsubsection{Physical Constants}
 \subsubsection{Material Properties}
-\subsubsection{Constitutive Models}
-\subsubsection{Contact}
+\subsubsection{Constitutive Models} \label{ConstitutiveModels}
+\subsubsection{Contact}  \label{Contact}
 \subsubsection{BoundaryConditions}
 \subsubsection{Physical Boundary Conditions} \label{PhysicalBCs}
 
@@ -197,3 +300,10 @@ This distinction will be described in greater detail later in this section.
 \subsection{References}
 \bibliographystyle{plain}
 \bibliography{mpm}
+
+
+
+
+
+
+
