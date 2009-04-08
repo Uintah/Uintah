@@ -1,18 +1,24 @@
 \section{Computational Framework} \label{Sec:UCF}
 
 %__________________________________
-\subsection{Time related variables}
+\subsection{Mechanics of Running sus}
+ - Explain how to run on multiple processors\\
+ - what do the different command line options mean\\
+ - how to restart an uda\\
+ 
+%__________________________________
+\subsection{Time Related Variables}
 \begin{Verbatim}[fontsize=\footnotesize]
-   <Time>
-       <maxTime>            1.0        </maxTime>
-       <initTime>           0.0         </initTime>
-       <delt_min>           0.0         </delt_min>
-       <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-9      </delt_init>
-       <max_delt_increase>  2.0        </max_delt_increase>
-       <timestep_multiplier>1.0         </timestep_multiplier>
-       <max_Timestep>       100        </max_Timestep>
-   </Time>
+<Time>
+    <maxTime>            1.0        </maxTime>
+    <initTime>           0.0         </initTime>
+    <delt_min>           0.0         </delt_min>
+    <delt_max>           1.0         </delt_max>
+    <delt_init>          1.0e-9      </delt_init>
+    <max_delt_increase>  2.0        </max_delt_increase>
+    <timestep_multiplier>1.0         </timestep_multiplier>
+    <max_Timestep>       100        </max_Timestep>
+</Time>
 \end{Verbatim}
 %
 %__________________________________
@@ -26,28 +32,86 @@
 - different objects available and how to specify them\\
 - what is res \\
 - operators, union, difference\\
+- example of combining several geom\_objects\\
 %
 %__________________________________
 \subsection{Grid specification}
 Explain how a grid is specified and what these tags mean
 
 \begin{Verbatim}[fontsize=\footnotesize]
-       <Level>
-           <Box label="1">
-              <lower>        [0,0,0]          </lower>
-              <upper>        [5,5,5]          </upper>
-              <extraCells>   [1,1,1]          </extraCells>
-              <patches>      [1,1,1]          </patches>
-           </Box>
-           <spacing>         [0.5,0.5,0.5]    </spacing>
-       </Level>
+<Level>
+    <Box label="1">
+       <lower>        [0,0,0]          </lower>
+       <upper>        [5,5,5]          </upper>
+       <extraCells>   [1,1,1]          </extraCells>
+       <patches>      [1,1,1]          </patches>
+    </Box>
+    <spacing>         [0.5,0.5,0.5]    </spacing>
+</Level>
  \end{Verbatim}
 %
 %__________________________________
 \subsection{Adapative Mesh Refinement}
-- need to discuss the input options for the different regridders.
+- need to discuss the input options for the different regridders.\\
 - How is a cell flagged as needing to be refined
 %
 %__________________________________
 \subsection{load Balancer}
 - to be filled in
+
+%__________________________________
+\subsection{uda}
+- discuss the directory structure of an uda
+- discuss how to modify an input parameter before you restart an uda.
+
+%__________________________________
+\subsection{Visualization tools}
+- VisIT\\
+- manta?
+
+%__________________________________
+\subsection{Tools}
+- puda, lineextract, timeextract, compare\_uda\\
+
+%__________________________________
+\subsection{Code}
+-explain the basic directory structure of src
+\begin{Verbatim}[fontsize=\footnotesize]
+|-- CCA
+|-- Components
+|   |-- Angio
+|   |-- Arches
+|   |-- DataArchiver
+|   |-- Examples
+|   |-- ICE
+|   |-- LoadBalancers
+|   |-- MPM
+|   |-- MPMArches
+|   |-- MPMICE
+|   |-- Models
+|   |-- OnTheFlyAnalysis
+|   |-- Parent
+|   |-- PatchCombiner
+|   |-- ProblemSpecification
+|   |-- Regridder
+|   |-- Schedulers
+|   |-- SimulationController
+|   |-- Solvers
+|   |-- SpatialOps
+|   `-- SwitchingCriteria
+`-- Ports
+|-- Core
+|-- R_Tester
+|-- StandAlone
+|-- Teem
+|-- VisIt
+|-- build_scripts
+|-- include
+|-- on-the-fly-libs
+|-- orderAccuracy
+|-- osx
+|-- scripts
+|-- tau
+|-- testprograms
+`-- tools
+\end{Verbatim}
