@@ -2,12 +2,16 @@
 \usepackage{listings}
 \usepackage{amsmath}
 \usepackage[pdftex]{graphicx}
+\usepackage{fancyvrb}
 \pdfcompresslevel=9
 \DeclareGraphicsExtensions{{.png},{.pdf},{.jpg},{jpeg}}
 \graphicspath{ {figures/}}
-
-
-
+\usepackage{color}
+%__________________________________
+% new commands
+\newcommand{\comment}[1]{ \marginpar{{\scriptsize \color{red} #1 }}}
+\newcommand{\red}[1]{\color{red} {#1} \color{black}}
+%__________________________________
 \bibliographystyle{plain}
 
 \begin{document}
@@ -34,7 +38,6 @@
 %%
 %% INTRODUCTION
 %%
-
 \include{arches}
 \include{ice}
 \include{mpm}

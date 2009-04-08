@@ -1,7 +1,13 @@
 
 \section{ICE} \label{Sec:ICE}
 
+
 \subsection{Introduction}
+\red{
+finite volume
+first order tempral discretizatioon
+all speed
+with the option of explicit or semi-implicit }
 
 \subsection{Theory - Algorithm Description}
 
@@ -9,24 +15,32 @@
 %______________________________________________________________________
 \subsubsection{Basic Inputs}
 \footnotesize
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
  <SimulationComponent type="ice" />
-\end{verbatim}
-\normalfont
+\end{Verbatim}
+\normalsize
 %______________________________________________________________________
 \subsubsection{Physical Constants}
 \footnotesize
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 <PhysicalConstants>
    <gravity>            [0,0,0]   </gravity>
    <reference_pressure> 101325.0  </reference_pressure>
 </PhysicalConstants>
-\end{verbatim}
-\normalfont
+\end{Verbatim}
+\normalsize
 %______________________________________________________________________
 \subsubsection{Material Properties}
-\footnotesize
-\begin{verbatim}
+For each ICE material the thermodynamic and transport properties must be
+specified, in addition to the initial conditions of the fluid inside of
+each geom\_object.  Below is the an example of how to specify an invisid
+ideal gas over square region with dimensions $6m X 6m X 6m$.  The initial
+conditions of the gas in that region are $T=300, \rho=1.179, v_x=1,v_y=2,
+v_z=3$ \big{(}Note, the pressure XML tag is not used as an initial condition
+and is simply there to make the user aware of what the pressure would be at
+that thermodynamic state.\big{)}
+%
+\begin{Verbatim}[fontsize=\footnotesize]
 <MaterialProperties>
    <ICE>
      <material>
@@ -41,7 +55,7 @@
                <max>       [ 6.0, 6.0, 6.0 ]       </max>
            </box>
            <res>                 [2,2,2]            </res>
-           <velocity>      [1.,1.,1.]               </velocity>
+           <velocity>      [1.,2.,3.]               </velocity>
            <density>       1.1792946927374306000e+00</density>
            <pressure>      101325.0                 </pressure>     
            <temperature>   300.0                    </temperature>
@@ -49,17 +63,30 @@
      </material>
   </ICE>       
 </MaterialProperties>
-\end{verbatim}
-\normalfont
+\end{Verbatim}
 %______________________________________________________________________
 \subsubsection{Equation of State}
-Below is a list of the various equations of state, along with the user defined constants, that are available for the user.
-
-
+Below is a list of the various equations of state, along with the user defined
+constants, that are available.  The reader should consult the literature for
+the theoretical development and applicability of the equations of state to
+the problem being solved.
+%
+%
+The most commonly used EOS is the ideal gas law
+\begin{equation}
+  p = (\gamma -1) c_v \rho T
+\end{equation}
+%
+and is specified in the input file with:
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<EOS type="ideal_gas"/>
+\end{Verbatim}
+%
 The Thomsen Hartka EOS for cold liquid water (1-100 atm pressure range)
 is specified with \cite{ref:Thomsen,ref:bejan}
-\footnotesize
-\begin{verbatim}
+%
+\begin{Verbatim}[fontsize=\footnotesize]
 <EOS type="Thomsen_Hartka_water">
   <a>  2.0e-7     </a>    <!-- (K/Pa)     -->    
   <b>  2.6        </b>    <!-- (J/kg K^2) -->
@@ -69,9 +96,11 @@ is specified with \cite{ref:Thomsen,ref:bejan}
   <L>  8.0e-6     </L>    <!-- (1/K^2)    -->
   <vo> 1.00008e-3 </vo>   <!-- (m^3/kg)   -->
 </EOS>
-\end{verbatim}
-
-\begin{verbatim}
+\end{Verbatim}
+% 
+%
+The input specification for the ``JWLC'', ``JWL++'' and ``Murnahan'' equations of state from \cite{ref:JWL} are: 
+\begin{Verbatim}[fontsize=\footnotesize]
 <EOS type = "JWLC">
   <A>   2.9867e11   </A>
   <B>   4.11706e9   </B>
@@ -81,9 +110,10 @@ is specified with \cite{ref:Thomsen,ref:bejan}
   <om>    0.35      </om>
   <rho0>  1160.0    </rho0>
 </EOS>
-\end{verbatim}
-\begin{verbatim}
-<EOS type = "ideal_gas">
+\end{Verbatim}
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<EOS type = "JWL">
   <A>     1.6689e12 </A>
   <B>     5.969e10  </B>
   <R1>      5.9     </R1>
@@ -91,59 +121,112 @@ is specified with \cite{ref:Thomsen,ref:bejan}
   <om>      0.45    </om>
   <rho0>  1835.0    </rho0>
 </EOS>
-\end{verbatim}
-\normalfont
-
-\begin{verbatim}
+\end{Verbatim}
+%
+\begin{Verbatim}[fontsize=\footnotesize]
 <EOS type = "Murnahan">
   <n>     7.4       </n>
   <K>     39.0e-11  </K>
   <rho0>  1160.0    </rho0>
   <P0>    101325.0  </P0>
 </EOS>
-\end{verbatim}
-\normalfont
-
+\end{Verbatim}
+%
+The ``hard sphere'' or ``Abel'' equation of state for dense gases is
+%
+\begin{equation}
+  p(v - b) = RT
+\end{equation}
+%
+where b corresponds to the volume occupied by the molecules themselves \cite{ref:thompson}.
+Input parameters are specified using:
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<EOS type="hard_sphere_gas">
+   <b> 1.4e-3 </b>
+</EOS>
+\end{Verbatim}
+%
+%
+Non-idea gas equation of state used in HMX combustion simulations the Twu-Sim-Tassone(TST) EOS
+is
+\begin{equation}
+  p = \frac{ (\gamma -1)c_v T }{ v - b} - \frac{ a }{(v+3.0b)(v-0.5b)}
+\end{equation}
+%
+Input parameters are specified using:
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<EOS type="TST">
+  <a>       -260.1385968     </a>
+  <b>       7.955153678e-4   </b>
+  <u>       -0.5             </u>
+  <w>       3.0              </w>
+  <Gamma>   1.63             </Gamma>
+</EOS>
+\end{Verbatim}
+%
+%
+The input parameters for the Tillotson equation of state \cite{ref:gathers} for soils :
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<EOS type = "Tillotson">
+  <a>       .5      </a>
+  <b>       1.3     </b>
+  <A>       4.5e9   </A>
+  <B>       3.0e9   </B>
+  <E0>      6.e6    </E0>
+  <Es>      3.2e6   </Es>
+  <Esp>     18.0e6  </Esp>
+  <alpha>   5.0     </alpha>
+  <beta>    5.0     </beta>
+  <rho0>    1700.0  </rho0>
+</EOS>
+\end{Verbatim}
+%
 %______________________________________________________________________
 \subsubsection{Exchange Properties}
-The heat and momentum exchange coefficients $K_{rs}$ and $H_{rs}$ are 
-between materials in the following format.
-\footnotesize
-\begin{verbatim}
+The heat and momentum exchange coefficients $K_{rs}$ and $H_{rs}$, which determine the rate at which momentum and heat are transferred between materials, are specified in the following format.
+%
+\begin{Verbatim}[fontsize=\footnotesize]
 0->1,   0->2,  0->3
         1->2,  1->3
                2->3
-\end{verbatim}
+\end{Verbatim}
+%
 For a two material problem the coefficients would be:
-\footnotesize
-\begin{verbatim}
+%
+\begin{Verbatim}[fontsize=\footnotesize]
 <exchange_properties> 
    <exchange_coefficients>
       <momentum>  [0, 1e15, 1e15 ]     </momentum>
       <heat>      [0, 1e10, 1e10 ]     </heat>  
    </exchange_coefficients>
 </exchange_properties>
-\end{verbatim}
-\normalfont
+\end{Verbatim}
+%
+%
 %______________________________________________________________________
 \subsubsection{BoundaryConditions}
-Boundary conditions must be specified on each face of the computational 
-domain $(x^-, x^+, y^-, y^+)$ for the variables $P, \bf{u}, T, \rho, v$ for each material.  
-The two main types of numerical boundary condition that can be applied are ''Neumann'' and ''Dirichlet''.  A Neumann boundary condition is used to set the gradient or $\frac{\partial{q}}{\partial{x}}|_{surface} = value$ at the boundary.   The value of the primative variable in the boundary cell is given by 
+Boundary conditions must be specified on each face of the computational
+domain $(x^-, x^+, y^-, y^+)$ for the variables $P, \bf{u}, T, \rho, v$ for
+each material.  The two main types of numerical boundary condition that can
+be applied are ``Neumann'' and ``Dirichlet''.  A Neumann boundary condition
+is used to set the gradient or $\frac{\partial{q}}{\partial{n}}|_{surface} =
+value$ at the boundary.   The value of the primative variable in the boundary
+cell is given by,
 %
 \begin{equation}
-    q[\text{boundary cell}] = q[\text{interior cell}] - value * dx;
+    q[\text{boundary cell}] = q[\text{interior cell}] - value * dn;
 \end{equation}
 %
-Dirichlet boundary conditions are used to set the primative variable in the
-boundary cell to a value
+if we use a first order upwind discretization of the gradient.  Dirichlet boundary conditions set the value of primative variable in the boundary cell using
 %
 \begin{equation}
     q[\text{boundary cell}] =  value;
 \end{equation}
 %
-\footnotesize
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 <Grid>
   <BoundaryConditions>
     <Face side = "x-">
@@ -168,14 +251,17 @@ boundary cell to a value
       .
   </BoundaryConditions>
 </Grid>
-\end{verbatim}
-
-- mention that pressure id =- 0
-
-To specify symmetric BC
-- need to talk abou symmetric BCs
-
-
+\end{Verbatim}
+Note that pressure field id is always 0. 
+%
+%
+Symmetric boundary conditions are set using:
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face side = "y-">
+    <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+</Face>
+\end{Verbatim}
+%
 \begin{center}
 Boundary Condition Variables
 \begin{tabular}{l p{7cm} p{7cm}}
@@ -183,23 +269,50 @@ Boundary Condition Variables
 \hline
 \hline
 id          &  [0,1,2...all]                                   &   material index.\\
-label       & [Temperature, Pressure, Density, SpecificVol]    &   primiative variable name\\
-var         & [Neumann, Dirichlet]                             &   type of boundary condition to apply \\
+label       & [Temperature, Pressure, Density, SpecificVol]    &   primative variable name\\
+var         & [Neumann, Dirichlet, symmetry]                   &   type of boundary condition to apply \\
 value       & [ double or vector]                              &   "value" to be used when applying a BC\\
 \hline
 \end{tabular}
 \end{center}
-\normalfont
+\normalsize
 %______________________________________________________________________
-\subsubsection{Solvers}
-\footnotesize
-\begin{verbatim}
+\subsubsection{Semi-Implicit Pressure Solve}
+The equation for the change in the pressure field $\Delta{P}$ during a given
+timestep is given by
+%
+\begin{equation}
+    \label{eq:delP}
+     \frac{dP}{dt} = 
+     \frac{\sum \limits_{{m}=1}^N  \frac{\dot{m}} {V \rho^{o}_m} 
+        -  \sum \limits_{{m}=1}^N \nabla \cdot \widehat{\theta_m} \vec{U_m}^{*^{f}}}
+          {\sum \limits_{{m}=1}^N \frac{\theta_m}{\rho^{o}_m c_m^2} }
+\end{equation}
+%
+which can be written in matrix form $Ax = b$ and solved.  Details on the
+notation, discretization of Eq. \ref{eq:delP} and the formation of $A$
+and $b$ can be found in
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+ src/CCA/Components/ICE/Docs/implicitPressSolve.pdf
+\end{Verbatim}
+%
+The linear system $Ax = b$ can be solved using the default Uintah:conjugate
+gradient solver (CG) (slow) or using one of the many that are available
+through the scalable linear solvers and preconditioner package hypre
+\cite{ref:hypre}. Experience has shown that the most efficient hypre
+preconditioner and solver are the pfmg and cg respectively.  Below are
+typical values for both the Uintah:CG and hypre cg solver
+%
+\begin{Verbatim}[fontsize=\footnotesize]
 <ImplicitSolver>
    <max_outer_iterations>         20    </max_outer_iterations>
    <outer_iteration_tolerance>    1e-8  </outer_iteration_tolerance>
    <iters_before_timestep_restart> 5    </iters_before_timestep_restart>
    <Parameters variable="implicitPressure">
 
+    <tolerance>     1.e-10  </tolerance>
+    
     <!-- CGSolver options -->
     <norm>     LInfinity  </norm>
     <criteria> Absolute   </criteria>
@@ -207,16 +320,34 @@ value       & [ double or vector]                              &   "value" to be
     <!-- Hypre options -->
     <solver>         cg      </solver>
     <preconditioner> pfmg    </preconditioner>
-    <tolerance>      1.e-10  </tolerance>
     <maxiterations>  7500    </maxiterations>
     <npre>           1       </npre>
     <npost>          1       </npost>
     <skip>           0       </skip>
     <jump>           0       </jump>
    </Parameters>
-</ImplicitSolver
-\end{verbatim}
-\normalfont
+</ImplicitSolver>
+\end{Verbatim}
+%
+The primary variables that the user should be concerned with is
+\begin{Verbatim}[fontsize=\footnotesize]
+<tolerance> and <outer\_iteration\_tolerance> \\
+\end{Verbatim}
+%
+\noindent
+\begin{tabular}{l p{7cm} p{14cm}}
+\footnotesize{XML tag} &  \footnotesize{Description}\\
+\hline
+\hline
+max\_outer\_iterations           &  maximum number of iterations in the outer loop of the pressure solve.\\
+outer\_iteration\_tolerance      &  tolerance XXXXDX\\
+iters\_before\_timestep\_restart &  \footnotesize number of outer iterations before a timestep is restarted\\
+tolerance                        &   XXXX\\
+\hline
+\end{tabular}
+
+
+\normalsize
 %______________________________________________________________________
 %  XML tags
 \subsubsection{XML tag description}
