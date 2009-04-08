@@ -27,11 +27,9 @@ class EqnBuilder
 public:
   EqnBuilder( Fields* fieldLabels, 
               ExplicitTimeInt* timeIntegrator,
-              const VarLabel* transportVarLabel, 
               string eqnName ) : 
               d_fieldLabels(fieldLabels), 
               d_timeIntegrator(timeIntegrator),
-              d_transportVarLabel(transportVarLabel), 
               d_eqnName(eqnName) {};
   virtual ~EqnBuilder(){};
 
@@ -40,7 +38,6 @@ public:
 protected: 
   Fields* d_fieldLabels; 
   ExplicitTimeInt* d_timeIntegrator;
-  const VarLabel* d_transportVarLabel; 
   string d_eqnName; 
 }; // class EqnBuilder
 

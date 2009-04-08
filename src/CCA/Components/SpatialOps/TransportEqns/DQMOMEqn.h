@@ -33,7 +33,6 @@ class DQMOMEqnBuilder: public DQMOMEqnBuilderBase
 public:
   DQMOMEqnBuilder( Fields* fieldLabels, 
                    ExplicitTimeInt* timeIntegrator, 
-                   const VarLabel* transportVarLabel, 
                    string eqnName );
   ~DQMOMEqnBuilder();
 
@@ -53,7 +52,7 @@ public EqnBase{
 
 public: 
 
-  DQMOMEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName );
+  DQMOMEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName );
 
   ~DQMOMEqn();
 

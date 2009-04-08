@@ -16,22 +16,21 @@ using namespace Uintah;
 // Builder:
 CCScalarEqnBuilder::CCScalarEqnBuilder( Fields* fieldLabels, 
                                         ExplicitTimeInt* timeIntegrator,
-                                        const VarLabel* transportVarLabel, 
                                         string eqnName ) : 
-EqnBuilder( fieldLabels, timeIntegrator, transportVarLabel, eqnName )
+EqnBuilder( fieldLabels, timeIntegrator, eqnName )
 {}
 CCScalarEqnBuilder::~CCScalarEqnBuilder(){}
 
 EqnBase*
 CCScalarEqnBuilder::build(){
-  return scinew ScalarEqn(d_fieldLabels, d_timeIntegrator, d_transportVarLabel, d_eqnName);
+  return scinew ScalarEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-ScalarEqn::ScalarEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName )
+ScalarEqn::ScalarEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName )
 : 
-EqnBase( fieldLabels, timeIntegrator, transportVarLabel, eqnName )
+EqnBase( fieldLabels, timeIntegrator, eqnName )
 {
   
   std::string varname = eqnName+"Fdiff"; 
@@ -55,6 +54,8 @@ ScalarEqn::~ScalarEqn()
   VarLabel::destroy(d_FdiffLabel);
   VarLabel::destroy(d_FconvLabel); 
   VarLabel::destroy(d_RHSLabel);
+  VarLabel::destroy(d_transportVarLabel);
+  VarLabel::destroy(d_oldtransportVarLabel);
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup 

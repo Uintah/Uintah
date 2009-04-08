@@ -14,22 +14,21 @@ using namespace Uintah;
 // Builder:
 DQMOMEqnBuilder::DQMOMEqnBuilder( Fields* fieldLabels, 
                                   ExplicitTimeInt* timeIntegrator,
-                                  const VarLabel* transportVarLabel, 
                                   string eqnName ) : 
-DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, transportVarLabel, eqnName )
+DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, eqnName )
 {}
 DQMOMEqnBuilder::~DQMOMEqnBuilder(){}
 
 EqnBase*
 DQMOMEqnBuilder::build(){
-  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_transportVarLabel, d_eqnName);
+  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-DQMOMEqn::DQMOMEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, const VarLabel* transportVarLabel, string eqnName )
+DQMOMEqn::DQMOMEqn( Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName )
 : 
-EqnBase( fieldLabels, timeIntegrator, transportVarLabel, eqnName )
+EqnBase( fieldLabels, timeIntegrator, eqnName )
 {
   
   std::string varname = eqnName+"Fdiff"; 
@@ -43,6 +42,9 @@ EqnBase( fieldLabels, timeIntegrator, transportVarLabel, eqnName )
             CCVariable<double>::getTypeDescription());
   varname = eqnName+"old";
   d_oldtransportVarLabel = VarLabel::create(varname,
+            CCVariable<double>::getTypeDescription());
+  varname = eqnName;
+  d_transportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
 
   // This is the source term:
@@ -60,6 +62,8 @@ DQMOMEqn::~DQMOMEqn()
   VarLabel::destroy(d_FconvLabel); 
   VarLabel::destroy(d_RHSLabel);    
   VarLabel::destroy(d_sourceLabel); 
+  VarLabel::destroy(d_transportVarLabel);
+  VarLabel::destroy(d_oldtransportVarLabel);
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup 

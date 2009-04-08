@@ -755,21 +755,13 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
       cout << "Found  an equation: " << eqn_name << endl;
       cout << " \n"; // white space for output 
 
-      const VarLabel* tempVarLabel = VarLabel::create(eqn_name, CCVariable<double>::getTypeDescription());
-      Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.find(eqn_name); 
-      if (iLabel == d_fieldLabels->d_labelMap.end()){
-        iLabel = d_fieldLabels->d_labelMap.insert(make_pair(eqn_name, tempVarLabel)).first;
-      } else {
-        throw InvalidValue("Two scalar equations registered with the same transport variable label!", __FILE__, __LINE__);
-      }
-
       // Here we actually register the equations based on their types.
       // This is only done once and so the "if" statement is ok.
       // Equations are then retrieved from the factory when needed. 
       // The keys are currently strings which might be something we want to change if this becomes inefficient  
       if ( eqn_type == "CCscalar" ) {
 
-        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_fieldLabels, d_timeIntegrator, iLabel->second, eqn_name ); 
+        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_fieldLabels, d_timeIntegrator, eqn_name ); 
         eqnFactory.register_scalar_eqn( eqn_name, scalarBuilder );     
 
       // ADD OTHER OPTIONS HERE if ( eqn_type == ....
@@ -809,15 +801,7 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
 
       cout << "creating a weight for: " << wght_name << endl;
 
-      const VarLabel* tempVarLabel = VarLabel::create(wght_name, CCVariable<double>::getTypeDescription());
-      Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.find(wght_name); 
-      if (iLabel == d_fieldLabels->d_labelMap.end()){
-        iLabel = d_fieldLabels->d_labelMap.insert(make_pair(wght_name, tempVarLabel)).first;
-      } else {
-        throw InvalidValue("Two weight equations registered with the same transport variable label!", __FILE__, __LINE__);
-      }
-
-      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, iLabel->second, wght_name ); 
+      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, wght_name ); 
       dqmom_eqnFactory.register_scalar_eqn( wght_name, eqnBuilder );     
       
     }
@@ -842,15 +826,7 @@ void SpatialOps::registerTransportEqns(ProblemSpecP& db)
 
         cout << "created a weighted abscissa for: " << final_name << endl; 
 
-        const VarLabel* tempVarLabel = VarLabel::create(final_name, CCVariable<double>::getTypeDescription());
-        Fields::LabelMap::iterator iLabel = d_fieldLabels->d_labelMap.find(final_name); 
-        if (iLabel == d_fieldLabels->d_labelMap.end()){
-          iLabel = d_fieldLabels->d_labelMap.insert(make_pair(final_name, tempVarLabel)).first;
-        } else {
-          throw InvalidValue("Two internal coordinate equations registered with the same transport variable label!", __FILE__, __LINE__);
-        }
-
-        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, iLabel->second, final_name ); 
+        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_fieldLabels, d_timeIntegrator, final_name ); 
         dqmom_eqnFactory.register_scalar_eqn( final_name, eqnBuilder );     
 
       } 
