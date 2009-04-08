@@ -1,5 +1,47 @@
 
-\section{MPM}
+\newcommand{\tn}[1]{\mbox{\bf{#1}}}
+\newcommand{\sig}{\mbox{\boldmath $\sigma \!\!$ \unboldmath}}
+\newcommand{\bnabla} {\mbox{\boldmath $\nabla \!\!$ \unboldmath}}
+\newcommand{\taubold} {\mbox{\boldmath $\tau \!\!$ \unboldmath}}
+\newcommand{\f}{\ensuremath{f^{\theta}_r} }
+
+\newcommand{\Texp}{\rm{exp}}
+\newcommand{\Text}{\rm{ext}}
+\newcommand{\Tint}{\rm{int}}
+\newcommand{\Teq}{\rm{eq}}
+\newcommand{\Delt}{\ensuremath{\Delta t}}
+\newcommand{\Ep}{\ensuremath{\epsilon_p}}
+\newcommand{\Epdot}[1]{\ensuremath{\dot{\epsilon}_{p#1}}}
+\def\bfE{{\bf E}}
+\newcommand{\BD}{\ensuremath{\boldsymbol{D}}}
+\newcommand{\Half}{\ensuremath{\frac{1}{2}}}
+\newcommand{\Bsig}{\ensuremath{\boldsymbol{\sigma}}}
+\newcommand{\Bn}{\ensuremath{\boldsymbol{n}}}
+\newcommand{\Bg}{\ensuremath{\boldsymbol{g}}}
+
+\def\rmd{{\rm d}}
+\def\rme{{\rm e}}
+\def\rmf{{\rm f}}
+\def\rmr{{\rm r}}
+\def\rmR{{\rm R}}
+\def\rms{{\rm s}}
+\def\bfE{{\bf E}}
+\def\bfF{{\bf F}}
+\def\bff{{\bf f}}
+\def\bfg{{\bf g}}
+\def\bfI{{\bf I}}
+\def\bfj{{\bf j}}
+\def\bfm{{\bf m}}
+\def\bfr{{\bf r}}
+\def\bfx{{\bf x}}
+\def\bfu{{\bf u}}
+\def\rmg{{\rm g}}
+\def\bfa{{\bf a}}
+\def\bfG{{\bf G}}
+\def\bfv{{\bf v}}
+\def\tdot{{\textstyle\cdot}}
+
+\section{MPM} \label{Sec:MPM}
 
 \subsection{Introduction}
 
@@ -63,7 +105,82 @@ Following that is a description of the information that goes into an input
 file.  Finally, a number of examples are provided, along with representative
 results.
 
-\subsection{Theory - Algorithm Description}
+\subsection{Algorithm Description}
+
+Time and space prohibit an exhaustive description of the theoretical
+underpinnings of the Material Point Method.   Here we will concentrate
+on the discrete equations that result from applying a weak form analysis
+to the governing equations.  The interested reader should
+consult \cite{sulskycmame,sulskycpc} for the development of these discrete
+equations in MPM, and \cite{bardgimp} for the development of the equations
+for the GIMP method.  These end up being very similar, the differences in
+how the two developments affect implementation will be described as we
+proceed.
+
+In solving a structural mechanics problem with MPM, one begins by discretizing
+the object of interest into a suitable number of particles, or ``material
+points".  ({\bf Aside:}  What constitutes a suitable number is something of an open
+question, but it is typically advisable to use at least two particles in each
+computational cell in each direction, i.e. 4 particles per cell (PPC) in 2-D,
+8 PPC in 3-D. In choosing the resolution of the computational grid, similar
+considerations apply as for any computational method (trade-off between
+time to solution and accuracy, use of resolution studies to ensure convergence
+in results, etc.).)  Each of these particles will carry, minimally, the
+following variables:
+\begin{enumerate}
+
+\item position - $\bfx_p$
+\item mass - $m_p$
+\item volume - $v_p$
+\item velocity - $\bfv_p$
+\item stress - $\sig_p$ 
+\item deformation gradient - $\bfF_p$
+
+\end{enumerate}
+
+The description that follows is a recipe for advancing each of these
+variables from the current (discrete) time $n$ to the subsequent
+time $n+1$.  Note that particle mass, $m_p$, typically remains constant
+throughout a simulation unless solid phase reaction models are utilized,
+a feature that is not present in Uintah-MPM.  (Such models are available
+in MPMICE, see Section \ref{Sec:MPMICE}.)
+
+The discrete momentum equation that results from the weak form is given as:
+\begin{eqnarray}
+        \bfm \bfa &=& \bfF^{\rm{ext}} - \bfF^{\rm{int}}  \label{newton2}
+\end{eqnarray}
+where $\bfm$ is the mass matrix, $\bfa$ is the acceleration vector,
+$\bfF^{\rm{ext}}$ is the external force vector (sum of the body forces and
+tractions), and $\bfF^{\rm{int}}$ is the internal force vector resulting from
+the divergence of the material stresses.  The construction of each of these
+quantities will be described below.
+
+The solution begins by accumulating the particle state on the
+nodes of the computational grid, to form the mass matrix $\bfm$ and to find
+the nodal external forces $\bfF^{\rm{ext}}$, and velocities,
+$\bfv$.  In practice, a lumped mass matrix is used to avoid the need to
+invert a system of equations to solve Eq. \ref{newton2} for acceleration.
+These quantities are calculated at individual nodes by the following equations, where the
+$\sum\limits_{p}$ represents a summation over all particles:
+\begin{eqnarray}
+m_i = \sum_{p} S_{ip} m_p,  \;\;\;\;\;\; 
+\bfv_i = \frac{\sum\limits_{p} S_{ip} m_p \bfv_p}{m_i},  \;\;\;\;\;\;
+\bfF^{\rm{ext}}_i &=& \sum_{p} S_{ip} \bfF^{\rm{ext}}_p
+\label{interpolate}
+\end{eqnarray}
+and $i$ refers to individual nodes of the grid.  $m_p$ is the particle
+mass, $\bfv_p$ is the particle velocity, and $\bfF^{\rm{ext}}_p$ is the
+external force on the particle.  The external forces that start on the
+particles typically the result of tractions, the application of which will
+be discussed in Section \ref{PhysicalBCs}.
+$S_{ip}$ is the shape function of the $ith$ node evaluated at $\bfx_p$.
+In MPM, standard tri-linear shape functions are used. In GIMP\cite{bardgimp},
+particles are assumed to have characteristic size, as opposed to MPM,
+where particles are assumed to be Dirac delta functions in space.  Thus in
+GIMP, the standard shape functions are convolved with a particle's
+characteristic function which effectively results in smoother interpolants.
+This distinction will be described in greater detail later in this section.
+
 
 \subsection{Uintah Specification}
 
@@ -73,9 +190,9 @@ results.
 \subsubsection{Constitutive Models}
 \subsubsection{Contact}
 \subsubsection{BoundaryConditions}
-\subsubsection{Physical Boundary Conditions}
+\subsubsection{Physical Boundary Conditions} \label{PhysicalBCs}
 
 \subsection{Examples}
 
 \subsection{References}
-\bibliography{mpm}
+%\bibliography{mpm}
