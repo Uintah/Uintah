@@ -2974,6 +2974,15 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
       ####################################################
       # The newer (2.3+) versions of petsc don't use the libO anymore...
       have23=`echo "$with_petsc" | grep "2.3."`
+      if test -z "$have23" ; then
+         petsc_version_major=`grep PETSC_VERSION_MAJOR $with_petsc/include/petscversion.h | awk '{print $3}'`
+         petsc_version_minor=`grep PETSC_VERSION_MINOR $with_petsc/include/petscversion.h | awk '{print $3}'`
+         if test $petsc_version_major -eq 2 ; then
+            if test $petsc_version_minor -eq 3 ; then
+               have23=true
+            fi
+         fi
+      fi
       if test "$have23"; then
          PETSC_SUB=lib
       fi
