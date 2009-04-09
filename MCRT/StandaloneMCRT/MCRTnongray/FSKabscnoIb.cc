@@ -69,16 +69,17 @@ int main(){
   double *abcswvnm = new double[abcswvnmSize];
   double *Rwvnabcs = new double[abcsSize];
   
-  ToArray(abcswvnmSize,abcswvnm, "LBLabsc-wvnm-T1000Trad1000-CO201H2O02CO003.dat");
-
+  //  ToArray(abcswvnmSize,abcswvnm, "LBLabsc-wvnm-T1000Trad1000-CO201H2O02CO003.dat");
+  ToArray(abcswvnmSize,abcswvnm, "LBLabsc-wvnm-T1500Trad1500-CO202H2O04CO006.dat");
+  
   // do integration
-  // direct FSK, stretching factor a = 1
+  // for direct FSK, stretching factor a = 1
   // R = \frac{int_0^g k(g)}{int_0^1 k(g)}
 
   double sumR = 0;
  
   //  Ebeta1 = C1 * abcswvnm[0] *  abcswvnm[0] *  abcswvnm[0]  * 1e6 /
-      ( exp( C2*  abcswvnm[0] / T )- 1);
+  //      ( exp( C2*  abcswvnm[0] / T )- 1);
   
       //  Ibeta1 = Ebeta1 / pi;
 
@@ -113,7 +114,7 @@ int main(){
     //  cout << Rwvnabcs[i] << endl;
   }
   
-  singleArrayTable(Rwvnabcs, abcsSize, 1, "RwvnabcsNoIb.dat");
+  singleArrayTable(Rwvnabcs, abcsSize, 1, "RwvnabcsNoIb1500K-CO202H2O04CO006.dat");
   
   /*
   // sort Rwvnabcs to ascending order
