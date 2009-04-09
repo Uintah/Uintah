@@ -20,7 +20,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            .25      </maxTime>
+       <maxTime>            .25         </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -96,7 +96,7 @@
               <patches>      [8,8,1]               </patches>
               <resolution>   [32,32,1]           </resolution>
            </Box>
-       </Level>
+        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
@@ -134,12 +134,12 @@
         <orderOfInterpolation>1  </orderOfInterpolation>
         <do_Refluxing>  false    </do_Refluxing>
         <Refinement_Criteria_Thresholds>
-          <Variable name = "press_CC" value = "15" matl = "0" />
-          <Variable name = "rho_CC"   value = "8" matl = "0" />
-          <Variable name = "temp_CC"  value = "10" matl = "0" />
+          <Variable name = "press_CC" value = "1" matl = "0" />
+          <Variable name = "rho_CC"   value = "1" matl = "0" />
+          <Variable name = "temp_CC"  value = "1" matl = "0" />
         </Refinement_Criteria_Thresholds>
       </ICE>  
-      <Regridder type="Tile">
+      <Regridder type="Tiled">
         <max_levels>3</max_levels>
         <cell_refinement_ratio>    [[4,4,1]]    </cell_refinement_ratio>
         <min_boundary_cells>       [1,1,0]      </min_boundary_cells>        
