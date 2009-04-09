@@ -90,6 +90,13 @@ public:
     return d_foreign;
   }
 
+  /*This linked list of vars is to store foreign Gridvariables
+   * from same patch but with different ranges*/
+  void setNextvar(Variable* var);
+  Variable* getNextvar() const {
+    return d_nextvar;
+  }
+
   void emit(OutputContext&, const IntVector& l, const IntVector& h,
 	    const string& compressionModeHint);
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
@@ -126,6 +133,7 @@ private:
   // other one.
   std::string* gzipCompress(std::string* pUncompressed, std::string* pBuffer);
   bool d_foreign;
+  Variable* d_nextvar;
 };
 
 } // End namespace Uintah

@@ -608,6 +608,7 @@
   
   <Scheduler              spec="OPTIONAL NO_DATA">
     <small_messages       spec="OPTIONAL BOOLEAN" />
+    <useExternalReadyQueue  spec="OPTIONAL BOOLEAN" />
     <VarTracker           spec="OPTIONAL NO_DATA">
       <start_time         spec="REQUIRED DOUBLE" />
       <end_time           spec="REQUIRED DOUBLE" />

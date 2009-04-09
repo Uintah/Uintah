@@ -612,29 +612,47 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
   case TypeDescription::SFCZVariable:
   {
     d_lock.readLock();
-    GridVariableBase* var = 0;
+    GridVariableBase* head = NULL;
+    GridVariableBase* last = NULL;
     if (d_varDB.exists(label, matlIndex, patch)) {
-      var = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
+      head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
       // use to indicate that it will be receiving (foreign) data and should
       // not be replaced.
-      var->setForeign();
+      head->setForeign();
     }
     d_lock.readUnlock();
-    
-    
 
-    if (var == 0 || var->getBasePointer() == 0 ||
-        Min(var->getLow(), dep->patchLow) != var->getLow() ||
-        Max(var->getHigh(), dep->patchHigh) != var->getHigh()) {
+    GridVariableBase* var;
+    for (var = head; var!=NULL; last = var, var = dynamic_cast<GridVariableBase*>(var->getNextvar())){
+      if (var->getBasePointer() == 0) {  // DW has an empty entry, expand it
+        var->rewindow(dep->patchLow, dep->patchHigh);
+        break;
+      }
+      if (Min(var->getLow(), dep->patchLow) != var->getLow() ||
+          Max(var->getHigh(), dep->patchHigh) != var->getHigh()) {
+            if (var->getLow() >= dep->patchLow && var->getHigh() <= dep->patchHigh) { 
+              var->rewindow(dep->patchLow, dep->patchHigh);  //expend this var
+              break;
+            } else {
+              continue;        //we can not use this var to recv, try next;
+            }
+      } else {        //we can use this var  
+        break;
+      }
+    } //end for 
+
+    if (var == NULL) {   // There was no place reserved to recv the data yet
       MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI(cell variable):" + label->getName());
-      // There was no place reserved to recv the data yet,
-      // so it must create the space now.
-      GridVariableBase* v = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
-      v->setForeign();
-      v->allocate(dep->patchLow, dep->patchHigh);
-      var = dynamic_cast<GridVariableBase*>(v);
+      var = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
+      if (last !=NULL) last->setNextvar(var);  //append to linked list
+      var->setForeign();
+      var->allocate(dep->patchLow, dep->patchHigh);
+    }
+
+    if (head == NULL) {  //Insert head of this var list to DW 
+      head = var;
       d_lock.writeLock();
-      d_varDB.put(label, matlIndex, patch, var, true);
+      d_varDB.put(label, matlIndex, patch, head, false); //put new var in data warehouse
       d_lock.writeUnlock();
     }
     
@@ -826,7 +844,7 @@ OnDemandDataWarehouse::put(const SoleVariableBase& var,
 			  to explicitly modify with multiple soles in the
 			  task graph */);
   // Put it in the database
-  if (!d_levelDB.exists(label, matlIndex, level))
+ // if (!d_levelDB.exists(label, matlIndex, level))
     d_levelDB.put(label, matlIndex, level, var.clone(), false);
   
   d_lock.writeUnlock();
@@ -1789,12 +1807,21 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       missing_patches.push_back(patch->getRealPatch());
       continue;
     }
+    //GridVariableBase* tmpVar = var->cloneType();
+    //d_varDB.get(label, matlIndex, patch, *tmpVar);
+    GridVariableBase* head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
     GridVariableBase* tmpVar = var->cloneType();
-    d_varDB.get(label, matlIndex, patch, *tmpVar);
+    GridVariableBase* v;
 
-    if (Max(l, tmpVar->getLow()) != l || Min(h, tmpVar->getHigh()) != h) {
+    for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
+      tmpVar->copyPointer(*v);
+
+      if (Max(l, tmpVar->getLow()) == l &&  Min(h, tmpVar->getHigh()) == h)  //find a completed region
+        break;
+    }
       // just like a "missing patch": got data on this patch, but it either corresponds to a different
       // region or is incomplete"
+    if (v == NULL){
       missing_patches.push_back(patch->getRealPatch());
       continue;
     }
@@ -2117,38 +2144,43 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
           continue;
         }
 
-	if(!d_varDB.exists(label, matlIndex, neighbor)) {
-	  SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor,
-				    matlIndex, neighbor == patch?
-				    "on patch":"on neighbor", __FILE__, __LINE__));
-        }
+	  if(!d_varDB.exists(label, matlIndex, neighbor)) {
+	    SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor,
+			  	    matlIndex, neighbor == patch?
+				      "on patch":"on neighbor", __FILE__, __LINE__));
+    }
 
-        GridVariableBase* srcvar = var.cloneType();
-	d_varDB.get(label, matlIndex, neighbor, *srcvar);
+    GridVariableBase* head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, neighbor));
+    GridVariableBase* srcvar = var.cloneType();
+    GridVariableBase* v;
+    for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
+      srcvar->copyPointer(*v);
 
-	if(neighbor->isVirtual())
-	  srcvar->offsetGrid(neighbor->getVirtualOffset());
-	
-	if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-	    || ( high.z() < low.z() ) ) {
-	  //SCI_THROW(InternalError("Patch doesn't overlap?", __FILE__, __LINE__));
-        }
-        
-        try {
-          //          if (var.getLow().x() > low.x() || var.getLow().y() > low.y() || var.getLow().z() > low.z() || 
-          //    var.getHigh().x() < high.x() || var.getHigh().y() < high.y() || var.getHigh().z() < low.z())
-          var.copyPatch(srcvar, low, high);
-        } catch (InternalError& e) {
-          cout << "  Can't copy patch " << neighbor->getID() << " on matl " << matlIndex << " for var " << *label << " " << low << " " << high << endl;
-          cout << e.message() << endl;
-          throw;
+  	  if(neighbor->isVirtual())
+	      srcvar->offsetGrid(neighbor->getVirtualOffset());
+      if (srcvar->getLow() <=  low && srcvar->getHigh() >= high){ 
+         try {
+           var.copyPatch(srcvar, low, high);
+         } catch (InternalError& e) {
+           cout << " Bad range: " << low << " " << high  
+              << " source var range: "  << srcvar->getLow() << " " << srcvar->getHigh() << endl;
+           throw e;
         }
         dn = high-low;
         total+=dn.x()*dn.y()*dn.z();
-        delete srcvar;
-        
+        break;
       }
+    } //end for vars
+    if (v==NULL) {
+     // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
+       // << " " << low << " " << high <<  ", DW has " << srcvar->getLow() << " " << srcvar->getHigh() << endl;
+	    SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor,
+			  	    matlIndex, neighbor == patch?
+				      "on patch":"on neighbor", __FILE__, __LINE__));
     }
+    delete srcvar;
+    } //end if neigbor
+  } //end for neigbours 
     
     //dn = highIndex - lowIndex;
     //long wanted = dn.x()*dn.y()*dn.z();
