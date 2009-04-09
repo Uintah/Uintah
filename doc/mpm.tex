@@ -550,7 +550,8 @@ between, say, tungsten and copper).  Within this loop, the required data
 are retrieved from the ``new\_dw" (New DataWarehouse) and space for the data
 to be created is allocated.  The final ``for" loop is over all of the nodes on
 the current patch, and the calculation described by
-Equations~\ref{MPM:acceleration} and~\ref{MPM:euler} are carried out.
+Equations~\ref{MPM:acceleration} and~\ref{MPM:euler} are carried out.  (This
+also includes a linear damping term not described above.)
 
 Let's consider each task in turn.  The remaining tasks will be described
 in much less detail, but the preceding dissection of a fairly simple task,
