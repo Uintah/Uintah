@@ -1947,53 +1947,59 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
   MALLOC_TRACE_TAG_SCOPE("ProblemSpecReader::resolveIncludes");
 
   while( child != NULL ) {
-
+  MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-1");
     if( child->type == XML_ELEMENT_NODE ) {
       string name1 = (const char *)(child->name);
       if( name1 == "include" ) {
-
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-2");
         ProblemSpec temp( child );
         map<string, string> attributes;
         temp.getAttributes( attributes );
-
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-3");
         xmlNode * prevChild = child->prev;
         
         string filename;
         string section = attributes[ "section" ];
-
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-4");
         if( child->_private ) {
+          MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-5");
           filename = validateFilename( attributes["href"], child );
         }
         else {
+          MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-6");
           filename = validateFilename( attributes["href"], parent );
         }
         
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-7");
         xmlDocPtr  doc     = xmlReadFile( filename.c_str(), 0, XML_PARSE_PEDANTIC );
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-8");
         xmlNode  * include = xmlDocGetRootElement(doc);
-
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-9");
         string * strPtr = new string( filename );
-
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-10");
         d_upsFilename.push_back( strPtr );
 
         // nodes to be substituted must be enclosed in a 
         // "Uintah_Include" node
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-11");
 
         string name = (const char *)( include->name );
         if( name == "Uintah_Include" || name == "Uintah_specification" ) {
-
+          MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-12");
           xmlNode * incChild = include->children;
 
           if( section != "" ) {  // Find the right section of the included file (to include).
+            MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-13");
 
             vector<string> sections;
             vector<char>   separators;
             separators.push_back( '/' );
             sections = split_string( section, separators );
-
+            MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-14");
             for( unsigned int pos = 0; pos < sections.size(); pos++ ) {
               bool done = false;
               while( !done ) {
-
+                MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-15");
                 if( incChild == NULL ) {
                   throw ProblemSetupException("Error parsing included file '" + filename + "' section '" + section + "'", __FILE__, __LINE__);
                 }
@@ -2001,6 +2007,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
                 string childName = (const char *)(incChild->name);
                 
                 if( ( incChild->type == XML_ELEMENT_NODE ) && ( childName == sections[ pos ] ) ) {
+                  MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-16");
                   if( pos != sections.size()-1 ) { // Not the last section, so descend.
                     incChild = incChild->children;
                   }
@@ -2014,23 +2021,25 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
           }
 
           while( incChild != 0 ) {
-
+            MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-17");
             // Make include be created from same document that created params...
             //ProblemSpecP newnode = tempParentPS.importNode( incChild, true );
 
             xmlNode * newnode = xmlDocCopyNode( incChild, parent->doc, true );
+            MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-18");
             if( prevChild == NULL ) {
               prevChild = newnode;
             }
 
             // Record the newnode's real file info...
             newnode->_private = strPtr;
-
+            MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-18");
             xmlAddPrevSibling( child, newnode );
             incChild = incChild->next;
           }
 
           // Remove the <include>
+          MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-19");
           xmlUnlinkNode( child );
           xmlFreeNode(   child );
 
@@ -2041,12 +2050,13 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
         else {
           throw ProblemSetupException("No href attributes in include tag", __FILE__, __LINE__);
         }
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-20");
         xmlFreeDoc( doc );
       }
       else { // !"include"
         indent( dbg, depth );
         dbg << " * " << name1 << "\n";
-
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-21");
         if( child->_private == NULL ) {
           child->_private = parent->_private;
         }
@@ -2055,10 +2065,11 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
       if( child != NULL ) {
         // Child can be NULL if an <include> is the last 'child'... as the <include> is
         // removed from the tree above.
-
+        MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-22");
         xmlNode * grandchild = child->children;
 
         if( grandchild != NULL ) {
+          MALLOC_TRACE_TAG("ProblemSpecReader::resolveIncludes-23");
           resolveIncludes( grandchild, child, depth+1 );
         }
       }
