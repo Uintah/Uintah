@@ -78,22 +78,22 @@ public:
     return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2];
   }
 
-  // commented out by BJW, nobody uses them, and they can't test for STL equality
-/*   inline bool operator>=(const IntVector& a) const { */
-/*     return value_[0] >= a.value_[0] && value_[1] >= a.value_[1] && value_[2] >= a.value_[2]; */
-/*   } */
+  inline bool operator>=(const IntVector& a) const { 
+    return value_[0] >= a.value_[0] && value_[1] >= a.value_[1] && value_[2] >= a.value_[2]; 
+  } 
 
-/*   inline bool operator<=(const IntVector& a) const { */
-/*     return value_[0] <= a.value_[0] && value_[1] <= a.value_[1] && value_[2] <= a.value_[2]; */
-/*   } */
+  inline bool operator<=(const IntVector& a) const { 
+    return value_[0] <= a.value_[0] && value_[1] <= a.value_[1] && value_[2] <= a.value_[2]; 
+  } 
 
-/*   inline bool operator>(const IntVector& a) const { */
-/*     return value_[0] > a.value_[0] && value_[1] > a.value_[1] && value_[2] > a.value_[2]; */
-/*   } */
+  /*
+  inline bool operator>(const IntVector& a) const { 
+    return value_[0] > a.value_[0] && value_[1] > a.value_[1] && value_[2] > a.value_[2]; 
+  }
 
-/*   inline bool operator<(const IntVector& a) const { */
-/*     return value_[0] < a.value_[0] && value_[1] < a.value_[1] && value_[2] < a.value_[2]; */
-/*   } */
+  inline bool operator<(const IntVector& a) const { 
+    return value_[0] < a.value_[0] && value_[1] < a.value_[1] && value_[2] < a.value_[2]; 
+  }*/
 
   // can test for equality - if this < a and a < this, they are equal
      inline bool operator<(const IntVector& a) const {

@@ -60,16 +60,25 @@ using namespace Uintah;
 Variable::Variable()
 {
    d_foreign = false;
+   d_nextvar = NULL;
 }
 
 Variable::~Variable()
 {
+  if (d_nextvar !=NULL) 
+    delete d_nextvar;
 }
 
 void
 Variable::setForeign()
 {
    d_foreign = true;
+}
+
+void
+Variable::setNextvar(Variable* var)
+{
+   d_nextvar = var;
 }
 
 void

@@ -143,7 +143,7 @@ MPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   if(params){
     params->get("useExternalReadyQueue", useExternalQueue_);
   }
- 
+
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
 }
@@ -449,8 +449,9 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 #endif
 
       //only send message if size is greather than zero
-      if(count>0)
-      {
+      //we need this empty message to enforce modify after read dependencies 
+      //if(count>0)
+      //{
         if( dbg.active()) {
           cerrLock.lock();
           //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
@@ -476,7 +477,7 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
         sends_.add( requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag );
         sendsLock.unlock(); // Dd: ??
         mpi_info_.totalsendmpi += Time::currentSeconds() - start;
-      }
+      //}
     }
   } // end for (DependencyBatch * batch = task->getComputes() )
   double dsend = Time::currentSeconds()-sendstart;
@@ -633,8 +634,9 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
       mpibuff.get_type(buf, count, datatype);
 #endif
       //only recieve message if size is greater than zero
-      if(count>0)
-      {
+      //we need this empty message to enforce modify after read dependencies 
+      //if(count>0)
+      //{
         int from = batch->fromTask->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Request requestid;
@@ -656,13 +658,13 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, bool only_old_recvs, int abort_
             scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler),
             ostr.str(), batch->messageTag);
         mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
-      }
+      /*}
       else
       {
         //no message was sent so clean up buffer and handler
         delete p_mpibuff;
         delete pBatchRecvHandler;
-      }
+      }*/
     }
     else {
       // Nothing really need to be received, but let everyone else know
@@ -924,10 +926,10 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
           numTasksDone++;
         }
         else {
-          taskdbg << d_myworld->myrank() << " Task internall ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           initiateTask( task, abort, abort_point, iteration );
           task->markInitiated();
           task->checkExternalDepCount();
+          taskdbg << d_myworld->myrank() << " Task internall ready " << *task << " deps needed: " << task->getExternalDepCount() << endl;
           // if MPI has completed, it will run on the next iteration
           pending_tasks.insert(task);
         }
@@ -937,7 +939,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         // tasks get in this queue automatically when their receive count hits 0
         //   in DependencyBatch::received, which is called when a message is delivered.
         DetailedTask * task = dts->getNextExternalReadyTask();
-        taskdbg << d_myworld->myrank() << " Running task " << *task << endl;
+        taskdbg << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() <<"/"<< pending_tasks.size() <<" tasks in queue)"<<endl;
         pending_tasks.erase(pending_tasks.find(task));
         ASSERTEQ(task->getExternalDepCount(), 0);
         runTask(task, iteration);
