@@ -45,12 +45,16 @@
 
 \subsection{Introduction}
 
-The Material Point Method (MPM) as described by Sulsky, et al.
-\cite{sulskycmame,sulskycpc} is a particle method for structural
-mechanics simulations.  Solid objects are represented by a
-collection of particles, or ``material points."  Each
-of these particles carries with it information for that part of the
-solid object that it represents.  This includes the position, mass, volume,
+The material point method (MPM) was described by Sulsky et al.~\cite{sulskycmame,sulskycpc} as
+an extension to the FLIP (Fluid-Implicit Particle) method of
+Brackbill~\cite{brackbill-ruppel86}, which itself is an
+extension of the particle-in-cell (PIC) method of
+Harlow~\cite{harlow1963}.  Interestingly, the name ``material point method"
+first appeared in the literature two years later in a description of
+an axisymmetric form of the method~\cite{sulsky_axisym_1996}.  In both
+FLIP and MPM, the basic idea is the same: objects are discretized into
+particles, or material points, each of which contains all state data for the
+small region of material that it represents.  This includes the position, mass, volume,
 velocity, stress and state of deformation of that material.  MPM differs from
 other so called ``mesh-free" particle methods in that, while each object
 is primarily represented by a collection of particles, a computational mesh
@@ -276,13 +280,151 @@ conduction is also available in the explicit MPM code, although it may be
 neglected via a run time option in the input file.  Explicit MPM is typically
 used for high rate simulations in which heat conduction is negligible.
 
-\subsubsection{Shape functions for MPM and GIMP} \label{gimp_mpm}
+\subsection{Shape functions for MPM and GIMP} \label{gimp_mpm}
 
-In MPM, standard tri-linear shape functions are used. In GIMP\cite{bardgimp},
-particles are assumed to have characteristic size, as opposed to MPM,
-where particles are assumed to be Dirac delta functions in space.  Thus in
-GIMP, the standard shape functions are convolved with a particle's
-characteristic function which effectively results in smoother interpolants.
+In both MPM and GIMP, the basic idea is the same: objects are discretized into
+particles, or material points, each of which contains all state data for the
+small region of material that it represents.  In MPM, these particles are spatially
+Dirac delta functions, meaning that the material that each represents is
+assumed to exist at a single point in space, namely the position of the
+particle.  Interactions between the particles and the grid take place
+using weighting functions, also known as shape functions or interpolation
+functions.  These are typically, but not necessarily, linear, bilinear or
+trilinear in one, two and three dimensions, respectively.
+
+More recently, Bardenhagen and Kober~\cite{bardgimp} generalized the
+development that gives rise to MPM, and suggested that MPM
+may be thought of as a subset of their ``Generalized Interpolation
+Material Point" (GIMP) method.  In the family of GIMP methods
+one chooses a characteristic function $\chi_p$ to represent
+the particles and a shape function $S_i$ as a basis of support on the
+computational nodes.  An effective shape function $\bar{S}_{ip}$  is found
+by the convolution of the $\chi_p$ and $S_i$ which is written as:
+\begin{equation}
+\bar{S}_{ip}(\bfx_p) = \frac{1}{V_p}  \int_{\Omega_p \cap \Omega} \chi_p(\bfx - \bfx_p) S_i(\bfx)\,\mathrm{d}\bfx .
+\label{effectiveS}
+\end{equation}
+While the user has significant latitude in choosing
+these two functions, in practice, the choice of $S_i$ is usually given
+(in one-dimension) as,
+\begin{equation}
+S_i\left(x\right) = \begin{cases} 1 + {\left(x-x_i\right) / h} & {-h < x-x_i \le 0} \\
+                    1 - {\left(x-x_i\right) / h} & {0  < x-x_i \le h} \\
+                    0 & \text{otherwise},
+       \end{cases}
+\label{linear_shape}
+\end{equation}
+where $x_i$ is the vertex location, and $h$ is the cell width, 
+assumed to be constant in this investigation, 
+although this is not a general restriction on the method.
+Multi-dimensional versions are constructed by forming tensor products of the
+one-dimensional version in the orthogonal directions.  
+
+When the choice of characteristic function is the Dirac delta,
+\begin{equation}
+\chi_p(\bfx) = \delta(\bfx-\bfx_p)V_p , \label{MPM_char}
+\end{equation}
+where $\bfx_p$ is the particle position, and $V_p$ is the particle volume,
+then traditional MPM is recovered.  In that case, the effective shape function
+is still that given by Equation~\ref{linear_shape}.  Its gradient is given by:
+
+\begin{equation}
+G_i\left(x\right) = \begin{cases} {1 / h} & {-h < x-x_i \le 0} \\
+                    {-1 / h} & {0  < x-x_i \le h} \\
+                    0 & \text{otherwise},
+       \end{cases}
+\label{linear_shape_grad}
+\end{equation}
+
+Plots of Equations~\ref{linear_shape} and~\ref{linear_shape_grad} are shown
+below.  The discontinuity in the gradient gives rise to poor accuracy and
+stability properties.
+
+\begin{figure}
+  \includegraphics[scale=.85]{mpm_basis.pdf}
+  \caption{Effective shape function when using traditional MPM.}
+  \label{Fig:MPMShape}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=.85]{mpm_grad.pdf}
+  \caption{Gradient of the effective shape function when using traditional MPM.}
+  \label{Fig:MPMShapeGrad}
+\end{figure}
+
+Typically, when an analyst indicates that
+they are ``using GIMP" this implies use of the linear grid basis function
+given in Eq.~\ref{linear_shape} and a ``top-hat" characteristic function,
+given by (in one-dimension),
+\begin{equation}
+\chi_p(x) = H(x-(x_p-l_p))-H(x-(x_p+l_p)) , \label{GIMP_char}
+\end{equation}
+where $H(x)$ is the Heaviside function
+($H(x)=0$ if $x<0$ and $H(x)=1$ if $x\ge0$) and $l_p$ is the half-length
+of the particle.  When the convolution indicated in Eq.~\ref{effectiveS}
+is carried out using the expressions in Eqns.~\ref{linear_shape}
+ and~\ref{GIMP_char}, a closed form for the effective shape function can be
+written as:
+\begin{equation}
+S_{i}\left(x_p\right) = \begin{cases}
+   \frac{\left(h+l_p+\left(x_p-x_i\right)\right)^2}{4hl_p} & {-h -l_p < x_p-x_i \le -h+l_p} \\
+   1 + \frac{\left(x_p-x_i\right)}{h} & {-h + l_p < x_p-x_i \le -l_p} \\
+   1 - \frac{\left(x_p-x_i\right)^2 + l_p^2}{2hl_p} & {-l_p < x_p-x_i \le l_p} \\
+   1 - \frac{\left(x_p-x_i\right)}{h} & {l_p  < x_p-x_i \le h-l_p} \\
+   \frac{\left(h+l_p-\left(x_p-x_i\right)\right)^2}{4hl_p} & {h -l_p < x_p-x_i \le h+l_p} \\
+   0 & \text{otherwise},
+\end{cases}
+\label{gimp_shape}
+\end{equation}
+%
+The gradient of which is:
+\begin{equation}
+G_i(x_p) = \begin{cases}
+   \frac{h+l_p+\left(x_p-x_i\right)}{2 h l_p} & {-h -l_p < x_p-x_i \le -h+l_p} \\
+   \frac{1}{h} & {-h + l_p < x_p-x_i \le -l_p} \\
+   - \frac{\left(x_p-x_i\right)}{h l_p} & {-l_p < x_p-x_i \le l_p} \\
+   - \frac{1}{h} & {l_p  < x_p-x_i \le h-l_p} \\
+   - \frac{h+l_p-\left(x_p-x_i\right)}{2 h l_p} & {h -l_p < x_p-x_i \le h+l_p} \\
+   0 & \text{otherwise},
+\end{cases}
+\label{gimpGrad}
+\end{equation}
+
+Plots of Equations~\ref{gimp_shape} and~\ref{gimpGrad} are shown
+below.  The continuous nature of the gradients are largely responsible
+for the improved robustness and accuracy of GIMP over MPM.
+
+\begin{figure}
+  \includegraphics[scale=.85]{gimp_basis.pdf}
+  \caption{Effective shape function when using GIMP.}
+  \label{Fig:GIMP}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[scale=.85]{gimp_grad.pdf}
+  \caption{Gradient of the effective shape function when using GIMP.}
+  \label{Fig:GradGIMP}
+\end{figure}
+%
+There is one further consideration in defining the effective shape function,
+and that is whether or not the size (length in 1-D) of the particle is kept
+fixed (denoted as ``UGIMP" here)
+or is allowed to evolve due to material deformations 
+(``Finite GIMP" or ``Contiguous GIMP" in (1) and ``cpGIMP" here).
+In one-dimensional
+simulations, evolution of the particle (half-)length is straightforward,
+\begin{equation}
+l_p^n = F_p^n l_p^0 ,  \label{particle_length}
+\end{equation} 
+where $F_p^n$ is the deformation gradient at time $n$.
+In multi-dimensional simulations, a similar approach can be used, assuming
+an initially rectangular or cuboid particle, to find the current particle
+shape.  The difficulty arises in evaluating Eq.~\ref{effectiveS} for
+these general shapes.  One approach, apparently effective, has been to create
+a cuboid that circumscribes the deformed particle shape~\cite{jinmaCMES2006}.
+Alternatively, one can assume that the particle size remains constant (insofar
+as it applies to the effective shape function evaluations only).  This is
+the approach currently implemented in Uintah.
 
 \subsection{Uintah Implementation} \label{Sec:UintahImp}
 
