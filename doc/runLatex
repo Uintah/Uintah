@@ -1,9 +1,16 @@
 #!/bin/csh
 
-pdflatex uintah.tex
-#bibtex arches
-bibtex ice
-bibtex mpm
-pdflatex uintah.tex
-pdflatex uintah.tex
+/bin/rm *.aux
+pdflatex  --halt-on-error uintah.tex
+
+if( $status == "0" ) then
+  echo "------------------"
+  echo "Now running bibtex"
+  echo "------------------"
+  #bibtex arches
+  bibtex ice
+  bibtex mpm
+  pdflatex -interaction=batchmode uintah.tex
+  pdflatex -interaction=batchmode uintah.tex
+endif
 exit
