@@ -1890,11 +1890,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     delete timeStepObjPtr;
   }
 
-  cout << "Out GetVar\n";
-
-  //
   return rv;
-  //
 }
 
 
@@ -1929,8 +1925,6 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
   //
   // EXCEPTION1(InvalidVariableException, varname);
   //
-
-  cout << "\nIn GetVectorVar " << timestate << "\n";
 
   string varName(varname);
 
