@@ -44,12 +44,13 @@ LU::decompose()
     }
     if (big == 0.0) {
       // return error "Singular matrix in routine ludcmp"
+      cout << "Singular matrix in routine LU::decompose." << endl;
       isSingular_ = true;
       isReady_ = true;
       return;
     }
     // save the scaling
-    vv[i]=1.0/big;
+    vv.push_back(1.0/big);
   }
 
   // Loop over columns for Crout's method
@@ -124,7 +125,7 @@ LU::decompose()
 }
 //--------------------------------------------------------------------
 void
-LU::back_subs( double * rhs )
+LU::back_subs( double* rhs )
 {
   if( ! isReady_ )
     throw std::runtime_error( "LU::back_subs() cannot be executed until LU::decompose() has been called!" );

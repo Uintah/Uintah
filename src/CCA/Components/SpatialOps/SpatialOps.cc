@@ -360,15 +360,16 @@ SpatialOps::actuallyInitialize(const ProcessorGroup* ,
           Point pt = patch->cellPosition(*iter);
           //if (pt.x() > .25 && pt.x() < .75 && pt.y() > .25 && pt.y() < .75)
           //if (pt.y() > .25 && pt.y() < .75 ) {
-            if (pt.x() < .5){
+
+          //if (pt.x() < .5){
             if (eqn->weight())
               tempVar[*iter] = 1.0;
             else 
               tempVar[*iter] = initValue;
-          }
-          else {
-            tempVar[*iter] = 0;
-          }
+          //}
+          //else {
+          //  tempVar[*iter] = 0;
+          //}
         //}
         //mylength += .10; 
       }

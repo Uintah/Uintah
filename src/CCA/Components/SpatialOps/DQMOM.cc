@@ -39,6 +39,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
 
   ProblemSpecP db = params; 
   unsigned int moments;
+  unsigned int index_length;
   moments = 0;
 
   // obtain moment index vectors
@@ -53,17 +54,19 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     
     // keep track of total number of moments
     ++moments;
+
+    index_length = temp_moment_index.size();
   }
 
-  // throw exception if moments != (N_xi+1)*N
-
+ 
   // This for block is not necessary if the map includes weighted abscissas/internal coordinats 
   // in the same order as is given in the input file (b/c of the moment indexes)
   // Reason: this block puts the labels in the same order as the input file, so the moment indexes match up OK
+  
   DQMOMEqnFactory & eqn_factory = DQMOMEqnFactory::self();
   //ModelFactory & model_factory = ModelFactory::self();
   N_ = eqn_factory.get_quad_nodes();
-  
+ 
   for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
     string wght_name = "w_qn";
     string node;
@@ -96,6 +99,19 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     }
     N_xi = N_xi + 1;
   }
+  
+  // Check to make sure number of total moments specified in input file is correct
+  if ( moments != (N_xi+1)*N_ ) {
+    cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect! Need ",__FILE__,__LINE__);
+  }
+
+  // Check to make sure number of moment indices matches the number of internal coordinates
+  if ( index_length != N_xi ) {
+    cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
+  }
+
 }
 
 // **********************************************
@@ -184,7 +200,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     // Cell iterator
     for ( CellIterator iter = patch->getCellIterator__New();
           !iter.done(); ++iter) {
-      
+  
       LU A( (N_xi+1)*N_, 1); // bandwidth doesn't matter b/c A is being stored densely
       vector<double> B( (N_xi+1)*N_, 0.0 );
       IntVector c = *iter;
@@ -196,10 +212,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       // store weights
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
            iEqn != weightEqns.end(); ++iEqn) {
-       constCCVariable<double> temp;
-       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-       new_dw->get( temp, equation_label, matlIndex, patch, gn, 0);
-       weights.push_back(temp[c]);
+        constCCVariable<double> temp;
+        const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+        new_dw->get( temp, equation_label, matlIndex, patch, gn, 0);
+        weights.push_back(temp[c]);
       }
 
       // store abscissas
@@ -266,7 +282,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               // Appendix C, C.16 (S matrix)
               prefixS = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
               productS = 1;
-        
+
               for (unsigned int n = 0; n < N_xi; ++n) {
                 if (n != j) {
                   // A_j+1 matrix:
@@ -282,16 +298,18 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             }
 
             modelsumS = modelsumS - models[j*(N_)+alpha];
-             
+
             A(k,(j+1)*N_ + alpha)=prefixA*productA;
             
             quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
           }//end quad nodes
           totalsumS = totalsumS + quadsumS;
         }//end int coords
+        
         B[k] = totalsumS;
       } // end moments
       
+      //A.dump();
       A.decompose();
       A.back_subs( &B[0] );
 
@@ -328,5 +346,5 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }//end for cells
 
   }//end per patch
-
+  cout << "Now leaving DQMOM linear solver.\n";
 }
