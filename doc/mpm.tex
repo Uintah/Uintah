@@ -80,7 +80,7 @@ deformation that will prematurely terminate the simulation.  The severity of
 all of these issues (except for the expense) has been significantly reduced
 with the introduction of the Generalized Interpolation Material Point Method,
 or GIMP\cite{bardgimp}.  The basic concepts associated with GIMP will be
-described in the subsequent section.  Throughout this document, MPM (which
+described below.  Throughout this document, MPM (which
 ends up being a special case of GIMP) will frequently be referred to
 interchangably with GIMP.
 
@@ -191,7 +191,8 @@ This is computed at the nodes as a volume integral of the divergence
 of the stress on the particles, specifically:
 
 \begin{eqnarray}
-        \bfF^{\rm{int}}_i &=& \sum_{p} \bfG_{ip} \sig_p v_p,
+\bfF^{\rm{int}}_i &=& \sum_{p} \bfG_{ip} \sig_p v_p,
+\label{computeIntForce}  
 \end{eqnarray}
 where $\bfG_{ip}$ is the gradient of the shape function of the $ith$ node
 evaluated at $\bfx_p$, and $\sig_p$ and $v_p$ are the time $n$ values of
@@ -250,7 +251,7 @@ constant) has been accomplished.  Conceptually, one can imagine that, since an
 acceleration and velocity were computed at the grid, and an interval of time
 has passed, the grid nodes also experienced a displacement.  This 
 displacement also moved the particles in an isoparametric fashion.  In
-practice, particle motion is accomplished by Eq.~\label{MPM:updateXp},
+practice, particle motion is accomplished by Equation~\ref{MPM:updateXp},
 and the grid never deforms.  So, while the MPM literature will often refer
 to resetting the grid to its original configuration, in fact, this 
 isn't necessary as the grid nodes never leave that configuration.  Regardless,
@@ -268,7 +269,7 @@ accumulated to common nodes) behave as if they are a single body.  To enable
 multi-field simulations with frictional contact, or to impose displacement
 based boundary conditions, e.g. a rigid piston, additional steps must be
 taken.  These steps implement contact formulations such as that described
-by Bardenhagen, et al.\ref{bard_contact}.  The {\it use} of the contact
+by Bardenhagen, et al.\cite{bard_contact}.  The {\it use} of the contact
 algorithms is described in Section~\ref{Contact}, but the reader will be
 referred to the relevant literature for their development.  Lastly, heat
 conduction is also available in the explicit MPM code, although it may be
@@ -308,19 +309,20 @@ discussed as needed.  For the moment, consider the various files that end in
 AMRMPM.cc  FractureMPM.cc  ImpMPM.cc  RigidMPM.cc  SerialMPM.cc  ShellMPM.cc
 \end{Verbatim}
 
-AMRMPM.cc is the nascent beginnings of an AMR implementation of MPM.  It is far from complete and should be ignored.  FractureMPM.cc is an implementation of
+\tt AMRMPM.cc \normalfont is the nascent beginnings of an AMR implementation of MPM. 
+It is far from complete and should be ignored.  \tt FractureMPM.cc \normalfont is an implementation of
 the work of Guo and Nairn \cite{GuoNairn}, and while it is viable, it is
-undocumented and unsupported.  ShellMPM.cc is a treatment of MPM particles
+undocumented and unsupported.  \tt ShellMPM.cc \normalfont is a treatment of MPM particles
 as shell and membrane elements, developed by Biswajit Bannerjee.  It is also
-viable, but also undocumented and unsupported.  ImpMPM.cc is an implicit
+viable, but also undocumented and unsupported.  \tt ImpMPM.cc \normalfont is an implicit
 time integration form of MPM based on the work of Guilkey and Weiss
 \cite{Guilkey03}.  It is also viable, and future releases of Uintah will include
 documentation of its capabilities and uses.  For now, interested readers
-should contact Jim Guilkey directly for more information.  RigidMPM.cc contains
+should contact Jim Guilkey directly for more information.  \tt RigidMPM.cc \normalfont contains
 a very reduced level of functionality, and is used solely in conjunction with
 the MPMArches component.
 
-This leaves SerialMPM.cc.  This contains, despite its name, the parallel
+This leaves \tt SerialMPM.cc. \normalfont  This contains, despite its name, the parallel
 implementation of the algorithm described above in Section~\ref{Sec:AlgDesc}.
 For now, we will skip over the initialization procedures such as:
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -332,7 +334,7 @@ and focus mainly on the timestepping algorithm described above.  Reference
 will be made back to these functions as needed in
 Section~\ref{Sec:UintahSpecMPM}.
 
-Each of the Uintah components contains a function called ``scheduleTimeAdvance".
+Each of the Uintah components contains a function called  \tt scheduleTimeAdvance \normalfont.
 The algorithms implemented in these components are broken into a number
 of steps.  The implementation of these steps in Uintah take place in ``tasks".
 Each task is responsible for performing the calculations needed to accomplish
@@ -345,7 +347,7 @@ both temporally and spatially, each task can be executed in the proper order,
 and communication tasks can automatically be generated by the Uintah
 infrastructure to achieve parallelism.  Thus, scheduleTimeAdvance calls
 a series of functions, each of which schedules the individual tasks.  Let's
-begin by looking at the scheduleTimeAdvance for SerialMPM, pasted below.
+begin by looking at the \tt scheduleTimeAdvance \normalfont for \tt SerialMPM, \normalfont pasted below.
 
 \begin{Verbatim}[fontsize=\footnotesize]
 void
@@ -438,7 +440,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 As described above, each of the ``schedule" functions describes dataflow,
 and it also calls the function that actually executes the task.  The naming
 convention is illustrated by an example,
-scheduleComputeAndIntegrateAcceleration calls computeAndIntegrateAcceleration.
+\tt scheduleComputeAndIntegrateAcceleration \normalfont calls \tt computeAndIntegrateAcceleration. \normalfont
 Let's examine this particular task, which executes
 Equations~\ref{MPM:acceleration} and~\ref{MPM:euler}, more carefully.  First,
 the scheduling of the task:
@@ -471,21 +473,22 @@ void SerialMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 }
 \end{Verbatim}
 
-The ``if" statement basically directs the schedule to only do this task on the 
+The \tt if \normalfont statement basically directs the schedule to only do this task on the 
 finest level (MPM can be used in AMR simulations, but only at the finest
-level.)  The ''printSchedule" command is in place for debugging purposes,
+level.)  The \tt printSchedule \normalfont command is in place for debugging purposes,
 this type of print statement can be turned on by setting an environmental
 variable.  The real business of this task begins with the declaration of the
 Task.  In the task declaration, the function associated with that task is
 identified.  Subsequent to that is a description of the data dependencies.
-Namely, this task ``requires" the mass, internal and external forces as well
+Namely, this task \tt requires \normalfont the mass, internal and external forces as well
 as velocity on the grid.  No ghost data are required as this task is a 
 node by node calculation.  It also requires the timestep size.  Note also
-that most of the required data are needed from the ``NewDW" where DW refers to
+that most of the required data are needed from the \tt NewDW \normalfont where
+\tt DW \normalfont refers to
 DataWarehouse.  This simply means that these data were calculated by an
 earlier task in the current timestep.  The timestep size for this step
-was computed in the previous timestep, and thus is required from the ``OldDW".
-Finally, this task ``computes" the acceleration and time advanced velocity
+was computed in the previous timestep, and thus is required from the \tt OldDW. \normalfont
+Finally, this task \tt computes \normalfont the acceleration and time advanced velocity
 at each node.
 
 The code to execute this task is as follows:
@@ -547,9 +550,9 @@ This task contains three nested for loops.  First, is a loop over all of the
 ``patches" that the processor executing this task is responsible for.  Next
 is a loop over all materials (imagine a simulation involving the interaction
 between, say, tungsten and copper).  Within this loop, the required data
-are retrieved from the ``new\_dw" (New DataWarehouse) and space for the data
-to be created is allocated.  The final ``for" loop is over all of the nodes on
-the current patch, and the calculation described by
+are retrieved from the \tt new\_dw \normalfont (New DataWarehouse) and space for the data
+to be created is allocated.  The final loop is over all of the nodes on
+the current patch, and the calculations described by
 Equations~\ref{MPM:acceleration} and~\ref{MPM:euler} are carried out.  (This
 also includes a linear damping term not described above.)
 
@@ -560,20 +563,88 @@ accomplish, should allow interested individuals to follow the remainder
 of the Uintah-MPM implementation.
 
 \begin{enumerate}
-\item {\bf scheduleApplyExternalLoads} This task is mainly responsible for
+\item {\tt scheduleApplyExternalLoads \normalfont} This task is mainly responsible for
 applying traction boundary conditions described in the input file.  This is
-done by assigning external force vectors to the particles.
+done by assigning external force vectors to the particles.  If the user
+wishes to apply a load that is not possible to acheive via the input file
+options, it is straightforward to modify the code here to do ``one-off" tests.
 
-\item {\bf scheduleInterpolateParticlesToGrid} 
-\item {\bf scheduleExMomInterpolated} 
-\item {\bf scheduleComputeInternalForce} 
-\item {\bf scheduleComputeAndIntegrateAcceleration} 
-\item {\bf scheduleExMomIntegrated} 
-\item {\bf scheduleSetGridBoundaryConditions} 
-\item {\bf scheduleInterpolateToParticlesAndUpdate} 
-\item {\bf scheduleParticleRelocation} 
+\item {\tt scheduleInterpolateParticlesToGrid \normalfont}   The name of this task was
+poorly chosen, but has persisted.  This task carries out the operations given
+in Equation~\ref{accumulate}.  It also sets boundary conditions on some of
+the variables, such as the grid temperature, and grid velocity 
+(in the case of symmetry BCs).
+
+\item {\tt scheduleExMomInterpolated \normalfont}  This task actually exists in one
+of the contact models which can be found in the \tt Contact \normalfont directory.  Each of those
+models has two main tasks. This is the the first of those. It is responsible
+for modifying the grid velocity computed by interpolateParticlesToGrid according
+to the rules for the particular contact model chosen in the input file.  These
+models are briefly described in Section~\ref{Contact}. 
+
+\item {\tt scheduleComputeInternalForce \normalfont} This task computes the volume
+integral of the divergence of stress.  Specifically, it carries out the
+operation given in Equation~\ref{computeIntForce}.  It also computes some
+diagnostic data, if requested in the input file, such as the reaction forces
+(tractions) on the boundaries of the computational domain.
+
+\item {\tt scheduleComputeAndIntegrateAcceleration \normalfont} As described previously,
+this task carries out the operations described in 
+Equations~\ref{MPM:acceleration} and~\ref{MPM:euler}.
+
+\item {\tt scheduleExMomIntegrated \normalfont}  This is the second of the contact tasks
+(see above).  It is responsible for modifiying the time advanced grid velocity
+computed in \tt computeAndIntegrateAcceleration. \normalfont
+
+\item {\tt scheduleSetGridBoundaryConditions \normalfont}  This task sets boundary conditions
+on the time advanced grid velocity.  It also sets an acceleration boundary
+condition as well.  However, rather than just setting the acceleration
+to a given value, it is computed by solving Equation~\ref{MPM:euler} for
+acceleration, and then recomputing the acceleration (on all nodes) as:
+\begin{eqnarray}
+\bfa_i= \frac{\bfv^L_i - \bfv_i}{\Delta{t}}
+\label{MPM:accBC}
+\end{eqnarray}
+Doing this operation on all nodes has several advantages.  For most interior
+nodes, the value for acceleration will be unchanged, but for nodes on the 
+where the velocity has been altered by enforcing boundary conditions, and
+for nodes at which the contact models have altered the velocity, the acceleration
+will be modified to reflect that alteration.
+
+\item{\tt scheduleComputeStressTensor \normalfont}  The task, \tt computeStressTensor, \normalfont
+exists in each of the models in the \tt ConstitutiveModel \normalfont directory.  Each
+model is responsible for carrying out the operations given in
+Equation~\ref{p_vol}, and of course, as the name implies, it also computes
+the material stress.  This task has one additional important function,
+and that is computing the timestep size for the subsequent step.  The CFL
+condition dictates that the timestep size be limited according to:
+\begin{eqnarray}
+\Delta{t} < \frac{\Delta{x}}{c+|u|}
+\label{MPM:CFL}
+\end{eqnarray}
+where $\Delta{x}$ is the cell spacing, $c$ is the wavespeed in the material,
+and $|u|$ is the magnitude of the local velocity.  Because the wavespeed 
+may depend on the state of stress that a material is in, this task provides
+a convenient time at which to make this calculation.  A timestep size is
+computed for all particles, and the minimum for the particle set on a given
+patch is put into a ``reduction variable".  The Uintah infrastructure then
+does a global reduction to select the smallest timestep from across the
+domain.
+
+\item {\tt scheduleInterpolateToParticlesAndUpdate \normalfont}  This task carries out the
+operations in Equations~\ref{MPM:updateVp} and~\ref{MPM:updateXp}, namely updating
+the particle state based on the grid solution.
+
+\item {\tt scheduleParticleRelocation \normalfont}  This task is not actually located
+in the MPM code, but in the Uintah infrastructure.  The idea is that as particles
+move, some will cross patch boundaries, and their data will need to be sent to
+other processors.  This task is responsible for identifying particles that have
+left the patch that they were on, finding where they went, and sending their
+data to the correct processor.
 
 \end{enumerate}
+
+
 
 \subsection{Uintah Specification} \label{Sec:UintahSpecMPM}
 
