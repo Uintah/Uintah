@@ -64,15 +64,15 @@ int main(){
   //% LBLHITEMPabcswvnm(:,2) == absc
  
   int abcsSize, abcswvnmSize;
-  abcsSize = 1495001; // get the number which is huge
+  abcsSize = 1495001; // the last nonzero length get the number which is huge
   abcswvnmSize = abcsSize * 2;
   double *abcswvnm = new double[abcswvnmSize];
   double *Rwvnabcs = new double[abcsSize];
   
-  ToArray(abcswvnmSize,abcswvnm, "LBLabsc-wvnm-T1000Trad1000-CO201H2O02CO003.dat");
-
+  //  ToArray(abcswvnmSize,abcswvnm, "LBLabsc-wvnm-T1000Trad1000-CO201H2O02CO003.dat");
+  ToArray(abcswvnmSize,abcswvnm, "LBLabsc-wvnm-T1500Trad1500-CO202H2O04CO006.dat");
   // do integration
-  // direct FSK, stretching factor a = 1
+  // direct FSK, stretching factor a = 1, no Ibeta needed
   // R = \frac{int_0^g k(g)}{int_0^1 k(g)}
 
   double sumR = 0;
@@ -109,7 +109,7 @@ int main(){
     //  cout << Rwvnabcs[i] << endl;
   }
   
-  singleArrayTable(Rwvnabcs, abcsSize, 1, "RwvnabcsNosorting2.dat");
+  singleArrayTable(Rwvnabcs, abcsSize, 1, "RwvnabcsNosorting1500K-CO202H2O04CO006.dat");
   
   /*
   // sort Rwvnabcs to ascending order
