@@ -77,7 +77,7 @@ public:
   inline void set_quad_nodes( int qn ) {
     n_quad_ = qn; };
 
-  /** @brief Set the number of quadrature nodes */ 
+  /** @brief Get the number of quadrature nodes */ 
   inline const int get_quad_nodes( ) {
     return n_quad_; };
 
