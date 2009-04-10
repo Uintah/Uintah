@@ -113,20 +113,23 @@
       </contact>
       <material                          spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
+        <density                         spec="REQUIRED DOUBLE" />
+
+        <include href="constitutive_models.xml" />
+
+        <specific_heat                   spec="REQUIRED DOUBLE 'positive'" /> 
+        <thermal_conductivity            spec="REQUIRED DOUBLE 'positive'" />
+        <geom_object                     spec="MULTIPLE" />
+        <is_rigid                        spec="OPTIONAL BOOLEAN" />
+        <C_p                             spec="OPTIONAL DOUBLE" />
+        <includeFlowWork                 spec="OPTIONAL BOOLEAN"/>
+        <melt_temp                       spec="OPTIONAL DOUBLE" /> <!--295.0 -->
+        <room_temp                       spec="OPTIONAL DOUBLE" /> <!--294.0 -->
+
         <fracture                        spec="OPTIONAL NO_DATA"
                                            attribute1="type REQUIRED STRING 'normal'">
           <constraint                      spec="OPTIONAL DOUBLE" />
         </fracture>
-        <C_p                             spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
-        <includeFlowWork                 spec="OPTIONAL BOOLEAN" />
-        <gamma                           spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
-        <ThresholdTemp                   spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
-        <ThresholdPressure               spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
-        <Enthalpy                        spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
-        <BurnCoeff                       spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
-        <refPressure                     spec="OPTIONAL DOUBLE" />  <!-- FIXME: what is this? -->
-        
-        <include href="constitutive_models.xml" />
 
         <crack                           spec="OPTIONAL NO_DATA" >
           <type                          spec="REQUIRED STRING 'friction'" />
@@ -143,21 +146,6 @@
             </quad>
           </crack_segments>
         </crack>
-        <density                         spec="OPTIONAL DOUBLE" />   <!-- FIXME: is this really optional?  Default? -->
-        <EOS                             spec="OPTIONAL NO_DATA"
-                                           attribute1="type REQUIRED STRING 'ideal_gas'" >
-          <gas_constant                  spec="OPTIONAL DOUBLE" />
-        </EOS>
-        <geom_object                     spec="MULTIPLE" />
-        <heat_transfer_coefficient       spec="OPTIONAL DOUBLE" />
-        <initial_material_temperature    spec="OPTIONAL DOUBLE" /> <!-- FIXME: what is the default for this? -->
-        <is_rigid                        spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what is the default for this? -->
-        <melt_temp                       spec="OPTIONAL DOUBLE" />
-        <room_temp                       spec="OPTIONAL DOUBLE" />
-        <specific_heat                   spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: is this really optional?  Default? -->
-        <thermal_conductivity            spec="OPTIONAL DOUBLE 'positive'" /> <!-- FIXME: is this really optional?  Default? -->
-        <toughness                       spec="OPTIONAL DOUBLE" />
-        <velocity_field                  spec="OPTIONAL INTEGER" /> <!-- FIXME: really in integer? -->
       </material>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
     </MPM>
