@@ -35,7 +35,6 @@ SRCDIR   := CCA/Components/MPM/PhysicalBC
 SRCS     += \
 	$(SRCDIR)/MPMPhysicalBCFactory.cc 	\
 	$(SRCDIR)/ForceBC.cc              	\
-	$(SRCDIR)/NormalForceBC.cc              \
 	$(SRCDIR)/PressureBC.cc          	\
 	$(SRCDIR)/CrackBC.cc			\
 	$(SRCDIR)/HeatFluxBC.cc			\

@@ -31,7 +31,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
-#include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
@@ -57,11 +56,6 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
     for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
         child = child->findNextBlock("force") ) {
        mpmPhysicalBCs.push_back(scinew ForceBC(child));
-    }
-
-    for(ProblemSpecP child = current_ps->findBlock("normal_force"); child != 0;
-        child = child->findNextBlock("normal_force") ) {
-       mpmPhysicalBCs.push_back(scinew NormalForceBC(child));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
