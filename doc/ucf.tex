@@ -8,17 +8,30 @@
  
 %__________________________________
 \subsection{Time Related Variables}
+Uintah components are timestepping codes.  As such, one of the first entries
+in each input file describes the timestepping parameters.  An input file
+segment is given below that encompasses all of the possible parameters.
+Most are self-explanatory, and not all are required,
+(e.g \tt <max\_Timestep>,
+<max\_delt\_increase>, <end\_on\_max\_time\_exactly> \normalfont and
+\tt <delt\_init> \normalfont are all optional).
+\tt <timestep\_multiplier> \normalfont serves
+as a CFL number, that is, a number, usually less than 1.0, that is used to
+moderate the timestep automatically calculated by the individual components. 
+
 \begin{Verbatim}[fontsize=\footnotesize]
 <Time>
-    <maxTime>            1.0        </maxTime>
+    <maxTime>            1.0         </maxTime>
     <initTime>           0.0         </initTime>
     <delt_min>           0.0         </delt_min>
     <delt_max>           1.0         </delt_max>
     <delt_init>          1.0e-9      </delt_init>
-    <max_delt_increase>  2.0        </max_delt_increase>
+    <max_delt_increase>  2.0         </max_delt_increase>
     <timestep_multiplier>1.0         </timestep_multiplier>
-    <max_Timestep>       100        </max_Timestep>
+    <max_Timestep>       100         </max_Timestep>
+    <end_on_max_time_exactly>true    </end_on_max_time_exactly>
 </Time>
+
 \end{Verbatim}
 %
 %__________________________________
