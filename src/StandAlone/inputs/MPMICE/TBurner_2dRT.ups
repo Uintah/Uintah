@@ -240,7 +240,6 @@
        <MPM>
          <material name="Reactant">
            <density>              1840.0 </density>
-           <toughness>            5.0e5  </toughness>
            <thermal_conductivity> 0.452  </thermal_conductivity>
            <specific_heat>        996.0  </specific_heat>
            <C_p>                  996.0  </C_p>
