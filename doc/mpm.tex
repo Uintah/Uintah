@@ -800,7 +800,9 @@ while the remainder of the file is enclosed within the following tags:
 
 The following subsections describe the remaining inputs needed to construct
 an input file for an MPM simulation.  The order of the various sections 
-of the input file is not important.
+of the input file is not important.  {\bf The MPM, ICE and MPMICE components
+are dimensionless calculations.  It is the responsibility of the analyst
+to provide the following inputs using a consistent set of units.}
 
 \subsubsection{Common Inputs}
 
@@ -860,7 +862,76 @@ MPM simulations is gravity, this is specified as:
 </PhysicalConstants>
 \end{Verbatim}
 
+\subsubsection{MPM Flags}
+
 \subsubsection{Material Properties}
+
+The \tt Material Properties \normalfont section of the input file
+actually contains not only those, but also the geometry and initial
+condition data as well.  Below is a simple example, copied from
+\tt inputs/MPM/disks.ups. \normalfont  The \tt name \normalfont field
+is optional.  The first field is the material \tt <density>. \normalfont
+The \tt <constitutive\_model> \normalfont field refers
+to the model used to generate a stress tensor on each material point.
+The use of these models is described in detail in
+Section~\ref{ConstitutiveModels}.  Next are the thermal transport properties,
+\it <thermal\_conductivity> \normalfont and 
+\it <specific\_heat>. \normalfont  Note that these are required even if
+heat conduction is not being computed.  These are the required material
+properties.  There are additional optional parameters that are used in
+other auxiliary calculations, for a list of these
+see the \tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont.
+
+Next is the specification of the geometry, and, along with it, the initial
+state of the material contained in that geometry.  For more information on
+how initial geometry can be specified, see Section~\ref{}.  Within the
+\tt <geom\_object> \normalfont is the \tt <res> \normalfont field.  This
+indicates how many particles per cell are to be used in each of the 
+coordinate directions.  Following that are initial values for velocity and
+temperature.  Finally, the \tt <color> \normalfont designation has a number
+of uses, for example when one wishes to identify initially distinct regions
+of the same material.  In Section~\ref{OTFA_MPM} is a description of how
+this field is used to identify particles for on the fly data extraction.
+
+An arbitray number of \tt <material> \normalfont fields can be specified.
+As the calculation proceeds, each of these materials has their own field
+variables, and, as such, each material behaves independently of the others.
+Interactions between materials occur as a result of ``contact" models.
+Their use is described in detail in Section~\ref{Contact}.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+    <MaterialProperties>
+       <MPM>
+           <material name="Tofu">
+              <density>1000.0</density>
+              <constitutive_model type="comp_mooney_rivlin">
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+              </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <cylinder label = "gp1">
+                     <bottom>[.25,.25,.05]</bottom>
+                     <top>[.25,.25,.1]</top>
+                     <radius> .2 </radius>
+                  </cylinder>
+                  <res>[2,2,2]</res>
+                  <velocity>[2.0,2.0,0]</velocity>
+                  <temperature>300</temperature>
+                  <color>             0               </color>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>null</type>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+\end{Verbatim}
+
 \subsubsection{Constitutive Models} \label{ConstitutiveModels}
 \subsubsection{Contact}  \label{Contact}
 \subsubsection{BoundaryConditions} \label{Sec:MPM_BCs}
@@ -929,6 +1000,100 @@ set different boundary condition types for different materials.  In practice,
 this is rarely used, so the usage illustrated here should be used.
 
 \subsubsection{Physical Boundary Conditions} \label{PhysicalBCs}
+
+It is often more convenient to apply a specified load at the MPM particles.
+The load may be a function of time.  Such a load versus time curve is called
+a {\bf load curve}.
+In Uintah, the load curve infrastructure is available for general use
+(and not only for particles).  However, it has been implemented only for
+a special case of pressure loading.  Namely, a surface is
+specified through the use of the \tt <geom\_object> \normalfont description,
+and a pressure vs. time curve is described by specifying their values
+at discrete points in time, between which linear interpolation is used
+to find values at any time.  At $t=0$, those particles in the vicinity
+of the the surface are tagged with a load curve ID, and those particles
+are assigned external forces such that the desired pressure is achieved.
+
+We invoke the load curve in the \verb|<MPM>| section
+(See Section~\ref{MPMFlags})of the input file
+using  \verb|<use_load_curves> true </use_load_curves>|.  The default value
+is \verb|<use_load_curves> false </use_load_curves>|.
+
+In Uintah, a load curve infrastructure is implemented in the file \\
+\verb|.../MPM/PhysicalBC/LoadCurve.h|.  This file is essentially a templated
+structure that has the following private data
+\begin{verbatim}
+  // Load curve information 
+  std::vector<double> d_time;
+  std::vector<T> d_load;
+  int d_id;
+\end{verbatim}
+The variable \verb|d_id| is the load curve ID, \verb|d_time| is the time,
+and \verb|d_load| is the load.  Note that the load can have any form - scalar,
+vector, matrix, etc.
+
+In our current implementation, the actual specification of the load curve
+information is in the \verb|<PhysicalBC>| section of the input file.  The
+implementation is limited in that it applies only to pressure boundary
+conditions for some special geometries (the implementation is in
+\verb|.../MPM/PhysicalBC/PressureBC.cc|).  However, the load curve template can
+be used in other, more general, contexts.
+
+A sample input file specification of a pressure load curve is shown below.
+In this case, a pressure is applied to the inside and outside of a cylinder.
+The pressure is ramped up from 0 to 1 GPa on the inside and from 0 to 0.1 MPa
+on the outside over a time of 10 microsecs.
+\begin{Verbatim}
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <cylinder label = "inner cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           0.5             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-5 </time>
+             <load> 1.0e9 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+       <pressure>
+         <geom_object>
+           <cylinder label = "outer cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.0,.02]   </top>
+             <radius>           1.0             </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-5 </time>
+             <load> 101325.0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+     </MPM>
+   </PhysicalBC>
+\end{Verbatim}
+The complete input file can be found in \verb|inputs/MPM/thickCylinderMPM.ups|. 
+An additional example which is used to achieve triaxial loading can be found
+at \verb|inputs/MPM/TXC.ups|.  There, the material geometry is a block, and so
+the regions described are flat surfaces upon which the pressure is applied.
+
 \subsubsection{On the Fly Analysis} \label{OTFA_MPM}
 
 \subsection{Examples} \label{Sec:ExamplesMPM}
