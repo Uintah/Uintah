@@ -21,7 +21,7 @@ while ($numHits != 1 && $counter < 15)
   set numHits = `echo $buildDir|grep -c SCIRun`
 end  
 
-set componentDir = $buildDir/src/Packages/Uintah/Core/Labels
+set componentDir = $buildDir/src/Core/Labels
 
 #__________________________________
 # set which label files to look at
@@ -32,10 +32,10 @@ else if( $component == "mpmice" ) then
 else if( $component == "mpm" ) then
   set files = ( MPMLabel.cc)
 else if( $component == "arches" ) then
-  set componentDir = $buildDir/src/Packages/Uintah/CCA/Components
+  set componentDir = $buildDir/src/CCA/Components
   set files = ( /Arches/ArchesLabel.cc)
 else if( $component == "mpmarches" ) then
-  set componentDir = $buildDir/src/Packages/Uintah/CCA/Components
+  set componentDir = $buildDir/src/CCA/Components
   set files = ( /Arches/ArchesLabel.cc /MPMArches/MPMArchesLabel.cc)
 else 
   echo "\ncomponent $component not found, now exiting\n"
