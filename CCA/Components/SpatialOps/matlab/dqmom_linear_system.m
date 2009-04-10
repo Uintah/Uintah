@@ -60,7 +60,6 @@ for K=1:Ntot
         
         quadsumS = 0;
         quadsumD = 0;
-        modelsumS = 0;
         for alpha=1:N
             prefixA    = k(K,j)*(wa(j,alpha)/w(alpha))^(k(K,j)-1);
             productA   = 1;
@@ -133,6 +132,7 @@ if (det(A) == 0)
   return;
 end
 
-A;
-B;
-X = A^-1*B;
+A
+B
+X = A^-1*B
+%X = crout(A,B);

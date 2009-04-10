@@ -16,7 +16,7 @@ clc;
 %% Problem Geometry
 
 W = 1.0; L = 1.0;               % geometry
-nx = 10; ny = 10;               % resolution
+nx = 2; ny = 2;               % resolution
 %nx = nx + 2; ny = ny + 2;       % add ghost cells (ignore for now)
 %dx = L/(nx-2); dy = W/(ny-2);   % grid spacing w/ ghost cells
 dx = L/nx; dy = W/ny;           % grid spacing
@@ -28,16 +28,18 @@ y=linspace(0,W,ny);
 %% DQMOM Specifications
 
 % weighted abscissa values
-wa = ([1,
-       2]);
+wa = ([1,2]);
+%wa = ([1,
+%       2]);
 
 % weight values
-w = [0.5];
+w = [1,1];
 
 % moment indexes
-k = ([0,2;
-      2,1;
-      3,0]);
+k = ([1;2;3;4]);
+%k = ([0,2;
+%      2,1;
+%      3,0]);
 
 % number of quad nodes, etc.
 N_xi = size(wa,1);
@@ -68,7 +70,7 @@ end
 count = 1;
 t=1;
 ttime = 25; %s
-delta_t = 0.25; %s
+delta_t = 0.1; %s
 while t<=ttime
     
     fprintf('------------------------------------------------------\n');
@@ -87,8 +89,8 @@ while t<=ttime
             
             % here you can specify a "growth" term
             for alpha=1:N
-                G(1,alpha) = 0.1*(wa_temp(m,alpha)/w_temp(alpha))*sin(t);
-                G(2,alpha) = 0;
+                G(1,alpha) = 1;
+%                G(2,alpha) = 0;
             end
             
             % solve DQMOM linear system
@@ -109,9 +111,10 @@ while t<=ttime
             
         end
     end
-
+    
     % make a plot of abscissa vs time for a point in space
-    plot(t,(wa_all(2,2,1,1)/w_all(2,2,1)),'bx',t,w_all(2,2,1),'bx');
+    %plot(t,(wa_all(2,2,1,1)/w_all(2,2,1)),'bx',t,(wa_all(2,2,1,2)/w_all(2,2,2)),'rx't,w_all(2,2,1),'ks');
+    plot(t,(wa_all(2,2,1,1)/w_all(2,2,1)),'bx',t,w_all(2,2,1),'ks');
     legend('internal coord 1','weight','location','eastoutside')
     title('Wt, Int Coord 1 Abscissa at x=2,y=2 vs. time')
     hold on;
