@@ -862,7 +862,7 @@ MPM simulations is gravity, this is specified as:
 </PhysicalConstants>
 \end{Verbatim}
 
-\subsubsection{MPM Flags}
+\subsubsection{MPM Flags} \label{MPMFlags}
 
 \subsubsection{Material Properties}
 
@@ -1043,7 +1043,7 @@ A sample input file specification of a pressure load curve is shown below.
 In this case, a pressure is applied to the inside and outside of a cylinder.
 The pressure is ramped up from 0 to 1 GPa on the inside and from 0 to 0.1 MPa
 on the outside over a time of 10 microsecs.
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
    <PhysicalBC>
      <MPM>
        <pressure>
@@ -1094,7 +1094,56 @@ An additional example which is used to achieve triaxial loading can be found
 at \verb|inputs/MPM/TXC.ups|.  There, the material geometry is a block, and so
 the regions described are flat surfaces upon which the pressure is applied.
 
-\subsubsection{On the Fly Analysis} \label{OTFA_MPM}
+\subsubsection{On the Fly DataAnalysis} \label{OTFA_MPM}
+
+In the event that one wishes to monitor the data for a small region of a
+simulation at a rate that is more frequent than the what the DataArchiver
+can reasonably provide (for reasons of data storage and effect on run time),
+Uintah provides a \tt <DataAnalysis> \normalfont feature.  As it applies
+to MPM, it allows one to specify a group of particles, by assigning those
+particles a particular value of the \tt <color> \normalfont parameter.
+In addition, a list of variables and a frequency of output is provided.
+Then, at run time, a sub-directory is created inside the uda which contains
+a series of files, named according to their particle IDs, one for each
+tagged particle.  Each of these files contains the time and position for
+that particle, along with whatever other data is specified.  {\bf To use this
+feature, one must include the} \tt <withColor>   true   </withColor> \normalfont
+{\bf tag in the} \tt <MPM> \normalfont {\bf section of the input file.}
+(See Section~\ref{MPMFlags}.)
+
+The following input file snippet is taken from
+\tt inputs/MPM/disks.ups \normalfont  
+\begin{Verbatim}[fontsize=\footnotesize]
+    <DataAnalysis>
+       <Module name="particleExtract">
+
+        <material>disks</material>
+        <samplingFrequency> 1e10 </samplingFrequency>
+        <timeStart>          0   </timeStart>
+        <timeStop>          100  </timeStop>
+        <colorThreshold>
+          0
+        </colorThreshold>
+
+        <Variables>
+          <analyze label="p.velocity"/>
+          <analyze label="p.stress"/>
+        </Variables>
+
+      </Module>
+    </DataAnalysis>
+\end{Verbatim}
+
+For all particles that are assigned a color greater than the
+\tt <colorThreshold>, \normalfont the variables
+\tt p.velocity \normalfont and
+\tt p.stress \normalfont are saved every every
+$1/$\tt <samplingFrequency> \normalfont time units, starting at
+\tt <timeStart> \normalfont until
+\tt <timeStop>. \normalfont
+
+It is also possible to save grid based data with this module,
+see Section~\ref{Sec:ICE} for more information.
 
 \subsection{Examples} \label{Sec:ExamplesMPM}
 
