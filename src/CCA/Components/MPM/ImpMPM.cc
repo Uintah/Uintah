@@ -45,7 +45,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
@@ -1753,7 +1752,6 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
   // Calculate the force vector at each particle for each bc
   std::vector<double> forceMagPerPart;
   std::vector<PressureBC*> pbcP;
-  std::vector<NormalForceBC*> nfbcP;
   std::vector<double> heatFluxMagPerPart;
   std::vector<HeatFluxBC*> hfbcP;
   std::vector<ArchesHeatFluxBC*> ahfbcP;
@@ -1775,14 +1773,6 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
         // Calculate the force per particle at current time
         forceMagPerPart.push_back(pbc->forcePerParticle(time));
 
-      }
-      if (bcs_type == "NormalForce") {
-        NormalForceBC* nfbc =
-         dynamic_cast<NormalForceBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-        nfbcP.push_back(nfbc);
-
-        // Calculate the force per particle at current time
-        forceMagPerPart.push_back(nfbc->getLoad(time));
       }
       if (bcs_type == "HeatFlux") {
         HeatFluxBC* hfbc =
@@ -1858,16 +1848,12 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
 
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
-        bool do_NormalForceBCs=false;
         for (int ii = 0; 
              ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
           string bcs_type = 
             MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
           if (bcs_type == "Pressure") {
             do_PressureBCs=true;
-          }
-          if (bcs_type == "NormalForce") {
-            do_NormalForceBCs=true;
           }
         }
         
@@ -1891,38 +1877,6 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
           }
         } //end d0_PressureBCs
         
-        //       if (flags->d_useLoadCurves) {
-        // Get the load curve data
-        //         constParticleVariable<int> pLoadCurveID;
-        //         old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-        
-        else if(do_NormalForceBCs){ 
-          
-          if (!forceMagPerPart.empty()) {
-            double mag = forceMagPerPart[0];
-            //cout << "force mag = " << mag << endl;
-            // Iterate over the particles
-            ParticleSubset::iterator iter = pset->begin();
-            for(;iter != pset->end(); iter++){
-                particleIndex idx = *iter;
-                // For particles with an existing external force, apply the
-                // new magnitude to the same direction.
-                if(pExternalForce[idx].length() > 1.e-7){
-                  pExternalForce_new[idx] = mag*
-                    (pExternalForce[idx]/pExternalForce[idx].length());
-                } else{
-                  pExternalForce_new[idx] = Vector(0.,0.,0.);
-                }
-            } //end pset for
-          } else {
-            ParticleSubset::iterator iter = pset->begin();
-            for(;iter != pset->end(); iter++){
-              particleIndex idx = *iter;
-              pExternalForce_new[idx] = pExternalForce[idx]
-                *flags->d_forceIncrementFactor;
-            }
-          } 
-        } // if do_NormalForceBCs
         else {
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){

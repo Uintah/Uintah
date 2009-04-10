@@ -38,7 +38,6 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Grid.h>
@@ -2120,7 +2119,6 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
   // Calculate the force vector at each particle for each pressure bc
   std::vector<double> forcePerPart;
   std::vector<PressureBC*> pbcP;
-  std::vector<NormalForceBC*> nfbcP;
   if (flags->d_useLoadCurves) {
     for (int ii = 0; 
              ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
@@ -2135,13 +2133,6 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
 	// Calculate the force per particle at current time
 	forcePerPart.push_back(pbc->forcePerParticle(time));
       } 
-      if (bcs_type == "NormalForce") {
-        NormalForceBC* nfbc =
-        dynamic_cast<NormalForceBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);        nfbcP.push_back(nfbc);
-
-        // Calculate the force per particle at current time
-        forcePerPart.push_back(nfbc->getLoad(time));
-      }
     }
   }
 
@@ -2166,15 +2157,11 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
 
       if (flags->d_useLoadCurves) {
         bool do_PressureBCs=false;
-        bool do_NormalForceBCs=false;
         for (int ii = 0;
               ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
           string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
           if (bcs_type == "Pressure") {
             do_PressureBCs=true;
-          }
-          if (bcs_type == "NormalForce") {
-            do_NormalForceBCs=true;
           }
         }
 	if(do_PressureBCs){
@@ -2214,37 +2201,6 @@ void FractureMPM::applyExternalLoads(const ProcessorGroup* ,
 	  		         lb->pLoadCurveIDLabel_preReloc, pset);
 	  pLoadCurveID_new.copyData(pLoadCurveID);
         }
-        else if(do_NormalForceBCs){  // Scale the normal vector by a magnitude
-	  // Get the external force data and allocate new space for
-	  // external force
-	  constParticleVariable<Vector> pExternalForce;
-	  ParticleVariable<Vector> pExternalForce_new;
-	  old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-	  new_dw->allocateAndPut(pExternalForce_new,
-	                         lb->pExtForceLabel_preReloc,  pset);       
-
-	  double mag = forcePerPart[0];
-          // Iterate over the particles
-	  ParticleSubset::iterator iter = pset->begin();
-	  for(;iter != pset->end(); iter++){
-	    particleIndex idx = *iter;
-	    // For particles with an existing external force, apply the
-	    // new magnitude to the same direction.
-	    if(pExternalForce[idx].length() > 1.e-7){
-	      pExternalForce_new[idx] = mag*
-	                 (pExternalForce[idx]/pExternalForce[idx].length());
-	    } else{
-	      pExternalForce_new[idx] = Vector(0.,0.,0.);
-	    }
-	  }
-	  // Recycle the loadCurveIDs, not needed for this BC type yet
-	  ParticleVariable<int> pLoadCurveID_new;
-	  constParticleVariable<int> pLoadCurveID;
-	  old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-	  new_dw->allocateAndPut(pLoadCurveID_new, 
-	                         lb->pLoadCurveIDLabel_preReloc, pset);
-	  pLoadCurveID_new.copyData(pLoadCurveID);
-	}
       } else {  // Carry forward the old pEF, scale by d_forceIncrementFactor
 	// Get the external force data and allocate new space for
 	// external force and copy the data
