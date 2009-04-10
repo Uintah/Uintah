@@ -165,7 +165,7 @@ mpiservice_component_test(scijump::BuilderService& builder, ::gov::cca::Services
     return;
   }
 
-  ::gov::cca::ConnectionID mpiSetupConn = builder.connect(mpicommsource, "MPISetup", mpitest, "commsetup");
+  ::gov::cca::ConnectionID mpiSetupConn = builder.connect(mpitest, "commsetup", mpicommsource, "MPISetup");
 
   svc.registerUsesPort("goport-up", "gov.cca.ports.GoPort", 0);
   ::gov::cca::ConnectionID goConnID = builder.connect(svc.getComponentID(), "goport-up", mpitest, "go");
