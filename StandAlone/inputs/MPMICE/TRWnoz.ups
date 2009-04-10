@@ -189,9 +189,6 @@
     <MaterialProperties>
        <MPM>
          <material>
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287             </gas_constant>
-               </EOS>
               <density>             8900.0         </density>
               <constitutive_model type = "comp_neo_hook_plastic">
                   <useModifiedEOS>     true          </useModifiedEOS>
