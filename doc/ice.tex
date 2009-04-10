@@ -15,6 +15,11 @@ with the option of explicit or semi-implicit }
 %______________________________________________________________________
 \subsubsection{Basic Inputs}
 
+Each Uintah component is invoked using a single executable called
+\it sus \normalfont, which chooses the type of simulation
+to execute based on the \it SimulationComponent \normalfont tag in the
+input file.  In the case of ICE simulations, this looks like:
+
 \begin{Verbatim}[fontsize=\footnotesize]
  <SimulationComponent type="ice" />
 \end{Verbatim}
@@ -209,9 +214,9 @@ For a two material problem the coefficients would be:
 %______________________________________________________________________
 \subsubsection{BoundaryConditions}
 Boundary conditions must be specified on each face of the computational
-domain $(x^-, x^+, y^-, y^+)$ for the variables $P, \bf{u}, T, \rho, v$ for
-each material.  The two main types of numerical boundary condition that can
-be applied are ``Neumann'' and ``Dirichlet''.  A Neumann boundary condition
+domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ for the variables $P, \bf{u}, T, \rho, v$ for
+each material.  The three main types of numerical boundary conditions that can
+be applied are ``Neumann",  ``Dirichlet" and ``Symmetric".  A Neumann boundary condition
 is used to set the gradient or $\frac{\partial{q}}{\partial{n}}|_{surface} =
 value$ at the boundary.   The value of the primative variable in the boundary
 cell is given by,

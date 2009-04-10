@@ -785,16 +785,149 @@ data to the correct processor.
 
 \end{enumerate}
 
-
-
 \subsection{Uintah Specification} \label{Sec:UintahSpecMPM}
 
-\subsubsection{Basic Inputs}
+Uintah input files are constructed in XML format.  Each begins with:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+\end{Verbatim}
+while the remainder of the file is enclosed within the following tags:
+\begin{Verbatim}[fontsize=\footnotesize]
+<Uintah_specification>
+</Uintah_specification>
+\end{Verbatim}
+
+The following subsections describe the remaining inputs needed to construct
+an input file for an MPM simulation.  The order of the various sections 
+of the input file is not important.
+
+\subsubsection{Common Inputs}
+
+Each Uintah component is invoked using a single executable called
+\it sus \normalfont, which chooses the type of simulation
+to execute based on the \it SimulationComponent \normalfont tag in the
+input file.  For the case of MPM simulations, this looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+ <SimulationComponent type="mpm" />
+\end{Verbatim}
+
+There are a number of fields that are required for any component.  The first
+is that describing the timestepping parameters, these are largely common to
+all components, and are described in Section~\ref{Sec:TimeRelatedVariables}.
+The only one that bears commenting on at this point is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  <timestep_multiplier>    0.5     </timestep_multiplier>
+\end{Verbatim}
+This is effectively the CFL number for MPM simulations, that is the number
+multiplied by the timestep size that is automatically calculated by the MPM
+code.  Experience indicates that one should generally keep this value below
+$0.5$, and should expect to use smaller values for high-rate, large-deformation
+simulations.
+
+The next field common to the input files for all components is:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+   <DataArchiver>
+   </DataArchiver>
+\end{Verbatim}
+This is described in Section~\ref{Sec:DataArchiver}.  To see a list of
+variables available for saving in MPM simulations, execute the following
+command from the \tt StandAlone \normalfont directory:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+inputs/labelNames mpm
+\end{Verbatim}
+Note that for visualizing particle data, one must save \tt p.x, \normalfont
+and at least one other variable by which to color the particles.
+
+The other principle common field is that which describes the computational
+grid.  For MPM, this is typically broken up into two parts, the
+\tt <Level> \normalfont section specifies the physical extents and spatial
+resolution of the grid.  For more information, consult Section~\ref{Sec:Grid}.
+The other part specifies kinematic boundary conditions on the grid boundaries.
+These are discussed below in Section~\ref{Sec:MPM_BCs}.
+
 \subsubsection{Physical Constants}
+The only physical constant required (or optional for that matter) for
+MPM simulations is gravity, this is specified as:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<PhysicalConstants>
+   <gravity>            [0,0,0]   </gravity>
+</PhysicalConstants>
+\end{Verbatim}
+
 \subsubsection{Material Properties}
 \subsubsection{Constitutive Models} \label{ConstitutiveModels}
 \subsubsection{Contact}  \label{Contact}
-\subsubsection{BoundaryConditions}
+\subsubsection{BoundaryConditions} \label{Sec:MPM_BCs}
+
+Boundary conditions must be specified on each face of the computational
+domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ each material.  An example of their
+specification is as follows, where the entire \tt <Grid> \normalfont field
+is included for context:
+\begin{Verbatim}[fontsize=\footnotesize]
+    <Grid>
+       <BoundaryConditions>
+         <Face side = "x-">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+             </BCType>
+         </Face>
+         <Face side = "x+">
+            <BCType id = "all" var = "Neumann" label = "Velocity">
+                 <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>
+         <Face side = "y-">
+           <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                  <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "y+">
+           <BCType id = "all" var = "Neumann" label = "Velocity">
+                  <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+         <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+       </BoundaryConditions>
+       <Level>
+\end{Verbatim}
+
+... See Section~\ref{Sec:Grid} ...
+
+\begin{Verbatim}[fontsize=\footnotesize]
+       </Level>
+    </Grid>
+\end{Verbatim}
+
+The three main types of numerical boundary conditions (BCs) that can
+be applied are ``Neumann", ``Dirichlet", and ``Symmetric", and the use of
+each is illustrated above.  In the case of
+MPM simulations, Neumann BCs are used when one wishes to allow particles to
+advect freely out of the computational domain.  Dirichlet BCs are used to
+specify a velocity, zero or otherwise (indicated by the \tt <value> \normalfont
+tag), on one of the computational boundaries.
+Symmetric BCs are used to indicate a plane of symmetry.  This has a variety
+of uses.  The most obvious is simply when a simulation of interest has symmetry
+that one can take advantage of to reduce the cost of a calculation.  Similarly,
+since Uintah is a three-dimensional code, if one wishes to achieve plane-strain
+conditions, this can be done by carrying out a simulation that is one cell thick
+with Symmetric BCs applied to each face of the plane, as in the example above.
+Finally, Symmetric BCs also provide a free slip boundary.
+
+There is also the field \tt id = "all" \normalfont.  In principal, one could
+set different boundary condition types for different materials.  In practice,
+this is rarely used, so the usage illustrated here should be used.
+
 \subsubsection{Physical Boundary Conditions} \label{PhysicalBCs}
 \subsubsection{On the Fly Analysis} \label{OTFA_MPM}
 
