@@ -280,7 +280,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               productA = 1;
 
               // Appendix C, C.16 (S matrix)
-              prefixS = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
+              prefixS = -(thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)));
               productS = 1;
 
               for (unsigned int n = 0; n < N_xi; ++n) {
@@ -308,11 +308,35 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         
         B[k] = totalsumS;
       } // end moments
-      
-      //A.dump();
+
+      /*
+      // Print out cell-by-cell matrix information
+      // (Make sure and change your domain to have a small # of cells!)
+      cout << "Cell " << c << endl;
+      cout << endl;
+
+      cout << "A matrix:" << endl;
+      A.dump();
+      cout << endl;
+
+      cout << "B matrix:" << endl;
+      for (vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB) {
+        cout << (*iB) << endl;
+      }
+      cout << endl;
+      */
+
       A.decompose();
       A.back_subs( &B[0] );
 
+      /*
+      cout << "X matrix:" << endl;
+      for (vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB) {
+        cout << (*iB) << endl;
+      }
+      cout << endl;
+      */
+ 
       // set weight/weighted abscissa transport eqn source terms equal to results
       unsigned int z = 0;
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
