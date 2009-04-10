@@ -173,6 +173,10 @@ public:
   /** @brief Set the quadrature node value */
   inline void setQuadNode(int node){
     d_quadNode = node; };
+
+  /** @brief Get the quadrature node value */
+  inline const int getQuadNode(){
+    return d_quadNode; };
  
 
 private:
