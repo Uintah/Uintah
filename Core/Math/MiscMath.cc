@@ -106,4 +106,81 @@ void findFactorsNearRoot(const int value, int &factor1, int &factor2) {
   factor2 = f2;
 }
 
-} // namespace SCIRun
+//Computes the cubed root of a using Halley's algorithm.  The initial guess
+//is set to the answer form the previous call
+double cubeRoot(double a)
+{
+  static const int small_num=1e-15;
+  static const int MAX_ITS=4;
+
+  double xold;
+  static double xnew=1;   //start initial guess at last answer
+  double atimes2=a*2.0;
+
+  double x3;
+
+  int i=0;
+  do
+  {
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+  } while ( fabs(xold-xnew)<small_num && ++i<MAX_ITS);
+
+  return xnew;
+}
+
+
+//Computes the cubed root of a using Halley's algorithm.  The initial guess
+//is set to the parameter provided
+double cubeRoot(double a, double guess)
+{
+  static const int small_num=1e-15;
+  static const int MAX_ITS=4;
+
+  double xold;
+  double xnew=guess;   //start with initial guess
+  double atimes2=a*2.0;
+
+  double x3;
+
+  int i=0;
+  do
+  {
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+    xold=xnew;
+    x3=xold*xold*xold;
+    xnew=xold*(x3+atimes2)/(2*x3+a);
+
+  } while ( fabs(xold-xnew)<small_num && ++i<MAX_ITS);
+
+  return xnew;
+}
+
+
+} // End namespace SCIRun
+

@@ -45,7 +45,8 @@
 #define SCI_Math_MiscMath_h 1
 
 #include <Core/Math/share.h>
-
+#include <cmath>
+using namespace std;
 namespace SCIRun {
 
 // Absolute value
@@ -366,6 +367,13 @@ Log2(const unsigned int dim) {
 // are closest to that square root.
 void findFactorsNearRoot(const int value, int& factor1, int& factor2);
 
+//Computes the cubed root of a using Halley's algorithm.  The initial guess
+//is set to the answer form the previous call
+double cubeRoot(double a);
+
+//Computes the cubed root of a using Halley's algorithm.  The initial guess
+//is set to the parameter provided
+double cubeRoot(double a, double guess);
 
 } // End namespace SCIRun
 
