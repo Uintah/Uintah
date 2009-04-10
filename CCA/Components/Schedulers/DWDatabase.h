@@ -96,6 +96,8 @@ using SCIRun::FastHashTable;
    bool exists(const VarLabel* label, int matlIndex, const DomainType* dom) const;
    void put(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable* var, bool replace);
+   void put(const VarLabel* label, int matlindex, const DomainType* dom,
+	    Variable* var);
    void get(const VarLabel* label, int matlindex, const DomainType* dom,
 	    Variable& var) const;
    inline Variable* get(const VarLabel* label, int matlindex,
@@ -307,6 +309,19 @@ DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainTy
     ASSERT(di.var != var);
     delete di.var;
   }
+  di.var = var;      
+}
+
+
+template<class DomainType>
+void
+DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainType* dom,
+				      Variable* var)
+{
+  ASSERT(matlIndex >= -1);
+  
+  VarLabelMatl<DomainType> v(label, matlIndex, getRealDomain(dom));
+  DataItem& di = vars[v]; 
   di.var = var;      
 }
 

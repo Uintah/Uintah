@@ -613,7 +613,7 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
   {
     d_lock.readLock();
     GridVariableBase* head = NULL;
-    GridVariableBase* last = NULL;
+   // GridVariableBase* last = NULL;
     if (d_varDB.exists(label, matlIndex, patch)) {
       head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
       // use to indicate that it will be receiving (foreign) data and should
@@ -622,37 +622,31 @@ OnDemandDataWarehouse::recvMPI(DependencyBatch* batch,
     }
     d_lock.readUnlock();
 
-    GridVariableBase* var;
-    for (var = head; var!=NULL; last = var, var = dynamic_cast<GridVariableBase*>(var->getNextvar())){
+    GridVariableBase* var=head;
+    //if (var !=NULL){
+      //  var->rewindow(dep->patchLow, dep->patchHigh);
+    for (var = head; var!=NULL; var = dynamic_cast<GridVariableBase*>(var->getNextvar())){
       if (var->getBasePointer() == 0) {  // DW has an empty entry, expand it
         var->rewindow(dep->patchLow, dep->patchHigh);
         break;
-      }
-      if (Min(var->getLow(), dep->patchLow) != var->getLow() ||
-          Max(var->getHigh(), dep->patchHigh) != var->getHigh()) {
-            if (var->getLow() >= dep->patchLow && var->getHigh() <= dep->patchHigh) { 
-              var->rewindow(dep->patchLow, dep->patchHigh);  //expend this var
-              break;
-            } else {
-              continue;        //we can not use this var to recv, try next;
-            }
-      } else {        //we can use this var  
+      } else if (Min(var->getLow(), dep->patchLow) == dep->patchLow &&       //var inside of dep, expend this var
+          Max(var->getHigh(), dep->patchHigh) == dep->patchHigh) { 
+         var->rewindow(dep->patchLow, dep->patchHigh);  
         break;
-      }
+      } else if (Min(var->getLow(), dep->patchLow) == var->getLow() &&       //dep inside of var,  use this var
+          Max(var->getHigh(), dep->patchHigh) == var->getHigh()) { 
+        break;
+      }             
     } //end for 
 
     if (var == NULL) {   // There was no place reserved to recv the data yet
       MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::recvMPI(cell variable):" + label->getName());
       var = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
-      if (last !=NULL) last->setNextvar(var);  //append to linked list
-      var->setForeign();
       var->allocate(dep->patchLow, dep->patchHigh);
-    }
-
-    if (head == NULL) {  //Insert head of this var list to DW 
-      head = var;
+      var->setNextvar(head);  //append to the head of linked list
+      var->setForeign();
       d_lock.writeLock();
-      d_varDB.put(label, matlIndex, patch, head, false); //put new var in data warehouse
+      d_varDB.put(label, matlIndex, patch, var); //put new var in data warehouse
       d_lock.writeUnlock();
     }
     
@@ -844,7 +838,7 @@ OnDemandDataWarehouse::put(const SoleVariableBase& var,
 			  to explicitly modify with multiple soles in the
 			  task graph */);
   // Put it in the database
- // if (!d_levelDB.exists(label, matlIndex, level))
+  if (!d_levelDB.exists(label, matlIndex, level))
     d_levelDB.put(label, matlIndex, level, var.clone(), false);
   
   d_lock.writeUnlock();
@@ -1807,16 +1801,13 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       missing_patches.push_back(patch->getRealPatch());
       continue;
     }
-    //GridVariableBase* tmpVar = var->cloneType();
-    //d_varDB.get(label, matlIndex, patch, *tmpVar);
     GridVariableBase* head = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, patch));
     GridVariableBase* tmpVar = var->cloneType();
     GridVariableBase* v;
 
     for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
       tmpVar->copyPointer(*v);
-
-      if (Max(l, tmpVar->getLow()) == l &&  Min(h, tmpVar->getHigh()) == h)  //find a completed region
+      if (Min(l, tmpVar->getLow()) == tmpVar->getLow()  &&  Max(h, tmpVar->getHigh()) == tmpVar->getHigh())  //find a completed region
         break;
     }
       // just like a "missing patch": got data on this patch, but it either corresponds to a different
@@ -2158,12 +2149,13 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
 
   	  if(neighbor->isVirtual())
 	      srcvar->offsetGrid(neighbor->getVirtualOffset());
-      if (srcvar->getLow() <=  low && srcvar->getHigh() >= high){ 
-         try {
-           var.copyPatch(srcvar, low, high);
-         } catch (InternalError& e) {
+
+      if (Min(srcvar->getLow(), low) == srcvar->getLow()  && Max(srcvar->getHigh(),high) == srcvar->getHigh()) {
+        try {
+          var.copyPatch(srcvar, low, high);
+        } catch (InternalError& e) {
            cout << " Bad range: " << low << " " << high  
-              << " source var range: "  << srcvar->getLow() << " " << srcvar->getHigh() << endl;
+             << " source var range: "  << srcvar->getLow() << " " << srcvar->getHigh() << endl;
            throw e;
         }
         dn = high-low;
