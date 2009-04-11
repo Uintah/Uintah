@@ -46,6 +46,7 @@
 
 #include <Core/Math/share.h>
 #include <cmath>
+#include <cfloat>
 using namespace std;
 namespace SCIRun {
 
@@ -368,12 +369,10 @@ Log2(const unsigned int dim) {
 void findFactorsNearRoot(const int value, int& factor1, int& factor2);
 
 //Computes the cubed root of a using Halley's algorithm.  The initial guess
-//is set to the answer form the previous call
-double cubeRoot(double a);
-
-//Computes the cubed root of a using Halley's algorithm.  The initial guess
-//is set to the parameter provided
-double cubeRoot(double a, double guess);
+//is set to the parameter provided, if no parameter is provided then the 
+//result of the last call is used as the initial guess.  DBL_MIN is used
+//as a sentinal to signal that no guess was provided.
+double cubeRoot(double a, double guess=DBL_MIN);
 
 } // End namespace SCIRun
 
