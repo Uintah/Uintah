@@ -654,10 +654,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
       weight+=d_sharedState->overheadWeights[i];
     }
-    if(weight>0)
-      d_sharedState->overheadAvg=overhead/weight; 
-    else
-      d_sharedState->overheadAvg=-1;
+    d_sharedState->overheadAvg=overhead/weight; 
     
     d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
     //increase overhead size if needed
@@ -748,7 +745,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
                   << " LIB%: " << 1-(avgReduce[i]/maxReduce[i].val) << "\n";
         }
       }
-      if(d_n>2 && d_sharedState->overheadAvg!=-1)
+      if(d_n>2 && !isnan(d_sharedState->overheadAvg))
         stats << "Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
     } 
 
