@@ -2,7 +2,6 @@
 <!-- Lexan -->
 <Uintah_Include>
   <density>1193.0</density>
-  <toughness>100.e6</toughness>
   <thermal_conductivity>0.187</thermal_conductivity>
   <specific_heat>1200</specific_heat>
   <room_temp>294.0</room_temp>
