@@ -10,21 +10,13 @@
       <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
-      <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <create_new_particles               spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
-      <dadx                               spec="OPTIONAL DOUBLE" />
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
-      <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
       <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
-      <DoImplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
-      <DoMechanics                        spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What are the defaults for these? -->
       <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
-      <DoTransientImplicitHeatConduction  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What are the defaults for these? -->
-      <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
-      <delT_increase_factor               spec="OPTIONAL DOUBLE" />
       <erosion                            spec="OPTIONAL NO_DATA"
-                                            attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress RemoveMass'" />
+                                            attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress, RemoveMass'" />
       <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />  <!-- FIXME: default is? Default? -->
       <manual_new_material                spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? Default? -->
       <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />
@@ -37,23 +29,30 @@
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
-      <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <temperature_solve                  spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <turn_on_adiabatic_heating          spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
-
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
-
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
+      <withColor                          spec="OPTIONAL BOOLEAN" />
     
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
       <solver                             spec="OPTIONAL STRING 'petsc, simple'" />
       <convergence_criteria_disp          spec="OPTIONAL DOUBLE 'positive'"/>
       <convergence_criteria_energy        spec="OPTIONAL DOUBLE 'positive'"/>
-      <withColor                          spec="OPTIONAL BOOLEAN" />
+      <DoImplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
+      <DoMechanics                        spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What are the defaults for these? -->
+      <DoTransientImplicitHeatConduction  spec="OPTIONAL BOOLEAN" /> <!-- FIXME: What are the defaults for these? -->
+      <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
+      <delT_increase_factor               spec="OPTIONAL DOUBLE" />
+      <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE Fracture MPM CODE -->
+      <dadx                               spec="OPTIONAL DOUBLE" />
+      <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
+      <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
+      <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
