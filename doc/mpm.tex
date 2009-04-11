@@ -864,7 +864,73 @@ MPM simulations is gravity, this is specified as:
 
 \subsubsection{MPM Flags} \label{MPMFlags}
 
-\subsubsection{Material Properties}
+There are many options available when running MPM simulations.  These
+are generally specified in the \tt <MPM> \normalfont section of the input file.
+Below is a list of these options taken from
+\tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont 
+This file also gives possible values for many of these.  A description of
+their functionality is forthcoming, in the meantime, consult the code and
+input files.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+    <MPM>
+      <accumulate_strain_energy           spec="OPTIONAL BOOLEAN" />
+      <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
+      <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
+      <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
+      <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
+      <axisymmetric                       spec="OPTIONAL BOOLEAN" />
+      <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
+      <create_new_particles               spec="OPTIONAL BOOLEAN" />
+      <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
+      <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
+      <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
+      <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />
+      <erosion                            spec="OPTIONAL NO_DATA"
+            attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress, RemoveMass'" />
+      <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />
+      <manual_new_material                spec="OPTIONAL BOOLEAN" />
+      <boundary_traction_faces            spec="OPTIONAL STRING" />
+      <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />
+      <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" />
+      <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" />
+      <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
+      <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
+      <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
+      <temperature_solve                  spec="OPTIONAL BOOLEAN" />
+      <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />
+      <turn_on_adiabatic_heating          spec="OPTIONAL BOOLEAN" />
+      <use_load_curves                    spec="OPTIONAL BOOLEAN" />
+
+      <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" />
+      <withColor                          spec="OPTIONAL BOOLEAN" />
+
+      <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
+      <dynamic                            spec="OPTIONAL BOOLEAN" />
+      <solver                             spec="OPTIONAL STRING 'petsc, simple'" />
+      <convergence_criteria_disp          spec="OPTIONAL DOUBLE 'positive'"/>
+      <convergence_criteria_energy        spec="OPTIONAL DOUBLE 'positive'"/>
+      <num_iters_to_decrease_delT         spec="OPTIONAL INTEGER" />
+      <num_iters_to_increase_delT         spec="OPTIONAL INTEGER" />
+      <iters_before_timestep_restart      spec="OPTIONAL INTEGER" />
+      <DoTransientImplicitHeatConduction  spec="OPTIONAL BOOLEAN" />
+      <delT_decrease_factor               spec="OPTIONAL DOUBLE" />
+      <delT_increase_factor               spec="OPTIONAL DOUBLE" />
+      <DoImplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
+      <DoMechanics                        spec="OPTIONAL BOOLEAN" />
+
+      <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE Fracture MPM CODE -->
+      <dadx                               spec="OPTIONAL DOUBLE" />
+      <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />
+      <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />
+      <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
+      <use_volume_integral                spec="OPTIONAL BOOLEAN" />
+    </MPM>
+\end{Verbatim}
+
+
+
+\subsubsection{Material Properties} \label{mat_props}
 
 The \tt Material Properties \normalfont section of the input file
 actually contains not only those, but also the geometry and initial
@@ -875,8 +941,8 @@ The \tt <constitutive\_model> \normalfont field refers
 to the model used to generate a stress tensor on each material point.
 The use of these models is described in detail in
 Section~\ref{ConstitutiveModels}.  Next are the thermal transport properties,
-\it <thermal\_conductivity> \normalfont and 
-\it <specific\_heat>. \normalfont  Note that these are required even if
+\tt <thermal\_conductivity> \normalfont and 
+\tt <specific\_heat>. \normalfont  Note that these are required even if
 heat conduction is not being computed.  These are the required material
 properties.  There are additional optional parameters that are used in
 other auxiliary calculations, for a list of these
@@ -902,7 +968,7 @@ Their use is described in detail in Section~\ref{Contact}.
 \begin{Verbatim}[fontsize=\footnotesize]
     <MaterialProperties>
        <MPM>
-           <material name="Tofu">
+           <material name="disks">
               <density>1000.0</density>
               <constitutive_model type="comp_mooney_rivlin">
                  <he_constant_1>100000.0</he_constant_1>
@@ -933,7 +999,159 @@ Their use is described in detail in Section~\ref{Contact}.
 \end{Verbatim}
 
 \subsubsection{Constitutive Models} \label{ConstitutiveModels}
+
+Until the Examples have been completed, the reader will need to refer
+to the source code and/or the many examples of the use of the constitutive
+models in the inputs/MPM directory.
+
 \subsubsection{Contact}  \label{Contact}
+
+When multiple materials are specified in the input file, each material
+interacts with its own field variables.  In other words, each material has
+its own mass, velocity, acceleration, etc.  Without any mechanism for their
+interaction, each material would behave as if it were the only one in the
+domain.  Contact models provide the mechanism by which to specify rules
+for inter material interactions.  There are a number of contact models
+from which to choose, the use of each is described next.  See the input
+file segment in Section~\ref{mat_props} for an example of their proper
+placement in the input file, namely, after all of the MPM materials have
+been described.
+
+The simplest contact model is the \tt null \normalfont model, which indicates
+that no inter material interactions are to take place.  This is typically only
+used in single material simulations.  Its usage looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+             <type>null</type>
+           </contact>
+\end{Verbatim}
+
+The next simplest model is the \tt single\_velocity \normalfont model.
+The basic MPM formulation provides ``free" no-slip, no-interpenetration
+contact, assuming that all particle data communicates with a single field
+on the grid.  For a single material simulation with multiple objects, that
+is the case.  If one wishes to achieve that behavior in Uintah-MPM when
+multiple materials are present, the \tt single\_velocity \normalfont contact
+model should be used.  It is specified as:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+             <type>single_velocity</type>
+             <materials>[0,1]</materials>
+           </contact>
+\end{Verbatim}
+Note that for this, and all of the contact models,
+the \tt <materials> \normalfont tag is optional.  If it is omitted,
+the assumption is that all materials will interact via the same contact model.
+(This will be further discussed below.)
+
+The ultimate in contact models is the \tt friction \normalfont contact 
+model.  For a full description, the reader is directed to the paper by
+Bardenhagen et al.\cite{bard_contact}.  Briefly, the model both overcomes
+some deficiences in the single velocity field contact (either the ``free"
+contact or the model described above, which behave identically), and it
+enables some additional features.  With single velocity field contact,
+initially adjacent objects are treated as if they are effectively stuck
+together.  The friction contact model overcomes this by detecting if
+materials are approaching or departing at a given node.  If they are
+approaching, contact is ``enforced" and if they are departing, another
+check is made to determine if the objects are in compression or tension.
+If they are in compression, then they are still rebounding from each other,
+and so contact is enforced.  If tension is detected, they are allowed
+to move apart independently.  Frictional sliding is allowed, based on
+the value specified for \tt <mu> \normalfont and the normal force between
+the objects.  An example of the use of this model is given here:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+              <type>friction</type>
+              <materials>[0,1,2]</materials>
+              <mu> 0.5 </mu>
+           </contact>
+\end{Verbatim}
+
+A slightly simplified version of the friction model is the
+\tt <approach> \normalfont model.  It is the same as the frictional model
+above, except that it doesn't make the additional check on the traction
+between two bodies at each node.  At times, it is necessary to neglect this,
+but some loss of energy will result.  Specification is of the model is 
+also nearly identical:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+              <type>approach</type>
+              <materials>[0,1,2]</materials>
+              <mu> 0.5 </mu>
+           </contact>
+\end{Verbatim}
+
+Finally, the contact infrastructure is also used to provide a moving
+displacement boundary condition.  Imagine a billet being smashed by a
+rigid platen, for example.  Usage of this model, known as
+\tt <specified> \normalfont contact, looks like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+           <contact>
+             <type>specified</type>
+             <filename>TXC.txt</filename>
+             <materials>[0,1,2]</materials>
+             <master_material>[0]</master_material>
+             <direction>[1,1,1]</direction>
+             <stop_time>1.0 </stop_time>
+             <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
+           </contact>
+\end{Verbatim}
+For reasons of backwards compatibility, the
+\tt <type>specified</type> \normalfont is interchangable with
+\tt <type>rigid</type>. \normalfont  By default, when either model is
+chosen, material 0 is the ``rigid" material, although this can be
+over ridden by the use of the
+\tt <master\_material> \normalfont field.  If no
+\tt <filename> \normalfont field is specified, then the particles of the
+rigid material proceed with the velocity that they were given as their
+initial condition, either until the reach a computational boundary, or
+until the simulation time has reached \tt <stop\_time>, \normalfont after
+which, their velocity becomes that given in the
+\tt <velocity\_after\_stop> \normalfont field.  The \tt <direction> \normalfont
+field indicates in which cartesian directions contact should be specified.
+Values of $1$ indicate that contact should be specified, $0$ indicates that
+the subject materials should be allowed to slide in that direction.  If
+a \tt <filename> \normalfont field {\it is} specified, then the user can
+create a text file which contains four entries per line.  These are:
+\begin{Verbatim}[fontsize=\footnotesize]
+time1 velocity_x1 velocity_y1 velocity_z1
+time2 velocity_x2 velocity_y2 velocity_z2
+     .
+     .
+     .
+\end{Verbatim}
+The velocity of the rigid material particles will be set to these values,
+based on linear interpolation between times, until \tt <stop\_time> \normalfont
+is reached.
+
+Finally, it is possible to specify more than one contact model.  Suppose
+one has a simulation with three materials, one rigid, and the other two
+deformable.  The user may want to have the rigid material interact in a
+rigid manner with the other two materials, while the two deformable materials
+interact with each other in a single velocity field manner.  Specification
+for this, assuming the rigid material is $0$ would look like:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+            <contact>
+                <type>single_velocity</type>
+                <materials>[1,2]</materials>
+            </contact>
+
+            <contact>
+                <type>specified</type>
+                <filename>prof.txt</filename>
+                <stop_time>1.0</stop_time>
+                <direction>[0, 0, 1]</direction>
+            </contact>
+\end{Verbatim}
+An example of this usage can be found in \tt inputs/MPM/twoblock-single-rigid.ups. \normalfont
+
 \subsubsection{BoundaryConditions} \label{Sec:MPM_BCs}
 
 Boundary conditions must be specified on each face of the computational
@@ -1103,7 +1321,8 @@ Uintah provides a \tt <DataAnalysis> \normalfont feature.  As it applies
 to MPM, it allows one to specify a group of particles, by assigning those
 particles a particular value of the \tt <color> \normalfont parameter.
 In addition, a list of variables and a frequency of output is provided.
-Then, at run time, a sub-directory is created inside the uda which contains
+Then, at run time, a sub-directory (\tt particleExtract/L-0 \normalfont)
+is created inside the uda which contains
 a series of files, named according to their particle IDs, one for each
 tagged particle.  Each of these files contains the time and position for
 that particle, along with whatever other data is specified.  {\bf To use this
