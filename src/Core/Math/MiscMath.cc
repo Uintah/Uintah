@@ -107,52 +107,20 @@ void findFactorsNearRoot(const int value, int &factor1, int &factor2) {
 }
 
 //Computes the cubed root of a using Halley's algorithm.  The initial guess
-//is set to the answer form the previous call
-double cubeRoot(double a)
-{
-  static const int small_num=1e-15;
-  static const int MAX_ITS=4;
-
-  double xold;
-  static double xnew=1;   //start initial guess at last answer
-  double atimes2=a*2.0;
-
-  double x3;
-
-  int i=0;
-  do
-  {
-    xold=xnew;
-    x3=xold*xold*xold;
-    xnew=xold*(x3+atimes2)/(2*x3+a);
-
-    xold=xnew;
-    x3=xold*xold*xold;
-    xnew=xold*(x3+atimes2)/(2*x3+a);
-
-    xold=xnew;
-    x3=xold*xold*xold;
-    xnew=xold*(x3+atimes2)/(2*x3+a);
-
-    xold=xnew;
-    x3=xold*xold*xold;
-    xnew=xold*(x3+atimes2)/(2*x3+a);
-
-  } while ( fabs(xold-xnew)<small_num && ++i<MAX_ITS);
-
-  return xnew;
-}
-
-
-//Computes the cubed root of a using Halley's algorithm.  The initial guess
-//is set to the parameter provided
+//is set to the parameter provided, if no parameter is provided then the 
+//result of the last call is used as the initial guess.  INT_MIN is used
+//as a sentinal to signal that no guess was provided.
 double cubeRoot(double a, double guess)
 {
   static const int small_num=1e-15;
   static const int MAX_ITS=4;
 
   double xold;
-  double xnew=guess;   //start with initial guess
+  static double xnew=1;   //start initial guess at last answer
+
+  if(guess!=DBL_MIN)
+    xnew=guess;
+
   double atimes2=a*2.0;
 
   double x3;
@@ -180,7 +148,6 @@ double cubeRoot(double a, double guess)
 
   return xnew;
 }
-
 
 } // End namespace SCIRun
 
