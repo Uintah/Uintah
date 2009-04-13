@@ -10,11 +10,21 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function X = dqmom_linear_system(w, wa, k, G)
+% param w   = matrix of weights' values
+% param wa  = matrix of weighted abscissas' values
+% param k   = matrix of moment indices
+% param G   = matrix of source terms for weighted abscissas
+
+% param condition_number  = condition number of DQMOM matrix A
+% param singular          = boolean (int = 0 or 1) representing whether A is singular (1) or not (0)
+% param X                 = solution vector for DQMOM linear system AX=B
+
+function [condition_number singular X] = dqmom_linear_system(w, wa, k, G)
 
 % diffusivity in phase space (of internal coordinate j at quad node alpha)
-
 Gamma_xi = 0.1;
+
+singular = 0;
 
 N_xi = size(wa,1);
 N = size(w,2);
@@ -85,8 +95,9 @@ for K=1:Ntot
                     end
                 end
             end
-            % sum over all models (not applicable in this case)
-            modelsumS = modelsumS - G(j,alpha);
+
+            % model term
+            modelsumS = - G(j,alpha);
             
             A(K,(j)*N+alpha)=prefixA*productA;
             
@@ -127,12 +138,14 @@ if (det(A) == 0)
   fprintf('ERROR: Your matrix is singular! Pick new moments.\n\n');
   k
   A
-  fprintf('Exiting...\n\n');
+  B
   fprintf('\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n');
-  return;
+  singular = 1;
 end
 
-A
-B
-X = A^-1*B
-%X = crout(A,B);
+%A
+%B
+%X = A^-1*B
+fprintf('Solving linear system...\n')
+[condition_number X] = crout(A,B);
+
