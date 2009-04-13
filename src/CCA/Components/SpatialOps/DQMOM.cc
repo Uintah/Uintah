@@ -236,7 +236,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           new_dw->get(tempCCVar, model_label, matlIndex, patch, gn, 0);
           runningsum = runningsum + tempCCVar[c];
         }
-
+        
         models.push_back(runningsum);
       }
 
@@ -297,7 +297,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
               productS = 0;
             }
 
-            modelsumS = modelsumS - models[j*(N_)+alpha];
+            modelsumS = - models[j*(N_)+alpha];
 
             A(k,(j+1)*N_ + alpha)=prefixA*productA;
             
