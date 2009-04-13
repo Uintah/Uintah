@@ -9,13 +9,13 @@ SRCS = RMCRTnoInterpolationFSKRIeta.cc Surface.cc RealSurface.cc TopRealSurface.
 
 OBJS := $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS)))
 
-RMCRTnoInterpolationFSKRIeta : $(OBJS) 
-			$(CXX) $(CFLAGS) $(OBJS) -o RMCRTnoInterpolationFSKRIeta
+RMCRTnoInterpolationFSKRIeta50wanL1202020 : $(OBJS) 
+			$(CXX) $(CFLAGS) $(OBJS) -o RMCRTnoInterpolationFSKRIeta50wanL1202020
 
 .cc.o: $<
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o *.d  RMCRTnoInterpolationFSKRIeta *.out
+	rm -f *.o *.d   *.out
 
 -include $(SRCS:.cc=.d)

@@ -10,25 +10,25 @@
    int xI, xII; // indices for x
    int xi;
    
-   xi = 0;
-   double firstlayer = -Lx/2 + 0.35;
-   double secondlayer = -Lx/2 + 0.65;
-   double thirdlayer = -Lx/2 + 1.0;
+   xi = -1;
+   double firstlayer = -Lx/2.0 + 0.35;
+   double secondlayer = -Lx/2.0 + 0.65;
+   double thirdlayer = -Lx/2.0 + 1.0;
 
 
      // Webb case , 3 layers in x direction; with top and bottom at 1000K e=0.8.
      
      do {
        xi++;
-     }while( X[xi] < firstlayer );
+     }while( (X[xi]+X[xi+1])/2.0 < firstlayer );
      
      xI = xi;
      cout << " xI = " << xI << endl;
      // note: dont need to do xi -1 for finding the firstlayer index  xI
-     
+     xi--;
      do {
        xi++;
-     }while( X[xi] < secondlayer );     
+     }while( (X[xi]+X[xi+1])/2.0 < secondlayer );     
 
 // xII = xi-1;
     xII = xi;
@@ -130,7 +130,7 @@ for ( int i = 0; i < VolElementNo; i ++){
     alpha_surface[RIGHT][i] = emiss_surface[RIGHT][i];
         
     rd_surface[LEFT][i] = 1 - rs_surface[LEFT][i] - emiss_surface[LEFT][i];
-    rd_surface[RIGHT][i] = 1 - rs_surface[LEFT][i] - emiss_surface[LEFT][i];
+    rd_surface[RIGHT][i] = 1 - rs_surface[RIGHT][i] - emiss_surface[RIGHT][i];
     
     T_surface[LEFT][i] = 1000;
     T_surface[RIGHT][i] = 1000;

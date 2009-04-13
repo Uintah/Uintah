@@ -450,9 +450,9 @@ int main(int argc, char *argv[]){
   StopLowerBound = 1e-10;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 40;
-  Ncy = 40;
-  Ncz = 40;
+  Ncx = 60;
+  Ncy = 60;
+  Ncz = 60;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
@@ -605,8 +605,8 @@ int main(int argc, char *argv[]){
 	VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
   
   int rayNocold, rayNohot;
-  rayNocold = 10000;
-  rayNohot = 10000; 
+  rayNocold = 5000;
+  rayNohot = 5000; 
 
   // get coordinates arrays
   double *X = new double [Npx]; // i 
@@ -836,8 +836,8 @@ int main(int argc, char *argv[]){
    for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
       for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 10000;   
-   //  rayNo_Vol[454] = 10000;
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 5000;   
+   //  rayNo_Vol[454] = 5000;
 
    int iSurface;
    // initial all surface elements ray no = 0
@@ -1637,7 +1637,7 @@ int main(int argc, char *argv[]){
 	    sumIncomInten = 0;
 
 	    //     if ( VolIndex==3783) 
-	    //       obTable.twoArrayTable( rayNocold, gcold, IncomingIntenVol, "Ieta10000cell3783NoIbCDFcold.dat");
+	    //       obTable.twoArrayTable( rayNocold, gcold, IncomingIntenVol, "Ieta5000cell3783NoIbCDFcold.dat");
 
 	 	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
@@ -1864,7 +1864,7 @@ int main(int argc, char *argv[]){
 	    sumIncomInten = 0;
 
 	    //    if ( VolIndex==3789) 
-	    //      obTable.twoArrayTable( rayNohot, ghot, IncomingIntenVol, "Ieta10000cell3789NoIbCDFhot.dat");
+	    //      obTable.twoArrayTable( rayNohot, ghot, IncomingIntenVol, "Ieta5000cell3789NoIbCDFhot.dat");
 
 	 	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
@@ -2099,7 +2099,7 @@ int main(int argc, char *argv[]){
 	    sumIncomInten = 0;
 
 	    //   if ( VolIndex==3796) 
-	    //  obTable.twoArrayTable( rayNocold, gcold, IncomingIntenVol, "Ieta10000cell3796NoIbCDFcold.dat");
+	    //  obTable.twoArrayTable( rayNocold, gcold, IncomingIntenVol, "Ieta5000cell3796NoIbCDFcold.dat");
 
 	 	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
@@ -2170,7 +2170,7 @@ int main(int argc, char *argv[]){
   }
   
   /*
-  obTable.vtkSurfaceTableMake("vtkSurfaceWebbnonHomoReta10000-202020NoIbCDF-11111", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceWebbnonHomoReta5000-202020NoIbCDF-11111", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
@@ -2201,7 +2201,7 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolWebbnonHomoReta10000-404040withIbCDF-11111",
+  obTable.vtkVolTableMake("vtkVolWebbnonHomoReta5000-606060withIbCDF-11111-test",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);

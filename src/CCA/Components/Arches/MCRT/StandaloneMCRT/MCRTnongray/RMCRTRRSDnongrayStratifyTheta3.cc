@@ -381,10 +381,10 @@ void rayfromSurf(SurfaceType &obSurface,
       "; rayNo = " << rayCounter << endl;
     */
     
-   } while(rayCounter < 1500); // rayCounter loop
+   } while(rayCounter < 800); // rayCounter loop
     // } while( sumSDave >= 0.03 || rayCounter <= 5);
 
-  
+  /*
     for ( int k = 0; k < p_n; k ++ )
     for ( int j = 0; j < theta_n; j ++)
       for ( int i = 0; i < phi_n; i ++){
@@ -413,6 +413,8 @@ void rayfromSurf(SurfaceType &obSurface,
   
   // sumVarave = sumVarave / anotherSize / anotherSize;    
   sumSDave = sqrt(sumVarave);
+
+  */
 
   
   double ttaveIncomInten;
@@ -444,7 +446,7 @@ int main(int argc, char *argv[]){
 //   int my_rank; // rank of process
 //   int np; // number of processes
   time_t time_start, time_end;
-  time (&time_start);
+
 
   // stratified sampling
   int i_n, j_n, k_n, theta_n, phi_n, straSize;
@@ -454,7 +456,7 @@ int main(int argc, char *argv[]){
   // cout << " Please enter i_n, j_n, k_n, theta_n, phi_n" << endl;
   // cin >> i_n >> j_n >> k_n >> theta_n >> phi_n ;
   
-  coluwgka = 1;
+  coluwgka = 4;
   
    i_n = 1;
    j_n = 1;
@@ -516,8 +518,8 @@ int main(int argc, char *argv[]){
   rayNoSurface = 1;
   rayNoVol = 1;  
   Ncx = 40;
-  Ncy = 40;
-  Ncz = 40;
+  Ncy = 20;
+  Ncz = 20;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
@@ -887,7 +889,7 @@ int main(int argc, char *argv[]){
   Y[Ncyhalf] = 0;
   Z[Nczhalf] = 0;   
  
-  StopLowerBound = 1e-10;
+  StopLowerBound = 1e-4;
   
 // initial as all volume elements ray no zeros first.
   // initial volume ray numbers
@@ -895,7 +897,7 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1; 
    // TopBottomNo = Ncx * Ncy;
 
    // (x,0,0) 4 lines at the center
@@ -913,8 +915,8 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_surface[TOP][iSurface] = 0;
-       rayNo_surface[BOTTOM][iSurface] = 0;
+       rayNo_surface[TOP][iSurface] = 1;
+       rayNo_surface[BOTTOM][iSurface] = 1;
      }
 
    
@@ -934,8 +936,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_surface[FRONT][iSurface] = 0;
-       rayNo_surface[BACK][iSurface] = 0;
+       rayNo_surface[FRONT][iSurface] = 1;
+       rayNo_surface[BACK][iSurface] = 1;
      }   
 
 
@@ -943,8 +945,8 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_surface[LEFT][iSurface] = 0;
-       rayNo_surface[RIGHT][iSurface] = 0;
+       rayNo_surface[LEFT][iSurface] = 1;
+       rayNo_surface[RIGHT][iSurface] = 1;
      }
 
 
@@ -975,8 +977,8 @@ int main(int argc, char *argv[]){
    // #include "inputNonblackSurf.cc"
    //#include "inputScattering.cc"
    //    #include "inputScatteringAniso.cc"
-   // #include "inputLiuWsggX.cc"
-     #include "inputBressloffRadCoeff.cc"
+    #include "inputLiuWsggX.cc"
+   //  #include "inputBressloffRadCoeff.cc"
    // #include "inputFSKhomoWebbfixg.cc" // using 12 g or fixed g points
 
    MTRand MTrng;   
@@ -1027,7 +1029,9 @@ int main(int argc, char *argv[]){
   int surfaceFlag;
   int surfaceIndex;
   int rayCounter;
-  // RadWsgg obWsgg;
+
+  // for Liu case
+  RadWsgg obWsgg;
   
  //// =============================== Calculation starts ========================
   
@@ -1066,7 +1070,7 @@ int main(int argc, char *argv[]){
       straVar[k][j] = new double [phi_n];
     }
 
-
+  time (&time_start);
   
   for ( int iggNo = 0; iggNo < coluwgka; iggNo ++ ) {
 
@@ -1086,15 +1090,15 @@ int main(int argc, char *argv[]){
 
     */
 
-    /*
+    
     // Liu case
     // update a_surface, a_Vol for each different gas band   
     obWsgg.WsggkVolwEmiss(CO2, H2O,iggNo+1, T_Vol, SFV, VolElementNo, kl_Vol, a_Vol);
     
     for ( int i = 0; i < 6; i ++)
       obWsgg.WsggwEmissSurface(i, surfaceNo[i], T_surface, iggNo+1, a_surface);
-    */
-
+    
+    
     
     
     // for Volume's  Intensity
@@ -1730,7 +1734,7 @@ int main(int argc, char *argv[]){
 	       sumSDave = sqrt(sumSDave )/anotherSize;  
 	      */ 
 	      
-	   }while( rayCounter < 1500 ); // rayCounter loop
+	   }while( rayCounter < 800 ); // rayCounter loop
 	    
 	   //  }while(sumSDave >= 0.03 || rayCounter <= 5);
 	   
@@ -1744,7 +1748,8 @@ int main(int argc, char *argv[]){
 	   double weighttheta[3] = {0.25, 0.5, 0.25};
 	   weightp = double(1.0 / p_n);
 	    weightphi = double(1.0 / phi_n);
-	    
+
+	    /*
 	   for ( int k = 0; k < p_n; k ++ )
 	     for ( int j = 0; j < theta_n; j ++)
 	       for ( int i = 0; i < phi_n; i ++){
@@ -1774,7 +1779,7 @@ int main(int argc, char *argv[]){
 
 	     // sumVarave = sumVarave / anotherSize / anotherSize;    
 	     sumSDave = sqrt(sumVarave);
-	     
+	    */
 
 	   double ttaveIncomInten;
 	   ttaveIncomInten = 0;
@@ -1808,6 +1813,8 @@ int main(int argc, char *argv[]){
     
 }// end of iggNo
 
+   time (&time_end);
+   
    // surface cell
   double *integrIntenSurface[6];
   for ( int i = 0; i < 6; i ++)
@@ -1837,9 +1844,9 @@ int main(int argc, char *argv[]){
   }
   
   
-  //  obTable.vtkSurfaceTableMake("vtkSurfaceLiu404080-ray1500RR1e-10-11133-bottom", Npx, Npy, Npz,
-  //  			      X, Y, Z, surfaceElementNo,
-  //  			      global_qsurface, global_Qsurface);
+    obTable.vtkSurfaceTableMake("vtkSurfaceLiu202040-ray800RR1e-4-11133all", Npx, Npy, Npz,
+   			      X, Y, Z, surfaceElementNo,
+   			      global_qsurface, global_Qsurface);
 
   
     // Vol cell
@@ -1860,7 +1867,7 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolBresloffUnit404040A-ray1500RR1e-10-11133-onlycenter",
+  obTable.vtkVolTableMake("vtkVolLiu202040-ray800RR1e-4-11133all",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
@@ -1888,7 +1895,7 @@ int main(int argc, char *argv[]){
   cout << " ratioBCx = " << ratioBCx << "; ratioBCy = " << ratioBCy <<
     ";  ratioBCz = " <<  ratioBCz << endl;
   
-  time (&time_end);
+
   timeused = difftime (time_end,time_start);
   cout << " time used up (S) = " << timeused << "sec." << endl;
 

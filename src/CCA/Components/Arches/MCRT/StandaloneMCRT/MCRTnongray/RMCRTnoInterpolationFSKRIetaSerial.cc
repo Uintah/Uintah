@@ -766,8 +766,8 @@ int main(int argc, char *argv[]){
    for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
       for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 5000;   
-   //  rayNo_Vol[454] = 50000;
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 10000;   
+   //  rayNo_Vol[454] = 100000;
 
    int iSurface;
    // initial all surface elements ray no = 0
@@ -800,8 +800,8 @@ int main(int argc, char *argv[]){
      for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_surface[LEFT][iSurface] = 5000;
-       rayNo_surface[RIGHT][iSurface] = 5000;
+       rayNo_surface[LEFT][iSurface] = 10000;
+       rayNo_surface[RIGHT][iSurface] = 10000;
       
      }
 
@@ -828,7 +828,7 @@ int main(int argc, char *argv[]){
     
    
   int rayNouniform;
-  rayNouniform = 5000;
+  rayNouniform = 10000;
   // generate uniform distributed from 0 to 1 , R same size as rayNo.
   int Runisize;
   Runisize = rayNouniform; // same as rayNo
@@ -873,9 +873,9 @@ int main(int argc, char *argv[]){
   }
 
     //  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
-  //  obTable.singleArrayTable(kl, Runisize, 1, "abcsTableReta5000IbCDF.dat");
-  // obTable.singleArrayTable(g, Runisize, 1, "wvnTableReta5000IbCDF.dat");
-  // obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableReta5000IbCDF.dat");
+  //  obTable.singleArrayTable(kl, Runisize, 1, "abcsTableReta10000IbCDF.dat");
+  // obTable.singleArrayTable(g, Runisize, 1, "wvnTableReta10000IbCDF.dat");
+  // obTable.singleArrayTable(Runi, Runisize, 1, "RuniTableReta10000IbCDF.dat");
 
    MTRand MTrng;
    VolElement obVol;
@@ -1521,7 +1521,7 @@ int main(int argc, char *argv[]){
 	    sumIncomInten = 0;
 
 	    //    if ( VolIndex==454) 
-	    //      obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ieta5000cell454noIbCDF-L5.dat");
+	    //      obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ieta10000cell454noIbCDF-L5.dat");
 
 	 	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
@@ -1588,7 +1588,7 @@ int main(int argc, char *argv[]){
   }
   
   /*
-    obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta5000-L1-202020IbCDF-11111", Npx, Npy, Npz,
+    obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta10000-L1-202020IbCDF-11111", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
   */
@@ -1619,7 +1619,7 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolWebbHomoReta5000-L1-202020NoIbCDF-11111",
+  obTable.vtkVolTableMake("vtkVolWebbHomoReta10000-L1-202020NoIbCDF-11111",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
