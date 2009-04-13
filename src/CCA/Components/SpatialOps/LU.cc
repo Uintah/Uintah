@@ -24,12 +24,12 @@ void
 LU::decompose()
 {
 
-  // Algorithm from Numerical Recipes (C)
+  // Algorithm from Numerical Recipes in C, by Press et al
 
   int i, imax, j, k;
   double big, dum, sum, temp;
   double tiny = 1e-10;
-  vector<double> vv(dim_);
+  vector<double> vv;
 
   isSingular_ = false;
 
@@ -44,7 +44,7 @@ LU::decompose()
     }
     if (big == 0.0) {
       // return error "Singular matrix in routine ludcmp"
-      cout << "Singular matrix in routine LU::decompose." << endl;
+      //cout << "Singular matrix in routine LU::decompose." << endl;
       isSingular_ = true;
       isReady_ = true;
       return;
@@ -52,11 +52,12 @@ LU::decompose()
     // save the scaling
     vv.push_back(1.0/big);
   }
+  cout << endl;
 
   // Loop over columns for Crout's method
   for (j=1; j<=dim_; ++j) {
-
-    // Inner loop 1: solve for elements of U, beta_ij (don't do i=j)
+    
+    // Inner loop 1: solve for elements of U (beta_ij in book's notation) (don't do i=j)
     if (j>1) {
       for (i=1; i<j; ++i) {
         sum = AA_(i-1,j-1);
@@ -70,7 +71,7 @@ LU::decompose()
     // initialize search for biggest pivot element
     big = 0.0;
 
-    // Inner loop 2: solve for elements of L, alpha_ij (including i=1)
+    // Inner loop 2: solve for elements of L (alpha_ij in book's notation) (include i=j)
     for (i=j; i<=dim_; ++i) {
       sum = AA_(i-1,j-1);
       if (j>1) {
@@ -79,7 +80,7 @@ LU::decompose()
         }
         AA_(i-1,j-1)=sum;
       }
-      dum = vv[i]*fabs(sum);
+      dum = vv[i-1]*fabs(sum);
       if ( dum >= big ) {
         // is the figure of merit for the pivot better than the best so far?
         big = dum;
@@ -89,32 +90,33 @@ LU::decompose()
 
     // Inner loop 3: check if you need to interchange rows
     if (j != imax) {
-      // yes
+      // yes, you do
       for (k=1; k<=dim_; ++k) {
         dum = AA_(imax-1,k-1);
         AA_(imax-1,k-1) = AA_(j-1,k-1);
         AA_(j-1,k-1)=dum;
       }
       // interchange scale factor too
-      vv[imax]=vv[j];
+      vv[imax-1]=vv[j-1];
     }
 
     indx.push_back(imax);
 
-    // replace zero w/ tiny value
+    // Inner loop 4: replace zero w/ tiny value
     if (AA_(j-1,j-1) == 0.0) {
       AA_(j-1,j-1) = tiny;
     }
 
-    // divide by the pivot element
+    // Inner loop 5: divide by the pivot element
     if (j != dim_)
     {
       dum = 1.0/AA_(j-1,j-1);
       for (i=j+1; i<=dim_; ++i) {
-        AA_(i-1,j-1) = AA_(i-1,j-1) * dum;
+        double temp = AA_(i-1,j-1) * dum;
+        AA_(i-1,j-1) = temp;
       }
     }
-    
+  
   }// end loop over columns for Crout's method
 
   if ( AA_(dim_-1,dim_-1) == 0 ) {
