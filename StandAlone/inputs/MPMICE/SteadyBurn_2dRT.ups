@@ -187,7 +187,6 @@
     <artificial_viscosity_coeff2>   1.6         </artificial_viscosity_coeff2>
     <accumulate_strain_energy>      false       </accumulate_strain_energy>
     <use_load_curves>               false       </use_load_curves>
-    <turn_on_adiabatic_heating>     false       </turn_on_adiabatic_heating>
     <do_contact_friction_heating>   false       </do_contact_friction_heating>
     <create_new_particles>          false       </create_new_particles>
     <DoThermalExpansion>            false       </DoThermalExpansion>

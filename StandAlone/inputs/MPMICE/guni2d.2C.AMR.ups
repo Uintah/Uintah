@@ -142,7 +142,6 @@
         <accumulate_strain_energy>       false      </accumulate_strain_energy>
         <use_load_curves>                false      </use_load_curves>
         <erosion algorithm = "none"/>
-        <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
         <testForNegTemps_mpm>           false       </testForNegTemps_mpm>
     </MPM>
 

@@ -31,7 +31,6 @@
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
       <temperature_solve                  spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
-      <turn_on_adiabatic_heating          spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
 
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
