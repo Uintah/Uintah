@@ -9,13 +9,13 @@ SRCS = RMCRTnoInterpolationWebbnonhomoReta.cc Surface.cc RealSurface.cc TopRealS
 
 OBJS := $(patsubst %.cc,%.o,$(filter %.cc,$(SRCS)))
 
-RMCRTnoInterpolationWebbnonhomoReta : $(OBJS) 
-			$(CXX) $(CFLAGS) $(OBJS) -o RMCRTnoInterpolationWebbnonhomoReta
+RMCRTnoInterpolationWebbnonhomoRetaTest : $(OBJS) 
+			$(CXX) $(CFLAGS) $(OBJS) -o RMCRTnoInterpolationWebbnonhomoRetaTest
 
 .cc.o: $<
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f *.o *.d  RMCRTnoInterpolationWebbnonhomoReta *.out
+	rm -f *.o *.d  RMCRTnoInterpolationWebbnonhomoRetaTest *.out
 
 -include $(SRCS:.cc=.d)
