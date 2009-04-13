@@ -143,6 +143,70 @@ usage( const string& badarg, const string& progname )
 
 /////////////////////////////////////////////////////////////////////
 extern "C"
+int*
+getPeriodicBoundaries(const string& input_uda_name, int timeStepNo, int levelNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+
+  vector<int> index;
+  vector<double> times;
+
+  int* boundaryExists = new int[3];
+
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  int numLevels = grid->numLevels();
+  
+  LevelP level;
+  
+  if (levelNo < numLevels) {
+    level = grid->getLevel(levelNo);
+    IntVector a = level->getPeriodicBoundaries();
+    
+    boundaryExists[0] = a.x();   
+    boundaryExists[1] = a.y();   
+    boundaryExists[2] = a.z();   
+  }
+
+  return boundaryExists;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
+int*
+getExtraCells(const string& input_uda_name, int timeStepNo, int levelNo) {
+  DataArchive* archive = scinew DataArchive(input_uda_name);
+
+  vector<int> index;
+  vector<double> times;
+
+  int* extraCells = new int[3];
+
+  // query time info from dataarchive
+  // This is needed here (it sets a member variable), without this queryGrid won't work
+  archive->queryTimesteps(index, times);
+
+  GridP grid = archive->queryGrid(timeStepNo);
+  int numLevels = grid->numLevels();
+  
+  LevelP level;
+  
+  if (levelNo < numLevels) {
+    level = grid->getLevel(levelNo);
+    IntVector a = level->getExtraCells();
+    
+    extraCells[0] = a.x();   
+    extraCells[1] = a.y();   
+    extraCells[2] = a.z();   
+  }
+
+  return extraCells;
+}
+
+/////////////////////////////////////////////////////////////////////
+extern "C"
 levelPatchVec*
 getTotalNumPatches(const string& input_uda_name, int timeStepNo) {
   DataArchive* archive = scinew DataArchive(input_uda_name);
@@ -508,7 +572,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
 	  minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
 
-	  int nCells = (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()).x();
+	  int nCells = (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()).y();
 
 	  patchInfo patchInfoObj(indexArr, minMaxArr, hiLoArr, nCells);
 	  patchInfoVecPtr->push_back(patchInfoObj);
