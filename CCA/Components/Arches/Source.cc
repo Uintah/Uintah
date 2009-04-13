@@ -644,11 +644,13 @@ Source::calculateScalarMMSSource(const ProcessorGroup*,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars) 
 {
+#if 0
   double rho0 = 0.0;
 
   for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
     //waiting for source terms...
   } 
+#endif
 }
 //****************************************************************************
 // Pressure source calculation for MMS
