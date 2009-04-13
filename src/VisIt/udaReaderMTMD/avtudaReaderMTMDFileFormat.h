@@ -144,6 +144,9 @@ protected:
   int         currLevel;
   std::string currVar, currMesh;
   bool ccMesh, ncMesh, sfcxMesh, sfcyMesh, sfczMesh;
+
+  int* boundaryExists;
+  int* extraCells;
         
   int ncomps;
         
@@ -157,6 +160,8 @@ protected:
   levelPatchVec*   (*getTotalNumPatches)(const std::string&, int);
   patchInfoVec*    (*getPatchInfo)(const std::string&, int, const std::string&, bool);
   int*             (*getNumPatches)(const std::string&, int, int);
+  int*             (*getPeriodicBoundaries)(const std::string&, int, int);
+  int*             (*getExtraCells)(const std::string&, int, int);
   int*             (*getNumLevels)(const std::string&, int);
 
   virtual void     PopulateDatabaseMetaData(avtDatabaseMetaData *, int);
