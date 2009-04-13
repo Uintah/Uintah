@@ -37,13 +37,13 @@ w = [1, 1, 1];
 % moment indexes
 k = ([0,0;
       0,1;
-      1,0;
       0,2;
-      2,0;
+      1,1;
       1,2;
-      2,1;
-      1,3;
-      3,1]);
+      2,2;
+      2,3;
+      1,0;
+      2,1]);
 
 % number of quad nodes, etc.
 N_xi = size(wa,1);
@@ -70,7 +70,7 @@ end
 
 count = 1;
 t=1;
-ttime = 15; %s
+ttime = 50; %s
 delta_t = 0.1; %s
 while t<=ttime
     
