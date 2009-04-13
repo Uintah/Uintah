@@ -72,7 +72,7 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-#AC_PREREQ(2.63)
+AC_PREREQ(2.63)
 
 AC_COPYRIGHT(
 ##
