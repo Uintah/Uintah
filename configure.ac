@@ -72,7 +72,7 @@ AC_INIT([Uintah],[1.25],[csafe-homebrew@cs.utah.edu])
 ##
 ##     type "autoconf --version" to find out what version you have.
 ##
-AC_PREREQ(2.63)
+#AC_PREREQ(2.63)
 
 AC_COPYRIGHT(
 ##
@@ -524,9 +524,6 @@ IS_VC="no"
 IS_AIX="no"
 unset NUM_CPUS
 
-NEED_OSX_SYSTEMSTUBS=no
-NEED_OSX_HACK=no
-DEF_NEED_OSX_HACK=
 MAKE_ARCHIVES="no"
 
 case $host in
@@ -539,11 +536,6 @@ case $host in
     NUM_CPUS=4
     ;;
   *-darwin*)
-    SCI_CHECK_OS_VERSION(9,IS_LEOPARD=yes,IS_LEOPARD=no)
-    SCI_CHECK_OS_VERSION(8,NEED_OSX_SYSTEMSTUBS=yes,NEED_OSX_SYSTEMSTUBS=no)
-    if test "$NEED_OSX_SYSTEMSTUBS" = "no"; then
-       SCI_CHECK_OS_VERSION(7.1,NEED_OSX_HACK=no,NEED_OSX_HACK=yes)
-    fi
     NUM_CPUS=2
     IS_OSX="yes"
     DEF_OSX="#define IS_OSX 1"
@@ -3236,39 +3228,6 @@ AC_SUBST(FREETYPE_LIB_FLAG)
 AC_SUBST(FREETYPE_LIB_DIR_FLAG)
 AC_SUBST(DEF_FREETYPE)
 AC_SUBST(INC_FREETYPE_H)
-
-
-##  --  search for ftgl stuff  -------------------------------------------
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-if test "$with_ftgl" = "yes"; then
-  _sci_optional=required
-elif test "$with_ftgl"; then
-  _sci_lib="$with_ftgl/lib"
-  _sci_inc="$with_ftgl/include"
-  _sci_optional=specific
-fi
-
-SCI_TRY_LINK(FTGL,ftgl library,FTGL/FTGLTextureFont.h,$_sci_inc,ftgl,$_sci_lib,$INC_FREETYPE_H $FREETYPE_LIB_DIR_FLAG $FREETYPE_LIB_FLAG,,$_sci_optional)
-
-if test "$HAVE_FTGL" = "yes"; then
-  DEF_FTGL="#define HAVE_FTGL 1"
-fi
-
-if test "$with_ftgl" && test ! "$DEF_FTGL"; then
-  echo
-  AC_MSG_ERROR(One or more of the FTGL components is missing.)
-fi
-
-AC_SUBST(FTGL_LIB_FLAG)
-AC_SUBST(FTGL_LIB_DIR_FLAG)
-AC_SUBST(DEF_FTGL)
-AC_SUBST(INC_FTGL_H)
-
-sci_defs_files="$sci_defs_files include/sci_defs/ogl_testdefs.h"
-
 
 ##  --  search for teem  -------------------------------------------------
 
