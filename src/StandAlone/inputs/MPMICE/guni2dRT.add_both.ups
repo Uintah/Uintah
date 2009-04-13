@@ -144,7 +144,6 @@
         <create_new_particles>           false      </create_new_particles>
         <manual_new_material>            true       </manual_new_material>
         <erosion algorithm = "KeepStress"/>
-        <turn_on_adiabatic_heating>      false      </turn_on_adiabatic_heating>
         <CanAddMPMMaterial>              true       </CanAddMPMMaterial>
     </MPM>
 
