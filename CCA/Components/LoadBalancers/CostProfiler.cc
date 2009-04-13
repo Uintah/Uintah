@@ -34,17 +34,20 @@ DEALINGS IN THE SOFTWARE.
 using namespace Uintah;
 using namespace SCIRun;
    
-void CostProfiler::setMinPatchSize(const vector<IntVector> &min_patch_size)
+void
+CostProfiler::setMinPatchSize( const vector<IntVector> & min_patch_size )
 {
   d_profiler.setMinPatchSize(min_patch_size);
 }
 
-void CostProfiler::addContribution(DetailedTask *task, double cost)
+void
+CostProfiler::addContribution( DetailedTask *task, double cost )
 {
-  if(task->getPatches()==0)
+  if( task->getPatches() == 0 ) {
     return;
-  const PatchSubset *patches=task->getPatches();
+  }
 #if 0  
+  const PatchSubset *patches=task->getPatches();
   for(int p=0;p<patches->size();p++)
   {
     const Patch* patch=patches->get(p);
@@ -52,28 +55,35 @@ void CostProfiler::addContribution(DetailedTask *task, double cost)
       cout << d_myworld->myrank() << " error patch is owned by processor:" << d_lb->getPatchwiseProcessorAssignment(patch) << " for task:" << task->getName() << endl;
   }
 #endif
-  d_profiler.addContribution(task->getPatches(),cost);
+  d_profiler.addContribution( task->getPatches(), cost );
 }
 
-void CostProfiler::outputError(const GridP currentGrid)
+void
+CostProfiler::outputError( const GridP currentGrid )
 {
-  d_profiler.outputError(currentGrid);
-}
-void CostProfiler::finalizeContributions(const GridP currentGrid)
-{
-  d_profiler.finalizeContributions(currentGrid);  
+  d_profiler.outputError( currentGrid );
 }
 
-void CostProfiler::getWeights(int l, const vector<Region> &regions, vector<double> &weights)
+void
+CostProfiler::finalizeContributions( const GridP currentGrid )
 {
-  d_profiler.getWeights(l,regions,weights);
+  d_profiler.finalizeContributions( currentGrid );  
 }
 
-void CostProfiler::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
+void
+CostProfiler::getWeights( int l, const vector<Region> & regions, vector<double> & weights )
 {
-  d_profiler.initializeWeights(oldgrid,newgrid);
+  d_profiler.getWeights( l, regions, weights );
 }
-void CostProfiler::reset()
+
+void
+CostProfiler::initializeWeights( const Grid * oldgrid, const Grid * newgrid )
+{
+  d_profiler.initializeWeights( oldgrid, newgrid );
+}
+
+void
+CostProfiler::reset()
 {
   d_profiler.reset();
 }
