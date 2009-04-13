@@ -14,7 +14,8 @@ with the option of explicit or semi-implicit }
 \subsection{Uintah Specification}
 %______________________________________________________________________
 \subsubsection{Basic Inputs}
-
+The ICE component is selected by specifying:
+%
 Each Uintah component is invoked using a single executable called
 \it sus \normalfont, which chooses the type of simulation
 to execute based on the \it SimulationComponent \normalfont tag in the
@@ -23,6 +24,10 @@ input file.  In the case of ICE simulations, this looks like:
 \begin{Verbatim}[fontsize=\footnotesize]
  <SimulationComponent type="ice" />
 \end{Verbatim}
+%
+near the top of the inputfile.  The system of units \bf{must}\normalfont be
+to be consistent (mks, cgs) and the majority of input files will be in meter-kilogram-sec
+system.
 
 %______________________________________________________________________
 \subsubsection{Physical Constants}
@@ -49,21 +54,21 @@ that thermodynamic state.\big{)}
 <MaterialProperties>
    <ICE>
      <material>
-       <EOS type = "ideal_gas">                     </EOS>
-       <dynamic_viscosity>   0.0                    </dynamic_viscosity>
-       <thermal_conductivity>0.0                    </thermal_conductivity>
-       <specific_heat>      716.0                   </specific_heat>
-       <gamma>              1.4                     </gamma>
+       <EOS type = "ideal_gas">                </EOS>
+       <dynamic_viscosity>   0.0               </dynamic_viscosity>
+       <thermal_conductivity>0.0               </thermal_conductivity>
+       <specific_heat>      716.0              </specific_heat>
+       <gamma>              1.4                </gamma>
        <geom_object>
            <box label="wholeDomain">
-               <min>       [ 0.0, 0.0, 0.0 ]       </min>
-               <max>       [ 6.0, 6.0, 6.0 ]       </max>
+               <min>       [ 0.0, 0.0, 0.0 ]  </min>
+               <max>       [ 6.0, 6.0, 6.0 ]  </max>
            </box>
-           <res>                 [2,2,2]            </res>
-           <velocity>      [1.,2.,3.]               </velocity>
-           <density>       1.1792946927374306000e+00</density>
-           <pressure>      101325.0                 </pressure>     
-           <temperature>   300.0                    </temperature>
+           <res>                 [2,2,2]      </res>
+           <velocity>      [1.,2.,3.]         </velocity>
+           <density>       1.1792946927374306 </density>
+           <pressure>      101325.0           </pressure>     
+           <temperature>   300.0              </temperature>
        </geom_object>
      </material>
   </ICE>       
@@ -191,7 +196,9 @@ The input parameters for the Tillotson equation of state \cite{ref:gathers} for 
 %
 %______________________________________________________________________
 \subsubsection{Exchange Properties}
-The heat and momentum exchange coefficients $K_{rs}$ and $H_{rs}$, which determine the rate at which momentum and heat are transferred between materials, are specified in the following format.
+The heat and momentum exchange coefficients $K_{rs}$ and $H_{rs}$, which
+determine the rate at which momentum and heat are transferred between
+materials, are specified in the following format.
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 0->1,   0->2,  0->3
@@ -214,18 +221,21 @@ For a two material problem the coefficients would be:
 %______________________________________________________________________
 \subsubsection{BoundaryConditions}
 Boundary conditions must be specified on each face of the computational
-domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ for the variables $P, \bf{u}, T, \rho, v$ for
-each material.  The three main types of numerical boundary conditions that can
-be applied are ``Neumann",  ``Dirichlet" and ``Symmetric".  A Neumann boundary condition
-is used to set the gradient or $\frac{\partial{q}}{\partial{n}}|_{surface} =
-value$ at the boundary.   The value of the primative variable in the boundary
-cell is given by,
+domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ for the variables $P, \bf{u},
+T, \rho, v$ for each material.  The three main types of numerical
+boundary conditions that can be applied are ``Neumann",  ``Dirichlet" and
+``Symmetric".  A Neumann boundary condition is used to set the gradient
+or $\frac{\partial{q}}{\partial{n}}|_{surface} = value$ at the boundary.
+The value of the primative variable in the boundary cell is given by,
+
 %
 \begin{equation}
     q[\text{boundary cell}] = q[\text{interior cell}] - value * dn;
 \end{equation}
 %
-if we use a first order upwind discretization of the gradient.  Dirichlet boundary conditions set the value of primative variable in the boundary cell using
+if we use a first order upwind discretization of the gradient.  Dirichlet
+boundary conditions set the value of primative variable in the boundary
+cell using
 %
 \begin{equation}
     q[\text{boundary cell}] =  value;
@@ -257,30 +267,83 @@ if we use a first order upwind discretization of the gradient.  Dirichlet bounda
   </BoundaryConditions>
 </Grid>
 \end{Verbatim}
-Note that pressure field id is always 0. 
+There is also the field \TT{id = "all"}.  In principal, one could set
+different boundary condition types for different materials.  In practice,
+this is rarely used, so the usage illustrated here should be used.  Note that
+pressure field id is always 0.Symmetric boundary conditions are set using:
 %
-%
-Symmetric boundary conditions are set using:
 \begin{Verbatim}[fontsize=\footnotesize]
 <Face side = "y-">
     <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
 </Face>
 \end{Verbatim}
 %
-\begin{center}
-Boundary Condition Variables
-\begin{tabular}{l p{7cm} p{7cm}}
-\footnotesize{XML tag} & \footnotesize{Options}& \footnotesize{Description}\\
-\hline
-\hline
-id          &  [0,1,2...all]                                   &   material index.\\
-label       & [Temperature, Pressure, Density, SpecificVol]    &   primative variable name\\
-var         & [Neumann, Dirichlet, symmetry]                   &   type of boundary condition to apply \\
-value       & [ double or vector]                              &   "value" to be used when applying a BC\\
-\hline
-\end{tabular}
-\end{center}
-\normalsize
+In addition to ``Dirichlet'', ``Neumann'', and ``Symmetric'' type boundary
+conditions ICE has several custom or experimental  boundary conditions the user can
+access.  The ``Sine'' boundary condition was designed to impose a pulsating
+pressure wave in the boundary cells by applying
+%
+\begin{equation} \label{eq:pSine}
+  p = p_{reference} + A  sin(\omega t)
+\end{equation}
+%
+The input file parameters that control the frequency and magnitude of the  wave are: 
+\begin{Verbatim}[fontsize=\footnotesize]
+<SINE_BC>
+  <omega>    1000 </omega>
+  <A>        800 </A>
+</SINE_BC>
+\end{Verbatim}
+and to specify them add
+\begin{Verbatim}[fontsize=\footnotesize]
+<BCType id = "0"   label = "Pressure"     var = "Sine"> 
+                      <value> 0.0 </value> 
+</BCType> 
+<BCType id = "0"   label = "Temperature"  var = "Sine"> 
+                      <value> 0.0 </value>
+</BCType>
+\end{Verbatim}
+%
+to the input file.
+%
+For non-reflective boundary conditions the user should specify the ``LODI''
+or locally one-dimensional invisid type \cite{ref:Sutherland}
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<LODI>
+  <press_infinity> 1.0132500000010138e+05  </press_infinity>
+  <sigma>          0.27                    </sigma>
+  <ice_material_index> 0                   </ice_material_index>
+</LODI>
+\end{Verbatim}
+%
+and
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<Face side = "x+">
+  <BCType id = "0"   label = "Pressure"     var = "LODI">
+                        <value> 0. </value>                
+  </BCType>
+  <BCType id = "0"   label = "Velocity"     var = "LODI">
+                        <value> [0.,0.,0.] </value>
+  </BCType>
+  <BCType id = "0"   label = "Temperature"  var = "LODI">
+                        <value> 0.0 </value>
+  </BCType>
+  <BCType id = "0"   label = "Density"      var = "LODI">
+                        <value> 0.0 </value>
+  </BCType>
+  <BCType id = '0' label = "SpecificVol" var = "computeFromDensity">
+                        <value> 0.0 </value>
+  </BCType>
+</Face> 
+\end{Verbatim}
+%
+This boundary condition is designed to suppress all the unwanted effects of an
+artifical boundary. \bf This BC is computationally expensive and only partially
+works and should be used with caution\normalfont.  In flow fields where
+there are no passing through the outlet of the domain it reduces
+the reflected pressure waves significantly.
 %______________________________________________________________________
 \subsubsection{Semi-Implicit Pressure Solve}
 The equation for the change in the pressure field $\Delta{P}$ during a given
@@ -303,11 +366,11 @@ and $b$ can be found in
 \end{Verbatim}
 %
 The linear system $Ax = b$ can be solved using the default Uintah:conjugate
-gradient solver (CG) (slow) or using one of the many that are available
+gradient solver (cg) (slow) or one of the many that are available
 through the scalable linear solvers and preconditioner package hypre
 \cite{ref:hypre}. Experience has shown that the most efficient hypre
 preconditioner and solver are the pfmg and cg respectively.  Below are
-typical values for both the Uintah:CG and hypre cg solver
+typical values for both the Uintah:cg and hypre:cg solver
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 <ImplicitSolver>
@@ -417,7 +480,7 @@ steep gradients and solve Eulers equations.
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill inputs/ICE/rieman\_sm.ups
+\item [Input file name:] \hfill rieman\_sm.ups
 \item [Command used to run input file:]\hfill sus inputs/UintahRelease/ICE/shockTube.ups
 \item [Postprocessing command:]\hfill \\
 inputs/UintahRelease/ICE/plot\_shockTube\_1L shockTube.uda y \\
@@ -428,26 +491,24 @@ This will generate a postscript file shockTube.ps
 1 x 1 x 1 mm (Level 0)
 
 \item [Example Runtimes:] \hfill \\
- 1 minutes   (1 processor, 2.66 GHz Xeon)
+ 1 minute   (1 processor, 2.66 GHz Xeon)
 
 \item [Physical time simulated:] \hfill 0.005 sec.
-
 \end{description}
 
 \section*{\underline{Results}}
 Figure \ref{results.ST} shows a comparison of the exact versus simulated
 results at time $t = 5msec$.
-
+%
 \begin{figure}
-  \includegraphics[scale=.85]{shockTube.png}
+  \includegraphics[scale=.65]{shockTube.png}
   \caption{Shock tube results at time $t = 5msec$}
   \label{results.ST}
   \end{figure}
 \newpage
-
+%
 %__________________________________SHOCKTUBE AMR
-
-\section*{\center Shock Tube with AMR}
+\section*{\center Shock Tube with Adaptive Mesh Refinement}
  
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
@@ -456,11 +517,11 @@ results at time $t = 5msec$.
 \item [Input file name:] \hfill shocktube\_AMR.ups
 \item [Command used to run input file:]\hfill sus inputs/UintahRelease/ICE/shocktube\_AMR.ups
 \item [Postprocessing command:]\hfill \\
-inputs/UintahRelease/ICE/plot\_shockTube\_AMR shockTube\_AMR.uda y
+inputs/UintahRelease/ICE/plot\_shockTube\_AMR shockTube\_AMR.uda y\\
 This will generate a postscript file shockTube\_AMR.ps
 
 \item [Simulation Domain:]\hfill    1 x .001 x .001 m
-\item [Cell Spacing:]\hfill 
+\item [Cell Spacing:] \hfill\\
 10 x 1 x 1 mm (Level 0)\\
 2.5 x 1 x1 mm (Level 1)\\
 0.625 x1 x1 mm (Level 2)
@@ -480,18 +541,27 @@ Figure \ref{results.ST.AMR} shows a comparison of the exact versus simulated res
   \label{results.ST.AMR}
   \end{figure}
 \newpage
-
+%
 %__________________________________riemann2D
-
-\section*{\center 2D Riemann Problem with AMR}
+\section*{\center 2D Riemann Problem with Adaptive Mesh Refinement}
 \subsection*{\underline{Problem Description}}
-In two-dimensional Riemann problems there 15 different solutions that combine rarefaction waves, shock waves and a slip line or contact discontinuities \cite{ref:schulz_collins_glaz, ref:Liska_Wendroff}.  Here we simulate 4 slip lines that form a symmetrical single vortex turning counter clockwise. At time $t=0$ the computational domain is divided into four quadrants by the lines $x = 1/2, y=1/2$  The initial condition for $V=(p, \rho, u, v)$ in the four quadrants are $V_{ll}=(1, 1, -0.75, 0.5), V_{lr}=(1, 3, -0.75,-0.5), V_{ul}=(1,2,0.75,0.5), V_{ur}=(1,1,0.75,-0.5)$ where, $p$ is pressure, $\rho$ is the density of the polytropic gas, $u$ and $v$ are the $x$ and $y$ component of velocity.
+In two-dimensional Riemann problems there 15 different solutions that combine
+rarefaction waves, shock waves and a slip line or contact discontinuities
+\cite{ref:schulz_collins_glaz, ref:Liska_Wendroff}.  Here we simulate 4 slip
+lines that form a symmetrical single vortex turning counter clockwise. At
+time $t=0$ the computational domain is divided into four quadrants by the
+lines $x = 1/2, y=1/2$  The initial condition for $V=(p, \rho, u, v)$ in the
+four quadrants are $V_{ll}=(1, 1, -0.75, 0.5), V_{lr}=(1, 3, -0.75,-0.5),
+V_{ul}=(1,2,0.75,0.5), V_{ur}=(1,1,0.75,-0.5)$ where, $p$ is pressure,
+$\rho$ is the density of the polytropic gas, $u$ and $v$ are the $x$ and $y$
+component of velocity.
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
 \item [Input file name:] \hfill riemann2D\_AMR.ups
-\item [Command used to run input file:]\hfill mpirun -np 5 sus inputs/UintahRelease/ICE/riemann2D\_AMR.ups
+\item [Command used to run input file:]\hfill \\
+mpirun -np 5 sus inputs/UintahRelease/ICE/riemann2D\_AMR.ups
 \item [VisIT session file:]\hfill inputs/UintahRelease/ICE/riemann2D.session
 \item [Simulation Domain:]\hfill    0.96 x 0.96m x 0.1 m
 \item [Cell Spacing:]\hfill \\ 
@@ -513,124 +583,119 @@ Figure \ref{fig:riemann2D} shows a flood and line contour plot(s) of the density
   \end{figure}
 \newpage
 
-%__________________________________Single level blast wave
+%__________________________________
 
-\section*{\center BlastWave 2D}
+\section*{\center Explosion 2D}
 \subsection*{\underline{Problem Description}}
-The Sedov-Taylor blastwave problem is a standard compressible flow problem
-that has been used by many as a validation test case.  At time $t=0$ there
-is a small region of gas at the center of the domain at a relatively high
-temperature and pressure.  The expansion of high pressure gas forms a
-spherical blast wave that expands into surrounding atmosphere.
+For the multidimensional blast wave orexplosion test is a standard compressible
+flow problem that has been used by many as a validation test case.  At time
+$t=0$ there is a circular region of gas at the center of the domain at a
+relatively high pressure and density.  The expansion of high pressure gas
+forms a circular shock wave and contact surface that expands into surrounding
+atmosphere.  At the same time a circular rarefaction travels towards the
+origin.  As the shock wave and contact surface move outwards they become
+weaker and at some point the contact reverses direction and travels inward.
+The rarefraction reflects from the center and forms an overexpanded region,
+creating a shock that travels inward \cite{ref:toro}.  At time $t=0$ the
+computational domain is divided into two region, circular high pressure region
+with a radius $R=0.4$ and the surrounding box 2x2x0.1.  The initial condition
+inside of the circular region were $(p=1, \rho=1, u=0, v=0)$  and outside
+$(p=0.1, \rho=0.125, u=0, v=0).$  The fluid was an ideal, inviscid, polytropic gas.
+%
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill blastWave.ups
-\item [Command used to run input file:]\hfill sus blastWave.ups
-\item [Visualization net file:]\hfill blastWave\_1L.srn\\
+\item [Input file name:] \hfill Explosion.ups
+\item [Command used to run input file:]\hfill \\
+      mpirun -np 4 sus inputs/UintahRelease/ICE/Explosion.ups
+\item [Visualization net file:]\hfill inputs/UintahRelease/ICE/Explosion.session\\
+\item [Postprocessing command:]\hfill \\
+inputs/ICE/Scripts/plot\_explosion\_AMR Explosion\_AMR.uda y\\
+This will generate a postscript file explosion\_AMR.ps
 
 
-\item [Simulation Domain:]\hfill    1 x 1 x .05 m
+\item [Simulation Domain:]\hfill    2 x 2 x .1
 \item [Cell Spacing:]\hfill \\ 
-5 x 5 x 50 mm (Level 0)
-
+62.5    x 62.5    x 10 (Level 0)\\
+15.625  x 15.625  x 10 (Level 1)\\
+3.9     x 3.9     x 10 (Level 2)
 
 \item [Example Runtimes:] \hfill \\
- 9ish minutes   (1 processor, 2.66 GHz Xeon)
+ 20 minutes   (4 processor, 2.66 GHz Xeon)
 
-\item [Physical time simulated:] \hfill 0.9e-3sec.
+\item [Physical time simulated:] \hfill 0.25 (non-dimensional).
 
 \end{description}
 
 \section*{\underline{Results}}
-Figure \ref{results.BW} shows a comparison of the exact versus simulated
-results at time $t = 5msec$.
-
+Figures \ref{fig:pressExplode,fig:rhoExplode} shows surface plots of the pressure and density at $t=0.25.$  
+\newpage
 \begin{figure}
-  \includegraphics[scale=.5]{blastWave.png}
-  \caption{Pressure field at time $t = 0.74msec$}
-  \label{results.BW}
-  \end{figure}
+  \includegraphics[scale=.5]{explode_press.png}
+  \caption{Pressure field at $t=0.25$}
+  \label{fig:pressExplode}
+\end{figure}
+%
+\newpage
+\begin{figure}
+  \includegraphics[scale=.5]{explode_rho.png}
+  \caption{Density field at time $t=0.25$}
+  \label{fig:rhoExplode}
+\end{figure}
 \newpage
 
-%__________________________________AMR blast wave
+Since this test is symetrical we can use results from the equivalent 1 dimensional problem to compare against
 
-\section*{\center BlastWave AMR}
-\subsection*{\underline{Simulation Specifics}}
-\begin{description} 
-\item [Component used:] \hfill ICE
-\item [Input file name:] \hfill blastWave.ups
-\item [Command used to run input file:]\hfill sus blastWave\_AMR.ups
-\item [Visualization net file:]\hfill blastWave\_1L.srn\\
-
-
-\item [Simulation Domain:]\hfill    1 x 1 x .05 m
-\item [Cell Spacing:]\hfill \\ 
-20 x 20 x 50 mm (Level 0) 
-5 x 5 x 50 mm (Level 1)
-
-
-\item [Example Runtimes:] \hfill \\
- 9ish minutes   (1 processor, 2.66 GHz Xeon)
-
-\item [Physical time simulated:] \hfill 0.9e-3sec.
-
-\end{description}
-
-\section*{\underline{Results}}
-Figure \ref{results.BW.AMR} shows the pressure field and an outline of the
-individual patches on levels 0 \& 1.  This simulation shows the adaptive
-mesh capabilities of ICE and the UCF.
 \begin{figure}
-  \includegraphics[scale=.5]{blastWave_AMR.png}
-  \caption{Pressure field at time $t = 0.74msec$.  The individual patches on levels 0 \& 1 are shown.}
-  \label{results.BW.AMR}
-  \end{figure}
-Good agreement between the single level results (Fig. \ref{results.BW}) and the AMR results (Fig.
-\ref{results.BW.AMR}) is shown.
+  \includegraphics[scale=.75]{explode_1D.png}
+  \caption{XXX$t=0.25$}
+  \label{fig:1dExplode}
+\end{figure}
+
 \newpage
+
 
 %__________________________________CH4 fire
 
-\section*{\center Methane Flame}
-\subsection*{\underline{Problem Description}}
-At $t=0$ Methane gas begin flowing from a $1m$ hole in the floor of the
-computational domain at a velocity of $1m/s$.  The methane mixes with the
-surrounding air, ignites and forms a puffing fire.  The main assumptions in
-this simulation are a) that the chemical reactions are taking place infinitely
-fast (equilibrium chemistry model) and b) that there is no radiative heat
-loss from the product gases.
-\subsection*{\underline{Simulation Specifics}}
-\begin{description} 
-\item [Component used:] \hfill ICE
-\item [Input file name:] \hfill CH4\_fire.ups
-\item [Command used to run input file:]\hfill sus CH4\_fire.ups \\
-Note you must have a link to the {\tt inputs} directory in the save directory as sus.  A table needed
-by the combustion model is inside the {\tt inputs} directory.
-\item [SCIRun visualization net file:]\hfill 3DFire\_Vol.srn \\
-
-
-\item [Simulation Domain:]\hfill    5 x 5 x 5 m
-\item [Cell Spacing:]\hfill \\ 
-3.3 x 3.3 x 3.3 cm (Level 0)
-
-
-\item [Example Runtimes:] \hfill \\
- 8 hours   (64 processor, 2.66 GHz Xeon)
-
-\item [Physical time simulated:] \hfill 3.4sec.
-
-\end{description}
-
-\section*{\underline{Results}}
-Figure \ref{results.CH4} shows a 3D view of the initial puff just before it leaves the computational
-doman.  
-\begin{figure}
-\includegraphics[scale=.66]{3DFire.png}
-\caption{Temperature field at time $t = 1.5 sec$}
-\label{results.CH4}
-\end{figure}
-\newpage
+%\section*{\center Methane Flame}
+%\subsection*{\underline{Problem Description}}
+%At $t=0$ Methane gas begin flowing from a $1m$ hole in the floor of the
+%computational domain at a velocity of $1m/s$.  The methane mixes with the
+%surrounding air, ignites and forms a puffing fire.  The main assumptions in
+%this simulation are a) that the chemical reactions are taking place infinitely
+%fast (equilibrium chemistry model) and b) that there is no radiative heat
+%loss from the product gases.
+%\subsection*{\underline{Simulation Specifics}}
+%\begin{description} 
+%\item [Component used:] \hfill ICE
+%\item [Input file name:] \hfill CH4\_fire.ups
+%\item [Command used to run input file:]\hfill sus CH4\_fire.ups \\
+%Note you must have a link to the {\tt inputs} directory in the save directory as sus.  A table needed
+%by the combustion model is inside the {\tt inputs} directory.
+%\item [SCIRun visualization net file:]\hfill 3DFire\_Vol.srn \\
+%
+%
+%\item [Simulation Domain:]\hfill    5 x 5 x 5 m
+%\item [Cell Spacing:]\hfill \\ 
+%3.3 x 3.3 x 3.3 cm (Level 0)
+%
+%
+%\item [Example Runtimes:] \hfill \\
+% 8 hours   (64 processor, 2.66 GHz Xeon)
+%
+%\item [Physical time simulated:] \hfill 3.4sec.
+%
+%\end{description}
+%
+%\section*{\underline{Results}}
+%Figure \ref{results.CH4} shows a 3D view of the initial puff just before it leaves the computational
+%doman.  
+%\begin{figure}
+%\includegraphics[scale=.66]{3DFire.png}
+%\caption{Temperature field at time $t = 1.5 sec$}
+%\label{results.CH4}
+%\end{figure}
+%\newpage
 
 
 \subsection{References}
