@@ -1325,6 +1325,21 @@ It is also possible to save grid based data with this module,
 see Section~\ref{Sec:ICE} for more information.
 
 \subsection{Examples} \label{Sec:ExamplesMPM}
+
+The following examples are meant to be illustrative of a variety of
+capabilities of Uintah-MPM, but are by no means exhaustive.  Input files
+for the examples given here can be found in:
+\begin{Verbatim}[fontsize=\footnotesize]
+inputs/UintahRelease/MPM
+\end{Verbatim}
+
+Additional (mostly undocumented) input files that exercise a greater range
+of code capabilities can be found in:
+\begin{Verbatim}[fontsize=\footnotesize]
+inputs/MPM
+\end{Verbatim}
+
+
 \section*{\center Colliding Disks}
 \subsection*{\underline{Problem Description}}
 This is an implementation of an example calculation from \cite{sulskycmame} in
@@ -1342,11 +1357,11 @@ manuscript for a description of the problem.
 .05 x .05 x .05 m (Level 0)
 
 \item [Example Runtimes:] \hfill \\
- 1 minute   (1 processor, 3.0 GHz Xeon)\\
+ 4 seconds  (1 processor, 3.16 GHz Xeon)\\
 
 \item [Physical time simulated:] \hfill 3.0 seconds
 
-\item [Associate scirun network:] \hfill disks.srn
+\item [Associate VisIt session:] \hfill disks.session
 
 \end{description}
 
@@ -1354,13 +1369,13 @@ manuscript for a description of the problem.
 
 Figure~\ref{figdisks} shows a snapshot of the simulation, as the disks
 are beginning to collide.
-%\begin{figure}[b]
-%  \center
-%%  \scalebox{0.2}{\includegraphics{disks.png}}
-%  \caption{Colliding elastic disks.  Particles colored according to
-%equivalent stress, grid according to nodal mass.}
-%  \label{figdisks}
-%\end{figure}
+\begin{figure}[p]
+  \center
+  \scalebox{0.2}{\includegraphics{disks.png}}
+  \caption{Colliding elastic disks.  Particles colored according to
+velocity magnitude.}
+  \label{figdisks}
+\end{figure}
 
 Additional data is available within the uda in the form of "dat" files.
 In this case, both the kinetic and strain energies are avaiable and can
@@ -1424,7 +1439,9 @@ the horizontal.  This simulation demonstrates the effectiveness of
 the contact algorithm, described in~\cite{bard01}.  Frictional
 contact, using a friction coefficient of $\mu = 0.495$ causes the ball
 to start rolling as it impacts the plane, after being dropped from
-barely above it.
+barely above it.  The same simulation is also run using a friction
+coefficient of $\mu = 0.0$.  The difference in the results is shown
+below.
  
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
@@ -1437,28 +1454,43 @@ barely above it.
 .2 x .2 x .2 m (Level 0)
 
 \item [Example Runtimes:] \hfill \\
- 9 minutes  (1 processor, 3.0 GHz Xeon)\\
+ 2.7 hours  (1 core, 3.16 GHz Xeon)\\
 
 \item [Physical time simulated:] \hfill 2.2 seconds
 
-\item [Associate scirun network:] \hfill inclinedPlaneSphere.srn
+\item [Associate VisIt session:] \hfill incplane.session
 
 \end{description}
 
 \section*{\underline{Results}}
 
-Figure~\ref{figincplaneSphere} shows a snapshot of the simulation, as
-the sphere is about halfway down the plane.  Particles are colored according
-to velocity magnitude, note that the particles at the top of the sphere
-are moving most rapidly, and those near the surface of the plane are 
-basically stationary, as expected.
-\begin{figure}[b]
+Figure~\ref{figincplaneSphere_bigmu} and Figure~\ref{figincplaneSphere_0mu}
+show snapshots of the simulation, as
+the sphere is about halfway down the plane.
+\begin{figure}[p]
   \center
-%  \scalebox{0.2}{\includegraphics{inclinedPlaneSphere.png}}
+  \scalebox{0.2}{\includegraphics{incplane_mu_495.png}}
   \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
 is oriented at a 45 degree angle relative to the plane.  Particles are colored
-by velocity magnitude.}
-  \label{figincplaneSphere}
+by velocity magnitude. A friction coefficient of $\mu = 0.495$ is used.
+Particles are colored according
+to velocity magnitude, note that the particles at the top of the sphere
+are moving most rapidly, and those near the surface of the plane are 
+basically stationary, as expected.}
+  \label{figincplaneSphere_bigmu}
+\end{figure}
+
+\begin{figure}[p]
+  \center
+  \scalebox{0.2}{\includegraphics{incplane_mu_0.png}}
+  \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
+is oriented at a 45 degree angle relative to the plane.  Particles are colored
+by velocity magnitude.  A friction coefficient of $\mu = 0.0$ is used.
+Particles are colored according to velocity magnitude.  In this case,
+the particles throughout the sphere are moving at roughly the same velocity,
+because the sphere is sliding as it moves down the plane, as opposed to
+sticking and rolling.}
+  \label{figincplaneSphere_0mu}
 \end{figure}
 
 \section*{\center Crushing a Foam Microstructure}
@@ -1525,7 +1557,7 @@ where NP is the number of processors being used.
 
 \item [Physical time simulated:] \hfill 3.75 seconds
 
-\item [Associated visit session:] \hfill foam.iso.session
+\item [Associated VisIt session:] \hfill foam.iso.session
 
 \end{description}
 
@@ -1533,7 +1565,7 @@ where NP is the number of processors being used.
 
 Figure~\ref{figfoam} shows a snapshot of the simulation, as the foam
 is at 50\% compaction.
-\begin{figure}[t]
+\begin{figure}[p]
   \center
   \scalebox{0.2}{\includegraphics{foam_iso.png}}
   \caption{Compaction of a foam microstructure.}
