@@ -12,7 +12,7 @@
        <initTime>0.0</initTime>
        <delt_min>0.00004</delt_min>
        <delt_max>0.004</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -22,7 +22,7 @@
        <save label = "TotalMass"/>
        <save label = "StrainEnergy"/>
        <save label = "CenterOfMassPosition"/>
-       <save label = "CenterOfMassVelocity"/>
+       <save label = "TotalMomentum"/>
        <save label = "p.x"/>
        <save label = "p.volume"/>
        <save label = "p.velocity"/>
@@ -129,9 +129,9 @@
       </BoundaryConditions>
       <Level>
         <Box label="1">
-          <lower>  [0, 0.0,-.8] </lower>
+          <lower>  [0, 0.0,-.4] </lower>
           <upper>  [12,2.0,4.0] </upper>
-          <resolution>[60,10,24]</resolution>
+          <resolution>[120,20,44]</resolution>
           <extraCells>[1,1,1]   </extraCells>
           <patches>   [1,1,1]   </patches>
         </Box>
