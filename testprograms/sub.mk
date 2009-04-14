@@ -41,6 +41,7 @@ SUBDIRS := $(SRCDIR)/Malloc $(SRCDIR)/Thread \
         $(SRCDIR)/BNRRegridder            \
 	$(SRCDIR)/IteratorTest            \
 	$(SRCDIR)/RegionTest            \
+	$(SRCDIR)/CubeRootTest            \
 	$(SRCDIR)/PatchBVH
 
 #       $(SRCDIR)/SFCTest \
