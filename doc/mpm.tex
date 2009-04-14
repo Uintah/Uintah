@@ -833,36 +833,37 @@ input files.
 
 \begin{Verbatim}[fontsize=\footnotesize]
     <MPM>
-      <accumulate_strain_energy           spec="OPTIONAL BOOLEAN" />
+<!-- These are commonly used options -->
       <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
       <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
       <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
-      <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
-      <create_new_particles               spec="OPTIONAL BOOLEAN" />
-      <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
-      <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
+      <boundary_traction_faces            spec="OPTIONAL STRING" />
       <DoExplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
-      <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />
       <erosion                            spec="OPTIONAL NO_DATA"
             attribute1="algorithm REQUIRED STRING 'none, KeepStress, ZeroStress, RemoveMass'" />
-      <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />
-      <manual_new_material                spec="OPTIONAL BOOLEAN" />
-      <boundary_traction_faces            spec="OPTIONAL STRING" />
-      <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />
-      <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" />
       <interpolator                       spec="OPTIONAL STRING 'linear, gimp, 3rdorderBS, 4thorderBS'" />
       <minimum_particle_mass              spec="OPTIONAL DOUBLE 'positive'"/>
       <minimum_mass_for_acc               spec="OPTIONAL DOUBLE 'positive'"/>
       <maximum_particle_velocity          spec="OPTIONAL DOUBLE 'positive'"/>
-      <temperature_solve                  spec="OPTIONAL BOOLEAN" />
       <testForNegTemps_mpm                spec="OPTIONAL BOOLEAN" />
-      <turn_on_adiabatic_heating          spec="OPTIONAL BOOLEAN" />
+      <time_integrator                    spec="OPTIONAL STRING 'explicit, fracture, implicit'" />
       <use_load_curves                    spec="OPTIONAL BOOLEAN" />
-
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" />
       <withColor                          spec="OPTIONAL BOOLEAN" />
+
+<!-- These are not commonly used options -->
+      <accumulate_strain_energy           spec="OPTIONAL BOOLEAN" />
+      <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
+      <create_new_particles               spec="OPTIONAL BOOLEAN" />
+      <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />
+      <do_grid_reset                      spec="OPTIONAL BOOLEAN" />
+      <DoThermalExpansion                 spec="OPTIONAL BOOLEAN" />
+      <ForceBC_force_increment_factor     spec="OPTIONAL DOUBLE" />
+      <manual_new_material                spec="OPTIONAL BOOLEAN" />
+      <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />
+      <temperature_solve                  spec="OPTIONAL BOOLEAN" />
 
       <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
@@ -1324,6 +1325,241 @@ It is also possible to save grid based data with this module,
 see Section~\ref{Sec:ICE} for more information.
 
 \subsection{Examples} \label{Sec:ExamplesMPM}
+\section*{\center Colliding Disks}
+\subsection*{\underline{Problem Description}}
+This is an implementation of an example calculation from \cite{sulskycmame} in
+which two elastic disks collide and rebound.  See Section 7.3 of that
+manuscript for a description of the problem.
+ 
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill disks\_sulsky.ups
+\item [Command used to run input file:]\hfill sus disks\_sulsky.ups
+\item [Simulation Domain:]\hfill    1.0 x 1.0 x 0.05 m
+
+\item [Cell Spacing:]\hfill \\ 
+.05 x .05 x .05 m (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 1 minute   (1 processor, 3.0 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 3.0 seconds
+
+\item [Associate scirun network:] \hfill disks.srn
+
+\end{description}
+
+\section*{\underline{Results}}
+
+Figure~\ref{figdisks} shows a snapshot of the simulation, as the disks
+are beginning to collide.
+%\begin{figure}[b]
+%  \center
+%%  \scalebox{0.2}{\includegraphics{disks.png}}
+%  \caption{Colliding elastic disks.  Particles colored according to
+%equivalent stress, grid according to nodal mass.}
+%  \label{figdisks}
+%\end{figure}
+
+Additional data is available within the uda in the form of "dat" files.
+In this case, both the kinetic and strain energies are avaiable and can
+be plotted to create a graph similar to that in Fig. 5a of \cite{sulskycmame}.
+e.g. using gnuplot:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+cd disks.uda.000
+gnuplot
+gnuplot> plot "StrainEnergy.dat", "KineticEnergy.dat"
+gnuplot> quit
+\end{Verbatim}
+
+\section*{\center Taylor Impact Test}
+\subsection*{\underline{Problem Description}}
+This is a simulation of an Taylor impact experiment calculation from 
+\cite{Gust82} in a copper cylinder at 718 K that is fired at a
+rigid anvil at 188 m/s.  The copper cylinder has a length of 30 mm and
+a diameter of 6 mm.  The cylinder rebounds from the anvil after 100 $\mu$s.
+ 
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill taylorImpact.ups
+\item [Command used to run input file:]\hfill sus taylorImpact.ups
+\item [Simulation Domain:]\hfill 8 mm x 33 mm x 8 mm
+
+\item [Cell Spacing:]\hfill \\ 
+  1/3 mm x 1/3 mm x 1/3 mm (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 1 hour 20 min.   (1 processor, AMD Opteron 2.2 GHz)\\
+
+\item [Physical time simulated:] \hfill 100 $\mu$seconds
+
+\item [Associate scirun network:] \hfill taylorImpact.srn
+
+\end{description}
+
+\section*{\underline{Results}}
+
+Figure~\ref{fig:taylorImpact} shows a snapshot of the simulation after the
+cylinder begins to rebound.
+%\begin{figure}[b]
+%  \center
+%%  \scalebox{0.2}{\includegraphics{taylorImpact.png}}
+%  \caption{Taylor impact simulation.  Particles colored according to
+%           temperature.}
+%  \label{fig:taylorImpact}
+%\end{figure}
+
+Additional data are available within the uda in the form of "dat" files.
+
+
+\section*{\center Sphere Rolling Down an Inclined Plane}
+\subsection*{\underline{Problem Description}}
+Here, a sphere of soft plastic, initially at rest, rolls under the
+influence of gravity down a plane of a harder plastic.  Gravity is
+oriented such that the plane is effectively angled at 45 degrees to
+the horizontal.  This simulation demonstrates the effectiveness of
+the contact algorithm, described in~\cite{bard01}.  Frictional
+contact, using a friction coefficient of $\mu = 0.495$ causes the ball
+to start rolling as it impacts the plane, after being dropped from
+barely above it.
+ 
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill inclinedPlaneSphere.ups
+\item [Command used to run input file:]\hfill sus inclinedPlaneSphere.ups
+\item [Simulation Domain:]\hfill    12.0 x 2.0 x 4.8 m
+
+\item [Cell Spacing:]\hfill \\ 
+.2 x .2 x .2 m (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 9 minutes  (1 processor, 3.0 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 2.2 seconds
+
+\item [Associate scirun network:] \hfill inclinedPlaneSphere.srn
+
+\end{description}
+
+\section*{\underline{Results}}
+
+Figure~\ref{figincplaneSphere} shows a snapshot of the simulation, as
+the sphere is about halfway down the plane.  Particles are colored according
+to velocity magnitude, note that the particles at the top of the sphere
+are moving most rapidly, and those near the surface of the plane are 
+basically stationary, as expected.
+\begin{figure}[b]
+  \center
+%  \scalebox{0.2}{\includegraphics{inclinedPlaneSphere.png}}
+  \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
+is oriented at a 45 degree angle relative to the plane.  Particles are colored
+by velocity magnitude.}
+  \label{figincplaneSphere}
+\end{figure}
+
+\section*{\center Crushing a Foam Microstructure}
+\subsection*{\underline{Problem Description}}
+This calculation demonstrates two important strength of MPM.  The first
+is the ability to quickly generate a computational representation of
+complex geometries.  The second is the ability of the method to handle
+large deformations, including self contact.
+
+In particular, in this calculation a small sample of foam, the geometry
+for which was collected using microCT, is represented via material points.
+The sample is crushed to 87.5\% compaction through the use of a rigid plate, which
+acts as a constant velocity boundary condition on the top of the sample.  This
+calculation is a small example of those described in \cite{brydonfoam}.  The
+geometry of the foam is created by image procesing the CT data, and based
+on the intensity of each voxel in the image data, the space represented
+by that voxel either recieves a particle with the material properties of the
+foam's constituent material, or is left as void space.  This particle
+representation avoids the time consuming steps required to build a suitable
+unstructured mesh for this very complicated geometry.
+ 
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill foam.ups
+\item [Instruction to run input file:]
+
+First, copy foam.ups and foam.pts.gz to the same directory as sus.
+Adjust the number of patches in the ups file based on
+the number of processors available to you for this run.
+First, uncompress the pts file:
+\begin{Verbatim}[fontsize=\footnotesize]
+ gunzip foam.pts.gz
+\end{Verbatim}
+
+Then the command:
+\begin{Verbatim}[fontsize=\footnotesize]
+ tools/pfs/pfs foam.pts
+\end{Verbatim}
+will divide the foam.pts
+file, which contains the geometric description of the foam,
+into number of patches smaller files, named foam.pts.0,
+foam.pts.1, etc.  This is done so that for large simulations,
+each processor is only reading that data which it needs, and
+prevents the thrashing of the file system that would occur
+if each processor needed to read the entire pts file.  This
+command only needs to be done once, or anytime the patch
+distibution is changed.  Note that this step must be done even
+if only one processor is available.
+
+To run this simulation:
+\begin{Verbatim}[fontsize=\footnotesize]
+  mpirun -np NP sus foam.ups
+\end{Verbatim}
+where NP is the number of processors being used.
+
+\item [Simulation Domain:]\hfill  0.2 X 0.2 X 0.2125 mm
+
+\item [Number of Computational Cells:]\hfill \\ 
+102 X 102 X 85 (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 3 hours  (32 processors, 2.4 GHz Xeon)\\
+ 11 hours (2 processors,  3.0 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 3.75 seconds
+
+\item [Associate scirun network:] \hfill foam.srn
+
+\end{description}
+
+\section*{\underline{Results}}
+
+Figure~\ref{figfoam} shows a snapshot of the simulation, as the foam
+is at 50\% compaction.
+\begin{figure}[b]
+  \center
+%  \scalebox{0.2}{\includegraphics{foam.png}}
+  \caption{Compaction of a foam microstructure.}
+  \label{figdisks}
+\end{figure}
+
+In this simulation, the reaction forces at 5 of the 6 computational boundaries
+are also recorded and can be viewed using a simple plotting package such
+as gnuplot.  At each timestep, the internal force at each of the boundaries
+is accumulated and stored in ``dat" files within the uda,
+e.g. BndyForce\_zminus.dat.  Because the reaction force is a vector, it
+is enclosed in square brackets which may be removed by use of a script in
+the inputs directory:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+cd foam.uda.000
+../inputs/ICE/Scripts/removeBraces BndyForce\_zminus.dat
+gnuplot
+gnuplot> plot "BndyForce\_zminus.dat" using 1:4
+gnuplot> quit
+\end{Verbatim}
+
+These reaction forces are similar to what would be measured on a mechanical
+testing device, and help to understand the material behavior.
+
 
 \subsection{References}
 \bibliographystyle{plain}
