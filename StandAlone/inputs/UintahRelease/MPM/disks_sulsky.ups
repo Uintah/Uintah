@@ -11,8 +11,8 @@
        <maxTime>3.0</maxTime>
        <initTime>0.0</initTime>
        <delt_min>0.0001</delt_min>
-       <delt_max>0.001</delt_max>
-       <timestep_multiplier>0.8</timestep_multiplier>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.2</timestep_multiplier>
    </Time>
 
     <Grid>
@@ -48,7 +48,8 @@
            <Box label = "1">
               <lower>[0,0,0]</lower>
               <upper>[1.0,1.0,.05]</upper>
-               <resolution>[20,20,1]</resolution>
+              <resolution>[20,20,1]</resolution>
+              <extraCells>[0,0,0]</extraCells>
               <patches>[1,1,1]</patches>
            </Box>
        </Level>
@@ -61,7 +62,7 @@
        <save label = "TotalMass"/>
        <save label = "StrainEnergy"/>
        <save label = "CenterOfMassPosition"/>
-       <save label = "CenterOfMassVelocity"/>
+       <save label = "TotalMomentum"/>
        <save label = "p.x"/>
        <save label = "p.volume"/>
        <save label = "p.velocity"/>
@@ -73,6 +74,7 @@
 
     <MPM>
        <time_integrator>explicit</time_integrator>
+       <interpolator>linear</interpolator>
     </MPM>
 
     <PhysicalConstants>
@@ -121,5 +123,4 @@
 
     </MaterialProperties>
        
-    
 </Uintah_specification>
