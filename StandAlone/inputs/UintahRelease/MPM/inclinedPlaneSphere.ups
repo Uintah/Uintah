@@ -91,6 +91,9 @@
              <type>friction</type>
              <materials>[0,1]</materials>
              <mu> .495 </mu>
+<!--
+             <mu> .0 </mu>
+-->
            </contact>
        </MPM>
 
