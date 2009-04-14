@@ -823,8 +823,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 //        cout << "tensorS=" << tensorS << "\n";
 
       // Calculate the temperature at the start of the time step
-      double temperature = flag->d_adiabaticHeating*pTemperature[idx] + 
-        (1.0-flag->d_adiabaticHeating)*pPlasticTemperature[idx];
+      double temperature = pTemperature[idx];
 
 //       // Calculate the equivalent plastic strain and strain rate
 //       double epdot = sqrt(tensorEta.NormSquared()/1.5);
