@@ -70,8 +70,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_erosionAlgorithm = "none";
   d_doThermalExpansion = true;
 
-  d_adiabaticHeatingOn = false;
-  d_adiabaticHeating = 1.0;
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
   d_canAddMPMMaterial = false;
@@ -148,8 +146,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     }
   }
 
-  mpm_flag_ps->get("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
-  if (d_adiabaticHeatingOn) d_adiabaticHeating = 0.0;
   mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   mpm_flag_ps->get("create_new_particles", d_createNewParticles);
   mpm_flag_ps->get("manual_new_material", d_addNewMaterial);
@@ -252,7 +248,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
     dbg << " Artificial Viscosity Coeff1 = " << d_artificialViscCoeff1<< endl;
     dbg << " Artificial Viscosity Coeff2 = " << d_artificialViscCoeff2<< endl;
     dbg << " Accumulate Strain Energy    = " << d_accStrainEnergy << endl;
-    dbg << " Adiabatic Heating On        = " << d_adiabaticHeating << endl;
     dbg << " Create New Particles        = " << d_createNewParticles << endl;
     dbg << " Add New Material            = " << d_addNewMaterial << endl;
     dbg << " Do Erosion ?                = " << d_doErosion << endl;
@@ -282,7 +277,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("artificial_viscosity_coeff2", d_artificialViscCoeff2);
   ps->appendElement("accumulate_strain_energy", d_accStrainEnergy);
   ps->appendElement("use_load_curves", d_useLoadCurves);
-  ps->appendElement("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
   ps->appendElement("ForceBC_force_increment_factor", d_forceIncrementFactor);
   ps->appendElement("create_new_particles", d_createNewParticles);
   ps->appendElement("manual_new_material", d_addNewMaterial);

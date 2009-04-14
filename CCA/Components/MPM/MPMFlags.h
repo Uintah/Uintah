@@ -86,8 +86,6 @@ namespace Uintah {
     
     std::string d_erosionAlgorithm; // Algorithm to erode material points
 
-    bool        d_adiabaticHeatingOn;
-    double      d_adiabaticHeating; // Flag adiabatic plastic heating on/off
     double      d_artificialDampCoeff;
     double      d_artificialViscCoeff1; // Artificial viscosity coefficient 1
     double      d_artificialViscCoeff2; // Artificial viscosity coefficient 2
