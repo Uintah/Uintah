@@ -158,13 +158,13 @@ getPeriodicBoundaries(const string& input_uda_name, int timeStepNo, int levelNo)
 
   GridP grid = archive->queryGrid(timeStepNo);
   int numLevels = grid->numLevels();
-  
+
   LevelP level;
-  
+
   if (levelNo < numLevels) {
     level = grid->getLevel(levelNo);
     IntVector a = level->getPeriodicBoundaries();
-    
+
     boundaryExists[0] = a.x();   
     boundaryExists[1] = a.y();   
     boundaryExists[2] = a.z();   
@@ -190,13 +190,13 @@ getExtraCells(const string& input_uda_name, int timeStepNo, int levelNo) {
 
   GridP grid = archive->queryGrid(timeStepNo);
   int numLevels = grid->numLevels();
-  
+
   LevelP level;
-  
+
   if (levelNo < numLevels) {
     level = grid->getLevel(levelNo);
     IntVector a = level->getExtraCells();
-    
+
     extraCells[0] = a.x();   
     extraCells[1] = a.y();   
     extraCells[2] = a.z();   
@@ -473,9 +473,21 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
       LevelP level;
       for (int i = 0; i < numLevels; i++) {
 	level = grid->getLevel(i);
-	  
+
 	if(remove_boundary) {
-	   level->findInteriorIndexRange(low, hi);
+	  level->findInteriorIndexRange(low, hi);
+	  if(varType.find("NC") != string::npos) {
+	    /*IntVector a = level->getPeriodicBoundaries();
+	    if (a.x() == 1) {
+	      hi = IntVector(hi.x() + 1, hi.y(), hi.z());
+	    }
+	    if (a.y() == 1) {
+	      hi = IntVector(hi.x(), hi.y() + 1, hi.z());
+	    }
+	    if (a.z() == 1) {
+	      hi = IntVector(hi.x(), hi.y(), hi.z() + 1);
+	    }*/
+	  }
 	} 
 	else {
 	  level->findIndexRange(low, hi);
@@ -499,18 +511,18 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	      else if(varType.find("SFCZ") != string::npos)
 		patch_hi = patch->getHighIndex(Patch::ZFaceBased);
 	      else if(varType.find("NC") != string::npos) {
-	        patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) + IntVector(1, 1, 1);
-		if (patch_hi.x() < hi.x()) {
+		patch_hi = patch_lo + (patch->getCellHighIndex__New() - patch->getCellLowIndex__New()) + IntVector(1, 1, 1);
+		if (!(patch_hi.x() == hi.x())) {
 		  patch_hi = IntVector(patch_hi.x() - 1, patch_hi.y(), patch_hi.z());
 		}  
-		if (patch_hi.y() < hi.y()) {
+		if (!(patch_hi.y() == hi.y())) {
 		  patch_hi = IntVector(patch_hi.x(), patch_hi.y() - 1, patch_hi.z());
 		}  
-		if (patch_hi.z() < hi.z()) {
+		if (!(patch_hi.z() == hi.z())) {
 		  patch_hi = IntVector(patch_hi.x(), patch_hi.y(), patch_hi.z() - 1);
 		}  
 		// patch_hi = patch->getNodeHighIndex__New();
-              }
+	      }
 	    }
 	  }
 	  else { // don't remove the boundary
@@ -533,10 +545,10 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	  /*if(remove_boundary) {
 	    level->findInteriorIndexRange(low, hi);
-	  } 
-	  else {
+	    } 
+	    else {
 	    level->findIndexRange(low, hi);
-	  }*/	
+	    }*/	
 
 	  // Moved above
 	  // level->findIndexRange(low, hi);
@@ -551,7 +563,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	  /*if ((j == 0) || (j == 1)) { 
 	    cout << indexArr[0] << " " << indexArr[1] << " " << indexArr[2] << endl;
 	    cout << indexArr[3] << " " << indexArr[4] << " " << indexArr[5] << endl;
-	  }*/
+	    }*/
 
 	  hiLoArr[0] = low.x();
 	  hiLoArr[1] = low.y();
