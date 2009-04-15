@@ -26,7 +26,6 @@
   <DataArchiver>
     <filebase>foam.uda</filebase>
     <outputInterval>.05</outputInterval>
-    <compression>gzip</compression>
     <save label = "p.x"/>
     <save label = "p.mass"/>
     <save label = "p.velocity"/>
