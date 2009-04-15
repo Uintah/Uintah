@@ -89,6 +89,10 @@ bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
           string warn="ERROR:\n Inputs:LODI Boundary Conditions: the pressure material index must = 0";
           throw ProblemSetupException(warn, __FILE__, __LINE__);
         } 
+        if (bc_type["id"] == "all"){
+          string warn="ERROR:\n Inputs:LODI Boundary Conditions: You've specified the 'id' = all \n The 'id' must be the ice material.";
+          throw ProblemSetupException(warn, __FILE__, __LINE__);  
+        }
         if (bc_type["label"] != "Pressure"){
           matl_index.push_back(atoi(bc_type["id"].c_str()));
         }
@@ -214,7 +218,8 @@ void addRequires_Lodi(Task* t,
   if(where == "CC_Exchange"){
     setLODI_bcs = true;
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
-    t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn);      
+    t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn);    
+    t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn);
     t->requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
     
     t->computes(lb->vel_CC_XchangeLabel);
@@ -265,7 +270,8 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
   Ghost::GhostType  gn  = Ghost::None;
 /*`==========TESTING==========*/
-  int indx = var_basket->iceMatl_indx;    
+  Material* matl = sharedState->getICEMaterial(var_basket->iceMatl_indx);
+  int indx = matl->getDWIndex();  
 /*===========TESTING==========`*/
 
   //__________________________________
