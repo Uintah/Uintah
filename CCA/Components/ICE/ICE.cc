@@ -413,7 +413,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     if (var_attr["label"] == "TotalMass"){
       d_conservationTest->onOff    = true;
     }
-    if (var_attr["label"] == "CenterOfMassVelocity"){
+    if (var_attr["label"] == "TotalMomentum"){
       d_conservationTest->momentum = true;
       d_conservationTest->onOff    = true;
     }
