@@ -115,7 +115,7 @@ void findFactorsNearRoot(const int value, int &factor1, int &factor2) {
 //as a sentinal to signal that no guess was provided.
 double cubeRoot(double a, double guess)
 {
-  static const double small_num=1e-8;
+  static const double small_num=1e-15;
   static const int MAX_ITS=30;
 
   double xold;
