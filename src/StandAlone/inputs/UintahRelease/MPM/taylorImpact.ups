@@ -28,7 +28,6 @@
     <!--
     <outputTimestepInterval>100</outputTimestepInterval>
     -->
-    <compression>gzip</compression>
     <outputDoubleAsFloat/>
     <save label = "KineticEnergy"/>
     <save label = "AccStrainEnergy"/>
