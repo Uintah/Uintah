@@ -90,8 +90,8 @@ endif
 %  extract initial conditions and grid information from the uda file
 c0 = sprintf('puda -gridstats %s >& tmp',uda); unix(c0);
 
-[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp | tr -d "[:alpha:]:[],"');
-[s,r2] = unix('grep -m1 -w "Domain Length" tmp         | tr -d "[:alpha:]:[],"');
+[s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
+[s,r2] = unix('grep -m1 -w "Domain Length" tmp         |cut -d":" -f2 | tr -d "[]"');
 
 resolution   = str2num(r1);
 domainLength = str2num(r2);
