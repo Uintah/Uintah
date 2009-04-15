@@ -381,7 +381,7 @@ void rayfromSurf(SurfaceType &obSurface,
       "; rayNo = " << rayCounter << endl;
     */
     
-   } while(rayCounter < 800); // rayCounter loop
+   } while(rayCounter < 1500); // rayCounter loop
     // } while( sumSDave >= 0.03 || rayCounter <= 5);
 
   /*
@@ -523,9 +523,9 @@ int main(int argc, char *argv[]){
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
-  Lx = 1;
-  Ly = 1;
-  Lz = 1;
+  Lx = 4;
+  Ly = 2;
+  Lz = 2;
 
   if ( ratioBCx == 1 )
     dxconst = Lx/Ncx;
@@ -1734,7 +1734,7 @@ int main(int argc, char *argv[]){
 	       sumSDave = sqrt(sumSDave )/anotherSize;  
 	      */ 
 	      
-	   }while( rayCounter < 800 ); // rayCounter loop
+	   }while( rayCounter < 1500 ); // rayCounter loop
 	    
 	   //  }while(sumSDave >= 0.03 || rayCounter <= 5);
 	   
@@ -1844,7 +1844,7 @@ int main(int argc, char *argv[]){
   }
   
   
-    obTable.vtkSurfaceTableMake("vtkSurfaceLiu202040-ray800RR1e-4-11133all", Npx, Npy, Npz,
+    obTable.vtkSurfaceTableMake("vtkSurfaceLiu202040-ray1500RR1e-4-11133all", Npx, Npy, Npz,
    			      X, Y, Z, surfaceElementNo,
    			      global_qsurface, global_Qsurface);
 
@@ -1867,7 +1867,7 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolLiu202040-ray800RR1e-4-11133all",
+  obTable.vtkVolTableMake("vtkVolLiu202040-ray1500RR1e-4-11133all",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
