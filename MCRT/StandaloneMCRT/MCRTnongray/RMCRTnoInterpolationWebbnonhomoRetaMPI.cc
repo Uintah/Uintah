@@ -10,7 +10,7 @@ License for the specific language governing rights and limitations under
 Permission is hereby granted, free of charge, to any person obtaining a 
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+the rights to use, copy, modisfy, merge, publish, distribute, sublicense, 
 and/or sell copies of the Software, and to permit persons to whom the 
 Software is furnished to do so, subject to the following conditions:
 
@@ -139,8 +139,9 @@ void rayfromSurf(SurfaceType &obSurface,
 		 const double * const a_surface[],
 		 const double * const rs_surface[],
 		 const double * const rd_surface[],
-		 const double *IntenArray_Vol,
+		 double *IntenArray_Vol,
 		 const double * const IntenArray_surface[],
+		 const double * const IntenArray_IetacoldSurface[],
 		 const double *X, const double *Y, const double *Z,
 		 double *kl_Vol, const double *scatter_Vol,
 		 const int *VolFeature,
@@ -153,9 +154,13 @@ void rayfromSurf(SurfaceType &obSurface,
 		 double ***netInten_surface,
 		 double *s,
 		 BinarySearchTree &obBST,
-		 int *countg, const int &gSize, const int &VolElementNo,
-		 const double *Rkg, const double *gk,
-		 const double *kl, const double *g){
+		 const int &gSize, const int &VolElementNo,
+		 const double *Rkgcold, const double *gkcold,
+		 const double *klcold, const double *gcold, const double *Ibetacold,
+		 const double *gkhot,
+		 const int &xI, const int &xII, const double &C1, const double &C2,
+		 const int &Ncx, const int &Ncy, const int &Ncz,
+		 const double &Thot){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
   double PathLeft, PathSurfaceLeft, weight, traceProbability;
@@ -170,6 +175,11 @@ void rayfromSurf(SurfaceType &obSurface,
   double *IncomingIntenSur = new double[ thisRayNo ];
   
 	  // loop over ray numbers on each surface element
+
+  // because surface is by the cold section, so rays shoot out from surface,
+  // will get the wavenumber from the cold CDF.
+  // and using the same wavenumber in hot section to find its corresponding kl
+  
   for ( rayCounter = 0; rayCounter < thisRayNo; rayCounter++ ) {
 
     /*
@@ -187,10 +197,44 @@ void rayfromSurf(SurfaceType &obSurface,
 
 
     // set absorption coeff
-    for ( int ki = 0; ki < VolElementNo; ki++)
-      kl_Vol[ki] = kl[rayCounter];
+    // cold section
+  for ( int k = 0; k < Ncz; k ++ )
+    for ( int j = 0; j < Ncy; j ++) 
+      for ( int i = 0; i < xI; i ++ ){
+	IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = Ibetacold[rayCounter];	
+	kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klcold[rayCounter];
+      }
 
-	     
+
+  // hot section pre-processing
+  double IbetaVolhot;
+  IbetaVolhot = C1 * gcold[rayCounter] * gcold[rayCounter] * gcold[rayCounter] * 1e6 /
+      ( exp( C2*  gcold[rayCounter]  / Thot )- 1) / pi;
+
+  // find klhot using gcold wavenumber
+  // 2D gkhot --2, looking for wavenumber--0
+  obBST.search(gcold[rayCounter], gkhot, gSize, 2, 0);
+  obBST.calculate_k(gkhot, gcold[rayCounter]);
+  double klVolhot;
+  klVolhot = obBST.get_k() * 100;
+     
+  // hot section
+  for ( int k = 0; k < Ncz; k ++ )
+    for ( int j = 0; j < Ncy; j ++) 
+      for ( int i = xI; i < xII; i ++ ){
+	IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = IbetaVolhot;
+	kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klVolhot;
+      }
+
+
+  for ( int k = 0; k < Ncz; k ++ )
+    for ( int j = 0; j < Ncy; j ++) 
+      for ( int i = xII; i < Ncx; i ++ ){
+	IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = Ibetacold[rayCounter];
+	kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klcold[rayCounter];
+      }
+
+
     LeftIntenFrac = 1;
     traceProbability = 1;
     weight = 1;
@@ -266,11 +310,22 @@ void rayfromSurf(SurfaceType &obSurface,
 		
 	// 		cout << "obRay.get_surfaceFlag() = " << obRay.get_surfaceFlag() << endl;
 	// 		cout << "surfaceFlag = " << surfaceFlag << endl;
-	
+
+	/*
 	IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
 	  IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
 	  exp ( -currentSum ) * SurLeft
 	  * weight;
+	  */
+
+	
+	IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
+	 IntenArray_IetacoldSurface[hitSurfaceFlag][rayCounter] *
+	    exp ( -currentSum ) * SurLeft
+	    * weight;
+
+	
+	
 	//	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
       }
       
@@ -287,27 +342,23 @@ void rayfromSurf(SurfaceType &obSurface,
       
     }while (  MTrng.randExc() < traceProbability); // continue the path
 
-       
+
   } // rayCounter loop
 	  
   
   sumIncomInten = 0;
 
-  /*
-  for ( int aaa = 0; aaa < thisRayNo-1; aaa ++ )
-    sumIncomInten = sumIncomInten +
-      IncomingIntenSur[aaa] ;
-  */
-  
-  
+  // because this is gray surface, so dont need to do spectral out intensity for surface
+  // only intergrate for the incoming intensity,
+  // integrate this part first
+  // then use the total gray surface intensity (over all spectra ) - integrated Incoming = net
   for ( int aaa = 0; aaa < thisRayNo-1; aaa ++ )
     sumIncomInten = sumIncomInten +
       ( IncomingIntenSur[aaa+1] + IncomingIntenSur[aaa] ) *
-         ( g[aaa+1] - g[aaa])/2.0;
+         ( gcold[aaa+1] - gcold[aaa]) * 100 /2.0;
   
 
-  //	  cout << "sumIncomInten = " << sumIncomInten << endl;
-  delete[] IncomingIntenSur;
+   delete[] IncomingIntenSur;
   
   aveIncomInten = sumIncomInten / thisRayNo;
   
@@ -327,27 +378,31 @@ void rayfromSurf(SurfaceType &obSurface,
 
 int main(int argc, char *argv[]){
 
+    time_t time_start, time_end;
+
   
-//   int my_rank; // rank of process
-//   int np; // number of processes
-  time_t time_start, time_end;
+      int my_rank; // rank of process
+       int np; // number of processes
+
 
   //  int casePlates;
   //  cout << " Please enter plates case " << endl;
   //  cin >> casePlates;
 
-   // starting up MPI
-   MPI_Init(&argc, &argv);
-   MPI_Barrier(MPI_COMM_WORLD);
+//   // starting up MPI
+    MPI_Init(&argc, &argv);
+    MPI_Barrier(MPI_COMM_WORLD);
   
-   precision = MPI_Wtick();
-    
-   // Find out process rank
+    //   precision = MPI_Wtick();
+  
+    //   time1 = MPI_Wtime();
+  
+//   // Find out process rank
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-   // Find out number of processes
-   MPI_Comm_size(MPI_COMM_WORLD, &np);
-
+//   // Find out number of processes
+     MPI_Comm_size(MPI_COMM_WORLD, &np);
+  
 
   int rayNoSurface, rayNoVol;
 
@@ -376,15 +431,14 @@ int main(int argc, char *argv[]){
   
   
   BinarySearchTree obBST;
-  gSize = 5000;
+  gSize = 1495001; 
   gkSize = gSize * 2;
   iggNo = 0;
-  //  int *countg = new int[gSize];  
-  double *Rkg = new double [gSize];
-  double *gk = new double [gkSize];
-  
-  //  for ( int i = 0; i < gSize; i ++)
-  //    countg[i] = 0;
+
+  double *Rkgcold = new double [gSize];
+  double *gkcold = new double [gkSize];
+  double *Rkghot = new double [gSize];
+  double *gkhot = new double [gkSize];
   
   scat = 0.0;
   linear_b = 1;
@@ -392,17 +446,16 @@ int main(int argc, char *argv[]){
   eddington_g = 0;
   PhFunc = ISOTROPIC;
   coluwgka = 1;
-
   
   StopLowerBound = 1e-10;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
-  ratioBCx = 0.9;
-  ratioBCy = 1.0;
-  ratioBCz = 1.0;
+  Ncx = 60;
+  Ncy = 60;
+  Ncz = 60;
+  ratioBCx = 1;
+  ratioBCy = 1;
+  ratioBCz = 1;
   Lx = 1;
   Ly = 1;
   Lz = 1;
@@ -551,6 +604,10 @@ int main(int argc, char *argv[]){
       for ( int i = 0; i < Ncx; i ++ )
 	VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
   
+  int rayNocold, rayNohot;
+  rayNocold = 100000;
+  rayNohot = 100000; 
+
   // get coordinates arrays
   double *X = new double [Npx]; // i 
   double *Y = new double [Npy]; // j 
@@ -566,7 +623,8 @@ int main(int argc, char *argv[]){
   // six surfaces
   // all these are equivalent to 2D matrix.
   double *alpha_surface[6], *rs_surface[6], *rd_surface[6], *IntenArray_surface[6];
-  double *a_surface[6], *T_surface[6], *emiss_surface[6];
+  double *a_surface[6], *T_surface[6], *emiss_surface[6], *IntenArray_IetahotSurface[6];
+  double *IntenArray_IetacoldSurface[6];
   int *rayNo_surface[6];
 
   for ( int i = 0; i < 6; i ++){
@@ -579,6 +637,11 @@ int main(int argc, char *argv[]){
     rayNo_surface[i] = new int [surfaceNo[i]];
     IntenArray_surface[i] = new double [surfaceNo[i]];
     netInten_surface[i] = new double *[surfaceNo[i]];
+    //   IntenArray_IetahotSurface[i] = new double [surfaceNo[i]];
+    //   IntenArray_IetacoldSurface[i] = new double [surfaceNo[i]];
+    IntenArray_IetahotSurface[i] = new double[rayNohot];
+    IntenArray_IetacoldSurface[i] = new double[rayNocold];
+    
   }
 
   
@@ -616,12 +679,12 @@ int main(int argc, char *argv[]){
   // the orgin of the cube ( domain ) can be changed here easily
 
   // the X, Y, Z are all face centered. so the dimensions are Npx, Npy, Npz.
-   X[0] = -Lx/2.; // start from left to right
-   Y[0] = -Ly/2.; // start from front to back
-   Z[0] = -Lz/2; // start from bottom to top
-   X[Npx-1] = Lx/2;
-   Y[Npy-1] = Ly/2;
-   Z[Npz-1] = Lz/2;
+   X[0] = -Lx/2.0; // start from left to right
+   Y[0] = -Ly/2.0; // start from front to back
+   Z[0] = -Lz/2.0; // start from bottom to top
+   X[Npx-1] = Lx/2.0;
+   Y[Npy-1] = Ly/2.0;
+   Z[Npz-1] = Lz/2.0;
 
     // if a cell-centered variable index is i, j, k,
    // Thus the corresponding face-centered indices are:
@@ -769,9 +832,13 @@ int main(int argc, char *argv[]){
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
 	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
-   // TopBottomNo = Ncx * Ncy;
 
-   rayNo_Vol[454] = 60000;
+   //  for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+     for ( int k = int(Ncz/2); k < int(Ncz/2)+1; k ++ )    
+      for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
+	for ( int i = 0; i < int(Ncx/2)+1; i ++ )
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 100000;   
+   //  rayNo_Vol[454] = 100000;
 
    int iSurface;
    // initial all surface elements ray no = 0
@@ -800,6 +867,16 @@ int main(int argc, char *argv[]){
        rayNo_surface[RIGHT][iSurface] = 0;
      }
 
+
+     for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+     for ( int j = 0; j < Ncy; j ++){
+       iSurface = j + k*Ncy;
+       rayNo_surface[LEFT][iSurface] = 0;
+       rayNo_surface[RIGHT][iSurface] = 0;
+      
+     }
+
+     
    MakeTableFunction obTable;    
    double *CO2 = new double [VolElementNo];
    double *H2O = new double [VolElementNo];
@@ -808,7 +885,50 @@ int main(int argc, char *argv[]){
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
    // when update anycases .cc, need to remove *.o, then recompile
    // otherwise,the input.cc file wont get updated in the binary files
-   
+   cout <<" before inputFSK file" << endl;
+
+     // generate uniform distributed from 0 to 1 , R same size as rayNo.
+  
+  int Rcoldsize, Rhotsize;
+  Rcoldsize = rayNocold; // same as rayNo
+  Rhotsize = rayNohot;
+  
+  double dRcold, dRhot, Rgg;
+
+  // this section can be carried out in the loop for each element
+  // when the rayNo are not the same for every element
+  // Rcold and Rhot could be the same or not .
+  
+  dRcold = 1.0/Rcoldsize; // has to be 1.0 otherwise return an integer.
+  cout<< "Rcoldsize = " << Rcoldsize << endl;
+  cout << "dRcold = " << dRcold << endl;
+  dRhot = 1.0/Rhotsize;
+  cout << "Rhotsize = " << Rhotsize << endl;
+  cout << "dRhot = " << dRhot << endl;
+  
+  double *Rcold = new double[Rcoldsize];
+  double *gcold = new double[Rcoldsize];
+  double *klcold = new double[Rcoldsize];
+  double *Ibetacold = new double[Rcoldsize];
+  double Tcold = 1000;
+
+  double *Rhot = new double[Rhotsize];
+  double *ghot = new double[Rhotsize];
+  double *klhot = new double[Rhotsize];
+  double *Ibetahot = new double[Rhotsize];
+  double Thot = 1500;
+
+  
+  double C1, C2;
+  
+  //%Ibeta = Ebeta/pi;
+  //% Ebeta = C1 wvn^3 / ( exp(C2 * eta/T) - 1) -- W/m
+  //% C1 = 2*pi*h*c0^2
+  //% C2 = h*c0/k
+  C1 = 3.7418e-16;// % [W m^2]
+  C2 = 1.4388; //%[cm K]
+  
+  
    //  #include "inputBenchmark.cc"
    //  #include "inputBenchmarkSurf.cc"
    //   #include "inputNonblackSurf.cc"
@@ -816,42 +936,9 @@ int main(int argc, char *argv[]){
    //  #include "inputScatteringAniso.cc"
    //  #include "inputLiuWsgg.cc"
    //#include "inputBressloffRadCoeff.cc"
-     #include "inputFSKhomoWebb.cc"
-   
-  int rayNouniform;
-  rayNouniform = 60000;
-  // generate uniform distributed from 0 to 1 , R same size as rayNo.
-  int Runisize;
-  Runisize = rayNouniform; // same as rayNo
-  
-  double dRuni, Rgg;
-  
-  dRuni = 1.0/Runisize; // has to be 1.0 otherwise return an integer.
-  cout<< "Runisize = " << Runisize << endl;
-  cout << "dRuni = " << dRuni << endl;
-  
-  // this section can be carried out in the loop for each element
-  // when the rayNo are not the same for every element
-  
-  double *Runi = new double[Runisize];
-  double *g = new double[Runisize];
-  double *kl = new double[Runisize];
-  
-  // make Runi not starting from 0, as R = 0-> g= 0, -> small k, not important rays
-  for ( int i = 0; i < Runisize; i ++ ){
-    Runi[i] = (i+1) * dRuni;
-    // cout << "Runi = " << Runi[i] << endl;
-    Rgg = Runi[i];
-    // Since Runi is pre-set, we can pre-calculate g and kl from Runi.    
-    obBST.search(Rgg, Rkg, gSize);
-    obBST.calculate_gk(gk, Rkg, Rgg);
-    g[i] = obBST.get_g(); // for Reta, convert wavenumber unit from cm-1 to m-1
-    //  cout << " g= "<< g << endl;
-    kl[i] = obBST.get_k()*100; // convert unit from cm-1 to m-1
-    
-  }
+    #include "inputFSKnonhomoWebbRetawithIb.cc" 
+  //  #include "inputFSKnonhomoWebbRetaNoIb.cc" 
 
-  
    MTRand MTrng;
    VolElement obVol;
    VirtualSurface obVirtual;
@@ -909,30 +996,22 @@ int main(int argc, char *argv[]){
   int thisRayNo;
   RadWsgg obWsgg;
   int RkgIndex;
-  
-   // when ProcessorDone == 0, fresh start on a surface
-  // when ProcessorDone == 1 , it is done with this processor calculation.
-  // when ProcessorDone == 2, continue calculating onto another surface
-  
-  int local_surfaceElementNo, local_Counter, ProcessorDone;
-  
-  int my_rank_Start_No;
-  local_surfaceElementNo = surfaceElementNo / np;
-  int local_VolElementNo;
-  local_VolElementNo = VolElementNo / np;
-  
-  //  time (&time_start);
+    
+
  
- time1 = MPI_Wtime();
  
  // for Volume's  Intensity
-   // for volume, use black intensity
+   // for volume, use black intensity per wavenumber Ibeta,
+  // note in I-eta, it is not the total black body intensity integrated over whole wavenumber
    for ( int i = 0; i < VolElementNo; i ++ )
-     IntenArray_Vol[i] = obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
+     IntenArray_Vol[i] = 0; //obVol.VolumeIntensityBlack(i, T_Vol, a_Vol);
 
-   // this is valid for gray surfaces, which in Webbhomo case is true.
-   // for gray surfaces, emiss_surface doesnot change at different g ( or wavenumbers)
-   // top bottom surfaces intensity
+   // this is not valid unless the surfaces are cold black.
+   // otherwise, even with gray surfaces, if T_surf != 0,
+   // then when a ray hits on a surface, the energy obtained from the surface should be spectral intensity.
+
+   // thus, the intenArray_surface can be used only for surface out intensity for gray surface
+   // but in the process of a ray, it needs to figure out the spectral intensity from the surface.
    for ( int i = 0;  i < TopBottomNo; i ++ ) {
      RealPointer = &obTop_init;
      IntenArray_surface[TOP][i] = RealPointer->SurfaceIntensity(i, emiss_surface[TOP],
@@ -990,21 +1069,13 @@ int main(int argc, char *argv[]){
  
   // end of recalculate Intensity
   
-
+  time (&time_start);
+  
   if ( rayNoSurface != 0 ) { // have rays emitting from surface elements
 
-    // how do u paralle using i, j, k index?
-    local_Counter = 0;    
-    ProcessorDone = 0;
-    my_rank_Start_No = my_rank * local_surfaceElementNo + VolElementNo;
 
-
-
-
-
-    
     // ------------- top surface -------------------
-    surfaceFlag = TOP;
+  surfaceFlag = TOP;
     
     // consider Z[] array from 0 to Npz -1 = Ncz
     kIndex = Ncz-1; // iIndex, jIndex, kIndex is consitent with control volume's index
@@ -1042,7 +1113,7 @@ int main(int argc, char *argv[]){
 		      rs_surface,
 		      rd_surface,
 		      IntenArray_Vol,
-		      IntenArray_surface,
+		      IntenArray_surface,IntenArray_IetacoldSurface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
@@ -1055,8 +1126,9 @@ int main(int argc, char *argv[]){
 		      netInten_surface,
 		      s,
 		      obBST,
-		      countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkgcold, gkcold, klcold, gcold,
+		      Ibetacold,
+		      gkhot, xI, xII, C1, C2, Ncx, Ncy, Ncz, Thot);
 	 
 	}
 
@@ -1099,7 +1171,7 @@ int main(int argc, char *argv[]){
 		      rs_surface,
 		      rd_surface,
 		      IntenArray_Vol,
-		      IntenArray_surface,
+		      IntenArray_surface,IntenArray_IetacoldSurface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
@@ -1112,8 +1184,8 @@ int main(int argc, char *argv[]){
 		      netInten_surface,
 		      s,
 		      obBST,
-		      countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      gSize, VolElementNo, Rkgcold, gkcold, klcold, gcold,
+		      Ibetacold, gkhot, xI, xII,  C1, C2, Ncx, Ncy, Ncz, Thot);
 	}
 
 
@@ -1158,7 +1230,7 @@ int main(int argc, char *argv[]){
 		      rs_surface,
 		      rd_surface,
 		      IntenArray_Vol,
-		      IntenArray_surface,
+		      IntenArray_surface,IntenArray_IetacoldSurface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
@@ -1169,8 +1241,9 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      s, obBST,
+		      gSize, VolElementNo, Rkgcold, gkcold, klcold, gcold,
+		      Ibetacold, gkhot, xI, xII,  C1, C2, Ncx, Ncy, Ncz, Thot);
 	}
 
 
@@ -1214,7 +1287,7 @@ int main(int argc, char *argv[]){
 		      rs_surface,
 		      rd_surface,
 		      IntenArray_Vol,
-		      IntenArray_surface,
+		      IntenArray_surface,IntenArray_IetacoldSurface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
@@ -1225,8 +1298,9 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      s, obBST, 
+		      gSize, VolElementNo, Rkgcold, gkcold, klcold, gcold,
+		      Ibetacold, gkhot, xI, xII, C1, C2,  Ncx, Ncy, Ncz, Thot);
 	}
 
 
@@ -1271,7 +1345,7 @@ int main(int argc, char *argv[]){
 		      rs_surface,
 		      rd_surface,
 		      IntenArray_Vol,
-		      IntenArray_surface,
+		      IntenArray_surface,IntenArray_IetacoldSurface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
@@ -1282,8 +1356,9 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      s, obBST, 
+		      gSize, VolElementNo, Rkgcold, gkcold, klcold, gcold,
+		      Ibetacold, gkhot, xI, xII, C1, C2, Ncx, Ncy, Ncz, Thot);
 	}
 
 
@@ -1328,7 +1403,7 @@ int main(int argc, char *argv[]){
 		      rs_surface,
 		      rd_surface,
 		      IntenArray_Vol,
-		      IntenArray_surface,
+		      IntenArray_surface,IntenArray_IetacoldSurface,
 		      X, Y, Z,
 		      kl_Vol, scatter_Vol,
 		      VolFeature,
@@ -1339,8 +1414,9 @@ int main(int argc, char *argv[]){
 		      iggNo,
 		      StopLowerBound,
 		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
+		      s, obBST,
+		      gSize, VolElementNo, Rkgcold, gkcold, klcold, gcold,
+		      Ibetacold, gkhot, xI, xII, C1, C2, Ncx, Ncy, Ncz, Thot);
 	}
 
 
@@ -1355,16 +1431,28 @@ int main(int argc, char *argv[]){
    
 	  
   iggNo = 0;
+
   
   //  cout << " i am here after one iggNo" << endl;
   if ( rayNoVol != 0 ) { // emitting ray from volume
     //    cout << "start from Vol" << endl;
     int rayCounter, VolIndex;
     
+    // need to know which section a ray is emitted from.
+    // if cold, then the wavenumber is obtained from gkcold, Rkgcold.
+    // and gcold then set to be the global wavenumber
+    // for the hot section, use gcold wavenumber to find its corresponding klhot.
+
+    
+    // if hot, then wavenumber is obtained from gkhot, Rkghot.
+    // ghot is then set to be the global wavenumber.
+    // for the cold section, use ghot wavenumber to find its corresponding klcold.
+    
+    // emitting a ray from the cold section
     for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
       for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {
-	for ( int iVolIndex = 0; iVolIndex < Ncx; iVolIndex ++ ) {
-
+	for ( int iVolIndex = 0; iVolIndex < xI; iVolIndex ++ ) {
+	  //	  cout << "cold section, iVolIndex  = " << iVolIndex << endl;
 	  VolIndex = iVolIndex + jVolIndex * Ncx + kVolIndex * TopBottomNo;
 
 	  if ( rayNo_Vol[VolIndex] != 0 ) {
@@ -1392,8 +1480,43 @@ int main(int argc, char *argv[]){
 
 	      
 	      // set absorption coeff
-	      for ( int ki = 0; ki < VolElementNo; ki++)
-		kl_Vol[ki] = kl[rayCounter];
+	      // cold section
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = 0; i < xI; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = Ibetacold[rayCounter];	
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klcold[rayCounter];
+		  }
+	      
+	      
+	      // hot section pre-processing
+	      double IbetaVolhot;
+	      IbetaVolhot = C1 * gcold[rayCounter] * gcold[rayCounter] * gcold[rayCounter] * 1e6 /
+		( exp( C2*  gcold[rayCounter]  / Thot )- 1) / pi;
+	      
+	      // find klhot using gcold wavenumber
+	      // 2D gkhot --2, looking for wavenumber--0
+	      obBST.search(gcold[rayCounter], gkhot, gSize, 2, 0);
+	      obBST.calculate_k(gkhot, gcold[rayCounter]);
+	      double klVolhot;
+	      klVolhot = obBST.get_k() * 100;
+	      
+	      // hot section
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = xI; i < xII; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = IbetaVolhot;
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klVolhot;
+		  }
+	      
+	      
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = xII; i < Ncx; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = Ibetacold[rayCounter];
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klcold[rayCounter];
+		  }
+	      
 	      
 	      OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
 	      
@@ -1470,9 +1593,15 @@ int main(int argc, char *argv[]){
 					    rs_surface[hitSurfaceFlag],
 					    rd_surface[hitSurfaceFlag],
 					    PathSurfaceLeft);
-		  
+		  /*
 		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
 		    IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
+		    exp ( -currentSum ) * SurLeft
+		    * weight;
+		    */
+
+		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
+		    IntenArray_IetacoldSurface[hitSurfaceFlag][rayCounter] *
 		    exp ( -currentSum ) * SurLeft
 		    * weight;
 		  
@@ -1507,19 +1636,15 @@ int main(int argc, char *argv[]){
 
 	    // the OutIntenVol is changing with each ray too!!!
 	    sumIncomInten = 0;
-	    obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ietaeta60000.dat");
 
-	    /*
-	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
-	      sumIncomInten = sumIncomInten +
-		IncomingIntenVol[aaa] ;
-	    */
-	    
-	    
+	    //     if ( VolIndex==3783) 
+	    //       obTable.twoArrayTable( rayNocold, gcold, IncomingIntenVol, "Ieta100000cell3783NoIbCDFcold.dat");
+
+	 	    
 	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
 	      sumIncomInten = sumIncomInten +
 		( IncomingIntenVol[aaa+1] + IncomingIntenVol[aaa] ) *
-		( g[aaa+1] - g[aaa])/2.0;
+		( gcold[aaa+1] - gcold[aaa]) * 100 /2.0;
 	    
 	    
 	    delete[] IncomingIntenVol;
@@ -1540,7 +1665,473 @@ int main(int argc, char *argv[]){
       
     } // end if kVolIndex
 
-  
+
+
+
+
+
+
+    // hot section
+    // emitting a ray from the cold section
+    for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
+      for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {
+	for ( int iVolIndex = xI; iVolIndex < xII; iVolIndex ++ ) {
+	  //	  cout << "hot section , iVolIndex = " << iVolIndex << endl;
+	  VolIndex = iVolIndex + jVolIndex * Ncx + kVolIndex * TopBottomNo;
+
+	  if ( rayNo_Vol[VolIndex] != 0 ) {
+	    
+	    MTrng.seed(VolIndex);	    
+	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
+	    
+
+	    double *IncomingIntenVol = new double [ rayNo_Vol[VolIndex] ];
+	  
+	    for ( rayCounter = 0; rayCounter < rayNo_Vol[VolIndex]; rayCounter ++) {
+
+	      /*
+	      Rgg = Runi[rayCounter];
+	      // Rgg =  MTrng.randExc(); // Rgg random number
+	      //	  cout << " Rgg = " << Rgg << endl;
+	      obBST.search(Rgg, Rkg, gSize);
+	      obBST.calculate_gk(gk, Rkg, Rgg);
+	      g = obBST.get_g();
+	      //  cout << " g= "<< g << endl;
+	      kl = obBST.get_k();
+	      //  cout << "kl = " << kl << endl;
+	      countg[obBST.get_lowI()] ++;
+	      */
+
+	      // cold section pre-processing
+	      double IbetaVolcold;
+	      IbetaVolcold = C1 * ghot[rayCounter] * ghot[rayCounter] * ghot[rayCounter] * 1e6 /
+		( exp( C2*  ghot[rayCounter]  / Tcold )- 1) / pi;
+	      
+	      // find klcold using ghot wavenumber
+	      // 2D gkcold --2, looking for wavenumber--0
+	      obBST.search(ghot[rayCounter], gkcold, gSize, 2, 0);
+	      obBST.calculate_k(gkcold, ghot[rayCounter]);
+	      double klVolcold;
+	      klVolcold = obBST.get_k() * 100;
+
+	      
+	      // set absorption coeff
+	      // cold section
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = 0; i < xI; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = IbetaVolcold;	
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klVolcold;
+		  }
+	      
+	      
+
+	      
+	      // hot section
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = xI; i < xII; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = Ibetahot[rayCounter];
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klhot[rayCounter];
+		  }
+	      
+	      
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = xII; i < Ncx; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = IbetaVolcold;
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klVolcold;
+		  }
+	      
+	      
+	      OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
+	      
+	      LeftIntenFrac = 1;
+	      weight = 1;
+	      traceProbability = 1;
+	      previousSum = 0;
+	      currentSum = 0;
+	      IncomingIntenVol[rayCounter] = 0;
+	      
+	      // when absorbed by this emitting volume, only absorbed by kl_Vol portion.
+	      SurLeft = kl_Vol[VolIndex];
+	      
+	      // get emitting ray's direction vector s
+	      obRay.set_emissS_vol(MTrng, s);
+	      
+	      obRay.set_directionS(s); // put s into directionVector ( private )
+	      obVol.get_limits(X, Y, Z);
+	      
+	      // VolIndex is the vIndex is
+	      // VoliIndex + VoljIndex * Ncx + VolkIndex * TopBottomNo
+	      
+	      obRay.set_emissP(MTrng,
+			       obVol.get_xlow(), obVol.get_xup(),
+			       obVol.get_ylow(), obVol.get_yup(),
+			       obVol.get_zlow(), obVol.get_zup());
+
+	      //   obRay.set_straightP();
+	      //   obRay.set_straight_len(0);
+	      
+	      obRay.set_currentvIndex(iVolIndex, jVolIndex, kVolIndex);
+	      
+	      // emitting rays from volume, then surely has participating media
+	      
+	      // only one criteria for now ( the left energy percentage )
+	      //   vectorIndex = 0;
+
+	      obRay.dirChange = 1;
+	      
+	      do {
+		weight = weight / traceProbability;
+		
+		previousSum = currentSum;
+		
+		obRay.TravelInMediumInten(MTrng, obVirtual,
+					  kl_Vol, scatter_Vol,
+					  X, Y, Z, VolFeature,
+					  PathLeft, PathSurfaceLeft);
+		
+		
+		// the upper bound of the segment
+		currentSum = previousSum + PathLeft;
+		
+		// the IntensityArray for volumes are black ones.
+		// use the previous SurLeft here.
+		// SurLeft is not updated yet.
+		
+		IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] + 
+		  IntenArray_Vol[obRay.get_currentvIndex()]
+		  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+		  * weight;
+		
+		// SurLeft to accout for the real surface absorption effect on intensity
+		
+		if ( !obRay.VIRTUAL ) {
+		  
+		  hitSurfaceFlag = obRay.get_surfaceFlag();
+		  hitSurfaceIndex = obRay.get_hitSurfaceIndex();
+		  
+		  // PathSurfaceLeft is updated here
+		  // and it comes into effect for next travelling step.
+		  obRay.hitRealSurfaceInten(MTrng,
+					    alpha_surface[hitSurfaceFlag],
+					    rs_surface[hitSurfaceFlag],
+					    rd_surface[hitSurfaceFlag],
+					    PathSurfaceLeft);
+		  /*
+		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
+		    IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
+		    exp ( -currentSum ) * SurLeft
+		    * weight;
+		    */
+
+		  
+		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
+		    IntenArray_IetahotSurface[hitSurfaceFlag][rayCounter] *
+		    exp ( -currentSum ) * SurLeft
+		    * weight;
+		  
+		}
+		
+		// set hitPoint as new emission Point
+		// and direction of the ray already updated
+		obRay.update_emissP();
+		obRay.update_vIndex();
+		
+		SurLeft = SurLeft * PathSurfaceLeft;		
+		LeftIntenFrac = exp(-currentSum) * SurLeft;
+		traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
+
+		
+	      }while ( MTrng.randExc() < traceProbability ); // continue the path
+	      
+	      // temperory solution.
+	      // otherwise get an array of OutIntenVol[rayCounter]
+	      IncomingIntenVol[rayCounter] = OutIntenVol - IncomingIntenVol[rayCounter];
+	      
+	    } // rayCounter loop
+	    
+	  
+	    // deal with the current control volume
+	    // isotropic emission, weighting factors are all the same on all directions
+	    // net = OutInten - averaged_IncomingIntenDir
+	    // div q = 4 * pi * netInten
+
+	    // integrate over all g of incoming Intensity
+	    // here the rayNo_Vol[VolIndex] has to be the same as Runisize
+
+	    // the OutIntenVol is changing with each ray too!!!
+	    sumIncomInten = 0;
+
+	    //    if ( VolIndex==3789) 
+	    //      obTable.twoArrayTable( rayNohot, ghot, IncomingIntenVol, "Ieta100000cell3789NoIbCDFhot.dat");
+
+	 	    
+	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
+	      sumIncomInten = sumIncomInten +
+		( IncomingIntenVol[aaa+1] + IncomingIntenVol[aaa] ) *
+		( ghot[aaa+1] - ghot[aaa]) * 100 /2.0;
+	    
+	    
+	    delete[] IncomingIntenVol;
+	    
+	    // aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
+	    // cout << "aveIncomInten = " << aveIncomInten << endl;
+	    
+	    // netInten_Vol[VolIndex][iggNo] = OutIntenVol - aveIncomInten;
+
+	     netInten_Vol[VolIndex][iggNo] = sumIncomInten;
+	    
+	  } // if rayNo_Vol[VolIndex] != 0
+	  
+	  
+	} // end if iVolIndex
+	
+      } // end if jVolIndex
+      
+    } // end if kVolIndex
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // cold section
+    // emitting a ray from the cold section
+    for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
+      for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {
+	for ( int iVolIndex = xII; iVolIndex < Ncx; iVolIndex ++ ) {
+	  //  cout << "cold section again, iVolIndex = " << iVolIndex << endl;
+	  VolIndex = iVolIndex + jVolIndex * Ncx + kVolIndex * TopBottomNo;
+
+	  if ( rayNo_Vol[VolIndex] != 0 ) {
+	    
+	     MTrng.seed(VolIndex);
+	    // MTrng.seed(VolIndex - (xII- (xI-1))- (iVolIndex-xII) ); // same seed as the first cold section
+	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
+	    
+
+	    double *IncomingIntenVol = new double [ rayNo_Vol[VolIndex] ];
+	  
+	    for ( rayCounter = 0; rayCounter < rayNo_Vol[VolIndex]; rayCounter ++) {
+
+	      /*
+	      Rgg = Runi[rayCounter];
+	      // Rgg =  MTrng.randExc(); // Rgg random number
+	      //	  cout << " Rgg = " << Rgg << endl;
+	      obBST.search(Rgg, Rkg, gSize);
+	      obBST.calculate_gk(gk, Rkg, Rgg);
+	      g = obBST.get_g();
+	      //  cout << " g= "<< g << endl;
+	      kl = obBST.get_k();
+	      //  cout << "kl = " << kl << endl;
+	      countg[obBST.get_lowI()] ++;
+	      */
+
+	      
+	      // set absorption coeff
+	      // cold section
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = 0; i < xI; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = Ibetacold[rayCounter];	
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klcold[rayCounter];
+		  }
+	      
+	      
+	      // hot section pre-processing
+	      double IbetaVolhot;
+	      IbetaVolhot = C1 * gcold[rayCounter] * gcold[rayCounter] * gcold[rayCounter] * 1e6 /
+		( exp( C2*  gcold[rayCounter]  / Thot )- 1) / pi;
+	      
+	      // find klhot using gcold wavenumber
+	      // 2D gkhot --2, looking for wavenumber--0
+	      obBST.search(gcold[rayCounter], gkhot, gSize, 2, 0);
+	      obBST.calculate_k(gkhot, gcold[rayCounter]);
+	      double klVolhot;
+	      klVolhot = obBST.get_k() * 100;
+	      
+	      // hot section
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = xI; i < xII; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = IbetaVolhot;
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klVolhot;
+		  }
+	      
+	      
+	      for ( int k = 0; k < Ncz; k ++ )
+		for ( int j = 0; j < Ncy; j ++) 
+		  for ( int i = xII; i < Ncx; i ++ ){
+		    IntenArray_Vol[k*Ncx*Ncy + j*Ncx +i] = Ibetacold[rayCounter];
+		    kl_Vol[k*Ncx*Ncy + j*Ncx +i] = klcold[rayCounter];
+		  }
+	      
+	      
+	      OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
+	      
+	      LeftIntenFrac = 1;
+	      weight = 1;
+	      traceProbability = 1;
+	      previousSum = 0;
+	      currentSum = 0;
+	      IncomingIntenVol[rayCounter] = 0;
+	      
+	      // when absorbed by this emitting volume, only absorbed by kl_Vol portion.
+	      SurLeft = kl_Vol[VolIndex];
+	      
+	      // get emitting ray's direction vector s
+	      obRay.set_emissS_vol(MTrng, s);
+	      
+	      obRay.set_directionS(s); // put s into directionVector ( private )
+	      obVol.get_limits(X, Y, Z);
+	      
+	      // VolIndex is the vIndex is
+	      // VoliIndex + VoljIndex * Ncx + VolkIndex * TopBottomNo
+	      
+	      obRay.set_emissP(MTrng,
+			       obVol.get_xlow(), obVol.get_xup(),
+			       obVol.get_ylow(), obVol.get_yup(),
+			       obVol.get_zlow(), obVol.get_zup());
+
+	      //   obRay.set_straightP();
+	      //   obRay.set_straight_len(0);
+	      
+	      obRay.set_currentvIndex(iVolIndex, jVolIndex, kVolIndex);
+	      
+	      // emitting rays from volume, then surely has participating media
+	      
+	      // only one criteria for now ( the left energy percentage )
+	      //   vectorIndex = 0;
+
+	      obRay.dirChange = 1;
+	      
+	      do {
+		weight = weight / traceProbability;
+		
+		previousSum = currentSum;
+		
+		obRay.TravelInMediumInten(MTrng, obVirtual,
+					  kl_Vol, scatter_Vol,
+					  X, Y, Z, VolFeature,
+					  PathLeft, PathSurfaceLeft);
+		
+		
+		// the upper bound of the segment
+		currentSum = previousSum + PathLeft;
+		
+		// the IntensityArray for volumes are black ones.
+		// use the previous SurLeft here.
+		// SurLeft is not updated yet.
+		
+		IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] + 
+		  IntenArray_Vol[obRay.get_currentvIndex()]
+		  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+		  * weight;
+		
+		// SurLeft to accout for the real surface absorption effect on intensity
+		
+		if ( !obRay.VIRTUAL ) {
+		  
+		  hitSurfaceFlag = obRay.get_surfaceFlag();
+		  hitSurfaceIndex = obRay.get_hitSurfaceIndex();
+		  
+		  // PathSurfaceLeft is updated here
+		  // and it comes into effect for next travelling step.
+		  obRay.hitRealSurfaceInten(MTrng,
+					    alpha_surface[hitSurfaceFlag],
+					    rs_surface[hitSurfaceFlag],
+					    rd_surface[hitSurfaceFlag],
+					    PathSurfaceLeft);
+		  /*  
+		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
+		    IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
+		    exp ( -currentSum ) * SurLeft
+		    * weight;
+		    */
+
+		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
+		    IntenArray_IetacoldSurface[hitSurfaceFlag][rayCounter] *
+		    exp ( -currentSum ) * SurLeft
+		    * weight;
+
+		  
+		}
+		
+		// set hitPoint as new emission Point
+		// and direction of the ray already updated
+		obRay.update_emissP();
+		obRay.update_vIndex();
+		
+		SurLeft = SurLeft * PathSurfaceLeft;		
+		LeftIntenFrac = exp(-currentSum) * SurLeft;
+		traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
+
+		
+	      }while ( MTrng.randExc() < traceProbability ); // continue the path
+	      
+	      // temperory solution.
+	      // otherwise get an array of OutIntenVol[rayCounter]
+	      IncomingIntenVol[rayCounter] = OutIntenVol - IncomingIntenVol[rayCounter];
+	      
+	    } // rayCounter loop
+	    
+	  
+	    // deal with the current control volume
+	    // isotropic emission, weighting factors are all the same on all directions
+	    // net = OutInten - averaged_IncomingIntenDir
+	    // div q = 4 * pi * netInten
+
+	    // integrate over all g of incoming Intensity
+	    // here the rayNo_Vol[VolIndex] has to be the same as Runisize
+
+	    // the OutIntenVol is changing with each ray too!!!
+	    sumIncomInten = 0;
+
+	    //   if ( VolIndex==3796) 
+	    //  obTable.twoArrayTable( rayNocold, gcold, IncomingIntenVol, "Ieta100000cell3796NoIbCDFcold.dat");
+
+	 	    
+	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
+	      sumIncomInten = sumIncomInten +
+		( IncomingIntenVol[aaa+1] + IncomingIntenVol[aaa] ) *
+		( gcold[aaa+1] - gcold[aaa]) * 100 /2.0;
+	    
+	    
+	    delete[] IncomingIntenVol;
+	    
+	    // aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
+	    // cout << "aveIncomInten = " << aveIncomInten << endl;
+	    
+	    // netInten_Vol[VolIndex][iggNo] = OutIntenVol - aveIncomInten;
+
+	     netInten_Vol[VolIndex][iggNo] = sumIncomInten;
+	    
+	  } // if rayNo_Vol[VolIndex] != 0
+	  
+	  
+	} // end if iVolIndex
+	
+      } // end if jVolIndex
+      
+    } // end if kVolIndex
+
+
+
+
+    
+    
   } // end rayNoVol!= 0 
     
 
@@ -1549,11 +2140,13 @@ int main(int argc, char *argv[]){
   time (&time_end); 
   
   // surface cell
-
+    
   double *integrIntenSurface[6];
   for ( int i = 0; i < 6; i ++)
     integrIntenSurface[i] = new double[surfaceNo[i]];
 
+  if ( rayNoSurface != 0 ) {
+    
   for ( int i = 0; i < 6; i ++)
     for ( int j = 0; j < surfaceNo[i]; j++)
       integrIntenSurface[i][j] = 0;
@@ -1577,19 +2170,23 @@ int main(int argc, char *argv[]){
     }
   }
   
-  
-  obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta60000-L1-101010", Npx, Npy, Npz,
+  /*
+  obTable.vtkSurfaceTableMake("vtkSurfaceWebbnonHomoReta100000-202020withIbCDF-11111", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
 
-
+  */
+    }
+    
   
     // Vol cell
   
    double integrIntenVol[VolElementNo];
    for ( int i = 0; i < VolElementNo; i ++)
      integrIntenVol[i] = 0;
-   
+
+   if ( rayNoVol != 0 ){
+     
   // WSGG all weights are 1, sum all bands together
 
     for ( int i = 0; i < VolElementNo; i ++)
@@ -1605,19 +2202,14 @@ int main(int argc, char *argv[]){
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
   
-  obTable.vtkVolTableMake("vtkVolWebbHomoReta60000-L1-101010",
+  obTable.vtkVolTableMake("vtkVolWebbnonHomoReta100000-606060withIbCDF-11111-k30halfcenter",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
 
   
- 
-  
-  obTable.singleArrayTable(kl_Vol, VolElementNo, 1, "klVolTablelast.dat");
-  obTable.singleArrayTable(kl, Runisize, 1, "abcsTable.dat");
-  obTable.singleArrayTable(g, Runisize, 1, "wvnTable.dat");
-  obTable.singleArrayTable(Runi, Runisize, 1, "RuniTable.dat");
-  
+   }
+   
   cout << "sumQsurface = " << sumQsurface << endl;
   cout << "sumQvolume = " << sumQvolume << endl;
   
@@ -1635,6 +2227,7 @@ int main(int argc, char *argv[]){
     "; ratioBCz = " << ratioBCz << endl;
   
   timeused = difftime (time_end,time_start);
+  
   cout << " time used up (S) = " << timeused << "sec." << endl;
   cout << "iggNo = " << iggNo << endl;
   
@@ -1676,14 +2269,21 @@ int main(int argc, char *argv[]){
   delete[] CO2;
   delete[] H2O;
   delete[] SFV;
-  delete[] Rkg;
-  delete[] gk;
-  delete[] countg;
-  delete[] g;
-  delete[] kl;
-  delete[] Runi;
+  delete[] Rkgcold;
+  delete[] gkcold;
+  delete[] gcold;
+  delete[] klcold;
+  delete[] Rcold;
+  delete[] Ibetacold;
+  delete[] Rkghot;
+  delete[] gkhot;
+  delete[] ghot;
+  delete[] klhot;
+  delete[] Rhot;
+  delete[] Ibetahot;
   //  delete[]integrIntenSurface; 
-       MPI_Finalize();
+     MPI_Finalize();
+
   return 0;
 
 
