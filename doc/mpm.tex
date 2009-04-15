@@ -1591,6 +1591,62 @@ gnuplot> quit
 These reaction forces are similar to what would be measured on a mechanical
 testing device, and help to understand the material behavior.
 
+\section*{\center Hole in an Elastic Plate}
+\subsection*{\underline{Problem Description}}
+A flat plate with a hole in the center is loaded in tension.  To achieve a
+quasi-static solution, the load is applied slowly and a viscous damping force
+is used to reduce transients in the solution.  As such, this simulation
+demonstrates those two capabilities.  Specifically, take note of:
+\begin{Verbatim}[fontsize=\footnotesize]
+       <use_load_curves> true </use_load_curves>
+       <artificial_damping_coeff>1.0</artificial_damping_coeff>
+\end{Verbatim}
+in the \tt <MPM> \normalfont section of the input file, and:
+\begin{Verbatim}[fontsize=\footnotesize]
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+	.
+	.
+	.
+\end{Verbatim}
+section below that.
+
+ 
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill holePlate.ups
+\item [Command used to run input file:]\hfill sus holePlate.ups
+\item [Simulation Domain:]\hfill 5.0 m x 5.0 m x 0.1 m
+
+\item [Cell Spacing:]\hfill \\ 
+  0.1 m x 0.1 m x 0.1 m (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 2 minutes  (1 processor, Xeon 3.16 GHz)\\
+
+\item [Physical time simulated:] \hfill 10 seconds
+
+\item [Associate VisIt session:] \hfill holeInPlate.session
+
+\end{description}
+
+\section*{\underline{Results}}
+
+Figure~\ref{fig:holeInPlate} shows a snapshot of the equivalent stress
+throughout the plate, as well as the load applied to the vectors near the
+edge of the plate.  Expected maximum stress is $300 Pa$.  The $238 Pa$ maximum
+observed here is significantly lower, but upon doubling the resolution in the
+x and y directions, the maximum stress is $308 Pa$.
+\begin{figure}[p]
+  \center
+  \scalebox{0.2}{\includegraphics{holeInPlate.png}}
+  \caption{Elastic plate with a hole loaded in tension.  Particles are
+           colored by equivalent stress, vectors indicate applied load.}
+  \label{fig:holeInPlate}
+\end{figure}
+
 
 \subsection{References}
 \bibliographystyle{plain}
