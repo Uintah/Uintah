@@ -28,7 +28,6 @@
     <!--
     <outputTimestepInterval>100</outputTimestepInterval>
     -->
-    <outputDoubleAsFloat/>
     <save label = "KineticEnergy"/>
     <save label = "AccStrainEnergy"/>
     <save label = "p.x"/>
@@ -189,6 +188,7 @@
           <temperature> 718.0 </temperature>
         </geom_object>
       </material>
+      <!--
       <contact>
         <type>rigid</type>
         <vel_fields>[0,0,0]</vel_fields>
@@ -197,12 +197,11 @@
         <master_material>0</master_material>
         <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
       </contact>
-      <!--
+      -->
       <contact>
         <type> friction </type>
         <mu>   0.01     </mu>
       </contact>
-      -->
     </MPM>
   </MaterialProperties>
        
