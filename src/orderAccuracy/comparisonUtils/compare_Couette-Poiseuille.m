@@ -149,7 +149,7 @@ if (wallVel > 0.0)
   disp("Couette-Poiseuille flow")
   P               = -dpdx * ( h^2/(2.0 * nu * wallVel) )
   vel_ratio_exact = 0.5 * (1 + y_CC./h) + P*(1 - (y_CC.^2/h.^2));
-  vel_exact       = vel_ratio_exact * wallVel
+  vel_exact       = vel_ratio_exact * wallVel;
 end
 
 % Exact solution for pure Poiseuille flow
