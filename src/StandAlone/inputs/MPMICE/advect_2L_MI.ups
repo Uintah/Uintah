@@ -229,10 +229,7 @@
                     <min>           [-1.0,-1.0,-1.0]    </min>
                     <max>           [10.0,10.0, 4.0]    </max>
                 </box>
-              <box label = "gpicehole">
-                        <min>           [2.5,2.5,0.0]   </min>
-                        <max>           [3.5,3.5,0.25]  </max>
-                </box>
+                <box label = "gpmpm" />
               </difference>
                <res>                      [1,1,1]        </res>
                <velocity>           [10.0,0.0,0.0]       </velocity>
