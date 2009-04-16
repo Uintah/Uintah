@@ -75,10 +75,10 @@
         <BCType id = "0"   label = "Pressure"     var = "Neumann">
                               <value> 0. </value>
         </BCType>
-        <!------------------------------------------------------->
-        <!-- The velocity the upper wall is defined here       -->
-        <!-- Pure Poiseuille flow velocity = 0, 0, 0           -->
-        <!------------------------------------------------------->
+        <!--__________________________________________________-->
+        <!-- The velocity the upper wall is defined here      -->
+        <!-- Pure Poiseuille flow velocity = 0, 0, 0          -->
+        <!--__________________________________________________-->
         <BCType id = "0"   label = "Velocity"     var = "Dirichlet">
                               <value> [1.25,0.,0.] </value>
         </BCType>
@@ -101,11 +101,11 @@
        <Level>
            <Box label="1">
               <lower>        [0,-0.05,0]         </lower>
-              <upper>        [1, 0.05,0.001]     </upper>
+              <upper>        [1, 0.05,0.01]     </upper>
               <extraCells>   [1,1,1]             </extraCells>
               <patches>      [1,1,1]             </patches>
            </Box>
-           <spacing>         [0.01,0.005,0.001]  </spacing>
+           <spacing>         [0.01,0.005,0.01]  </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
