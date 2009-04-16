@@ -75,7 +75,7 @@
     <evolve_porosity               spec="OPTIONAL BOOLEAN" />
     <failure_strain_mean           spec="OPTIONAL DOUBLE" />
     <failure_strain_std            spec="OPTIONAL DOUBLE" />
-    <failure_strain_distrib        spec="OPTIONAL STRING" />
+    <failure_strain_distrib        spec="OPTIONAL STRING 'constant, gauss, weibull'" />
     <failure_strain_scale          spec="OPTIONAL DOUBLE" />
     <failure_by_stress             spec="OPTIONAL BOOLEAN" />
     <frac_nucleation               spec="OPTIONAL DOUBLE" />
