@@ -92,7 +92,7 @@ considerations apply as for any computational method (trade-off between
 time to solution and accuracy, use of resolution studies to ensure convergence
 in results, etc.).)  Each of these particles will carry, minimally, the
 following variables:
-\begin{enumerate}
+\begin{itemize}
 
 \item position - $\bfx_p$
 \item mass - $m_p$
@@ -101,7 +101,7 @@ following variables:
 \item stress - $\sig_p$ 
 \item deformation gradient - $\bfF_p$
 
-\end{enumerate}
+\end{itemize}
 
 The description that follows is a recipe for advancing each of these
 variables from the current (discrete) time $n$ to the subsequent
@@ -827,14 +827,15 @@ There are many options available when running MPM simulations.  These
 are generally specified in the \tt <MPM> \normalfont section of the input file.
 Below is a list of these options taken from
 \tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont 
-This file also gives possible values for many of these.  A description of
-their functionality is forthcoming, in the meantime, consult the code and
-input files.
+This file also gives possible values, or at least expected datatype,
+for these flags.  A description of their functionality is forthcoming,
+in the meantime, consult the code and input files.  A default value is
+set for many, see \tt MPM/MPMFlags.cc \normalfont for more.
 
 \begin{Verbatim}[fontsize=\footnotesize]
     <MPM>
-<!-- These are commonly used options -->
-      <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
+     <!-- These are commonly used options -->
+      <artificial\_damping\_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
       <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_coeff1        spec="OPTIONAL DOUBLE" />
       <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
@@ -853,7 +854,7 @@ input files.
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" />
       <withColor                          spec="OPTIONAL BOOLEAN" />
 
-<!-- These are not commonly used options -->
+     <!-- These are not commonly used options -->
       <accumulate_strain_energy           spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <create_new_particles               spec="OPTIONAL BOOLEAN" />
@@ -865,7 +866,7 @@ input files.
       <interpolateParticleTempToGridEveryStep spec="OPTIONAL BOOLEAN" />
       <temperature_solve                  spec="OPTIONAL BOOLEAN" />
 
-      <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE IMPLICIT MPM CODE -->
+     <!-- THE FOLLOWING APPLY ONLY TO THE IMPLICIT MPM CODE -->
       <dynamic                            spec="OPTIONAL BOOLEAN" />
       <solver                             spec="OPTIONAL STRING 'petsc, simple'" />
       <convergence_criteria_disp          spec="OPTIONAL DOUBLE 'positive'"/>
@@ -879,7 +880,7 @@ input files.
       <DoImplicitHeatConduction           spec="OPTIONAL BOOLEAN" />
       <DoMechanics                        spec="OPTIONAL BOOLEAN" />
 
-      <!-- FIXME:  THE FOLLOW APPLY ONLY TO THE Fracture MPM CODE -->
+      <!-- THE FOLLOWING APPLY ONLY TO THE FRACTURE MPM CODE -->
       <dadx                               spec="OPTIONAL DOUBLE" />
       <smooth_crack_front                 spec="OPTIONAL BOOLEAN" />
       <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />
@@ -960,9 +961,156 @@ Their use is described in detail in Section~\ref{Contact}.
 
 \subsubsection{Constitutive Models} \label{ConstitutiveModels}
 
-Until the Examples have been completed, the reader will need to refer
-to the source code and/or the many examples of the use of the constitutive
-models in the inputs/MPM directory.
+The MPM code contains a large number of constitutive models that provide
+a Cauchy stress on each particle based on the velocity gradient computed at
+that particle.  The following is a list and very brief description of 
+the most commonly used models.  The reader may wish to consult the
+\tt inputs/MPM \normalfont and \tt inputs/MPMICE \normalfont directories
+to find explicit examples of the use of these models, and others not
+described below.
+
+\begin{description}
+\item[Compressible Neo-Hookean Models] There are a number of implementations
+based on a hyperelastic-plastic model described by Simo and
+Hughes\cite{simo1998} (pp. 307 -- 321).  Several of these models should be 
+combined, but for now, they are separate.  Below the usage for each is
+given.  These models are very robust, and as hyperelastic models don't
+require rotation back and forth between laboratory and material frames of
+reference.
+
+\tt <comp\_neo\_hook> \normalfont is a basic elastic model.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+                <constitutive_model type="comp_neo_hook">
+                    <bulk_modulus>2000.0</bulk_modulus>
+                    <shear_modulus>1500.0</shear_modulus>
+                </constitutive_model>
+\end{Verbatim}
+
+\tt <comp\_neo\_hook\_plastic> \normalfont is the basic elastic model extended
+to include plasticity with isotropic linear hardening.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+                <constitutive_model type="comp_neo_hook_plastic">
+                  <bulk_modulus>2000.0</bulk_modulus>
+                  <shear_modulus>1500.0</shear_modulus>
+                  <yield_stress>100.0</yield_stress>
+                  <hardening_modulus>500.0</hardening_modulus>
+                  <alpha> 0.0 </alpha>  <!-- optional defaults to 0.0 -->
+                </constitutive_model>
+\end{Verbatim}
+
+\tt <cnh\_damage> \normalfont is a basic elastic model, with an extension
+to failure based on a stress or strain as given below, thus yielding an
+elastic-brittle failure model.  This model also allows a distribution
+of failure strain (or stress) based on normal or Weibull distributions.
+Note that the post-failure behaviour of simulations is not always robust.
+
+When either this or the subsequent model is chosen, one must also specify
+the following MPMFlag
+\begin{Verbatim}[fontsize=\footnotesize]
+     <!-- choices are: "AllowNoTension", "ZeroStress" -->
+     <erosion algorithm="ZeroStress"/>
+\end{Verbatim}
+in the \tt <MPM> \normalfont section of the input file.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+            <constitutive_model type="cnh_damage">
+                 <bulk_modulus> 8.9e9  </bulk_modulus>
+                 <shear_modulus>3.52e9  </shear_modulus>
+
+                  <!-- choices are true or false (default) -->
+                  <failure_by_stress>true </failure_by_stress>
+
+                 <!-- when failure_by_stress is true, values are stress not strain -->
+                 <failure_strain_mean> 900 </failure_strain_mean>
+                 <failure_strain_std> 0.1 </failure_strain_std>
+
+                 <!-- choices are "constant", "gauss" or "weibull" -->
+                 <failure_strain_distrib> "constant" </failure_strain_distrib>
+            </constitutive_model>
+\end{Verbatim}
+
+\tt <cnhp\_damage> \normalfont is the elastic plastic model above, with an extension
+to failure based on a stress or strain as given below, thus yielding an
+elastic-plastic model with failure.  Note that the post-failure behaviour of
+simulations is not always robust.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+            <constitutive_model type="cnhp_damage">
+               <bulk_modulus> 8.9e9  </bulk_modulus>
+               <shear_modulus>3.52e9  </shear_modulus>
+               <yield_stress>100.0</yield_stress>
+               <hardening_modulus>500.0</hardening_modulus>
+
+               <!-- choices are true or false (default) -->
+               <failure_by_stress>true </failure_by_stress>
+
+               <!-- when failure_by_stress is true, values are stress not strain -->
+               <failure_strain_mean> 900 </failure_strain_mean>
+               <failure_strain_std> 0.1 </failure_strain_std>
+
+               <!-- choices are "constant", "gauss" or "weibull" -->
+               <failure_strain_distrib> "constant" </failure_strain_distrib>
+            </constitutive_model>
+\end{Verbatim}
+
+\item[Compressible Mooney-Rivlin Model] This model is generally parameterized
+for rubber type materials.  Usage is as follows:
+\begin{Verbatim}[fontsize=\footnotesize]
+              <constitutive_model type="comp_mooney_rivlin">
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+               </constitutive_model>
+\end{Verbatim}
+where \tt <he\_constant\_(1,2)> \normalfont are usually referred to
+as $C1$ and $C2$ in the literature.
+
+\item[Kayenta] This is the model formerly known as the Sandia Geomodel.  Use
+is limited to licensees, see Rebecca Brannon for details.  It also requires
+an obscene number of input parameters which are best covered in the users
+guide for this model.  For a simple list, see the source code in
+\tt Kayenta.cc. \normalfont
+
+\item[Water]  This is a model for water, reported in \cite{water_model_ref}.
+The P-V relationship is given by:
+\begin{equation}
+p=\kappa\left[\left(\frac{\rho}{\rho_0}\right)^{\gamma} - 1\right]
+\end{equation}
+Shear stress is simple Newtonian behavior.  It has not been validated,
+but gives qualitatively reasonable behavior.  Usage is given by:
+\begin{Verbatim}[fontsize=\footnotesize]
+              <constitutive_model type="water">
+                 <bulk_modulus>15000.0</bulk_modulus>
+                 <viscosity>.5</viscosity>
+                 <gamma>7.0</gamma>
+               </constitutive_model>
+\end{Verbatim}
+
+\item[Ideal Gas]  This is simply an equation of state, with no shear stress.
+Usage is given by:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+              <constitutive_model type="ideal_gas">
+                  <specific_heat>  717.5        </specific_heat>
+                  <gamma>  1.4        </gamma>
+              </constitutive_model>
+\end{Verbatim}
+
+\item[ElasticPlastic] Description forthcoming.
+
+\end{description}
+
+There is a large number remaining models but these are not frequently utilized. 
+Examples of their use can be found in the \tt inputs \normalfont directory.
+Input files can also be constructed by checking the source code to see
+what parameters are required.
+
+There are a few models whose use is explicitly not recommended.  In particular,
+\tt HypoElasticPlastic, Membrane and SmallStrainPlastic. \normalfont  Input
+files calling for the first of these should be switched to the
+\tt ElasticPlastic \normalfont model instead.
 
 \subsubsection{Contact}  \label{Contact}
 
