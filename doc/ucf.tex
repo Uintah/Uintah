@@ -1,10 +1,65 @@
-\section{Computational Framework} \label{Sec:UCF}
+\section{Using Uintah} \label{Sec:UCF}
+
+Several executable programs have been developed using the Uintah
+Computational Framework (ucf).  The primary code is called sus which
+stands for the Standalone Uintah Simulation.  The code was originally
+developed to solve a complex fluid structure problem involving a
+container filled with an explosive set in a fire.  The code would
+model the fire and the subsequent heat transfer to the container
+followed by the resultant container deformation and ultimate rupture
+due to the ignition and burning of the explosive material all running
+on thousands of processors requiring thousands of hours of computer
+time and hundreds of gigabytes of data storage.  Although this code
+was developed originally to solve this complicated multi-physics
+problem, the general nature of the algorithms and the framework have
+afforded researchers to use the code to investigate a wide range of
+problems.  The framework is general purpose enough to allow for the
+implementation of This code leverages the task based parallelism
+inherent in the ucf to implement several time stepping algorithms for
+structural mechanics, fluid dynamics, and fluid structure
+interactions.  What follows is a description of using sus within the
+realm of structural mechanics, fluid mechanics and structure-fluid
+interactions.
+
+
 
 %__________________________________
 \subsection{Mechanics of Running sus}
  - Explain how to run on multiple processors\\
  - what do the different command line options mean\\
  - how to restart an uda\\
+
+For single processor simulations, the sus excutable (Standalone Uintah Simulation) is run from the command line prompt like this:
+
+\begin{Verbatim}
+  
+  sus input.ups
+
+\end{Verbatim}
+
+where the input.ups is an xml formatted input file.  The Uintah
+software release contains numerous example input files located in the
+src/StandAlone/inputs directory.
+
+For multiprocessor runs, the general format is to use mpirun to launch
+the jobs.  Depending on the environment, batch scheduler, launch
+scripts, etc, mpirun mayy or may not be used.  However, the general
+format would be something like the following:
+
+\begin{Verbatim}
+
+  mpirun -np num_processors sus -mpi input.ups
+
+\end{Verbatim}
+
+The num_processors is the number of processors that will be used.  The
+input file must contain a patch layout that has at least the same
+number (or greater) of patches as processors specified by a number
+following the -np option shown above.
+
+In addition, the -mpi is optional but often times necessary if the mpi
+environment is not automatically detected from within the sus
+executable.
  
 %__________________________________
 \subsection{Time Related Variables} \label{Sec:TimeRelatedVariables}
