@@ -1369,9 +1369,9 @@ manuscript for a description of the problem.
 
 Figure~\ref{figdisks} shows a snapshot of the simulation, as the disks
 are beginning to collide.
-\begin{figure}[p]
+\begin{figure}
   \center
-  \scalebox{0.2}{\includegraphics{disks.png}}
+  \includegraphics[scale=.25]{disks.png}
   \caption{Colliding elastic disks.  Particles colored according to
 velocity magnitude.}
   \label{figdisks}
@@ -1407,27 +1407,47 @@ a diameter of 6 mm.  The cylinder rebounds from the anvil after 100 $\mu$s.
   1/3 mm x 1/3 mm x 1/3 mm (Level 0)
 
 \item [Example Runtimes:] \hfill \\
- 1 hour 20 min.   (1 processor, AMD Opteron 2.2 GHz)\\
+  1 hour   (1 processor, Xeon 3.16 GHz)\\
 
 \item [Physical time simulated:] \hfill 100 $\mu$seconds
 
-\item [Associate scirun network:] \hfill taylorImpact.srn
+\item [Associate VisIt session:] \hfill taylorImpact.session
 
 \end{description}
 
 \section*{\underline{Results}}
+Figure~\ref{fig:taylorImpact_slide} shows a snapshot from the end of the simulation.
+There, the cylinder is allowed to slide laterally across the plate due
+to the following optional specification in the \tt <contact> \normalfont
+section:
 
-Figure~\ref{fig:taylorImpact} shows a snapshot of the simulation after the
-cylinder begins to rebound.
-%\begin{figure}[b]
-%  \center
-%%  \scalebox{0.2}{\includegraphics{taylorImpact.png}}
-%  \caption{Taylor impact simulation.  Particles colored according to
-%           temperature.}
-%  \label{fig:taylorImpact}
-%\end{figure}
+\begin{Verbatim}[fontsize=\footnotesize]
+        <direction>[1,1,1]</direction>
+\end{Verbatim}
 
-Additional data are available within the uda in the form of "dat" files.
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{taylorImpact_slide.png}
+  \caption{Taylor impact simulation with sliding between cylinder and
+           target.  Particles colored according to temperature.}
+  \label{fig:taylorImpact_slide}
+\end{figure}
+
+Figure~\ref{fig:taylorImpact_stick} shows a snapshot from the end of a
+similar simulation.  In this case, the cylinder is restricted from sliding
+laterally across the plate by altering the \tt <contact> \normalfont
+section as follows:
+\begin{Verbatim}[fontsize=\footnotesize]
+        <direction>[0,1,0]</direction>
+\end{Verbatim}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{taylorImpact_stick.png}
+  \caption{Taylor impact simulation with sliding prohibited between
+           cylinder and target.  Particles colored according to temperature.}
+  \label{fig:taylorImpact_stick}
+\end{figure}
 
 
 \section*{\center Sphere Rolling Down an Inclined Plane}
@@ -1467,9 +1487,9 @@ below.
 Figure~\ref{figincplaneSphere_bigmu} and Figure~\ref{figincplaneSphere_0mu}
 show snapshots of the simulation, as
 the sphere is about halfway down the plane.
-\begin{figure}[p]
+\begin{figure}
   \center
-  \scalebox{0.2}{\includegraphics{incplane_mu_495.png}}
+  \includegraphics[scale=.25]{incplane_mu_495.png}
   \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
 is oriented at a 45 degree angle relative to the plane.  Particles are colored
 by velocity magnitude. A friction coefficient of $\mu = 0.495$ is used.
@@ -1480,9 +1500,9 @@ basically stationary, as expected.}
   \label{figincplaneSphere_bigmu}
 \end{figure}
 
-\begin{figure}[p]
+\begin{figure}
   \center
-  \scalebox{0.2}{\includegraphics{incplane_mu_0.png}}
+  \includegraphics[scale=.25]{incplane_mu_0.png}
   \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
 is oriented at a 45 degree angle relative to the plane.  Particles are colored
 by velocity magnitude.  A friction coefficient of $\mu = 0.0$ is used.
@@ -1566,18 +1586,18 @@ where NP is the number of processors being used.
 
 Figure~\ref{figfoam} shows a snapshot of the simulation via isosurfacing,
 as the foam is at about 50\% compaction.
-\begin{figure}[p]
+\begin{figure}
   \center
-  \scalebox{0.2}{\includegraphics{foam_iso.png}}
+  \includegraphics[scale=.15]{foam_iso.png}
   \caption{Compaction of a foam microstructure shown via isosurfacing.}
   \label{figfoam}
 \end{figure}
 
 Figure~\ref{figfoampart} shows a snapshot of the simulation via particles
 colored by equivalent stress as the foam is at about 60\% compaction.
-\begin{figure}[p]
+\begin{figure}
   \center
-  \scalebox{0.2}{\includegraphics{foam_part.png}}
+  \includegraphics[scale=.15]{foam_part.png}
   \caption{Compaction of a foam microstructure rendered as particles colored
            by equivalent stress.}
   \label{figfoampart}
@@ -1650,13 +1670,14 @@ throughout the plate, as well as the load applied to the vectors near the
 edge of the plate.  Expected maximum stress is $300 Pa$.  The $238 Pa$ maximum
 observed here is significantly lower, but upon doubling the resolution in the
 x and y directions, the maximum stress is $308 Pa$.
-\begin{figure}[p]
+\begin{figure}
   \center
-  \scalebox{0.2}{\includegraphics{holeInPlate.png}}
+  \includegraphics[scale=.25]{holeInPlate.png}
   \caption{Elastic plate with a hole loaded in tension.  Particles are
            colored by equivalent stress, vectors indicate applied load.}
   \label{fig:holeInPlate}
 \end{figure}
+\newpage
 
 
 \subsection{References}
