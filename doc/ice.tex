@@ -4,90 +4,30 @@
 
 
 \subsection{Introduction}
-\red{
-finite volume
-first order tempral discretizatioon
-all speed
-with the option of explicit or semi-implicit }
-
-\subsection{Theory - Algorithm Description}
-
-\section{Introduction}
-
-The work presented here describes a numerical approach for ``full
-physics" simulations of dynamic fluid structure interactions involving
-large deformations and material transformations (e.g., phase change).
+The work presented here describes a multi-material CFD approached designed
+to solve ``full physics" simulations of dynamic fluid structure interactions
+involving large deformations and material transformations (e.g., phase change).
 ``Full physics" refers to problems involving strong interactions between
 the fluid field and solid field temperatures and velocities, with a full
 Navier Stokes representation of fluid materials and the transient, nonlinear
 response of solid materials.  These interactions may include chemical or
 physical transformation between the solid and fluid fields.
 
-Approaches to fluid structure interaction (FSI) problems are typically
-divided into two classes.  ``Separated" approaches treat individual materials
-as occupying distinct regions of space, with interactions occurring only
-at material interfaces.  The details of those interactions vary between
-implementations, and are often a function of the degree, or ``strength" of
-the coupling between the fluid and solid fields.  Because of the separated
-nature of the materials, only one set of state variables is needed at any
-point in space, since only one material is allowed to exist at that point.
-``Averaged" model approaches allow {\bf all} materials to exist at any point in
-space with some probability.    Variables describing the material state vary
-continuously throughout the computational domain, thus, the state of every
-material is defined at every point in space.  Distinct material interfaces are
-not defined, rather the interaction between materials is computed in an average
-sense, and, as such, interactions among materials may take place anywhere.
-
-While both the separated and averaged model approaches have their
-respective merits, the averaged model, when carried out on an Eulerian
-grid, allows arbitrary distortion of materials and material interfaces.
-However, these distortions can be catastrophic for the solid material,
-as the deformation history of the solid must be transported through the
-Eulerian grid.  This transport can lead to non-physical stresses and the
-interface between materials is also subject to diffusion.  The latter problem
-can be mitigated via surface tracking and the use of a single valued velocity
-field~\cite{benson95,benson98}, but this does not eliminate the problems of
-stress transport.
-
-The approach described here uses the averaged model approach and addresses
-the issue of stress transport by integrating the state of the solid field in
-the ``material" frame of reference through use of the Material Point Method
-(MPM)~\cite{sulskycmame,sulskycpc}.  MPM is a particle method for solid
-mechanics that allows the solid field to undergo arbitrary distortion.
-Because the fluid state is integrated in the Eulerian frame, it can also
-undergo arbitrary distortion.  MPM uses a computational ``scratchpad"
-grid to advance the solution to the equations of motion, and by choosing
-to use the same grid used in the Eulerian frame of reference, interactions
-among the materials are facilitated on this common computational framework.
-By choosing to use an infinitely fast rate of momentum transfer between the
-materials, the single velocity field limit is obtained, and the interface
-between materials is limited to, at most, a few cells.  Thus, in the
-differential limit, the separated model can be recovered.  This means that
-with sufficient grid resolution, the accuracy of the separated model and
-the robustness of the averaged model can be enjoyed simultaneously.
-
-The theoretical and algorithmic basis for the fluid structure interaction
-simulations presented here is based on a body of work of several investigators
-at Los Alamos National Laboratory, primarily Bryan Kashiwa, Rick Rauenzahn and
-Matt Lewis.  Several reports by these researchers are publicly available and
-are cited herein.  It is largely through our personal interactions that we have
+The theoretical and algorithmic basis for the multi-material CFD algorithm
+presented here is based on a body of work of several investigators at Los
+Alamos National Laboratory, primarily Bryan Kashiwa, Rick Rauenzahn and Matt
+Lewis.  Several reports by these researchers are publicly available and are
+cited herein.  It is largely through our personal interactions that we have
 been able to bring these ideas to bear on the simulations described herein.
+
 
 An exposition of the governing equations is given in the next section,
 followed by an algorithmic description of the solution of those equations.
 This description is first done separately for the materials in the Eulerian
 and Lagrangian frames of reference, before details associated with the
-integrated approach are given.  Because this manuscript is focused on
-explosions of energetic devices, some of the models used to close the
-governing equations are described briefly.  Finally, results from three
-calculations are presented.  The first two of these are intended to serve as
-validation of the general approach and the models used, while the third is an
-unvalidated demonstration calculation.  The reader is encouraged to browse
-Section~\ref{sec:numerical_results}  at this point to better appreciate the
-direction that the subsequent development is headed.
+integrated approach are given. 
 
-\section{Governing Equations}\label{sec:governing_equations}
-
+\subsection{Governing Equations}\label{sec:governing_equations}
 The governing multi-material model equations are stated and described, but
 not developed, here.  Their development can be found in~\cite{kashiwa2000}.
 Here, our intent is to identify the quantities of interest, of which there
@@ -107,26 +47,28 @@ with the velocity of r-material is:
 % mass
 \begin{eqnarray}
 {1\over V}{D_\rmr M_\rmr \over Dt} &=&
-{\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}\Gamma_{\rmr\rms}
+\SUM\Gamma_{\rmr\rms}
 \label{eqmassr} \\
 \nonumber \\
 %__________________________________
 % momentum
 {1\over V}{D_\rmr (M_\rmr \bfu_\rmr) \over Dt} &=&
-\theta_\rmr \bnabla\cdot\sig
-+\bnabla\cdot\theta_\rmr(\sig_\rmr - \sig) + \rho_\rmr\bfg
-+ {\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
-\bff_{\rmr\rms} + {\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
-\bfu_{\rmr\rms}^+ \Gamma_{\rmr\rms}
+\theta_\rmr \bnabla\cdot\sig +
+\bnabla\cdot\theta_\rmr(\sig_\rmr - \sig) + 
+\rho_\rmr\bfg + 
+\SUM \bff_{\rmr\rms} + 
+\SUM \bfu_{\rmr\rms}^+ 
+\Gamma_{\rmr\rms}
 \label{eqmomr}\\ \nonumber \\
 %__________________________________
 % internal energy
 {1\over V}{D_\rmr (M_\rmr e_\rmr) \over Dt} &=& -
 \rho_\rmr p {D_\rmr v_\rmr\over Dt} +
-\theta_\rmr\taubold_\rmr:\nabla\bfu_\rmr - \bnabla\cdot\bfj_\rmr +
-{\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}} q_{\rmr\rms} +
-{\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
-h_{\rmr\rms}^+ \Gamma_{\rmr\rms}
+\theta_\rmr\taubold_\rmr:\nabla\bfu_\rmr - 
+\bnabla\cdot\bfj_\rmr +
+\SUM q_{\rmr\rms} +
+\SUM h_{\rmr\rms}^+ 
+\Gamma_{\rmr\rms}
 \label{eqenergyr}
 \end{eqnarray}
 
@@ -156,9 +98,8 @@ is included).
 
 In Eqs. (\ref{eqmassr}-\ref{eqenergyr}) the term $\Gamma_{\rmr\rms}$ is
 the rate of mass conversion from s-material into r-material, for example,
-the burning of a solid reactant into gaseous products.  The rate at which
-mass conversion occurs is governed by a reaction model, two examples of
-which are given in Section~\ref{sec:HEReaction}.  In Eqs. (\ref{eqmomr})
+the burning of a solid or liquid reactant into gaseous products.  The rate at which
+mass conversion occurs is governed by a reaction model.  In Eqs. (\ref{eqmomr})
 and (\ref{eqenergyr}), the velocity $\bfu_{\rmr\rms}^+$ and the enthalpy
 $h_{\rmr\rms}^+$ are those of the s-material that is converted into r-material.
 These are simply the mean values associated with the donor material.
@@ -174,7 +115,7 @@ v_\rmr, \theta_\rmr, p)$ are:
 e_\rmr &=& e_\rmr(v_\rmr, T_\rmr) \label{caloric} \\
 v_\rmr &=& v_\rmr(p, T_\rmr) \label{thermal} \\
 \theta_\rmr &=& \rho_\rmr v_\rmr \label{thedef} \\
-0 &=& 1 - {\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}\rho_\rms v_\rms
+0 &=& 1 - \SUM\rho_\rms v_\rms
 \label{mmeos}
 \end{eqnarray}
 %
@@ -229,11 +170,11 @@ has been developed in \cite{kashiwa2000}.  It is stated here as:
 {1\over V}{D_\rmr (M_\rmr v_\rmr) \over Dt} =
 f_\rmr^{\theta} \bnabla \cdot \bfu &+&
 \left[v_\rmr \Gamma_\rmr -
-f_\rmr^{\theta} {\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
+f_\rmr^{\theta} \SUM
 v_\rms \Gamma_\rms \right]  \nonumber \\ &+&
 \left[\theta_\rmr
 \beta_\rmr {D_\rmr T_\rmr\over Dt} -
-f_\rmr^{\theta} {\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
+f_\rmr^{\theta} \SUM
 \theta_\rms \beta_\rms {D_\rms T_\rms\over Dt} \right] \; .
 \label{eqspvolr}
 \end{eqnarray}
@@ -247,17 +188,14 @@ is still required in order to determine an equilibrium pressure that results
 in a common value for the  pressure, as well as specific volumes that fill
 the total volume identically.
 
-\section{Numerical Implementation}\label{sec:numerical_algorithm}
-
 A description of the means by which numerical solutions to the equations in
-Section~\ref{sec:governing_equations} are found is presented next.  This begins
+Section~\ref{sec:ICE:algorithm} are found is presented next.  This begins
 with separate, brief, overviews of the methodologies used for the Eulerian
 and Lagrangian reference frames.  The algorithmic details necesssary for
 integrating them to achieve a tightly coupled fluid-structure interaction
 capability is provided in Sec.~\ref{sec:coupling}.
 
-
-\subsection{Eulerian Multi-Material Method}\label{sec:EulerianMFM}
+\subsection{Algorithm Description}\label{sec:ICE:algorithm}
 
 The Eulerian method implemented here is a cell-centered, finite volume,
 multi-material version of the ICE (for Implicit, Continuous fluid, Eulerian)
@@ -271,7 +209,6 @@ volume for mass and momentum it can be assured that as the material mass goes
 to zero, the mass and momentum also go to zero at the same rate, leaving a
 well defined velocity.  The technique is fully compressible, allowing wide
 generality in the types of problems that can be addressed.
-
  
 Our use of the cell-centered ICE method employs time splitting: first,
 a Lagrangian step updates the state due to the physics of the conservation
@@ -279,7 +216,6 @@ laws (i.e., right hand side of Eqs.~{\ref{eqmassr}-\ref{eqenergyr}}); this
 is followed by an Eulerian step, in which the change due to advection is
 evaluated.  For solution in the Eulerian frame, the method is well developed
 and described in \cite{kashiwaCCICE94}.
-
 
 In the mixed frame approach used here, a modification to the multi-material
 equation of state is needed.  Equation (\ref{mmeos}) is unambiguous when all
@@ -292,8 +228,7 @@ interface between the two materials: there the normal part of the traction
 equals the pressure exerted by the fluid on the solid over the interface.
 Because the orientation of the interface is not explicitly known at any
 point (it is effectively lost in the averaging) such an equilibrium cannot
-be computed
-.
+be computed.
 
 The difficulty, and the modification that resolves it, can be understood by
 considering a solid material in tension coexisting with a gas.  For solid
@@ -305,7 +240,6 @@ which Eq. (\ref{mmeos}) has no physical solutions (because the gas pressure
 is only positive).  This can be seen schematically in Fig.~\ref{vpfig}, which
 sketches equations of state for a gas and a solid, at an arbitrary temperature.
 
-
 Recall that the isothermal compressiblity is the negative slope of the
 specific volume versus pressure.  Embedded structures considered here are
 solids and, at low pressure, possess a much smaller compressibility than
@@ -315,7 +249,6 @@ where the compressibilities of the gas and condensed phase materials can
 become comparable (as in a detonation wave, for example).  Because the speed of
 shock waves in materials is determined by their equations of state, obtaining
 accurate high pressure behavior is an important goal of our FSI studies.
-
 
 To compensate for the lack of directional information for the embedded
 surfaces, we evaluate the solid phase equations of state in two parts.
@@ -329,7 +262,8 @@ of coexistence at states below the threshold pressure, $p$ tends to behave
 according to the fluid equation of state (due to the greater compressibility)
 while in regions of pure condensed phase material $p$ tends rapidly toward
 zero and the full material stress dominates the dynamics as it should.
-
+\subsection{Uintah Implementation}
+- to be filled in\\
 
 \subsection{Uintah Specification}
 %______________________________________________________________________
@@ -358,6 +292,8 @@ system.
    <reference_pressure> 101325.0  </reference_pressure>
 </PhysicalConstants>
 \end{Verbatim}
+
+\subsubsection{Material Properties}
 
 %______________________________________________________________________
 \subsubsection{Material Properties}
@@ -781,6 +717,102 @@ do\_Refluxing         & boolean &              &    on/off switch for correcting
 %______________________________________________________________________
 \newpage
 \subsection{Examples}
+\section*{\center Poiseuille Flow}
+\subsection*{\underline{Problem Description}}
+The Poiseuille flow problem is classical viscous flow problem in which flow is
+driven through two parallel plates from fixed pressure gradient.  The pressure
+gradient is balanced by the diffusion $x$ momentum in the $y$ direction.
+
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ICE
+\item [Input file name:] \hfill \TT{CouettePoiseuille.ups}\\
+Edit this file and set the boundary condition for the velocity on the y+ = 0.0.
+Change:
+\begin{Verbatim}[fontsize=\footnotesize]
+<BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                       <value> [1.25,0.,0.] </value>
+[to]
+<BCType id = "0"   label = "Velocity"     var = "Dirichlet">
+                      <value> [0,0.,0.] </value>
+\end{Verbatim}
+ 
+\item [Command used to run input file:]\hfill \\
+\TT{mpirun -np 1 sus -solver hypre inputs/UintahRelease/ICE/CouettePoiseuille.ups}
+\item [Postprocessing command:]\hfill \\
+\TT{inputs/UintahRelease/ICE/compare\_Couette\-Poiseuille.m -uda Couette-Poiseuille.uda}\\
+You must edit \TT{compare\_Couette\-Poiseuille.m} and set \TT{wallVel = 0}.
+This will generate a postscript file Couette\-Poiseuille.ps
+
+\item [Simulation Domain:]\hfill    1 x .01 x .01 m
+\item [Cell Spacing:]\hfill \\ 
+10 x 5 x 10 mm (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 8ish minutes   (1 processor, 2.66 GHz Xeon)
+
+\item [Physical time simulated:] \hfill 15 sec.
+\end{description}
+
+\section*{\underline{Results}}
+Figure \ref{fig:Poiseuille} shows a comparison of the exact and simulated u
+velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
+plot shows the difference of the velocity $\|u - u_{exact}\|$.
+%
+\begin{figure}
+  \includegraphics[scale=.85]{Poiseuille.png}
+  \caption{ Comparison of $u$ velocity $t = 15sec$}
+  \label{fig:Poiseuille}
+  \end{figure}
+\newpage
+
+%______________________________________________________________________
+\section*{\center Combined Couette-Poiseuille Flow}
+\subsection*{\underline{Problem Description}}
+The combined Couette-Poiseuille flow problem is another classical viscous
+flow problem in which flow is driven through a channel by a pressure gradient
+and a wall moving.  The reduced x momentum equation differential is
+
+\begin{equation}
+  \mu \frac{d^2 u}{dy^2} = \frac{dp}{dx} = \text{constant}
+\end{equation}
+subject to the no slip boundary condition $u(\pm h) = \text{wall velocity}$,
+where $h$ is half the height of the channel \cite{ref:white}.
+
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\footnotesize
+\item [Component used:] \hfill ICE
+\item [Input file name:] \hfill \TT{CouettePoiseuille.ups}
+\item [Command used to run input file:]\hfill \\
+\TT{mpirun -np 1 sus -solver hypre inputs/UintahRelease/ICE/CouettePoiseuille.ups}
+\item [Postprocessing command:]\hfill \\
+\TT{inputs/UintahRelease/ICE/compare\_Couette\-Poiseuille.m -uda Couette-Poiseuille.uda}\\
+This will generate a postscript file Couette\-Poiseuille.ps
+
+\item [Simulation Domain:]\hfill    1 x .01 x .01 m
+\item [Cell Spacing:]\hfill \\ 
+10 x 5 x 10 mm (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 8ish minutes   (1 processor, 2.66 GHz Xeon)
+
+\item [Physical time simulated:] \hfill 15 sec.
+\end{description}
+
+\section*{\underline{Results}}
+Figure \ref{fig:Poiseuille} shows a comparison of the exact and simulated u
+velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
+plot shows the difference of the velocity $\|u - u_{exact}\|$.
+%
+\begin{figure}
+  \includegraphics[scale=.85]{Poiseuille.png}
+  \caption{ Comparison of $u$ velocity $t = 15sec$}
+  \label{fig:Poiseuille}
+  \end{figure}
+\newpage
+%______________________________________________________________________
 \section*{\center Shock Tube}
 \subsection*{\underline{Problem Description}}
 The shock tube problem is a standard 1D compressible flow problem that
@@ -800,10 +832,10 @@ steep gradients and solve Eulers equations.
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill rieman\_sm.ups
-\item [Command used to run input file:]\hfill sus inputs/UintahRelease/ICE/shockTube.ups
+\item [Input file name:] \hfill \TT{rieman\_sm.ups}
+\item [Command used to run input file:]\hfill \TT{sus inputs/UintahRelease/ICE/shockTube.ups}
 \item [Postprocessing command:]\hfill \\
-inputs/UintahRelease/ICE/plot\_shockTube\_1L shockTube.uda y \\
+\TT{inputs/UintahRelease/ICE/plot\_shockTube\_1L shockTube.uda y}\\
 This will generate a postscript file shockTube.ps
 
 \item [Simulation Domain:]\hfill    1 x .001 x .001 m
@@ -834,10 +866,10 @@ results at time $t = 5msec$.
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill shocktube\_AMR.ups
-\item [Command used to run input file:]\hfill sus inputs/UintahRelease/ICE/shocktube\_AMR.ups
+\item [Input file name:] \hfill \TT{shocktube\_AMR.ups}
+\item [Command used to run input file:]\hfill\\ \TT{sus inputs/UintahRelease/ICE/shocktube\_AMR.ups}
 \item [Postprocessing command:]\hfill \\
-inputs/UintahRelease/ICE/plot\_shockTube\_AMR shockTube\_AMR.uda y\\
+\TT{inputs/UintahRelease/ICE/plot\_shockTube\_AMR shockTube\_AMR.uda y}\\
 This will generate a postscript file shockTube\_AMR.ps
 
 \item [Simulation Domain:]\hfill    1 x .001 x .001 m
@@ -879,10 +911,10 @@ component of velocity.
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill riemann2D\_AMR.ups
+\item [Input file name:] \hfill \TT{riemann2D\_AMR.ups}
 \item [Command used to run input file:]\hfill \\
-mpirun -np 5 sus inputs/UintahRelease/ICE/riemann2D\_AMR.ups
-\item [VisIT session file:]\hfill inputs/UintahRelease/ICE/riemann2D.session
+\TT{mpirun -np 5 sus inputs/UintahRelease/ICE/riemann2D\_AMR.ups}
+\item [VisIT session file:]\hfill \TT{inputs/UintahRelease/ICE/riemann2D.session}
 \item [Simulation Domain:]\hfill    0.96 x 0.96m x 0.1 m
 \item [Cell Spacing:]\hfill \\ 
 40  x 40  x 1 mm (Level 0)\\
@@ -925,12 +957,12 @@ $(p=0.1, \rho=0.125, u=0, v=0).$  The fluid was an ideal, inviscid, polytropic g
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill ICE
-\item [Input file name:] \hfill Explosion.ups
+\item [Input file name:] \hfill \TT{Explosion.ups}
 \item [Command used to run input file:]\hfill \\
-      mpirun -np 4 sus inputs/UintahRelease/ICE/Explosion.ups
-\item [Visualization net file:]\hfill inputs/UintahRelease/ICE/Explosion.session\\
+      \TT{mpirun -np 4 sus inputs/UintahRelease/ICE/Explosion.ups}
+\item [Visualization net file:]\hfill \TT{inputs/UintahRelease/ICE/Explosion.session}\\
 \item [Postprocessing command:]\hfill \\
-inputs/ICE/Scripts/plot\_explosion\_AMR Explosion\_AMR.uda y\\
+\TT{inputs/ICE/Scripts/plot\_explosion\_AMR Explosion\_AMR.uda y}\\
 This will generate a postscript file explosion\_AMR.ps
 
 
@@ -950,27 +982,27 @@ This will generate a postscript file explosion\_AMR.ps
 \section*{\underline{Results}}
 Figures \ref{fig:pressExplode,fig:rhoExplode} shows surface plots of the pressure and density at $t=0.25.$  
 \newpage
-%\begin{figure}
- % \includegraphics[scale=.5]{explode_press.png}
-  %\caption{Pressure field at $t=0.25$}
-  %\label{fig:pressExplode}
-%\end{figure}
+\begin{figure}
+ \includegraphics[scale=.5]{explode_press.png}
+\caption{Pressure field at $t=0.25$}
+\label{fig:pressExplode}
+\end{figure}
 %
 \newpage
-%\begin{figure}
-%  \includegraphics[scale=.5]{explode_rho.png}
-%  \caption{Density field at time $t=0.25$}
-%  \label{fig:rhoExplode}
-%\end{figure}
+\begin{figure}
+  \includegraphics[scale=.5]{explode_rho.png}
+  \caption{Density field at time $t=0.25$}
+  \label{fig:rhoExplode}
+\end{figure}
 \newpage
-
+%
 Since this test is symetrical we can use results from the equivalent 1 dimensional problem to compare against
-
-%\begin{figure}
-%  \includegraphics[scale=.75]{explode_1D.png}
-%  \caption{XXX$t=0.25$}
-%  \label{fig:1dExplode}
-%\end{figure}
+%
+\begin{figure}
+  \includegraphics[scale=.75]{explode_1D.png}
+  \caption{XXX$t=0.25$}
+  \label{fig:1dExplode}
+\end{figure}
 
 \newpage
 
