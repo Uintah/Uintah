@@ -1,25 +1,26 @@
 \section{Using Uintah} \label{Sec:UCF}
 
 Several executable programs have been developed using the Uintah
-Computational Framework (ucf).  The primary code is called sus which
-stands for the Standalone Uintah Simulation.  The code was originally
-developed to solve a complex fluid structure problem involving a
-container filled with an explosive set in a fire.  The code would
-model the fire and the subsequent heat transfer to the container
-followed by the resultant container deformation and ultimate rupture
-due to the ignition and burning of the explosive material all running
-on thousands of processors requiring thousands of hours of computer
-time and hundreds of gigabytes of data storage.  Although this code
-was developed originally to solve this complicated multi-physics
-problem, the general nature of the algorithms and the framework have
-afforded researchers to use the code to investigate a wide range of
-problems.  The framework is general purpose enough to allow for the
-implementation of This code leverages the task based parallelism
-inherent in the ucf to implement several time stepping algorithms for
-structural mechanics, fluid dynamics, and fluid structure
-interactions.  What follows is a description of using sus within the
-realm of structural mechanics, fluid mechanics and structure-fluid
-interactions.
+Computational Framework (UCF).  The primary code is named \tt sus
+\normalfont which stands for Standalone Uintah Simulation.  The code
+was originally developed to solve a complex fluid structure problem
+involving a container filled with an explosive enveloped in a fire.
+The code models the fire and the subsequent heat transfer to the
+container followed by the resultant container deformation and ultimate
+rupture due to the ignition and burning of the explosive material all
+running on thousands of processors requiring thousands of hours of
+computer time and hundreds of gigabytes of data storage.  Although
+Uintah was developed originally to solve this complicated
+multi-physics problem, the general nature of the algorithms and the
+framework have allowed researchers to use the code to investigate a
+wide range of problems.  The framework is general purpose enough to
+allow for the implementation of FIX ME
+
+This code leverages the task based parallelism inherent in the UCF to
+implement several time stepping algorithms for structural mechanics,
+fluid dynamics, and fluid structure interactions.  What follows is a
+description of using \tt sus \normalfont within the realm of structural mechanics,
+fluid mechanics, and structure-fluid interactions.
 
 
 
@@ -29,41 +30,39 @@ interactions.
  - what do the different command line options mean\\
  - how to restart an uda\\
 
-For single processor simulations, the sus excutable (Standalone Uintah Simulation) is run from the command line prompt like this:
-
+For single processor simulations, the \tt sus \normalfont excutable
+(Standalone Uintah Simulation) is run from the command line prompt
+like this:
 \begin{Verbatim}
   
-  sus input.ups
+  sus <input.ups>
 
 \end{Verbatim}
-
-where the input.ups is an xml formatted input file.  The Uintah
+where \tt input.ups \normalfont is an xml formatted input file.  The Uintah
 software release contains numerous example input files located in the
 src/StandAlone/inputs directory.
 
-For multiprocessor runs, the general format is to use mpirun to launch
-the jobs.  Depending on the environment, batch scheduler, launch
-scripts, etc, mpirun mayy or may not be used.  However, the general
-format would be something like the following:
-
+For multiprocessor runs, the user generally uses \tt mpirun \normalfont to launch
+the code.  Depending on the environment, batch scheduler, launch
+scripts, etc, \tt mpirun \normalfont may or may not be used.  However, in general,
+something like the following is used:
 \begin{Verbatim}
 
   mpirun -np num_processors sus -mpi input.ups
 
 \end{Verbatim}
-
-The num_processors is the number of processors that will be used.  The
+\tt num\_processors \normalfont is the number of processors that will be used.  The
 input file must contain a patch layout that has at least the same
 number (or greater) of patches as processors specified by a number
 following the -np option shown above.
 
-In addition, the -mpi is optional but often times necessary if the mpi
+In addition, the \tt -mpi \normalfont is optional but often times necessary if the mpi
 environment is not automatically detected from within the sus
 executable.
  
 %__________________________________
 \subsection{Time Related Variables} \label{Sec:TimeRelatedVariables}
-Uintah components are timestepping codes.  As such, one of the first entries
+Uintah components are time dependent codes.  As such, one of the first entries
 in each input file describes the timestepping parameters.  An input file
 segment is given below that encompasses all of the possible parameters.
 Most are self-explanatory, and not all are required,
@@ -86,7 +85,6 @@ moderate the timestep automatically calculated by the individual components.
     <max_Timestep>       100         </max_Timestep>
     <end_on_max_time_exactly>true    </end_on_max_time_exactly>
 </Time>
-
 \end{Verbatim}
 %
 %__________________________________
@@ -132,9 +130,73 @@ Explain how a grid is specified and what these tags mean
 - to be filled in
 
 %__________________________________
-\subsection{uda}
-- discuss the directory structure of an uda
-- discuss how to modify an input parameter before you restart an uda.
+\subsection{UDA}
+
+\subsubsection{UDA Directory Structure}
+
+The UDA is a file/directory structure used to save Uintah simulation
+data.  For the most part, the user need not concern him or herself
+with the UDA layout, but it is a good idea to have a general feeling
+for how the data is stored on disk...
+
+%\subsubsubsection{UDA Naming}
+
+Every time a simulation (sus) is run, a new UDA is created.  Sus uses
+the <filebase> tag in the simulation input
+(FIXME: link to [[Documentation/UsersGuide Input\_Files|.ups]]) file to name the UDA
+directory (appending a version number).  If an UDA of that name
+already exists, the next version number is used.  Additionally, a
+symbolic link named ``disks.uda'' (is updated to and) will point to
+the newest version of this simulations UDA.  Eg:
+
+disks.uda.000
+disks.uda.001
+disks.uda.001 <- disks.uda
+
+%\subsubsubsection{UDA Files}
+
+Each UDA consists of a number of top level files, a checkpoints
+subdirectory, and subdirectories for each saved timestep.  These files
+include:
+
+- \tt.dat\normalfont files contain global information about the simulation
+(each line in the .dat files contains: simulation\_time value).
+- The \tt checkpoints\normalfont directory contains a limited number of time
+step data subdirectories that contain a complete snapshot of the
+simulation (allowing for the simulation to be restarted from that
+time).
+- \tt input.xml\normalfont contains the original problem specification (the
+.ups file).
+- \tt index.xml\normalfont contains information on the actual simulation run.
+- \tt t0000 FIXME number sign\normalfont contains data saved for that specific time step.  The
+data saved is specified in .ups file and may be a very limited subset
+of the full simulation data.
+
+Example UDA file list:
+
+CenterOfMassPosition.dat
+CenterOfMassVelocity.dat
+KineticEnergy.dat
+StrainEnergy.dat
+TotalMass.dat
+checkpoints
+index.xml
+input.xml
+t00001
+t00057
+
+%\subsubsection{Known Issues} 
+
+Occasionally, due (most likely) to file system issues on large
+clusters, some of the files in the UDA have been found to be corrupted
+or nonexistent.  (There is error checking in the code to try to
+prevent this.  We believe that either the OS/File system is
+incorreclty returning error codes, or, more likely, that the files are
+corrupted (due to file system issues) after the simulation is done.
+
+%\subsubsection{Restrarting} 
+
+FIXME: discuss how to modify an input parameter before you restart an uda.
 
 %__________________________________
 \subsection{Visualization tools}
@@ -178,7 +240,7 @@ Explain how a grid is specified and what these tags mean
 |   |-- Solvers
 |   |-- SpatialOps
 |   `-- SwitchingCriteria
-`-- Ports
+|-- Ports
 |-- Core
 |-- R_Tester
 |-- StandAlone
@@ -186,9 +248,7 @@ Explain how a grid is specified and what these tags mean
 |-- VisIt
 |-- build_scripts
 |-- include
-|-- on-the-fly-libs
 |-- orderAccuracy
-|-- osx
 |-- scripts
 |-- tau
 |-- testprograms

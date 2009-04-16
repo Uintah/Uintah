@@ -1,7 +1,12 @@
-#!/bin/csh
+#! /bin/csh
 
-/bin/rm *.aux
-pdflatex  --halt-on-error uintah.tex
+/bin/rm -f *.aux
+
+mkdir -p PDF
+
+set OUTPUT_DIR="-output-directory=PDF"
+
+pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
 
 if( $status == "0" ) then
   echo "------------------"
@@ -10,7 +15,7 @@ if( $status == "0" ) then
   #bibtex arches
   bibtex ice
   bibtex mpm
-  pdflatex -interaction=batchmode uintah.tex
-  pdflatex -interaction=batchmode uintah.tex
+  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
+  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
 endif
-exit
+
