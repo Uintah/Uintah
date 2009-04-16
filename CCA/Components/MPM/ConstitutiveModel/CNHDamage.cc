@@ -248,7 +248,7 @@ CNHDamage::initializeCMData(const Patch* patch,
       pFailureStrain[*iter] = fabs(gaussGen.rand());
       pFailed[*iter] = 0;
     }
-  } else {
+  } else if (d_epsf.dist == "weibull"){
     // Initialize a weibull random number generator
     SCIRun::Weibull weibGen(d_epsf.mean, d_epsf.std, d_epsf.scale, 0);
 
