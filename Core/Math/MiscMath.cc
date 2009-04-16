@@ -115,43 +115,46 @@ void findFactorsNearRoot(const int value, int &factor1, int &factor2) {
 //as a sentinal to signal that no guess was provided.
 double cubeRoot(double a, double guess)
 {
-  static const double small_num=1e-15;
-  static const int MAX_ITS=30;
-
   double xold;
   static double xnew=1;   //start initial guess at last answer
+  double small_num=5*DBL_EPSILON;
 
   if(guess!=DBL_MIN)
     xnew=guess;
 
   double atimes2=a*2.0;
-
   double x3;
+  double diff=DBL_MAX, last_diff;
+   
+  //do a couple of iterations without checking the convergence criteria
+  xold=xnew;
+  x3=xold*xold*xold;
+  xnew=xold*(x3+atimes2)/(2*x3+a);
 
-  int i=0;
+  xold=xnew;
+  x3=xold*xold*xold;
+  xnew=xold*(x3+atimes2)/(2*x3+a);
+
+  xold=xnew;
+  x3=xold*xold*xold;
+  xnew=xold*(x3+atimes2)/(2*x3+a);
+
+  diff=fabs(xold-xnew);
+
   do
   {
     xold=xnew;
     x3=xold*xold*xold;
     xnew=xold*(x3+atimes2)/(2*x3+a);
 
-    xold=xnew;
-    x3=xold*xold*xold;
-    xnew=xold*(x3+atimes2)/(2*x3+a);
-    
-    xold=xnew;
-    x3=xold*xold*xold;
-    xnew=xold*(x3+atimes2)/(2*x3+a);
-
-#if 0
-    xold=xnew;
-    x3=xold*xold*xold;
-    xnew=xold*(x3+atimes2)/(2*x3+a);
-#endif
-    //printf("iter %d old: %f new: %f diff:%18.16f, percent diff: %18.16f\n",i,xold,xnew,fabs(xold-xnew),fabs(xold-xnew)/xold);
-  } while ( fabs(xold-xnew)/xold>small_num && ++i<MAX_ITS);
-  //} while ( fabs(xold-xnew)>small_num && ++i<MAX_ITS);
-
+    last_diff=diff;
+    diff=fabs(xold-xnew);
+    //terminate if the /*absolute or*/ relative difference is less than machine precision or if the convergence has stopped
+  } while(/*diff>small_num &&*/ diff>small_num*xold && last_diff>diff);
+  
+  if(last_diff<diff)
+    return xold;
+  else
     return xnew;
 }
 
