@@ -61,7 +61,7 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("shear_modulus",d_initialData.Shear);
   ps->require("yield_stress",d_initialData.FlowStress);
   ps->require("hardening_modulus",d_initialData.K);
-  ps->require("alpha",d_initialData.Alpha);
+  ps->getWithDefault("alpha",d_initialData.Alpha,0.0);
   ps->get("useModifiedEOS",d_useModifiedEOS);
   
   p_statedata_label = VarLabel::create("p.statedata_cnhp",
