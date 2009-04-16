@@ -512,8 +512,6 @@
   <PhysicalConstants    spec="OPTIONAL NO_DATA"> <!-- FIXME: REALLY OPTIONAL??? -->
     <gravity            spec="REQUIRED VECTOR" /> <!-- THIS IS OPTIONAL IN ICE AND MPM, DEFAULT IS 0,0,0 -->
     <reference_pressure spec="OPTIONAL DOUBLE" />
-    <pressure           spec="OPTIONAL DOUBLE" />
-    <ideal_gas_constant spec="OPTIONAL DOUBLE" />
   </PhysicalConstants>
 
   <CFD                                  spec="OPTIONAL NO_DATA" >
