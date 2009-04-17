@@ -170,6 +170,7 @@ getPeriodicBoundaries(const string& input_uda_name, int timeStepNo, int levelNo)
     boundaryExists[2] = a.z();   
   }
 
+  delete archive;
   return boundaryExists;
 }
 
@@ -202,6 +203,7 @@ getExtraCells(const string& input_uda_name, int timeStepNo, int levelNo) {
     extraCells[2] = a.z();   
   }
 
+  delete archive;
   return extraCells;
 }
 
@@ -237,6 +239,8 @@ getTotalNumPatches(const string& input_uda_name, int timeStepNo) {
   }	
 
   // return numPatches;
+
+  delete archive;
   return levelPatchVecPtr;
 }
 
@@ -262,6 +266,7 @@ getNumPatches(const string& input_uda_name, int timeStepNo, int levelNo) {
   level = grid->getLevel(levelNo);
   *numPatches = level->numPatches();
 
+  delete archive;
   return numPatches;
 }
 
@@ -284,6 +289,7 @@ getNumLevels(const string& input_uda_name, int timeStepNo) {
   GridP grid = archive->queryGrid(timeStepNo);
   *numLevels = grid->numLevels();
 
+  delete archive;
   return numLevels;
 }
 
@@ -330,6 +336,7 @@ getMaterials(const string& input_uda_name, const string& variable_name, int time
     varMatlList->push_back(*matlIter);
     }*/	
 
+  delete archive;
   return varMatlList;
 }
 
@@ -362,6 +369,7 @@ getBBox(const string& input_uda_name, int timeStepNo, int levelNo) {
   minMaxArr[0] = min.x(); minMaxArr[1] = min.y(); minMaxArr[2] = min.z();
   minMaxArr[3] = max.x(); minMaxArr[4] = max.y(); minMaxArr[5] = max.z();
 
+  delete archive;
   return minMaxArr;
 } 
 
@@ -442,6 +450,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
   cout << indexArr[3] - indexArr[0] << " " << indexArr[4] - indexArr[1] << " " << indexArr[5] - indexArr[2] << "\n";
 
+  delete archive;
   return indexArr;
   }
 
@@ -591,6 +600,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	}
       }		
 
+      delete archive;
       return patchInfoVecPtr;
     }
 
@@ -663,6 +673,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
       // minMaxArr[4] = min.y() + uppery * length.y(); 
       // minMaxArr[5] = min.z() + upperz * length.z();
 
+      delete archive;
       return minMaxArr;
     }
 
@@ -706,6 +717,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	timeStepInfo->push_back(times[i]);
       }
 
+      delete archive;
       return timeStepInfo;
 
       // int* noTimeSteps = new int(index.size());
@@ -731,6 +743,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	cout << vars[i] << " " << types[i]->getName() << endl;
       }
 
+      delete archive;
       return udaVarList;
     } 
 
@@ -1260,7 +1273,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	// Adding time step object to the data bank 
 	// dataBank->push_back(timeStepObj);
-
+        
+	delete archive;
 	return timeStepObjPtr;
 
 	// } // end time step loop
