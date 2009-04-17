@@ -65,7 +65,7 @@ struct ParticleDataContainer {
   {
     type = UNKNOWN;
   }
-
+  
   string       name;
   float      * data;
   float      * x, * y, * z;

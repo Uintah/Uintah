@@ -355,7 +355,9 @@ wrap_nrrd( FIELD * source, Matrix_Op matrix_op, bool verbose, cellVals& cellValC
 	free(data);
 	return 0;
 	}*/
-    }  
+    }
+
+    free(data);
   }
 
   // return out;
