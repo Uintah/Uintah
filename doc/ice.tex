@@ -1007,6 +1007,53 @@ Since this test is symetrical we can use results from the equivalent 1 dimension
 \newpage
 
 
+\section*{\center ANFO Rate Stick}
+\subsection*{\underline{Problem Description}}
+A cylindrical stick ($r = 8 mm$) of Ammonium Nitrate Fuel Oil (ANFO) given an initial
+velocity of $90 m/s$.  As it strikes the domain boundary, pressure is generated
+sufficient to reach the initial pressure required to activate the 
+JWL++~\cite{ref:JWL} detonation model.  This empirically based model results
+in a steady state detonation that traverses the stick, consuming the solid 
+explosive and generating high pressure gas.  The experimentally observed
+curvature is generated at the detonation front, a feature that will not develop
+in programmed burn models.  By running this simulation at
+a variety of cylinder radii, one can observe the ''size effect", namely that
+cylinders of larger radii will reach a higher steady state detonation velocity,
+due to the increased effective confinement.  An infinite radius case can be
+simulated by shrinking the computational domain to one cell in each of the
+transverse directions.
+
+%
+\subsection*{\underline{Simulation Specifics}}
+\begin{description}
+\item [Component used:] \hfill ICE
+\item [Input file name:] \hfill \TT{JWLpp8mmRS.ups}
+\item [Command used to run input file:]\hfill \\
+      \TT{mpirun -np 4 sus inputs/UintahRelease/ICE/JWLpp8mmRS.ups}
+\item [Visualization net file:]\hfill \TT{inputs/UintahRelease/ICE/RateStick.session}\\
+
+\item [Simulation Domain:]\hfill    0.1 m x 0.015 m x 0.015 m
+\item [Cell Spacing:]\hfill \\
+0.0005  x 0.0005  x 0.0005 (Level 0)\\
+
+\item [Example Runtimes:] \hfill \\
+ 1.5 hours   (4 processor, 3.16 GHz Xeon)
+
+\item [Physical time simulated:] \hfill 20.0 $\mu$seconds
+
+\end{description}
+
+\section*{\underline{Results}}
+Figure \ref{fig:RateStick} shows a volume rendering of the density of the
+reactant.  Note the curvature of the reaction zone.
+\begin{figure}
+ \includegraphics[scale=.5]{RateStick.png}
+\caption{Density of reactant material.}
+\label{fig:RateStick}
+\end{figure}
+
+\newpage
+
 %__________________________________CH4 fire
 
 %\section*{\center Methane Flame}
