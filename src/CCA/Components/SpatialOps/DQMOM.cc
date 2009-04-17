@@ -274,7 +274,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           
           double quadsumS = 0;
           for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-            if (weights[alpha] != 0) {
+            if (weights[alpha] == 0) {
+              prefixA = 0;
+              productA = 0;
+              productS = 0;
+            } else if ( weightedAbscissas[j*(N_)+alpha] == 0 && thisMoment[j] == 0) {
+              // do something
+            } else {
               // Appendix C, C.11 (A_j+1 matrix)
               prefixA = (thisMoment[j])*( pow((weightedAbscissas[j*(N_)+alpha]/weights[alpha]),(thisMoment[j]-1)) );
               productA = 1;
@@ -285,17 +291,21 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
               for (unsigned int n = 0; n < N_xi; ++n) {
                 if (n != j) {
-                  // A_j+1 matrix:
-                  productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
-                  // S matrix:
-                  productS = productS*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                  // if statements needed b/c only checking int coord j above
+                  if (weights[alpha] == 0) {
+                    productA = 0;
+                    productS = 0;
+                  } else if (weightedAbscissas[n*(N_)+alpha] == 0 && thisMoment[n] == 0) {
+                    productA = 0;
+                    productS = 0;
+                  } else {
+                    productA = productA*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                    productS = productS*( pow( (weightedAbscissas[n*(N_)+alpha]/weights[alpha]), thisMoment[n] ));
+                  }
                 }
-              }
-            } else {
-              prefixA = 0;
-              productA = 0;
-              productS = 0;
-            }
+              }//end int coord n
+            }//end divide by zero conditionals
+            
 
             modelsumS = - models[j*(N_)+alpha];
 
@@ -304,7 +314,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             quadsumS = quadsumS + weights[alpha]*modelsumS*prefixS*productS;
           }//end quad nodes
           totalsumS = totalsumS + quadsumS;
-        }//end int coords
+        }//end int coords j
         
         B[k] = totalsumS;
       } // end moments
