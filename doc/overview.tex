@@ -85,7 +85,7 @@ variables, i.e. \texttt{variable1\_label}, and
 component with specifications about what patches and materials are
 associated with the actual computation.
 
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 
 Task* task = scinew Task("Example::taskexample",this,
                          &Example::taskexample);
@@ -94,7 +94,7 @@ task->computes(variable1_label);
 task->computes(variable2_label);
 sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
-\end{verbatim}
+\end{Verbatim}
 
 For more complex problems involving multiple materials and
 multi-physics calculations, a subset of the materials may only be used
@@ -114,9 +114,7 @@ following virtual methods: \texttt{problemSetup},
 and \texttt{scheduleTimeAdvance}.  Here is an example of the typical
 *.h file that needs to be created for a new component.
 
-\begin{verbatim}
-
-
+\begin{Verbatim}[fontsize=\footnotesize]
 class Example : public UintahParallelComponent, public SimulationInterface {
   public:
 
@@ -154,11 +152,8 @@ class Example : public UintahParallelComponent, public SimulationInterface {
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
                      DataWarehouse* new_dw);
-
 }
-
-
-\end{verbatim}
+\end{Verbatim}
 
 
 Each new component inherits from the classes
