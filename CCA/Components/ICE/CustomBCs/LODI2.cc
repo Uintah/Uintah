@@ -270,7 +270,7 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
   cout_doing << "preprocess_Lodi_BCs on patch "<<patch->getID()<< endl;
   Ghost::GhostType  gn  = Ghost::None;
 /*`==========TESTING==========*/
-  Material* matl = sharedState->getICEMaterial(var_basket->iceMatl_indx);
+  Material* matl = sharedState->getMaterial(var_basket->iceMatl_indx);
   int indx = matl->getDWIndex();  
 /*===========TESTING==========`*/
 
