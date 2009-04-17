@@ -149,6 +149,10 @@ protected:
   int* extraCells;
         
   int ncomps;
+
+  int refX, refY, refZ;
+  int vecX, vecY, vecZ;
+  int tenX, tenY, tenZ;
         
   timeStep*        (*processData)(int, char[][128], int, bool, int, bool, int);
   udaVars*         (*getVarList)(const std::string&);
