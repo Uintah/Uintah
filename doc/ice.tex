@@ -268,33 +268,106 @@ zero and the full material stress dominates the dynamics as it should.
 \subsection{Uintah Specification}
 %______________________________________________________________________
 \subsubsection{Basic Inputs}
-The ICE component is selected by specifying:
-%
 Each Uintah component is invoked using a single executable called
 \it sus \normalfont, which chooses the type of simulation
 to execute based on the \it SimulationComponent \normalfont tag in the
 input file.  In the case of ICE simulations, this looks like:
-
+%
 \begin{Verbatim}[fontsize=\footnotesize]
  <SimulationComponent type="ice" />
 \end{Verbatim}
 %
-near the top of the inputfile.  The system of units \bf{must}\normalfont be
-to be consistent (mks, cgs) and the majority of input files will be in meter-kilogram-sec
+near the top of the inputfile.  The system of units \bf{must }\normalfont be
+consistent (mks, cgs) and the majority of input files will be in Meter-Kilogram-Sec
 system.
 
+\red{ discuss  first order and second order advection}
+
+\red{ discuss timestep scheme.  We mainly use aggressive}
+%
+%______________________________________________________________________
+\subsubsection{Semi-Implicit Pressure Solve}
+The equation for the change in the pressure field $\Delta{P}$ during a given
+timestep is given by
+%
+\begin{equation}
+    \label{eq:delP}
+     \frac{dP}{dt} = 
+     \frac{\sum \limits_{{m}=1}^N  \frac{\dot{m}} {V \rho^{o}_m} 
+        -  \sum \limits_{{m}=1}^N \nabla \cdot \widehat{\theta_m} \vec{U_m}^{*^{f}}}
+          {\sum \limits_{{m}=1}^N \frac{\theta_m}{\rho^{o}_m c_m^2} }
+\end{equation}
+%
+which can be written in matrix form $Ax = b$ and solved with a linear solver.  Details on the
+notation, discretization of Eq. \ref{eq:delP} and the formation of $A$
+and $b$ can be found in
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+ src/CCA/Components/ICE/Docs/implicitPressSolve.pdf
+\end{Verbatim}
+%
+The linear system $Ax = b$ can be solved using the default Uintah:conjugate
+gradient solver (cg) (slow) or one of the many that are available
+through the scalable linear solvers and preconditioner package hypre
+\cite{ref:hypre}. Experience has shown that the most efficient hypre
+preconditioner and solver are the pfmg and cg respectively.  Below are
+typical values for both the Uintah:cg and hypre:cg solver
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+<ImplicitSolver>
+   <max_outer_iterations>         20    </max_outer_iterations>
+   <outer_iteration_tolerance>    1e-8  </outer_iteration_tolerance>
+   <iters_before_timestep_restart> 5    </iters_before_timestep_restart>
+   <Parameters variable="implicitPressure">
+
+    <tolerance>     1.e-10  </tolerance>
+    
+    <!-- CGSolver options -->
+    <norm>     LInfinity  </norm>
+    <criteria> Absolute   </criteria>
+
+    <!-- Hypre options -->
+    <solver>         cg      </solver>
+    <preconditioner> pfmg    </preconditioner>
+    <maxiterations>  7500    </maxiterations>
+    <npre>           1       </npre>
+    <npost>          1       </npost>
+    <skip>           0       </skip>
+    <jump>           0       </jump>
+   </Parameters>
+</ImplicitSolver>
+\end{Verbatim}
+%
+If the user is interested in altering the tolerance to which the equations are solved they should look at
+\begin{Verbatim}[fontsize=\footnotesize]
+<tolerance> and <outer_iteration_tolerance>
+\end{Verbatim} 
+%
+B
+\noindent
+\footnotesize
+\begin{tabular}{l p{8cm}}
+XML tag &  Description\\
+\hline
+\hline
+max\_outer\_iterations           &  maximum number of iterations in the outer loop of the pressure solve.\\
+outer\_iteration\_tolerance      &  tolerance XXXXDX\\
+iters\_before\_timestep\_restart &  \footnotesize number of outer iterations before a timestep is restarted\\
+tolerance                        &   XXXX\\
+\hline
+\end{tabular}
+\normalsize\\
+\\
 %______________________________________________________________________
 \subsubsection{Physical Constants}
-
+The gravitational constant and a reference pressure are specified in:
 \begin{Verbatim}[fontsize=\footnotesize]
 <PhysicalConstants>
    <gravity>            [0,0,0]   </gravity>
    <reference_pressure> 101325.0  </reference_pressure>
 </PhysicalConstants>
 \end{Verbatim}
-
-\subsubsection{Material Properties}
-
+%
 %______________________________________________________________________
 \subsubsection{Material Properties}
 For each ICE material the thermodynamic and transport properties must be
@@ -600,77 +673,6 @@ artifical boundary. \bf This BC is computationally expensive and only partially
 works and should be used with caution\normalfont.  In flow fields where
 there are no passing through the outlet of the domain it reduces
 the reflected pressure waves significantly.
-%______________________________________________________________________
-\subsubsection{Semi-Implicit Pressure Solve}
-The equation for the change in the pressure field $\Delta{P}$ during a given
-timestep is given by
-%
-\begin{equation}
-    \label{eq:delP}
-     \frac{dP}{dt} = 
-     \frac{\sum \limits_{{m}=1}^N  \frac{\dot{m}} {V \rho^{o}_m} 
-        -  \sum \limits_{{m}=1}^N \nabla \cdot \widehat{\theta_m} \vec{U_m}^{*^{f}}}
-          {\sum \limits_{{m}=1}^N \frac{\theta_m}{\rho^{o}_m c_m^2} }
-\end{equation}
-%
-which can be written in matrix form $Ax = b$ and solved with a linear solver.  Details on the
-notation, discretization of Eq. \ref{eq:delP} and the formation of $A$
-and $b$ can be found in
-%
-\begin{Verbatim}[fontsize=\footnotesize]
- src/CCA/Components/ICE/Docs/implicitPressSolve.pdf
-\end{Verbatim}
-%
-The linear system $Ax = b$ can be solved using the default Uintah:conjugate
-gradient solver (cg) (slow) or one of the many that are available
-through the scalable linear solvers and preconditioner package hypre
-\cite{ref:hypre}. Experience has shown that the most efficient hypre
-preconditioner and solver are the pfmg and cg respectively.  Below are
-typical values for both the Uintah:cg and hypre:cg solver
-%
-\begin{Verbatim}[fontsize=\footnotesize]
-<ImplicitSolver>
-   <max_outer_iterations>         20    </max_outer_iterations>
-   <outer_iteration_tolerance>    1e-8  </outer_iteration_tolerance>
-   <iters_before_timestep_restart> 5    </iters_before_timestep_restart>
-   <Parameters variable="implicitPressure">
-
-    <tolerance>     1.e-10  </tolerance>
-    
-    <!-- CGSolver options -->
-    <norm>     LInfinity  </norm>
-    <criteria> Absolute   </criteria>
-
-    <!-- Hypre options -->
-    <solver>         cg      </solver>
-    <preconditioner> pfmg    </preconditioner>
-    <maxiterations>  7500    </maxiterations>
-    <npre>           1       </npre>
-    <npost>          1       </npost>
-    <skip>           0       </skip>
-    <jump>           0       </jump>
-   </Parameters>
-</ImplicitSolver>
-\end{Verbatim}
-%
-If the user is interested in altering the tolerance to which the equations are solved they should look at
-\begin{Verbatim}[fontsize=\footnotesize]
-<tolerance> and <outer\_iteration\_tolerance>
-\end{Verbatim} 
-%
-\noindent
-\footnotesize
-\begin{tabular}{l p{8cm}}
-XML tag &  Description\\
-\hline
-\hline
-max\_outer\_iterations           &  maximum number of iterations in the outer loop of the pressure solve.\\
-outer\_iteration\_tolerance      &  tolerance XXXXDX\\
-iters\_before\_timestep\_restart &  \footnotesize number of outer iterations before a timestep is restarted\\
-tolerance                        &   XXXX\\
-\hline
-\end{tabular}
-\normalsize\\
 %
 Table below shows some of the
 
@@ -678,10 +680,6 @@ Table below shows some of the
 %______________________________________________________________________
 %  XML tags
 \subsubsection{XML tag description}
-
-
-
-
 %__________________________________
 \begin {center}
 \begin{tabular}{lllp{8cm}}
@@ -717,6 +715,13 @@ do\_Refluxing         & boolean &              &    on/off switch for correcting
 %______________________________________________________________________
 \newpage
 \subsection{Examples}
+Below are several example problems that illustrate the wide range of problems
+that can be solved using the ICE algorithm.  Where possible simulation
+results are compared to exact solutions or high fidelity numerical results.
+Note in order to run the post processing scripts the user should have a
+recent version of Octave installed.  To visualize the results the visualization
+package VisIT should be used.  VisIT session files are included.
+ 
 \section*{\center Poiseuille Flow}
 \subsection*{\underline{Problem Description}}
 The Poiseuille flow problem is classical viscous flow problem in which flow is
@@ -766,7 +771,7 @@ plot shows the difference of the velocity $\|u - u_{exact}\|$.
   \label{fig:Poiseuille}
   \end{figure}
 \newpage
-
+%
 %______________________________________________________________________
 \section*{\center Combined Couette-Poiseuille Flow}
 \subsection*{\underline{Problem Description}}
@@ -789,7 +794,7 @@ where $h$ is half the height of the channel \cite{ref:white}.
 \TT{mpirun -np 1 sus -solver hypre inputs/UintahRelease/ICE/CouettePoiseuille.ups}
 \item [Postprocessing command:]\hfill \\
 \TT{inputs/UintahRelease/ICE/compare\_Couette\-Poiseuille.m -uda Couette-Poiseuille.uda}\\
-This will generate a postscript file Couette\-Poiseuille.ps
+This Octave script will generate a postscript file Couette\-Poiseuille.ps
 
 \item [Simulation Domain:]\hfill    1 x .01 x .01 m
 \item [Cell Spacing:]\hfill \\ 
@@ -807,11 +812,12 @@ velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
 plot shows the difference of the velocity $\|u - u_{exact}\|$.
 %
 \begin{figure}
-  \includegraphics[scale=.85]{Poiseuille.png}
+  \includegraphics[scale=.85]{Couette-Poiseuille.png}
   \caption{ Comparison of $u$ velocity $t = 15sec$}
   \label{fig:Poiseuille}
   \end{figure}
 \newpage
+%
 %______________________________________________________________________
 \section*{\center Shock Tube}
 \subsection*{\underline{Problem Description}}
@@ -826,8 +832,7 @@ traveling shockwave, discontinutity and expansion fan form.  The expansion
 fan moves towards the left while the shockwave and contact discontinutity
 move to the right.  This problem tests the algorithm's ability to capture
 steep gradients and solve Eulers equations.
-
- 
+%
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
@@ -836,7 +841,7 @@ steep gradients and solve Eulers equations.
 \item [Command used to run input file:]\hfill \TT{sus inputs/UintahRelease/ICE/shockTube.ups}
 \item [Postprocessing command:]\hfill \\
 \TT{inputs/UintahRelease/ICE/plot\_shockTube\_1L shockTube.uda y}\\
-This will generate a postscript file shockTube.ps
+This Octave script will generate a postscript file shockTube.ps
 
 \item [Simulation Domain:]\hfill    1 x .001 x .001 m
 \item [Cell Spacing:]\hfill \\ 
@@ -861,7 +866,7 @@ results at time $t = 5msec$.
 %
 %__________________________________SHOCKTUBE AMR
 \section*{\center Shock Tube with Adaptive Mesh Refinement}
- 
+%
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
@@ -870,7 +875,7 @@ results at time $t = 5msec$.
 \item [Command used to run input file:]\hfill\\ \TT{sus inputs/UintahRelease/ICE/shocktube\_AMR.ups}
 \item [Postprocessing command:]\hfill \\
 \TT{inputs/UintahRelease/ICE/plot\_shockTube\_AMR shockTube\_AMR.uda y}\\
-This will generate a postscript file shockTube\_AMR.ps
+This Octave script will generate a postscript file shockTube\_AMR.ps
 
 \item [Simulation Domain:]\hfill    1 x .001 x .001 m
 \item [Cell Spacing:] \hfill\\
@@ -934,9 +939,8 @@ Figure \ref{fig:riemann2D} shows a flood and line contour plot(s) of the density
   \label{fig:riemann2D}
   \end{figure}
 \newpage
-
+%
 %__________________________________
-
 \section*{\center Explosion 2D}
 \subsection*{\underline{Problem Description}}
 For the multidimensional blast wave orexplosion test is a standard compressible
@@ -963,7 +967,7 @@ $(p=0.1, \rho=0.125, u=0, v=0).$  The fluid was an ideal, inviscid, polytropic g
 \item [Visualization net file:]\hfill \TT{inputs/UintahRelease/ICE/Explosion.session}\\
 \item [Postprocessing command:]\hfill \\
 \TT{inputs/ICE/Scripts/plot\_explosion\_AMR Explosion\_AMR.uda y}\\
-This will generate a postscript file explosion\_AMR.ps
+This Octave script will generate a postscript file explosion\_AMR.ps
 
 
 \item [Simulation Domain:]\hfill    2 x 2 x .1
@@ -1003,10 +1007,7 @@ Since this test is symetrical we can use results from the equivalent 1 dimension
   \caption{XXX$t=0.25$}
   \label{fig:1dExplode}
 \end{figure}
-
 \newpage
-
-
 \section*{\center ANFO Rate Stick}
 \subsection*{\underline{Problem Description}}
 A cylindrical stick ($r = 8 mm$) of Ammonium Nitrate Fuel Oil (ANFO) given an initial
