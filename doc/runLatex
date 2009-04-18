@@ -4,9 +4,10 @@
 
 mkdir -p PDF
 
-set OUTPUT_DIR="-output-directory=PDF"
+#set OUTPUT_DIR="-output-directory=PDF"
 
-pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
+#pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
+pdflatex  --halt-on-error  uintah.tex
 
 if( $status == "0" ) then
   echo "------------------"
@@ -15,7 +16,10 @@ if( $status == "0" ) then
   #bibtex arches
   bibtex ice
   bibtex mpm
-  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
-  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
+  bibtex mpmice
+#  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
+#  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
+  pdflatex -interaction=batchmode uintah.tex
+  pdflatex -interaction=batchmode uintah.tex
 endif
 
