@@ -74,11 +74,56 @@ plot depicts pressure and reflects the presence of a leading shock
 and an expansion fan.
 \begin{figure}
   \center
-  \includegraphics[scale=.25]{M2wedge.png}
+  \includegraphics[scale=.4]{M2wedge.png}
 
   \caption{$20^o$ wedge moving at Mach 2.0 through initially stationary
 air.  Contour plot depicts pressure.}
   \label{figwedge}
 \end{figure}
+\newpage
+%
+%__________________________________
+\section*{\center Cylinder in a Crossflow}
+\subsection*{\underline{Problem Description}}
+In this example the domain is initially filled with air moving at a uniform velocity of $0.03m/s$  A ridgid cylinder $O.D. = 0.02m$ is placed $0.1m$ from the inlet and a passive scalar is injected into the domain through a $0.002m$ hole on in the inlet boundary of the domain.  A velocity perturbation is placed upstream of the cylinder to produce an instablity that will help trigger the onset of the K\'arm\'an vortex street.
+%
+\subsection*{\underline{Simulation Specifics}}
+\begin{description}
+\item [Component used:] \hfill rmpmice (Rigid MPM-ICE)
+\item [Input file name:] \hfill \TT{cylinderCrossFlow.ups}
+\item [Command used to run input file:]\hfill \\
+\TT{mpirun -np 6  sus inputs/UintahRelease/MPMICE/cylinderCrossFlow.ups}
 
+\item [Simulation Domain:]\hfill    0.3 x 0.15 x 0.001 m
+
+\item [Cell Spacing:]\hfill \\
+.00015 x .001 x .001 m (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 7ish hrs   (6 processor, 3.16 GHz Xeon)\\
+
+\item [Physical time simulated:] \hfill 60 seconds
+
+\item [Associated visit session:] \hfill cyl\_crossFlow.session
+
+\end{description}
+
+\section*{\underline{Results}}
+
+Figure~\ref{fig:cylCrossFlow} shows a snapshot of the simulation at time $t=60sec$.  The contour
+plot of the passive scalar shows the K\'arm\'an vortex street behind the cylinder at $Re=700$.
+\begin{figure}
+  \center
+  \includegraphics[scale=.5]{cylCrossFlow.png}
+  \caption{Flow over a stationary cylinder, $Re=700$, a passive scalar is used as a flow marker}
+  \label{fig:cylCrossFlow}
+\end{figure}
+%
+A movie of the results is located at
+\begin{Verbatim}[fontsize=\footnotesize]
+  movies/cyl_crossFlow.mpg
+\end{Verbatim}
+\newpage
+%
+%__________________________________
 \subsection{References}
