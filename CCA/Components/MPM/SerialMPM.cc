@@ -1992,7 +1992,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                               psize[idx]);
           stressvol  = pstress[idx]*pvol[idx];
-          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+          stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
           partvoldef += pvol[idx];
 
           for (int k = 0; k < n8or27; k++){
@@ -2017,7 +2017,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
           interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,
                                                               psize[idx]);
           stressvol  = pstress[idx]*pvol[idx];
-          stresspress = pstress[idx] + Id*p_pressure[idx] - Id*p_q[idx];
+          stresspress = pstress[idx] + Id*(p_pressure[idx] - p_q[idx]);
           partvoldef += pvol[idx];
   
           // r is the x direction, z (axial) is the y direction
