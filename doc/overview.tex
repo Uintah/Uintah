@@ -43,8 +43,9 @@ input/output, and so forth) to evolve independently of the simulation
 components. Furthermore, components enable replacement of computation
 pieces without complex decision logic in the code itself.
 
-\section{Scheduler}
+\section{Scheduler and Tasks Overview}
 
+\subsection{Scheduler}
 The Scheduler in Uintah is responsible for determining the order of
 tasks and ensuring that the correct inter-processor data is made
 available when necessary. Each software component passes a set of
@@ -57,7 +58,7 @@ to perform inter-process communication via MPI. Then, when the
 scheduler is executed, the tasks will execute in the pre-determined
 order.
 
-\section{Tasks}
+\subsection{Tasks}
 
 A task contains two essential components: a pointer to a function
 that performs the actual computations, and the data inputs and
@@ -102,7 +103,14 @@ in the calculation of particular tasks.  The Uintah framework allows
 for the independent scheduling and computation of multi-material
 within a multi-physics calculation.
 
-\section{Tasks and Scheduler Description -- Programmer Interface}
+\section{Programmer Interface to Uintah Components}
+
+Components are the Uintah vernacular for the algorithms that have
+been implemented within the Uintah Computational Framework (UCF).
+For example, the MPM component is a particle based method for structural
+dynamics, the Arches component is a method for simulation of unsteady reacting
+flows, etc.  The following describes how these and other components are
+incorporated within the UCF.
 
 \subsection{Simulation Component Class Description}
 
