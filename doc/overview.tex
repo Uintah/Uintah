@@ -100,8 +100,8 @@ sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 For more complex problems involving multiple materials and
 multi-physics calculations, a subset of the materials may only be used
 in the calculation of particular tasks.  The Uintah framework allows
-for the independent scheduling and computation of multi-material
-within a multi-physics calculation.
+for the independent scheduling and computation of variables associated
+with an individual material within a multi-physics calculation.
 
 \section{Programmer Interface to Uintah Components}
 
@@ -198,7 +198,7 @@ is defined which references a function pointer called
 
 \subsubsection{ScheduleComputeStableTimestep}
 
-The purpose of this method is to compute the next timestep in the
+The purpose of this method is to compute the size of the next timestep in the
 simulation.  A task is defined which references a function pointer
 called \texttt{computeStableTimestep}.
 
