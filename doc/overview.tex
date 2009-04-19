@@ -64,7 +64,7 @@ A task contains two essential components: a pointer to a function
 that performs the actual computations, and the data inputs and
 outputs, i.e. the data dependencies required by the function.  When a
 task requests a previously computed variable from the data warehouse,
-the number of ghost cells are also specified.  The Unitah framework
+the number of ghost cells are also specified.  The Uintah framework
 uses the ghost cell information to excecute inter-process
 communication to retrieve the necessary ghost cell data.
 
@@ -165,7 +165,7 @@ class Example : public UintahParallelComponent, public SimulationInterface {
 
 
 Each new component inherits from the classes
-\textbf{UintahParrallelComponent} and \textbf{SimulationInterface}.
+\textbf{UintahParallelComponent} and \textbf{SimulationInterface}.
 The component overrides default implementations of various methods.
 The above methods are the essential functions that a new component
 must implement.  Additional methods to do AMR will be described as
@@ -217,7 +217,7 @@ individual computational methods.
 During the course of the simulation, data is computed and stored in a
 data structure called the DataWarehouse.  Data that is from a previous
 timestep is stored in the Old DataWarehouse, called \texttt{OldDW},
-and data that is computed in current timestep is stored in the New
+and data that is computed in the current timestep is stored in the New
 DataWarehouse, called \texttt{NewDW}.  At the end of the timestep,
 current timestep data is moved to the old data warehouse for the next
 timestep in the simulation.
