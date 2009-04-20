@@ -145,9 +145,7 @@ individual components.
 %
 %__________________________________
 \subsection{Data Archiver} \label{Sec:DataArchiver}
-- variable labels\\
-- checkpointing \\
-- different options for specifying the output frequency\\
+
 
 The Data Archiver section specifies the directory name where data will
 be stored and what variables will be saved and how often data is saved
@@ -198,6 +196,25 @@ is shown below:
 
 \end{verbatim}
 
+
+To restart from a checkpointed archive, simply put "-restart" in the
+sus command-line arguments and specify the .uda directory instead of
+the instead of a ups file (it reads the copied input.ups from the
+archive).  One can optionally specify a certain timestep to restart
+from with "-t <timestep>" with multiple checkpoints, but the
+last checkpointed timestep is the default.  When restarting, it
+copies all of the appropriate stuff from the old uda directory to its
+new uda directory.  If you don't want to keep the old uda directory
+around, you can specify "-nocopy" to have it be removed (i.e. if you
+are cramped for disk space).  Either way it creates a new uda
+directory for you as always.
+
+Here are some example:
+
+\begin{verbatim}[fontsize=\footnotesize]
+./sus -mpm -restart disks.uda.000 -nocopy
+./sus -mpm -restart disks.uda.000 -t 29
+\end{verbatim}
 %
 %__________________________________
 \subsection{Geometry objects} \label{Sec:GeometryObjects}
