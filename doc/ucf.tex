@@ -66,26 +66,29 @@ In addition, the \tt -mpi \normalfont is optional but often times
 necessary if the mpi environment is not automatically detected from
 within the sus executable.
 
+\subsection{Uintah Problem Specification (UPS)} \label{Sec:UPS}
 
-\subsection{Input File Specification} \label{Sec:InputFileSpecification}
+The Uintah framework uses XML like input files to specify the various
+parameters required by simulation components.  These Uintah Problem
+Specification (.ups) files are validated based on the specification
+found in src/StandAlone/inputs/UPS\_SPEC/ups\_spec.xml (and its sibling
+files).  
 
-The Uintah framework uses xml input files to specify the various
-parameters required in any simulation component.  The application
-developer is free to use any tags to specify the data needed by the
-simulation.  The essential tags that are required by Uintah include
-the following:
+The application developer is free to use any of the specified tags to
+specify the data needed by the simulation.  The essential tags that
+are required by Uintah include the following:
 
 \begin{verbatim}
 
-	<Uintah_specification>
+  <Uintah_specification>
 
-         <SimulationComponent>
+  <SimulationComponent>
 
-	<Time>
+  <Time>
 
-	<DataArchiver>
+  <DataArchiver>
 
-	<Grid>
+  <Grid>
 
 \end{verbatim}
 

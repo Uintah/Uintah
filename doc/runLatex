@@ -2,7 +2,7 @@
 
 /bin/rm -f *.aux
 
-mkdir -p PDF
+#mkdir -p PDF
 
 #set OUTPUT_DIR="-output-directory=PDF"
 
