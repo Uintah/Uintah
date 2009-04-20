@@ -443,7 +443,34 @@ lower corner at 0,0.181,0 and upper corner at 0,0.5,0.
 %
 %__________________________________
 \subsection{Grid specification} \label{Sec:Grid}
-Explain how a grid is specified and what these tags mean
+
+The \tt <Grid> \normalfont section specifies the domain of the
+structured grid and includes tags which indicate the lower and upper
+corners, the number of extra cells which can be used by various
+components for the application of boundary conditions or interpolation
+schemes.  
+
+The grid is decomposed into a number of patches.  For single processor
+problems, usually one patch is used for the entire domain.  For
+multiple processor simulations, there must be at least one patch per
+processor.  Patches are specified along the x,y,z directions of the
+grid using the \tt <patches> [2,5,3] </patches> \normalfont which
+specifies two patches along the x direction, five patches along the y
+direction and 3 patches along the z direction.  The maximum number of
+processors that \tt sus \normalfont could use is \begin{verbatim}2*5*3
+  = 30 \end{verbatim}.  Attempting to use more processors than patches
+will cause a run time error during initialization.
+
+Finally, the grid spacing can specified using either a fixed number of
+cells along each x,y,z direction or by the size of the grid cell in
+each direction.  To specify a fixed number of grid cells, use the \tt
+<resolution> [20,20,3] </resolution> \normalfont.  This specifies 20
+grid cells in the x direction, 20 in the y direction and 3 in the z
+direction.  To specify the grid cell size use the \tt <spacing>
+[0.5,0.5,0.3] </spacing> \normalfont.  This specifies the a grid cell
+size of .5 in the x and y directions and .3 in the z direction.  The
+\tt <resolution> \normalfont and \tt <spacing> \normalfont cannot be
+specified together.
 
 \begin{Verbatim}[fontsize=\footnotesize]
 <Level>
@@ -455,7 +482,16 @@ Explain how a grid is specified and what these tags mean
     </Box>
     <spacing>         [0.5,0.5,0.5]    </spacing>
 </Level>
- \end{Verbatim}
+\end{Verbatim}
+
+The above example indicates that the grid domain has a lower corner at
+0,0,0 and an upper corner at 5,5,5 with one extra cell in each
+direction.  There domain is broken down into one patch covering the
+entire domain with a grid spacing of .5,.5,.5.  Along each dimension
+there are ten cells in the interior of the grid and 2 cells outside of
+the domain.
+
+
 %
 %__________________________________
 \subsection{Adapative Mesh Refinement}
