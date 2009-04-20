@@ -39,7 +39,7 @@ For single processor simulations, the \tt sus \normalfont excutable
 (Standalone Uintah Simulation) is run from the command line prompt
 like this:
 \begin{Verbatim}[fontsize=\footnotesize]
-  
+
   sus <input.ups>
 
 \end{Verbatim}
@@ -65,7 +65,7 @@ number following the -np option shown above.
 In addition, the \tt -mpi \normalfont is optional but often times
 necessary if the mpi environment is not automatically detected from
 within the sus executable.
- 
+
 
 \subsection{Input File Specification} \label{Sec:InputFileSpecification}
 
@@ -94,7 +94,7 @@ Individual components have additional tags that specify properties,
 algorithms, materials, etc. that are unique to that individual
 components.  Within the individual sections on MPM, ICE, MPMICE,
 Arches, and MPMArches, the individual tags will be explained more
-fully.  
+fully.
 
 The sus executable verifies that the input file adheres to a consitent
 specification and that all necessary tags are specified.  However, it
@@ -106,7 +106,7 @@ physically reasonable set of consistent parameters.
 
 The input file tag for SimulationComponent has the \em{type} attribute
 that must be specified with either mpm, mpmice, ice, arches, or
-mpmarches.  
+mpmarches.
 
 \begin{verbatim}[fontsize=\footnotesize]
 
@@ -157,7 +157,7 @@ name and by convention, the .uda suffix is attached denoting the
 
 
 Data can be saved based on a frequency setting that is either time
-based on by the number of timesteps taken. 
+based on by the number of timesteps taken.
 
 The \tt <outputInterval> \normalfont is the time based tag which takes
 a floating point number whereas the \tt <outputTimestepInterval>
@@ -184,7 +184,7 @@ Checkpointing information can be created that provides a mechanism for
 restarting a simulation at a later point in time.  The \tt
 <checkpoint> \normalfont tag with the \tt cycle \normalfont and \tt
 interval \normalfont attributes describe how many copies of checkpoint
-data is stored (cycle)  and how often it is generated (interval). 
+data is stored (cycle)  and how often it is generated (interval).
 
 As an example of checkpoint data that has two timesteps worth of
 checkpoint data that is created every .01 seconds of simulation time
@@ -238,7 +238,7 @@ quantity), and any unique geometry parameters such as origin, corners,
 triangulated data file, etc.  The operators which include, the union,
 the difference, and intersection tags contain either lists of
 additional operators or the primitives pieces.
- 
+
 
 As an example of a non-trivial geometry object is shown below:
 
@@ -299,7 +299,7 @@ Triangulated file
 
 1 39 41
 1 41 38
-38 41 42   
+38 41 42
 . . .
 
 Points file
@@ -307,7 +307,7 @@ Points file
 0 0.03863 -0.005
 0.35227 0.13023 -0.005
 0.00403479 0.0296797 -0.005
-. . . 
+. . .
 
 \end{verbatim}
 
@@ -334,7 +334,7 @@ can be assigned either on the entire face, or parts of the face.
 Combinations of various geometric descriptions are used to aid in the
 assignment of values over specific regions of the grid.  Each of the
 six faces of the grid is denoted by either the minus or plus side of
-the domain. 
+the domain.
 
 The xml description of a particular boundary condition includes which
 side of the domain, the material id, what type of boundary condition
@@ -558,7 +558,7 @@ input.xml
 t00001
 t00057
 
-%\subsubsection{Known Issues} 
+%\subsubsection{Known Issues}
 
 Occasionally, due (most likely) to file system issues on large
 clusters, some of the files in the UDA have been found to be corrupted
@@ -567,10 +567,10 @@ prevent this.  We believe that either the OS/File system is
 incorreclty returning error codes, or, more likely, that the files are
 corrupted (due to file system issues) after the simulation is done.
 
-%\subsubsection{Restarting} 
+%\subsubsection{Restarting}
 
 The sus executable provides a mechanism for checkpointing the code and
-then restarting the ongoing simulation from a given checkpoint. 
+then restarting the ongoing simulation from a given checkpoint.
 
 
 
@@ -597,20 +597,145 @@ access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 \subsection{Data Extraction Tools}
 
 Uintah offers a number of tools for accessing data stored in Uintah Data
-Archives (``UDAs").  Because the format of Uintah data is specific to the 
+Archives (``UDAs").  Because the format of Uintah data is specific to the
 framework, these tools allow a user to quickly extract data, which can then
 either be postprocessed within that tool (simple modification of the source
 code may be necessary), postprocessed with external software such as
-Matlab or Octave, or simply plotted with, e.g. gnuplot.  These tools
+Matlab or Octave, or simply plotted with, e.g. gnuplot.  These tools are not compiled automatically when ``make sus'' is issued.  To compile them cd to ``opt/StandAlone/tools'' and issue ``make''.  These tools
 are described below.
 
 \subsubsection{puda}
 
+The command line extraction utility "puda" may be used to extract a subset of particle data from a UDA.  Once the extraction tools have been compiled, the puda executable will be located in ``/opt/StandAlone/tools/puda/''.  If the executable is ran with no additional command line arguments, the following usage information will be displayed in the terminal:
+
+\begin{verbatim}
+Usage: puda [options] <archive file>
+
+Valid options are:
+  -h[elp]
+  -timesteps
+  -gridstats
+  -listvariables
+  -varsummary
+  -jim1
+  -jim2
+  -partvar <variable name>
+  -asci
+  -tecplot <variable name>
+  -no_extra_cells     (Excludes extra cells when iterating over cells.
+                       Default is to include extra cells.)
+  -cell_stresses
+  -rtdata <output directory>
+  -PTvar
+  -ptonly             (prints out only the point location
+  -patch              (outputs patch id with data)
+  -material           (outputs material number with data)
+  -NCvar <double | float | point | vector>
+  -CCvar <double | float | point | vector>
+  -verbose            (prints status of output)
+  -timesteplow <int>  (only outputs timestep from int)
+  -timestephigh <int> (only outputs timesteps upto int)
+  -matl,mat <int>         (only outputs data for matl)
+*NOTE* to use -PTvar or -NVvar -rtdata must be used
+*NOTE* ptonly, patch, material, timesteplow, timestephigh are used in conjuntion with -PTvar.
+\end{verbatim}
+
+As an example of how to use ``puda'', suppose that you wanted to know the locations of all particles at the last archived timestep for the ``const\_test\_hypo.uda'' (found in '/inputs/MPM/' after running the simulation).  First you would need to know how many timesteps have been archived.  To do this you could issue:
+
+\begin{verbatim}
+ puda -timesteps const_test_hypo.uda
+\end{verbatim}
+The resulting terminal output would be:
+\begin{verbatim}
+Parsing const_test_hypo.uda/index.xml
+There are 11 timesteps:
+1: 1.8257001926347728e-05
+548: 1.0012914931998474e-02
+1094: 2.0005930425875382e-02
+1640: 3.0015616802173569e-02
+2184: 4.0005272397960444e-02
+2728: 5.0011587657447343e-02
+3271: 6.0016178181543284e-02
+3812: 7.0000536667661845e-02
+4353: 8.0001537138146825e-02
+4893: 9.0000702723306208e-02
+5433: 1.0001655973087024e-01
+\end{verbatim}
+
+These represent all of the timesteps for which data has been archived.  Suppose now that we which so know what the stress state is for all particles (in this case two) at the final archived timestep.  For this you could issue:
+
+\begin{verbatim}
+puda -partvar p.stress -timesteplow 10 -timestephigh 10 const_test_hypo.uda
+\end{verbatim}
+
+The resulting output is:
+
+\begin{verbatim}
+Parsing const_test_hypo.uda/index.xml
+1.00016560e-01 1 0 281474976710656 -2.72031498e-10 -1.05064208e-26 -2.53781271e-08 -1.05064208e-26 -2.72031498e-10 -1.23584688e-09 -2.53781271e-08 -1.23584688e-09 1.63840079e-07
+1.00016560e-01 1 1 0 1.93256890e-13 6.56787331e-18 1.85514400e-14 6.56787331e-18 2.24310469e-13 1.85519650e-14 1.85514400e-14 1.85519650e-14 -3.20052991e+06
+\end{verbatim}
+
+The first column is the simulation time, the second column is ????, the third column is the material number, the fourth column is the particle ID, and the remaining nine columns represent the components of the Cauchy stress tensor ($ \sigma_{11}$,$\sigma_{12}$,$\sigma_{13}$, ..., $\sigma_{32}$,$\sigma_{33}$).  If desired, the terminal output can be piped to a text file for further use.
+
+
 \subsubsection{partextract}
+
+The command-line utility ``partextract'' may be used to extract data from an individual particle.  To do this you first need to know the ID number of the particle you are interested in.  This may be done by using the puda utility, or the visualization tools.  Once the extraction tools have been compiled, the partextract utility executable will be located in  ``/opt/StandAlone/tools/extractors/''.  If the executable is ran without any arguments the following usage guide will be displayed in the terminal:
+
+\begin{verbatim}
+No archive file specified
+Usage: partextract [options] <archive file>
+
+Valid options are:
+  -mat <material id>
+  -partvar <variable name>
+  -partid <particleid>
+  -part_stress [avg or equiv or all]
+  -part_strain [avg/true/equiv/all/lagrangian/eulerian]
+  -timesteplow [int] (only outputs timestep from int)
+  -timestephigh [int] (only outputs timesteps upto int)
+\end{verbatim}
+
+As an example of how to use the partextract utility, suppose we wanted to find the velocity at every archived timestep for the particle with ID 281474976710656 (found above using puda) in the ``const\_test\_hypo.uda'' file (src/StandAlone/inputs/MPM).  The appropriate command to issue is:
+
+\begin{verbatim}
+partextract -partvar p.velocity -partid 281474976710656 const\_test\_hypo.uda
+\end{verbatim}
+
+The output to the terminal is:
+
+\begin{verbatim}
+Parsing const_test_hypo.uda/index.xml
+1.82570019e-05 1 0 281474976710656 0.00000000e+00 0.00000000e+00 -1.00000000e-02
+1.00129149e-02 1 0 281474976710656 -1.03554318e-19 -1.03554318e-19 -1.00000000e-02
+2.00059304e-02 1 0 281474976710656 -1.99388121e-19 -1.99388121e-19 -1.00000000e-02
+3.00156168e-02 1 0 281474976710656 -1.56358733e-20 -1.56358733e-20 -1.00000000e-02
+4.00052724e-02 1 0 281474976710656 4.11469970e-20 4.11469970e-20 -1.00000000e-02
+5.00115877e-02 1 0 281474976710656 -1.01422665e-19 -1.01422665e-19 -1.00000000e-02
+6.00161782e-02 1 0 281474976710656 -2.46491637e-20 -2.46491637e-20 -1.00000000e-02
+7.00005367e-02 1 0 281474976710656 1.02800845e-19 1.02800845e-19 -1.00000000e-02
+8.00015371e-02 1 0 281474976710656 6.05507624e-20 6.05507624e-20 -1.00000000e-02
+9.00007027e-02 1 0 281474976710656 6.74198631e-21 6.74198631e-21 -1.00000000e-02
+1.00016560e-01 1 0 281474976710656 6.89536861e-20 6.89536861e-20 -1.00000000e-02
+\end{verbatim}
+
+It is noted that if the stress tensor is output using the partextract utility, the output format is different than for the puda utility.  The partextract utility only outputs the six independent components instead of all nine.  For example, if we use partextract to get the stress tensor for the same particle as above at the last archived timestep only, the output is:
+
+\begin{verbatim}
+partextract -partvar p.stress -partid 281474976710656 -timesteplow 10 -timestephigh 10 const_test_hypo.uda
+Parsing const_test_hypo.uda/index.xml
+1.00016560e-01 1 0 281474976710656 -2.72031498e-10 -1.05064208e-26 -2.53781271e-08 -1.05064208e-26 -2.72031498e-10 -1.23584688e-09 -2.53781271e-08 -1.23584688e-09 1.63840079e-07
+
+\end{verbatim}
+
+Compare this output with the output from puda above.  Notice that the ordering of the six independent components of the stress tensor for partextract are $\sigma_{11}$,$\sigma_{22}$, $\sigma_{33}$, $\sigma_{23}$, $\sigma_{13}$ , $\sigma_{12}$.
+
+
 
 \subsubsection{lineextract}
 
-Lineextract is used to extract an array of data from a region of a computational domain. Data can be extracted from a point, along a line, or from a three dimensional region and then stored as a variable for ease of post processing. 
+Lineextract is used to extract an array of data from a region of a computational domain. Data can be extracted from a point, along a line, or from a three dimensional region and then stored as a variable for ease of post processing.
 
 Usage: \begin{Verbatim}[fontsize=\footnotesize]
 ./lineextract [options] -uda <archive file>
@@ -632,10 +757,10 @@ Valid options are:
  --cellIndexFile:             <filename> (file that contains a list of cell indices)
                                   [int 100, 43, 0]
                                   [int 101, 43, 0]
-                                  [int 102, 44, 0] 
+                                  [int 102, 44, 0]
 \end{Verbatim}
 
-The following example shows the usage of lineextract for extracting density data at the 60th computational cell in the x-direction, spanning the width of the domain in the y-direction (0 to 1000), at a time step, ts. The variable containing the density data within the uda is ``rho\_CC," and the output variable that will store the data for post processing is ``rho." 
+The following example shows the usage of lineextract for extracting density data at the 60th computational cell in the x-direction, spanning the width of the domain in the y-direction (0 to 1000), at a time step, ts. The variable containing the density data within the uda is ``rho\_CC," and the output variable that will store the data for post processing is ``rho."
 \begin{Verbatim}[fontsize=\footnotesize]
 ./lineextract -v rho_CC  -timestep ts -istart 60 0 0 -iend 60 1000 0 -m 1 -o rho -uda test01.uda.000
 \end{Verbatim}
