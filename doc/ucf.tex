@@ -223,6 +223,64 @@ Here are some example:
 - operators, union, difference\\
 - example of combining several geom\_objects\\
 
+Within several of the components, the material is described by a
+combination of physical parameters and the geometry.  Geometry objects
+use the notion of constructive solid geometry operations to compose
+the layout of the material from simple shapes such as boxes, spheres,
+cylinders, as well as operators which include the union,
+intersections, differences of the simple shapes.  In addition to the
+simple shapes, triangulated surfaces can be used in conjunction with
+the simple shapes and the operations on these shapes.
+
+Each geometry object has the following properties, label (string
+name), type (box, cylinder, sphere, etc), resolution (vector
+quantity), and any unique geometry parameters such as origin, corners,
+triangulated data file, etc.  The operators which include, the union,
+the difference, and intersection tags contain either lists of
+additional operators or the primitives pieces.
+ 
+
+As an example of a non-trivial geometry object is shown below:
+
+\begin{verbatim}[fontsize=\footnotesize]
+
+
+<geom_object>
+
+    <intersection>
+       <box label = "Domain">
+          <min>[0.0,0.0,0.0]</min>
+          <max>[0.1,0.1,0.1]</max>
+        </box>
+     <union>
+        <sphere label = "First node">
+            <origin>[0.022,0.028,0.1  ]</origin>
+            <radius>0.01</radius>
+        </sphere>
+        <sphere label = "2nd node">
+            <origin>[0.030,0.075,0.1  ]</origin>
+            <radius>0.01</radius>
+        </sphere>
+      </union>
+     </intersection>
+     <res>[2,2,2]</res>
+     <velocity>[0.,0.,0.]</velocity>
+     <temperature>0 </temperature>
+</geom_object>
+
+\end{verbatim}
+
+The following geometry objects are given with their required tags:
+
+box has the following tags: min and max which are vector quantities
+specified in the \tt [a, b, c] \normalfont format.
+
+sphere has an origin tag specified as a vector and the radius tag
+specified as a float.
+
+
+
+
 %__________________________________
 \subsection{Boundary conditions}
 - describe how to have a jet in the floor of the domain.
