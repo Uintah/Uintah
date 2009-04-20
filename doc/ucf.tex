@@ -6,19 +6,28 @@ components implemented in Uintah is called \tt sus \normalfont, which
 stands for Standalone Uintah Simulation.  The existing components were
 originally developed to solve a complex fluid structure problem
 involving a container filled with an explosive enveloped in a fire.
-These components model the fire and the subsequent heat transfer to
-the container followed by the resultant container deformation and
-ultimate rupture due to the ignition and burning of the explosive
-material.  Although Uintah was developed originally to solve this
-complicated multi-physics problem, the general nature of the
-algorithms and the framework have allowed researchers to use the code
-to investigate a wide range of problems.
+
+The code models the fire and the subsequent heat transfer to the
+container followed by the resultant container deformation and ultimate
+rupture due to the ignition and burning of the explosive material all
+running on thousands of processors requiring thousands of hours of
+computer time and hundreds of gigabytes of data storage.  Although
+Uintah was developed originally to solve this complicated
+multi-physics problem, the general nature of the algorithms and the
+framework have allowed researchers to use the code to investigate a
+wide range of problems.  The framework is general purpose enough to
+allow for the implementation of a variety of implicit and explicit
+algorithms on structured grids.  In addition, particle based
+algorithms can be implemented using the native particle support found
+in the framework.
 
 This code leverages the task based parallelism inherent in the UCF to
-implement several time stepping algorithms for structural mechanics (MPM),
-fluid dynamics (Arches and ICE) , and fluid structure interactions
-(MPMICE and MPMArches).  What follows is a description of using
-\tt sus \normalfont within the realm of these existing components.
+implement several time stepping algorithms for structural mechanics,
+fluid dynamics, and fluid structure interactions.  What follows is a
+description of using \tt sus \normalfont within the realm of
+structural mechanics, fluid mechanics, and structure-fluid
+interactions.
+
 
 %__________________________________
 \subsection{Mechanics of Running sus}
