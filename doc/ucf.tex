@@ -278,6 +278,49 @@ specified in the \tt [a, b, c] \normalfont format.
 sphere has an origin tag specified as a vector and the radius tag
 specified as a float.
 
+cone has a tag for the top and bottom origins (vector) as well as tags for the
+top and bottom radius (float) to create a right ciruclar cone/frustram.
+
+cylinder has a tag for the top and bottom origins (vector) plus a tag
+for the radius (float).
+
+sphere has a tag for the origin (vector) and the radius (float).
+
+tri is a tag for describing a triangulated surface.  The name tag
+specifies the file name to use for reading in the triangulated surface
+description and the points file.  The triangulated surface
+(file_name.tri) contains a list of integers describing the
+connectivities of points specified in file_name.pts.  Here is an
+excerpt from a tri file and a points file:
+
+
+\begin{verbatim}
+Triangulated file
+
+1 39 41
+1 41 38
+38 41 42   
+. . .
+
+Points file
+
+0 0.03863 -0.005
+0.35227 0.13023 -0.005
+0.00403479 0.0296797 -0.005
+. . . 
+
+\end{verbatim}
+
+
+The operators on the geometry pieces include difference, intersection,
+and union.
+
+The difference takes two geometry pieces and subtracts the second
+geometry piece from the first geometry piece.  The intersection
+operator requires at least two geometry pieces in forming an
+intersection geometry piece.  Whereas the union operator aggregates a
+collection of geometry pieces.  Multiple operators can be used to form
+very complex geometry pieces.
 
 
 
