@@ -4,7 +4,7 @@
 
 
 \subsection{Introduction}
-The work presented here describes a multi-material CFD approached designed
+The work presented here describes a multi-material CFD approach designed
 to solve ``full physics" simulations of dynamic fluid structure interactions
 involving large deformations and material transformations (e.g., phase change).
 ``Full physics" refers to problems involving strong interactions between
@@ -31,7 +31,7 @@ integrated approach are given.
 The governing multi-material model equations are stated and described, but
 not developed, here.  Their development can be found in~\cite{kashiwa2000}.
 Here, our intent is to identify the quantities of interest, of which there
-are 8, as well as those equations (or closure models) which govern their
+are eight, as well as those equations (or closure models) which govern their
 behavior.  Consider a collection of $N$ materials, and let the subscript r
 signify one of the materials, such that $\rmr = 1, 2, 3, \dots, N$.  In an
 arbitary volume of space $V(\bfx,t)$, the averaged thermodynamic state of a
@@ -119,7 +119,7 @@ v_\rmr &=& v_\rmr(p, T_\rmr) \label{thermal} \\
 \label{mmeos}
 \end{eqnarray}
 %
-Equations (\ref{caloric}) and (\ref{thermal} )are, respectively, the caloric
+Equations (\ref{caloric}) and (\ref{thermal}) are, respectively, the caloric
 and thermal equations of state.  Equation (\ref{thedef}) defines the volume
 fraction, $\theta$, as the volume of r-material per total material volume,
 and with that definition, Equation (\ref{mmeos}), referred to as the
@@ -147,7 +147,7 @@ that can be considered.  More specific discussion of some of the models
 used in this work is found in Sec.~\ref{sec:models}
 
 Equations (\ref{eqmassr}-\ref{conslaw}) form a set of eight equations for
-the eight-element state vector \\ $[M_\rmr, \bfu_\rmr, e_\rmr, T_\rmr,
+the eight-element state vector, \\ $[M_\rmr, \bfu_\rmr, e_\rmr, T_\rmr,
 v_\rmr, \theta_\rmr, \sig_\rmr, p]$, for any arbitrary volume of space $V$
 moving with the r-material velocity.  The approach described here uses the
 reference frame most suitable for a particular material type.  As such,
@@ -190,7 +190,7 @@ the total volume identically.
 
 A description of the means by which numerical solutions to the equations in
 Section~\ref{sec:ICE:algorithm} are found is presented next.  This begins
-with separate, brief, overviews of the methodologies used for the Eulerian
+with separate, brief overviews of the methodologies used for the Eulerian
 and Lagrangian reference frames.  The algorithmic details necesssary for
 integrating them to achieve a tightly coupled fluid-structure interaction
 capability is provided in Sec.~\ref{sec:MPMICE}.
@@ -207,7 +207,7 @@ of grid cells, for example).  This colocation is particularly important
 in regions where a material mass is vanishing.  By using the same control
 volume for mass and momentum it can be assured that as the material mass goes
 to zero, the mass and momentum also go to zero at the same rate, leaving a
-well defined velocity.  The technique is fully compressible, allowing wide
+well-defined velocity.  The technique is fully compressible, allowing wide
 generality in the types of problems that can be addressed.
  
 Our use of the cell-centered ICE method employs time splitting: first,
