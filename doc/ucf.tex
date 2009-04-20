@@ -360,6 +360,37 @@ are described below.
 
 \subsubsection{lineextract}
 
+Lineextract is used to extract an array of data from a region of a computational domain. Data can be extracted from a point, along a line, or from a three dimensional region and then stored as a variable for ease of post processing. 
+
+Usage: \begin{Verbatim}[fontsize=\footnotesize]
+./lineextract [options] -uda <archive file>
+
+Valid options are:
+ -h,        --help
+ -v,        --variable:      <variable name>
+ -m,        --material:      <material number> [defaults to 0]
+ -tlow,     --timesteplow:   [int] (sets start output timestep to int) [defaults to 0]
+ -thigh,    --timestephigh:  [int] (sets end output timestep to int) [defaults to last timestep]
+ -timestep, --timestep:      [int] (only outputs from timestep int) [defaults to 0]
+ -istart,   --indexs:        <x> <y> <z> (cell index) [defaults to 0,0,0]
+ -iend,     --indexe:        <x> <y> <z> (cell index) [defaults to 0,0,0]
+ -l,        --level:         [int] (level index to query range from) [defaults to 0]
+ -o,        --out:           <outputfilename> [defaults to stdout]
+ -vv,       --verbose:       (prints status of output)
+ -q,        --quiet:         (only print data values)
+ -cellCoords:                (prints the cell centered coordinates on that level)
+ --cellIndexFile:             <filename> (file that contains a list of cell indices)
+                                  [int 100, 43, 0]
+                                  [int 101, 43, 0]
+                                  [int 102, 44, 0] 
+\end{Verbatim}
+
+The following example shows the usage of lineextract for extracting density data at the 60th computational cell in the x-direction, spanning the width of the domain in the y-direction (0 to 1000), at a time step, ts. The variable containing the density data within the uda is ``rho\_CC," and the output variable that will store the data for post processing is ``rho." 
+\begin{Verbatim}[fontsize=\footnotesize]
+./lineextract -v rho_CC  -timestep ts -istart 60 0 0 -iend 60 1000 0 -m 1 -o rho -uda test01.uda.000
+\end{Verbatim}
+
+
 \subsubsection{timeextract}
 
 \subsubsection{compare\_uda}
