@@ -180,17 +180,18 @@ gradient at each particle according to:
 \label{velgrad}
 \end{equation}
 This velocity gradient is used to update the particle's deformation gradient,
-volume and stress.  First, an incremental deformation gradient is computed:
+volume and stress.  First, an incremental deformation gradient is computed
+using the velocity gradient:
 
 \begin{equation}
-\bfF_{n_p}^{n+1} = (\bfI+\nabla \bfv_p \Delta{t})
+\bfd \bfF_p^{n+1} = (\bfI+\nabla \bfv_p \Delta{t})
 \label{Finc}
 \end{equation}
 Particle volume and deformation gradient are updated by:
 
 \begin{eqnarray}
-v_p^{n+1} = \rm{Det}(\bfF_{n_p}^{n+1})v_p^n,  \;\;\;\;\;\;\;\;\;
-\bfF_p^{n+1}=\bfF_{n_p}^{n+1} \bfF_{p}^{n}
+v_p^{n+1} = \rm{Det}(\bfd\bfF_p^{n+1})v_p^n,  \;\;\;\;\;\;\;\;\;
+\bfF_p^{n+1}=\bfd\bfF_p^{n+1} \bfF_{p}^{n}
 \label{p_vol}
 \end{eqnarray}
 Finally, the velocity gradient, and/or the deformation gradient are
@@ -274,7 +275,7 @@ S_i\left(x\right) = \begin{cases} 1 + {\left(x-x_i\right) / h} & {-h < x-x_i \le
 \label{linear_shape}
 \end{equation}
 where $x_i$ is the vertex location, and $h$ is the cell width, 
-assumed to be constant in this investigation, 
+assumed to be constant in this formulation, 
 although this is not a general restriction on the method.
 Multi-dimensional versions are constructed by forming tensor products of the
 one-dimensional version in the orthogonal directions.  
@@ -974,7 +975,7 @@ described below.
 based on a hyperelastic-plastic model described by Simo and
 Hughes\cite{simo1998} (pp. 307 -- 321).  Several of these models should be 
 combined, but for now, they are separate.  Below the usage for each is
-given.  These models are very robust, and as hyperelastic models don't
+given.  These models are very robust, and hyperelastic models don't
 require rotation back and forth between laboratory and material frames of
 reference.
 
@@ -2627,7 +2628,7 @@ An example of this usage can be found in \tt inputs/MPM/twoblock-single-rigid.up
 \subsubsection{BoundaryConditions} \label{Sec:MPM_BCs}
 
 Boundary conditions must be specified on each face of the computational
-domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ each material.  An example of their
+domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ for each material.  An example of their
 specification is as follows, where the entire \tt <Grid> \normalfont field
 is included for context:
 \begin{Verbatim}[fontsize=\footnotesize]
