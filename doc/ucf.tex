@@ -2,19 +2,17 @@
 
 Several executable programs have been developed using the Uintah
 Computational Framework (UCF).  The primary code that drives the
-components implemented in Uintah is called \tt sus
-\normalfont, which stands for Standalone Uintah Simulation.  The existing
-components were originally developed to solve a complex fluid structure problem
+components implemented in Uintah is called \tt sus \normalfont, which
+stands for Standalone Uintah Simulation.  The existing components were
+originally developed to solve a complex fluid structure problem
 involving a container filled with an explosive enveloped in a fire.
-These components model the fire and the subsequent heat transfer to the
-container followed by the resultant container deformation and ultimate
-rupture due to the ignition and burning of the explosive material.
-Although Uintah was developed originally to solve this complicated
-multi-physics problem, the general nature of the algorithms and the
-framework have allowed researchers to use the code to investigate a
-wide range of problems.
-%  The framework is general purpose enough to
-%allow for the implementation of FIX ME
+These components model the fire and the subsequent heat transfer to
+the container followed by the resultant container deformation and
+ultimate rupture due to the ignition and burning of the explosive
+material.  Although Uintah was developed originally to solve this
+complicated multi-physics problem, the general nature of the
+algorithms and the framework have allowed researchers to use the code
+to investigate a wide range of problems.
 
 This code leverages the task based parallelism inherent in the UCF to
 implement several time stepping algorithms for structural mechanics (MPM),
@@ -36,40 +34,91 @@ like this:
   sus <input.ups>
 
 \end{Verbatim}
-where \tt input.ups \normalfont is an xml formatted input file.  The Uintah
-software release contains numerous example input files located in the
-src/StandAlone/inputs directory.
+where \tt input.ups \normalfont is an xml formatted input file.  The
+Uintah software release contains numerous example input files located
+in the src/StandAlone/inputs directory.
 
-For multiprocessor runs, the user generally uses \tt mpirun \normalfont to launch
-the code.  Depending on the environment, batch scheduler, launch
-scripts, etc, \tt mpirun \normalfont may or may not be used.  However, in general,
-something like the following is used:
+For multiprocessor runs, the user generally uses \tt mpirun
+\normalfont to launch the code.  Depending on the environment, batch
+scheduler, launch scripts, etc, \tt mpirun \normalfont may or may not
+be used.  However, in general, something like the following is used:
 \begin{Verbatim}[fontsize=\footnotesize]
 
   mpirun -np num_processors sus -mpi input.ups
 
 \end{Verbatim}
-\tt num\_processors \normalfont is the number of processors that will be used.  The
-input file must contain a patch layout that has at least the same
-number (or greater) of patches as processors specified by a number
-following the -np option shown above.
 
-In addition, the \tt -mpi \normalfont is optional but often times necessary if the mpi
-environment is not automatically detected from within the sus
-executable.
+\tt num\_processors \normalfont is the number of processors that will
+be used.  The input file must contain a patch layout that has at least
+the same number (or greater) of patches as processors specified by a
+number following the -np option shown above.
+
+In addition, the \tt -mpi \normalfont is optional but often times
+necessary if the mpi environment is not automatically detected from
+within the sus executable.
  
+
+\subsection{Input File Specification} \label{Sec:InputFileSpecification}
+
+The Uintah framework uses xml input files to specify the various
+parameters required in any simulation component.  The application
+developer is free to use any tags to specify the data needed by the
+simulation.  The essential tags that are required by Uintah include
+the following:
+
+\begin{verbatim}
+
+	<Uintah_specification>
+
+         <SimulationComponent>
+
+	<Time>
+
+	<DataArchiver>
+
+	<Grid>
+
+\end{verbatim}
+
+
+Individual components have additional tags that specify properties,
+algorithms, materials, etc. that are unique to that individual
+components.  Within the individual sections on MPM, ICE, MPMICE,
+Arches, and MPMArches, the individual tags will be explained more
+fully.  
+
+The sus executable verifies that the input file adheres to a consitent
+specification and that all necessary tags are specified.  However, it
+is up to the individual creating or modifying the input file to put in
+physically reasonable set of consistent parameters.
+
+
+\subsection{Simulation Components} \label{Sec:SimulationComponent}
+
+The input file tag for SimulationComponent has the \em{type} attribute
+that must be specified with either mpm, mpmice, ice, arches, or
+mpmarches.  
+
+\begin{verbatim}[fontsize=\footnotesize]
+
+<SimulationComponent type = "mpm" />
+
+\end{verbatim}
+
+
+
 %__________________________________
 \subsection{Time Related Variables} \label{Sec:TimeRelatedVariables}
-Uintah components are time dependent codes.  As such, one of the first entries
-in each input file describes the timestepping parameters.  An input file
-segment is given below that encompasses all of the possible parameters.
-Most are self-explanatory, and not all are required,
-(e.g \tt <max\_Timestep>,
-<max\_delt\_increase>, <end\_on\_max\_time\_exactly> \normalfont and
-\tt <delt\_init> \normalfont are all optional).
-\tt <timestep\_multiplier> \normalfont serves
-as a CFL number, that is, a number, usually less than 1.0, that is used to
-moderate the timestep automatically calculated by the individual components. 
+Uintah components are time dependent codes.  As such, one of the first
+entries in each input file describes the timestepping parameters.  An
+input file segment is given below that encompasses all of the possible
+parameters.  Most are self-explanatory, and not all are required, (e.g
+\tt <max\_Timestep>, <max\_delt\_increase>,
+<end\_on\_max\_time\_exactly> \normalfont and \tt <delt\_init>
+\normalfont are all optional).  \tt <timestep\_multiplier> \normalfont
+serves as a CFL number, that is, a number, usually less than 1.0, that
+is used to moderate the timestep automatically calculated by the
+individual components.
 
 \begin{Verbatim}[fontsize=\footnotesize]
 <Time>
@@ -90,6 +139,56 @@ moderate the timestep automatically calculated by the individual components.
 - variable labels\\
 - checkpointing \\
 - different options for specifying the output frequency\\
+
+The Data Archiver section specifies the directory name where data will
+be stored and what variables will be saved and how often data is saved
+and how frequently the simulation is checkpointed.
+
+The \tt <filebase> \normalfont tag is used to specify the directory
+name and by convention, the .uda suffix is attached denoting the
+'uintah data archive'.
+
+
+Data can be saved based on a frequency setting that is either time
+based on by the number of timesteps taken. 
+
+The \tt <outputInterval> \normalfont is the time based tag which takes
+a floating point number whereas the \tt <outputTimestepInterval>
+\normalfont is the frequency based tag which takes an integer number.
+
+
+Each simulation component specifies variables with label names that
+can be specified for data output.  By convention, particle data is
+denoted by \tt p. \normalfont followed by a particular variable name
+such as mass, velocity, stress, etc.  Whereas for grid data, the
+convention is to use the \tt g. \normalfont followed by the variable
+name, such as mass, stress, velocity, etc.  Within the DataArchiver
+section, variables are specified with the following format:
+
+\begin{verbatim}[fontsize=\footnotesize]
+
+   <save label = "p.mass" />
+   <save label = "g.mass" />
+
+\end{verbatim}
+
+
+Checkpointing information can be created that provides a mechanism for
+restarting a simulation at a later point in time.  The \tt
+<checkpoint> \normalfont tag with the \tt cycle \normalfont and \tt
+interval \normalfont attributes describe how many copies of checkpoint
+data is stored (cycle)  and how often it is generated (interval). 
+
+As an example of checkpoint data that has two timesteps worth of
+checkpoint data that is created every .01 seconds of simulation time
+is shown below:
+
+\begin{verbatim}[fontsize=\footnotesize]
+
+<checkpoint cycle = "2" interval = "0.01"/>
+
+\end{verbatim}
+
 %
 %__________________________________
 \subsection{Geometry objects} \label{Sec:GeometryObjects}
@@ -194,7 +293,10 @@ corrupted (due to file system issues) after the simulation is done.
 
 %\subsubsection{Restarting} 
 
-FIXME: discuss how to modify an input parameter before you restart an uda.
+The sus executable provides a mechanism for checkpointing the code and
+then restarting the ongoing simulation from a given checkpoint. 
+
+
 
 %__________________________________
 \subsection{Visualization tools}
