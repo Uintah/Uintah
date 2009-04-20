@@ -294,7 +294,7 @@ connectivities of points specified in file_name.pts.  Here is an
 excerpt from a tri file and a points file:
 
 
-\begin{verbatim}
+\begin{verbatim}[fontsize=\footnotesize]
 Triangulated file
 
 1 39 41
@@ -326,7 +326,120 @@ very complex geometry pieces.
 
 %__________________________________
 \subsection{Boundary conditions}
-- describe how to have a jet in the floor of the domain.
+
+Boundary conditions are specified within the \tt <Grid> \normalfont
+but are described separately for clarity.  The essential idea is that
+boundary conditions are specified on the domain of the grid.  Values
+can be assigned either on the entire face, or parts of the face.
+Combinations of various geometric descriptions are used to aid in the
+assignment of values over specific regions of the grid.  Each of the
+six faces of the grid is denoted by either the minus or plus side of
+the domain. 
+
+The xml description of a particular boundary condition includes which
+side of the domain, the material id, what type of boundary condition
+(Dirichlet or Neumann) and which variable and the value assigned.  The
+following is a an MPM specification of a Dirichlet boundary condition
+assigned to the velocity component on the x minus face (the entire
+side) with a vector value of [0,0,0] applied to all of the materials.
+
+\begin{verbatim}[fontsize=\footnotesize]
+
+ <Grid>
+       <BoundaryConditions>
+         <Face side = "x-">
+             <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                   <value> [0.0,0.0,0.0] </value>
+             </BCType>
+         </Face>
+         <Face side = "x+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                 <value> [0.0,0.0,0.0] </value>
+            </BCType>
+         </Face>
+        . . . .
+        <BoundaryCondition>
+   . . . .
+  <Grid>
+
+\end{verbatim}
+
+The notation \tt <Face side = ``x-''> \normalfont indicates that the
+entire x minus face of the boundary will have the boundary condition
+applied.  The \tt id = ``all'' \normalfont means that all the
+materials will have this value.  To specify the boundary condition for
+a particular material, specify an integer number instead of the
+``all''.  The \tt var = ``Dirichlet'' \normalfont is used to specify
+whether it is a Dirichlet or Neumann or symmetry boundary conditions.
+Different components may use the \tt var \normalfont to include a
+variety of different boundary conditions and are explained more fully
+in the following component sections.  The \tt label = ``Velocity''
+\normalfont specifies which variable is being assigned and again is
+component dependent.  The \tt <value> [0.0,0.0,0.0] </value>
+\normalfont specifies the value.
+
+An example of a more complicated boundary condition demonstrating a
+hot jet of fluid issued into the domain is described.  The jet is
+described by a circle on one side of the domain with boundary
+conditions that are different in the circular jet compared to the rest
+of the side.
+
+\begin{verbatim}[fontsize=\footnotesize]
+
+ <Face circle = "y-" origin = "0.0 0.0 0.0" radius = ".5">
+        <BCType id = "0"   label = "Pressure" var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity" var = "Dirichlet">
+                              <value> [0.,1.,0.] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature" var = "Dirichlet">
+                              <value> 1000.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density" var = "Dirichlet">
+                              <value> .35379  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+
+\end{verbatim}
+
+The jet is described by the circle on the y minus face with the origin
+at 0,0,0 and a radius of .5.  For the region outside of the circle,
+the boundary conditions are different.  Each side must have at least
+the \tt ``side'' \normalfont specified, but additional circles and
+rectangles can be specified on a given face.
+
+An example of the \tt rectangle \normalfont is specified as with the
+lower corner at 0,0.181,0 and upper corner at 0,0.5,0.
+
+
+\begin{verbatim}[fontsize=\footnotesize]
+
+ <Face rectangle = "x-" lower = "0.0 0.181 0.0" upper = "0.0 0.5 0.0">
+
+\end{verbatim}
+
+
 %
 %__________________________________
 \subsection{Grid specification} \label{Sec:Grid}
