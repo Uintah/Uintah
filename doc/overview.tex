@@ -1,6 +1,6 @@
-\section{Overview of Uintah} \label{Sec:Overview}
-
-The Uintah Computational Framework, i.e. Uintah consists of a set of
+\section{Overview of Uintah} \label{Sec:Overview} 
+The Uintah Computational Framework, (also referred to as Uintah or the UCF)
+consists of a set of
 software components and libraries that facilitate the solution of
 Partial Differential Equations (PDEs) on Structured AMR (SAMR) grids
 using hundreds to thousands of processors.
@@ -169,23 +169,26 @@ Each new component inherits from the classes
 The component overrides default implementations of various methods.
 The above methods are the essential functions that a new component
 must implement.  Additional methods to do AMR will be described as
-more complex examples are presented.
-
-The roles of each of the scheduling methods are described below.  Each
-scheduling method, i.e. \texttt{scheduleInitialize},
-\texttt{scheduleComputeStableTimestep}, and
-\texttt{scheduleTimeAdvance} describe
+more complex examples are presented.  Note that in implementing most
+algorithms, \tt scheduleTimeAdvance \normalfont actually
+schedules several tasks, each of which is responsible for a portion
+of the algorithm, rather than scheduling a single \tt timeAdvance \normalfont
+task.
+The roles of each of the scheduling methods e.g. \texttt{scheduleInitialize},
+\texttt{scheduleComputeStableTimestep}, and \texttt{scheduleTimeAdvance}
+are described below. 
 
 \subsubsection{ProblemSetup}
 
 
-
 The purpose of this method is to read a problem specification which
-requires a minimum of information about the grid used, time
-information, i.e. time step size, length of time for simulation, etc,
-and where and what data is actually saved.  Depending on the problem
-that is solved, the input file can be rather complex, and this method
-would evolve to establish any and all parameters needed to initially
+requires a minimum of information about the grid used (e.g. spatial extents,
+spatial resolution, patch configuration, etc), time
+information, (e.g. time step size, length of time for simulation, etc)
+data archiving (e.g., what variables are saved, how frequently, when to
+checkpoint for restart, etc).  Depending on the component and the problem
+that is being solved, the input file can be rather complex, and this method
+would evolve to establish those parameters needed to initially
 setup the problem.
 
 \subsubsection{ScheduleInitialize}
@@ -214,10 +217,23 @@ individual computational methods.
 
 \subsection{Data Storage Concepts}
 
-During the course of the simulation, data is computed and stored in a
-data structure called the DataWarehouse.  Data that is from a previous
+Tasks ``communicate'' with each other through an entity called the
+{\em DataWarehouse}.  The {\em DataWarehouse} is accessed through a simple
+name-based dictionary mechanism and provides each task with the
+illusion that all memory is global.  If the tasks correctly describe
+their data dependencies, then the data stored in the DataWarehouse
+will match the data (variable and region of space) needed by the task.
+In other words, the {\em DataWarehouse} is an abstraction of a global
+single-assignment memory, with automatic data lifetime management and
+storage reclamation.  Values stored in the {\em DataWarehouse} are
+typically array-structured.
+
+During the course of the simulation, data is computed and stored in
+the DataWarehouse.  Data that is from a previous
 timestep is stored in the Old DataWarehouse, called \texttt{OldDW},
 and data that is computed in the current timestep is stored in the New
 DataWarehouse, called \texttt{NewDW}.  At the end of the timestep,
 current timestep data is moved to the old data warehouse for the next
 timestep in the simulation.
+
+
