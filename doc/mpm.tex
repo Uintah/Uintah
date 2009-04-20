@@ -3192,6 +3192,66 @@ x and y directions, the maximum stress is $308 Pa$.
 \end{figure}
 \newpage
 
+\section*{\center Tungsten Sphere Impacting a Steel Target}
+\subsection*{\underline{Problem Description}}
+A $1 mm$ tungsten sphere with an initial velocity of $5000 m/s$
+impacts a steel target.  Axisymmetric conditions are used in this case,
+conversion of the input file to the full 3D simulation is straightforward.
+The user may wish to do both simulations of both to gain confidence in the
+applicability of axisymmetry. 
+
+This simulation exercises the \tt elastic\_plastic \normalfont
+constitutive model for the
+steel material. This includes sub-models for equations of state,
+variable shear modulus, melting, plasticity, etc.  The tungsten is modeled
+using the \tt comp\_neo\_hook\_plastic, \normalfont which is simple vonMises
+plasticity with linear hardening.  One difficulty with using the more 
+sophisticated models is that parameters can be difficult to find for many
+materials.
+
+\subsection*{\underline{Simulation Specifics}}
+\begin{description}
+\item [Component used:] \hfill MPM
+\item [Input file name:] \hfill WSphereIntoSteel.axi.ups
+\item [Command used to run input file:]\hfill sus WSphereIntoSteel.axi.ups
+\item [Simulation Domain:]\hfill 1.0 cm x 1.5 cm x axisymmetric
+
+\item [Cell Spacing:]\hfill \\
+  0.333 mm x 0.333 mm x axisymmetry (Level 0)
+
+\item [Example Runtimes:] \hfill \\
+ 15 seconds  (1 processor, Xeon 3.16 GHz)\\
+
+\item [Physical time simulated:] \hfill 4 $\mu$seconds
+
+\item [Associate VisIt session:] \hfill WSphereSteel.session
+
+\end{description}
+
+\section*{\underline{Results}}
+
+Figure~\ref{fig:WSphereSteelInit} shows the initial configuration for
+this simulation, with particles colored by the magnitude of their velocity.
+Figure~\ref{fig:WSphereSteelFinal} shows the state of the simulation after
+$4 \mu$seconds this simulation, with particles still colored by velocity
+magnitude.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{WShereInitAxi.png}
+  \caption{Initial configuration of hypervelocity impact of tungsten sphere
+           into a steel target.  Particles are
+           colored by velocity magnitude.}
+  \label{fig:WSphereSteelInit}
+\end{figure}
+\newpage
+\begin{figure}
+  \center
+  \includegraphics[scale=.25]{WShereFinalAxi.png}
+  \caption{State of the tunsgsten and steel after $4 \mu$seconds.
+           Particles are colored by velocity magnitude.}
+  \label{fig:WSphereSteelFinal}
+\end{figure}
 
 \subsection{References}
 \bibliographystyle{plain}
