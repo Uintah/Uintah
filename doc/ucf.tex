@@ -194,18 +194,49 @@ prevent this.  We believe that either the OS/File system is
 incorreclty returning error codes, or, more likely, that the files are
 corrupted (due to file system issues) after the simulation is done.
 
-%\subsubsection{Restrarting} 
+%\subsubsection{Restarting} 
 
 FIXME: discuss how to modify an input parameter before you restart an uda.
 
 %__________________________________
 \subsection{Visualization tools}
-- VisIT\\
-- manta?
+
+Visualization of Uintah data is currently possible using any of three
+software packages.  These are SCIRun, VisIt and Manta.  Of these, SCIRun is
+no longer supported, although legacy versions will continue to work.  The
+VisIt package from LLNL is general purpose visualization software that offers
+all of the usual capabilities for rendering scientific data.  It is still
+developed and maintained by LLNL staff, and its interface to Uintah data is
+supported by the Uintah team.  Manta offers volume rendering and particle
+visualizaton based on parallel (shared memory) ray tracing techniques.
+While the capabilities of Manta are more limited, it is a fast way to
+interactively interrogate reasonably large datasets, provided the user has
+access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
+
+\subsubsection{VisIt}
+
+\subsubsection{Manta}
 
 %__________________________________
-\subsection{Tools}
-- puda, lineextract, timeextract, compare\_uda\\
+\subsection{Data Extraction Tools}
+
+Uintah offers a number of tools for accessing data stored in Uintah Data
+Archives (``UDAs").  Because the format of Uintah data is specific to the 
+framework, these tools allow a user to quickly extract data, which can then
+either be postprocessed within that tool (simple modification of the source
+code may be necessary), postprocessed with external software such as
+Matlab or Octave, or simply plotted with, e.g. gnuplot.  These tools
+are described below.
+
+\subsubsection{puda}
+
+\subsubsection{partextract}
+
+\subsubsection{lineextract}
+
+\subsubsection{timeextract}
+
+\subsubsection{compare\_uda}
 
 %__________________________________
 \subsubsection{plotting tools}
