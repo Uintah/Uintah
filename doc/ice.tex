@@ -262,8 +262,10 @@ of coexistence at states below the threshold pressure, $p$ tends to behave
 according to the fluid equation of state (due to the greater compressibility)
 while in regions of pure condensed phase material $p$ tends rapidly toward
 zero and the full material stress dominates the dynamics as it should.
-\subsection{Uintah Implementation}
-- to be filled in\\
+
+%FIXME
+%\subsection{Uintah Implementation}
+%- to be filled in\\
 
 \subsection{Uintah Specification}
 %______________________________________________________________________
@@ -281,9 +283,10 @@ near the top of the inputfile.  The system of units \bf{must }\normalfont be
 consistent (mks, cgs) and the majority of input files will be in Meter-Kilogram-Sec
 system.
 
-\red{ discuss  first order and second order advection}
+%FIXME
+%\red{ discuss  first order and second order advection}
 
-\red{ discuss timestep scheme.  We mainly use aggressive}
+%\red{ discuss timestep scheme.  We mainly use aggressive}
 %
 %______________________________________________________________________
 \subsubsection{Semi-Implicit Pressure Solve}
@@ -343,7 +346,7 @@ If the user is interested in altering the tolerance to which the equations are s
 <tolerance> and <outer_iteration_tolerance>
 \end{Verbatim} 
 %
-B
+
 \noindent
 \footnotesize
 \begin{tabular}{l p{8cm}}
@@ -669,12 +672,12 @@ and
 \end{Verbatim}
 %
 This boundary condition is designed to suppress all the unwanted effects of an
-artifical boundary. \bf This BC is computationally expensive and only partially
-works and should be used with caution\normalfont.  In flow fields where
+artifical boundary. \bf This BC is computationally expensive, not entirely
+effective and should be used with caution\normalfont.  In flow fields where
 there are no passing through the outlet of the domain it reduces
 the reflected pressure waves significantly.
-%
-Table below shows some of the
+%FIXME
+%Table below shows some of the
 
 \normalsize
 %______________________________________________________________________
@@ -766,7 +769,7 @@ velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
 plot shows the difference of the velocity $\|u - u_{exact}\|$.
 %
 \begin{figure}
-  \includegraphics[scale=.85]{Poiseuille.png}
+  \includegraphics[scale=.80]{Poiseuille.png}
   \caption{ Comparison of $u$ velocity $t = 15sec$}
   \label{fig:Poiseuille}
   \end{figure}
@@ -966,7 +969,7 @@ $(p=0.1, \rho=0.125, u=0, v=0).$  The fluid was an ideal, inviscid, polytropic g
       \TT{mpirun -np 4 sus inputs/UintahRelease/ICE/Explosion.ups}
 \item [Visualization net file:]\hfill \TT{inputs/UintahRelease/ICE/Explosion.session}\\
 \item [Postprocessing command:]\hfill \\
-\TT{inputs/ICE/Scripts/plot\_explosion\_AMR Explosion\_AMR.uda y}\\
+\tt inputs/ICE/Scripts/plot\_explosion\_AMR Explosion\_AMR.uda y \normalfont \\
 This Octave script will generate a postscript file explosion\_AMR.ps
 
 
@@ -984,27 +987,27 @@ This Octave script will generate a postscript file explosion\_AMR.ps
 \end{description}
 
 \section*{\underline{Results}}
-Figures \ref{fig:pressExplode,fig:rhoExplode} shows surface plots of the pressure and density at $t=0.25.$  
-\newpage
+Figures \ref{fig:pressExplode} and \ref{fig:rhoExplode} shows surface plots of the pressure and density at $t=0.25.$  
+%\newpage
 \begin{figure}
  \includegraphics[scale=.5]{explode_press.png}
 \caption{Pressure field at $t=0.25$}
 \label{fig:pressExplode}
 \end{figure}
 %
-\newpage
+%\newpage
 \begin{figure}
   \includegraphics[scale=.5]{explode_rho.png}
   \caption{Density field at time $t=0.25$}
   \label{fig:rhoExplode}
 \end{figure}
-\newpage
+%\newpage
 %
 Since this test is symetrical we can use results from the equivalent 1 dimensional problem to compare against
 %
 \begin{figure}
   \includegraphics[scale=.75]{explode_1D.png}
-  \caption{XXX$t=0.25$}
+  \caption{$t=0.25$}
   \label{fig:1dExplode}
 \end{figure}
 \newpage
