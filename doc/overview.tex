@@ -219,14 +219,14 @@ individual computational methods.
 \subsection{Data Storage Concepts}
 
 Tasks ``communicate'' with each other through an entity called the
-{\em DataWarehouse}.  The {\em DataWarehouse} is accessed through a simple
+\tt DataWarehouse. \normalfont  The \tt DataWarehouse \normalfont is accessed through a simple
 name-based dictionary mechanism and provides each task with the
 illusion that all memory is global.  If the tasks correctly describe
 their data dependencies, then the data stored in the DataWarehouse
 will match the data (variable and region of space) needed by the task.
-In other words, the {\em DataWarehouse} is an abstraction of a global
+In other words, the \tt DataWarehouse \normalfont is an abstraction of a global
 single-assignment memory, with automatic data lifetime management and
-storage reclamation.  Values stored in the {\em DataWarehouse} are
+storage reclamation.  Values stored in the \tt DataWarehouse \normalfont are
 typically array-structured.
 
 During the course of the simulation, data is computed and stored in
