@@ -31,16 +31,12 @@ interactions.
 
 %__________________________________
 \subsection{Mechanics of Running sus}
- - what do the different command line options mean\\
- - how to restart an uda\\
 
 For single processor simulations, the \tt sus \normalfont excutable
 (Standalone Uintah Simulation) is run from the command line prompt
 like this:
 \begin{Verbatim}[fontsize=\footnotesize]
-
   sus input.ups
-
 \end{Verbatim}
 where \tt input.ups \normalfont is an xml formatted input file.  The
 Uintah software release contains numerous example input files located
@@ -51,9 +47,7 @@ For multiprocessor runs, the user generally uses \tt mpirun
 scheduler, launch scripts, etc, \tt mpirun \normalfont may or may not
 be used.  However, in general, something like the following is used:
 \begin{Verbatim}[fontsize=\footnotesize]
-
   mpirun -np num_processors sus -mpi input.ups
-
 \end{Verbatim}
 
 \tt num\_processors \normalfont is the number of processors that will
@@ -64,6 +58,10 @@ number following the -np option shown above.
 In addition, the \tt -mpi \normalfont is optional but often times
 necessary if the mpi environment is not automatically detected from
 within the sus executable.
+
+Uintah provides for restarting from checkpoint as well.  For information on
+this, see Section~\ref{Sec:DataArchiver}, which describes how to create
+checkpoint data, and how to restart from it.
 
 \subsection{Uintah Problem Specification (UPS)} \label{Sec:UPS}
 
@@ -78,7 +76,6 @@ specify the data needed by the simulation.  The essential tags that
 are required by Uintah include the following:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-
   <Uintah_specification>
 
   <SimulationComponent>
@@ -88,7 +85,6 @@ are required by Uintah include the following:
   <DataArchiver>
 
   <Grid>
-
 \end{Verbatim}
 
 
@@ -111,9 +107,7 @@ attribute that must be specified with either \tt mpm, mpmice, ice, arches,
 \normalfont or \tt mpmarches, \normalfont as in:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-
 <SimulationComponent type = "mpm" />
-
 \end{Verbatim}
 
 
@@ -148,39 +142,43 @@ individual components.
 %__________________________________
 \subsection{Data Archiver} \label{Sec:DataArchiver}
 
-
 The Data Archiver section specifies the directory name where data will
 be stored and what variables will be saved and how often data is saved
 and how frequently the simulation is checkpointed.
 
 The \tt <filebase> \normalfont tag is used to specify the directory
-name and by convention, the .uda suffix is attached denoting the
-'uintah data archive'.
+name and by convention, the \tt .uda \normalfont suffix is attached denoting the
+``uintah data archive".
 
-
-Data can be saved based on a frequency setting that is either time
-based on by the number of timesteps taken.
-
-The \tt <outputInterval> \normalfont is the time based tag which takes
-a floating point number whereas the \tt <outputTimestepInterval>
-\normalfont is the frequency based tag which takes an integer number.
-
+Data can be saved based on a frequency setting that is either based on time
+intervals;\\
+\tt <outputTimestepInterval> floating\_point\_time\_increment </outputTimestepInterval> \normalfont\\
+or timestep intervals; \\
+\tt <outputInterval> integer\_number\_of\_steps </outputInterval> \normalfont\\
 
 Each simulation component specifies variables with label names that
 can be specified for data output.  By convention, particle data is
 denoted by \tt p. \normalfont followed by a particular variable name
-such as mass, velocity, stress, etc.  Whereas for grid data, the
+such as mass, velocity, stress, etc.  Whereas for node based data, the
 convention is to use the \tt g. \normalfont followed by the variable
-name, such as mass, stress, velocity, etc.  Within the DataArchiver
+name, such as mass, stress, velocity, etc.  Similarly, cell-centered
+and face-centered data typically end with the a trailing \tt CC \normalfont
+or \tt FC, \normalfont  respectively.  Within the DataArchiver
 section, variables are specified with the following format:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-
    <save label = "p.mass" />
    <save label = "g.mass" />
-
 \end{Verbatim}
 
+To see a list of
+variables available for saving for a given component, execute the following
+command from the \tt StandAlone \normalfont directory:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+inputs/labelNames component
+\end{Verbatim}
+where \tt component \normalfont is, e.g., \tt mpm, \normalfont \tt ice, \normalfont etc.
 
 Checkpointing information can be created that provides a mechanism for
 restarting a simulation at a later point in time.  The \tt
@@ -193,23 +191,25 @@ checkpoint data that is created every .01 seconds of simulation time
 is shown below:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-
 <checkpoint cycle = "2" interval = "0.01"/>
-
 \end{Verbatim}
 
 
 To restart from a checkpointed archive, simply put "-restart" in the
 sus command-line arguments and specify the .uda directory instead of
-the instead of a ups file (it reads the copied input.ups from the
+a ups file (sus reads the copied \tt input.xml \normalfont from the
 archive).  One can optionally specify a certain timestep to restart
-from with "-t <timestep>" with multiple checkpoints, but the
-last checkpointed timestep is the default.  When restarting, it
-copies all of the appropriate stuff from the old uda directory to its
-new uda directory.  If you don't want to keep the old uda directory
-around, you can specify "-nocopy" to have it be removed (i.e. if you
-are cramped for disk space).  Either way it creates a new uda
-directory for you as always.
+from with \tt -t timestep \normalfont with multiple checkpoints, but the
+last checkpointed timestep is the default.  When restarting, sus
+copies all of the appropriate information from the old uda directory to its
+new uda directory.
+% I'M NOT SURE ABOUT THIS, -nocopy REMOVES THE OLD UDA?  I THOUGHT IT
+% JUST LEFT STUFF IN THE OLD UDA, WHERE AS -copy MADE A COPY OF OLD TIMESTEP
+% DATA, AND -move MOVED THE OLD TIMESTEP DATA TO THE NEW UDA.  
+%  If one doesn't want to keep the old uda directory
+%around, they can specify \tt -nocopy \normalfont to have it be removed
+%(e.g., if you are cramped for disk space).  Either way it creates a new uda
+%directory for you as always.
 
 Here are some example:
 
@@ -220,10 +220,8 @@ Here are some example:
 %
 %__________________________________
 \subsection{Geometry objects} \label{Sec:GeometryObjects}
-- different objects available and how to specify them\\
-- what is res \\
-- operators, union, difference\\
-- example of combining several geom\_objects\\
+%FIXME
+%- what is res \\
 
 Within several of the components, the material is described by a
 combination of physical parameters and the geometry.  Geometry objects
@@ -241,54 +239,50 @@ triangulated data file, etc.  The operators which include, the union,
 the difference, and intersection tags contain either lists of
 additional operators or the primitives pieces.
 
-
 As an example of a non-trivial geometry object is shown below:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-
-
 <geom_object>
 
-    <intersection>
+     <intersection>
        <box label = "Domain">
           <min>[0.0,0.0,0.0]</min>
           <max>[0.1,0.1,0.1]</max>
-        </box>
-     <union>
-        <sphere label = "First node">
+       </box>
+       <union>
+         <sphere label = "First node">
             <origin>[0.022,0.028,0.1  ]</origin>
             <radius>0.01</radius>
-        </sphere>
-        <sphere label = "2nd node">
+         </sphere>
+         <sphere label = "2nd node">
             <origin>[0.030,0.075,0.1  ]</origin>
             <radius>0.01</radius>
-        </sphere>
-      </union>
+         </sphere>
+       </union>
      </intersection>
      <res>[2,2,2]</res>
      <velocity>[0.,0.,0.]</velocity>
      <temperature>0 </temperature>
 </geom_object>
-
 \end{Verbatim}
 
 The following geometry objects are given with their required tags:
 
-box has the following tags: min and max which are vector quantities
+\tt box \normalfont has the following tags: min and max which are vector quantities
 specified in the \tt [a, b, c] \normalfont format.
 
-sphere has an origin tag specified as a vector and the radius tag
+\tt sphere \normalfont has an origin tag specified as a vector and the radius tag
 specified as a float.
 
-cone has a tag for the top and bottom origins (vector) as well as tags for the
-top and bottom radius (float) to create a right ciruclar cone/frustram.
+\tt cone \normalfont has a tag for the top and bottom origins (vector) as well as tags for the
+top and bottom radius (float) to create a right circular cone/frustram.
 
-cylinder has a tag for the top and bottom origins (vector) plus a tag
+\tt cylinder \normalfont has a tag for the top and bottom origins (vector) plus a tag
 for the radius (float).
 
-sphere has a tag for the origin (vector) and the radius (float).
+\tt sphere \normalfont has a tag for the origin (vector) and the radius (float).
 
-tri is a tag for describing a triangulated surface.  The name tag
+\tt tri \normalfont is a tag for describing a triangulated surface.  The name tag
 specifies the file name to use for reading in the triangulated surface
 description and the points file.  The triangulated surface
 (file\_name.tri) contains a list of integers describing the
@@ -313,17 +307,14 @@ Points file
 
 \end{Verbatim}
 
+The boolean operators on the geometry pieces include \tt difference, intersection, \normalfont and \tt union.\normalfont 
 
-The operators on the geometry pieces include difference, intersection,
-and union.
-
-The difference takes two geometry pieces and subtracts the second
-geometry piece from the first geometry piece.  The intersection
+The \tt difference  \normalfont takes two geometry pieces and subtracts the second
+geometry piece from the first geometry piece.  The \tt intersection \normalfont
 operator requires at least two geometry pieces in forming an
-intersection geometry piece.  Whereas the union operator aggregates a
+intersection geometry piece.  Whereas the \tt union \normalfont operator aggregates a
 collection of geometry pieces.  Multiple operators can be used to form
 very complex geometry pieces.
-
 
 
 %__________________________________
@@ -343,7 +334,7 @@ side of the domain, the material id, what type of boundary condition
 (Dirichlet or Neumann) and which variable and the value assigned.  The
 following is a an MPM specification of a Dirichlet boundary condition
 assigned to the velocity component on the x minus face (the entire
-side) with a vector value of [0,0,0] applied to all of the materials.
+side) with a vector value of [0.0,0.0,0.0] applied to all of the materials.
 
 \begin{Verbatim}[fontsize=\footnotesize]
 
@@ -366,16 +357,16 @@ side) with a vector value of [0,0,0] applied to all of the materials.
 
 \end{Verbatim}
 
-The notation \tt <Face side = ``x-''> \normalfont indicates that the
+The notation \tt <Face side = "x-"> \normalfont indicates that the
 entire x minus face of the boundary will have the boundary condition
-applied.  The \tt id = ``all'' \normalfont means that all the
+applied.  The \tt id = "all" \normalfont means that all the
 materials will have this value.  To specify the boundary condition for
 a particular material, specify an integer number instead of the
-``all''.  The \tt var = ``Dirichlet'' \normalfont is used to specify
+"all".  The \tt var = "Dirichlet" \normalfont is used to specify
 whether it is a Dirichlet or Neumann or symmetry boundary conditions.
 Different components may use the \tt var \normalfont to include a
 variety of different boundary conditions and are explained more fully
-in the following component sections.  The \tt label = ``Velocity''
+in the following component sections.  The \tt label = "Velocity"
 \normalfont specifies which variable is being assigned and again is
 component dependent.  The \tt <value> [0.0,0.0,0.0] </value>
 \normalfont specifies the value.
@@ -428,7 +419,7 @@ of the side.
 The jet is described by the circle on the y minus face with the origin
 at 0,0,0 and a radius of .5.  For the region outside of the circle,
 the boundary conditions are different.  Each side must have at least
-the \tt ``side'' \normalfont specified, but additional circles and
+the \tt "side" \normalfont specified, but additional circles and
 rectangles can be specified on a given face.
 
 An example of the \tt rectangle \normalfont is specified as with the
@@ -436,11 +427,8 @@ lower corner at 0,0.181,0 and upper corner at 0,0.5,0.
 
 
 \begin{Verbatim}[fontsize=\footnotesize]
-
  <Face rectangle = "x-" lower = "0.0 0.181 0.0" upper = "0.0 0.5 0.0">
-
 \end{Verbatim}
-
 
 %
 %__________________________________
@@ -472,7 +460,8 @@ direction.  To specify the grid cell size use the \tt <spacing>
 [0.5,0.5,0.3] </spacing> \normalfont.  This specifies the a grid cell
 size of .5 in the x and y directions and .3 in the z direction.  The
 \tt <resolution> \normalfont and \tt <spacing> \normalfont cannot be
-specified together.
+specified together.  The following two examples would generate
+identical grids:
 
 \begin{Verbatim}[fontsize=\footnotesize]
 <Level>
@@ -485,14 +474,26 @@ specified together.
     <spacing>         [0.5,0.5,0.5]    </spacing>
 </Level>
 \end{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
+<Level>
+    <Box label="1">
+       <lower>        [0,0,0]          </lower>
+       <upper>        [5,5,5]          </upper>
+       <resolution>   [10,10,10]       </resolution>
+       <extraCells>   [1,1,1]          </extraCells>
+       <patches>      [1,1,1]          </patches>
+    </Box>
+</Level>
+\end{Verbatim}
 
-The above example indicates that the grid domain has a lower corner at
+
+The above examples indicate that the grid domain has a lower corner at
 0,0,0 and an upper corner at 5,5,5 with one extra cell in each
-direction.  There domain is broken down into one patch covering the
+direction.  The domain is broken down into one patch covering the
 entire domain with a grid spacing of .5,.5,.5.  Along each dimension
-there are ten cells in the interior of the grid and 2 cells outside of
-the domain.
-
+there are ten cells in the interior of the grid and one layer of
+``extraCells" outside of the domain.  extraCells are the Uintah nomenclature
+for what are frequently referred to as ``ghost-cells".
 
 %
 %__________________________________
@@ -608,9 +609,15 @@ are described below.
 
 \subsubsection{puda}
 
-The command line extraction utility "puda" may be used to extract a subset of particle data from a UDA.  Once the extraction tools have been compiled, the puda executable will be located in ``/opt/StandAlone/tools/puda/''.  If the executable is ran with no additional command line arguments, the following usage information will be displayed in the terminal:
+The command line extraction utility \tt puda \normalfont
+(for ``parse uintah data archive") has a number of uses.  For example, it
+may be used to extract a subset of particle data from a UDA.  Once the
+extraction tools have been compiled, the puda executable will be located in 
+\tt opt/StandAlone/tools/puda/. \normalfont  If the executable is run with
+no additional command line arguments, the following usage information will be
+displayed:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 Usage: puda [options] <archive file>
 
 Valid options are:
@@ -642,13 +649,16 @@ Valid options are:
 *NOTE* ptonly, patch, material, timesteplow, timestephigh are used in conjuntion with -PTvar.
 \end{Verbatim}
 
-As an example of how to use ``puda'', suppose that you wanted to know the locations of all particles at the last archived timestep for the ``const\_test\_hypo.uda'' (found in '/inputs/MPM/' after running the simulation).  First you would need to know how many timesteps have been archived.  To do this you could issue:
+As an example of how to use \tt puda \normalfont, suppose that one wanted to know the locations of all particles at the last archived timestep for the 
+\tt const\_test\_hypo.uda \normalfont 
+First one may wish to know how many timesteps have been archived.
+This could be accomplished by:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
  puda -timesteps const_test_hypo.uda
 \end{Verbatim}
 The resulting terminal output would be:
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 Parsing const_test_hypo.uda/index.xml
 There are 11 timesteps:
 1: 1.8257001926347728e-05
@@ -664,28 +674,27 @@ There are 11 timesteps:
 5433: 1.0001655973087024e-01
 \end{Verbatim}
 
-These represent all of the timesteps for which data has been archived.  Suppose now that we which so know what the stress state is for all particles (in this case two) at the final archived timestep.  For this you could issue:
+These represent all of the timesteps for which data has been archived.  Suppose now that we wish to know what the stress state is for all particles (in this case two) at the final archived timestep.  For this one could issue:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 puda -partvar p.stress -timesteplow 10 -timestephigh 10 const_test_hypo.uda
 \end{Verbatim}
 
 The resulting output is:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 Parsing const_test_hypo.uda/index.xml
 1.00016560e-01 1 0 281474976710656 -2.72031498e-10 -1.05064208e-26 -2.53781271e-08 -1.05064208e-26 -2.72031498e-10 -1.23584688e-09 -2.53781271e-08 -1.23584688e-09 1.63840079e-07
 1.00016560e-01 1 1 0 1.93256890e-13 6.56787331e-18 1.85514400e-14 6.56787331e-18 2.24310469e-13 1.85519650e-14 1.85514400e-14 1.85519650e-14 -3.20052991e+06
 \end{Verbatim}
 
-The first column is the simulation time, the second column is ????, the third column is the material number, the fourth column is the particle ID, and the remaining nine columns represent the components of the Cauchy stress tensor ($ \sigma_{11}$,$\sigma_{12}$,$\sigma_{13}$, ..., $\sigma_{32}$,$\sigma_{33}$).  If desired, the terminal output can be piped to a text file for further use.
-
+The first column is the simulation time, the second column is ????, the third column is the material number, the fourth column is the particle ID, and the remaining nine columns represent the components of the Cauchy stress tensor ($ \sigma_{11}$,$\sigma_{12}$,$\sigma_{13}$, ..., $\sigma_{32}$,$\sigma_{33}$).  If desired, the terminal output can be redirected to a text file for further use.
 
 \subsubsection{partextract}
 
-The command-line utility ``partextract'' may be used to extract data from an individual particle.  To do this you first need to know the ID number of the particle you are interested in.  This may be done by using the puda utility, or the visualization tools.  Once the extraction tools have been compiled, the partextract utility executable will be located in  ``/opt/StandAlone/tools/extractors/''.  If the executable is ran without any arguments the following usage guide will be displayed in the terminal:
+The command-line utility \tt partextract \normalfont may be used to extract data from an individual particle.  To do this you first need to know the ID number of the particle you are interested in.  This may be done by using the puda utility, or the visualization tools.  Once the extraction tools have been compiled, the partextract utility executable will be located in  \tt /opt/StandAlone/tools/extractors/ \normalfont.  If the executable is run without any arguments the following usage guide will be displayed in the terminal:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 No archive file specified
 Usage: partextract [options] <archive file>
 
@@ -701,39 +710,31 @@ Valid options are:
 
 As an example of how to use the partextract utility, suppose we wanted to find the velocity at every archived timestep for the particle with ID 281474976710656 (found above using puda) in the ``const\_test\_hypo.uda'' file (src/StandAlone/inputs/MPM).  The appropriate command to issue is:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 partextract -partvar p.velocity -partid 281474976710656 const\_test\_hypo.uda
 \end{Verbatim}
 
 The output to the terminal is:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 Parsing const_test_hypo.uda/index.xml
 1.82570019e-05 1 0 281474976710656 0.00000000e+00 0.00000000e+00 -1.00000000e-02
 1.00129149e-02 1 0 281474976710656 -1.03554318e-19 -1.03554318e-19 -1.00000000e-02
 2.00059304e-02 1 0 281474976710656 -1.99388121e-19 -1.99388121e-19 -1.00000000e-02
-3.00156168e-02 1 0 281474976710656 -1.56358733e-20 -1.56358733e-20 -1.00000000e-02
-4.00052724e-02 1 0 281474976710656 4.11469970e-20 4.11469970e-20 -1.00000000e-02
-5.00115877e-02 1 0 281474976710656 -1.01422665e-19 -1.01422665e-19 -1.00000000e-02
-6.00161782e-02 1 0 281474976710656 -2.46491637e-20 -2.46491637e-20 -1.00000000e-02
-7.00005367e-02 1 0 281474976710656 1.02800845e-19 1.02800845e-19 -1.00000000e-02
-8.00015371e-02 1 0 281474976710656 6.05507624e-20 6.05507624e-20 -1.00000000e-02
-9.00007027e-02 1 0 281474976710656 6.74198631e-21 6.74198631e-21 -1.00000000e-02
-1.00016560e-01 1 0 281474976710656 6.89536861e-20 6.89536861e-20 -1.00000000e-02
+	.
+	.
+	.
 \end{Verbatim}
 
 It is noted that if the stress tensor is output using the partextract utility, the output format is different than for the puda utility.  The partextract utility only outputs the six independent components instead of all nine.  For example, if we use partextract to get the stress tensor for the same particle as above at the last archived timestep only, the output is:
 
-\begin{Verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
 partextract -partvar p.stress -partid 281474976710656 -timesteplow 10 -timestephigh 10 const_test_hypo.uda
 Parsing const_test_hypo.uda/index.xml
 1.00016560e-01 1 0 281474976710656 -2.72031498e-10 -1.05064208e-26 -2.53781271e-08 -1.05064208e-26 -2.72031498e-10 -1.23584688e-09 -2.53781271e-08 -1.23584688e-09 1.63840079e-07
-
 \end{Verbatim}
 
 Compare this output with the output from puda above.  Notice that the ordering of the six independent components of the stress tensor for partextract are $\sigma_{11}$,$\sigma_{22}$, $\sigma_{33}$, $\sigma_{23}$, $\sigma_{13}$ , $\sigma_{12}$.
-
-
 
 \subsubsection{lineextract}
 
@@ -762,11 +763,12 @@ Valid options are:
                                   [int 102, 44, 0]
 \end{Verbatim}
 
-The following example shows the usage of lineextract for extracting density data at the 60th computational cell in the x-direction, spanning the width of the domain in the y-direction (0 to 1000), at a time step, ts. The variable containing the density data within the uda is ``rho\_CC," and the output variable that will store the data for post processing is ``rho."
+The following example shows the usage of lineextract for extracting density data at the 60th computational cell in the x-direction, spanning the width of the domain in the y-direction (0 to 1000), at timestep, 7, (note ``timestep" actually 
+refers to the seventh data dump, not necessarily the seventh timestep in the 
+simulation. The variable containing the density data within the uda is ``rho\_CC," and the output variable that will store the data for post processing is ``rho."
 \begin{Verbatim}[fontsize=\footnotesize]
-./lineextract -v rho_CC  -timestep ts -istart 60 0 0 -iend 60 1000 0 -m 1 -o rho -uda test01.uda.000
+./lineextract -v rho_CC  -timestep 7 -istart 60 0 0 -iend 60 1000 0 -m 1 -o rho -uda test01.uda.000
 \end{Verbatim}
-
 
 \subsubsection{timeextract}
 
@@ -780,6 +782,7 @@ The following example shows the usage of lineextract for extracting density data
 - plotComponents
 
 %__________________________________
+%FIXME
 \subsection{Code}
 -explain the basic directory structure of src
 \begin{Verbatim}[fontsize=\footnotesize]
