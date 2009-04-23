@@ -42,7 +42,7 @@ These lines to the writing:
 Probably need a for loop to grab each double and then save it
 individually as a float.
 
-----------------------------------------------------------------------
+------------------------------------------------------------------------
 
 Particle thoughts:
 
@@ -57,7 +57,7 @@ Probably the best idea: Or use the TypeDescription (td variable) and
 call getType and compare it with double_type.  (See
 Core/Disclosure/TypeDescription.h)
 
-----------------------------------------------------------------------
+------------------------------------------------------------------------
 
 Labels used to get data from DW.  Only need to create the label
 once... (could do it anytime you needed it, but wastes time and space.
