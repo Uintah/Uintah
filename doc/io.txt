@@ -42,7 +42,7 @@ These lines to the writing:
 Probably need a for loop to grab each double and then save it
 individually as a float.
 
-------------------------------------------------------------------------
+-------------------------------------------------------------------------
 
 Particle thoughts:
 
