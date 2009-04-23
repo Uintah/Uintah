@@ -498,12 +498,137 @@ for what are frequently referred to as ``ghost-cells".
 %
 %__________________________________
 \subsection{Adapative Mesh Refinement}
-- need to discuss the input options for the different regridders.\\
+- Describe refinement flags
+- Describe boundary layers
 - How is a cell flagged as needing to be refined
 %
 %__________________________________
-\subsection{load Balancer}
-- to be filled in
+\subsection{Regridder}
+
+The regridder creates a multilevel grid from the refinement flags.
+Each level will completely cover the refinement flags from the corser
+level.  The primary regridder used in Uintah is the \emph{Tiled} regridder.
+The tiled regridder creates a set of evenly sized tiles across the domain
+that will become patches if refinement is required in the tiles region.
+
+The following is an example of this regridder.
+
+\begin{Verbatim}     
+<Regridder type="Tiled">   
+    <max_levels>2</max_levels>
+    <cell_refinement_ratio> [[2,2,1]] </cell_refinement_ratio>
+    <cell_stability_dilation> [2,2,0] </cell_stability_dilation>
+    <min_boundary_cells> [1,1,0] </min_boundary_cells>
+    <min_patch_size>  [[8,8,1]] </min_patch_size>
+    <dynamic_size> true </dynamic_size>      
+    <patches_per_level_per_proc>8</patches_per_level_per_proc>   
+</Regridder>
+\end{Verbatim}
+
+The \emph{max\_levels} tag specifies the maximum number of levels
+to be created.  The \emph{cell\_refinement\_ratio} tag specifies the 
+refinement ratio between the levels.  This can be specified on a per 
+level basis as follows:
+
+\begin{Verbatim}
+    <cell_refinement_ratio> [[2,2,1],[4,4,1]] </cell_refinement_ratio>
+\end{Verbatim}
+
+The \emph{cell\_stability\_dilation} tag specifies how many cells around
+the refinement flags are also gaurenteed to be refined.  The
+\emph{min\_boundary\_cells} tag specifies the size of the boundary layers. 
+The size of the tiles is specified using the \emph{min\_patch\_size} tag
+and can also be specified on a per level basis.
+
+Finally the size of the tiles can change at run time.  If the number
+of patches is higher than what is needed then the tile size will double in
+the smallest dimension.  Conversely if the target number of patches is low
+then the tile size will halve in the longest dimension but will never go
+below the \emph{min\_patch\_size}.  The target number of patches per processor is 
+specified using the \emph{patches\_per\_level\_per\_proc} tag. To prevent the 
+resizing of tiles set the tag \emph{dynamic\_size} to false. 
+
+%
+%__________________________________
+\subsection{Load Balancer}
+
+The load balancer assignes patches to processors such that work is 
+evenly distributed.  Uintah currently supports a wide array of 
+load balancing algorithms.  To specify a load balancing algorithm 
+add a block similar to the following:
+
+\begin{Verbatim}
+  <LoadBalancer type="DLB">
+       <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
+       <timestepInterval>50</timestepInterval>
+       <gainThreshold>0.05</gainThreshold>
+  </LoadBalancer>
+\end{Verbatim}
+
+The type specifies which load balancer is used.  The type can be \emph{DLB}, 
+\emph{RoundRobin}, \emph{SimpleLoadBalancer}, or \emph{SingleProcessorLoadBalancer}.  
+If no load balancer is specified than either the SimpleLoadBalancer 
+or the SingleProcessorLoadBalancer will be used.  For complex problems including 
+AMR the DLB load  balancer should be used.  This load balancer uses advanced 
+algorithms to achieve more efficient patch assignments.  To use the DLB load 
+balancer you must include the  \emph{dynamicAlgorithm} tag. This tag can be 
+\emph{PatchFactor} or \emph{Zoltan}.  
+
+\begin{Verbatim}
+       <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
+\end{Verbatim}
+
+Both of these algorithms compute the weight of a patch using either a profiling model 
+or an algorithm cost model.  By default  the profiling model is used as it provides 
+highly accurate estimates and does not require the specification of model parameters.  
+To disable profiling add the tag
+
+\begin{Verbatim}
+       <doCostProfiling>false</doCostProfiling>
+\end{Verbatim}
+
+This will cause the load balancer to use the cost model $W_p=N_pc_1+N_cc_2+c_3$ to 
+determine the weight of a patch, where $N_p$ is the number of particles 
+in the patch, $N_c$ is the number of cells on the patch, $c_1$ is the weight per
+particle, $c_2$ is the weight per cell, and $c_3$ is a constanct cost on the
+patch.  These constants can be specified with the following tags:
+
+\begin{Verbatim}
+       <cellCost>1</cellCost>
+       <particleCost>1.25</particleCost>
+       <patchCost>4</patchCost>
+\end{Verbatim}
+
+The number of particles will always be zero unless the algorithm is instructed to
+collect particles with the collectParticles tag.  
+
+\begin{Verbatim}
+       <collectParticles>true</collectParticles>
+\end{Verbatim}
+
+The following are a couple of extra load balancer parameters that may be useful.
+\begin{Verbatim}
+       <timestepInterval>50</timestepInterval>
+       <gainThreshold>0.05</gainThreshold>
+       <outputNthProc>8</outputNthProc>
+\end{Verbatim}
+
+The \emph{timestepInterval} tag specifies the maximum number of timesteps the simulation
+can run without attempting to load balance.  The \emph{gainThreshold} tag specifies the 
+percent improvement that a load balance must provide over the old load balance in 
+order for the new load balance to be used.  Finally the \emph{outputNthProc} tag causes
+the data archive to be written to by every Nth processor instead of every processor.  
+This can allieviate problems caused by having to many processors attempting to write 
+to the same file system at the same time. 
+
+If the dynamic algorithm is set to \emph{Zoltan} then the user must also specify which
+Zoltan algorithm to use with the \emph{zoltanAlgorithm} tag.  
+
+\begin{Verbatim}
+       <zoltanAlgorithm>HSFC</zoltanAlgorithm>
+\end{Verbatim}
+
+The Zoltan algorithm can be set to \emph{HSFC}, \emph{RIB}, \emph{RCB}.
 
 %__________________________________
 \subsection{UDA}
