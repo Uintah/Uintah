@@ -1545,6 +1545,7 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     d_costProfiler.setTimestepWindow(timestepWindow);
     p->getWithDefault("doCostProfiling",d_profile,true);
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
+    p->getWithDefault("collectParticles",d_collectParticles,false);
   }
 
   if(d_myworld->myrank()==0)
@@ -1556,10 +1557,9 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     d_dynamicAlgorithm = random_lb;
   else if (dynamicAlgo == "patchFactor") {
     d_dynamicAlgorithm = patch_factor_lb;
-    d_collectParticles = false;
   }
   else if (dynamicAlgo == "patchFactorParticles" || dynamicAlgo == "particle3") {
-    // particle3 is for backward-compatibility
+    // these are for backward-compatibility
     d_dynamicAlgorithm = patch_factor_lb;
     d_collectParticles = true;
   }
@@ -1569,7 +1569,6 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
     d_dynamicAlgorithm=zoltan_sfc_lb;
     p->getWithDefault("zoltanAlgorithm",d_zoltanAlgorithm,"HSFC");
     p->getWithDefault("zoltanIMBTol",d_zoltanIMBTol,"1.1");
-    d_collectParticles = false;
   }
 #endif
   else {
@@ -1579,6 +1578,11 @@ DynamicLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  SimulationS
            << "\nUsing 'patchFactor' load balancer\n";
     d_dynamicAlgorithm = patch_factor_lb;
   }
+
+  //Automatically disable collection of particles if we are profiling.
+  if(d_profile)
+    d_collectParticles=false;
+
   d_lbInterval = interval;
   d_lbTimestepInterval = timestepInterval;
   d_doSpaceCurve = spaceCurve;
