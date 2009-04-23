@@ -1,4 +1,4 @@
-\section{Downloading the Software} \label{Sec:download}
+\section{Installing Uintah} \label{Sec:installation}
 
 The Uintah library is composed of several executables and a generic
 library framework for solving PDEs on structured AMR grids.  The VisIT
@@ -35,6 +35,7 @@ libxml2-devel
 zlib-devel
 c++
 subversion
+ccmake
 
 Useful libraries:
 hypre-2.0
@@ -54,7 +55,7 @@ installing Uintah with the exception of VisIT and Teem.
 
 Installing the following libraries will ensure that all dependencies
 required for Uintah are satisfied: subversion libhypre-dev petsc-dev
-libxml2-dev zlib1g-dev liblapack-dev.
+libxml2-dev zlib1g-dev liblapack-dev cmake cmake-curses-gui.
 
 Once these libraries are installed, Teem and VisIT can be installed
 followed by installation of Uintah.
@@ -154,7 +155,7 @@ ${CC} -c -fPIC dlamch.c
 Depending on the location of the mpi libraries, i.e. location of mpi.h
 and libmpi.so, the configure line for hypre should look something like this:
 
-\begin{verbatim}
+\begin{Verbatim}
 
 cd hypre-2.0.0/src
 
@@ -167,39 +168,111 @@ make
 
 make install
 
-\end{verbatim}
+\end{Verbatim}
 
  
 
-\subsection{Installing Uintah, Teem and VisIT}
+\subsection{Teem Installation}
 
-Teem and VisIT need to be installed first before Uintah can be configured 
+Download Teem from http://teem.sourceforge.net/download/index.html.  Teem uses cmake to configure the build system. Installation instructions for Teem are found at http://teem.sourceforge.net/build.html.  Simplified instructions are as follows:
+
+\begin{verbatim}
+
+tar zxf teem-1.10.0-src.tar.gz
+
+cd teem-1.10.0-src/
+
+mkdir teem-build
+
+cd teem-build
+
+ccmake ../
+
+press the 'c' key
+
+Use the arrow keys to scroll down to the fourth line 'BUILD_SHARED_LIBS' and press the 
+return key to toggle the 'ON' flag.
+
+Press the 'c' key
+
+Press the 'g' key
+
+make
+
+make install
+
+\end{verbatim}
+
+The Teem libraries and include files will be install in /usr/local hierarchy.
 
 
+\subsection{VisIT Installation}
+VisIT has a build script which builds VisIT plus all of its dependencies.
 
+The build script can be downloaded from
+https://wci.llnl.gov/codes/visit/1.11.2/build_visit
+
+Make the build_script executable:
+
+\begin{verbatim}
+
+chmod +x build_script
+
+\end{verbatim}
+
+Create a directory for VisIT and launch the build_script using four
+processors (-j4):
+
+\begin{verbatim}
+
+mkdir Visit
+
+cp build_script Visit
+
+cd Visit
+
+./build_script --makeflags '-j4'
+
+\end{verbatim}
+
+The build_visit script will launch a GUI.  Use the space key to
+unselect the Optional and then scroll down to the Parallel option and
+select that.  The GUI will determine the location of the mpi libraries
+and then start the build process.  All source files will be downloaded
+and installed in the ~/Visit/visit1.11.2 directory.  The \tt visit
+\normalfont executable is found in ~/Visit/visit1.11.2/src/bin .
 
 \subsubsection{Configuring Uintah}
 
-cd to \tt ~/SCIRun \normalfont and create the following directories: dbg and opt
+cd to \tt ~/Uintah \normalfont and create the following directories:
+dbg and opt
 
-cd to dbg and type the following to configure for a debug build:
+\begin{verbatim}
+
+mkdir dbg opt
+
+\end{verbatim}
+
+Go to the dbg directory and enter the following:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-../src/configure --enable-debug --enable-sci-malloc 
---enable-package=Uintah 
---with-thirdparty=/usr/local/Thirdparty/1.25.5/Linux/gcc-4.3.1-2-32bit/
+../src/configure --enable-debug --with-teem=/usr/local
+--with-visit=/home/user_name/Visit/visit1.11.2
 \end{Verbatim}
 
-Then build the software by typing \texttt{make} at the command
-line. Once the debug build has finished which can take roughly an hour
-on a single processor Pentium IV computer, cd to the opt/ and type the
-following to configure for an optimized build:
+If building on a 64bit platform, append \tt --enable-64bit \normalfont
+to the configure line.
+
+After the configuration process, type \tt make \normalfont to compile
+Uintah.
+
+Once a debug build has finished, change to the opt directory and enter
+the following configure line:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-./src/configure '--enable-optimze=-march=pentium4 -msse -msse2 
--mfpmath=sse -03' --disable-sci-malloc --enable-assertion-level=0 
---enable-package=Uintah 
---with-thirdparty=/usr/local/Thirdparty/1.25.4/Linux/gcc-4.3.1-2-32bit/
+./src/configure --enable-optimze --enable-assertion-level=0 
+--with-teem=/usr/local
+--with-visit=/home/user_name/Visit/visit1.11.2
 \end{Verbatim}
 
 Then build the software by typing \tt make \normalfont at the command line.
@@ -218,8 +291,9 @@ While the capabilities of Manta are more limited, it is a fast way to
 interactively interrogate reasonably large datasets, provided the user has
 access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
-\subsubsection{Installing VisIt}
 
-\subsubsection{Installing Manta}
+
+
+\subsection{Installing Manta}
 
 
