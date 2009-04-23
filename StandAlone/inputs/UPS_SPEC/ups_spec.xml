@@ -637,6 +637,7 @@
                              attribute1="type REQUIRED STRING 'DLB'" >
     <cellCost              spec="OPTIONAL DOUBLE 'positive'" /> <!--The weight per cell -->
     <cellFactor            spec="OPTIONAL DOUBLE" />  <!-- FIXME: What is this?  What is the default? -->
+    <collectParticles      spec="OPTIONAL BOOLEAN" />
     <doCostProfiling       spec="OPTIONAL BOOLEAN" /> <!-- use cost profiling instead of the cost model-->
     <doSpaceCurve          spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
     <dynamicAlgorithm      spec="REQUIRED STRING 'particle3, patchFactor, patchFactorParticles, Zoltan'" />
