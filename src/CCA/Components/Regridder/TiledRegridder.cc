@@ -130,116 +130,118 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       num_patches=mytiles.size();
     }
 
-    //compute the volume 
-    int min_volume=num_patches*Product(d_minTileSize[l+1]);
-    
-    do
+    if(d_dynamic_size)
     {
-      retry=false;
+      //compute the volume 
+      int min_volume=num_patches*Product(d_minTileSize[l+1]);
 
-      //save tiles in case we want to restore them later
-      myoldtiles.swap(mytiles); 
-
-      //erase old tileset
-      mytiles.resize(0);
-
-      //compute tiles using the new tile size
-      //this could be computed form the minimum tile set instead
-      ComputeTiles(mytiles,level,d_tileSize[l+1],d_cellRefinementRatio[l]);
-
-      unsigned int num_patches=0;
-      if(d_myworld->size()>1)
+      do
       {
-        unsigned int mycount=mytiles.size();
+        retry=false;
 
-        //reduce the number of tiles on each processor
-        MPI_Allreduce(&mycount,&num_patches,1,MPI_UNSIGNED,MPI_SUM,d_myworld->getComm());
-      }
-      else
-      {
-        num_patches=mytiles.size();
-      }
+        //save tiles in case we want to restore them later
+        myoldtiles.swap(mytiles); 
 
-      //compute the volume
-      int volume=num_patches*Product(d_tileSize[l+1]);
+        //erase old tileset
+        mytiles.resize(0);
 
-      //volume huristic to decide if the new tile set is "good"
-      if(volume*.95>min_volume) //if increasing the tile size significantly increased the volume
-      {
-        //restore old tiles 
-        mytiles.swap(myoldtiles); 
-        d_tileSize[l+1]=old_tile_size;
-      }
-      else 
-      {
-        old_tile_size=d_tileSize[l+1];
+        //compute tiles using the new tile size
+        //this could be computed form the minimum tile set instead
+        ComputeTiles(mytiles,level,d_tileSize[l+1],d_cellRefinementRatio[l]);
 
-        if(num_patches<target_patches_) //decrease tile size
+        unsigned int num_patches=0;
+        if(d_myworld->size()>1)
         {
-          //decrease tile size
+          unsigned int mycount=mytiles.size();
 
-          //sort the current tile size largest to smallest
-          int dims[3]={0,1,2};
-
-          //simple unrolled bubble sort
-          if(dims[1]>dims[0])
-            swap(dims[0],dims[1]);
-          if(dims[2]>dims[1])
-            swap(dims[1],dims[2]);
-          if(dims[1]>dims[0])
-            swap(dims[0],dims[1]);
-
-          //loop through each dimension and take the first one that can be decreased
-          for(int d=0;d<3;d++)
-          {
-            int new_size=d_tileSize[l+1][dims[d]]/2;
-            if(new_size>=d_minTileSize[l+1][dims[d]])
-            {
-              d_tileSize[l+1][dims[d]]=new_size;
-
-              //if(d_myworld->myrank()==0)
-              //  cout << " Decreasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << endl;
-
-              retry=true;
-              break;
-            }
-          }
+          //reduce the number of tiles on each processor
+          MPI_Allreduce(&mycount,&num_patches,1,MPI_UNSIGNED,MPI_SUM,d_myworld->getComm());
         }
-        else if (num_patches>2*target_patches_)
+        else
         {
-          //increase tile size
-          int min_dim=-1;
+          num_patches=mytiles.size();
+        }
 
-          //find the smallest non-1 dimension
-          for(int d=0;d<3;d++)
+        //compute the volume
+        int volume=num_patches*Product(d_tileSize[l+1]);
+
+        //volume huristic to decide if the new tile set is "good"
+        if(volume*.95>min_volume) //if increasing the tile size significantly increased the volume
+        {
+          //restore old tiles 
+          mytiles.swap(myoldtiles); 
+          d_tileSize[l+1]=old_tile_size;
+        }
+        else 
+        {
+          old_tile_size=d_tileSize[l+1];
+
+          if(num_patches<target_patches_) //decrease tile size
           {
-            //if dimension is not equal to 1 and is smaller than the other dimensions
-            if(d_minTileSize[l+1][d]>1 && (min_dim==-1 || d_tileSize[l+1][d]<d_tileSize[l+1][min_dim]))
+            //decrease tile size
+
+            //sort the current tile size largest to smallest
+            int dims[3]={0,1,2};
+
+            //simple unrolled bubble sort
+            if(dims[1]>dims[0])
+              swap(dims[0],dims[1]);
+            if(dims[2]>dims[1])
+              swap(dims[1],dims[2]);
+            if(dims[1]>dims[0])
+              swap(dims[0],dims[1]);
+
+            //loop through each dimension and take the first one that can be decreased
+            for(int d=0;d<3;d++)
             {
-              //don't allow tiles to be bigger than the coarser tile and make sure tiles will divide evenly into coarse tiles
-              if(d_tileSize[l+1][d]*2<=d_tileSize[l][d]*d_cellRefinementRatio[l][d] && d_tileSize[l][d]%(d_tileSize[l+1][d]*2)==0) 
-                min_dim=d;
+              int new_size=d_tileSize[l+1][dims[d]]/2;
+              if(new_size>=d_minTileSize[l+1][dims[d]])
+              {
+                d_tileSize[l+1][dims[d]]=new_size;
+
+                //if(d_myworld->myrank()==0)
+                //  cout << " Decreasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << endl;
+
+                retry=true;
+                break;
+              }
             }
           }
-
-          if(min_dim!=-1)
+          else if (num_patches>2*target_patches_)
           {
-            //increase that dimension by the min_tile_size
-            d_tileSize[l+1][min_dim]*=2;
-            //if(d_myworld->myrank()==0)
-            //  cout << " Increasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << " coarser tile " << d_tileSize[l] << endl;
-            retry=true;
-          }
-        } // end else if(num_patches>2*target_patches_)
-      } //end else (volume*.90>min_volume)
-    }
-    while(retry);
+            //increase tile size
+            int min_dim=-1;
 
-    if(d_myworld->myrank()==0 && !(d_tileSize[l+1]==original_tile_size))
-    {
-      cout << "Tile size on level:" << l+2 << " changed from " << original_tile_size << " to " << d_tileSize[l+1] << endl;
-    }
+            //find the smallest non-1 dimension
+            for(int d=0;d<3;d++)
+            {
+              //if dimension is not equal to 1 and is smaller than the other dimensions
+              if(d_minTileSize[l+1][d]>1 && (min_dim==-1 || d_tileSize[l+1][d]<d_tileSize[l+1][min_dim]))
+              {
+                //don't allow tiles to be bigger than the coarser tile and make sure tiles will divide evenly into coarse tiles
+                if(d_tileSize[l+1][d]*2<=d_tileSize[l][d]*d_cellRefinementRatio[l][d] && d_tileSize[l][d]%(d_tileSize[l+1][d]*2)==0) 
+                  min_dim=d;
+              }
+            }
 
+            if(min_dim!=-1)
+            {
+              //increase that dimension by the min_tile_size
+              d_tileSize[l+1][min_dim]*=2;
+              //if(d_myworld->myrank()==0)
+              //  cout << " Increasing tile size on level " << l+1 << " to " << d_tileSize[l+1] << " coarser tile " << d_tileSize[l] << endl;
+              retry=true;
+            }
+          } // end else if(num_patches>2*target_patches_)
+        } //end else (volume*.90>min_volume)
+      }
+      while(retry);
+
+      if(d_myworld->myrank()==0 && !(d_tileSize[l+1]==original_tile_size))
+      {
+        cout << "Tile size on level:" << l+2 << " changed from " << original_tile_size << " to " << d_tileSize[l+1] << endl;
+      }
+    }
     if(d_myworld->size()>1)
     {
       unsigned int mycount=mytiles.size();
@@ -410,7 +412,7 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   }
   // get min patch size
   regrid_spec->require("min_patch_size", d_minTileSize);
-
+  regrid_spec->getWithDefault("dynamic_size", d_dynamic_size, true);
   int size=d_minTileSize.size();
 
   //it is not required to specifiy the minimum patch size on each level
