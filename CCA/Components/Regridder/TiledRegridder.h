@@ -94,6 +94,8 @@ WARNING
    
     SizeList d_minTileSize;         //the minimum tile size 
     SizeList d_tileSize;            //the size of tiles on each level
+
+    bool     d_dynamic_size;        //dynamically grow or shrink the tile size
   };
 
 } // End namespace Uintah
