@@ -293,4 +293,39 @@ access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
 \subsection{Installing Manta}
 
+For complete build instructions for Manta, please refer to
+http://software.sci.utah.edu/manta/index.php/Trunk.  An abbreviated
+installation guide is as follows:
+
+Download the source via svn:
+
+\begin{Verbatim}
+
+svn co https://code.sci.utah.edu/svn/Manta/trunk Manta
+
+\end{Verbatim}
+
+Then create a build directory within Manta/
+
+\begin{Verbatim}
+
+mkdir Manta/build-manta
+
+cd Manta/build-manta
+
+\end{Verbatim}
+
+From  within Manta/build-manta,  configure the  build using  cmake and
+then run  make itself on the  source.
+
+\begin{Verbatim}
+
+cmake ..
+
+make
+
+
+\end{Verbatim}
+
+The manta executable is located in Manta/build-manta/bin.
 
