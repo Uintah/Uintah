@@ -210,32 +210,32 @@ The Teem libraries and include files will be install in /usr/local hierarchy.
 VisIT has a build script which builds VisIT plus all of its dependencies.
 
 The build script can be downloaded from
-https://wci.llnl.gov/codes/visit/1.11.2/build_visit
+https://wci.llnl.gov/codes/visit/1.11.2/build\_visit
 
-Make the build_script executable:
+Make the build\_script executable:
 
 \begin{verbatim}
 
-chmod +x build_script
+chmod +x build\_script
 
 \end{verbatim}
 
-Create a directory for VisIT and launch the build_script using four
+Create a directory for VisIT and launch the build\_script using four
 processors (-j4):
 
 \begin{verbatim}
 
 mkdir Visit
 
-cp build_script Visit
+cp build\_script Visit
 
 cd Visit
 
-./build_script --makeflags '-j4'
+./build\_script --makeflags '-j4'
 
 \end{verbatim}
 
-The build_visit script will launch a GUI.  Use the space key to
+The build\_visit script will launch a GUI.  Use the space key to
 unselect the Optional and then scroll down to the Parallel option and
 select that.  The GUI will determine the location of the mpi libraries
 and then start the build process.  All source files will be downloaded
