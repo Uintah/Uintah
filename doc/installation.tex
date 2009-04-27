@@ -1,7 +1,7 @@
 \section{Installing Uintah} \label{Sec:installation}
 
 The Uintah library is composed of several executables and a generic
-library framework for solving PDEs on structured AMR grids.  The VisIT
+library framework for solving PDEs on structured AMR grids.  The VisIt
 and Teem libraries are used to visualize the resulting data.
 
 Uintah can be obtained either from a tarball \tt
@@ -15,7 +15,7 @@ latest source from the following:
 The above command checks out the Uintah source tree and installs it
 into a directory called Uintah in the users home directory.
 
-VisIT can be obtained from https://wci.llnl.gov/codes/visit/. And Teem
+VisIt can be obtained from https://wci.llnl.gov/codes/visit/. And Teem
 can be obtained from http://teem.sourceforge.net/.
 
 
@@ -51,13 +51,13 @@ http://www.mcs.anl.gov/petsc/petsc-as/download/index.html.
 \subsection{Debian Dependencies}
 
 The Debian OS offers the vast majority of libraries necessary for
-installing Uintah with the exception of VisIT and Teem.
+installing Uintah with the exception of VisIt and Teem.
 
 Installing the following libraries will ensure that all dependencies
 required for Uintah are satisfied: subversion libhypre-dev petsc-dev
 libxml2-dev zlib1g-dev liblapack-dev cmake cmake-curses-gui.
 
-Once these libraries are installed, Teem and VisIT can be installed
+Once these libraries are installed, Teem and VisIt can be installed
 followed by installation of Uintah.
 
 \subsection{Fedora Core 9 Dependencies}
@@ -188,7 +188,7 @@ cd teem-build
 
 ccmake ../
 
-Teem and VisIT need to be installed first before Uintah can be configured.
+Teem and VisIt need to be installed first before Uintah can be configured.
 
 Use the arrow keys to scroll down to the fourth line 'BUILD_SHARED_LIBS' and press the 
 return key to toggle the 'ON' flag.
@@ -206,8 +206,8 @@ make install
 The Teem libraries and include files will be install in /usr/local hierarchy.
 
 
-\subsection{VisIT Installation}
-VisIT has a build script which builds VisIT plus all of its dependencies.
+\subsection{VisIt Installation}
+VisIt has a build script which builds VisIt plus all of its dependencies.
 
 The build script can be downloaded from
 https://wci.llnl.gov/codes/visit/1.11.2/build\_visit
@@ -220,7 +220,7 @@ chmod +x build\_script
 
 \end{verbatim}
 
-Create a directory for VisIT and launch the build\_script using four
+Create a directory for VisIt and launch the build\_script using four
 processors (-j4):
 
 \begin{verbatim}
