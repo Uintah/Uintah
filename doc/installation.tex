@@ -171,6 +171,8 @@ make install
  
 
 \subsection{Teem Installation}
+\label{sec:teem}
+
 
 Download Teem from http://teem.sourceforge.net/download/index.html.  Teem uses cmake to configure the build system. Installation instructions for Teem are found at http://teem.sourceforge.net/build.html.  Simplified instructions are as follows:
 
@@ -430,41 +432,87 @@ While the capabilities of Manta are more limited, it is a fast way to
 interactively interrogate reasonably large datasets, provided the user has
 access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
-\subsection{Installing Manta}
+\subsection{Installing Manta C-SAFE Scene}
+
+\subsection{Building Manta}
 
 For complete build instructions for Manta, please refer to
-http://software.sci.utah.edu/manta/index.php/Trunk.  An abbreviated
-installation guide is as follows:
+http://software.sci.utah.edu/manta/index.php/CSAFE.  
 
-Download the source via svn:
-
+\begin{enumerate}
+\item
+Install Teem \ref{sec:teem}.
+\item
+Install wxPython 2.8+ http://www.wxpython.org/ .  
+to verify that you have 2.8+ installed, run
 \begin{Verbatim}
+> python
+>>> import wxversion
+>>> wxversion.getInstalled()
+['2.8-mac-unicode']
+\end{Verbatim}
+\item
+The next step is to download the Manta source and create a build directory.
+\begin{Verbatim}
+mkdir Manta
+mkdir Manta/build
+svn co https://code.sci.utah.edu/svn/Manta/trunk Manta/src
+\end{Verbatim}
+\item
+The build is configured with cmake.
+\begin{Verbatim}
+cd Manta/build
+ccmake ..
+\end{Verbatim}
+\item
+ First you will need to set the TEEM library path. Press the down arrow until you get to the variable FOUND\_TEEM\_BIN. Set this to the location of your TEEM installation by pressing enter and entering the path, eg /usr/bin. Press "c" to configure. If you get errors about not finding TeemConfig.cmake (in older versions before Nov. 2008 it was called TEEMConfig.cmake), you can manually set this by pressing t and going down to the variable named FOUND\_TEEMCONFIG\_CMAKE and setting it to TeemConfig.cmake from your TEEM installation. 
+ \item
+ You will need to enable the following by scrolling down to them and pressing "enter" if they do not already say ON: BUILD\_SWIG\_INTERFACE, BUILD\_NRRDPARTICLES, MANTA\_SSE. Now press "c" to configure. 
+ \item
+ You should now see an option called SCENE\_CSAFE, enable this if not already. Now press "c" to configure again. 
+ \item
+ Click "g" to generate the cmake files. you can now build Manta again by typing make. 
+\end{enumerate}
 
-svn co https://code.sci.utah.edu/svn/Manta/trunk Manta
+\subsection{Running Manta}
 
+To run the C-SAFE scene: 
+\begin{Verbatim}
+  Manta/build/bin/csafe_scene
 \end{Verbatim}
 
-Then create a build directory within Manta/
-
+The csafescene window will open showing a transfer function editor.  To add files to load run:
 \begin{Verbatim}
-
-mkdir Manta/build-manta
-
-cd Manta/build-manta
-
+  File -> Add/Remove NRRD Files
 \end{Verbatim}
 
-From  within Manta/build-manta,  configure the  build using  cmake and
-then run  make itself on the  source.
+\begin{figure}[thb!]
+  \center
+  \includegraphics[width=.48\linewidth]{manta_files.png}
+  \caption{Opening the scene}
+  \label{fig:manta_files}
+\end{figure}
+
+This will open a window where you can add volume and particle files in .nrrd or .nhdr formats.  Select add particle file(s) and open a particle nrrd file in .nhdr or .nrrd format.  These nrrd files should be created with the uda2nrrd tool.
+
+\begin{figure}[thb!]
+  \center
+  \includegraphics[width=.48\linewidth]{manta_add_files.png}
+  \caption{Adding files to the scene}
+  \label{fig:manta_add_files}
+\end{figure}
+
+A similarly named volume nrrd should be automatically added if in the same folder.  Close the window by pressing "OK".  The files won't be loaded yet so you can make modifications to the data to be loaded in before loading them.  To load the files:
 
 \begin{Verbatim}
-
-cmake ..
-
-make
-
-
+  Scene -> Generate
 \end{Verbatim}
 
-The manta executable is located in Manta/build-manta/bin.
+The resulting csafescene window should look similar to:
 
+\begin{figure}[thb!]
+  \center
+  \includegraphics[width=.48\linewidth]{manta_histograms.png}
+  \caption{C-SAFE window with histograms from loaded nrrd files}
+  \label{fig:manta_histograms}
+\end{figure}
