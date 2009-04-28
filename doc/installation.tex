@@ -18,7 +18,6 @@ into a directory called Uintah in the users home directory.
 VisIt can be obtained from https://wci.llnl.gov/codes/visit/. And Teem
 can be obtained from http://teem.sourceforge.net/.
 
-
 \subsection{Library Dependencies}
 
 Uintah depends on several different libraries that are commonly
@@ -46,7 +45,6 @@ https://computation.llnl.gov/casc/hypre/software.html.
 
 Petsc 2.3.3 can be downloaded from
 http://www.mcs.anl.gov/petsc/petsc-as/download/index.html.
-
 
 \subsection{Debian Dependencies}
 
@@ -205,52 +203,193 @@ make install
 
 The Teem libraries and include files will be install in /usr/local hierarchy.
 
-
 \subsection{VisIt Installation}
-VisIt has a build script which builds VisIt plus all of its dependencies.
 
-The build script can be downloaded from
-https://wci.llnl.gov/codes/visit/1.11.2/build\_visit
+\subsubsection{Client/ Server}
+\label{sec:ClientServer}
 
-Make the build\_script executable:
+You would most likely will want to install a VisIt server on a multiprocessor machine. This requires you to build the server from source (as it is needed to compile the UDA reading plugin). You can then install any client on your local machine and attach to the server. 
 
-\begin{verbatim}
+\subsubsection{Prebuilt binaries}
+\label{sec:PrebuiltBinaries}
 
-chmod +x build\_script
+If you have a system that matches the prebuilt binaries, found at \url{https://wci.llnl.gov/codes/visit/executables.html}, you may want to try one. In most cases you will want to build your own binaries. There are currently no universal binaries available for Mac OS X 10.5 (leopard).
 
-\end{verbatim}
+\subsubsection{Using the build script}
+\label{sec:UsingTheBuildScript}
 
-Create a directory for VisIt and launch the build\_script using four
-processors (-j4):
+We recommend that you first try the visit build script (WARNING, make sure you get the must recent version of this script. The build script must correspond to the version of VisIt you wish to install. The latest version is 1.11.2). This is a link to the script, \url{https://wci.llnl.gov/codes/visit/1.11.2/build\_visit}.
 
-\begin{verbatim}
+You can also use the following command on the terminal (from most linux boxes), to download the file directly, 
 
-mkdir Visit
+\begin{Verbatim}[fontsize=\footnotesize]
+wget https://wci.llnl.gov/codes/visit/1.11.1/build_visit
+chmod +x build_visit
+\end{Verbatim}
 
-cp build\_script Visit
+\normalfont The chmod is used to set execute permissions on the file.
 
-cd Visit
+build\_visit is a bash build script that downloads and builds VisIt as well as all of the necessary third party libraries. The script makes use of the dialog program which allows you to customize your build.
 
-./build\_script --makeflags '-j4'
+Once you have the script, you would need to execute the following on the terminal,
 
-\end{verbatim}
+\begin{Verbatim}[fontsize=\footnotesize]
+./build_visit --makeflags '-j#'
+\end{Verbatim}
+	
+\normalfont where '\#' is the number of processors to use, while building VisIt. 
 
-The build\_visit script will launch a GUI.  Use the space key to
-unselect the Optional and then scroll down to the Parallel option and
-select that.  The GUI will determine the location of the mpi libraries
-and then start the build process.  All source files will be downloaded
-and installed in the ~/Visit/visit1.11.2 directory.  The \tt visit
-\normalfont executable is found in ~/Visit/visit1.11.2/src/bin .
+This would launch a dialog window and would require you to select some options (using the Space bar). You should select the 'Parallel' option, if you wish to have a parallel build of the engine. Once you have selected the parallel option, you may be required to specify the path to the include and lib directories of your MPI installation. 
+
+The process of building VisIt may be slow and it may appear that nothing is happening. To verify the build script is not hanging, open another terminal and tail the file build\_visit\_log	. 
+
+\begin{Verbatim}[fontsize=\footnotesize]
+tail -f build_visit_log
+\end{Verbatim}
+
+\normalfont  
+\subsubsection{Parallel OS X build}
+\label{sec:ParallelOSXBuild}
+
+A full parallel OS X build can be built using the instructions above, but it will fail when it tries to build the visit executable (the last stage of the script). When it fails, you will need to follow the instructions for building in parallel on a Mac. 
+
+\begin{Verbatim}[fontsize=\footnotesize]
+http://visitusers.org/index.php?title=Building_in_parallel_on_a_Mac
+\end{Verbatim}
+  
+Note particularly the changes that need to be made in the file, 
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<path\_to\_visit>/visit1.11.2/src/config-site/<your_machine_name>.conf
+\end{Verbatim}
+
+\normalfont Once you make these edit's, you can then finish building VisIt by typing make in the \tt <path\_to\_visit>/visit1.11.2/src \normalfont directory.  
+
+\subsubsection{When the build script fails}
+\label{sec:WhenTheBuildsSriptFails}
+
+Sometimes the build script doesn't work depending on your installation. When this happens, you may be forced to build everything by hand. The instructions for doing this are carefully outlined in the VisIt Build Notes file, 
+
+\begin{Verbatim}[fontsize=\footnotesize]
+https://wci.llnl.gov/codes/visit/1.11.2/BUILD_NOTES
+\end{Verbatim}
+
+\subsubsection{VisIt executable}
+\label{sec:VisItExecutable}
+
+After a successful build, the executable will be placed in,
+
+\begin{Verbatim}[fontsize=\footnotesize]
+<path\to\visit>/visit1.11.2/src/bin
+\end{Verbatim}
+
+\subsubsection{Building and installing the UDA reader plugin}
+\label{sec:BuildingAndInstallingUDAPlugin}
+
+Add the following arguements to the Uintah configure line,
+
+\begin{Verbatim}[fontsize=\footnotesize]
+--with-visit=/path/to/visit 
+--with-teem=/path/to/teem
+\end{Verbatim}
+
+For example,
+
+\begin{Verbatim}[fontsize=\footnotesize]
+--with-teem=/usr/sci/projects/Manta/Thirdparty/Linux/gcc-4.1.2-64bit/teem \
+--with-visit=/home/csafe/dav/VisIt/blaze/visit1.11.2 \
+\end{Verbatim}
+
+Note, the \tt visit1.11.2 \normalfont directory you point at should have \tt data\normalfont , and \tt src \normalfont sub-directories; and the \tt teem \normalfont directory should have \tt bin\normalfont , \tt include\normalfont , and \tt lib \normalfont sub-directories.
+
+\subsubsection{How it works}
+By specifying the above configure arguments (to the Uintah configure), Uintah will automatically build a VisIt plugin (when you type "make"). The plugin will be placed in (a sub-directory of) ~/.visit. When VisIt is run, it will find the plugin and allow for reading UDA's.
+
+\subsubsection{Remote visualization}
+In order to read data on a remote machine, you will need to have a version of VisIt and the UDA reader plugin installed on that machine. You will also need to make sure that the VisIt executable is in your path. You may need to edit your shell's .rc file so that the path to VisIt is included in your shell's PATH variable.
+
+NOTE: The version of VisIt installed on your local desktop and the remote machine should be the same.
+
+\paragraph{Host Profile}
+Next you will want to set up a Host Profile for your remote machine. Select 'Host Profiles' from the 'Options' menu and set up a new profile as shown in figure ~\ref{VisItHostProfile}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItHostProfile.png}
+  \caption{Setting up Host Profile}
+  \label{VisItHostProfile}
+\end{figure}
+
+After filling in the remote machine information, select the 'Advanced options' tab, then 'Networking' and check the 'Tunnel data connections through SSH' option. This is illustrated in figure~\ref{VisItHostProfileAdv}. Click on 'Apply' and then do a 'Save Settings' in the 'Options' menu on the gui.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItHostProfileAdv.png}
+  \caption{Setting up advanced options}
+  \label{VisItHostProfileAdv}
+\end{figure}
+
+For the remote visualization option to work, you must have ports 5600 - 5609 open. You can try this by running the following on your local desktop (on linux distributions),
+
+\begin{Verbatim}[fontsize=\footnotesize]
+traceroute -p 560[0-9] <remote machine> 
+\end{Verbatim}
+
+If the tunneling option doesn't works, try the option as shown in figure~\ref{VisItHostProfileAdv2}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItHostProfileAdv2.png}
+  \caption{Setting up advanced options}
+  \label{VisItHostProfileAdv2}
+\end{figure}
+
+Now you should be able select 'Open' from VisIt's 'File' menu. After selecting your host from the host entry list, you will be prompted for a password on the remote machine (unless you have set up passwordless ssh access). 
+
+Once the ssh login has completed, you should see the directory listing. You can then change directories to your UDA and load the data. 
+
+%VisIt has a build script which builds VisIt plus all of its dependencies.
+
+%The build script can be downloaded from
+%https://wci.llnl.gov/codes/visit/1.11.2/build\_visit
+
+%Make the build\_script executable:
+
+%\begin{verbatim}
+
+%chmod +x build\_script
+
+%\end{verbatim}
+
+%Create a directory for VisIt and launch the build\_script using four
+%processors (-j4):
+
+%\begin{verbatim}
+
+%mkdir Visit
+
+%cp build\_script Visit
+
+%cd Visit
+
+%./build\_script --makeflags '-j4'
+
+%\end{verbatim}
+
+%The build\_visit script will launch a GUI.  Use the space key to
+%unselect the Optional and then scroll down to the Parallel option and
+%select that.  The GUI will determine the location of the mpi libraries
+%and then start the build process.  All source files will be downloaded
+%and installed in the ~/Visit/visit1.11.2 directory.  The \tt visit
+%\normalfont executable is found in ~/Visit/visit1.11.2/src/bin .
 
 \subsubsection{Configuring Uintah}
 
-cd to \tt ~/Uintah \normalfont and create the following directories:
+cd to\tt ~/Uintah \normalfont and create the following directories:
 dbg and opt
 
 \begin{verbatim}
-
 mkdir dbg opt
-
 \end{verbatim}
 
 Go to the dbg directory and enter the following:

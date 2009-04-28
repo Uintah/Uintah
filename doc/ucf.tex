@@ -719,6 +719,288 @@ access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
 \subsubsection{VisIt}
 
+\paragraph{Reading Uintah Data Archive's}
+
+Once you have installed VisIt and the UDA reader plugin, you can launch VisIt and start visualizing UDA's. To open a UDA, select \tt Open File \normalfont from the \tt  File \normalfont menu. Browse into the UDA you want to load and select the \tt index.xml \normalfont file. Then hit on \tt OK \normalfont and a list of timesteps should now appear on the gui. Figure~\ref{VisItFileOpen} illustrates this process.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItFileOpen.png}
+  \caption{Opening an UDA with VisIt}
+  \label{VisItFileOpen}
+\end{figure}
+
+\paragraph{Plots}
+
+VisIt displays data as plots. A plot might render a specific variable or it might render the structure of the mesh. Figure~\ref{VisItPlots} illustrates this.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItPlots.png}
+  \caption{Various plots in VisIt}
+  \label{VisItPlots}
+\end{figure}
+
+Note that VisIt attempts to analyze the variables and associate them with the appropriate plots. As shown in figure~\ref{VisItPlots}, only vector variables are available for the vector plot. The most commonly used plots for visualizing UDA's are Pseudocolor, Volume and the Vector plot. The Subset plot can be used to visualize the structure of patches in an AMR dataset. %The Mesh plot can be used to display the mesh structure.
+
+Once you have a plot, you change plot attributes by clicking on the PlotAtts menu and selecting the plot of you choice. Alternatively, you may double click on the plot itself in Active plots window. For example, if you have a Volume plot and you want to change its attributes, the window shown in figure~\ref{VisItVolumeAtts} pops up.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.65]{VisItVolumeAtts.png}
+  \caption{Volume plot attributes in VisIt}
+  \label{VisItVolumeAtts}
+\end{figure}
+
+As seen in figure~\ref{VisItVolumeAtts}, you can change the color map, opacity curve, rendering method, no. of samples, lighting options, etc. in this window.
+
+\paragraph{Operators}
+
+A wide variety of operators can be applied to the plots, as mentioned earlier. These modify the incoming datasets in some way (eg., a slice formats a 3D dataset into a 2D slice), which can then be plotted. However, you will first need to select a plot and then only you can apply an operator to it (though the order of operation is opposite). An important thing to keep in mind is that when you select an operator, by default it gets applied to all the plots in the Active plots window. You will need to uncheck the Apply operators checkbox, in case you just want to apply the operator to a single plot. This is illustrated in figure~\ref{VisItApplyOperators}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItApplyOperators.png}
+  \caption{Unchecking "selection to all plots"}
+  \label{VisItApplyOperators}
+\end{figure}
+
+The entire list of operators that VisIt supports can be seen by clicking on the Operators menu. Also, once you have applied an operator, you can change its attributes by clicking on the OpAtts menu and then clicking on the desired operator.
+Figures~\ref{VisItSelectPlot} and~\ref{VisItSelectOperator} illustrate how you can apply a Slice operator to a Pseudocolor plot and then change the operator attributes.
+First, apply the Pseudocolor plot to a desired variable, and then select the Slice operator from the Operators menu.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItSelectPlot.png}
+  \caption{Applying the Pseudocolor plot to a variable}
+  \label{VisItSelectPlot}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItSelectOperator.png}
+  \caption{Applying an operator to a plot}
+  \label{VisItSelectOperator}
+\end{figure}
+
+At this point in time, you should have an ordering similar to that in figure~\ref{VisItOrderOperator}.  
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItOrderOperator.png}
+  \caption{Ordering of an operator and a plot}
+  \label{VisItOrderOperator}
+\end{figure}
+
+Once you have this order, select Slice from the OpAtts menu. This will pop up the Slice operator attributes window, as shown in figure~\ref{VisItSliceAtts}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItSliceAtts.png}
+  \caption{Slice plot attributes in VisIt}
+  \label{VisItSliceAtts}
+\end{figure}
+
+You can now play up with the various attributes (eg., selecting normal plane) to obtain the desired visualization. The checkbox "Project to 2D" should be unchecked is you want to have the slice in 3D space.
+
+\paragraph{Vectors}
+
+By default, VisIt reduces the number of vectors plotted (to 400) and this needs to be manually changed to the original number or something greater, only if required.
+This can be accomplished by changing the attributes of the Vector plot. In figure~\ref{VisItVectorNumber}, the no of vectors has been increased to 2000.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItVectorNumber.png}
+  \caption{Increasing the number of Vectors}
+  \label{VisItVectorNumber}
+\end{figure}
+
+Also if you would like all the vectors to be visible, you would need to switch off both the options,
+\tt Scale by magnitude
+\normalfont and
+\tt Auto scale
+\normalfont under the Scale tab in the same window.
+
+Figure~\ref{VisItVectorScale} describes this.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItVectorScale.png}
+  \caption{Increasing the number of Vectors}
+  \label{VisItVectorScale}
+\end{figure}
+
+\paragraph{AMR datasets}
+
+AMR datasets are read the same way as single level datasets. Once you have it read, you can apply an plot/ operator on it. Since the dataset is organized as levels and patches, you now have the flexibility of visualizing each of them independently or as in a group. To achieve this (assuming that you have already selected a plot), click on the Subset button either on the Active Plots window in the gui or on the same option in the Controls menu. This is illustrated in figures~\ref{VisItSubsetIcon} and ~\ref{VisItSubsetWin}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=1.0]{VisItSubsetIcon.png}
+  \caption{Clicking on this icon pops up the Subset window}
+  \label{VisItSubsetIcon}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItSubsetWin.png}
+  \caption{The Subset window in VisIt}
+  \label{VisItSubsetWin}
+\end{figure}
+
+\paragraph{Examples}
+
+\subparagraph{Volume visualization}
+
+a. Read in the uda by selecting the index.xml file. A list of timesteps should now appear on the gui.
+
+b. The first timestep (cycle 0000) should be preselected. In case you are interested in plotting a different timestep, just double click on it. Alternatively you can type it in the small rectangular box (figure~\ref{VisItTimestepBox}), just below the list of timesteps. This can also be done at a later period in time, when you are done plotting the variable associated with a specific timestep and want to traverse through the others.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItTimestepBox.png}
+  \caption{The window on the gui lists all the timesteps}
+  \label{VisItTimestepBox}
+\end{figure}
+
+c. Next we select a variable to plotted. We click on the Plots menu, select the Volume plot and then select the variable tempIN as shown in the figure~\ref{VisItVolumeTempINATK08}. The number '1' refers to the material associated with the variable.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItVolumeTempINATK08.png}
+  \caption{Selecting a volume plot and an associated variable/ material}
+  \label{VisItVolumeTempINATK08}
+\end{figure}
+
+d. The variable tempIN/1 now appears on the Active plots window (figure~\ref{VisItDrawTempINATK08}). Select the variable and click Draw.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItDrawTempINATK08.png}
+  \caption{The list of plots in the Active plots window}
+  \label{VisItDrawTempINATK08}
+\end{figure}
+
+e. A visualization now appears on the Viewer window, as shown in figure~\ref{VisItVolumeTempINATK08Viewer}. You can interact with the visualization in terms of rotating it (holding the left mouse button and dragging it), zooming in/ out (scrolling the roller on the mouse and/ or selecting the magnifier at the top of the Viewer window) etc.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItVolumeTempINATK08Viewer.png}
+  \caption{Visualization of a volume on the viewer window}
+  \label{VisItVolumeTempINATK08Viewer}
+\end{figure}
+
+f. Once you have this basic volume visualization, you can change its attributes by double clicking on the Volume - tempIN/1 plot in the Active plots window. This pops up the Volume plot attributes window (figure~\ref{VisItVolumeAttributes1} and figure~\ref{VisItVolumeAttributes2}).
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItVolumeAttributes1.png}
+  \caption{Volume visualization attributes window}
+  \label{VisItVolumeAttributes1}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItVolumeAttributes2.png}
+  \caption{Volume visualization attributes window}
+  \label{VisItVolumeAttributes2}
+\end{figure}
+
+The tab Color specifies the color table and the various options associated with it. The user can add/ remove control points by clicking on the + and - buttons. These can then be equally spaced by pressing the Align button.
+
+A different color table can be selected by clicking on the Default button and then selecting an appropriate color table. The color(s) associated with the control points can be changed by right-clicking on the them and then selecting an appropriate color.
+
+The user also has the option of specifying a Min and Max on the scalar value range by checking on the associated box(s) and entering in the values.
+
+The second tab Opacity lets you specify a transfer function for the color table. Clicking on the check box Show Colors copies the colors from the color table onto this graph. Selecting the Interaction Mode as Gaussian lets you draw curves and specify a more accurate color table (figure~\ref{VisItTransferFunction}).
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItTransferFunction.png}
+  \caption{The opacity trasfer function in the attributes window}
+  \label{VisItTransferFunction}
+\end{figure}
+
+You can add in as many curves on the graph by clicking on the left mouse button and then placing them accordingly. To delete an unwanted curve, just right click on it.
+
+After specifying an opacity transfer function, one can select an appropriate rendering method, Splatting being the default. The related fields thereafter become active/ inactive as and when different rendering methods are selected.
+
+\subparagraph{Particles}
+
+a. To add particles, we select the Molecule plot and then click on the variable p.temperature as shown in the figure~\ref{VisItMoleculePTempATK08}. The asterisk '*' refers to all the materials associated with the variable.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItMoleculePTempATK08.png}
+  \caption{Selecting a molecule plot and an associated variable/ material}
+  \label{VisItMoleculePTempATK08}
+\end{figure}
+
+b. The variable p.temperature/* now appears on the Active plots list. Select the variable and hit Draw. A container in the form of particles now appears on the Viewer window.
+
+c. Now double click on the variable name in Active plots list. This brings up the Molecule plot attributes window as shown in figure~\ref{VisItMoleculeAttributesPTemp1}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItMoleculeAttributesPTemp1.png}
+  \caption{Selecting a molecule plot and an associated variable/ material}
+  \label{VisItMoleculeAttributesPTemp1}
+\end{figure}
+
+We choose to visualize the particles as Sphere Imposters (doesn't runs the GPU out of memory, drawing as Spheres does). We also choose to scale the sphere radius by a Scalar Variable and specify that variable to be p.temperature/* itself (therefore the * appears). Since the temperature values are too high, we scale them all by a factor of 5.e-05 (on the basis of trial \& error).
+
+Finally in Colors tab, we set the Color map for scalars as orangehot.
+
+Combined with volume visualization, we get a visualization as shown in figure~\ref{VisItMoleculePTtempViewer}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItMoleculePTtempViewer.png}
+  \caption{Selecting a molecule plot and an associated variable/ material}
+  \label{VisItMoleculePTtempViewer}
+\end{figure}
+
+\paragraph{Visualizing patch boundaries}
+%In order to generate an image, like the one shown in figure~\ref{VisItSubsetPlot}, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
+In order to visualize patch boundaries, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
+
+%\begin{figure}
+%  \center
+%  \includegraphics[scale=0.5]{VisItSubsetPlot.png}
+%  \caption{Visualizing patch boundaries} 
+%  \label{VisItSubsetPlot}
+%\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItSubsetPlotVariables.png}
+  \caption{A patch/ level variable, associated with every kind of variable}
+  \label{VisItSubsetPlotVariables}
+\end{figure}
+
+Next, we hit Draw. This produces a visualization as shown in figure~\ref{VisItSubsetPlotViewer}. To generate a wireframe model, we double click on the Subset plot in the Active plots window. This pops up the Subset plot attributes window, where we check the Wireframe mode as shown in figure`\ref{VisItSubsetPlotAttrib}. This would produce a visualization, similar to one shown in figure~\ref{VisItSubsetPlotWireframe}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItSubsetPlotViewer.png}
+  \caption{The default visualization of patches} 
+  \label{VisItSubsetPlotViewer}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItSubsetPlotAttrib.png}
+  \caption{Enabling the 'Wireframe' mode for visualizing patch boundaries}
+  \label{VisItSubsetPlotAttrib}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItSubsetPlotWireframe.png}
+  \caption{The patch boundaries after enabling the wireframe mode}
+  \label{VisItSubsetPlotWireframe}
+\end{figure}
+
 \subsubsection{Manta}
 
 %__________________________________
