@@ -4,6 +4,6 @@
  <component>ICE</component>
  <!--<component>MPM</component> -->
  <!--<component>MPMICE</component>-->
- <sus_path>/home/harman/Builds/Fresh/NB/opt_Linux/Packages/Uintah/StandAlone</sus_path>
+ <sus_path>/usr/local/home/harman/Builds/Fresh/NB/opt_Linux/StandAlone/</sus_path>
  
 </config>
