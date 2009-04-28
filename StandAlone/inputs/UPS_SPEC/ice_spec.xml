@@ -44,6 +44,7 @@
         <iters_before_timestep_restart  spec="REQUIRED INTEGER 'positive'"/>
         <Parameters                     spec="OPTIONAL NO_DATA"
                                           attribute1="variable OPTIONAL STRING 'implicitPressure'" >
+          <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
           <criteria                     spec="OPTIONAL STRING 'Absolute relative'" />                     
           <jump                         spec="OPTIONAL INTEGER" />                                        
           <logging                      spec="OPTIONAL INTEGER 'positive'" />                             
