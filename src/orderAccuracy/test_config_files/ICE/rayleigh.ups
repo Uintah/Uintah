@@ -8,7 +8,7 @@
    <Meta>
        <title>Rayleigh Problem</title>
    </Meta>
-   
+   <SimulationComponent type="ice" />
     <!--____________________________________________________________________-->
     <!-- The Rayliegh problem tests the viscous shear stress terms          -->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -93,9 +93,6 @@
       <save label="rho_CC"/>
       <save label="vel_CC"/>     
    </DataArchiver>
-
-  <Debug>
-    </Debug>
     
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
