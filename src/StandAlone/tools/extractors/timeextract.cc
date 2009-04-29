@@ -29,7 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 /*
- *  puda.cc: Print out a uintah data archive
+ *  timeextract.cc:  extract data at a point over time
  *
  *  Written by:
  *   James L. Bigler
@@ -90,6 +90,7 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -tlow,--timesteplow [int] (only outputs timestep from int) [defaults to 0]\n";
     cerr << "  -thigh,--timestephigh [int] (only outputs timesteps up to int) [defaults to last timestep]\n";
     cerr << "  -i,--index <x> <y> <z> (cell coordinates) [defaults to 0,0,0]\n";
+    cerr << "  -p,--point <x> <y> <z> [doubles] (physical coordinates)\n";
     cerr << "  -l,--level [int] (level index to query range from) [defaults to 0]\n";
     cerr << "  -o,--out <outputfilename> [defaults to stdout]\n";
     cerr << "  -vv,--verbose (prints status of output)\n";
@@ -137,7 +138,9 @@ printData(DataArchive* archive, string& variable_name,
     exit(1);
   }
   
-  if (!quite) cout << "outputting for times["<<time_step_lower<<"] = " << times[time_step_lower]<<" to times["<<time_step_upper<<"] = "<<times[time_step_upper] << endl;
+  if (!quite){
+    cout << "outputting for times["<<time_step_lower<<"] = " << times[time_step_lower]<<" to times["<<time_step_upper<<"] = "<<times[time_step_upper] << endl;
+  }
   
   // set defaults for output stream
   out.setf(ios::scientific,ios::floatfield);
@@ -165,6 +168,7 @@ main(int argc, char** argv)
    * Default values
    */
   bool do_binary=false;
+  bool findCellIndex=false;
 
   unsigned long time_step_lower = 0;
   // default to be last timestep, but can be set to 0
@@ -173,6 +177,7 @@ main(int argc, char** argv)
   string input_uda_name;
   string output_file_name("-");
   IntVector var_id(0,0,0);
+  Point var_pt(0,0,0);
   string variable_name;
   int levelIndex = 0;
 
@@ -210,6 +215,12 @@ main(int argc, char** argv)
       int y = atoi(argv[++i]);
       int z = atoi(argv[++i]);
       var_id = IntVector(x,y,z);
+    } else if (s == "-p" || s == "--point") {
+      double x = atof(argv[++i]);
+      double y = atof(argv[++i]);
+      double z = atof(argv[++i]);
+      var_pt = Point(x,y,z);
+      findCellIndex = true;
     } else if (s == "-l" || s == "--level") {
       levelIndex = atoi(argv[++i]);
     } else if( (s == "-h") || (s == "--help") ) {
@@ -235,7 +246,9 @@ main(int argc, char** argv)
   try {
     DataArchive* archive = scinew DataArchive(input_uda_name);
 
-    if (!storeXML) archive->turnOffXMLCaching();
+    if (!storeXML){
+      archive->turnOffXMLCaching();
+    }
     
     vector<string> vars;
     vector<const Uintah::TypeDescription*> types;
@@ -252,6 +265,8 @@ main(int argc, char** argv)
       }
     }
     
+    //__________________________________
+    //  Bullet proofing
     if (!var_found) {
       cerr << "Variable \"" << variable_name << "\" was not found.\n";
       cerr << "If a variable name was not specified try -var [name].\n";
@@ -265,8 +280,25 @@ main(int argc, char** argv)
       //      var = vars[0];
     }
 
-    if (!quite) cout << vars[var_index] << ": " << types[var_index]->getName() << " being extracted for material "<<material<<" at index "<<var_id<<endl;
+    //__________________________________
+    //  compute the cell index from the point
+    if(findCellIndex){
+      vector<int> index;
+      vector<double> times;
+      archive->queryTimesteps(index, times);
+      ASSERTEQ(index.size(), times.size());
 
+      GridP grid = archive->queryGrid(time_step_lower);
+      const LevelP level = grid->getLevel(levelIndex);  
+      if (level){                                       
+        var_id=level->getCellIndex(var_pt);                    
+      }
+    }
+      
+    if (!quite){
+      cout << vars[var_index] << ": " << types[var_index]->getName() << " being extracted for material "<<material<<" at index "<<var_id<<endl;
+    }
+    
     // get type and subtype of data
     const Uintah::TypeDescription* td = types[var_index];
     const Uintah::TypeDescription* subtype = td->getSubType();
@@ -287,6 +319,8 @@ main(int argc, char** argv)
     } else {
       //output_stream = cout;
     }
+  //__________________________________
+  //  Now print out the data  
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
     printData<double>(archive, variable_name, material, var_id, levelIndex,
