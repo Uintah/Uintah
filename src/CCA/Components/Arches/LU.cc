@@ -1,10 +1,11 @@
-#include <CCA/Components/SpatialOps/LU.h>
+#include <CCA/Components/Arches/LU.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Exceptions/InvalidValue.h>
 
-#include <cmath>
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
-#include <vector>
+//#include <cmath>
+//#include <iostream>
+//#include <iomanip>
+//#include <stdexcept>
 
 using namespace std;
 using namespace Uintah;
@@ -43,8 +44,7 @@ LU::decompose()
       }
     }
     if (big == 0.0) {
-      // return error "Singular matrix in routine ludcmp"
-      //cout << "Singular matrix in routine LU::decompose." << endl;
+      // A matrix contains all-zero row, so it is singular; set solution vector equal to 0
       isSingular_ = true;
       isReady_ = true;
       return;
@@ -129,8 +129,10 @@ LU::decompose()
 void
 LU::back_subs( double* rhs )
 {
-  if( ! isReady_ )
-    throw std::runtime_error( "LU::back_subs() cannot be executed until LU::decompose() has been called!" );
+  if( ! isReady_ ) {
+    string err_msg = "ERROR:LU:back_subs(): This method cannot be called until LU::decompose() has been executed.\n";
+    throw InvalidValue(err_msg,__FILE__,__LINE__);
+  }
 
   if( isSingular_ ) {
     for (int i=0; i<dim_; ++i) {
@@ -198,15 +200,15 @@ LU::SparseMatrix::~SparseMatrix()
 void
 LU::dump()
 {
-  using std::cout;
-  using std::endl;
+  //using std::cout;
+  //using std::endl;
 
   for( int i=0; i<dim_; i++ ){
     for( int j=0; j<dim_; j++ ){
-      cout << std::setw(9) << std::setprecision(4) << AA_(i,j) << "  ";
+      proc0cout << std::setw(9) << std::setprecision(4) << AA_(i,j) << "  ";
     }
-    cout << endl;
+    proc0cout << endl;
   }
-  cout << "-----------------------------------------------------" << endl;
+  proc0cout << "-----------------------------------------------------" << endl;
 }
 //--------------------------------------------------------------------
