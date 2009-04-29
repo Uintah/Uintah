@@ -43,6 +43,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationState.h>
 
 using namespace Uintah;
+using namespace std;
 
 //****************************************************************************
 // Default constructor for ArchesLabel
@@ -195,6 +196,7 @@ ArchesLabel::ArchesLabel()
 
   // for reacting flows
   d_normalizedScalarVarLabel = VarLabel::create("normalizedScalarVar",CC_double);
+  d_dummyTLabel    =  VarLabel::create("dummyT",    CC_double);
   d_tempINLabel    =  VarLabel::create("tempIN",    CC_double);
   d_tempFxLabel    =  VarLabel::create("tempFxLabel", SFCX_double); 
   d_tempFyLabel    =  VarLabel::create("tempFyLabel", SFCY_double); 
@@ -507,6 +509,8 @@ ArchesLabel::ArchesLabel()
   d_umomBoundarySrcLabel      =  VarLabel::create("umomBoundarySrc",      SFCX_double);
   d_vmomBoundarySrcLabel      =  VarLabel::create("vmomBoundarySrc",      SFCY_double);
   d_wmomBoundarySrcLabel      =  VarLabel::create("wmomBoundarySrc",      SFCZ_double);
+
+  //DQMOM vars
 }
 
 //****************************************************************************
@@ -587,6 +591,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_newCCWVelocityLabel);
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
+
+  VarLabel::destroy(d_dummyTLabel);
   VarLabel::destroy(d_tempINLabel);
   VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
@@ -813,6 +819,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_tempFxLabel);
   VarLabel::destroy(d_tempFyLabel);
   VarLabel::destroy(d_tempFzLabel);
+  
 }           
 
 void ArchesLabel::setSharedState(SimulationStateP& sharedState)

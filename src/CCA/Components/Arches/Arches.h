@@ -107,6 +107,9 @@ namespace Uintah {
   class ArchesLabel;
   class TimeIntegratorLabel;
   class ExtraScalarSolver;
+  class ExplicitTimeInt; 
+  class PartVel; 
+  class DQMOM; 
 #ifdef PetscFilter
   class Filter;
 #endif
@@ -181,6 +184,8 @@ public:
                                          SchedulerP&);
   virtual void sched_blobInit(const LevelP& level,
                               SchedulerP&);
+  virtual void sched_dqmomInit( const LevelP& level, 
+                                SchedulerP& ); 
   // GROUP: Access Functions :
   ///////////////////////////////////////////////////////////////////////
     // Boolean to see whether or not Enthalpy is solved for
@@ -275,7 +280,29 @@ private:
                 DataWarehouse* ,
                 DataWarehouse* new_dw);
 
+  void dqmomInit( const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset*,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
+
+
+
 private:
+
+  /** @brief Registers all possible source terms by instantiating a builder in the factory */     
+  void registerSources(ProblemSpecP& db);
+
+  /** @brief Registers all possible models for DQMOM */ 
+  void registerModels( ProblemSpecP& db ); 
+
+  /** @brief Registers all possible equations by instantiating a builder in the factory */     
+  void registerTransportEqns(ProblemSpecP& db);
+
+  /** @brief Registers all possible DQMOM equations by instantiating a builder in the factory */     
+  void registerDQMOMEqns(ProblemSpecP& db);
+
+
 
       double d_deltaT;
       bool d_variableTimeStep;
@@ -335,7 +362,15 @@ private:
 
     bool d_carbon_balance_es;        
     bool d_sulfur_balance_es;        
-    
+
+    // Variables----
+    vector<string> d_scalarEqnNames; 
+    bool d_doDQMOM; // do we need this as a private member?
+    int d_tOrder; 
+    ExplicitTimeInt* d_timeIntegrator;
+    PartVel* d_partVel; 
+    DQMOM* d_dqmomSolver; 
+
 
 }; // end class Arches
 

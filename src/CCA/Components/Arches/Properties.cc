@@ -586,6 +586,8 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   if ((timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
     tsk->computes(d_lab->d_drhodfCPLabel);
+    
+    tsk->computes(d_lab->d_dummyTLabel);
     if (d_reactingFlow) {
       tsk->computes(d_lab->d_tempINLabel);
       tsk->computes(d_lab->d_cpINLabel);
@@ -649,6 +651,8 @@ Properties::sched_reComputeProps(SchedulerP& sched,
   }
   else {
     tsk->modifies(d_lab->d_drhodfCPLabel);
+
+    tsk->modifies(d_lab->d_dummyTLabel);
     if (d_reactingFlow) {
       tsk->modifies(d_lab->d_tempINLabel);
       tsk->modifies(d_lab->d_cpINLabel);
@@ -768,6 +772,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     constCCVariable<double> scalarDisp;
     constCCVariable<double> voidFraction;
     CCVariable<double> new_density;
+    CCVariable<double> dummytemperature;
     CCVariable<double> temperature;
     CCVariable<double> cp;
     CCVariable<double> co2;
@@ -914,6 +919,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       &&((!(d_EKTCorrection))||((d_EKTCorrection)&&(doing_EKT_now)))) {
       new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
 
+      new_dw->allocateAndPut(dummytemperature, d_lab->d_dummyTLabel, indx, patch);
       if (d_reactingFlow) {
         new_dw->allocateAndPut(temperature, d_lab->d_tempINLabel,     indx, patch);
         new_dw->allocateAndPut(cp,          d_lab->d_cpINLabel,       indx, patch);
@@ -980,6 +986,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     else {
       new_dw->getModifiable(drhodf, d_lab->d_drhodfCPLabel, indx, patch);
 
+      new_dw->getModifiable(dummytemperature, d_lab->d_dummyTLabel, indx, patch);
       if (d_reactingFlow) {
         new_dw->getModifiable(temperature, d_lab->d_tempINLabel,      indx, patch);
         new_dw->getModifiable(cp,          d_lab->d_cpINLabel,        indx, patch);
@@ -1044,6 +1051,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
     drhodf.initialize(0.0);
     
+    dummytemperature.initialize(0.0);
     if (d_reactingFlow) {
       temperature.initialize(0.0); 
       cp.initialize(0.0);
@@ -1231,6 +1239,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
           }
           
           //__________________________________
+          dummytemperature[currCell] = outStream.getTemperature();
           if (d_reactingFlow) {
             temperature[currCell]   = outStream.getTemperature();
             cp[currCell]            = outStream.getCP();
