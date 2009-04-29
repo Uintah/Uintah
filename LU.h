@@ -1,8 +1,12 @@
-#ifndef Uintah_Components_SpatialOps_LU_h
-#define Uintah_Components_SpatialOps_LU_h
+#ifndef Uintah_Components_Arches_LU_h
+#define Uintah_Components_Arches_LU_h
 
+#include <Core/Grid/Variables/VarTypes.h>
 #include <assert.h>
 #include <vector>
+#include <string>
+#include <iostream>
+#include <iomanip>
 
 /**
  *  @class LU
@@ -38,6 +42,11 @@ class LU{
   /** @brief Dumps the contents of the matrix A to std::out.
   */
   void dump();
+
+  /** @brief Returns dimension of matrix A.
+  */
+  const int getDimension() {
+    return dim_; };
 
  private:
 
