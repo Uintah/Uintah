@@ -11,8 +11,8 @@
 using namespace std;
 using namespace Uintah;
 
-EqnBase::EqnBase(Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName):
-d_fieldLabels(fieldLabels), d_timeIntegrator(timeIntegrator), d_eqnName(eqnName)
+EqnBase::EqnBase(Fields* fieldLabels, ExplicitTimeInt* timeIntegrator, string eqnName) :
+  d_fieldLabels( fieldLabels ), d_eqnName( eqnName ), d_timeIntegrator( timeIntegrator )
 {
 }
 
