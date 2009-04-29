@@ -51,8 +51,9 @@ machineIsBigEndian()
 //////////////////////////////////////////////////////////////////////////////////
 
 template<>
-  ParticleDataContainer
-handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication )
+  void
+  /*ParticleDataContainer*/
+handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result )
 {
   vector<float> dataX, dataY, dataZ;
 
@@ -90,14 +91,14 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
     } // end for materials
   } // end for each Patch
 
-  float * floatArrayX = (float*)malloc(sizeof(float)*dataX.size());
-  float * floatArrayY = (float*)malloc(sizeof(float)*dataX.size());
-  float * floatArrayZ = (float*)malloc(sizeof(float)*dataX.size());
+  // float * floatArrayX = (float*)malloc(sizeof(float)*dataX.size());
+  // float * floatArrayY = (float*)malloc(sizeof(float)*dataX.size());
+  // float * floatArrayZ = (float*)malloc(sizeof(float)*dataX.size());
 
-  float min[3] = {  FLT_MAX,  FLT_MAX,  FLT_MAX };
-  float max[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+  // float min[3] = {  FLT_MAX,  FLT_MAX,  FLT_MAX };
+  // float max[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
-  for( unsigned int pos = 0; pos < dataX.size(); pos++ ) {
+  /*for( unsigned int pos = 0; pos < dataX.size(); pos++ ) {
     floatArrayX[ pos ] = dataX[ pos ];
     floatArrayY[ pos ] = dataY[ pos ];
     floatArrayZ[ pos ] = dataZ[ pos ];
@@ -108,23 +109,23 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
     if( dataY[ pos ] < min[1] ) { min[1] = dataY[ pos ]; }
     if( dataZ[ pos ] > max[2] ) { max[2] = dataZ[ pos ]; }
     if( dataZ[ pos ] < min[2] ) { min[2] = dataZ[ pos ]; }
-  }
+  }*/
 
   // printf("%s (%d):  min/max: %f / %f, %f / %f, %f / %f\n", 
   //       qinfo.varname.c_str(), (int)dataX.size(), min[0], max[0], min[1], max[1], min[2], max[2] );
 
-  ParticleDataContainer result;
+  // ParticleDataContainer result;
 
   result.name = qinfo.varname;
 
-  result.x = floatArrayX;
-  result.y = floatArrayY;
-  result.z = floatArrayZ;
+  result.x = /*floatArrayX*/ dataX;
+  result.y = /*floatArrayY*/ dataY;
+  result.z = /*floatArrayZ*/ dataZ;
   result.type = SCALAR;
   
   result.numParticles = dataX.size();
 
-  return result;
+  // return result;
 }
 
 /*
@@ -183,8 +184,9 @@ return result;
 } // end handleParticleData<Vector>*/
 
 template<>
-  ParticleDataContainer
-handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication )
+  void
+  /*ParticleDataContainer*/
+handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result)
 {
   cout << "In handleParticleData<Vector>\n";
   vector<float> dataX, dataY, dataZ;
@@ -220,47 +222,48 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
     } // end for each matl
   } // end for each Patch
 
-  float * floatArrayX = (float*)malloc(sizeof(float)*dataX.size());
-  float * floatArrayY = (float*)malloc(sizeof(float)*dataY.size());
-  float * floatArrayZ = (float*)malloc(sizeof(float)*dataZ.size());
+  // float * floatArrayX = (float*)malloc(sizeof(float)*dataX.size());
+  // float * floatArrayY = (float*)malloc(sizeof(float)*dataY.size());
+  // float * floatArrayZ = (float*)malloc(sizeof(float)*dataZ.size());
 
   // float min =  FLT_MAX;
   // float max = -FLT_MAX;
 
-  for( unsigned int pos = 0; pos < dataX.size(); pos++ ) {
+  /*for( unsigned int pos = 0; pos < dataX.size(); pos++ ) {
     floatArrayX[ pos ] = dataX[ pos ];
     floatArrayY[ pos ] = dataY[ pos ];
     floatArrayZ[ pos ] = dataZ[ pos ];
 
     // if( data[ pos ] > max ) { max = data[ pos ]; }
     // if( data[ pos ] < min ) { min = data[ pos ]; }
-  }
+  }*/
 
   // printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
 
   // ParticleDataContainer result( qinfo.varname, floatArray, data.size() );
 
-  ParticleDataContainer result;
+  // ParticleDataContainer result;
 
   result.name = qinfo.varname;
-  result.x = floatArrayX;
-  result.y = floatArrayY;
-  result.z = floatArrayZ;
+  result.x = /*floatArrayX*/ dataX;
+  result.y = /*floatArrayY*/ dataY;
+  result.z = /*floatArrayZ*/ dataZ;
   result.type = VECTOR;
   result.numParticles = dataX.size();
   
   cout << "Out handleParticleData<Vector>\n";	
 
-  return result;
+  // return result;
 } // end handleParticleData<Vector>
 
 template<>
-  ParticleDataContainer
-handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication )
+  void
+  /*ParticleDataContainer*/
+handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result)
 {
   cout << "In handleParticleData<Matrix3>\n";
   vector<float> data;
-  matrixVec* matrixRep = new matrixVec();
+  matrixVec matrixRep /*= new matrixVec()*/;
 
   // Loop over each patch and get the data from the data archive.
   Level::const_patchIterator patch_it;
@@ -292,7 +295,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 	  // float temp_value = (float)(sqrt(1.5*(value[*iter]-one*temp_value).NormSquared())); // Equivalent 
 
 	  // pushing individual matrices into the repository
-	  matrixRep->push_back(value[*iter]);
+	  matrixRep.push_back(value[*iter]);
 
 	  data.push_back( temp_value );
 	}
@@ -300,18 +303,18 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
     } // end for each Material
   } // end for each Patch
 
-  float * floatArray = (float*)malloc(sizeof(float)*data.size());
+  // float * floatArray = (float*)malloc(sizeof(float)*data.size());
 
-  float min =  FLT_MAX;
-  float max = -FLT_MAX;
+  // float min =  FLT_MAX;
+  // float max = -FLT_MAX;
 
-  for( unsigned int pos = 0; pos < data.size(); pos++ ) {
+  /*for( unsigned int pos = 0; pos < data.size(); pos++ ) {
 
     floatArray[ pos ] = data[ pos ];
 
     if( data[ pos ] > max ) { max = data[ pos ]; }
     if( data[ pos ] < min ) { min = data[ pos ]; }
-  }
+  }*/
 
   // printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
 
@@ -322,22 +325,23 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 
   // ParticleDataContainer result( qinfo.varname + " Trace/3", floatArray, data.size() );
 
-  ParticleDataContainer result;
+  // ParticleDataContainer result;
 
   result.name = qinfo.varname;
-  result.data = floatArray;
+  result.data = data;
   result.matrixRep = matrixRep;
   result.type = TENSOR;
   result.numParticles = data.size();
 
   cout << "Out handleParticleData<Matrix3>\n";
 
-  return result;
+  // return result;
 }
 
 template<class PartT>
-  ParticleDataContainer
-handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication )
+  void
+  /*ParticleDataContainer*/
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result)
 {
   vector<float> data;
 
@@ -398,21 +402,25 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication )
     } // end for each Material
   } // end for each Patch
 
-  float * floatArray = (float*)malloc(sizeof(float)*data.size());
+  // float * floatArray = (float*)malloc(sizeof(float)*data.size());
 
-  float min =  FLT_MAX;
-  float max = -FLT_MAX;
-  for( unsigned int pos = 0; pos < data.size(); pos++ ) {
+  // float min =  FLT_MAX;
+  // float max = -FLT_MAX;
+  /*for( unsigned int pos = 0; pos < data.size(); pos++ ) {
     floatArray[ pos ] = data[ pos ];
     if( data[ pos ] > max ) { max = data[ pos ]; }
     if( data[ pos ] < min ) { min = data[ pos ]; }
-  }
+  }*/
 
   // printf("%s (%d):  min/max: %f / %f\n", name.c_str(), (int)data.size(), min, max);
 
-  ParticleDataContainer result( name, floatArray, data.size() );
+  // ParticleDataContainer result( name, floatArray, data.size() );
+  
+  result.name = name;
+  result.data = /*floatArray*/ data;
+  result.numParticles = data.size();
 
-  return result;
+  // return result;
 
 } // end handleParticleData()
 
@@ -437,7 +445,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
   for( unsigned int cnt = 0; cnt < particleVars.size(); cnt++ ) {
 
-    if( particleVars[cnt].data ) {
+    if( (particleVars[cnt].data).size() > 0 ) {
       numVars++;
     }
     else {
@@ -505,7 +513,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
       // size_t wrote = -1;
 
-      if( particleVars[cnt].data != NULL ) {
+      if( (particleVars[cnt].data).size() > 0 ) {
 
 	// wrote = fwrite( &particleVars[cnt].data[particle], sizeof(float), 1, out );
 	// if (cnt == 1)
@@ -523,8 +531,9 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 	// With tensor data we also have the Trace value and data != NULL in that case
 	if ( particleVars[cnt].type == 2 ) { // Tensor data 
 	  tenVal tenValObj;
-	  matrixVec* matrixRepPtr = particleVars[cnt].matrixRep;
-	  matrixVec& matrixRepRef = *(matrixRepPtr);
+	  matrixVec& matrixRepRef = particleVars[cnt].matrixRep;
+	  // matrixVec* matrixRepPtr = particleVars[cnt].matrixRep;
+	  // matrixVec& matrixRepRef = *(matrixRepPtr);
 
 	  tenValObj.name = particleVars[cnt].name;
 
@@ -586,12 +595,13 @@ templateInstantiationForParticlesCC()
   QueryInfo  * qinfo = NULL;
   int matlNo = 0;
   bool matlClassfication = false;
+  ParticleDataContainer result;
 
-  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication );
-  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication );
-  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication );
-  handleParticleData<double> ( *qinfo, matlNo, matlClassfication );
-  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication );
-  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication );
-  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication );
+  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication, result );
+  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication, result );
+  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication, result );
+  handleParticleData<double> ( *qinfo, matlNo, matlClassfication, result );
+  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication, result );
+  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication, result );
+  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication, result );
 }

@@ -1199,25 +1199,25 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	    switch (subtype->getType()) {
 	      case Uintah::TypeDescription::double_type:
-		data = handleParticleData<double>( qinfo, matlNo, matlClassfication );
+		/*data =*/ handleParticleData<double>( qinfo, matlNo, matlClassfication, data );
 		break;
 	      case Uintah::TypeDescription::float_type:
-		data = handleParticleData<float>( qinfo, matlNo, matlClassfication );
+		/*data =*/ handleParticleData<float>( qinfo, matlNo, matlClassfication, data );
 		break;
 	      case Uintah::TypeDescription::int_type:
-		data = handleParticleData<int>( qinfo, matlNo, matlClassfication );
+		/*data =*/ handleParticleData<int>( qinfo, matlNo, matlClassfication, data );
 		break;
 	      case Uintah::TypeDescription::long64_type:
-		data = handleParticleData<long64>( qinfo, matlNo, matlClassfication );
+		/*data =*/ handleParticleData<long64>( qinfo, matlNo, matlClassfication, data );
 		break;
 	      case Uintah::TypeDescription::Point:
-		data = handleParticleData<Point>( qinfo, matlNo, matlClassfication );
+		/*data =*/ handleParticleData<Point>( qinfo, matlNo, matlClassfication, data );
 		break;
 	      case Uintah::TypeDescription::Vector:
-		data = handleParticleData<Vector>( qinfo, matlNo, matlClassfication );
+		/*data =*/ handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data );
 		break;
 	      case Uintah::TypeDescription::Matrix3:
-		data = handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication );
+		/*data =*/ handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data );
 		break;
 	      default:
 		cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";
@@ -1225,7 +1225,7 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	    } // end switch( subtype )
 
 	    particleDataArray.push_back( data );
-
+            
 	  } else { // Handle Grid Variables
 
 	    switch (subtype->getType()) {
@@ -1273,6 +1273,8 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	// Adding time step object to the data bank 
 	// dataBank->push_back(timeStepObj);
+
+	// particleDataArray.clear();
         
 	delete archive;
 	return timeStepObjPtr;
