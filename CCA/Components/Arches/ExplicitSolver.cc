@@ -29,6 +29,13 @@ DEALINGS IN THE SOFTWARE.
 
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/CoalModels/PartVel.h>
+#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/ModelBase.h>
+#include <CCA/Components/Arches/DQMOM.h>
 
 #include <CCA/Components/Arches/ExplicitSolver.h>
 #include <Core/Containers/StaticArray.h>
@@ -322,8 +329,75 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //add other ones here too.
   } 
 
+  // Get a reference to all the DQMOM equations
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+  if (dqmomFactory.get_quad_nodes() > 0) 
+    d_doDQMOM = true; 
+  else 
+    d_doDQMOM = false; // probably need to sync this better with the bool being set in Arches
+
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
   {
+
+    if (d_doDQMOM) {
+
+      ModelFactory& modelFactory = ModelFactory::self(); 
+      DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+
+      // Compute the particle velocities
+      d_partVel->schedComputePartVel( level, sched, curr_level ); 
+
+      // ---- schedule the solution of the transport equations ----
+      
+      // Perform the weight updates first.
+      for(  int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++ )
+      {
+        std::string wght_name = "w_qn";
+        std::string node;  
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        wght_name += node; 
+
+        EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(wght_name); 
+
+        w_eqn.sched_evalTransportEqn( level, sched, curr_level ); 
+
+        if (curr_level == numTimeIntegratorLevels-1){
+          //last time sub-step so cleanup.
+          w_eqn.sched_cleanUp( level, sched ); 
+        }
+      }
+     
+      // now do all the weighted abscissa values
+      for (DQMOMEqnFactory::EqnMap::iterator ieqn = dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+        
+        std::string currname = ieqn->first; 
+        EqnBase* temp_eqn = ieqn->second; 
+        DQMOMEqn* wa_eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+
+        if (!wa_eqn->weight()) {
+          wa_eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+        }
+      
+        if (curr_level == numTimeIntegratorLevels-1){
+          //last time sub-step so cleanup.
+          wa_eqn->sched_cleanUp( level, sched ); 
+          //also get the abscissa values
+          wa_eqn->sched_getAbscissaValues( level, sched ); 
+        }
+      }
+
+      // schedule the models for evaluation
+      ModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
+      for (ModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
+        imodel->second->sched_computeModel( level, sched, curr_level );  
+      }
+
+      // schedule DQMOM linear solve
+      d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+    }
+
 
     if (curr_level > 0)
       sched_saveTempCopies(sched, patches, matls,d_timeIntegratorLabels[curr_level]);

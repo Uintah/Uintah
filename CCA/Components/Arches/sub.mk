@@ -70,7 +70,10 @@ SRCS += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/OdtClosure.cc \
         $(SRCDIR)/OdtData.cc \
         $(SRCDIR)/Source.cc \
-        $(SRCDIR)/TurbulenceModel.cc 
+        $(SRCDIR)/TurbulenceModel.cc \
+	$(SRCDIR)/DQMOM.cc \
+	$(SRCDIR)/LU.cc \
+	$(SRCDIR)/ExplicitTimeInt.cc 
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc $(SRCDIR)/Filter.cc
@@ -82,8 +85,8 @@ ifeq ($(HAVE_HYPRE),yes)
   SRCS += $(SRCDIR)/HypreSolver.cc
 endif
 
-# SUBDIRS := $(SRCDIR)/fortran 
-# include $(SCIRUN_SCRIPTS)/recurse.mk
+SUBDIRS := $(SRCDIR)/CoalModels $(SRCDIR)/SourceTerms $(SRCDIR)/TransportEqns 
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := \
         Core/ProblemSpec   \

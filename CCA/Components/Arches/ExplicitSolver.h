@@ -81,6 +81,8 @@ class BoundaryCondition;
 class PhysicalConstants;
 class EnthalpySolver;
 class RMCRTRadiationModel; 
+class PartVel; 
+class DQMOM; 
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -398,6 +400,12 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
+  void setPartVel( PartVel* partVel ) {
+    d_partVel = partVel; };
+
+  void setDQMOMSolver( DQMOM* dqmomSolver ) { 
+    d_dqmomSolver = dqmomSolver; }; 
+
 private:
   // const VarLabel*
   const ArchesLabel* d_lab;
@@ -416,6 +424,7 @@ private:
   TurbulenceModel* d_turbModel;
   ScaleSimilarityModel* d_scaleSimilarityModel;
   bool d_mixedModel;
+
   bool d_calScalar;
   bool d_reactingScalarSolve;
   bool d_enthalpySolve;
@@ -470,6 +479,11 @@ private:
   //RMCRT Stuff
   bool d_standAloneRMCRT; 
   RMCRTRadiationModel* d_RMCRTRadiationModel;  
+
+  //DQMOM 
+  bool d_doDQMOM; 
+  PartVel* d_partVel; 
+  DQMOM* d_dqmomSolver; 
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

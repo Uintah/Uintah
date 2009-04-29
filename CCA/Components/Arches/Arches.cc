@@ -29,6 +29,21 @@ DEALINGS IN THE SOFTWARE.
 
 
 //----- Arches.cc ----------------------------------------------
+#include <CCA/Components/Arches/DQMOM.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/CoalModels/ModelFactory.h>
+#include <CCA/Components/Arches/CoalModels/ModelBase.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/CoalModels/PartVel.h>
+#include <CCA/Components/Arches/CoalModels/ConstantModel.h>
+#include <CCA/Components/Arches/CoalModels/BadHawkDevol.h>
+#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
@@ -105,6 +120,11 @@ Arches::Arches(const ProcessorGroup* myworld) :
   d_analysisModule = false;
   d_calcExtraScalars = false;
   d_extraScalarSolver = 0;
+
+  DQMOMEqnFactory& dqmomfactory = DQMOMEqnFactory::self(); 
+  dqmomfactory.set_quad_nodes(0);
+  d_doDQMOM = false; 
+  
 }
 
 // ****************************************************************************
@@ -359,6 +379,160 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (d_analysisModule) {
     d_analysisModule->problemSetup(params, grid, sharedState);
   }
+
+  // ----- NEW DQMOM STUFF:
+  ProblemSpecP time_db = db->findBlock("TimeIntegrator");
+  if (time_db) {
+    time_db->getWithDefault("tOrder",d_tOrder,1);
+    //create a time integrator.
+    d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
+    d_timeIntegrator->problemSetup(time_db);
+  } else {
+    cout << "WARNING: If you are trying to do DQMOM you need to add the <TimeIntegrator> section!\n"; 
+  }
+
+  //register all source terms
+  ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
+  if (transportEqn_db) {
+    Arches::registerSources(transportEqn_db);
+    //register all equations
+    Arches::registerTransportEqns(transportEqn_db); 
+  }
+  else
+    cout << "No *extra* transport equations found." << endl;
+
+  //create user specified transport eqns
+  if (transportEqn_db) {
+    // Go through eqns and intialize all defined eqns and call their respective 
+    // problem setup
+    EqnFactory& eqn_factory = EqnFactory::self();
+    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
+
+      std::string eqnname; 
+      eqn_db->getAttribute("label", eqnname);
+      d_scalarEqnNames.push_back(eqnname);
+      if (eqnname == ""){
+        throw InvalidValue( "The label attribute must be specified for the eqns!", __FILE__, __LINE__); 
+      }
+      EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname ); 
+      an_eqn.problemSetup( eqn_db ); 
+
+    }
+
+    // Now go through sources and initialize all defined sources and call 
+    // their respective problemSetup
+    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
+    if (sources_db) {
+
+      SourceTermFactory& src_factory = SourceTermFactory::self(); 
+      for (ProblemSpecP src_db = sources_db->findBlock("src"); 
+          src_db !=0; src_db = src_db->findNextBlock("src")){
+
+        std::string srcname; 
+        src_db->getAttribute("label", srcname);
+        if (srcname == "") {
+          throw InvalidValue( "The label attribute must be specified for the source terms!", __FILE__, __LINE__); 
+        }
+        SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
+        a_src.problemSetup( src_db );  
+      
+      }
+    }
+  }
+
+  ProblemSpecP dqmom_db = db->findBlock("DQMOM"); 
+  if (dqmom_db) {
+
+    d_doDQMOM = true; 
+
+    //register all equations. 
+    Arches::registerDQMOMEqns(dqmom_db);
+    //register all models
+    Arches::registerModels(dqmom_db); 
+
+    d_dqmomSolver = scinew DQMOM( d_lab );
+    d_dqmomSolver->problemSetup( dqmom_db ); 
+
+    // Create a velocity model 
+    d_partVel = scinew PartVel( d_lab ); 
+    d_partVel->problemSetup( dqmom_db ); 
+    d_nlSolver->setPartVel( d_partVel ); 
+    // Do through and initialze all DQMOM equations and call their respective problem setups. 
+    DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self(); 
+    const int numQuadNodes = eqn_factory.get_quad_nodes();  
+
+    ProblemSpecP w_db = dqmom_db->findBlock("Weights");
+
+    // do all weights
+    for (int iqn = 0; iqn < numQuadNodes; iqn++){
+      std::string wght_name = "w_qn";
+      std::string node;  
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      wght_name += node; 
+
+      EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( wght_name );
+      DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
+      weight.setAsWeight(); 
+      weight.problemSetup( w_db, iqn );  //don't know what db to pass it here
+
+    }
+    
+    // loop for all ic's
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
+      std::string ic_name;
+      ic_db->getAttribute("label", ic_name); 
+      //loop for all quad nodes for this internal coordinate 
+      for (int iqn = 0; iqn < numQuadNodes; iqn++){
+
+        std::string final_name = ic_name + "_qn"; 
+        std::string node; 
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        final_name += node; 
+
+        EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
+        an_ic.problemSetup( ic_db, iqn );  
+
+      }
+    }
+    // Now go through models and initialize all defined models and call 
+    // their respective problemSetup
+    ProblemSpecP models_db = dqmom_db->findBlock("Models"); 
+    if (models_db) { 
+      ModelFactory& model_factory = ModelFactory::self();
+      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")){
+        std::string model_name; 
+        m_db->getAttribute("label", model_name); 
+        for (int iqn = 0; iqn < numQuadNodes; iqn++){
+          std::string temp_model_name = model_name; 
+          std::string node;  
+          std::stringstream out; 
+          out << iqn; 
+          node = out.str(); 
+          temp_model_name += "_qn";
+          temp_model_name += node; 
+
+          ModelBase& a_model = model_factory.retrieve_model( temp_model_name ); 
+          a_model.problemSetup( m_db, iqn ); 
+
+        }
+      } 
+    }
+
+    // set up the linear solver:
+    d_dqmomSolver = scinew DQMOM(d_lab);
+    d_dqmomSolver->problemSetup( dqmom_db ); 
+
+    // now pass it off to the nonlinear solver:
+    d_nlSolver->setDQMOMSolver( d_dqmomSolver ); 
+
+  } 
+
+
+
 }
 
 // ****************************************************************************
@@ -467,6 +641,14 @@ Arches::scheduleInitialize(const LevelP& level,
   if (d_analysisModule) {
     d_analysisModule->scheduleInitialize(sched, level);
   }
+
+  //----------------------
+  //DQMOM initialization 
+  if(d_doDQMOM)
+  {
+    sched_dqmomInit(level, sched);
+  }
+    
 }
 
 // ****************************************************************************
@@ -485,6 +667,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_uVelRhoHatLabel);
     tsk->computes(d_lab->d_vVelRhoHatLabel);
     tsk->computes(d_lab->d_wVelRhoHatLabel);
+    tsk->computes(d_lab->d_newCCVelocityLabel);
     tsk->computes(d_lab->d_newCCUVelocityLabel);
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
@@ -604,6 +787,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> uVelocityCC;
     CCVariable<double> vVelocityCC;
     CCVariable<double> wVelocityCC;
+    CCVariable<Vector> ccVelocity; 
     CCVariable<double> pressure;
     CCVariable<double> pressureExtraProjection;
     CCVariable<double> pressurePred;
@@ -674,9 +858,15 @@ Arches::paramInit(const ProcessorGroup* pg,
     new_dw->allocateAndPut(uVelocityCC, d_lab->d_newCCUVelocityLabel, indx, patch);
     new_dw->allocateAndPut(vVelocityCC, d_lab->d_newCCVVelocityLabel, indx, patch);
     new_dw->allocateAndPut(wVelocityCC, d_lab->d_newCCWVelocityLabel, indx, patch);
+    new_dw->allocateAndPut(ccVelocity, d_lab->d_newCCVelocityLabel, indx, patch); 
     uVelocityCC.initialize(0.0);
     vVelocityCC.initialize(0.0);
     wVelocityCC.initialize(0.0);
+    for (CellIterator iter=patch->getCellIterator__New(); 
+         !iter.done(); iter++){
+      ccVelocity[*iter] = Vector(0,0,0);
+    }
+    
     new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
     new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
     new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
@@ -797,6 +987,16 @@ Arches::paramInit(const ProcessorGroup* pg,
       }
     }
     scalar.initialize(0.0);
+
+/*    for (CellIterator iter=patch->getCellIterator__New(); 
+         !iter.done(); iter++){
+      Point pt = patch->cellPosition(*iter);
+      if (pt.x() > 0.25) 
+        scalar[*iter] = 1.0;
+
+    }
+*/
+ 
 
     if (d_calcExtraScalars) {
 
@@ -1153,6 +1353,122 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
   }
 }
 
+//___________________________________________________________________________
+//
+void 
+Arches::sched_dqmomInit( const LevelP& level, 
+                         SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "Arches::dqmomInit", 
+                           this, &Arches::dqmomInit); 
+    // DQMOM transport vars
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+    EqnBase* temp_eqn = ieqn->second; 
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+    const VarLabel* tempSource = eqn->getSourceLabel();
+    tsk->computes( tempSource ); 
+    const VarLabel* tempVar = eqn->getTransportEqnLabel();
+    const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
+    tsk->computes( tempVar );  
+    tsk->computes( oldtempVar ); 
+  } 
+
+  // Particle Velocities
+  for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin(); 
+        i != d_lab->partVel.end(); i++){
+    tsk->computes( i->second );
+  }
+
+
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+}
+void 
+Arches::dqmomInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw )
+{
+  for (int p = 0; p < patches->size(); p++){
+    //assume only one material for now.
+    int matlIndex = 0;
+    const Patch* patch=patches->get(p);
+
+    CCVariable<Vector> partVel; 
+
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
+    double mylength = .5;
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
+      EqnBase* temp_eqn = ieqn->second; 
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+      const VarLabel* tempSourceLabel = eqn->getSourceLabel();
+      const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
+      const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
+      double initValue = eqn->getInitValue(); 
+     cout << "INITIAL VALUE FOR" << tempVarLabel << endl; 
+     cout << " = " << initValue << endl; 
+      CCVariable<double> tempSource;
+      CCVariable<double> tempVar; 
+      CCVariable<double> oldtempVar; 
+      new_dw->allocateAndPut( tempSource, tempSourceLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( oldtempVar, oldtempVarLabel, matlIndex, patch ); 
+    
+      tempSource.initialize(0.0);
+      tempVar.initialize(0.0);
+      oldtempVar.initialize(0.0); 
+
+      //if ( eqn->weight() )
+      //  tempVar.initialize(1);
+      //else {
+
+        for (CellIterator iter=patch->getCellIterator__New(); 
+              !iter.done(); iter++){
+          Point pt = patch->cellPosition(*iter);
+          //if (pt.x() > .25 && pt.x() < .75 && pt.y() > .25 && pt.y() < .75)
+          //if (pt.y() > .25 && pt.y() < .75 ) {
+
+  
+          if (pt.x() < .0){
+            if (!eqn->weight()){
+              tempVar[*iter] = initValue;
+              oldtempVar[*iter] = initValue; 
+            } 
+            else 
+              tempVar[*iter] = 1.5;
+          //} else if (eqn->weight()) {
+            //tempVar[*iter] = 1.0;
+          }
+          else {
+            if (!eqn->weight())
+              tempVar[*iter] = 0;
+            else 
+              tempVar[*iter] = .0;
+          }
+        //}
+        //mylength += .10; 
+      }
+    } 
+
+     // --- PARTICLE VELS
+    for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin(); 
+          i != d_lab->partVel.end(); i++){
+      CCVariable<Vector> partVel; 
+      new_dw->allocateAndPut( partVel, i->second, matlIndex, patch ); 
+      for (CellIterator iter=patch->getCellIterator__New(); 
+           !iter.done(); iter++){
+        IntVector c = *iter; 
+        partVel[c] = Vector(0.,0.,0.);
+
+      }
+    }
+  }
+}
+ 
 
 
 //______________________________________________________________________
@@ -1578,3 +1894,280 @@ double Arches::recomputeTimestep(double current_dt) {
 bool Arches::restartableTimesteps() {
   return d_nlSolver->restartableTimesteps();
 }
+ 
+//---------------------------------------------------------------------------
+// Builder methods 
+//---------------------------------------------------------------------------
+// Method: Register Sources 
+//---------------------------------------------------------------------------
+void Arches::registerSources(ProblemSpecP& db)
+{
+
+  if (db->findBlock("Sources")) { 
+
+  ProblemSpecP srcs_db = db->findBlock("TransportEqns")->findBlock("Sources");
+
+  // Get reference to the source factory
+  SourceTermFactory& factory = SourceTermFactory::self();
+
+  if (srcs_db) {
+    for (ProblemSpecP source_db = srcs_db->findBlock("src"); source_db != 0; source_db = source_db->findNextBlock("src")){
+      std::string src_name;
+      source_db->getAttribute("label", src_name);
+      std::string src_type;
+      source_db->getAttribute("type", src_type);
+
+      vector<string> required_varLabels;
+      ProblemSpecP var_db = source_db->findBlock("RequiredVars"); 
+
+      cout << "******* Source Term Registration ********" << endl; 
+      cout << "Found  a source term: " << src_name << endl;
+      cout << "Requires the following variables: " << endl;
+      cout << " \n"; // white space for output 
+
+      if ( var_db ) {
+        // You may not have any labels that this source term depends on...hence the 'if' statement
+        for (ProblemSpecP var = var_db->findBlock("variable"); var !=0; var = var_db->findNextBlock("variable")){
+
+          std::string label_name; 
+          var->getAttribute("label", label_name);
+
+          cout << "label = " << label_name << endl; 
+          // This map hold the labels that are required to compute this source term. 
+          required_varLabels.push_back(label_name);  
+        }
+      }
+
+     // Here we actually register the source terms based on their types.
+      // This is only done once and so the "if" statement is ok.
+      // Source terms are then retrieved from the factory when needed. 
+      // The keys are currently strings which might be something we want to change if this becomes inefficient  
+      if ( src_type == "constant_src" ) {
+        // Adds a constant to RHS
+        SourceTermBuilder* srcBuilder = scinew ConstSrcTermBuilder(src_name, required_varLabels, d_lab->d_sharedState); 
+        factory.register_source_term( src_name, srcBuilder ); 
+
+      } else {
+        cout << "For source term named: " << src_name << endl;
+        cout << "with type: " << src_type << endl;
+        throw InvalidValue("This source term type not recognized or not supported! ", __FILE__, __LINE__);
+      }
+      
+    }
+  }
+  } else {
+
+    cout << "No sources found for transport equations." << endl;
+  }
+}
+//---------------------------------------------------------------------------
+// Method: Register Models 
+//---------------------------------------------------------------------------
+void Arches::registerModels(ProblemSpecP& db)
+{
+  //ProblemSpecP models_db = db->findBlock("DQMOM")->findBlock("Models");
+  ProblemSpecP models_db = db->findBlock("Models");
+
+  // Get reference to the model factory
+  ModelFactory& model_factory = ModelFactory::self();
+  // Get reference to the dqmom factory
+  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
+
+  cout << "\n";
+  cout << "******* Model Registration ********" << endl; 
+
+  // There are three kind of variables to worry about:
+  // 1) internal coordinates
+  // 2) other "extra" scalars
+  // 3) standard flow variables
+  // We want the model to have access to all three.  
+  // Thus, for 1) you just set the internal coordinate name and the "_qn#" is attached.  This means the models are reproduced qn times
+  // for 2) you specify this in the <otherVars> tag
+  // for 3) you specify this in the implementation of the model itself (ie, no user input)
+
+  if (models_db) {
+    for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != 0; model_db = model_db->findNextBlock("model")){
+      std::string model_name;
+      model_db->getAttribute("label", model_name);
+      std::string model_type;
+      model_db->getAttribute("type", model_type);
+
+      // The model must be reproduced for each quadrature node.
+      const int numQuadNodes = dqmom_factory.get_quad_nodes();  
+
+      vector<string> requiredIC_varLabels;
+      ProblemSpecP icvar_db = model_db->findBlock("ICVars"); 
+
+      cout << " \n"; // white space for output 
+      cout << "Found  a model: " << model_name << endl;
+      cout << "Requires the following internal coordinates: " << endl;
+
+      if ( icvar_db ) {
+        // These variables are only those that are specifically defined from the input file
+        for (ProblemSpecP var = icvar_db->findBlock("variable"); var !=0; var = var->findNextBlock("variable")){
+
+          std::string label_name; 
+          var->getAttribute("label", label_name);
+
+          cout << "label = " << label_name << endl; 
+          // This map hold the labels that are required to compute this source term. 
+          requiredIC_varLabels.push_back(label_name);  
+        }
+      }
+
+      // --- looping over quadrature nodes ---
+      // This will make a model for each quadrature node. 
+      for (int iqn = 0; iqn < numQuadNodes; iqn++){
+        std::string temp_model_name = model_name; 
+        std::string node;  
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        temp_model_name += "_qn";
+        temp_model_name += node; 
+
+        if ( model_type == "ConstantModel" ) {
+          // Model term G = constant (G = 1)
+          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "BadHawkDevol" ) {
+          //Badzioch and Hawksley 1st order Devol.
+          ModelBuilder* modelBuilder = scinew BadHawkDevolBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "KobayashiSarofimDevol" ) {
+          // Kobayashi Sarofim devolatilization model
+          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else {
+          cout << "For model named: " << temp_model_name << endl;
+          cout << "with type: " << model_type << endl;
+          std::string errmsg;
+          errmsg = model_type + ": This model type not recognized or not supported.";
+          throw InvalidValue(errmsg, __FILE__, __LINE__);
+        }
+      }
+    }
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Register Eqns
+//---------------------------------------------------------------------------
+void Arches::registerTransportEqns(ProblemSpecP& db)
+{
+  ProblemSpecP eqns_db = db;
+
+  // Get reference to the source factory
+  EqnFactory& eqnFactory = EqnFactory::self();
+
+  if (eqns_db) {
+
+    cout << "\n";
+    cout << "******* Equation Registration ********" << endl; 
+
+    for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
+      std::string eqn_name;
+      eqn_db->getAttribute("label", eqn_name);
+      std::string eqn_type;
+      eqn_db->getAttribute("type", eqn_type);
+
+      cout << "Found  an equation: " << eqn_name << endl;
+
+      // Here we actually register the equations based on their types.
+      // This is only done once and so the "if" statement is ok.
+      // Equations are then retrieved from the factory when needed. 
+      // The keys are currently strings which might be something we want to change if this becomes inefficient  
+      if ( eqn_type == "CCscalar" ) {
+
+        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_lab, d_timeIntegrator, eqn_name ); 
+        eqnFactory.register_scalar_eqn( eqn_name, scalarBuilder );     
+
+      // ADD OTHER OPTIONS HERE if ( eqn_type == ....
+
+      } else {
+        cout << "For eqnation named: " << eqn_name << endl;
+        cout << "with type: " << eqn_type << endl;
+        throw InvalidValue("This equation type not recognized or not supported! ", __FILE__, __LINE__);
+      }
+    }
+  }  
+}
+//---------------------------------------------------------------------------
+// Method: Register DQMOM Eqns
+//---------------------------------------------------------------------------
+void Arches::registerDQMOMEqns(ProblemSpecP& db)
+{
+
+  // Now do the same for DQMOM equations. 
+  ProblemSpecP dqmom_db = db;
+
+  // Get reference to the source factory
+  DQMOMEqnFactory& dqmom_eqnFactory = DQMOMEqnFactory::self();
+
+  if (dqmom_db) {
+    
+    int n_quad_nodes; 
+    dqmom_db->require("number_quad_nodes", n_quad_nodes);
+    dqmom_eqnFactory.set_quad_nodes( n_quad_nodes ); 
+
+    cout << "\n";
+    cout << "******* DQMOM Equation Registration ********" << endl; 
+
+    // Make the weight transport equations
+    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
+
+      std::string wght_name = "w_qn";
+      std::string node;  
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      wght_name += node; 
+
+      cout << "creating a weight for: " << wght_name << endl;
+
+      DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, wght_name ); 
+      dqmom_eqnFactory.register_scalar_eqn( wght_name, eqnBuilder );     
+      
+    }
+    // Make the weighted abscissa 
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")){
+      std::string ic_name;
+      ic_db->getAttribute("label", ic_name);
+      std::string eqn_type = "dqmom"; // by default 
+
+      cout << "Found  an internal coordinate: " << ic_name << endl;
+
+      // loop over quad nodes. 
+      for (int iqn = 0; iqn < n_quad_nodes; iqn++){
+
+        // need to make a name on the fly for this ic and quad node. 
+        std::string final_name = ic_name + "_qn"; 
+        std::string node; 
+        std::stringstream out; 
+        out << iqn; 
+        node = out.str(); 
+        final_name += node; 
+
+        cout << "created a weighted abscissa for: " << final_name << endl; 
+
+        DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, final_name ); 
+        dqmom_eqnFactory.register_scalar_eqn( final_name, eqnBuilder );     
+
+      } 
+    }
+    // Make the velocities for each quadrature node
+    for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
+      string name = "vel_qn"; 
+      std::string node; 
+      std::stringstream out; 
+      out << iqn; 
+      node = out.str(); 
+      name += node; 
+
+      const VarLabel* tempVarLabel = VarLabel::create(name, CCVariable<Vector>::getTypeDescription());
+      d_lab->partVel.insert(make_pair(iqn, tempVarLabel)).first; 
+ 
+    }
+  }  
+}
+
