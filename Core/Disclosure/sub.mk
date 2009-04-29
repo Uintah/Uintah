@@ -1,5 +1,4 @@
 # 
-# 
 # The MIT License
 # 
 # Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
@@ -25,10 +24,18 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 # DEALINGS IN THE SOFTWARE.
 # 
-# 
-# 
-# 
+
 # Makefile fragment for this subdirectory
+
+#########################################################################
+#
+#  WARNING: This library has been combined with the Math library to
+#           avoid a circular dependency...  The (empty) lib is still
+#           created until we determine whether it should be officially
+#           merged into the Math directory, or if a better split
+#           can be arranged.
+#
+#
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 

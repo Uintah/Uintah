@@ -26,10 +26,19 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-
 # Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+
+########################################################################
+#
+#  WARNING: This library has been combined with the Math library to
+#           avoid a circular dependency...  This (empty) lib  is still
+#           created until we determine whether it should be officially
+#           merged into the Math directory, or if a better split
+#           can be arranged.
+#
+#
 
 INCLUDES += $(TEEM_INCLUDE)
 
