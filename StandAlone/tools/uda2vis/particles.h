@@ -48,31 +48,47 @@ DEALINGS IN THE SOFTWARE.
 
 typedef vector<Matrix3> matrixVec;
 
-struct ParticleDataContainer {
+class ParticleDataContainer {
+public:
   ParticleDataContainer() :
     name( "name not set" ),
-    data( NULL ),
-    x( NULL ), y( NULL ), z( NULL ),
+    // data( NULL ),
+    // x( NULL ), y( NULL ), z( NULL ),
     numParticles( 0 )
   {
   }
 
-  ParticleDataContainer( const string & theName, float * theData, int theNumParticles ) :
+  /*ParticleDataContainer( const string & theName, float * theData, int theNumParticles ) :
     name( theName ),
     data( theData ),
     x( NULL ), y( NULL ), z( NULL ),
     numParticles( theNumParticles )
   {
     type = UNKNOWN;
-  }
-  
-  string       name;
-  float      * data;
-  float      * x, * y, * z;
+  }*/
+
+  /*~ParticleDataContainer() {
+    if (data != NULL) {
+      free(data);	
+    }
+    if (x != NULL) {
+      free(x);	
+    }
+    if (y != NULL) {
+      free(y);	
+    }
+    if (z != NULL) {
+      free(z);	
+    }
+  }*/
+
+  string name;
+  vector<float> data;
+  vector<float> x, y, z;
   unsigned int numParticles;
   
   // Addition
-  matrixVec* matrixRep; // matrix repository
+  matrixVec matrixRep; // matrix repository
   DataType type;
 };
 
@@ -87,8 +103,8 @@ struct ParticleDataContainer {
 //
 
 template<class PartT>
-ParticleDataContainer
-handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication );
+void
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result );
 
 void
 saveParticleData( std::vector<ParticleDataContainer> & data,
