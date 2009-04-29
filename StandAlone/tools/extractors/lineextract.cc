@@ -97,6 +97,8 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -timestep, --timestep:      [int] (only outputs from timestep int) [defaults to 0]\n";
     cerr << "  -istart,   --indexs:        <x> <y> <z> (cell index) [defaults to 0 0 0]\n";
     cerr << "  -iend,     --indexe:        <x> <y> <z> (cell index) [defaults to 0 0 0]\n";
+    cerr << "  -startPt                    <x> <y> <z> [doubles] Starting point of line in physical units\n";
+    cerr << "  -endPt                      <x> <y> <z> [doubles] Ending point of line in physical units\n";
     cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
     cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
     cerr << "  -vv,       --verbose:       (prints status of output)\n";
@@ -586,6 +588,7 @@ int main(int argc, char** argv)
   //__________________________________
   //  Default Values
   bool use_cellIndex_file = false;
+  bool findCellIndices = false;
 
   unsigned long time_start = 0;
   unsigned long time_end = (unsigned long)-1;
@@ -594,6 +597,8 @@ int main(int argc, char** argv)
   string output_file_name("-");
   IntVector var_start(0,0,0);
   IntVector var_end(0,0,0);
+  Point     start_pt(-9,-9,-9);
+  Point     end_pt(-9,-9,-9);
   int levelIndex = 0;
   vector<IntVector> cells;
   string variable_name;
@@ -631,6 +636,17 @@ int main(int argc, char** argv)
       int y = atoi(argv[++i]);
       int z = atoi(argv[++i]);
       var_end = IntVector(x,y,z);
+    } else if (s == "-startPt" ) {
+      double x = atof(argv[++i]);
+      double y = atof(argv[++i]);
+      double z = atof(argv[++i]);
+      start_pt = Point(x,y,z);
+    } else if (s == "-endPt" ) {
+      double x = atof(argv[++i]);
+      double y = atof(argv[++i]);
+      double z = atof(argv[++i]);
+      end_pt = Point(x,y,z);
+      findCellIndices = true;
     } else if (s == "-l" || s == "--level") {
       levelIndex = atoi(argv[++i]);
     } else if( (s == "-h") || (s == "--help") ) {
@@ -685,11 +701,6 @@ int main(int argc, char** argv)
       exit(-1);
     }
 
-    if (!quiet) {
-      cout << vars[var_index] << ": " << types[var_index]->getName() 
-           << " being extracted for material "<<material
-           <<" at index "<<var_start << " to " << var_end <<endl;
-    }
     //__________________________________
     // get type and subtype of data
     const Uintah::TypeDescription* td = types[var_index];
@@ -713,6 +724,27 @@ int main(int argc, char** argv)
       //output_stream = cout;
     }
     
+    //__________________________________
+    //  find the cell index
+    if(findCellIndices){
+      vector<int> index;
+      vector<double> times;
+      archive->queryTimesteps(index, times);
+      ASSERTEQ(index.size(), times.size());
+
+      GridP grid = archive->queryGrid(time_start);
+      const LevelP level = grid->getLevel(levelIndex);  
+      if (level){                                       
+        var_start=level->getCellIndex(start_pt);
+        var_end  =level->getCellIndex(end_pt);                    
+      }
+    }                                  
+
+    if (!quiet) {
+      cout << vars[var_index] << ": " << types[var_index]->getName() 
+           << " being extracted for material "<<material
+           <<" at index "<<var_start << " to " << var_end <<endl;
+    }    
     //__________________________________    
     // read in cell indices from a file
     if ( use_cellIndex_file) {
