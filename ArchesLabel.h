@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Util/Handle.h>
-
+#include <map>
 
 /**************************************
 CLASS
@@ -243,6 +243,7 @@ namespace Uintah {
       const VarLabel* d_mmgasVolFracLabel;
 
       // for reacting flows
+      const VarLabel* d_dummyTLabel;
       const VarLabel* d_tempINLabel;
       const VarLabel* d_tempFxLabel; 
       const VarLabel* d_tempFyLabel;
@@ -498,6 +499,14 @@ namespace Uintah {
       const VarLabel* d_umomBoundarySrcLabel;
       const VarLabel* d_vmomBoundarySrcLabel;
       const VarLabel* d_wmomBoundarySrcLabel;
+
+
+      // DQMOM Variables:
+      // -- particle velocity 
+      typedef std::map<int, const VarLabel* > PartVelMap;
+      PartVelMap partVel;  
+      
+
 
     }; // End class ArchesLabel
 } // End namespace Uintah
