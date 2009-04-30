@@ -98,7 +98,6 @@ private:
   int d_timeSubStep;
 
   const VarLabel* d_normBLabel; 
-  const VarLabel* d_normResLabel;
 
 }; // end class DQMOM
 
