@@ -400,7 +400,7 @@ compare_results () {
         compare=false
     fi
     
-    echo; echo   "Running command: ../compare_uda -skip_unknown_types  $goldStandard/checkpoints  $uda/checkpoints"
+    echo; echo   "Running command: ../compare_uda -skip_unknown_types  $compare_uda_options $goldStandard/checkpoints  $uda/checkpoints"
     echo "../compare_uda -skip_unknown_types $compare_uda_options  $goldStandard/checkpoints $uda/checkpoints" > $n.compare 2>&1
     ../compare_uda -skip_unknown_types $compare_uda_options $goldStandard/checkpoints $uda/checkpoints > $n.compare_checkpoints 2>&1
 
@@ -583,6 +583,7 @@ if test "$do_ice" -eq 1; then
     rt_value=$?
 fi
 if test "$do_ice_amr" -eq 1; then
+    MPI_RUN="yes"
     CASE=ICE   
     run_case ice_amr
     rt_value=$?
@@ -598,6 +599,7 @@ if test "$do_mpmice_amr" -eq 1; then
     rt_value=$?
 fi
 if test "$do_models" -eq 1; then 
+    MPI_RUN="yes"
     CASE=Models
     run_case model
     rt_value=$?
@@ -608,11 +610,13 @@ if test "$do_smpm" -eq 1; then
     rt_value=$?
 fi
 if test "$do_impm" -eq 1; then
+    MPI_RUN="yes"
     CASE=IMPM
     run_case impm
     rt_value=$?
 fi
 if test "$do_arches" -eq 1; then
+    MPI_RUN="yes"
     CASE=ARCHES
 #    opts=-arches
 #    arches_test
