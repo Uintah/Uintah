@@ -1,37 +1,14 @@
 #! /bin/sh
 
-# If we are on inferno use the TestData in $INF_GS
-INF_GS=/home/csafe/csafe-tester/Linux/TestData
-
-ON_SCI_FS=
-if test -d $INF_GS; then
-   ON_SCI_FS=true
+if test "$GOLD_STANDARD" == "" ; then
+    echo "The variable GOLD_STANDARD has not been set.  Please set the GOLD_STANDARD"
+    echo "variable to a valid directory (either in your environment or in this script."
+    echo "Goodbye."
+    exit
+elif test -d ${GOLD_STANDARD}; then
+    test_dir=${GOLD_STANDARD}
 fi
 
-if test "$ON_SCI_FS" == "true"; then
-   if test "$GOLD_STANDARD" != "" -a "$GOLD_STANDARD" != "$INF_GS"; then
-      echo ""
-      echo "WARNING: You have specified a gold standard different from the default..."
-      echo "         If you did not wish to do this, unset the GOLD_STANDARD environment"
-      echo "         variable."
-      echo ""
-      echo "         Continuing in 5 seconds..."
-      sleep 5
-      echo ""
-      test_dir=${GOLD_STANDARD}
-   else
-       test_dir=$INF_GS
-   fi
-else
-    if test "$GOLD_STANDARD" == "" ; then
-        echo "The variable GOLD_STANDARD has not been set.  Please set the GOLD_STANDARD"
-        echo "variable to a valid directory (either in your environment or in this script."
-        echo "Goodbye."
-        exit
-    elif test -d ${GOLD_STANDARD}; then
-        test_dir=${GOLD_STANDARD}
-    fi
-fi
 
 if test ! -d $GOLD_STANDARD; then
     echo "The directory, '$GOLD_STANDARD', does not exist.  Please set the variable"
