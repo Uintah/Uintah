@@ -429,7 +429,12 @@ ray::surfaceIntersect( const double *X,
 // modify scattering scheme.
 // instead of picking a scattering length every time, pick scat-length once,
 // then keep tracking if the ray goes to that scatter length yet.
-// otherwise, if scat-length is too long, the ray will never get a chance to scatter
+// In another word, the ray will always scatter at length scat_length.
+// otherwise, if scat-length is too long, and mesh is too fine,
+// by comparing the length of scat and ray_length within the cell,
+// the ray could never get a chance to scatter.
+
+// scattering here only changes direction, dont affect the intensity a ray carries.
 void ray::TravelInMediumInten(MTRand &MTrng,
 			      VirtualSurface &obVirtual,
 			      const double *kl_Vol,
@@ -498,7 +503,8 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       yemiss = yemiss + scat_len * directionVector[1];
       zemiss = zemiss + scat_len * directionVector[2];
       sumScat = sumScat + scat_len;
-
+      //  cout << xemiss << "   " << yemiss << "   " << zemiss << endl;
+    
       // re-set straight Position
       set_straightP();
       straight_len = 0;
@@ -550,7 +556,8 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       yemiss = ystraight + scat_len * directionVector[1];
       zemiss = zstraight + scat_len * directionVector[2];     
       sumScat = sumScat + (scat_len - pre_straight_len);
-      
+      // cout << xemiss << "   " << yemiss << "   " << zemiss << endl;
+    
       /*
       cout << "scat_len = " << scat_len << endl;
       cout << "straight_len = " << straight_len << endl;
