@@ -841,9 +841,9 @@ int main(int argc, char *argv[]){
    
    //  #include "inputBenchmark.cc"
    //  #include "inputBenchmarkSurf.cc"
-   //   #include "inputNonblackSurf.cc"
+      #include "inputNonblackSurf.cc"
    //  #include "inputScattering.cc"   
-    #include "inputScatteringAniso.cc"
+   //#include "inputScatteringAniso.cc"
    
    MTRand MTrng;
    VolElement obVol;
