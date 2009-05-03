@@ -153,7 +153,7 @@ void rayfromSurf(SurfaceType &obSurface,
   
 	  // loop over ray numbers on each surface element
   for ( rayCounter = 0; rayCounter < thisRayNo; rayCounter++ ) {
-    
+    //  cout << "rayCounter = " << rayCounter << endl;
     LeftIntenFrac = 1;
     traceProbability = 1;
     weight = 1;
@@ -177,6 +177,8 @@ void rayfromSurf(SurfaceType &obSurface,
 		     obSurface.get_xlow(), obSurface.get_xup(),
 		     obSurface.get_ylow(), obSurface.get_yup(),
 		     obSurface.get_zlow(), obSurface.get_zup());
+
+    // cout << obRay.get_xemiss() << "   " << obRay.get_yemiss() << "   " << obRay.get_zemiss() << endl;
     
     obRay.set_straightP();
     obRay.set_straight_len(0);
@@ -249,7 +251,8 @@ void rayfromSurf(SurfaceType &obSurface,
       // and direction of the ray already updated
       obRay.update_emissP();
       obRay.update_vIndex();
-     
+      //  cout << obRay.get_xemiss() << "   " << obRay.get_yemiss() << "   " << obRay.get_zemiss() << endl;
+    
       SurLeft = SurLeft * PathSurfaceLeft;
       
       LeftIntenFrac = exp( -currentSum) * SurLeft;
@@ -329,17 +332,17 @@ int main(int argc, char *argv[]){
   double scat_len;
  
   scat = 5;
-  linear_b = 1;
+  linear_b = 0;
   eddington_f = 0;
   eddington_g = 0;
-  PhFunc = LINEAR_SCATTER;
+  PhFunc = ISOTROPIC;
   
   StopLowerBound = 1e-4;
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 10;
-  Ncy = 10;
-  Ncz = 10;
+  Ncx = 40;
+  Ncy = 40;
+  Ncz = 40;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
@@ -820,10 +823,24 @@ int main(int argc, char *argv[]){
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 1500;
-       rayNo_bottom_surface[iSurface] = 1500;
+       rayNo_top_surface[iSurface] = 0;
+       rayNo_bottom_surface[iSurface] = 0;
      }
+   
+   
+   // top, bottom surfaces
+   for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
+     for ( int i = 0; i < Ncx; i ++){
+       iSurface = i + j*Ncx;
+       rayNo_top_surface[iSurface] = 1500;
+       // rayNo_bottom_surface[iSurface] = 1;
+     }
+   
 
+   // almost the center of top surface
+   // iSurface = int(Ncx/2)-1 + (int(Ncy/2)-1) * Ncx;
+   // rayNo_top_surface[iSurface] = 100;
+   
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
@@ -1312,7 +1329,7 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfaceBenchmarkRay500RR1e-4", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceIsoScat5Ray1500RR1e-4-404040", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
   
@@ -1485,11 +1502,14 @@ int main(int argc, char *argv[]){
     global_Qdiv[i] = global_qdiv[i] * ElementVol[i];
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
-  
+
+  /*
   obTable.vtkVolTableMake("vtkVolBenchmarkRay500RR1e-4",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
+
+  */
 
   
   } // end rayNoVol!= 0 
