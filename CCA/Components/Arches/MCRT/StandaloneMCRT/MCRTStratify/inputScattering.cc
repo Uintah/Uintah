@@ -30,10 +30,11 @@ DEALINGS IN THE SOFTWARE.
 
    // with scattering media 1D slab with cold black walls
    
-   double omega, ext;
+//   double omega, ext;
    double kl;
    double T;
-   
+
+/*
    // more scattering will reduce the SD for Volume
    // when increase the extinction coeff, SD VOL increases
    
@@ -64,7 +65,9 @@ DEALINGS IN THE SOFTWARE.
      omega = 0.9;
      ext = 10;
    }
-   
+
+*/
+
    scat = omega * ext;
   
    kl = ext - scat;
