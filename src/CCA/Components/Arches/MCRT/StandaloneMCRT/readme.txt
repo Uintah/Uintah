@@ -29,7 +29,7 @@ MCRTscatter1ver and MCRTscatterlen
 
 are folders with different modified scattering schemes.
 
-MCRTscatter1ver ( first version) has more potential. it is pick a scat_len, 
+MCRTscatter1ver ( first version) has more potential. it picks a scat_len, 
 then check scat_len < pre_straight_len , and ( scat_len <=
 straight_len && scat_len >= pre_straight_len) scattering happens, 
 otherwise, go straight.
