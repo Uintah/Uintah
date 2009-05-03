@@ -357,7 +357,7 @@ void rayfromSurf(SurfaceType &obSurface,
       "; rayNo = " << rayCounter << endl;
     */
     
-   } while(rayCounter < 800); // rayCounter loop
+   } while(rayCounter < 1500); // rayCounter loop
     // } while( sumSDave >= 0.03 || rayCounter <= 5);
 
   
@@ -427,21 +427,21 @@ int main(int argc, char *argv[]){
   // stratified sampling
   int i_n, j_n, k_n, theta_n, phi_n, straSize;
   int p_n; // position number
-  cout << " Please enter i_n, j_n, k_n, theta_n, phi_n" << endl;
-  cin >> i_n >> j_n >> k_n >> theta_n >> phi_n ;
+  //  cout << " Please enter i_n, j_n, k_n, theta_n, phi_n" << endl;
+  //  cin >> i_n >> j_n >> k_n >> theta_n >> phi_n ;
 
-//   i_n = 3;
-//   j_n = 3;
-//   k_n = 1;
-//   theta_n = 10;
-//   phi_n = 10;
+   i_n = 1;
+   j_n = 1;
+   k_n = 1;
+   theta_n = 1;
+   phi_n = 1;
   // wont work for theta_n case theta_n has to be one in here
   p_n = i_n * j_n * k_n;
   straSize = p_n * theta_n * phi_n;
   
   int casePlates;
-  cout << " Please enter plates case " << endl;
-  cin >> casePlates;
+  //  cout << " Please enter plates case " << endl;
+  //  cin >> casePlates;
 
 //   // starting up MPI
 //   MPI_Init(&argc, &argv);
@@ -482,18 +482,18 @@ int main(int argc, char *argv[]){
   // cout << "enter linear_b" << endl;
  // cin >> linear_b;
  
- //  scat = 1.0;
- //  linear_b = 1.0;
+ // scat = 5.0;
+  //  linear_b = 0.0;
   eddington_f = 0;
   eddington_g = 0;
-  PhFunc = LINEAR_SCATTER;
+  PhFunc = ISOTROPIC;
    
   varianceBound = 0.03; // set arbitrary
   rayNoSurface = 1;
   rayNoVol = 1;  
-  Ncx = 20;
-  Ncy = 20;
-  Ncz = 20;
+  Ncx = 10;
+  Ncy = 10;
+  Ncz = 10;
   ratioBCx = 1;
   ratioBCy = 1;
   ratioBCz = 1;
@@ -965,18 +965,26 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1; 
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
    // TopBottomNo = Ncx * Ncy;
 
-
+   
+   // (x,0,0) 4 lines at the center
+   
+   for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+     for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
+       for ( int i = 0; i < Ncx; i ++ )
+	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 1; 
+   
+   
    int iSurface;
    // initial all surface elements ray no = 0
    // top, bottom surfaces
    for ( int j = 0; j < Ncy; j ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
-       rayNo_top_surface[iSurface] = 1;
-       rayNo_bottom_surface[iSurface] = 1;
+       rayNo_top_surface[iSurface] = 0;
+       rayNo_bottom_surface[iSurface] = 0;
      }
 
    /*
@@ -985,37 +993,55 @@ int main(int argc, char *argv[]){
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + j*Ncx;
        rayNo_top_surface[iSurface] = 1;
-       rayNo_bottom_surface[iSurface] = 1;
+       rayNo_bottom_surface[iSurface] = 0;
      }   
 
+    
+   // top, bottom center cell surfaces
+   for ( int j = int(Ncy/2)-1; j < int(Ncy/2)+1; j ++ )
+     for ( int i = int(Ncx/2)-1; i < int(Ncx/2)+1; i ++ ) {
+       iSurface = i + j*Ncx;
+       rayNo_top_surface[iSurface] = 1;
+       rayNo_bottom_surface[iSurface] = 1;
+     }
    */
-
+   
    
    // front back surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int i = 0; i < Ncx; i ++){
        iSurface = i + k*Ncx;
-       rayNo_front_surface[iSurface] = 1;
-       rayNo_back_surface[iSurface] = 1;
+       rayNo_front_surface[iSurface] = 0;
+       rayNo_back_surface[iSurface] = 0;
      }   
 
 
+   // back center cells along (x,0,0)  
+   // front back surfaces
+   for ( int k = int(Ncz/2)-1; k < int(Ncz/2)+1; k ++ )
+     for ( int i = 0; i < Ncx; i ++){
+       iSurface = i + k*Ncx;
+       rayNo_front_surface[iSurface] = 0;
+       rayNo_back_surface[iSurface] = 1;
+     }   
+
+   
    // left right surfaces
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++){
        iSurface = j + k*Ncy;
-       rayNo_left_surface[iSurface] = 1;
-       rayNo_right_surface[iSurface] = 1;
+       rayNo_left_surface[iSurface] = 0;
+       rayNo_right_surface[iSurface] = 0;
      }
 
    //   rayNo_top_surface[20] = 1;
    
    // case set up-- dont put these upfront , put them here. otherwise return compile errors
-   //  #include "inputBenchmark.cc"
+    #include "inputBenchmark.cc"
    //  #include "inputBenchmarkSurf.cc"
-   #include "inputNonblackSurf.cc"
+   // #include "inputNonblackSurf.cc"
      // #include "inputScattering.cc"
-   //   #include "inputScatteringAniso.cc"
+   //  #include "inputScatteringAniso.cc"
    
    MTRand MTrng;   
    VolElement obVol;
@@ -1739,7 +1765,7 @@ int main(int argc, char *argv[]){
 	       sumSDave = sqrt(sumSDave )/anotherSize;  
 	      */ 
 	      
-	   }while( rayCounter < 800 ); // rayCounter loop
+	   }while( rayCounter < 1500 ); // rayCounter loop
 	    
 	   //  }while(sumSDave >= 0.03 || rayCounter <= 5);
 	   
@@ -1830,7 +1856,7 @@ int main(int argc, char *argv[]){
   }
   
   
-  obTable.vtkSurfaceTableMake("vtkSurfacePlates11ray800RR1e-4-202020-11111", Npx, Npy, Npz,
+  obTable.vtkSurfaceTableMake("vtkSurfaceBenchmarkray1500RR1e-4-101010-11111", Npx, Npy, Npz,
 			      X, Y, Z, surfaceElementNo,
 			      global_qsurface, global_Qsurface);
  }
@@ -1842,25 +1868,33 @@ int main(int argc, char *argv[]){
     global_Qdiv[i] = global_qdiv[i] * ElementVol[i];
     sumQvolume = sumQvolume + global_Qdiv[i];
   }
+
   
-  obTable.vtkVolTableMake("vtkVolPlates11ray800RR1e-4-202020-11111",
+  obTable.vtkVolTableMake("vtkVolBenchmarkray1500RR1e-4-101010-11111",
 			  Npx, Npy, Npz,
 			  X, Y, Z, VolElementNo,
 			  global_qdiv, global_Qdiv);
+  
  }
 
- 
- obTable.singleArrayTable(ttSDave_surface[0], TopBottomNo, 1, "Plates11ray800RR1e-4-topsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[1], TopBottomNo, 1, "Plates11ray800RR1e-4-bottomsurfaceSDave202020-11111");
 
  /*
- obTable.singleArrayTable(ttSDave_surface[2], FrontBackNo, 1, "Plates11ray800RR1e-4-frontsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[3], FrontBackNo, 1, "Plates11ray800RR1e-4-backsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[4], LeftRightNo, 1, "Plates11ray800RR1e-4-leftsurfaceSDave202020-11111");
- obTable.singleArrayTable(ttSDave_surface[5], LeftRightNo, 1, "Plates11ray800RR1e-4-rightsurfaceSDave202020-11111");
+ obTable.singleArrayTable(ttSDave_surface[0], TopBottomNo, 1, "Benchmarkray1500RR1e-4-topsurfaceSDave101010-11111");
+ obTable.singleArrayTable(ttSDave_surface[1], TopBottomNo, 1, "Benchmarkray1500RR1e-4-bottomsurfaceSDave101010-11111");
+
  
- obTable.singleArrayTable(ttSDave_Vol, VolElementNo, 1, "Plates11ray800RR1e-4-VolSDave202020-11111");
+ obTable.singleArrayTable(ttSDave_surface[2], FrontBackNo, 1, "Benchmarkray1500RR1e-4-frontsurfaceSDave101010-11111");
  */
+ 
+ obTable.singleArrayTable(ttSDave_surface[3], FrontBackNo, 1, "Benchmarkray1500RR1e-4-backsurfaceSDave101010-11111");
+
+ /*
+ obTable.singleArrayTable(ttSDave_surface[4], LeftRightNo, 1, "Benchmarkray1500RR1e-4-leftsurfaceSDave101010-11111");
+ obTable.singleArrayTable(ttSDave_surface[5], LeftRightNo, 1, "Benchmarkray1500RR1e-4-rightsurfaceSDave101010-11111");
+ */
+ 
+ obTable.singleArrayTable(ttSDave_Vol, VolElementNo, 1, "Benchmarkray1500RR1e-4-VolSDave101010-11111");
+ 
  
   cout << "i_n = " << i_n << endl;
   cout << "j_n = " << j_n << endl;

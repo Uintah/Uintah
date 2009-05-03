@@ -54,7 +54,6 @@ DEALINGS IN THE SOFTWARE.
 // q = out - incoming
 // thus reflectance = 1 - q
 
-//   scat = 10;
    ext = scat;
    
    kl = ext - scat;

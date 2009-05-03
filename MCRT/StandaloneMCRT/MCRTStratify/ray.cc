@@ -502,6 +502,7 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       yemiss = yemiss + scat_len * directionVector[1];
       zemiss = zemiss + scat_len * directionVector[2];
       sumScat = sumScat + scat_len;
+      //  cout << xemiss << "   " << yemiss << "   " << zemiss << endl;
       
       // set s be the sIncoming
        for ( int i = 0; i < 3 ; i ++ ) sIncoming[i] = directionVector[i];
