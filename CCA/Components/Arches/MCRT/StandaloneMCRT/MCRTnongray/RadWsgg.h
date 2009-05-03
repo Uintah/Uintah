@@ -108,10 +108,12 @@ public:
 	  b[3] = -1.612;
 	}	
 	else if (bands == 4){ 
-            
+
+	  // due to   a_surface[surfaceFlag][4] = 1 - sum(a_surface[surfaceFlag][i]);
+	  // b for bands = 4, are the summation of the three bands.
 	  // see the Smith's paper, for the clear gas, i = 0, weighting factor sum up to unity.           
 	  a = 0.0; 
-	  b[0] = 8.9756;
+	  b[0] = 8.9756; // = b[0]_band1 + b[0]_band2 + b[0]_band3
 	  b[1] = -2.557;
 	  b[2] = 0.368;
 	  b[3] = -0.437;
