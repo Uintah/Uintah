@@ -185,10 +185,8 @@ void rayfromSurf(SurfaceType &obSurface,
   double sumVar, sumSD, sumSDave;
   double R_theta, R_phi, R_xemiss, R_yemiss, R_zemiss;
   int sMx, sMy, sMz, sMtheta, sMphi, sMp;
-  double tempV, sumSDave_prv;
+  double tempV;
   int anotherSize;
-   
-  sumSDave = DBL_MAX; // initial value for sumSDave_prv
   
   //local stratum variance is a good guidance for bias sampling (important sampling)  
   // get surface element's absorption coefficient
