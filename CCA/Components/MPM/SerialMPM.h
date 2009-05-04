@@ -2,27 +2,27 @@
 
 The MIT License
 
-Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and
-Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI),
+Copyright (c) 1997-2009 Center for the Simulation of Accidental Fires and 
+Explosions (CSAFE), and  Scientific Computing and Imaging Institute (SCI), 
 University of Utah.
 
 License for the specific language governing rights and limitations under
-Permission is hereby granted, free of charge, to any person obtaining a
+Permission is hereby granted, free of charge, to any person obtaining a 
 copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
+to deal in the Software without restriction, including without limitation 
+the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+and/or sell copies of the Software, and to permit persons to whom the 
 Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included
+The above copyright notice and this permission notice shall be included 
 in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 DEALINGS IN THE SOFTWARE.
 
 */
@@ -67,7 +67,7 @@ class AnalysisModule;
 
 CLASS
    SerialMPM
-
+   
    Short description...
 
 GENERAL INFORMATION
@@ -79,7 +79,7 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
+  
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
@@ -87,9 +87,9 @@ KEYWORDS
 
 DESCRIPTION
    Long description...
-
+  
 WARNING
-
+  
 ****************************************/
 
 class UINTAHSHARE SerialMPM : public MPMCommon, public SimulationInterface, public UintahParallelComponent {
@@ -100,10 +100,10 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
-
+ 
   //////////
   // Insert Documentation Here:
-  virtual void problemSetup(const ProblemSpecP& params,
+  virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec, GridP&,
                             SimulationStateP&);
 
@@ -135,9 +135,9 @@ public:
   virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
 
   /// Schedule to mark flags for AMR regridding
-  virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+  virtual void scheduleErrorEstimate(const LevelP& coarseLevel, 
                                      SchedulerP& sched);
-
+  
   /// Schedule to mark initial flags for AMR regridding
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
@@ -176,7 +176,7 @@ protected:
   // Insert Documentation Here:
   friend class MPMICE;
   friend class MPMArches;
-
+ 
   virtual void actuallyInitialize(const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset* matls,
@@ -204,12 +204,12 @@ protected:
                           DataWarehouse* new_dw,
                           double val);
   void setParticleDefault(ParticleVariable<Vector>& pvar,
-                          const VarLabel* label,
+                          const VarLabel* label, 
                           ParticleSubset* pset,
                           DataWarehouse* new_dw,
                           const Vector& val);
   void setParticleDefault(ParticleVariable<Matrix3>& pvar,
-                          const VarLabel* label,
+                          const VarLabel* label, 
                           ParticleSubset* pset,
                           DataWarehouse* new_dw,
                           const Matrix3& val);
@@ -277,7 +277,7 @@ protected:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
-
+  
   virtual void computeInternalForce(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
@@ -293,7 +293,7 @@ protected:
                                                DataWarehouse* new_dw);
 
   //////////
-  // Insert Documentation Here:
+  // Insert Documentation Here:                            
   void setGridBoundaryConditions(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* ,
@@ -370,7 +370,7 @@ protected:
 
   virtual void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
                                            const MaterialSet*);
-
+  
   void scheduleUpdateErosionParameter(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls);
@@ -380,13 +380,13 @@ protected:
 
   virtual void scheduleComputeContactArea(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
-
+  
   virtual void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
                                             const MaterialSet*);
 
   virtual void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
                                                const MaterialSet*);
-
+                                          
   virtual void scheduleComputeNodalHeatFlux(SchedulerP&, const PatchSet*,
                                             const MaterialSet*);
 
@@ -405,15 +405,15 @@ protected:
 
   void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
-
+                                                 
   void scheduleApplyExternalLoads(SchedulerP&, const PatchSet*,
                                   const MaterialSet*);
 
-  virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&,
+  virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
                                                        const PatchSet*,
                                                        const MaterialSet*);
 
-  virtual void scheduleSetPrescribedMotion(SchedulerP&,
+  virtual void scheduleSetPrescribedMotion(SchedulerP&, 
                                            const PatchSet*,
                                            const MaterialSet*);
 
@@ -425,7 +425,7 @@ protected:
   void scheduleCheckNeedAddMPMMaterial(SchedulerP&,
                                        const PatchSet* patches,
                                        const MaterialSet*);
-
+                                                                             
   //////////
   // Insert Documentation Here:
   void checkNeedAddMPMMaterial(const ProcessorGroup*,
@@ -437,30 +437,30 @@ protected:
   void scheduleSetNeedAddMaterialFlag(SchedulerP&,
                                       const LevelP& level,
                                       const MaterialSet*);
-
-
+  
+  
   void setNeedAddMaterialFlag(const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse*,
                               DataWarehouse*);
-
+  
   bool needRecompile(double time, double dt,
                      const GridP& grid);
 
   void readPrescribedDeformations(string filename);
-
-
+  
+  
   virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
-
+  
   virtual void switchTest(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse*,
                           DataWarehouse*);
+                   
 
-
-
+  
   SimulationStateP d_sharedState;
   MPMLabel* lb;
   MPMFlags* flags;
@@ -471,27 +471,26 @@ protected:
   double           d_SMALL_NUM_MPM;
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
-
+  
   list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   vector<MPMPhysicalBC*> d_physicalBCs;
 
-  vector<double>   d_prescribedTimes;    // These three are used only if
-  vector<double>  d_prescribedAngle;  // d_prescribeDeformation
-  vector<Vector>  d_prescribedRotationAxis; // is "true".  It is "false" by default.
-  vector<Matrix3>  d_prescribedF;
+  vector<double>   d_prescribedTimes;    // These three are used only if 
+  vector<Matrix3>  d_prescribedStretch;  // d_prescribeDeformation
+  vector<Matrix3>  d_prescribedRotation; // is "true".  It is "false" by default.
 
   bool             d_fracture;
   bool             d_recompile;
   IntegratorType   d_integrator;
   MaterialSubset*  d_loadCurveIndex;
-
+  
   AnalysisModule* d_analysisModule;
 private:
 
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);
 };
-
+      
 } // end namespace Uintah
 
 #endif
