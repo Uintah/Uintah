@@ -280,7 +280,24 @@ top and bottom radius (float) to create a right circular cone/frustram.
 \tt cylinder \normalfont has a tag for the top and bottom origins (vector) plus a tag
 for the radius (float).
 
-\tt sphere \normalfont has a tag for the origin (vector) and the radius (float).
+\tt parallelepiped \normalfont requires that four points be specified as
+illustrated by the ASCI art snippet taken from the source code:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+//********************************************
+//                                          //
+//             *-------------*              //
+//            / .           / \             //
+//           /   .         /   \            //
+//          P4-------------*    \           //
+//           \    .         \    \          //
+//            \   P2.........\....*         //
+//             \ .            \  /          //
+//             P1--------------P3           //
+//
+//  Returns true if the point is inside (or on) the parallelepiped.
+//  (The order of p2, p3, and p4 doesn't really matter.)
+\end{Verbatim}
 
 \tt tri \normalfont is a tag for describing a triangulated surface.  The name tag
 specifies the file name to use for reading in the triangulated surface
