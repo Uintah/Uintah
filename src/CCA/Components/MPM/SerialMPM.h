@@ -475,9 +475,12 @@ protected:
   list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   vector<MPMPhysicalBC*> d_physicalBCs;
 
-  vector<double>   d_prescribedTimes;    // These three are used only if 
-  vector<Matrix3>  d_prescribedStretch;  // d_prescribeDeformation
-  vector<Matrix3>  d_prescribedRotation; // is "true".  It is "false" by default.
+  vector<double>   d_prescribedTimes;    // These three are used only if
+  vector<double>  d_prescribedAngle;  // d_prescribeDeformation
+  vector<Vector>  d_prescribedRotationAxis; // is "true".  It is "false" by default.
+  vector<Matrix3>  d_prescribedF;
+
+
 
   bool             d_fracture;
   bool             d_recompile;
