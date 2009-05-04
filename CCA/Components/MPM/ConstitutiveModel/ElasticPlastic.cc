@@ -876,9 +876,11 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" 
-             << " in particle " << idx << endl;
+        cerr << getpid() ;
+        constParticleVariable<long64> pParticleID; 
+        old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
+        cerr << "**ERROR** Negative Jacobian of deformation gradient" 
+             << " in particle " << pParticleID[idx] << endl;
         cerr << "l = " << tensorL << endl;
         cerr << "F_old = " << pDeformGrad[idx] << endl;
         cerr << "F_inc = " << tensorFinc << endl;

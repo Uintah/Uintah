@@ -1460,6 +1460,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
 void SerialMPM::readPrescribedDeformations(string filename)
 {
+ 
  if(filename!="") {
     std::ifstream is(filename.c_str());
     if (!is ){
@@ -1468,15 +1469,16 @@ void SerialMPM::readPrescribedDeformations(string filename)
     }
     double t0(-1.e9);
     while(is) {
-        double t1,U11,U12,U13,U21,U22,U23,U31,U32,U33,R11,R22,R33,R12,R13,R23;
-        is >> t1 >> U11 >> U12 >> U13 >> U21 >> U22 >> U23 >> U31 >> U32 >> U33 >> R11 >> R22 >> R33 >> R12 >> R13 >> R23;
+        double t1,F11,F12,F13,F21,F22,F23,F31,F32,F33,Theta,a1,a2,a3;
+        is >> t1 >> F11 >> F12 >> F13 >> F21 >> F22 >> F23 >> F31 >> F32 >> F33 >> Theta >> a1 >> a2 >> a3;
         if(is) {
             if(t1<=t0){
               throw ProblemSetupException("ERROR: Time in prescribed deformation file is not monotomically increasing", __FILE__, __LINE__);
             }
             d_prescribedTimes.push_back(t1);
-            d_prescribedStretch.push_back(Matrix3(U11,U12,U13,U21,U22,U23,U31,U32,U33));
-            d_prescribedRotation.push_back(Matrix3(R11,R12,R13,R12,R22,R23,R13,R23,R33));
+            d_prescribedF.push_back(Matrix3(F11,F12,F13,F21,F22,F23,F31,F32,F33));
+            d_prescribedAngle.push_back(Theta);
+            d_prescribedRotationAxis.push_back(Vector(a1,a2,a3));
         }
         t0 = t1;
     }
@@ -1486,6 +1488,8 @@ void SerialMPM::readPrescribedDeformations(string filename)
     }
   }
 }
+
+
 
 void SerialMPM::actuallyInitializeAddedMaterial(const ProcessorGroup*,
                                                 const PatchSubset* patches,
@@ -2239,13 +2243,16 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw)
 {
-  for(int p=0;p<patches->size();p++){
+
+
+
+ for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing setPrescribedMotion\t\t\t");
 
     // Get the current time
     double time = d_sharedState->getElapsedTime();
-    delt_vartype delT;            
+    delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
 
@@ -2285,20 +2292,76 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
         s = smin;
       }
 
-      Matrix3 U_high = d_prescribedStretch[s+1];
-      Matrix3 U_low  = d_prescribedStretch[s];
-      Matrix3 R_high = d_prescribedRotation[s+1];
-      Matrix3 R_low  = d_prescribedRotation[s];
-      Matrix3 F_high = R_high*U_high;
-      Matrix3 F_low  = R_low*U_low;
+      Matrix3 F_high = d_prescribedF[s+1]; //next prescribed deformation gradient
+      Matrix3 F_low  = d_prescribedF[s]; //last prescribed deformation gradient
+      double t1 = d_prescribedTimes[s];    // time of last prescribed deformation
+      double t2 = d_prescribedTimes[s+1];  //time of next prescribed deformation
 
-      Fdot = (F_high - F_low)/(d_prescribedTimes[s+1] - d_prescribedTimes[s]);
+
+      //Interpolate to get the deformation gradient at the current time:
+      Matrix3 Ft = F_low*(t2-time)/(t2-t1) + F_high*(time-t1)/(t2-t1);
+
+      // Calculate the rate of the deformation gradient without the rotation:
+      Fdot = (F_high - F_low)/(t2-t1);
+
+      // Now we need to construct the rotation matrix and its time rate:
+      // We are only interested in the rotation information at the next specified time since the rotations specified should be relative to the previously specified time.  For example if I specify Theta=90 at time=1.0, and Theta = 91 and time=2.0 the total rotation at time=2.0 will be 181 degrees.
+      //
+      const double pi = 3.1415926535897932384626433832795028841972;
+      const double degtorad= pi/180.0;
+      double PrescribedTheta = d_prescribedAngle[s+1]; //The final angle of rotation
+      double thetat = PrescribedTheta*degtorad*(time-t1)/(t2-t1); // rotation angle at current time
+      Vector a = d_prescribedRotationAxis[s+1];  // The axis of rotation
+      Matrix3 Ident;
+      Ident.Identity();
+      const double costhetat = cos(thetat);
+      const double sinthetat = sin(thetat);
+      Matrix3 aa(a,a);
+      Matrix3 A(0.0,-a.z(),a.y(),a.z(),0.0,-a.x(),-a.y(),a.x(),0.0);
+
+      //construct the rotation matrix:
+      Matrix3 Qt(thetat,a);
+
+      //calculate thetadot:
+      double thetadot = PrescribedTheta*(degtorad)/(t2-t1);
+
+      //construct Rdot:
+      Matrix3 Qdot(0.0);
+      Qdot = (Ident-aa)*(-sinthetat*thetadot) + A*costhetat*thetadot;
+
+
+      Matrix3 Ftinverse;
+      Ftinverse = Ft.Inverse();
+
+      Vector Unrotated_NodePosition, Unrotated_velocity;
+      Matrix3 Total_Rotation;
+      Total_Rotation.Identity();
+      int i;
+      //now we need to compute the total superimposed rotation:
+      for(i=0;i<s+1;i++){
+              Matrix3 Qi(d_prescribedAngle[i]*degtorad,d_prescribedRotationAxis[i]);
+              Total_Rotation = Qi*Total_Rotation;
+      }
+      //add the current rotation to the total rotation
+      Total_Rotation= Qt*Total_Rotation;
+
 
       for(NodeIterator iter=patch->getExtraNodeIterator__New();!iter.done();
                                                                 iter++){
         IntVector n = *iter;
+
         Vector NodePosition = patch->getNodePosition(n).asVector();
-        gvelocity_star[n] = Fdot*NodePosition;
+
+        //Now we need to compute the unrotated nodal position:
+        Unrotated_NodePosition= Total_Rotation*NodePosition;
+
+        //Now we compute the unrotated velocity:
+        Unrotated_velocity = Fdot * Ftinverse*Unrotated_NodePosition;
+
+        //Now we add the rotation to the velocity:
+        gvelocity_star[n] = Total_Rotation*Unrotated_velocity + Qdot*Unrotated_NodePosition;
+
+
       } // Node Iterator
       if(!flags->d_doGridReset){
         NCVariable<Vector> displacement;
@@ -2314,7 +2377,13 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       }  // d_doGridReset
     }   // matl loop
   }     // patch loop
+
+
+
+
+
 }
+
 
 void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
                                    const PatchSubset* patches,
