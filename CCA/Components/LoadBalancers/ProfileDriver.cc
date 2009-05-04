@@ -427,7 +427,10 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     vector<int> recvs(d_myworld->size(),0), displs(d_myworld->size(),0);
 
     //gather new regions counts
-    MPI_Allgather(&mysize,1,MPI_INT,&recvs[0],1,MPI_INT,d_myworld->getComm());
+    if(d_myworld->size()>1)
+      MPI_Allgather(&mysize,1,MPI_INT,&recvs[0],1,MPI_INT,d_myworld->getComm());
+    else
+      recvs[0]=mysize;
 
     int size=recvs[0]; 
     recvs[0]*=sizeof(Region);
@@ -447,8 +450,10 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     new_regions.resize(size);
   
     //gather the regions
-    MPI_Allgatherv(&new_regions_partial[0],recvs[d_myworld->myrank()],MPI_BYTE,&new_regions[0],&recvs[0],&displs[0],MPI_BYTE,d_myworld->getComm());
-
+    if(d_myworld->size()>1)
+      MPI_Allgatherv(&new_regions_partial[0],recvs[d_myworld->myrank()],MPI_BYTE,&new_regions[0],&recvs[0],&displs[0],MPI_BYTE,d_myworld->getComm());
+    else
+      new_regions.swap(new_regions_partial);
 
     int p=0;
     //initialize weights 
