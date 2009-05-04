@@ -119,6 +119,14 @@
       <top                    spec="REQUIRED VECTOR" />
       <radius                 spec="REQUIRED DOUBLE 'positive'" />
     </cylinder>
+
+    <parallelepiped                 spec="OPTIONAL NO_DATA"
+                                attribute1="label    OPTIONAL STRING" >
+      <p1                     spec="REQUIRED VECTOR" />
+      <p2                     spec="REQUIRED VECTOR" />
+      <p3                     spec="REQUIRED VECTOR" />
+      <p4                     spec="REQUIRED VECTOR" />
+    </parallelepiped>
     
     <sphere                   spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING"
@@ -198,6 +206,7 @@
       <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
+      <parallelepiped         spec="MULTIPLE" />
     </union>
 
     <!-- FIXME: only can have 2 children, right? how to specify? -->
@@ -215,6 +224,7 @@
       <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
+      <parallelepiped         spec="MULTIPLE" />
     </difference>
 
     <intersection             spec="OPTIONAL NO_DATA"
@@ -231,6 +241,7 @@
       <plane_shell            spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
+      <parallelepiped         spec="MULTIPLE" />
     </intersection>
 
     <geom_object              spec="REQUIRED NO_DATA"
@@ -248,6 +259,7 @@
       <smoothcyl              spec="MULTIPLE" />
       <tri                    spec="MULTIPLE" />
       <union                  spec="MULTIPLE" />
+      <parallelepiped         spec="MULTIPLE" />
 
       <file                   spec="OPTIONAL NO_DATA" >
         <name                 spec="REQUIRED STRING" />
