@@ -33,6 +33,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/CoalModels/ModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -394,7 +395,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   //register all source terms
   ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
   if (transportEqn_db) {
-    Arches::registerSources(transportEqn_db);
+    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
+    if (sources_db)
+      Arches::registerSources(sources_db);
     //register all equations
     Arches::registerTransportEqns(transportEqn_db); 
   }
@@ -648,6 +651,8 @@ Arches::scheduleInitialize(const LevelP& level,
   {
     sched_dqmomInit(level, sched);
   }
+
+  sched_scalarInit(level, sched);
     
 }
 
@@ -1352,7 +1357,65 @@ Arches::readCCInitialCondition(const ProcessorGroup* ,
     fd.close();  
   }
 }
+//___________________________________________________________________________
+//
+void 
+Arches::sched_scalarInit( const LevelP& level, 
+                          SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "Arches::scalarInit", 
+                           this, &Arches::scalarInit); 
+ 
+  EqnFactory& eqnFactory = EqnFactory::self(); 
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+    EqnBase* eqn = ieqn->second; 
 
+    const VarLabel* tempVar = eqn->getTransportEqnLabel();
+    const VarLabel* oldtempVar = eqn->getoldTransportEqnLabel();
+    tsk->computes( tempVar );  
+    tsk->computes( oldtempVar ); 
+  } 
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+void 
+Arches::scalarInit( const ProcessorGroup* ,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw )
+{
+  for (int p = 0; p < patches->size(); p++){
+    //assume only one material for now.
+    int matlIndex = 0;
+    const Patch* patch=patches->get(p);
+
+    EqnFactory& eqnFactory = EqnFactory::self(); 
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns(); 
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++){
+
+      EqnBase* eqn = ieqn->second; 
+      std::string eqn_name = ieqn->first; 
+      const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
+      const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
+      double initValue = eqn->getInitValue(); 
+
+      CCVariable<double> tempVar; 
+      CCVariable<double> oldtempVar; 
+      new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( oldtempVar, oldtempVarLabel, matlIndex, patch ); 
+    
+      tempVar.initialize(0.0);
+      oldtempVar.initialize(initValue); 
+
+      //do Boundary conditions
+      eqn->computeBCsSpecial( patch, eqn_name, tempVar ); 
+
+    }
+  }
+}
 //___________________________________________________________________________
 //
 void 
@@ -1381,7 +1444,14 @@ Arches::sched_dqmomInit( const LevelP& level,
     tsk->computes( i->second );
   }
 
-
+  // Models
+  ModelFactory& modelFactory = ModelFactory::self();
+  ModelFactory::ModelMap models = modelFactory.retrieve_all_models();
+  for ( ModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
+    ModelBase* model = imodel->second;
+    const VarLabel* modelLabel = model->getModelLabel();
+    tsk->computes( modelLabel ); 
+  }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
@@ -1409,8 +1479,7 @@ Arches::dqmomInit( const ProcessorGroup* ,
       const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
       const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
       double initValue = eqn->getInitValue(); 
-     cout << "INITIAL VALUE FOR" << tempVarLabel << endl; 
-     cout << " = " << initValue << endl; 
+      
       CCVariable<double> tempSource;
       CCVariable<double> tempVar; 
       CCVariable<double> oldtempVar; 
@@ -1466,10 +1535,19 @@ Arches::dqmomInit( const ProcessorGroup* ,
 
       }
     }
+
+
+    ModelFactory& modelFactory = ModelFactory::self();
+    ModelFactory::ModelMap models = modelFactory.retrieve_all_models();
+    for ( ModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
+      ModelBase* model = imodel->second;
+      const VarLabel* modelLabel = model->getModelLabel();
+      CCVariable<double> tempModel; 
+      new_dw->allocateAndPut( tempModel, modelLabel, matlIndex, patch ); 
+      tempModel.initialize(0.0);
+    }
   }
 }
- 
-
 
 //______________________________________________________________________
 //
@@ -1903,9 +1981,7 @@ bool Arches::restartableTimesteps() {
 void Arches::registerSources(ProblemSpecP& db)
 {
 
-  if (db->findBlock("Sources")) { 
-
-  ProblemSpecP srcs_db = db->findBlock("TransportEqns")->findBlock("Sources");
+  ProblemSpecP srcs_db = db;
 
   // Get reference to the source factory
   SourceTermFactory& factory = SourceTermFactory::self();
@@ -1947,6 +2023,11 @@ void Arches::registerSources(ProblemSpecP& db)
         SourceTermBuilder* srcBuilder = scinew ConstSrcTermBuilder(src_name, required_varLabels, d_lab->d_sharedState); 
         factory.register_source_term( src_name, srcBuilder ); 
 
+      } else if (src_type == "coal_gas_devol"){
+        // Sums up the devol. model terms * weights
+        SourceTermBuilder* srcBuilder = scinew CoalGasDevolBuilder(src_name, required_varLabels, d_lab->d_sharedState);
+        factory.register_source_term( src_name, srcBuilder ); 
+
       } else {
         cout << "For source term named: " << src_name << endl;
         cout << "with type: " << src_type << endl;
@@ -1954,10 +2035,6 @@ void Arches::registerSources(ProblemSpecP& db)
       }
       
     }
-  }
-  } else {
-
-    cout << "No sources found for transport equations." << endl;
   }
 }
 //---------------------------------------------------------------------------

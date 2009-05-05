@@ -53,6 +53,9 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
 
+  inline const VarLabel* getGasRateLabel(){
+    return d_gasDevolRate; };
+
 private:
 
   const ArchesLabel* d_fieldLabels; 
@@ -62,6 +65,7 @@ private:
   //const VarLabel* d_temperature_label;
   const VarLabel* d_raw_coal_mass_fraction_label;
   const VarLabel* d_weight_label;
+  const VarLabel* d_gasDevolRate; 
 
   double A1;
   double A2;
@@ -78,6 +82,11 @@ private:
 
   double d_lowClip; 
   double d_highClip; 
+
+  double Y1_;
+  double Y2_;
+
+  double d_rc_scaling_factor;
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

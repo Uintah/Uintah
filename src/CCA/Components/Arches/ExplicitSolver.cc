@@ -30,6 +30,8 @@ DEALINGS IN THE SOFTWARE.
 
 //----- ExplicitSolver.cc ----------------------------------------------
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
@@ -515,6 +517,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                   d_timeIntegratorLabels[curr_level],
                                   true, false,
                                   d_EKTCorrection, doing_EKT_now);
+
+    EqnFactory& eqn_factory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns(); 
+    for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
+      EqnBase* eqn = iter->second; 
+      eqn->sched_evalTransportEqn( level, sched, curr_level ); 
+    }
+
     if (d_standAloneRMCRT) { 
       d_RMCRTRadiationModel->sched_solve( level, sched, d_timeIntegratorLabels[curr_level] );  
     }

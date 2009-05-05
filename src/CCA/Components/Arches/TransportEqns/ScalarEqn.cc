@@ -39,9 +39,10 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   varname = eqnName+"RHS";
   d_RHSLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-  varname = eqnName+"old";
+  varname = eqnName;
   d_oldtransportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
+  varname = eqnName+"old";
   d_transportVarLabel = VarLabel::create(varname,
             CCVariable<double>::getTypeDescription());
 
@@ -55,6 +56,7 @@ ScalarEqn::~ScalarEqn()
   VarLabel::destroy(d_transportVarLabel);
   VarLabel::destroy(d_transportVarLabel);
   VarLabel::destroy(d_oldtransportVarLabel);
+
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup 
@@ -82,6 +84,7 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "doConv", d_doConv, false);
   db->getWithDefault( "doDiff", d_doDiff, false);
   db->getWithDefault( "addSources", d_addSources, true); 
+
 
 }
 //---------------------------------------------------------------------------
@@ -129,9 +132,9 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
   if (d_addSources) 
     sched_computeSources( level, sched, timeSubStep ); 
 
-    sched_buildTransportEqn( level, sched, timeSubStep );
+  sched_buildTransportEqn( level, sched, timeSubStep );
 
-    sched_solveTransportEqn( level, sched, timeSubStep );
+  sched_solveTransportEqn( level, sched, timeSubStep );
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -242,12 +245,12 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int 
     SourceTermBase& temp_src = src_factory.retrieve_source_term( *iter ); 
     const VarLabel* temp_varLabel; 
     temp_varLabel = temp_src.getSrcLabel(); 
-    cout << "The var label = " << *temp_varLabel << endl;
-    tsk->modifies(temp_src.getSrcLabel()); 
+    tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
   }
   
   //-----OLD-----
   //tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::AroundCells, 1); 
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
   tsk->requires(Task::OldDW, d_fieldLabels->d_uVelocitySPBCLabel, Ghost::AroundCells, 1);   
 #ifdef YDIM
@@ -274,13 +277,14 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
     Ghost::GhostType  gac = Ghost::AroundCells;
-    //Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int matlIndex = 0;
     Vector Dx = patch->dCell(); 
 
     constCCVariable<double> oldPhi;
+    constCCVariable<double> den;
     constCCVariable<double> mu_t;
     constSFCXVariable<double> uVel; 
     constSFCYVariable<double> vVel; 
@@ -292,6 +296,7 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> RHS; 
 
     new_dw->get(oldPhi, d_oldtransportVarLabel, matlIndex, patch, gac, 2);
+    old_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gac, 1); 
     old_dw->get(mu_t, d_fieldLabels->d_viscosityCTSLabel, matlIndex, patch, gac, 1); 
     old_dw->get(uVel,   d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1); 
     double vol = Dx.x();
@@ -314,7 +319,8 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
 
     //----CONVECTION
     if (d_doConv)
-      computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel );
+      d_disc->computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel, den, d_convScheme ); 
+      //computeConv( patch, Fconv, oldPhi, uVel, vVel, wVel );
   
     //----DIFFUSION
     if (d_doDiff)
@@ -330,9 +336,9 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
         // Get the factory of source terms
         SourceTermFactory& src_factory = SourceTermFactory::self(); 
         for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-          CCVariable<double> src;  // Outside of this scope src is no longer available 
+          constCCVariable<double> src;  // Outside of this scope src is no longer available 
           SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter ); 
-          new_dw->getModifiable(src, temp_src.getSrcLabel(), matlIndex, patch);
+          new_dw->get(src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
           // Add to the RHS
           RHS[c] += src[c]*vol; 
         }            
@@ -354,6 +360,10 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->modifies(d_transportVarLabel);
   tsk->modifies(d_oldtransportVarLabel); 
   tsk->requires(Task::NewDW, d_RHSLabel, Ghost::None, 0);
+  tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+
+  //Old
+  tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -382,12 +392,16 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> phi;
     CCVariable<double> oldphi; 
     constCCVariable<double> RHS; 
+    constCCVariable<double> old_den; 
+    constCCVariable<double> new_den; 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch); 
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
+    new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
+    old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
 
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt );
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt );
     Vector alpha = d_timeIntegrator->d_alpha; 
     Vector beta  = d_timeIntegrator->d_beta; 
     d_timeIntegrator->timeAvePhi( patch, phi, oldphi, timeSubStep, alpha, beta ); 
@@ -668,7 +682,7 @@ ScalarEqn::computeBCs( const Patch* patch,
                        string varName,
                        phiType& phi )
 {
-  //d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
+  d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
 }
 //---------------------------------------------------------------------------
 // Method: Interpolate a variable to the face of its respective cv
