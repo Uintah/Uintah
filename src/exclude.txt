@@ -1,13 +1,13 @@
-../doc/movies
-../doc/Release
-../doc/runLatex
-..doc/checkpointing.txt
-../doc/*.txt
-../doc/*.tex
-../doc/Doxyfile
-../doc/*.lyx
-../doc/*.bib
-../doc/TAU
+doc/movies
+doc/Release
+doc/runLatex
+doc/checkpointing.txt
+doc/*.txt
+doc/*.tex
+doc/Doxyfile
+doc/*.lyx
+doc/*.bib
+doc/TAU
 
 R_Tester
 orderAccuracy
@@ -17,6 +17,7 @@ exclude.txt
 scripts
 
 CCA/Components/SpatialOps
+CCA/Components/Arches/MCRT
 
 CCA/Components/*.orig
 CCA/Components/*.release
