@@ -14,7 +14,7 @@ cd ../doc
 
 cd ..
 
-tar -X exclude.txt --exclude-vcs -cvf uintah.tar doc src
+tar -X src/exclude.txt --exclude-vcs -cvf uintah.tar doc src
 
 
 
