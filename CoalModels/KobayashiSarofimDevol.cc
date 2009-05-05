@@ -303,8 +303,16 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         omegac = 0.0;
       }
 
-      devol_rate[c] = -1.0*(k1+k2)*(omegac);  
-      gas_devol_rate[c] = (Y1_*k1 + Y2_*k2)*omegac*d_rc_scaling_factor;
+      double testVal = -1.0*(k1+k2)*(omegac);  
+      if (testVal < 0.0)
+        devol_rate[c] = -1.0*(k1+k2)*(omegac);  
+      else 
+        devol_rate[c] = 0.0;
+      testVal = (Y1_*k1 + Y2_*k2)*omegac*d_rc_scaling_factor;
+      if (testVal > 0.0)
+        gas_devol_rate[c] = (Y1_*k1 + Y2_*k2)*omegac*d_rc_scaling_factor;
+      else 
+        gas_devol_rate[c] = 0.0;
 
     }
   }

@@ -173,7 +173,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
       }
 
       // add the source term to the array
-      devolSrc[c] = -1.0 * source; 
+      devolSrc[c] = source; //sign accounted for in the Kobayashi Coal Model.
     }
   }
 }
