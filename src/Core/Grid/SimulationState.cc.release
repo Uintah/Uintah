@@ -194,11 +194,6 @@ void SimulationState::registerArchesMaterial(ArchesMaterial* matl)
    registerMaterial(matl);
 }
 
-void SimulationState::registerSpatialOpsMaterial(SpatialOpsMaterial* matl)
-{
-   spatialops_matls.push_back(matl);
-   registerMaterial(matl);
-}
 
 void SimulationState::registerICEMaterial(ICEMaterial* matl)
 {
@@ -392,12 +387,6 @@ const MaterialSet* SimulationState::allArchesMaterials() const
 {
   ASSERT(all_arches_matls != 0);
   return all_arches_matls;
-}
-
-const MaterialSet* SimulationState::allSpatialOpsMaterials() const
-{
-  ASSERT(all_spatialops_matls != 0);
-  return all_spatialops_matls;
 }
 
 const MaterialSet* SimulationState::allICEMaterials() const
