@@ -46,12 +46,22 @@ public:
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, SchedulerP& sched, 
                             int timeSubStep );
+
+  /** @brief Schedule the initialization of some special/local vars */ 
+  void sched_initVars( const LevelP& level, SchedulerP& sched );
+
   /** @brief Actually compute the source term */ 
   void computeModel( const ProcessorGroup* pc, 
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw );
+
+  void initVars( const ProcessorGroup * pc, 
+    const PatchSubset    * patches, 
+    const MaterialSubset * matls, 
+    DataWarehouse        * old_dw, 
+    DataWarehouse        * new_dw );
 
   inline const VarLabel* getGasRateLabel(){
     return d_gasDevolRate; };

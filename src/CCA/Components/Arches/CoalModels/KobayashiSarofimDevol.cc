@@ -112,6 +112,52 @@ KobayashiSarofimDevol::problemSetup(const ProblemSpecP& params, int qn)
 
     std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
   }
+
+  std::string node; 
+  std::stringstream out; 
+  out << qn; 
+  node = out.str();
+  std::string gasDevolName = "gasDevolRate_qn";
+  gasDevolName += node; 
+  d_gasDevolRate = VarLabel::create(gasDevolName, CCVariable<double>::getTypeDescription());
+
+
+}
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of some variables 
+//---------------------------------------------------------------------------
+void 
+KobayashiSarofimDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+
+  std::string taskname = "KobayashiSarofimDevol::initVars";
+  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::initVars);
+
+  tsk->computes(d_gasDevolRate); 
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+}
+void
+KobayashiSarofimDevol::initVars( const ProcessorGroup * pc, 
+    const PatchSubset    * patches, 
+    const MaterialSubset * matls, 
+    DataWarehouse        * old_dw, 
+    DataWarehouse        * new_dw )
+{
+  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
+
+    //Ghost::GhostType  gaf = Ghost::AroundFaces;
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
+
+    const Patch* patch = patches->get(p);
+    int matlIndex = 0;
+
+    CCVariable<double> gasDevolRate; 
+    new_dw->allocateAndPut( gasDevolRate, d_gasDevolRate, matlIndex, patch ); 
+    gasDevolRate.initialize(0.);
+
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
