@@ -8,7 +8,13 @@ for i in `find . -name "*.release"`; do
  
 done
 
-tar -X exclude.txt --exclude-vcs -cvf uintah.tar ../doc ../src
+cd ../doc
+
+./runLatex
+
+cd ..
+
+tar -X exclude.txt --exclude-vcs -cvf uintah.tar doc src
 
 
 
