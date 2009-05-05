@@ -48,7 +48,6 @@ private:
 //---------------------------------------------------------------------------
 
 class ArchesLabel; 
-class BoundaryCond; 
 class ExplicitTimeInt; 
 class DQMOMEqn: 
 public EqnBase{
@@ -161,10 +160,6 @@ public:
 
 
   // ---- ACCESS FUNCTIONS ----
-  /** @brief Sets the boundary condition object. */ 
-  inline void setBoundaryCond( BoundaryCond* boundaryCond ) {
-  d_boundaryCond = boundaryCond; 
-  }
   /** @brief Sets the time integrator. */ 
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
   d_timeIntegrator = timeIntegrator; 
@@ -208,9 +203,6 @@ public:
     return d_initValue; }; 
 
 private:
-
-  BoundaryCond* d_boundaryCond;
-  //ExplicitTimeInt* d_timeIntegrator; 
 
   const VarLabel* d_sourceLabel; //DQMOM Eqns only have ONE source term.  
   const VarLabel* d_icLabel; // This is the label that hold that actual IC value (not weighted IC)

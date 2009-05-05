@@ -73,6 +73,7 @@ SRCS += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/TurbulenceModel.cc \
 	$(SRCDIR)/DQMOM.cc \
 	$(SRCDIR)/LU.cc \
+	$(SRCDIR)/BoundaryCond_new.cc \
 	$(SRCDIR)/ExplicitTimeInt.cc 
 
 ifeq ($(HAVE_PETSC),yes)

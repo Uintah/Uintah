@@ -50,6 +50,9 @@ KobayashiSarofimDevol::KobayashiSarofimDevol( std::string srcName, SimulationSta
   alpha_o = 0.91;      // initial mass fraction of raw coal
   c_o     = 3.90e-11;  // initial mass of raw coal
 
+  Y1_ = 1.0;
+  Y2_ = 0.4;
+
   d_quad_node = qn;
 }
 
@@ -127,8 +130,10 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     d_labelSchedInit = true;
 
     tsk->computes(d_modelLabel);
+    tsk->computes(d_gasDevolRate);
   } else {
     tsk->modifies(d_modelLabel); 
+    tsk->modifies(d_gasDevolRate);
   }
 
   EqnFactory& eqn_factory = EqnFactory::self();
@@ -166,8 +171,10 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           tsk->requires(Task::OldDW, d_raw_coal_mass_fraction_label, Ghost::None, 0);
           // if it's a dqmom scalar
         } else if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
+          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
+          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_fraction_label = current_eqn.getTransportEqnLabel();
+          d_rc_scaling_factor = current_eqn.getScalingConstant();
           tsk->requires(Task::OldDW, d_raw_coal_mass_fraction_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
@@ -210,12 +217,17 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     int matlIndex = 0;
 
     CCVariable<double> devol_rate;
+    CCVariable<double> gas_devol_rate; 
     if (new_dw->exists( d_modelLabel, matlIndex, patch )){
       new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( gas_devol_rate, d_gasDevolRate, matlIndex, patch ); 
       devol_rate.initialize(0.0);
+      gas_devol_rate.initialize(0.0);
     } else {
       new_dw->allocateAndPut( devol_rate, d_modelLabel, matlIndex, patch );
+      new_dw->allocateAndPut( gas_devol_rate, d_gasDevolRate, matlIndex, patch ); 
       devol_rate.initialize(0.0);
+      gas_devol_rate.initialize(0.0);
     }
 
     // to add:
@@ -245,7 +257,8 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         omegac = 0.0;
       }
 
-      devol_rate[c] = -1*(k1+k2)*(omegac);                            // track raw coal mass fraction so it is bounded from 0 to 1
+      devol_rate[c] = -1.0*(k1+k2)*(omegac);  
+      gas_devol_rate[c] = (Y1_*k1 + Y2_*k2)*omegac*d_rc_scaling_factor;
 
     }
   }

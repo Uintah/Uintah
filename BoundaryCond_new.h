@@ -1,5 +1,5 @@
-#ifndef Uintah_Components_Arches_BoundaryCond_h
-#define Uintah_Components_Arches_BoundaryCond_h
+#ifndef Uintah_Components_Arches_BoundaryCondition_new_h
+#define Uintah_Components_Arches_BoundaryCondition_new_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -20,13 +20,13 @@
 namespace Uintah {
 
 class ArchesLabel; 
-class BoundaryCond {
+class BoundaryCondition_new {
 
 public: 
 
-  BoundaryCond(const ArchesLabel* fieldLabels);
+  BoundaryCondition_new(const ArchesLabel* fieldLabels);
 
-  ~BoundaryCond();
+  ~BoundaryCondition_new();
   /** @brief Interface for the input file and set constants */ 
   void problemSetup();
   /** @brief Schedular for setting the boundary condition */ 
@@ -74,7 +74,7 @@ public:
     bc_kind="NotSet";
     if (new_bcs != 0) {      // non-symmetric
       bc_value = new_bcs->getValue();
-      //bc_kind = new_bcs->getKind();
+      bc_kind =  new_bcs->getBCType__NEW();
     }        
     delete bc;
 
@@ -85,6 +85,7 @@ public:
       return true;
     }
   }
+
 private: 
  
   //variables
@@ -92,7 +93,7 @@ private:
 
 
 
-}; // class BoundaryCond
+}; // class BoundaryCondition_new
 } // namespace Uintah
 
 #endif 

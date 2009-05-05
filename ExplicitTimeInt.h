@@ -3,6 +3,7 @@
 #include <Core/Grid/LevelP.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/CCVariable.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -26,6 +27,14 @@ public:
     template <class phiT, class constphiT>
     void singlePatchFEUpdate( const Patch* patch, 
                               phiT& phi, 
+                              constphiT& RHS, 
+                              double dt );
+   /** @brief A template forward Euler update for a single 
+               variable for a single patch */ 
+    template <class phiT, class constphiT>
+    void singlePatchFEUpdate( const Patch* patch, 
+                              phiT& phi, constCCVariable<double>& old_den, 
+                              constCCVariable<double>& new_den, 
                               constphiT& RHS, 
                               double dt );
     /** @brief A template for time averaging using a Runge-kutta form */  
@@ -59,6 +68,30 @@ private:
       double vol = dx.x()*dx.y()*dx.z();
 
       phi[*iter] += dt/vol*(RHS[*iter]);
+
+    } 
+  }
+
+  template <class phiT, class constphiT>
+  void ExplicitTimeInt::singlePatchFEUpdate( const Patch* patch, 
+                                             phiT& phi, constCCVariable<double>& old_den, 
+                                             constCCVariable<double>& new_den, 
+                                             constphiT& RHS, 
+                                             double dt )
+ 
+  {
+
+    Vector dx = patch->dCell();
+
+    for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+
+      double vol = dx.x()*dx.y()*dx.z();
+
+      // (rho*phi)^{t+\Delta t} = (rho*phi)^{t} + RHS
+      phi[*iter] = old_den[*iter]*phi[*iter] + dt/vol*(RHS[*iter]); 
+
+      // phi^{t+\Delta t} = ((rho*phi)^{t} + RHS) / rho^{t + \Delta t} 
+      phi[*iter] = phi[*iter] / new_den[*iter]; 
 
     } 
   }

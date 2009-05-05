@@ -186,6 +186,9 @@ public:
                               SchedulerP&);
   virtual void sched_dqmomInit( const LevelP& level, 
                                 SchedulerP& ); 
+  virtual void sched_scalarInit( const LevelP& level, 
+                                 SchedulerP& sched );
+
   // GROUP: Access Functions :
   ///////////////////////////////////////////////////////////////////////
     // Boolean to see whether or not Enthalpy is solved for
@@ -285,6 +288,12 @@ private:
                   const MaterialSubset*,
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw);
+
+  void scalarInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw );
 
 
 
