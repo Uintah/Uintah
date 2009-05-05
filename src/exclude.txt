@@ -26,3 +26,6 @@ CCA/Components/Parent/*.release
 CCA/Components/Arches/*.orig
 CCA/Components/Arches/*.release
 
+Core/Grid/*.orig
+Core/Grid/*.release
+
