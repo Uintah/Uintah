@@ -1451,6 +1451,7 @@ Arches::sched_dqmomInit( const LevelP& level,
     ModelBase* model = imodel->second;
     const VarLabel* modelLabel = model->getModelLabel();
     tsk->computes( modelLabel ); 
+    model->sched_initVars( level, sched ); 
   }
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());

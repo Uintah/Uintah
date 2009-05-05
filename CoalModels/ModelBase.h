@@ -40,6 +40,9 @@ public:
   /** @brief Schedule the source for computation. */
   virtual void sched_computeModel(const LevelP& level, SchedulerP& sched, int timeSubStep ) = 0;
 
+  /** @brief Schedule the initialization of any special/local variables */ 
+  virtual void sched_initVars( const LevelP& level, SchedulerP& sched ) = 0;
+
   /** @brief Actually compute the source. */
   virtual void computeModel( const ProcessorGroup* pc, 
                              const PatchSubset* patches, 
