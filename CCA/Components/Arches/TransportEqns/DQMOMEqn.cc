@@ -2,7 +2,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <Core/Exceptions/InvalidValue.h>
 
 using namespace std;

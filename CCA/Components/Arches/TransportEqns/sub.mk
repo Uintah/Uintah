@@ -7,5 +7,6 @@ SRCS += \
   $(SRCDIR)/DQMOMEqnFactory.cc \
   $(SRCDIR)/EqnBase.cc \
   $(SRCDIR)/ScalarEqn.cc \
+	$(SRCDIR)/Discretization_new.cc \
   $(SRCDIR)/DQMOMEqn.cc
 

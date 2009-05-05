@@ -4,6 +4,9 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
+#include <CCA/Components/Arches/ExplicitTimeInt.h>
+#include <CCA/Components/Arches/TransportEqns/Discretization_new.h>
 
 //========================================================================
 
@@ -18,7 +21,8 @@
 
 namespace Uintah {
 class ArchesLabel; 
-class BoundaryCond; 
+class BoundaryCondition_new;
+class Discretization_new; 
 class ExplicitTimeInt;  
 class EqnBase{
 
@@ -64,7 +68,7 @@ public:
   template <class phiType> void computeBCs( const Patch* patch, string varName, phiType& phi );
 
   // Access functions:
-  inline void setBoundaryCond( BoundaryCond* boundaryCond ) {
+  inline void setBoundaryCond( BoundaryCondition_new* boundaryCond ) {
   d_boundaryCond = boundaryCond; 
   }
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
@@ -78,6 +82,15 @@ public:
     return d_eqnName; };
   inline const double getInitValue(){
     return d_initValue; };
+
+
+  template<class phiType> void
+  computeBCsSpecial( const Patch* patch, 
+                       string varName,
+                       phiType& phi )
+  {
+    d_boundaryCond->setScalarValueBC( 0, patch, phi, varName ); 
+  }
 
 protected:
 
@@ -106,8 +119,9 @@ protected:
 
   std::string d_convScheme; 
 
-  BoundaryCond* d_boundaryCond;
+  BoundaryCondition_new* d_boundaryCond;
   ExplicitTimeInt* d_timeIntegrator; 
+  Discretization_new* d_disc;  
 
   double d_initValue; // The initial value for this eqn. 
 

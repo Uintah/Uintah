@@ -6,7 +6,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/BoundaryCond.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 
 //===========================================================================
 
@@ -14,25 +14,25 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun; 
 
-BoundaryCond::BoundaryCond(const ArchesLabel* fieldLabels):
+BoundaryCondition_new::BoundaryCondition_new(const ArchesLabel* fieldLabels):
 d_fieldLabels(fieldLabels)
 {} 
 
-BoundaryCond::~BoundaryCond()
+BoundaryCondition_new::~BoundaryCondition_new()
 {}
 //---------------------------------------------------------------------------
 // Method: Problem Setup 
 //---------------------------------------------------------------------------
-void BoundaryCond::problemSetup()
+void BoundaryCondition_new::problemSetup()
 {}
 //---------------------------------------------------------------------------
 // Method: Schedule the assignment of boundary conditions 
 //---------------------------------------------------------------------------
-int BoundaryCond::scheduleSetBC( const LevelP& level,
+int BoundaryCondition_new::scheduleSetBC( const LevelP& level,
                                   SchedulerP& sched )
 {
-  string taskname = "BoundaryCond::setBC"; 
-  Task* tsk = scinew Task(taskname, this, &BoundaryCond::setBC);
+  string taskname = "BoundaryCondition_new::setBC"; 
+  Task* tsk = scinew Task(taskname, this, &BoundaryCondition_new::setBC);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 
@@ -40,7 +40,7 @@ int BoundaryCond::scheduleSetBC( const LevelP& level,
 //---------------------------------------------------------------------------
 // Method: Actually set the boundary condition 
 //---------------------------------------------------------------------------
-void BoundaryCond::setBC( const ProcessorGroup* pc,
+void BoundaryCondition_new::setBC( const ProcessorGroup* pc,
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
@@ -60,7 +60,7 @@ void BoundaryCond::setBC( const ProcessorGroup* pc,
 //---------------------------------------------------------------------------
 // Method: Set Scalar BC values 
 //---------------------------------------------------------------------------
-void BoundaryCond::setScalarValueBC( const ProcessorGroup*,
+void BoundaryCondition_new::setScalarValueBC( const ProcessorGroup*,
                                      const Patch* patch,
                                      CCVariable<double>& scalar, 
                                      string varname )

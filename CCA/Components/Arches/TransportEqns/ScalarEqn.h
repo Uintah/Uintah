@@ -47,7 +47,6 @@ private:
 //---------------------------------------------------------------------------
 
 class ArchesLabel; 
-class BoundaryCond; 
 class ExplicitTimeInt; 
 class SourceTerm; 
 class ScalarEqn: 
@@ -127,10 +126,6 @@ public:
                 DataWarehouse* new_dw  ); 
 
   // Access functions:
-  /** @brief Sets the boundary condition object. */ 
-  inline void setBoundaryCond( BoundaryCond* boundaryCond ) {
-  d_boundaryCond = boundaryCond; 
-  }
   /** @brief Sets the time integrator. */ 
   inline void setTimeInt( ExplicitTimeInt* timeIntegrator ) {
   d_timeIntegrator = timeIntegrator; 
@@ -158,7 +153,6 @@ public:
 
 private:
 
-  BoundaryCond* d_boundaryCond;
   vector<std::string> d_sources;
 
   double d_turbPrNo;
