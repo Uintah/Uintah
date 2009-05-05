@@ -9,7 +9,7 @@
 #pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
 pdflatex  --halt-on-error  uintah.tex
 
-if [ $? -ne 0 ]; then
+if [ $? -eq 0 ]; then
   echo "------------------"
   echo "Now running bibtex"
   echo "------------------"
