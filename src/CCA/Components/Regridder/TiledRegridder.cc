@@ -521,7 +521,16 @@ void TiledRegridder::problemSetup_BulletProofing(const int k)
     msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minTileSize[k] << ")\n";
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
-    
+  if (k!=d_maxLevels-1 && Mod(d_minTileSize[k]*d_cellRefinementRatio[k],d_minTileSize[k+1]) != IntVector(0,0,0)  )
+  {
+    ostringstream msg;
+    msg << "Problem Setup: Regridder: Patch boundaries between levels " << k << " and " << k+1 << " do not align\n";
+    msg << "    Coarse tile size (CTS):" << d_minTileSize[k] << endl;
+    msg << "    Refinement Ratio (RR):" << d_cellRefinementRatio[k] << endl;
+    msg << "    Fine Tile size: (FTS)" << d_minTileSize[k+1] << endl;
+    msg << "    CTS*RR%FTS should equal [int 0,0,0] but is " <<  Mod(d_minTileSize[k]*d_cellRefinementRatio[k],d_minTileSize[k+1]) << endl;
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+  }
 }
 
 //Create flags on level l-1 where ever tiles exist on level l+1 with boundary layers
