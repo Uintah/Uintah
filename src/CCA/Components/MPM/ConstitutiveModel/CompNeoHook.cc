@@ -273,22 +273,67 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
                                                  dx, interpolator);
     }
 
+    // The following is used only for pressure stabilization
+    CCVariable<double> J_CC;
+    new_dw->allocateTemporary(J_CC,     patch);
+    J_CC.initialize(0.);
+    if(flag->d_doPressureStabilization) {
+      CCVariable<double> vol_0_CC;
+      CCVariable<double> vol_CC;
+      new_dw->allocateTemporary(vol_0_CC, patch);
+      new_dw->allocateTemporary(vol_CC, patch);
+
+      vol_0_CC.initialize(0.);
+      vol_CC.initialize(0.);
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+  
+        // get the volumetric part of the deformation
+        J = deformationGradient_new[idx].Determinant();
+  
+        // Get the deformed volume
+        pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
+  
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+  
+        vol_CC[cell_index]+=pvolume_new[idx];
+        vol_0_CC[cell_index]+=pmass[idx]/rho_orig;
+      }
+
+      for(CellIterator iter=patch->getCellIterator__New(); !iter.done();iter++){
+        IntVector c = *iter;
+        J_CC[c]=vol_CC[c]/vol_0_CC[c];
+      }
+    }
+
     for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      
+
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
 #ifdef Comer
-     // gcd change to set shear = pcolor for each particle
-     //
-     if(flag->d_with_color) {
+      // gcd change to set shear = pcolor for each particle
+      if(flag->d_with_color) {
           shear = pcolor[idx];
-     }
+      }
 #endif
 
-      // get the volumetric part of the deformation
+      if(flag->d_doPressureStabilization) {
+        IntVector cell_index;
+        patch->findCell(px[idx],cell_index);
+
+        // get the original volumetric part of the deformation
+        J = deformationGradient_new[idx].Determinant();
+
+        // Change F such that the determinant is equal to the average for
+        // the cell
+        deformationGradient_new[idx]*=pow(J_CC[cell_index],1./3.)/pow(J,1./3.);
+      }
+
       J = deformationGradient_new[idx].Determinant();
 
       // Get the deformed volume

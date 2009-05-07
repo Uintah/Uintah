@@ -368,6 +368,18 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
+    ParticleVariable<Matrix3> vG;
+    new_dw->allocateTemporary(vG, pset);
+
+    CCVariable<double> vol_0_CC,dvol_CC;
+    CCVariable<int> PPC;
+    new_dw->allocateTemporary(vol_0_CC,  patch);
+    new_dw->allocateTemporary(dvol_CC,  patch);
+    new_dw->allocateTemporary(PPC,  patch);
+
+    vol_0_CC.initialize(0.);
+    dvol_CC.initialize(0.);
+    PPC.initialize(0);
 
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
@@ -407,19 +419,55 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT; 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5-Identity*alpha*ptempRate;
-      Matrix3 DPrime = D - Identity*onethird*D.Trace();
+      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+
+      vG[idx]=velGrad;
+
+      IntVector cell_index;
+      patch->findCell(px[idx],cell_index);
+
+      vol_0_CC[cell_index]+=pvolume[idx];
+      dvol_CC[cell_index]+=D.Trace()*pvolume[idx];
+      PPC[cell_index]++;
+    }
+
+    double press_stab=0.;
+    if(flag->d_doPressureStabilization) {
+      press_stab=1.;
+      for(CellIterator iter=patch->getCellIterator__New();!iter.done();iter++){
+         IntVector c = *iter;
+         dvol_CC[c]/=vol_0_CC[c];
+      }
+    }
+
+    for(ParticleSubset::iterator iter = pset->begin();
+                                        iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+
+      // Rate of particle temperature change for thermal stress
+      double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT;
+      // Calculate rate of deformation D, and deviatoric rate DPrime,
+      // including effect of thermal strain
+      IntVector cell_index;
+      patch->findCell(px[idx],cell_index);
+
+      Matrix3 D = (vG[idx] + vG[idx].Transpose())*.5;
+      double DTrace = D.Trace();
+      // Alter to stabilize the pressure in each cell
+      D = D + Identity*onethird*
+             (press_stab*dvol_CC[cell_index] - (1.-press_stab)*DTrace);
+      Matrix3 DPrime = D - Identity*onethird*DTrace;
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
+      deformationGradientInc = vG[idx] * delT + Identity;
 
       Jinc = deformationGradientInc.Determinant();
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
-                             deformationGradient[idx];
+                                     deformationGradient[idx];
 
       // get the volumetric part of the deformation
       double J = deformationGradient[idx].Determinant();
@@ -431,7 +479,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
        
       // This is the (updated) Cauchy stress
       pstress_new[idx] = pstress[idx] + 
-                         (DPrime*2.*G + Identity*bulk*D.Trace())*delT;
+                         (DPrime*2.*G + Identity*bulk*DTrace)*delT;
 
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
@@ -446,9 +494,9 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       se += e;
 
       if (flag->d_fracture) {
-        pvelGrads[idx]=velGrad;
+        pvelGrads[idx]=vG[idx];
         // Update particle displacement gradients
-        pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
+        pdispGrads_new[idx] = pdispGrads[idx] + vG[idx] * delT;
         // Update particle strain energy density 
         pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] + 
                                          e/pvolume_new[idx];
@@ -464,8 +512,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
-        Matrix3 D=(velGrad + velGrad.Transpose())*0.5;
-        p_q[idx] = artificialBulkViscosity(D.Trace(), c_bulk, rho_cur, dx_ave);
+        Matrix3 D=(vG[idx] + vG[idx].Transpose())*0.5;
+        p_q[idx] = artificialBulkViscosity(DTrace, c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
       }

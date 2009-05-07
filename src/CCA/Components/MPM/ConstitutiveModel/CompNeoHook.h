@@ -58,7 +58,6 @@ namespace Uintah {
       double Bulk;
       double Shear;
     };
-
     const VarLabel* bElBarLabel;
     const VarLabel* bElBarLabel_preReloc;
 

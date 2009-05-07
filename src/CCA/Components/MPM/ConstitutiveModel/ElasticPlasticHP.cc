@@ -770,9 +770,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
     // Get the particle stress and temperature and energy
     constParticleVariable<Matrix3> pStress;
-    constParticleVariable<double> pTempPrev, pTemperature;
+    constParticleVariable<double> pTemperature;
     old_dw->get(pStress,      lb->pStressLabel, pset);
-    old_dw->get(pTempPrev,    lb->pTempPreviousLabel, pset); 
     old_dw->get(pTemperature, lb->pTemperatureLabel,  pset);
 
     constParticleVariable<double> pErosion;
@@ -908,6 +907,8 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
         cerr << "F_inc = " << tensorFinc << endl;
         cerr << "F_new = " << tensorF_new << endl;
         cerr << "J = " << J << endl;
+        cerr << "T = " << pTemperature[idx] << endl;
+        cerr << "X = " << px[idx] << endl;
         throw ParameterNotFound("**ERROR**:ElasticPlasticHP", __FILE__, __LINE__);
       }
 
