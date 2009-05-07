@@ -146,10 +146,10 @@
    <Grid>
      <Level>
        <Box label = "1">
-         <lower>        [0,0,0]    </lower>
+         <lower>        [0,0,0]           </lower>
          <upper>        [1.2,1.2,0.02]    </upper>
-         <patches>      [2,2,1]     </patches>
-        <extraCells>[0, 0, 0]</extraCells>
+         <patches>      [2,2,1]           </patches>
+        <extraCells>    [1,1,1]           </extraCells>
        </Box>
        <spacing>   [0.025,0.025,0.02]  </spacing>
      </Level>
