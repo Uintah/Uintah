@@ -231,7 +231,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
-  MPMPhysicalBCFactory::create(restart_mat_ps);
+  MPMPhysicalBCFactory::create(restart_mat_ps, grid);
 
   contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, restart_mat_ps,sharedState,lb,flags);
   thermalContactModel =
@@ -459,7 +459,9 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") d_loadCurveIndex->add(nofPressureBCs++);
+    if (bcs_type == "Pressure"){
+      d_loadCurveIndex->add(nofPressureBCs++);
+    }
   }
   if (nofPressureBCs > 0) {
 
