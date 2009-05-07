@@ -70,11 +70,11 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid)
 
     for(ProblemSpecP child = current_ps->findBlock("heat_flux"); child != 0;
         child = child->findNextBlock("heat_flux") ) {
-       mpmPhysicalBCs.push_back(scinew HeatFluxBC(child));
+       mpmPhysicalBCs.push_back(scinew HeatFluxBC(child, grid));
     }
     for(ProblemSpecP child = current_ps->findBlock("arches_heat_flux"); 
         child != 0; child = child->findNextBlock("arches_heat_flux") ) {
-       mpmPhysicalBCs.push_back(scinew ArchesHeatFluxBC(child));
+       mpmPhysicalBCs.push_back(scinew ArchesHeatFluxBC(child,grid));
     }
   }
 }

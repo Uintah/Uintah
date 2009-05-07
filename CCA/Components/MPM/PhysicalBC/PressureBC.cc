@@ -29,7 +29,6 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/GeometryPiece/BoxGeometryPiece.h>
