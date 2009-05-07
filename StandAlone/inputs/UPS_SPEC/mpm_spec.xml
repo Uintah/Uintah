@@ -83,6 +83,16 @@
             </time_point>
           </load_curve>
         </pressure>
+        <heat_flux                spec="MULTIPLE NO_DATA" >
+          <geom_object />
+          <load_curve             spec="REQUIRED NO_DATA" >
+            <id                   spec="REQUIRED INTEGER" />
+            <time_point           spec="MULTIPLE NO_DATA" >
+              <time               spec="REQUIRED INTEGER" />
+              <load               spec="REQUIRED INTEGER" />
+            </time_point>
+          </load_curve>
+        </heat_flux>
       </MPM>
     </PhysicalBC>
   </Uintah_specification>
