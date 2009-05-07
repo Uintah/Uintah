@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/GeometryPiece/BoxGeometryPiece.h>
@@ -36,6 +37,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Grid/Box.h>
+#include <Core/Geometry/BBox.h>
 #include <iostream>
 
 using namespace Uintah;
@@ -43,7 +46,7 @@ using namespace SCIRun;
 using namespace std;
 
 // Store the geometry object and the load curve
-PressureBC::PressureBC(ProblemSpecP& ps)
+PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
 {
   // First read the geometry information
   // d_surface is the geometry object containing the surface to be loaded.
@@ -71,7 +74,34 @@ PressureBC::PressureBC(ProblemSpecP& ps)
   d_numMaterialPoints = 0;
 
   // Read and save the load curve information
-  d_loadCurve = scinew LoadCurve<double>(ps); 
+  d_loadCurve = scinew LoadCurve<double>(ps);
+
+  //__________________________________
+  //   Bulletproofing
+  // user shouldn't specify a geometry object that is bigger than the domain
+  Box boundingBox = d_surface->getBoundingBox();
+  BBox compDomain;
+  grid->getSpatialRange(compDomain);
+  
+  Point BB_min = boundingBox.lower();
+  Point CD_min = compDomain.min();
+  Point BB_max = boundingBox.upper();
+  Point CD_max = compDomain.max(); 
+  
+  if( ( BB_min.x() < CD_min.x() ) ||
+      ( BB_min.y() < CD_min.y() ) || 
+      ( BB_min.z() < CD_min.z() ) ||
+      ( BB_max.x() > CD_max.x() ) ||
+      ( BB_max.y() > CD_max.y() ) ||
+      ( BB_max.z() > CD_max.z() ) ){
+    proc0cout <<"__________________________________________________________\n";
+    proc0cout << "\n Input File WARNING: <PhysicalBC : MPM : Pressure> \n"
+              << " The geometry Object ["<<d_surface->getType() << "] exceeds the dimensions of the computational domain.\n"
+              << " \n Please change the parameters so it doesn't. \n\n"
+              << " There is a flaw in the surface area calculation for the geometry object,\n"
+              << " it does not take into account that the object exceeds the domain\n";
+    proc0cout <<"__________________________________________________________\n";
+  }
 }
 
 // Destroy the pressure BCs

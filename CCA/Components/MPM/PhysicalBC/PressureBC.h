@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Grid.h>
 #include <iosfwd>
 
 namespace Uintah {
@@ -81,7 +82,7 @@ WARNING
       // the area over which pressure is to be applied
       // and the value of that pressure (in the form
       // of a load curve)
-      PressureBC(ProblemSpecP& ps);
+      PressureBC(ProblemSpecP& ps, const GridP& grid);
       ~PressureBC();
       virtual std::string getType() const;
 

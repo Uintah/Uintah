@@ -137,17 +137,24 @@ CylinderGeometryPiece::inside(const Point &p) const
 Box
 CylinderGeometryPiece::getBoundingBox() const
 {
-  using std::min;
-  using std::max;
-  Point lo(min(d_bottom.x(),d_top.x()) - d_radius,
-           min(d_bottom.y(),d_top.y()) - d_radius,
-           min(d_bottom.z(),d_top.z()) - d_radius);
+  
+  Point minBB = Min(d_bottom, d_top);
+  Point maxBB = Max(d_bottom, d_top);
+  
+  double x_sqrd = pow( ( d_bottom.x() - d_top.x() ), 2);
+  double y_sqrd = pow( ( d_bottom.y() - d_top.y() ), 2);
+  double z_sqrd = pow( ( d_bottom.z() - d_top.z() ), 2);  
+  double all_sqrd = x_sqrd + y_sqrd + z_sqrd;
+  
+  double kx = sqrt( (y_sqrd + z_sqrd)/all_sqrd );
+  double ky = sqrt( (x_sqrd + z_sqrd)/all_sqrd );
+  double kz = sqrt( (x_sqrd + y_sqrd)/all_sqrd );
+  
+  Vector tmp(kx*d_radius, ky*d_radius, kz*d_radius);
+  minBB -= tmp;
+  maxBB += tmp;
 
-  Point hi(max(d_bottom.x(),d_top.x()) + d_radius,
-           max(d_bottom.y(),d_top.y()) + d_radius,
-           max(d_bottom.z(),d_top.z()) + d_radius);
-
-  return Box(lo,hi);
+  return Box(minBB,maxBB);
 }
 
 //////////

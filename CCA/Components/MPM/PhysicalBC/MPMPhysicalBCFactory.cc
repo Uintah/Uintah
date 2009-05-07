@@ -45,7 +45,7 @@ using namespace SCIRun;
 
 std::vector<MPMPhysicalBC*> MPMPhysicalBCFactory::mpmPhysicalBCs;
 
-void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
+void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid)
 {
   ProblemSpecP test = ps->findBlock("PhysicalBC");
   if (test){
@@ -60,7 +60,7 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
 
     for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
         child = child->findNextBlock("pressure") ) {
-       mpmPhysicalBCs.push_back(scinew PressureBC(child));
+       mpmPhysicalBCs.push_back(scinew PressureBC(child, grid));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;
