@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/PolynomialData.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Grid/Grid.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <iosfwd>
 
@@ -82,7 +83,7 @@ WARNING
       // the area over which heatflux is to be applied
       // and the value of that heatflux (in the form
       // of a load curve)
-      ArchesHeatFluxBC(ProblemSpecP& ps);
+      ArchesHeatFluxBC(ProblemSpecP& ps,const GridP& grid);
       ~ArchesHeatFluxBC();
       virtual std::string getType() const;
       virtual void outputProblemSpec(ProblemSpecP& ps);

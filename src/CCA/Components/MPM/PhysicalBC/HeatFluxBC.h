@@ -35,6 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <CCA/Components/MPM/PhysicalBC/LoadCurve.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Grid/Grid.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <iosfwd>
 
@@ -81,7 +82,7 @@ WARNING
       // the area over which heatflux is to be applied
       // and the value of that heatflux (in the form
       // of a load curve)
-      HeatFluxBC(ProblemSpecP& ps);
+      HeatFluxBC(ProblemSpecP& ps,const GridP& grid);
       ~HeatFluxBC();
       virtual std::string getType() const;
       virtual void outputProblemSpec(ProblemSpecP& ps);

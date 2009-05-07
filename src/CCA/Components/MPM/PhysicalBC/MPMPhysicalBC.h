@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #define UINTAH_MPM_MPMPHYSICALBC_H
 
 #include <string>
+#include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
