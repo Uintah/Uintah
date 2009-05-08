@@ -72,6 +72,7 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
   }
   d_numMaterialPoints = 0;
 
+  
   // Read and save the load curve information
   d_loadCurve = scinew LoadCurve<double>(ps);
 
@@ -112,6 +113,10 @@ PressureBC::~PressureBC()
 
 void PressureBC::outputProblemSpec(ProblemSpecP& ps)
 {
+  ProblemSpecP press_ps = ps->appendChild("pressure");
+  ProblemSpecP geom_ps = press_ps->appendChild("geom_object");
+  d_surface->outputProblemSpec(geom_ps);
+  d_loadCurve->outputProblemSpec(press_ps);
 }
 
 // Get the type of this object for BC application
