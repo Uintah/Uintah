@@ -239,7 +239,7 @@ avtudaReaderMTMDFileFormat::avtudaReaderMTMDFileFormat(const char *filename) :
   refX = refY = refZ = 0;
   vecY = vecY = vecZ = 0;
   tenX = tenY = tenZ = 0;
-    
+
   levelPatchVecPtr = NULL;
   patchInfoVecPtr = NULL;     
 
@@ -353,13 +353,13 @@ avtudaReaderMTMDFileFormat::FreeUpResources(void)
     free(tenValMatrix );
     tenValMatrix = NULL;
   } 	
-      
+
   delete [] boundaryExists;
   boundaryExists = NULL;
 
   delete [] extraCells;
   extraCells = NULL;
-  
+
   // ccMesh = false;
   // ncMesh = false;
   // sfcxMesh = false;
@@ -476,7 +476,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
   lastTimeStep = currTimeStep;
   currTimeStep = timeState;
- 
+
   if (levelPatchVecPtr != NULL) 
     delete levelPatchVecPtr;
 
@@ -714,7 +714,7 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
   // Nothing needs to be modifed for particle data, as they exist only on a single level
   for (int i = 0; i < udaVarsObj.size(); i++) {
-    if (udaVarsObj[i].find("p.") != string::npos && udaVarsObj[i].find("p.x") == string::npos) {
+    if (udaVarsObj[i].find("p.") != string::npos /*&& udaVarsObj[i].find("p.x") == string::npos*/) {
       string varname = udaVarsObj[i];
       size_t found = varname.find("/");
 
@@ -755,7 +755,8 @@ avtudaReaderMTMDFileFormat::PopulateDatabaseMetaData(avtDatabaseMetaData *md, in
 
 	cent = AVT_NODECENT;
 
-	if (vartype.find("Vector") != string::npos) 
+	if ((vartype.find("Vector") != string::npos) ||
+	    (vartype.find("Point") != string::npos)) 
 	  AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3); // 3 -> vector dimension
 	else if (vartype.find("Matrix3") != string::npos)
 	  AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9); // 9 -> tensor 
@@ -1255,10 +1256,10 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     if (currLevel != level) {
       if (boundaryExists != NULL) 
-        delete [] boundaryExists;
-      
+	delete [] boundaryExists;
+
       if (extraCells != NULL)
-        delete [] extraCells;
+	delete [] extraCells;
 
       boundaryExists = (*getPeriodicBoundaries)(folder, timestate, level);
       extraCells = (*getExtraCells)(folder, timestate, level); 
@@ -1559,7 +1560,7 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     size_t found1 = meshName.find("p.");
     size_t found2 = meshName.find("/");
-   
+
     string vars = meshName.substr(found1, found2 - found1); 
     string matl = meshName.substr(found2 + 1);
 
@@ -2146,7 +2147,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       unknownData& dataRef = varRef.data;
 
       // if (dataRef.size() == 0) {
-        // cout << "No data for particle " << i << endl; 
+      // cout << "No data for particle " << i << endl; 
       // }
 
       // cout << dataRef.size() << endl;
@@ -2161,7 +2162,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
 
       /*if (!varFound) {
 	rv->SetTuple1(i, 0.f);  // you must determine value for ith entry.
-      }*/
+	}*/
 
     }
 
@@ -2346,7 +2347,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	      if (vecValMatrix[i][j] == NULL) cout << "Error allocating vecValMatrix[" << i << "][" << j << "]\n";
 	    }
 	  }
-	
+
 	  vecX = cellValColln.x + 2 * extraXYZ[0];
 	  vecY = cellValColln.y + 2 * extraXYZ[1];
 	  vecZ = cellValColln.z + 2 * extraXYZ[2];
@@ -2756,9 +2757,12 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     udaVars* udaVarsPtr = (*getVarList)(folder);
     udaVars& udaVarsObj = *(udaVarsPtr);
 
+    // cout << "varName is: " << varName << endl;
+
     for (int k = 0; k < udaVarsObj.size(); k++) {
       if (udaVarsObj[k].find(varName) != string::npos) { // should be a vector or a tensor
-	if (udaVarsObj[k].find("Vector") != string::npos)
+	if ((udaVarsObj[k].find("Vector") != string::npos) ||
+	    (udaVarsObj[k].find("Point") != string::npos))
 	  ncomps = 3;
 	else if (udaVarsObj[k].find("Matrix3") != string::npos)   
 	  ncomps = 9;
@@ -2780,17 +2784,27 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     // int ntuples = varColln.size(); // this is the number of entries in the variable.
 
     if (ncomps == 3) { // Vectors
-      for (int i = 0 ; i < ntuples ; i++) {
-	variable& varRef = varColln[i * PARTICLE_INTERVAL];
-	vecValData& vecDataRef = varRef.vecData;
+      if (varName.compare("p.x") == 0) {
+	for (int i = 0 ; i < ntuples ; i++) {
+	  variable& varRef = varColln[i * PARTICLE_INTERVAL];
 
-	for (int j = 0;  j < vecDataRef.size(); j++) {
-	  if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
-	    one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
-	    rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
-	  }     
+	  one_entry[0] = varRef.x; one_entry[1] = varRef.y; one_entry[2] = varRef.z; 
+	  rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
 	}
-      }         
+      }
+      else {
+	for (int i = 0 ; i < ntuples ; i++) {
+	  variable& varRef = varColln[i * PARTICLE_INTERVAL];
+	  vecValData& vecDataRef = varRef.vecData;
+
+	  for (int j = 0;  j < vecDataRef.size(); j++) {
+	    if (strcmp(varName.c_str(), vecDataRef[j].name.c_str()) == 0) {
+	      one_entry[0] = vecDataRef[j].x; one_entry[1] = vecDataRef[j].y; one_entry[2] = vecDataRef[j].z; 
+	      rv->SetTuple(i, one_entry);  // you must determine value for ith entry.
+	    }     
+	  }
+	}
+      }
     }
     else if (ncomps == 9) { // Tensors
       for (int i = 0 ; i < ntuples ; i++) {
