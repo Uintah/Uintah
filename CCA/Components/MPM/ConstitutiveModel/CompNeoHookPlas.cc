@@ -392,7 +392,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // get the volume preserving part of the deformation gradient increment
 //      fbar = deformationGradientInc * pow(Jinc,-onethird);
 //      fbar = deformationGradientInc * 1/cubeRoot(Jinc,1.0);
-      fbar = deformationGradientInc * 1/cbrt(Jinc);
+      fbar = deformationGradientInc/cbrt(Jinc);
 
 
       // predict the elastic part of the volume preserving part of the left
