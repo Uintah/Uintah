@@ -681,7 +681,8 @@ CNHDamage::computeStressTensorImplicit(const PatchSubset* patches,
       pVol_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute Bbar
-      Matrix3 pRelDefGradBar = pDefGradInc*pow(Jinc, -onethird);
+//      Matrix3 pRelDefGradBar = pDefGradInc*pow(Jinc, -onethird);
+      Matrix3 pRelDefGradBar = pDefGradInc/cbrt(Jinc);
       pBBar_new = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
       pBeBar_new[idx] = pBBar_new;
       IEl = onethird*pBBar_new.Trace();
@@ -817,7 +818,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       pVol_new[idx] = volnew;
 
       // Compute BeBar
-      pRelDefGradBar = pDefGradInc*pow(pDefGradInc.Determinant(),-onethird);
+      pRelDefGradBar = pDefGradInc/cbrt(pDefGradInc.Determinant());
       pBeBar_new[idx] = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
 
       // Shear is equal to the shear modulus times dev(bElBar)
