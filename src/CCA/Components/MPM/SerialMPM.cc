@@ -297,6 +297,13 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
   }
   contactModel->outputProblemSpec(mpm_ps);
   thermalContactModel->outputProblemSpec(mpm_ps);
+  
+  ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
+  ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+    MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
+  }
+  
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,
@@ -307,6 +314,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("MPM::actuallyInitialize",
                         this, &SerialMPM::actuallyInitialize);
 
+  const PatchSet* patches = level->eachPatch();
+  printSchedule(patches,cout_doing,"MPM::scheduleInitialize\t\t\t\t");
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
   zeroth_matl->add(0);
   zeroth_matl->addReference();
@@ -358,14 +367,14 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
              << " 8 or 27 = " << flags->d_8or27 << endl;
 
   int numMPM = d_sharedState->getNumMPMMatls();
-  const PatchSet* patches = level->eachPatch();
+  
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
   }
 
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 
   schedulePrintParticleCount(level, sched);
 
@@ -388,8 +397,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
                                                 SchedulerP& sched)
 {
-  if (cout_doing.active())
-    cout_doing << "Doing SerialMPM::scheduleInitializeAddedMaterial " << endl;
+  const PatchSet* patches = level->eachPatch();
+  printSchedule(patches,cout_doing,"MPM::scheduleInitializeAddedMateria\t\t\t");
 
   Task* t = scinew Task("SerialMPM::actuallyInitializeAddedMaterial",
                   this, &SerialMPM::actuallyInitializeAddedMaterial);
@@ -426,13 +435,11 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
     t->computes(lb->AccStrainEnergyLabel);
   }
 
-  const PatchSet* patches = level->eachPatch();
-
   MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(numMPMMatls-1);
   ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
   cm->addInitialComputesAndRequires(t, mpm_matl, patches);
 
-  sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 
   // The task will have a reference to add_matl
   if (add_matl->removeReference())
@@ -452,6 +459,9 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
+  const PatchSet* patches = level->eachPatch();
+  
+  
   d_loadCurveIndex = scinew MaterialSubset();
   d_loadCurveIndex->add(0);
   d_loadCurveIndex->addReference();
@@ -464,7 +474,8 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
     }
   }
   if (nofPressureBCs > 0) {
-
+    printSchedule(patches,cout_doing,"MPM::countMaterialPointsPerLoadCurve\t\t\t\t");
+    printSchedule(patches,cout_doing,"MPM::scheduleInitializePressureBCs\t\t\t\t");
     // Create a task that calculates the total number of particles
     // associated with each load curve.  
     Task* t = scinew Task("MPM::countMaterialPointsPerLoadCurve",
@@ -472,7 +483,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
                 Task::OutOfDomain);
-    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+    sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
@@ -482,7 +493,7 @@ void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
     t->modifies(lb->pExternalForceLabel);
-    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+    sched->addTask(t, patches, d_sharedState->allMPMMaterials());
   }
 
   if(d_loadCurveIndex->removeReference())
@@ -1287,6 +1298,7 @@ void SerialMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
                                                 DataWarehouse* ,
                                                 DataWarehouse* new_dw)
 {
+  printTask(patches, patches->get(0) ,cout_doing,"countMaterialPointsPerLoadCurve\t\t\t");
   // Find the number of pressure BCs in the problem
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
@@ -1329,7 +1341,7 @@ void SerialMPM::initializePressureBC(const ProcessorGroup*,
 {
   // Get the current time
   double time = 0.0;
-
+  printTask(patches, patches->get(0),cout_doing,"Doing initializePressureBC\t\t\t");
   if (cout_dbg.active())
     cout_dbg << "Current Time (Initialize Pressure BC) = " << time << endl;
 
@@ -1537,7 +1549,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid\t\t");
+    printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid\t\t\t");
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
@@ -1712,7 +1724,7 @@ void SerialMPM::computeStressTensor(const ProcessorGroup*,
 {
 
   printTask(patches, patches->get(0),cout_doing,
-            "Doing computeStressTensor\t\t\t");
+            "Doing computeStressTensor\t\t\t\t");
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
 
@@ -2138,7 +2150,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t\t");
+    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration\t\t\t");
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = d_sharedState->getGravity();
@@ -2379,11 +2391,6 @@ void SerialMPM::setPrescribedMotion(const ProcessorGroup*,
       }  // d_doGridReset
     }   // matl loop
   }     // patch loop
-
-
-
-
-
 }
 
 
@@ -2448,6 +2455,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
             do_PressureBCs=true;
           }
         }
+
         if(do_PressureBCs){
 
         // Get the load curve data
