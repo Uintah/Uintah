@@ -154,7 +154,7 @@ protected:
   int vecX, vecY, vecZ;
   int tenX, tenY, tenZ;
         
-  timeStep*        (*processData)(int, char[][128], int, bool, int, bool, int);
+  timeStep*        (*processData)(int, char[][128], int, bool, int, bool, const std::string&, int);
   udaVars*         (*getVarList)(const std::string&);
   typeDouble*      (*getTimeSteps)(const std::string&);
   double*          (*getBBox)(const std::string&, int, int);

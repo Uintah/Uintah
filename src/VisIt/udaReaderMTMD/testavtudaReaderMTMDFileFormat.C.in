@@ -1557,8 +1557,14 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
     // cout << "\nIn GetMesh\n";
     // cout << meshName << endl;
 
-    size_t found = meshName.find("/");
-    string matl = meshName.substr(found + 1);
+    size_t found1 = meshName.find("p.");
+    size_t found2 = meshName.find("/");
+   
+    string vars = meshName.substr(found1, found2 - found1); 
+    string matl = meshName.substr(found2 + 1);
+
+    // cout << "<<<<<<< " << vars << " >>>>>>>\n"; 
+    // cout << "<<<<<<< " << matl << " >>>>>>>\n"; 
 
     int matlNo = 0;
 
@@ -1578,11 +1584,11 @@ avtudaReaderMTMDFileFormat::GetMesh(int timestate, int domain, const char *meshn
 
     // not removing the boundary with particle data
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false, 0); 
+      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false, vars, 0); 
       cout << "All data\n";
     }
     else {
-      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true, 0);
+      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true, vars, 0);
       cout << "Some data\n";
     }  
 
@@ -1770,7 +1776,7 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       strcpy(arr2d[10], "test"); // anything will do
       // strcpy(arr2d[11], "-nbc"); // boundary cells not required
 
-      timeStep* timeStepObjPtr = (*processData)(11, arr2d, timestate, true, 0, false, local_patch);
+      timeStep* timeStepObjPtr = (*processData)(11, arr2d, timestate, true, 0, false, string("null"), local_patch);
       timeStep &timeStepObj = *timeStepObjPtr;
 
       if (timeStepObj.cellValColln != NULL) {
@@ -2112,11 +2118,11 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
     timeStep *timeStepObjPtr;
 
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false, 0); 
+      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false, varName, 0); 
       cout << "All data\n";
     }  
     else { 
-      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true, 0);
+      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true, varName, 0);
       cout << "Some data\n";
     }  
 
@@ -2139,10 +2145,24 @@ avtudaReaderMTMDFileFormat::GetVar(int timestate, int domain, const char *varnam
       variable& varRef = varColln[i * PARTICLE_INTERVAL];
       unknownData& dataRef = varRef.data;
 
+      // if (dataRef.size() == 0) {
+        // cout << "No data for particle " << i << endl; 
+      // }
+
+      // cout << dataRef.size() << endl;
+
+      // bool varFound = false;
+
       for (int j = 0;  j < dataRef.size(); j++) {
 	if (strcmp(varName.c_str(), dataRef[j].name.c_str()) == 0)
+	  // varFound = true;
 	  rv->SetTuple1(i, dataRef[j].value);  // you must determine value for ith entry.
       }
+
+      /*if (!varFound) {
+	rv->SetTuple1(i, 0.f);  // you must determine value for ith entry.
+      }*/
+
     }
 
     delete timeStepObjPtr;
@@ -2237,7 +2257,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
       strcpy(arr2d[10], "test"); // this is not required
       // strcpy(arr2d[11], "-nbc");
 
-      timeStep *timeStepObjPtr = (*processData)(11, arr2d, timestate, true, 0, false, local_patch);
+      timeStep *timeStepObjPtr = (*processData)(11, arr2d, timestate, true, 0, false, string("null"), local_patch);
       timeStep &timeStepObj = *timeStepObjPtr;
 
       if (timeStepObj.cellValColln != NULL) {
@@ -2716,11 +2736,11 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
     timeStep *timeStepObjPtr;
 
     if (matl.compare("*") == 0) {
-      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false, 0); 
+      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, false, varName, 0); 
       cout << "All data\n";
     }  
     else { 
-      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true, 0);
+      timeStepObjPtr = (*processData)(6, arr2d, timestate, false, matlNo, true, varName, 0);
       cout << "Some data\n";
     }  
 
