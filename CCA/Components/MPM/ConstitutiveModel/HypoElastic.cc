@@ -419,7 +419,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT; 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain
-      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
+      Matrix3 D = (velGrad + velGrad.Transpose())*.5-Identity*alpha*ptempRate;
 
       vG[idx]=velGrad;
 
@@ -451,11 +451,12 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       IntVector cell_index;
       patch->findCell(px[idx],cell_index);
 
-      Matrix3 D = (vG[idx] + vG[idx].Transpose())*.5;
+      Matrix3 D = (vG[idx] + vG[idx].Transpose())*.5-Identity*alpha*ptempRate;
       double DTrace = D.Trace();
-      // Alter to stabilize the pressure in each cell
+      // Alter D to stabilize the pressure in each cell
       D = D + Identity*onethird*
              (press_stab*dvol_CC[cell_index] - (1.-press_stab)*DTrace);
+      DTrace = D.Trace();
       Matrix3 DPrime = D - Identity*onethird*DTrace;
 
       // Compute the deformation gradient increment using the time_step
@@ -512,7 +513,6 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
         double c_bulk = sqrt(bulk/rho_cur);
-        Matrix3 D=(vG[idx] + vG[idx].Transpose())*0.5;
         p_q[idx] = artificialBulkViscosity(DTrace, c_bulk, rho_cur, dx_ave);
       } else {
         p_q[idx] = 0.;
