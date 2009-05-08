@@ -331,7 +331,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 
         // Change F such that the determinant is equal to the average for
         // the cell
-        deformationGradient_new[idx]*=pow(J_CC[cell_index],1./3.)/pow(J,1./3.);
+        deformationGradient_new[idx]*=cbrt(J_CC[cell_index])/cbrt(J);
       }
 
       J = deformationGradient_new[idx].Determinant();
@@ -343,8 +343,10 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_orig/J;
       c_dil = sqrt((bulk + 4.*shear/3.)/rho_cur);
 
+      double cubeRootJ=cbrt(J);
+      double Jtothetwothirds=cubeRootJ*cubeRootJ;
       bElBar_new = deformationGradient_new[idx]
-                 * deformationGradient_new[idx].Transpose()*pow(J,-(2./3.));
+                 * deformationGradient_new[idx].Transpose()/Jtothetwothirds;
 
       IEl = onethird*bElBar_new.Trace();
 

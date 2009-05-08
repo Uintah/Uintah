@@ -460,7 +460,9 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
       pvolume_new[idx]=(pmass[idx]/rho_orig)*J;
 
       // Compute Bbar
-      Matrix3 pRelDefGradBar = pDefGradInc*pow(Jinc, -onethird);
+//      Matrix3 pRelDefGradBar = pDefGradInc*pow(Jinc, -onethird);
+      Matrix3 pRelDefGradBar = pDefGradInc/cbrt(Jinc);
+
       pBBar_new = pRelDefGradBar*pBeBar[idx]*pRelDefGradBar.Transpose();
       IEl = onethird*pBBar_new.Trace();
       pBeBar_new[idx] = pBBar_new;
