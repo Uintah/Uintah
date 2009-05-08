@@ -454,8 +454,7 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 D = (vG[idx] + vG[idx].Transpose())*.5-Identity*alpha*ptempRate;
       double DTrace = D.Trace();
       // Alter D to stabilize the pressure in each cell
-      D = D + Identity*onethird*
-             (press_stab*dvol_CC[cell_index] - (1.-press_stab)*DTrace);
+      D = D + Identity*onethird*press_stab*(dvol_CC[cell_index] - DTrace);
       DTrace = D.Trace();
       Matrix3 DPrime = D - Identity*onethird*DTrace;
 
