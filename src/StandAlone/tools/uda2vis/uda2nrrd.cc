@@ -750,8 +750,13 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
   /////////////////////////////////////////////////////////////////////
   extern "C"
     timeStep*
-    processData(int argc, char argv[][128], int timeStepNo, bool dataReq, int matlNo, 
-	bool matlClassfication, int patchNo) // patchNo not required anymore, should remove it
+    processData(int argc, char argv[][128], 
+                int timeStepNo, 
+		bool dataReq, 
+		int matlNo, 
+	        bool matlClassfication, 
+		const string& varSelected,
+		int patchNo) // patchNo not required anymore, should remove it
     {
       /*
        * Default values
@@ -1199,25 +1204,25 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 
 	    switch (subtype->getType()) {
 	      case Uintah::TypeDescription::double_type:
-		/*data =*/ handleParticleData<double>( qinfo, matlNo, matlClassfication, data );
+		/*data =*/ handleParticleData<double>( qinfo, matlNo, matlClassfication, data, varSelected );
 		break;
 	      case Uintah::TypeDescription::float_type:
-		/*data =*/ handleParticleData<float>( qinfo, matlNo, matlClassfication, data );
+		/*data =*/ handleParticleData<float>( qinfo, matlNo, matlClassfication, data, varSelected );
 		break;
 	      case Uintah::TypeDescription::int_type:
-		/*data =*/ handleParticleData<int>( qinfo, matlNo, matlClassfication, data );
+		/*data =*/ handleParticleData<int>( qinfo, matlNo, matlClassfication, data, varSelected  );
 		break;
 	      case Uintah::TypeDescription::long64_type:
-		/*data =*/ handleParticleData<long64>( qinfo, matlNo, matlClassfication, data );
+		/*data =*/ handleParticleData<long64>( qinfo, matlNo, matlClassfication, data, varSelected  );
 		break;
 	      case Uintah::TypeDescription::Point:
-		/*data =*/ handleParticleData<Point>( qinfo, matlNo, matlClassfication, data );
+		/*data =*/ handleParticleData<Point>( qinfo, matlNo, matlClassfication, data, varSelected  );
 		break;
 	      case Uintah::TypeDescription::Vector:
-		/*data =*/ handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data );
+		/*data =*/ handleParticleData<Vector>( qinfo, matlNo, matlClassfication, data, varSelected  );
 		break;
 	      case Uintah::TypeDescription::Matrix3:
-		/*data =*/ handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data );
+		/*data =*/ handleParticleData<Matrix3>( qinfo, matlNo, matlClassfication, data, varSelected  );
 		break;
 	      default:
 		cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";

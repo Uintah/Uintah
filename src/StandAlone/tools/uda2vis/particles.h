@@ -37,9 +37,9 @@ DEALINGS IN THE SOFTWARE.
 #include <StandAlone/tools/uda2vis/QueryInfo.h>
 
 #include <cstdlib>
-
 #include <string>
 #include <vector>
+#include <map>
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -47,6 +47,21 @@ DEALINGS IN THE SOFTWARE.
 //
 
 typedef vector<Matrix3> matrixVec;
+
+struct patchMatlPart {
+  int id;
+  int matl;
+  int particles;
+
+  patchMatlPart(int a, int b, int c) {
+    id = a;
+    matl = b;
+    particles = c;
+  }
+};
+
+static vector<patchMatlPart> mapA;
+static map<int, Patch*> patchMap;
 
 class ParticleDataContainer {
 public:
@@ -104,7 +119,7 @@ public:
 
 template<class PartT>
 void
-handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result );
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected );
 
 void
 saveParticleData( std::vector<ParticleDataContainer> & data,
