@@ -328,7 +328,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
       pVol_new[idx]=pMass[idx]/rho_cur;
 
       // Get the volume preserving part of the deformation gradient increment
-      relDefGradBar = defGradInc*pow(Jinc, -onethird);
+//      relDefGradBar = defGradInc*pow(Jinc, -onethird);
+      relDefGradBar = defGradInc/cbrt(Jinc);
 
       // Compute the trial elastic part of the volume preserving 
       // part of the left Cauchy-Green deformation tensor
@@ -535,7 +536,7 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
       pVol_new[idx]=pMass[idx]/rho_cur;
 
       // Compute trial BeBar
-      relDefGradBar = defGradInc*pow(Jinc, -onethird);
+      relDefGradBar = defGradInc/cbrt(Jinc);
 
       // Compute the trial elastic part of the volume preserving 
       // part of the left Cauchy-Green deformation tensor
@@ -716,7 +717,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
       pVol_new[idx] = volnew;
 
       // Compute trial BeBar
-      relDefGradBar = defGradInc*pow(Jinc, -onethird);
+//      relDefGradBar = defGradInc*pow(Jinc, -onethird);
+      relDefGradBar = defGradInc/cbrt(Jinc);
 
       // Compute the trial elastic part of the volume preserving 
       // part of the left Cauchy-Green deformation tensor
