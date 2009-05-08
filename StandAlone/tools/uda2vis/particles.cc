@@ -51,19 +51,31 @@ machineIsBigEndian()
 //////////////////////////////////////////////////////////////////////////////////
 
 template<>
-  void
-  /*ParticleDataContainer*/
-handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result )
+void
+/*ParticleDataContainer*/
+handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected )
 {
   vector<float> dataX, dataY, dataZ;
 
   // Loop over each patch and get the data from the data archive.
   Level::const_patchIterator patch_it;
 
+  mapA.clear();
+  patchMap.clear();
+
+  // cout << "varSelected: " << varSelected << endl;
+	  
+  const Patch* pZero = *(qinfo.level->patchesBegin());
+  ConsecutiveRangeSet matlsForVar = qinfo.archive->queryMaterials(varSelected, pZero, qinfo.timestep);
+
   for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
     const Patch* patch = *patch_it;
+    patchMap[patch->getID()] = *patch_it;
 
-    for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+    for( ConsecutiveRangeSet::iterator matlIter = matlsForVar.begin(); matlIter != matlsForVar.end(); matlIter++ ) {
+    // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+
+      // cout << patch->getID() << " " << *matlIter << endl;
 
       int matl = *matlIter;
       if (matlClassfication && (matl != matlNo))
@@ -80,6 +92,8 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
       }
 
       int numParticles = pset->numParticles();
+      
+      // cout << patch->getID() << " " << *matlIter << " " << numParticles << endl;
 
       if (numParticles > 0) {
 	for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
@@ -87,7 +101,11 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
 	  dataY.push_back( (float)value[*iter].y() );
 	  dataZ.push_back( (float)value[*iter].z() );
 	}
+	// cout << numParticles << endl;
       }
+
+      patchMatlPart pObj(patch->getID(), matl, numParticles);
+      mapA.push_back(pObj);
     } // end for materials
   } // end for each Patch
 
@@ -109,7 +127,7 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
     if( dataY[ pos ] < min[1] ) { min[1] = dataY[ pos ]; }
     if( dataZ[ pos ] > max[2] ) { max[2] = dataZ[ pos ]; }
     if( dataZ[ pos ] < min[2] ) { min[2] = dataZ[ pos ]; }
-  }*/
+    }*/
 
   // printf("%s (%d):  min/max: %f / %f, %f / %f, %f / %f\n", 
   //       qinfo.varname.c_str(), (int)dataX.size(), min[0], max[0], min[1], max[1], min[2], max[2] );
@@ -122,8 +140,10 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
   result.y = /*floatArrayY*/ dataY;
   result.z = /*floatArrayZ*/ dataZ;
   result.type = SCALAR;
-  
+
   result.numParticles = dataX.size();
+
+  // cout << mapA.size() << endl;
 
   // return result;
 }
@@ -184,33 +204,57 @@ return result;
 } // end handleParticleData<Vector>*/
 
 template<>
-  void
-  /*ParticleDataContainer*/
-handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result)
+void
+/*ParticleDataContainer*/
+handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
 {
   cout << "In handleParticleData<Vector>\n";
   vector<float> dataX, dataY, dataZ;
+  vector<int> matlList;
+    
+  for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+    matlList.push_back(*matlIter);
+  }  
 
   // Loop over each patch and get the data from the data archive.
   Level::const_patchIterator patch_it;
 
-  for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
-    const Patch* patch = *patch_it;
+  // for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
+  for (unsigned int p = 0; p < mapA.size(); p++) {
+    // const Patch* patch = /* *patch_it */ patchMap.find(mapA[p].id)->second;
+    const Patch* patch = qinfo.level->getPatch(mapA[p].id);
 
-    for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+    // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+      int matl = /* *matlIter */ mapA[p].matl;
 
-      int matl = *matlIter;
-      if (matlClassfication && (matl != matlNo))
-	continue;
+      // no more needed
+      // if (matlClassfication && (matl != matlNo))
+	// continue;
 
-      ParticleVariable<Vector> value;
-      qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
-      ParticleSubset* pset = value.getParticleSubset();
-      if (!pset) {
-	printf("NOT sure that this case is being handled correctly...\n");
-	exit( 1 );
+      // check if it is a valid matl for this var
+      bool validMatl = false;
+
+      for (unsigned int q = 0; q < matlList.size(); q++) {
+        if (matl == matlList[q]) {
+	  validMatl = true;
+	  break;
+	}
       }
-      int numParticles = pset->numParticles();
+
+      int numParticles = 0;
+      ParticleVariable<Vector> value;
+      ParticleSubset* pset = NULL;
+
+      if (validMatl) {
+        qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
+        pset = value.getParticleSubset();
+        if (!pset) {
+	  printf("NOT sure that this case is being handled correctly...\n");
+	  exit( 1 );
+        }
+      
+        numParticles = pset->numParticles();
+      }
 
       if (numParticles > 0) {
 	for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
@@ -218,8 +262,17 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
 	  dataY.push_back( (float)value[*iter].y() );
 	  dataZ.push_back( (float)value[*iter].z() );
 	}
-      } // end if numParticles > 0
-    } // end for each matl
+      }
+      else {
+	numParticles = mapA[p].particles;
+	for (int i = 0; i < numParticles; i++) {
+	  dataX.push_back(-FLT_MAX);
+	  dataY.push_back(-FLT_MAX);
+	  dataZ.push_back(-FLT_MAX);
+	}
+      }
+
+    // } // end for each matl
   } // end for each Patch
 
   // float * floatArrayX = (float*)malloc(sizeof(float)*dataX.size());
@@ -234,8 +287,8 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
     floatArrayY[ pos ] = dataY[ pos ];
     floatArrayZ[ pos ] = dataZ[ pos ];
 
-    // if( data[ pos ] > max ) { max = data[ pos ]; }
-    // if( data[ pos ] < min ) { min = data[ pos ]; }
+  // if( data[ pos ] > max ) { max = data[ pos ]; }
+  // if( data[ pos ] < min ) { min = data[ pos ]; }
   }*/
 
   // printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
@@ -250,44 +303,65 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
   result.z = /*floatArrayZ*/ dataZ;
   result.type = VECTOR;
   result.numParticles = dataX.size();
-  
+
   cout << "Out handleParticleData<Vector>\n";	
 
   // return result;
 } // end handleParticleData<Vector>
 
 template<>
-  void
-  /*ParticleDataContainer*/
-handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result)
+void
+/*ParticleDataContainer*/
+handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
 {
   cout << "In handleParticleData<Matrix3>\n";
   vector<float> data;
   matrixVec matrixRep /*= new matrixVec()*/;
+  vector<int> matlList;
+    
+  for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+    matlList.push_back(*matlIter);
+  }  
 
   // Loop over each patch and get the data from the data archive.
   Level::const_patchIterator patch_it;
 
-  for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
-    const Patch* patch = *patch_it;
+  // for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
+  for (unsigned int p = 0; p < mapA.size(); p++) {
+    // const Patch* patch = /* *patch_it */ patchMap.find(mapA[p].id)->second;
+    const Patch* patch = qinfo.level->getPatch(mapA[p].id);
 
-    for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+    // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+      int matl = /* *matlIter */ mapA[p].matl;
 
-      int matl = *matlIter;
-      if (matlClassfication && (matl != matlNo))
-	continue;
+      // no more needed
+      // if (matlClassfication && (matl != matlNo))
+	// continue;
 
-      ParticleVariable<Matrix3> value;
-      qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
+      // check if it is a valid matl for this var
+      bool validMatl = false;
 
-      ParticleSubset* pset = value.getParticleSubset();
-
-      if (!pset) { 
-	printf("not sure if this case is handled correctly....\n");
-	exit( 1 );
+      for (unsigned int q = 0; q < matlList.size(); q++) {
+        if (matl == matlList[q]) {
+	  validMatl = true;
+	  break;
+	}
       }
 
-      int numParticles = pset->numParticles();
+      int numParticles = 0; 
+      ParticleVariable<Matrix3> value;
+      ParticleSubset* pset = NULL;
+
+      if (validMatl) { 
+        qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
+        pset = value.getParticleSubset();
+        if (!pset) { 
+	  printf("not sure if this case is handled correctly....\n");
+	  exit( 1 );
+        }
+      
+        numParticles = pset->numParticles();
+      }
 
       if (numParticles > 0) {
 	for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
@@ -300,7 +374,17 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 	  data.push_back( temp_value );
 	}
       }
-    } // end for each Material
+      else {
+	numParticles = mapA[p].particles; 
+	for (int i = 0; i < numParticles; i++) {
+	  Matrix3 empMat(-DBL_MAX);
+	  matrixRep.push_back(empMat);
+
+	  data.push_back(-FLT_MAX);
+	}
+      }
+
+    // } // end for each Material
   } // end for each Patch
 
   // float * floatArray = (float*)malloc(sizeof(float)*data.size());
@@ -314,7 +398,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 
     if( data[ pos ] > max ) { max = data[ pos ]; }
     if( data[ pos ] < min ) { min = data[ pos ]; }
-  }*/
+    }*/
 
   // printf("%s (%d):  min/max: %f / %f\n", qinfo.varname.c_str(), (int)data.size(), min, max);
 
@@ -339,9 +423,9 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
 }
 
 template<class PartT>
-  void
-  /*ParticleDataContainer*/
-handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result)
+void
+/*ParticleDataContainer*/
+handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, ParticleDataContainer& result, string varSelected)
 {
   vector<float> data;
 
@@ -358,27 +442,54 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, Parti
   else {
     name = "Radius from p.volume";
   }
+  
+  vector<int> matlList;
+  for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+    matlList.push_back(*matlIter);
+  }  
 
   // Loop over each patch and get the data from the data archive.
   Level::const_patchIterator patch_it;
 
-  for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
-    const Patch* patch = *patch_it;
+  // for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
+  for (unsigned int p = 0; p < mapA.size(); p++) {
+    // const Patch* patch = /* *patch_it */ patchMap.find(mapA[p].id)->second;
+    // int levelBaseId = qinfo.level->getPatch(0)->getID();
+    // may be, mapA[p].id - levelBaseId, would be the correct thing to do
 
-    for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+    const Patch* patch = qinfo.level->getPatch(mapA[p].id);
 
-      int matl = *matlIter;
-      if (matlClassfication && (matl != matlNo))
-	continue;
+    // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
+      int matl = /* *matlIter */ mapA[p].matl;
+  
+      // no more needed
+      // if (matlClassfication && (matl != matlNo))
+	// continue;
+      
+      // check if it is a valid matl for this var
+      bool validMatl = false;
 
-      ParticleVariable<PartT> value;
-      qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
-      ParticleSubset* pset = value.getParticleSubset();
-      if (!pset) {
-	printf("NOT sure that this case is being handled correctly...\n");
-	exit( 1 );
+      for (unsigned int q = 0; q < matlList.size(); q++) {
+        if (matl == matlList[q]) {
+	  validMatl = true;
+	  break;
+	}
       }
-      int numParticles = pset->numParticles();
+
+      int numParticles = 0;
+      ParticleVariable<PartT> value;
+      ParticleSubset* pset = NULL;
+
+      if (validMatl) {
+        qinfo.archive->query( value, qinfo.varname, matl, patch, qinfo.timestep );
+        pset = value.getParticleSubset();
+        if (!pset) {
+	  printf("NOT sure that this case is being handled correctly...\n");
+	  exit( 1 );
+        }
+
+        numParticles = pset->numParticles();
+      }
 
       if (numParticles > 0) {
 	if (!do_radius_computation) {
@@ -398,8 +509,14 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, Parti
 	    data.push_back( temp_value );
 	  }
 	}
-      } // end if numParticles > 0
-    } // end for each Material
+      } 
+      else {
+	numParticles = mapA[p].particles;
+	for (int i = 0; i < numParticles; i++) {
+	  data.push_back(-FLT_MAX);
+	}
+      }
+    // } // end for each Material
   } // end for each Patch
 
   // float * floatArray = (float*)malloc(sizeof(float)*data.size());
@@ -410,12 +527,12 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, Parti
     floatArray[ pos ] = data[ pos ];
     if( data[ pos ] > max ) { max = data[ pos ]; }
     if( data[ pos ] < min ) { min = data[ pos ]; }
-  }*/
+    }*/
 
   // printf("%s (%d):  min/max: %f / %f\n", name.c_str(), (int)data.size(), min, max);
 
   // ParticleDataContainer result( name, floatArray, data.size() );
-  
+
   result.name = name;
   result.data = /*floatArray*/ data;
   result.numParticles = data.size();
@@ -513,6 +630,9 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
       // size_t wrote = -1;
 
+      // if (particle >= particleVars[cnt].numParticles)
+      // continue;
+
       if( (particleVars[cnt].data).size() > 0 ) {
 
 	// wrote = fwrite( &particleVars[cnt].data[particle], sizeof(float), 1, out );
@@ -596,12 +716,13 @@ templateInstantiationForParticlesCC()
   int matlNo = 0;
   bool matlClassfication = false;
   ParticleDataContainer result;
+  string varSelected = "null";
 
-  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication, result );
-  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication, result );
-  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication, result );
-  handleParticleData<double> ( *qinfo, matlNo, matlClassfication, result );
-  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication, result );
-  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication, result );
-  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication, result );
+  handleParticleData<int>    ( *qinfo, matlNo, matlClassfication, result, varSelected );
+  handleParticleData<long64> ( *qinfo, matlNo, matlClassfication, result, varSelected );
+  handleParticleData<float>  ( *qinfo, matlNo, matlClassfication, result, varSelected  );
+  handleParticleData<double> ( *qinfo, matlNo, matlClassfication, result, varSelected  );
+  handleParticleData<Point>  ( *qinfo, matlNo, matlClassfication, result, varSelected  );
+  handleParticleData<Vector> ( *qinfo, matlNo, matlClassfication, result, varSelected  );
+  handleParticleData<Matrix3>( *qinfo, matlNo, matlClassfication, result, varSelected  );
 }

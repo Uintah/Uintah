@@ -61,7 +61,7 @@ class vecVal {
 class tenVal {
   public:
     string name;
-    float mat[3][3];
+    double mat[3][3];
     tenVal(){};
     ~tenVal(){};
 };
