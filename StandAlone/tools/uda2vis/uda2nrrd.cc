@@ -1032,6 +1032,16 @@ getPatchIndex(const string& input_uda_name, int timeStepNo, int levelNo, int pat
 	// ... However, it should be easy to allow the user to create multiple grid var
 	// ... NRRDs at the same time using this loop...
 
+	// p.x should always be at the top 
+	for (unsigned int varCount = 0; varCount < var_indices.size(); varCount++) {
+	  if (vars[var_indices[varCount]].compare("p.x") == 0) {
+	    unsigned int tmpIndex = var_indices[0];
+	    var_indices[0] = var_indices[varCount];
+	    var_indices[varCount] = tmpIndex;
+	    break;
+	  }
+	}
+
 	for( unsigned int cnt = 0; cnt < var_indices.size(); cnt++ ) {
 
 	  unsigned int var_index = var_indices[cnt];
