@@ -63,19 +63,19 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
   mapA.clear();
   patchMap.clear();
 
-  // cout << "varSelected: " << varSelected << endl;
+  // cout << "Point: " << qinfo.varname << "\n";
 	  
   const Patch* pZero = *(qinfo.level->patchesBegin());
   ConsecutiveRangeSet matlsForVar = qinfo.archive->queryMaterials(varSelected, pZero, qinfo.timestep);
 
   for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
     const Patch* patch = *patch_it;
-    patchMap[patch->getID()] = *patch_it;
+
+    // not used anymore 
+    // patchMap[patch->getID()] = *patch_it;
 
     for( ConsecutiveRangeSet::iterator matlIter = matlsForVar.begin(); matlIter != matlsForVar.end(); matlIter++ ) {
     // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
-
-      // cout << patch->getID() << " " << *matlIter << endl;
 
       int matl = *matlIter;
       if (matlClassfication && (matl != matlNo))
@@ -214,15 +214,20 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
     
   for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
     matlList.push_back(*matlIter);
-  }  
+  }
 
   // Loop over each patch and get the data from the data archive.
   Level::const_patchIterator patch_it;
 
+  // cout << "Vector: " << qinfo.varname << "\n";
+
   // for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
   for (unsigned int p = 0; p < mapA.size(); p++) {
     // const Patch* patch = /* *patch_it */ patchMap.find(mapA[p].id)->second;
-    const Patch* patch = qinfo.level->getPatch(mapA[p].id);
+    int levelBaseId = qinfo.level->getPatch(0)->getID();
+    const Patch* patch = qinfo.level->getPatch(mapA[p].id - levelBaseId);
+
+    // cout << mapA[p].id  << " " << patch->getID() << endl; 
 
     // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
       int matl = /* *matlIter */ mapA[p].matl;
@@ -318,6 +323,8 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
   vector<float> data;
   matrixVec matrixRep /*= new matrixVec()*/;
   vector<int> matlList;
+
+  // cout << "Matrix3: " << qinfo.varname << "\n";
     
   for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
     matlList.push_back(*matlIter);
@@ -329,7 +336,8 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
   // for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
   for (unsigned int p = 0; p < mapA.size(); p++) {
     // const Patch* patch = /* *patch_it */ patchMap.find(mapA[p].id)->second;
-    const Patch* patch = qinfo.level->getPatch(mapA[p].id);
+    int levelBaseId = qinfo.level->getPatch(0)->getID();
+    const Patch* patch = qinfo.level->getPatch(mapA[p].id - levelBaseId);
 
     // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
       int matl = /* *matlIter */ mapA[p].matl;
@@ -442,6 +450,8 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, Parti
   else {
     name = "Radius from p.volume";
   }
+
+  // cout << "Generic: " << qinfo.varname << "\n";
   
   vector<int> matlList;
   for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
@@ -454,10 +464,10 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, Parti
   // for( patch_it = qinfo.level->patchesBegin(); patch_it != qinfo.level->patchesEnd(); ++patch_it) {
   for (unsigned int p = 0; p < mapA.size(); p++) {
     // const Patch* patch = /* *patch_it */ patchMap.find(mapA[p].id)->second;
-    // int levelBaseId = qinfo.level->getPatch(0)->getID();
-    // may be, mapA[p].id - levelBaseId, would be the correct thing to do
-
-    const Patch* patch = qinfo.level->getPatch(mapA[p].id);
+    int levelBaseId = qinfo.level->getPatch(0)->getID();
+    const Patch* patch = qinfo.level->getPatch(mapA[p].id - levelBaseId);
+    
+    // cout << mapA[p].id  << " " << patch->getID() << endl; 
 
     // for( ConsecutiveRangeSet::iterator matlIter = qinfo.materials.begin(); matlIter != qinfo.materials.end(); matlIter++ ) {
       int matl = /* *matlIter */ mapA[p].matl;
@@ -696,7 +706,6 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
     }
 
     varColln.push_back(varData);
-    // cout << endl << endl;
   }
   // fclose(out);
 
