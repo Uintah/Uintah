@@ -41,14 +41,17 @@
         <BCType id = "all" label = "Velocity"      var = "Dirichlet">
                               <value> [1.,1.,0.] </value>
         </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Dirichlet">
+        <BCType id = "all" label = "Temperature"    var = "Dirichlet">
                               <value> 300.0  </value>
         </BCType>
-        <BCType id = "0" label = "Density"      var = "Dirichlet">
+        <BCType id = "0" label = "Density"          var = "Dirichlet">
                               <value> 8900   </value>
         </BCType>
-        <BCType id = "1" label = "Density"      var = "Dirichlet">
+        <BCType id = "1" label = "Density"          var = "Dirichlet">
                               <value> 1.1792946927374306000e+00   </value>
+        </BCType>
+        <BCType id = "all"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
       </Face>
       
@@ -77,6 +80,9 @@
         <BCType id = "1" label = "Density"      var = "LODI">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       
       <Face side = "y-">
@@ -94,6 +100,9 @@
         </BCType>
         <BCType id = "1" label = "Density"        var = "Dirichlet">
                               <value> 1.1792946927374306000e+00   </value>
+        </BCType>
+        <BCType id = "all"   label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
         </BCType>
       </Face>                  
       <Face side = "y+">
@@ -117,6 +126,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "1" label = "Density"      var = "LODI">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all"   label = "SpecificVol"  var = "computeFromDensity">
                               <value> 0.0  </value>
         </BCType>
       </Face>

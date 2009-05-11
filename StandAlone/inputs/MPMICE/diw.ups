@@ -37,6 +37,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0" var = "Dirichlet" label = "Pressure">
@@ -49,6 +52,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -65,6 +71,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "0" var = "Neumann" label = "Pressure">
@@ -77,6 +86,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -93,6 +105,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>                  
       <Face side = "z+">
         <BCType id = "0" var = "Neumann" label = "Pressure">
@@ -105,6 +120,9 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "all" var = "Neumann" label = "Density">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" var = "computefromDensity" label = "SpecificVol">
                               <value> 0.0  </value>
         </BCType>
       </Face>

@@ -45,6 +45,9 @@
           <BCType id="all" label="Density" var="Neumann">
              <value> 0.0  </value>
           </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
         </Face>
         <Face side="x-">
           <BCType id="0" label="Pressure" var="Neumann">
@@ -62,6 +65,9 @@
           <BCType id="all" label="Density" var="Neumann">
              <value> 0.0  </value>
           </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
         </Face>
 
         <Face circle="y+" origin="0.00 0.069 0.0" radius="0.009">
@@ -75,6 +81,9 @@
              <value> 0.0  </value>
           </BCType>
           <BCType id="all" label="Density" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
              <value> 0.0  </value>
           </BCType>
         </Face>
@@ -91,6 +100,9 @@
           <BCType id="all" label="Density" var="Neumann">
              <value> 0.0  </value>
           </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
+             <value> 0.0  </value>
+          </BCType>
         </Face>
         <Face side="y-">
           <BCType id="0" label="Pressure" var="Neumann">
@@ -103,6 +115,9 @@
              <value> 0.0  </value>
           </BCType>
           <BCType id="all" label="Density" var="Neumann">
+             <value> 0.0  </value>
+          </BCType>
+          <BCType id="all" label="SpecificVol" var="computeFromDensity">
              <value> 0.0  </value>
           </BCType>
         </Face>
