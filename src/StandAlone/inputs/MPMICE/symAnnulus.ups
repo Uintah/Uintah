@@ -40,6 +40,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>        
       </Face>
       <Face side = "y-">
         <BCType id = "all" var = "symmetry" label = "Symmetric">
@@ -58,6 +61,9 @@
         <BCType id = "all" var = "Neumann" label = "Density">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" var = "computeFromDensity" label = "SpecificVol">
+                              <value> 0.0  </value>
+        </BCType>     
       </Face>
       <Face side = "z-">
         <BCType id = "all" var = "symmetry" label = "Symmetric">
