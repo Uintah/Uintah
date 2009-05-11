@@ -1013,7 +1013,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     isBC_set["Temperature"] =false;
     isBC_set["Density"]     =false;
     isBC_set["Velocity"]    =false;            
-    //isBC_set["SpecificVol"] =false;  this is an optional BC    
+    isBC_set["SpecificVol"] =false;  
     isBC_set["Symmetric"]   =false;    
                       
     map<string,string> face;
