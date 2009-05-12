@@ -1063,6 +1063,142 @@ The resulting csafe scene window should look similar to:
   \label{fig:manta_histograms}
 \end{figure}
 
+and a separate window will open showing the visualization. 
+
+\section{Manta Commandline options} 
+Many of the operations typically used through the GUI can be used through the commandline when running the csafe scene.
+
+\begin{enumerate}
+
+\item
+--np=<int>  : the number of processes to devote to Manta. Should be roughly equivalent to the number of cores in your system.
+\item
+--cfg=<string>  : load a configuration file, this has histogram and filenames saved
+\item
+--nrrdlist=<string>  : load a nrrdlist
+\item
+--uda=<string>  : load an UDA file
+\item
+--res <int>x<int>: resolution of window, ie 512x512
+\item
+--g  : generate (load) all datasets when starting up, should be used in conjunction with --nrrdlist or --cfg
+
+\end{enumerate}
+
+Additionally, many of the commandline options that Manta uses can also be used with the csafe scene.  These commands configure rendering options.  For example, jittered sampling may reduce aliasing effects.
+
+\begin{enumerate}
+
+\item
+--imagetype <string> : manta image type (see manta command line options)
+\item
+--shadows <string> : manta shadow algorithm (see manta command line options)
+\item
+--imagetraverser <string> : manta image traverser (see manta command line options)
+\item
+--loadbalancer <string> : manta load balancer option (see manta command line options)
+\item
+--renderer <string> : manta renderer (see manta command line options)
+
+
+\end{enumerate}
+
+\section{Saving and Loading}
+
+You can save the status of your project through File->Save or File->save as. Note that saving your project saves everything from the clipping regions to the transfer functions but currently does not save some things such as the background color or the camera position.
+
+Exporting transfer functions: You can export the transfer function currently displayed by selecting File->Export Transfer Function. This is The exported format is as follows: position r g b a position r g b a ... position is a number (0-1) that specifies the position of your control point in the transfer function. r g b a are simply the color and alpha values of the control point.
+
+You can import saved transfer functions from File->import Transfer Function. 
+
+The configuration file saves the data files used however if you would like to use the same configuration file for multiple sets of data you can select File->Export NrrdList.  This stores the data files as a list in ascii which can be imported to use with any configuration.  
+
+\section{Using the Transfer Function Editor}
+
+\begin{figure}[htbp]
+  \center
+  \includegraphics[width=.5\linewidth]{transferF.png}
+  \caption{Transfer function editor.}
+  \label{fig:manta_tf}
+\end{figure}
+
+The transfer function display in the histogram window displays the currently selected transfer function. To select a different transfer function, click on the color wheel icon next to the histogram. The transfer function can be modified in a similar fashion to gradient editors in popular image editing programs. The color and opacity of the data range can be adjusted by modifying the control points. The default transfer function is a rainbow. To change a color, select a control point and click the color wheel to edit it. Or you can simply right-click on a control point to change the color. To modify opacity, simply move the control points up and down by clicking and dragging them.
+
+\section{Histogram Controls}
+
+\begin{figure}[htbp]
+  \center
+  \includegraphics[width=.5\linewidth]{histogram.png}
+  \caption{Histogram with controls.}
+  \label{fig:manta_histogram}
+\end{figure}
+
+Histograms represent the frequency of data values in a data set. Each histogram is associated with an index into either a volume or sphere data. If you select index 0 in the sphere data set, then the histogram mostly likely shows the accumulated range of x-coordinates for all of the sphere data sets. There is a semi-transparent grey box overlaying each histogram. This represents the range of values in the histogram that are displayed. Clicking on the right or left side of this box moves the left or right side of the clipping region accordingly. You can also click and drag the middle of the region to drag the region along the histogram. You can also use the mouse wheel to zoom into a region of the histogram.
+  Name (\#) - The name associated with the histogram and the index it corresponds to in the NRRD file. 
+To the right are various controls.
+
+\begin{enumerate}
+\item
+colorwheel : This will make this histogram's transfer function display in the transfer function panel and also make it the active transfer function for either the volume or sphere data.
+\item
+Ruler : you can explicitly set specific data ranges for the clipping region or the region of the data to which the transfer function applies to. This is extremely useful if there is only a vary narrow region of the data range that you want to be looking at.
+\item
+Zoom in/out: this will zoom in to the clipping region or back out to the zoom where you were previously. 
+\end{enumerate}
+
+\section{Ambient Occlusion}
+  Ambient occlusion is an approximation of global illumination and can give a better sense of relative depth in clusters of objects.  To enable ambient occlusion turn it on in Scene->Preferences.  There are two variables to modify, the cutoff distance and the number of rays shot.  The cutoff distance is how far away objects can be to occlude rays.  To produce a good image it is a good idea to turn off the volume and reduce or remove the lights.  The light can be turned off in the Light dialog in the Manta Menu.  Setting the light color to black will completely disable a light.
+  
+\section{CSAFE Window Menus}
+
+\subsection{File - Save and Load Configuration File}
+
+\subsection{File - Save and Load NRRDFile}
+
+\subsection{File - Add Remove NRRD Files}
+
+\subsection{File - Import Export Transfer Function}
+
+\subsection{Scene - Add Histogram}
+
+\subsection{Scene - Scene Preferences}
+
+\subsection{Scene - Volume Position Size}
+
+\subsection{Scene - Cutting Bounding Box}
+
+\subsection{Scene - Generate}
+
+\section{Manta Window Menus}
+
+\subsection{File - Threads}
+
+\subsection{Camera - Auto View}
+
+\subsection{Camera - Edit Camera}
+
+\subsection{Camera - Edit Background}
+
+\subsection{Camera - Camera Paths}
+
+\subsection{Camera - Capture Frames}
+
+\subsection{Lights - Edit Lights}
+
+\subsection{Lights - Enable Visible Lights}
+
+
+\section{Manta FAQ}
+
+\begin{enumerate}
+\item
+Q. "I get an error Gtk-CRITICAL **: file gtkrange.c".
+A.  This error pops up on some system and can safely be ignored.
+Q.  "It is running very slowly"
+A.  Try increasing the number of threads, shrinking the window size, and reducing the step size through the volume.
+\end{enumerate}
+
+
 %__________________________________
 \section{Data Extraction Tools}
 
