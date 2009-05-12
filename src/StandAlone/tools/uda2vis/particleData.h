@@ -54,6 +54,12 @@ class vecVal {
     float y;
     float z;
     vecVal(){};
+    void operator=(const vecVal& obj) {
+      // name.assign(obj.name);
+      x = obj.x;
+      y = obj.y;
+      z = obj.z;
+    }
     ~vecVal(){};
 };
 
@@ -63,6 +69,14 @@ class tenVal {
     string name;
     double mat[3][3];
     tenVal(){};
+    void operator=(const tenVal& obj) {
+      // name.assign(obj.name);
+      for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+	  mat[i][j] = obj.mat[i][j];
+	}
+      }
+    }
     ~tenVal(){};
 };
 
