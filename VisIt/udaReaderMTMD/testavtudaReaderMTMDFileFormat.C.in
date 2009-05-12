@@ -2357,6 +2357,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	    for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
 	      for (int k = extraXYZ[0]; k < (cellValColln.x + extraXYZ[0]); k++) {    
 		vecVal& vecValRef = vecValMatrix[k][j][i];
+		// vecValRef.name = varName;
 		vecValRef.x = cellValVec[count++];
 		vecValRef.y = cellValVec[count++];
 		vecValRef.z = cellValVec[count++];
@@ -2386,6 +2387,7 @@ avtudaReaderMTMDFileFormat::GetVectorVar(int timestate, int domain,const char *v
 	    for (int j = extraXYZ[1]; j < (cellValColln.y + extraXYZ[1]); j++) {
 	      for (int k = extraXYZ[0]; k < (cellValColln.x + extraXYZ[0]); k++) {    
 		tenVal& tenValRef = tenValMatrix[k][j][i];
+		// tenValRef.name = varName;
 		for (int p = 0; p < 3; p++) {
 		  for (int q = 0; q < 3; q++) {
 		    tenValRef.mat[p][q] = cellValVec[count++];
