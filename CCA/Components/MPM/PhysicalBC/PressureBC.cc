@@ -70,8 +70,9 @@ PressureBC::PressureBC(ProblemSpecP& ps, const GridP& grid)
     throw ParameterNotFound("** ERROR ** No surface specified for pressure BC.",
                             __FILE__, __LINE__);
   }
-  d_numMaterialPoints = 0;
-
+  
+  d_numMaterialPoints = 0;  // this value is read in on a restart
+  ps->get("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
   
   // Read and save the load curve information
   d_loadCurve = scinew LoadCurve<double>(ps);
@@ -116,6 +117,7 @@ void PressureBC::outputProblemSpec(ProblemSpecP& ps)
   ProblemSpecP press_ps = ps->appendChild("pressure");
   ProblemSpecP geom_ps = press_ps->appendChild("geom_object");
   d_surface->outputProblemSpec(geom_ps);
+  press_ps->appendElement("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
   d_loadCurve->outputProblemSpec(press_ps);
 }
 
