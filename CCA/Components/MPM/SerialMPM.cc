@@ -446,6 +446,21 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
     delete add_matl; // shouln't happen, but...
 }
 
+
+/* _____________________________________________________________________
+ Purpose:   Set variables that are normally set during the initialization
+            phase, but get wiped clean when you restart
+_____________________________________________________________________*/
+void SerialMPM::restartInitialize()
+{
+  cout_doing<<"Doing restartInitialize\t\t\t\t\t MPM"<<endl;
+
+  if(d_analysisModule){
+    d_analysisModule->restartInitialize();
+  }  
+}
+
+//______________________________________________________________________
 void SerialMPM::schedulePrintParticleCount(const LevelP& level, 
                                            SchedulerP& sched)
 {
