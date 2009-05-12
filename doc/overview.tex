@@ -1,12 +1,12 @@
 \chapter{Overview of Uintah} \label{Sec:Overview} 
-The Uintah Computational Framework, (also referred to as Uintah or the UCF)
+The Uintah Computational Framework (also referred to as Uintah or the UCF)
 consists of a set of
 software components and libraries that facilitate the solution of
 Partial Differential Equations (PDEs) on Structured AMR (SAMR) grids
 using hundreds to thousands of processors.
 
 One of the challenges in designing a parallel, component-based
-multi-physics application is determining how to efficiently decompose
+and multi-physics application is determining how to efficiently decompose
 the problem domain. Components, by definition, make local
 decisions. Yet parallel efficiency is only obtained through a globally
 optimal domain decomposition and scheduling of computational
@@ -16,15 +16,15 @@ decomposition that is a compromise between the ideal load balance of
 multiple components. However, neither of these techniques will achieve
 maximum efficiency for complex multi-physics problems.
 
-Uintah uses a non-traditional approach to achieving parallelism,
-employing an abstract taskgraph representation to describe computation
-and communication. The taskgraph (for an example, see Figure~\ref{fig:TaskGraph}) is an explicit representation of the
+Uintah uses a non-traditional approach to achieving parallelism by
+employing an abstract task graph representation to describe computation
+and communication. The task graph (see Figure~\ref{fig:TaskGraph}) is an explicit representation of the
 computation and communication that occur in the coarse of a single
 iteration of the simulation (typically a timestep or nonlinear solver
 iteration). Uintah components delegate decisions about parallelism to
-a scheduler component, using variable dependencies to describe
+a scheduler component by using variable dependencies to describe
 communication patterns and characterizing computational workloads to
-facilitate a global resource optimization. The taskgraph
+facilitate a global resource optimization. The task graph
 representation has a number of advantages, including efficient
 fine-grained coupling of multi-physics components, flexible load
 balancing mechanisms and a separation of application concerns from
@@ -60,15 +60,15 @@ subset of variables, and may require previously computed variables,
 possibly from different processors. The scheduler will then compile
 this task information into a task graph, and the task graph will
 contain a sorted order of tasks, along with any information necessary
-to perform inter-process communication via MPI. Then, when the
-scheduler is executed, the tasks will execute in the pre-determined
+to perform inter-process communication via MPI. When the
+scheduler is executed, the tasks will execute in their pre-determined
 order.
 
 \subsection{Tasks}
 
 A task contains two essential components: a pointer to a function
-that performs the actual computations, and the data inputs and
-outputs, i.e. the data dependencies required by the function.  When a
+that performs the actual computations and the data inputs and
+outputs (i.e. the data dependencies required by the function).  When a
 task requests a previously computed variable from the data warehouse,
 the number of ghost cells are also specified.  The Uintah framework
 uses the ghost cell information to excecute inter-process
@@ -77,8 +77,8 @@ communication to retrieve the necessary ghost cell data.
 An example of a task description is presented showing the essential
 features that are commonly used by the application developer when
 implementing an algorithm within the Uintah framework.  The task
-component is assigned a name and in this particular example, it is
-called \texttt{taskexample} and a funtion pointer,
+component is assigned a name (in this particular example, it is
+called \texttt{taskexample}) and a function pointer,
 \texttt{\&Example::taskexample}.  Following the instantiation of the
 task itself, the dependency information is assigned to the tasks.  In
 the following example, the task requires data from the previous
@@ -87,8 +87,8 @@ variable1\_label and requires one ghost node
 (\texttt{Ghost::AroundNodes,1}) level of information which will be
 retrieved from another processor via MPI.  In addition, the task will
 compute two new pieces of data each associated with different
-variables, i.e. \texttt{variable1\_label}, and
-\texttt{variable2\_label}.  Finally, the task is added to the scheduler
+variables (i.e. \texttt{variable1\_label} and
+\texttt{variable2\_label}).  Finally, the task is added to the scheduler
 component with specifications about what patches and materials are
 associated with the actual computation.
 
@@ -113,7 +113,7 @@ with an individual material within a multi-physics calculation.
 
 Components are the Uintah vernacular for the algorithms that have
 been implemented within the Uintah Computational Framework (UCF).
-For example, the MPM component is a particle based method for structural
+For example, the MPM component is a particle-based method for structural
 dynamics, the Arches component is a method for simulation of unsteady reacting
 flows, etc.  The following describes how these and other components are
 incorporated within the UCF.
@@ -180,8 +180,8 @@ algorithms, \tt scheduleTimeAdvance \normalfont actually
 schedules several tasks, each of which is responsible for a portion
 of the algorithm, rather than scheduling a single \tt timeAdvance \normalfont
 task.
-The roles of each of the scheduling methods e.g. \texttt{scheduleInitialize},
-\texttt{scheduleComputeStableTimestep}, and \texttt{scheduleTimeAdvance}
+The roles of each of the scheduling methods (e.g. \texttt{scheduleInitialize},
+\texttt{scheduleComputeStableTimestep}, and \texttt{scheduleTimeAdvance})
 are described below. 
 
 \subsubsection{ProblemSetup}
@@ -191,9 +191,9 @@ The purpose of this method is to read the problem specification (.ups
 file (Section~\ref{Sec:UPS})) which
 requires a minimum of information about the grid used (e.g. spatial extents,
 spatial resolution, patch configuration, etc), time
-information, (e.g. time step size, length of time for simulation, etc)
-data archiving (e.g., what variables are saved, how frequently, when to
-checkpoint for restart, etc).  Depending on the component and the problem
+information (e.g. time step size, length of time for simulation, etc), and
+data archiving (e.g. what variables are saved, how frequently, when to
+checkpoint for restart, etc.).  Depending on the component and the problem
 that is being solved, the input file can be rather complex, and this method
 would evolve to establish those parameters needed to initially
 setup the problem.
@@ -201,7 +201,7 @@ setup the problem.
 \subsubsection{ScheduleInitialize}
 
 The purpose of this method is to initialize the grid data with values
-read in from the problemSetup and to define what variables are
+read in from the \texttt{problemSetup} method and to define what variables are
 actually computed in the TimeAdvance stage of the simulation.  A task
 is defined which references a function pointer called
 \texttt{initialize}.
@@ -228,7 +228,7 @@ Tasks ``communicate'' with each other through an entity called the
 \tt DataWarehouse. \normalfont  The \tt DataWarehouse \normalfont is accessed through a simple
 name-based dictionary mechanism and provides each task with the
 illusion that all memory is global.  If the tasks correctly describe
-their data dependencies, then the data stored in the DataWarehouse
+their data dependencies then the data stored in the DataWarehouse
 will match the data (variable and region of space) needed by the task.
 In other words, the \tt DataWarehouse \normalfont is an abstraction of a global
 single-assignment memory, with automatic data lifetime management and
