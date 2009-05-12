@@ -1,4 +1,4 @@
-\section{Using Uintah} \label{Sec:UCF}
+\chapter{Using Uintah} \label{Chapter:UCF}
 
 Several executable programs have been developed using the Uintah
 Computational Framework (UCF).  The primary code that drives the
@@ -30,7 +30,7 @@ interactions.
 
 
 %__________________________________
-\subsection{Mechanics of Running sus}
+\section{Mechanics of Running sus}
 
 For single processor simulations, the \tt sus \normalfont excutable
 (Standalone Uintah Simulation) is run from the command line prompt
@@ -63,7 +63,7 @@ Uintah provides for restarting from checkpoint as well.  For information on
 this, see Section~\ref{Sec:DataArchiver}, which describes how to create
 checkpoint data, and how to restart from it.
 
-\subsection{Uintah Problem Specification (UPS)} \label{Sec:UPS}
+\section{Uintah Problem Specification (UPS)} \label{Sec:UPS}
 
 The Uintah framework uses XML like input files to specify the various
 parameters required by simulation components.  These Uintah Problem
@@ -100,7 +100,7 @@ is up to the individual creating or modifying the input file to put in
 physically reasonable set of consistent parameters.
 
 
-\subsection{Simulation Components} \label{Sec:SimulationComponent}
+\section{Simulation Components} \label{Sec:SimulationComponent}
 
 The input file tag for SimulationComponent has the \tt type \normalfont
 attribute that must be specified with either \tt mpm, mpmice, ice, arches,
@@ -113,7 +113,7 @@ attribute that must be specified with either \tt mpm, mpmice, ice, arches,
 
 
 %__________________________________
-\subsection{Time Related Variables} \label{Sec:TimeRelatedVariables}
+\section{Time Related Variables} \label{Sec:TimeRelatedVariables}
 Uintah components are time dependent codes.  As such, one of the first
 entries in each input file describes the timestepping parameters.  An
 input file segment is given below that encompasses all of the possible
@@ -140,7 +140,7 @@ individual components.
 \end{Verbatim}
 %
 %__________________________________
-\subsection{Data Archiver} \label{Sec:DataArchiver}
+\section{Data Archiver} \label{Sec:DataArchiver}
 
 The Data Archiver section specifies the directory name where data will
 be stored and what variables will be saved and how often data is saved
@@ -219,7 +219,7 @@ Here are some example:
 \end{Verbatim}
 %
 %__________________________________
-\subsection{Geometry objects} \label{Sec:GeometryObjects}
+\section{Geometry objects} \label{Sec:GeometryObjects}
 %FIXME
 %- what is res \\
 
@@ -268,17 +268,18 @@ As an example of a non-trivial geometry object is shown below:
 
 The following geometry objects are given with their required tags:
 
-\tt box \normalfont has the following tags: min and max which are vector quantities
-specified in the \tt [a, b, c] \normalfont format.
+\tt box \normalfont has the following tags: min and max which are
+vector quantities specified in the \tt [a, b, c] \normalfont format.
 
-\tt sphere \normalfont has an origin tag specified as a vector and the radius tag
-specified as a float.
+\tt sphere \normalfont has an origin tag specified as a vector and the
+radius tag specified as a float.
 
-\tt cone \normalfont has a tag for the top and bottom origins (vector) as well as tags for the
-top and bottom radius (float) to create a right circular cone/frustram.
+\tt cone \normalfont has a tag for the top and bottom origins (vector)
+as well as tags for the top and bottom radius (float) to create a
+right circular cone/frustram.
 
-\tt cylinder \normalfont has a tag for the top and bottom origins (vector) plus a tag
-for the radius (float).
+\tt cylinder \normalfont has a tag for the top and bottom origins
+(vector) plus a tag for the radius (float).
 
 \tt parallelepiped \normalfont requires that four points be specified as
 illustrated by the ASCI art snippet taken from the source code:
@@ -299,12 +300,12 @@ illustrated by the ASCI art snippet taken from the source code:
 //  (The order of p2, p3, and p4 doesn't really matter.)
 \end{Verbatim}
 
-\tt tri \normalfont is a tag for describing a triangulated surface.  The name tag
-specifies the file name to use for reading in the triangulated surface
-description and the points file.  The triangulated surface
-(file\_name.tri) contains a list of integers describing the
-connectivities of points specified in file\_name.pts.  Here is an
-excerpt from a tri file and a points file:
+\tt tri \normalfont is a tag for describing a triangulated surface.
+The name tag specifies the file name to use for reading in the
+triangulated surface description and the points file.  The
+triangulated surface (file\_name.tri) contains a list of integers
+describing the connectivities of points specified in file\_name.pts.
+Here is an excerpt from a tri file and a points file:
 
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -324,18 +325,19 @@ Points file
 
 \end{Verbatim}
 
-The boolean operators on the geometry pieces include \tt difference, intersection, \normalfont and \tt union.\normalfont 
+The boolean operators on the geometry pieces include \tt difference,
+intersection, \normalfont and \tt union.\normalfont
 
-The \tt difference  \normalfont takes two geometry pieces and subtracts the second
-geometry piece from the first geometry piece.  The \tt intersection \normalfont
-operator requires at least two geometry pieces in forming an
-intersection geometry piece.  Whereas the \tt union \normalfont operator aggregates a
-collection of geometry pieces.  Multiple operators can be used to form
-very complex geometry pieces.
+The \tt difference \normalfont takes two geometry pieces and subtracts
+the second geometry piece from the first geometry piece.  The \tt
+intersection \normalfont operator requires at least two geometry
+pieces in forming an intersection geometry piece.  Whereas the \tt
+union \normalfont operator aggregates a collection of geometry pieces.
+Multiple operators can be used to form very complex geometry pieces.
 
 
 %__________________________________
-\subsection{Boundary conditions}
+\section{Boundary conditions}
 
 Boundary conditions are specified within the \tt <Grid> \normalfont
 but are described separately for clarity.  The essential idea is that
@@ -449,7 +451,7 @@ lower corner at 0,0.181,0 and upper corner at 0,0.5,0.
 
 %
 %__________________________________
-\subsection{Grid specification} \label{Sec:Grid}
+\section{Grid specification} \label{Sec:Grid}
 
 The \tt <Grid> \normalfont section specifies the domain of the
 structured grid and includes tags which indicate the lower and upper
@@ -514,13 +516,13 @@ for what are frequently referred to as ``ghost-cells".
 
 %
 %__________________________________
-\subsection{Adapative Mesh Refinement}
+\section{Adapative Mesh Refinement}
 - Describe refinement flags
 - Describe boundary layers
 - How is a cell flagged as needing to be refined
 %
 %__________________________________
-\subsection{Regridder}
+\section{Regridder}
 
 The regridder creates a multilevel grid from the refinement flags.
 Each level will completely cover the refinement flags from the corser
@@ -567,7 +569,7 @@ resizing of tiles set the tag \emph{dynamic\_size} to false.
 
 %
 %__________________________________
-\subsection{Load Balancer}
+\section{Load Balancer}
 
 The load balancer assignes patches to processors such that work is 
 evenly distributed.  Uintah currently supports a wide array of 
@@ -648,16 +650,16 @@ Zoltan algorithm to use with the \emph{zoltanAlgorithm} tag.
 The Zoltan algorithm can be set to \emph{HSFC}, \emph{RIB}, \emph{RCB}.
 
 %__________________________________
-\subsection{UDA}
+\section{UDA}
 
-\subsubsection{UDA Directory Structure}
+\subsection{UDA Directory Structure}
 
 The UDA is a file/directory structure used to save Uintah simulation
 data.  For the most part, the user need not concern him or herself
 with the UDA layout, but it is a good idea to have a general feeling
 for how the data is stored on disk...
 
-%\subsubsubsection{UDA Naming}
+%\subsubsection{UDA Naming}
 
 Every time a simulation (sus) is run, a new UDA is created.  Sus uses
 the <filebase> tag in the simulation input
@@ -671,7 +673,7 @@ disks.uda.000
 disks.uda.001
 disks.uda.001 <- disks.uda
 
-%\subsubsubsection{UDA Files}
+%\subsubsection{UDA Files}
 
 Each UDA consists of a number of top level files, a checkpoints
 subdirectory, and subdirectories for each saved timestep.  These files
@@ -703,7 +705,7 @@ input.xml
 t00001
 t00057
 
-%\subsubsection{Known Issues}
+%\subsection{Known Issues}
 
 Occasionally, due (most likely) to file system issues on large
 clusters, some of the files in the UDA have been found to be corrupted
@@ -712,7 +714,7 @@ prevent this.  We believe that either the OS/File system is
 incorreclty returning error codes, or, more likely, that the files are
 corrupted (due to file system issues) after the simulation is done.
 
-%\subsubsection{Restarting}
+%\subsection{Restarting}
 
 The sus executable provides a mechanism for checkpointing the code and
 then restarting the ongoing simulation from a given checkpoint.
@@ -720,7 +722,7 @@ then restarting the ongoing simulation from a given checkpoint.
 
 
 %__________________________________
-\subsection{Visualization tools}
+\chapter{Visualization tools}
 
 Visualization of Uintah data is currently possible using any of three
 software packages.  These are SCIRun, VisIt and Manta.  Of these, SCIRun is
@@ -734,9 +736,9 @@ While the capabilities of Manta are more limited, it is a fast way to
 interactively interrogate reasonably large datasets, provided the user has
 access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
-\subsubsection{VisIt}
+\chapter{VisIt}
 
-\paragraph{Reading Uintah Data Archive's}
+\chapter{Reading Uintah Data Archive's}
 
 Once you have installed VisIt and the UDA reader plugin, you can launch VisIt and start visualizing UDA's. To open a UDA, select \tt Open File \normalfont from the \tt  File \normalfont menu. Browse into the UDA you want to load and select the \tt index.xml \normalfont file. Then hit on \tt OK \normalfont and a list of timesteps should now appear on the gui. Figure~\ref{VisItFileOpen} illustrates this process.
 
@@ -747,7 +749,7 @@ Once you have installed VisIt and the UDA reader plugin, you can launch VisIt an
   \label{VisItFileOpen}
 \end{figure}
 
-\paragraph{Plots}
+\section{Plots}
 
 VisIt displays data as plots. A plot might render a specific variable or it might render the structure of the mesh. Figure~\ref{VisItPlots} illustrates this.
 
@@ -771,7 +773,7 @@ Once you have a plot, you change plot attributes by clicking on the PlotAtts men
 
 As seen in figure~\ref{VisItVolumeAtts}, you can change the color map, opacity curve, rendering method, no. of samples, lighting options, etc. in this window.
 
-\paragraph{Operators}
+\section{Operators}
 
 A wide variety of operators can be applied to the plots, as mentioned earlier. These modify the incoming datasets in some way (eg., a slice formats a 3D dataset into a 2D slice), which can then be plotted. However, you will first need to select a plot and then only you can apply an operator to it (though the order of operation is opposite). An important thing to keep in mind is that when you select an operator, by default it gets applied to all the plots in the Active plots window. You will need to uncheck the Apply operators checkbox, in case you just want to apply the operator to a single plot. This is illustrated in figure~\ref{VisItApplyOperators}.
 
@@ -820,7 +822,7 @@ Once you have this order, select Slice from the OpAtts menu. This will pop up th
 
 You can now play up with the various attributes (eg., selecting normal plane) to obtain the desired visualization. The checkbox "Project to 2D" should be unchecked is you want to have the slice in 3D space.
 
-\paragraph{Vectors}
+\section{Vectors}
 
 By default, VisIt reduces the number of vectors plotted (to 400) and this needs to be manually changed to the original number or something greater, only if required.
 This can be accomplished by changing the attributes of the Vector plot. In figure~\ref{VisItVectorNumber}, the no of vectors has been increased to 2000.
@@ -847,7 +849,7 @@ Figure~\ref{VisItVectorScale} describes this.
   \label{VisItVectorScale}
 \end{figure}
 
-\paragraph{AMR datasets}
+\section{AMR datasets}
 
 AMR datasets are read the same way as single level datasets. Once you have it read, you can apply an plot/ operator on it. Since the dataset is organized as levels and patches, you now have the flexibility of visualizing each of them independently or as in a group. To achieve this (assuming that you have already selected a plot), click on the Subset button either on the Active Plots window in the gui or on the same option in the Controls menu. This is illustrated in figures~\ref{VisItSubsetIcon} and ~\ref{VisItSubsetWin}.
 
@@ -865,9 +867,9 @@ AMR datasets are read the same way as single level datasets. Once you have it re
   \label{VisItSubsetWin}
 \end{figure}
 
-\paragraph{Examples}
+\section{Examples}
 
-\subparagraph{Volume visualization}
+\subsection{Volume visualization}
 
 a. Read in the uda by selecting the index.xml file. A list of timesteps should now appear on the gui.
 
@@ -942,7 +944,7 @@ You can add in as many curves on the graph by clicking on the left mouse button 
 
 After specifying an opacity transfer function, one can select an appropriate rendering method, Splatting being the default. The related fields thereafter become active/ inactive as and when different rendering methods are selected.
 
-\subparagraph{Particles}
+\subsection{Particles}
 
 a. To add particles, we select the Molecule plot and then click on the variable p.temperature as shown in the figure~\ref{VisItMoleculePTempATK08}. The asterisk '*' refers to all the materials associated with the variable.
 
@@ -977,7 +979,7 @@ Combined with volume visualization, we get a visualization as shown in figure~\r
   \label{VisItMoleculePTtempViewer}
 \end{figure}
 
-\paragraph{Visualizing patch boundaries}
+\section{Visualizing patch boundaries}
 %In order to generate an image, like the one shown in figure~\ref{VisItSubsetPlot}, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
 In order to visualize patch boundaries, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
 
@@ -1018,7 +1020,7 @@ Next, we hit Draw. This produces a visualization as shown in figure~\ref{VisItSu
   \label{VisItSubsetPlotWireframe}
 \end{figure}
 
-\subsubsection{Manta}
+\chapter{Manta}
 
 To run the C-SAFE scene: 
 \begin{Verbatim}
@@ -1062,7 +1064,7 @@ The resulting csafe scene window should look similar to:
 \end{figure}
 
 %__________________________________
-\subsection{Data Extraction Tools}
+\section{Data Extraction Tools}
 
 Uintah offers a number of tools for accessing data stored in Uintah Data
 Archives (``UDAs").  Because the format of Uintah data is specific to the
@@ -1072,7 +1074,7 @@ code may be necessary), postprocessed with external software such as
 Matlab or Octave, or simply plotted with, e.g. gnuplot.  These tools are not compiled automatically when ``make sus'' is issued.  To compile them cd to ``opt/StandAlone/tools'' and issue ``make''.  These tools
 are described below.
 
-\subsubsection{puda}
+\subsection{puda}
 
 The command line extraction utility \tt puda \normalfont
 (for ``parse uintah data archive") has a number of uses.  For example, it
@@ -1155,7 +1157,7 @@ Parsing const_test_hypo.uda/index.xml
 
 The first column is the simulation time, the second column is ????, the third column is the material number, the fourth column is the particle ID, and the remaining nine columns represent the components of the Cauchy stress tensor ($ \sigma_{11}$,$\sigma_{12}$,$\sigma_{13}$, ..., $\sigma_{32}$,$\sigma_{33}$).  If desired, the terminal output can be redirected to a text file for further use.
 
-\subsubsection{partextract}
+\subsection{partextract}
 
 The command-line utility \tt partextract \normalfont may be used to extract data from an individual particle.  To do this you first need to know the ID number of the particle you are interested in.  This may be done by using the puda utility, or the visualization tools.  Once the extraction tools have been compiled, the partextract utility executable will be located in  \tt /opt/StandAlone/tools/extractors/ \normalfont.  If the executable is run without any arguments the following usage guide will be displayed in the terminal:
 
@@ -1201,7 +1203,7 @@ Parsing const_test_hypo.uda/index.xml
 
 Compare this output with the output from puda above.  Notice that the ordering of the six independent components of the stress tensor for partextract are $\sigma_{11}$,$\sigma_{22}$, $\sigma_{33}$, $\sigma_{23}$, $\sigma_{13}$ , $\sigma_{12}$.
 
-\subsubsection{lineextract}
+\subsection{lineextract}
 
 Lineextract is used to extract an array of data from a region of a computational domain. Data can be extracted from a point, along a line, or from a three dimensional region and then stored as a variable for ease of post processing.
 
@@ -1235,12 +1237,12 @@ simulation. The variable containing the density data within the uda is ``rho\_CC
 ./lineextract -v rho_CC  -timestep 7 -istart 60 0 0 -iend 60 1000 0 -m 1 -o rho -uda test01.uda.000
 \end{Verbatim}
 
-\subsubsection{timeextract}
+\subsection{timeextract}
 
-\subsubsection{compare\_uda}
+\subsection{compare\_uda}
 
 %__________________________________
-\subsubsection{plotting tools}
+\subsection{plotting tools}
 - plotStats\\
 - plotRegridder \\
 - plotCPU\_usage \\

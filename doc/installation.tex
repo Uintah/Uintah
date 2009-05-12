@@ -1,4 +1,25 @@
-\section{Installing Uintah} \label{Sec:installation}
+\documentclass[12pt]{article}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage[pdftex]{graphicx}
+\usepackage{fancyvrb}
+\usepackage{chapterbib}
+\usepackage{hyperref}
+
+\pdfcompresslevel=9
+\DeclareGraphicsExtensions{{.png},{.pdf},{.jpg},{jpeg}}
+\graphicspath{ {figures/}}
+\usepackage{color}
+
+\begin{document}
+
+\title{Uintah Installation Guide}
+
+\author{Jim Guilkey, Todd Harman, Justin Luitjens, John Schmidt,
+  Jeremy Thornock, J. Davison de St. Germain, Siddharth Shankar,
+  Carson Brownlee}
+
+\chapter{Installing Uintah} \label{Sec:installation}
 
 The Uintah library is composed of several executables and a generic
 library framework for solving PDEs on structured AMR grids.  The VisIt
@@ -18,7 +39,7 @@ into a directory called Uintah in the users home directory.
 VisIt can be obtained from https://wci.llnl.gov/codes/visit/. And Teem
 can be obtained from http://teem.sourceforge.net/.
 
-\subsection{Library Dependencies}
+\section{Library Dependencies}
 
 Uintah depends on several different libraries that are commonly
 available or easily installable on various Linux or Unix like OS
@@ -46,7 +67,7 @@ https://computation.llnl.gov/casc/hypre/software.html.
 Petsc 2.3.3 can be downloaded from
 http://www.mcs.anl.gov/petsc/petsc-as/download/index.html.
 
-\subsection{Debian Dependencies}
+\section{Debian Dependencies}
 
 The Debian OS offers the vast majority of libraries necessary for
 installing Uintah with the exception of VisIt and Teem.
@@ -58,7 +79,7 @@ libxml2-dev zlib1g-dev liblapack-dev cmake cmake-curses-gui.
 Once these libraries are installed, Teem and VisIt can be installed
 followed by installation of Uintah.
 
-\subsection{Fedora Core 9 Dependencies}
+\section{Fedora Core 9 Dependencies}
 
 Fedora Core 9 offers all the dependencies except for petsc and hypre.
 Install the following libraries: openmpi-devel openmpi-libs
@@ -68,7 +89,7 @@ make tar diffutils.
 Please see the section on MPI Issues for creating symbolic links for
 the mpi libaries and include files.
 
-\subsection{CentOS 5 Dependencies}
+\section{CentOS 5 Dependencies}
 
 CentOS 5 does not provide an openmpi rpm, however a src.rpm can be
 downloaded from http://www.open-mpi.org:80/software/ompi/v1.3/ and
@@ -86,7 +107,7 @@ Once mpi has been built, the other libraries can be installed:
 lapack-devel gcc-gfortran blas-devel gcc-c++ libxml2-devel subversion
 make tar diffutils.
 
-\subsection{MPI issues}
+\section{MPI issues}
 
 The openmpi library that is installed with Fedora Core 9 needs to have
 a 'helper' directory set up with symbolic links assigned so that
@@ -106,7 +127,7 @@ ln -s /usr/lib64/openmpi/1.2.4-gcc lib
 
 
 
-\subsection{Petsc Installation}
+\section{Petsc Installation}
 
 Petsc can be installed by executing the following simplified
 instructions.  Please refer to the petsc website for comprehensive
@@ -133,7 +154,7 @@ make install
 
 \end{Verbatim}
 
-\subsection{Hypre Installation}
+\section{Hypre Installation}
 
 Hypre can be installed by executing the following simplified
 instructions, however, if you encounter problems please refer to the
@@ -173,7 +194,7 @@ make install
 
  
 
-\subsection{Teem Installation}
+\section{Teem Installation}
 \label{sec:teem}
 
 
@@ -208,19 +229,19 @@ make install
 
 The Teem libraries and include files will be install in /usr/local hierarchy.
 
-\subsection{VisIt Installation}
+\section{VisIt Installation}
 
-\subsubsection{Client/ Server}
+\subsection{Client/ Server}
 \label{sec:ClientServer}
 
 You would most likely will want to install a VisIt server on a multiprocessor machine. This requires you to build the server from source (as it is needed to compile the UDA reading plugin). You can then install any client on your local machine and attach to the server. 
 
-\subsubsection{Prebuilt binaries}
+\subsection{Prebuilt binaries}
 \label{sec:PrebuiltBinaries}
 
 If you have a system that matches the prebuilt binaries, found at \url{https://wci.llnl.gov/codes/visit/executables.html}, you may want to try one. In most cases you will want to build your own binaries. There are currently no universal binaries available for Mac OS X 10.5 (leopard).
 
-\subsubsection{Using the build script}
+\subsection{Using the build script}
 \label{sec:UsingTheBuildScript}
 
 We recommend that you first try the visit build script (WARNING, make sure you get the must recent version of this script. The build script must correspond to the version of VisIt you wish to install. The latest version is 1.11.2). This is a link to the script, \url{https://wci.llnl.gov/codes/visit/1.11.2/build\_visit}.
@@ -253,7 +274,7 @@ tail -f build_visit_log
 \end{Verbatim}
 
 \normalfont  
-\subsubsection{Parallel OS X build}
+\subsection{Parallel OS X build}
 \label{sec:ParallelOSXBuild}
 
 A full parallel OS X build can be built using the instructions above, but it will fail when it tries to build the visit executable (the last stage of the script). When it fails, you will need to follow the instructions for building in parallel on a Mac. 
@@ -270,7 +291,7 @@ Note particularly the changes that need to be made in the file,
 
 \normalfont Once you make these edit's, you can then finish building VisIt by typing make in the \tt <path\_to\_visit>/visit1.11.2/src \normalfont directory.  
 
-\subsubsection{When the build script fails}
+\subsection{When the build script fails}
 \label{sec:WhenTheBuildsSriptFails}
 
 Sometimes the build script doesn't work depending on your installation. When this happens, you may be forced to build everything by hand. The instructions for doing this are carefully outlined in the VisIt Build Notes file, 
@@ -288,7 +309,7 @@ After a successful build, the executable will be placed in,
 <path\to\visit>/visit1.11.2/src/bin
 \end{Verbatim}
 
-\subsubsection{Building and installing the UDA reader plugin}
+\subsection{Building and installing the UDA reader plugin}
 \label{sec:BuildingAndInstallingUDAPlugin}
 
 Add the following arguements to the Uintah configure line,
@@ -307,15 +328,15 @@ For example,
 
 Note, the \tt visit1.11.2 \normalfont directory you point at should have \tt data\normalfont , and \tt src \normalfont sub-directories; and the \tt teem \normalfont directory should have \tt bin\normalfont , \tt include\normalfont , and \tt lib \normalfont sub-directories.
 
-\subsubsection{How it works}
+\subsection{How it works}
 By specifying the above configure arguments (to the Uintah configure), Uintah will automatically build a VisIt plugin (when you type "make"). The plugin will be placed in (a sub-directory of) ~/.visit. When VisIt is run, it will find the plugin and allow for reading UDA's.
 
-\subsubsection{Remote visualization}
+\subsection{Remote visualization}
 In order to read data on a remote machine, you will need to have a version of VisIt and the UDA reader plugin installed on that machine. You will also need to make sure that the VisIt executable is in your path. You may need to edit your shell's .rc file so that the path to VisIt is included in your shell's PATH variable.
 
 NOTE: The version of VisIt installed on your local desktop and the remote machine should be the same.
 
-\paragraph{Host Profile}
+\subsubsection{Host Profile}
 Next you will want to set up a Host Profile for your remote machine. Select 'Host Profiles' from the 'Options' menu and set up a new profile as shown in figure ~\ref{VisItHostProfile}.
 
 \begin{figure}
@@ -388,7 +409,7 @@ Once the ssh login has completed, you should see the directory listing. You can 
 %and installed in the ~/Visit/visit1.11.2 directory.  The \tt visit
 %\normalfont executable is found in ~/Visit/visit1.11.2/src/bin .
 
-\subsubsection{Configuring Uintah}
+\subsection{Configuring Uintah}
 
 cd to\tt ~/Uintah \normalfont and create the following directories:
 dbg and opt
@@ -421,7 +442,7 @@ the following configure line:
 
 Then build the software by typing \tt make \normalfont at the command line.
 
-\subsection{Installing Visualization Software}
+\section{Installing Visualization Software}
 
 Visualization of Uintah data is currently possible using any of three
 software packages.  These are SCIRun, VisIt and Manta.  Of these, SCIRun is
@@ -435,9 +456,9 @@ While the capabilities of Manta are more limited, it is a fast way to
 interactively interrogate reasonably large datasets, provided the user has
 access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
-\subsection{Installing Manta C-SAFE Scene}
+\section{Installing Manta C-SAFE Scene}
 
-\subsection{Building Manta}
+\section{Building Manta}
 
 For complete build instructions for Manta, please refer to
 http://software.sci.utah.edu/manta/index.php/CSAFE.  
@@ -477,3 +498,4 @@ ccmake ..
  Click "g" to generate the cmake files. you can now build Manta again by typing make. 
 \end{enumerate}
 
+\end{document}
