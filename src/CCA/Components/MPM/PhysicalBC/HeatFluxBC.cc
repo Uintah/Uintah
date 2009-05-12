@@ -73,7 +73,9 @@ HeatFluxBC::HeatFluxBC(ProblemSpecP& ps,const GridP& grid)
     throw ParameterNotFound("** ERROR ** No surface specified for heatflux BC.",
                             __FILE__, __LINE__);
   }
-  d_numMaterialPoints = 0;
+  
+  d_numMaterialPoints = 0;  // this value is read in on a restart
+  ps->get("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
 
   // Read and save the load curve information
   d_loadCurve = scinew LoadCurve<double>(ps); 
@@ -115,10 +117,11 @@ HeatFluxBC::~HeatFluxBC()
 void HeatFluxBC::outputProblemSpec(ProblemSpecP& ps)
 {
 
-  ProblemSpecP ahf_ps = ps->appendChild("heat_flux");
-  ProblemSpecP geom_ps = ahf_ps->appendChild("geom_object");
+  ProblemSpecP hf_ps = ps->appendChild("heat_flux");
+  ProblemSpecP geom_ps = hf_ps->appendChild("geom_object");
   d_surface->outputProblemSpec(geom_ps);
-  d_loadCurve->outputProblemSpec(ahf_ps);
+  hf_ps->appendElement("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
+  d_loadCurve->outputProblemSpec(hf_ps);
 
 }
 
