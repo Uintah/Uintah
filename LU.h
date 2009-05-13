@@ -21,6 +21,9 @@ namespace Uintah {
 class LU{
  public:
   LU( const int dim, const int bandwidth );
+
+  LU( LU &CopyThis );
+  
   ~LU();
 
   inline double& operator ()(const int row, const int col){
