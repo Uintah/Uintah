@@ -26,12 +26,12 @@ set replacePattern = `sed s/'\/'/"\\\/"/g .tmp`
 /bin/rm .tmp
 
 
-# find the first xml tag
-set xml_tag = `echo "$replacePattern" |awk -F">" '{print $1}'`
+# find  xml tag
+set xml_tag = `echo "$replacePattern" |tr -d "<>/"|awk '{print $1}'`
 
 #do a line replacement
 cp $f $f.tmp
-sed s/"$xml_tag.*"/"$replacePattern"/g < $f.tmp >& $f
+sed s/"<$xml_tag>.*<\/$xml_tag>"/"$replacePattern"/g < $f.tmp >& $f
 
 /bin/rm $f.tmp 
 
