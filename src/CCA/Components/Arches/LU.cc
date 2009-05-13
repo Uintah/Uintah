@@ -17,6 +17,18 @@ LU::LU( const int dim, const int bandwidth )
 {
 }
 //--------------------------------------------------------------------
+// Copy constructor for LU object
+LU::LU( LU &CopyThis ) : dim_( CopyThis.getDimension() ), 
+                         AA_( CopyThis.getDimension(), CopyThis.getDimension() )
+{
+  const int CopyThisDim = CopyThis.getDimension();
+  for (int i=0; i < CopyThisDim; ++i) {
+    for (int j=0; j < CopyThisDim; ++j) {
+      AA_(i,j) = CopyThis(i,j);
+    }
+  }
+}
+//--------------------------------------------------------------------
 LU::~LU()
 {
 }
