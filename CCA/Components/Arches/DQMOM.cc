@@ -381,15 +381,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       //save a copy of the original B as RHS vector
       copy(B.begin(), B.end(), RHS.begin());
 
-      const int dim_A = A.getDimension();
-
       // save a copy of the original A as Aorig
-      LU Aorig( (N_xi+1)*N_, 1);
-      for (int i=0; i < dim_A; ++i) {
-        for (int j=0; j < dim_A; ++j) {
-          Aorig(i,j) = A(i,j);
-        }
-      }
+      LU Aorig( A );
       
       A.decompose();
       A.back_subs( &B[0] );
