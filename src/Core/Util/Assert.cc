@@ -1,4 +1,5 @@
 #include <Core/Util/Assert.h>
+#include <cstdio>
 
 void WAIT_FOR_DEBUGGER()
 { 

@@ -37,6 +37,7 @@
 
 #include <cstring>
 #include <cerrno>
+#include <cstdio>
 
 #ifdef _WIN32
 #  define socklen_t int

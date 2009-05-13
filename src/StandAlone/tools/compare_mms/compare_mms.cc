@@ -71,6 +71,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include <cstdio>
 
 using namespace SCIRun;
 using namespace std;

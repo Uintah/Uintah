@@ -64,6 +64,8 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 using namespace SCIRun;
 using namespace std;

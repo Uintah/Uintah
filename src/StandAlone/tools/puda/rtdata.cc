@@ -41,6 +41,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/OS/Dir.h>
 
 #include <iomanip>
+#include <cstdio>
 
 using namespace Uintah;
 using namespace SCIRun;
