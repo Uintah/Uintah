@@ -76,7 +76,7 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
+#include <Core/Parallel/Parallel.h>
 
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
@@ -389,7 +389,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
     d_timeIntegrator->problemSetup(time_db);
   } else {
-    cout << "WARNING: If you are trying to do DQMOM you need to add the <TimeIntegrator> section!\n"; 
+    proc0cout << "WARNING: If you are trying to do DQMOM you need to add the <TimeIntegrator> section!\n"; 
   }
 
   //register all source terms
@@ -402,7 +402,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     Arches::registerTransportEqns(transportEqn_db); 
   }
   else
-    cout << "No *extra* transport equations found." << endl;
+    proc0cout << "No *extra* transport equations found." << endl;
 
   //create user specified transport eqns
   if (transportEqn_db) {
@@ -1228,10 +1228,10 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
       delta_t = delta_t2;
     }
     else {
-      cout << " Courant condition for time step: " << delta_t2 << endl;
+      proc0cout << " Courant condition for time step: " << delta_t2 << endl;
     }
 
-    //    cout << "time step used: " << delta_t << endl;
+    //    proc0cout << "time step used: " << delta_t << endl;
     new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label()); 
   }
 }
@@ -1249,7 +1249,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 #ifndef ExactMPMArchesInitialize
     //    if (nofTimeSteps < 2) {
     if (time < 1.0E-10) {
-      cout << "Calculating at time step = " << nofTimeSteps << endl;
+      proc0cout << "Calculating at time step = " << nofTimeSteps << endl;
       d_nlSolver->noSolve(level, sched);
     }
     else 
@@ -1472,7 +1472,7 @@ Arches::dqmomInit( const ProcessorGroup* ,
 
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
-    double mylength = .5;
+    //double mylength = .5;
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       EqnBase* temp_eqn = ieqn->second; 
       DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
@@ -1480,6 +1480,8 @@ Arches::dqmomInit( const ProcessorGroup* ,
       const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
       const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
       double initValue = eqn->getInitValue(); 
+      //proc0cout << "INITIAL VALUE FOR" << tempVarLabel << endl; 
+      //proc0cout << " = " << initValue << endl; 
       
       CCVariable<double> tempSource;
       CCVariable<double> tempVar; 
@@ -1592,8 +1594,8 @@ Arches::blobInit(const ProcessorGroup* ,
     extrascalarlabel = d_extraScalars[0]->getScalarLabel();
     new_dw->getModifiable(extrascalar, extrascalarlabel, indx, patch);
   
-    std::cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
-    std::cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
+    proc0cout << "WARNING!  SETTING UP A BLOB IN YOUR DOMAIN!" << std::endl;
+    proc0cout << "Turn off debug_mom in Arches.cc to stop this" << std::endl;
   
     IntVector idxLo = patch->getFortranCellLowIndex__New();
     IntVector idxHi = patch->getFortranCellHighIndex__New();
@@ -1997,10 +1999,10 @@ void Arches::registerSources(ProblemSpecP& db)
       vector<string> required_varLabels;
       ProblemSpecP var_db = source_db->findBlock("RequiredVars"); 
 
-      cout << "******* Source Term Registration ********" << endl; 
-      cout << "Found  a source term: " << src_name << endl;
-      cout << "Requires the following variables: " << endl;
-      cout << " \n"; // white space for output 
+      proc0cout << "******* Source Term Registration ********" << endl; 
+      proc0cout << "Found  a source term: " << src_name << endl;
+      proc0cout << "Requires the following variables: " << endl;
+      proc0cout << " \n"; // white space for output 
 
       if ( var_db ) {
         // You may not have any labels that this source term depends on...hence the 'if' statement
@@ -2009,7 +2011,7 @@ void Arches::registerSources(ProblemSpecP& db)
           std::string label_name; 
           var->getAttribute("label", label_name);
 
-          cout << "label = " << label_name << endl; 
+          proc0cout << "label = " << label_name << endl; 
           // This map hold the labels that are required to compute this source term. 
           required_varLabels.push_back(label_name);  
         }
@@ -2030,12 +2032,16 @@ void Arches::registerSources(ProblemSpecP& db)
         factory.register_source_term( src_name, srcBuilder ); 
 
       } else {
-        cout << "For source term named: " << src_name << endl;
-        cout << "with type: " << src_type << endl;
+        proc0cout << "For source term named: " << src_name << endl;
+        proc0cout << "with type: " << src_type << endl;
         throw InvalidValue("This source term type not recognized or not supported! ", __FILE__, __LINE__);
       }
       
     }
+  }
+  } else {
+
+    proc0cout << "No sources found for transport equations." << endl;
   }
 }
 //---------------------------------------------------------------------------
@@ -2051,8 +2057,8 @@ void Arches::registerModels(ProblemSpecP& db)
   // Get reference to the dqmom factory
   DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self(); 
 
-  cout << "\n";
-  cout << "******* Model Registration ********" << endl; 
+  proc0cout << "\n";
+  proc0cout << "******* Model Registration ********" << endl; 
 
   // There are three kind of variables to worry about:
   // 1) internal coordinates
@@ -2076,9 +2082,9 @@ void Arches::registerModels(ProblemSpecP& db)
       vector<string> requiredIC_varLabels;
       ProblemSpecP icvar_db = model_db->findBlock("ICVars"); 
 
-      cout << " \n"; // white space for output 
-      cout << "Found  a model: " << model_name << endl;
-      cout << "Requires the following internal coordinates: " << endl;
+      proc0cout << " \n"; // white space for output 
+      proc0cout << "Found  a model: " << model_name << endl;
+      proc0cout << "Requires the following internal coordinates: " << endl;
 
       if ( icvar_db ) {
         // These variables are only those that are specifically defined from the input file
@@ -2087,7 +2093,7 @@ void Arches::registerModels(ProblemSpecP& db)
           std::string label_name; 
           var->getAttribute("label", label_name);
 
-          cout << "label = " << label_name << endl; 
+          proc0cout << "label = " << label_name << endl; 
           // This map hold the labels that are required to compute this source term. 
           requiredIC_varLabels.push_back(label_name);  
         }
@@ -2117,8 +2123,8 @@ void Arches::registerModels(ProblemSpecP& db)
           ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredIC_varLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
-          cout << "For model named: " << temp_model_name << endl;
-          cout << "with type: " << model_type << endl;
+          proc0cout << "For model named: " << temp_model_name << endl;
+          proc0cout << "with type: " << model_type << endl;
           std::string errmsg;
           errmsg = model_type + ": This model type not recognized or not supported.";
           throw InvalidValue(errmsg, __FILE__, __LINE__);
@@ -2140,8 +2146,8 @@ void Arches::registerTransportEqns(ProblemSpecP& db)
 
   if (eqns_db) {
 
-    cout << "\n";
-    cout << "******* Equation Registration ********" << endl; 
+    proc0cout << "\n";
+    proc0cout << "******* Equation Registration ********" << endl; 
 
     for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")){
       std::string eqn_name;
@@ -2149,7 +2155,7 @@ void Arches::registerTransportEqns(ProblemSpecP& db)
       std::string eqn_type;
       eqn_db->getAttribute("type", eqn_type);
 
-      cout << "Found  an equation: " << eqn_name << endl;
+      proc0cout << "Found  an equation: " << eqn_name << endl;
 
       // Here we actually register the equations based on their types.
       // This is only done once and so the "if" statement is ok.
@@ -2163,8 +2169,8 @@ void Arches::registerTransportEqns(ProblemSpecP& db)
       // ADD OTHER OPTIONS HERE if ( eqn_type == ....
 
       } else {
-        cout << "For eqnation named: " << eqn_name << endl;
-        cout << "with type: " << eqn_type << endl;
+        proc0cout << "For eqnation named: " << eqn_name << endl;
+        proc0cout << "with type: " << eqn_type << endl;
         throw InvalidValue("This equation type not recognized or not supported! ", __FILE__, __LINE__);
       }
     }
@@ -2188,8 +2194,8 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
     dqmom_db->require("number_quad_nodes", n_quad_nodes);
     dqmom_eqnFactory.set_quad_nodes( n_quad_nodes ); 
 
-    cout << "\n";
-    cout << "******* DQMOM Equation Registration ********" << endl; 
+    proc0cout << "\n";
+    proc0cout << "******* DQMOM Equation Registration ********" << endl; 
 
     // Make the weight transport equations
     for ( int iqn = 0; iqn < n_quad_nodes; iqn++) {
@@ -2201,7 +2207,7 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
       node = out.str(); 
       wght_name += node; 
 
-      cout << "creating a weight for: " << wght_name << endl;
+      proc0cout << "creating a weight for: " << wght_name << endl;
 
       DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, wght_name ); 
       dqmom_eqnFactory.register_scalar_eqn( wght_name, eqnBuilder );     
@@ -2213,7 +2219,7 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
       ic_db->getAttribute("label", ic_name);
       std::string eqn_type = "dqmom"; // by default 
 
-      cout << "Found  an internal coordinate: " << ic_name << endl;
+      proc0cout << "Found  an internal coordinate: " << ic_name << endl;
 
       // loop over quad nodes. 
       for (int iqn = 0; iqn < n_quad_nodes; iqn++){
@@ -2226,7 +2232,7 @@ void Arches::registerDQMOMEqns(ProblemSpecP& db)
         node = out.str(); 
         final_name += node; 
 
-        cout << "created a weighted abscissa for: " << final_name << endl; 
+        proc0cout << "created a weighted abscissa for: " << final_name << endl; 
 
         DQMOMEqnBuilderBase* eqnBuilder = scinew DQMOMEqnBuilder( d_lab, d_timeIntegrator, final_name ); 
         dqmom_eqnFactory.register_scalar_eqn( final_name, eqnBuilder );     
