@@ -3,22 +3,20 @@
 <!--Please use a consistent set of units, (mks, cgs,...)-->
 
    <Meta>
-       <title> Flow around a wedge using velocity input from x- </title>
+       <title>20 degree wedge moving at mach 2.0 through stationary air</title>
    </Meta>
 
-   <SimulationComponent type="mpmice" />
-
+   <SimulationComponent type="rmpmice" />
 
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.00064       </maxTime>
+       <maxTime>            0.0003      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-      <!-- <max_Timesteps> 400 </max_Timesteps>--> 
        <timestep_multiplier>0.8 </timestep_multiplier>
    </Time>
 
@@ -31,7 +29,7 @@
         <BCType id = "0" label = "Pressure" var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"    var = "Neumann">
+        <BCType id = "all" label = "Velocity" var = "Neumann">
                               <value> [0.0,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature" var = "Neumann">
@@ -45,10 +43,10 @@
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0" label = "Pressure"     var = "Neumann">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"    var = "Neumann">
+        <BCType id = "all" label = "Velocity" var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature" var = "Neumann">
@@ -66,10 +64,10 @@
         </BCType>
       </Face>
       <Face side = "y+">
-        <BCType id = "0" label = "Pressure"     var = "Neumann">
+        <BCType id = "0" label = "Pressure" var = "Neumann">
                               <value> 0.0   </value>
         </BCType>
-        <BCType id = "all" label = "Velocity"   var = "Neumann">
+        <BCType id = "all" label = "Velocity" var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature" var = "Neumann">
@@ -98,9 +96,9 @@
               <lower>        [-0.03,0.0,  -0.0005]   </lower>
               <upper>        [ 0.22,0.0375,0.0005]   </upper>
               <extraCells>   [1,1,1]                  </extraCells>
-              <patches>      [4,2,1]                  </patches>
+              <patches>      [1,1,1]                  </patches>
             </Box>
-           <spacing>         [0.00025,0.00025,0.001]       </spacing>
+           <spacing>         [0.0005,0.0005,0.001]       </spacing>
        </Level>
     </Grid>
 
@@ -108,9 +106,8 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>M2wedge.uda</filebase>
+      <filebase>Mach2_wedge.uda</filebase>
       <outputInterval>0.00001</outputInterval>
-      <!-- <outputTimestepInterval> 2 </outputTimestepInterval>--> 
       <save label = "press_equil_CC"/>
       <save label = "vol_frac_CC"/>
       <save label = "sp_vol_CC"/>
@@ -140,12 +137,11 @@
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
-    <!--____________________________________________________________________-->   
+    <!--____________________________________________________________________-->
     <PhysicalConstants>
        <gravity>            [0,0,0]   </gravity>
        <reference_pressure> 101325.0  </reference_pressure>
     </PhysicalConstants>
-
 
     <!--____________________________________________________________________-->
     <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
@@ -154,28 +150,22 @@
        <MPM>
          <material>
               <density>             8900.0         </density>
-              <constitutive_model type = "comp_neo_hook_plastic">
+              <constitutive_model type = "comp_neo_hook">
                   <useModifiedEOS>     true          </useModifiedEOS>
                   <bulk_modulus>      117.0e7        </bulk_modulus>
                   <shear_modulus>      43.8e7        </shear_modulus>
-                  <yield_stress>       70.0e6        </yield_stress>
-                  <hardening_modulus>  43.8e5        </hardening_modulus>
-                  <alpha>               0.0          </alpha>
-                  <strain_limit>       3.05          </strain_limit>
-                  <reduction_factor>   1.0           </reduction_factor>
               </constitutive_model>
-                <thermal_conductivity>  400.0         </thermal_conductivity>
-                <specific_heat>         386.0         </specific_heat>
+              <thermal_conductivity>  400.0         </thermal_conductivity>
+              <specific_heat>         386.0         </specific_heat>
                
-                
-               <geom_object>
-                    <tri>
-                      <name>wedge40</name>
-                    </tri>
-                    <res>              [2,2,1]          </res>
-                    <velocity>         [696.,0.,0.]     </velocity>
-                    <temperature>      300.             </temperature>
-                </geom_object>
+              <geom_object>
+                <tri>
+                  <name>wedge40</name>
+                </tri>
+                <res>              [2,2,1]          </res>
+                <velocity>         [696.,0.,0.]     </velocity>
+                <temperature>      300.             </temperature>
+              </geom_object>
          </material>
             <contact>
               <type>null</type>
@@ -207,7 +197,7 @@
            </geom_object>
          </material>
       </ICE>       
-       
+
       <exchange_properties> 
          <exchange_coefficients>
               <momentum>               [1e15]         </momentum>
@@ -215,7 +205,6 @@
         </exchange_coefficients>
      </exchange_properties> 
     </MaterialProperties>
-            
 
        
 </Uintah_specification>
