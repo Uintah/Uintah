@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cmath>
 #include <cerrno>
 #include <cstring>
+#include <cstdio>
 
 
 using namespace Uintah;
