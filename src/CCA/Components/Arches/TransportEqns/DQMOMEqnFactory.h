@@ -38,8 +38,8 @@ public:
 
 protected: 
   ArchesLabel* d_fieldLabels; 
-  ExplicitTimeInt* d_timeIntegrator; 
   string d_eqnName; 
+  ExplicitTimeInt* d_timeIntegrator; 
 }; // class DQMOMEqnBuilder
 
 // End builder 

@@ -580,12 +580,12 @@ DQMOMEqn::computeConv(const Patch* p, fT& Fconv, oldPhiT& oldPhi,
 
   if (d_convScheme == "upwind") {
 
-    bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
-    bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
-    bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
-    bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
-    bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
-    bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
+    //bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
+    //bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
+    //bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
+    //bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
+    //bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
+    //bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
 
   // UPWIND
   for (CellIterator iter=p->getCellIterator__New(); !iter.done(); iter++){
@@ -983,11 +983,11 @@ DQMOMEqn::computeBCs( const Patch* p,
   // Going to hard code these until I figure out a better way to handle
   // the boundary conditions
   bool xminus = p->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
+  //bool xplus =  p->getBCType(Patch::xplus) != Patch::Neighbor;
+  //bool yminus = p->getBCType(Patch::yminus) != Patch::Neighbor;
+  //bool yplus =  p->getBCType(Patch::yplus) != Patch::Neighbor;
+  //bool zminus = p->getBCType(Patch::zminus) != Patch::Neighbor;
+  //bool zplus =  p->getBCType(Patch::zplus) != Patch::Neighbor;
 
   double inletR = 0.007112;
   double boundaryValue = d_initValue;

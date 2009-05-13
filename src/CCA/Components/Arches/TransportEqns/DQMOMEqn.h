@@ -180,7 +180,7 @@ public:
     return d_weight; };
 
   /** @brief Get the low clipping values */ 
-  inline int getLowClip(){
+  inline double getLowClip(){
     return d_lowClip; };
 
   /** @brief Sets this equation as a weight.
