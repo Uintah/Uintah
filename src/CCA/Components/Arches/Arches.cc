@@ -2038,7 +2038,6 @@ void Arches::registerSources(ProblemSpecP& db)
       }
       
     }
-  }
   } else {
 
     proc0cout << "No sources found for transport equations." << endl;
