@@ -19,6 +19,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/DQMOM.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Parallel/Parallel.h>
 
 //===========================================================================
 
@@ -109,13 +110,13 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   
   // Check to make sure number of total moments specified in input file is correct
   if ( moments != (N_xi+1)*N_ ) {
-    cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
   // Check to make sure number of moment indices matches the number of internal coordinates
   if ( index_length != N_xi ) {
-    cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
     throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
   }
 
@@ -133,7 +134,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
   ModelFactory& model_factory = ModelFactory::self();
 
   if (timeSubStep == 0) {
-    cout << "Asking for normB label " << endl; 
+    proc0cout << "Asking for normB label " << endl; 
     tsk->computes(d_normBLabel); 
   } else {
     tsk->modifies(d_normBLabel); 
@@ -144,15 +145,15 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weights
-    cout << "The linear system requires weight " << *tempLabel << endl;
+    proc0cout << "The linear system requires weight " << *tempLabel << endl;
     tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
 
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     if (timeSubStep == 0) {
-      cout << "The linear system computes source term " << *sourceterm_label << endl;
+      proc0cout << "The linear system computes source term " << *sourceterm_label << endl;
       tsk->computes(sourceterm_label);
     } else {
-      cout << "The linear system modifies source term " << *sourceterm_label << endl;
+      proc0cout << "The linear system modifies source term " << *sourceterm_label << endl;
       tsk->modifies(sourceterm_label);
     }
  
@@ -163,24 +164,24 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weighted abscissas
-    cout << "The linear system requires weighted abscissa " << *tempLabel << endl;
+    proc0cout << "The linear system requires weighted abscissa " << *tempLabel << endl;
     tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
 
     // compute or modify source terms
-    cout << " current eqn  = " << (*iEqn)->getEqnName() << endl;
+    proc0cout << " current eqn  = " << (*iEqn)->getEqnName() << endl;
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     if (timeSubStep == 0) {
-      cout << "The linear system computes source term " << *sourceterm_label << endl;
+      proc0cout << "The linear system computes source term " << *sourceterm_label << endl;
       tsk->computes(sourceterm_label);
     } else {
-      cout << "The linear system modifies source term " << *sourceterm_label << endl;
+      proc0cout << "The linear system modifies source term " << *sourceterm_label << endl;
       tsk->modifies(sourceterm_label);
     }
     
     // require model terms
     vector<string> modelsList = (*iEqn)->getModelsList();
     for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
-      cout << "looking for model: " << (*iModels) << endl;
+      proc0cout << "looking for model: " << (*iModels) << endl;
       ModelBase& model_base = model_factory.retrieve_model(*iModels);
       const VarLabel* model_label = model_base.getModelLabel();
       tsk->requires( Task::NewDW, model_label, Ghost::AroundCells, 1 );
@@ -364,34 +365,37 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         B[k] = totalsumS;
       } // end moments
 
-     /* 
-      // Print out cell-by-cell matrix information
-      // (Make sure and change your domain to have a small # of cells!)
-      cout << "Cell " << c << endl;
-      cout << endl;
 
-      cout << "A matrix:" << endl;
+
+      proc0cout << "Cell " << c << endl;
+      proc0cout << endl;
+  
+      // ---------------- coefficient matrix (A) -------------
+      proc0cout << "A matrix:" << endl;
       A.dump();
-      cout << endl;
+      proc0cout << endl;
 
-      cout << "B matrix:" << endl;
+      // ---------------- RHS vector (B) ---------------------
+      proc0cout << "B matrix:" << endl;
       for (vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB) {
-        cout << (*iB) << endl;
+        proc0cout << (*iB) << endl;
       }
-      cout << endl;
-      */
+      proc0cout << endl;
+
 
       A.decompose();
       A.back_subs( &B[0] );
 
-      /*
-      cout << "X matrix:" << endl;
+
+      // -------------- solution vector (X) ------------------
+      proc0cout << "X matrix:" << endl;
       for (vector<double>::iterator iB = B.begin(); iB != B.end(); ++iB) {
-        cout << (*iB) << endl;
+        proc0cout << (*iB) << endl;
       }
-      cout << endl;
-      */
-   
+      proc0cout << endl;
+      
+
+
       normB[c] = 0;
       double maxNormMag = 10000; 
       unsigned int z = 0;
@@ -411,6 +415,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       normB[c] = pow(normB[c], 1./2.); 
       
       z = 0; 
+
+
 
       // set weight/weighted abscissa transport eqn source terms equal to results
       for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
