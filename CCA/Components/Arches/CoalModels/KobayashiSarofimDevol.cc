@@ -147,8 +147,8 @@ KobayashiSarofimDevol::initVars( const ProcessorGroup * pc,
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
+    //Ghost::GhostType  gac = Ghost::AroundCells;
+    //Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int matlIndex = 0;
