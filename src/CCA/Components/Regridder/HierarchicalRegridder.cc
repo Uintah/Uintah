@@ -89,6 +89,8 @@ void HierarchicalRegridder::problemSetup(const ProblemSpecP& params,
 				   const SimulationStateP& state)
 
 {
+  if(d_myworld->myrank()==0)
+    cout << " WARNING: The Hierarchical regridder has major performance issues and has been superseeded by the tiled regridder\n";
   rdbg << "HierarchicalRegridder::problemSetup() BGN" << endl;
   RegridderCommon::problemSetup(params, oldGrid, state);
   d_sharedState = state;

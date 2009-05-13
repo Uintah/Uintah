@@ -630,6 +630,9 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
                                 const GridP& oldGrid,
                                 const SimulationStateP& state)
 {
+  if(d_myworld->myrank()==0)
+    cout << " WARNING: The BNR regridder has performance issues and has been superseeded by the tiled regridder\n";
+
   RegridderCommon::problemSetup(params, oldGrid, state);
   d_sharedState = state;
 

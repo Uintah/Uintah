@@ -895,6 +895,7 @@ namespace Uintah
   }
 }
 
+//This is O(p).
 bool Grid::operator==(const Grid& othergrid) const
 {
   if (numLevels() != othergrid.numLevels())
@@ -918,6 +919,9 @@ bool Grid::operator==(const Grid& othergrid) const
   return true;
 
 }
+
+//This seems to have performance issues when there are lots of patches. This could be 
+//partially avoided by parallelizing it.  
 bool Grid::isSimilar(const Grid& othergrid) const
 {
   if(numLevels() != othergrid.numLevels())

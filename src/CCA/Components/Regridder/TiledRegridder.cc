@@ -289,7 +289,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
  
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,tiles);
-  if (newGrid->isSimilar(*oldGrid)) 
+  if(newGrid==oldGrid)
   {
     delete newGrid;
     return oldGrid;
