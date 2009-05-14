@@ -86,8 +86,6 @@
           <soot_precursors              spec="OPTIONAL BOOLEAN" />
           <sulfur_chem                  spec="OPTIONAL BOOLEAN" />
           <tabulated_soot               spec="OPTIONAL BOOLEAN" />
-          <emperical_soot               spec="OPTIONAL BOOLEAN" />
-          <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>
         </NewStaticMixingTable>
 
         <optically_thin_model_opl      spec="OPTIONAL DOUBLE" />
@@ -97,6 +95,9 @@
           <strict_mode                  spec="OPTIONAL BOOLEAN" />
           <diagnostic_mode              spec="OPTIONAL BOOLEAN" />
         </TabPropsTable>
+
+        <emperical_soot               spec="OPTIONAL BOOLEAN" />
+        <soot_factor                  spec="OPTIONAL DOUBLE '0,100'"/>
 
       </Properties>
 
