@@ -226,8 +226,12 @@ Properties::problemSetup(const ProblemSpecP& params)
           throw InvalidValue("Table has soot, do not use empirical soot model!",
                              __FILE__, __LINE__);
       }
-      else
+      else {
         db->getWithDefault("empirical_soot",d_empirical_soot,true);
+        if (d_empirical_soot) 
+          db->getWithDefault("soot_factor", d_sootFactor, 1.0);
+
+      }
     }
 
   }
@@ -1273,7 +1277,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
                   double cmw     = 12.0;
 
                   if (inStream.d_mixVars[0] > d_f_stoich)
-                    sootFV[currCell] = c3*bc*cmw/rhosoot;
+                    sootFV[currCell] = d_sootFactor * c3*bc*cmw/rhosoot;
                   else
                     sootFV[currCell] = 0.0;
                 }
