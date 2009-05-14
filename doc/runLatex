@@ -6,8 +6,11 @@
 
 #set OUTPUT_DIR="-output-directory=PDF"
 
+pdflatex installation.tex
+
 #pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
 pdflatex  --halt-on-error  uintah.tex
+
 
 if [ $? -eq 0 ]; then
   echo "------------------"
@@ -22,3 +25,8 @@ if [ $? -eq 0 ]; then
   pdflatex -interaction=batchmode uintah.tex
   pdflatex -interaction=batchmode uintah.tex
 fi
+
+#cleanup
+echo "------------------"
+echo "now cleaning up"
+/bin/rm -f installation.log installation.aux installation.out
