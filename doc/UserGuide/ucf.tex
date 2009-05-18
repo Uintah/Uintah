@@ -738,7 +738,7 @@ access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
 \chapter{VisIt}
 
-\chapter{Reading Uintah Data Archive's}
+\section{Reading Uintah Data Archive's}
 
 Once you have installed VisIt and the UDA reader plugin, you can launch VisIt and start visualizing UDA's. To open a UDA, select \tt Open File \normalfont from the \tt  File \normalfont menu. Browse into the UDA you want to load and select the \tt index.xml \normalfont file. Then hit on \tt OK \normalfont and a list of timesteps should now appear on the gui. Figure~\ref{VisItFileOpen} illustrates this process.
 
@@ -944,7 +944,7 @@ You can add in as many curves on the graph by clicking on the left mouse button 
 
 After specifying an opacity transfer function, one can select an appropriate rendering method, Splatting being the default. The related fields thereafter become active/ inactive as and when different rendering methods are selected.
 
-\subsection{Particles}
+\subsection{Particle visualization}
 
 a. To add particles, we select the Molecule plot and then click on the variable p.temperature as shown in the figure~\ref{VisItMoleculePTempATK08}. The asterisk '*' refers to all the materials associated with the variable.
 
@@ -979,7 +979,7 @@ Combined with volume visualization, we get a visualization as shown in figure~\r
   \label{VisItMoleculePTtempViewer}
 \end{figure}
 
-\section{Visualizing patch boundaries}
+\subsection{Visualizing patch boundaries}
 %In order to generate an image, like the one shown in figure~\ref{VisItSubsetPlot}, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
 In order to visualize patch boundaries, we use the Subset plot. As with other variables, we select the Subset plot and an associated variable. The variables have a prefix 'level/ patch'. There is a level/ patch variable associated with every kind of variable (Cell Centered, Node Centered, Face Centeerd) present in the dataset. In the figure~\ref{VisItSubsetPlotVariables}, we select one such variable.
 
@@ -1018,6 +1018,75 @@ Next, we hit Draw. This produces a visualization as shown in figure~\ref{VisItSu
   \includegraphics[width=.5\linewidth]{VisItSubsetPlotWireframe.png}
   \caption{The patch boundaries after enabling the wireframe mode}
   \label{VisItSubsetPlotWireframe}
+\end{figure}
+
+\subsection{Iso-surfaces}
+
+The easiest way to draw iso-surfaces is to use the 'Contour' Plot. As with other plots demonstrated above, the contour plot is selected on a regular 3D scalar variable. Figure ~\ref{VisItContourPlot} illustrates this. 
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItContourPlot.png}
+  \caption{Selecting the 'Contour' plot on a regular 3D scalar variable}
+  \label{VisItContourPlot}
+\end{figure}
+
+Once the plot is selected, we hit 'Draw'. This would produce a visualization, similar to one shown in figure~\ref{VisItContourPlotViewer}. You can then modify the attributes the plot attribute's by double clicking on the plot in the 'Active plots' window. This would pop up the 'Contour plot attributes window', as shown in figure~\ref{VisItContourPlotAttrib}. 
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.25]{VisItContourPlotViewer.png}
+  \caption{Iso-surface viualization}
+  \label{VisItContourPlotViewer}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItContourPlotAttrib.png}
+  \caption{The attributes window for the 'Contour' plot}
+  \label{VisItContourPlotAttrib}
+\end{figure}
+
+The 'Select by' option can be changed to 'Value(s)' and 'Percent(s)'. When specifying multiple values, they should be separated by a space.
+
+\subsection{Streamlines}
+
+The 'Streamlines' plot has issues with the current version of VisIt (1.11.2 and older). Howerver, these have been corrected in the trunk and should be out in version 2.0. The controls remain the same in all these version and the example below was implemented on the trunk version.
+
+As shown in figure~\ref{VisItStreamlinesPlot} we select the 'Streamlines' plot on a vector variable. We then double click on the plot itself, which pops up the 'Streamlines attributes window'. 
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItStreamlinesPlot.png}
+  \caption{Selecting the 'Streamlines' plot on a vector variable}
+  \label{VisItStreamlinesPlot}
+\end{figure}
+
+We set the 'Distance' parameter such that it covers the entire computational domain. We set the  'Streamline direciton' as forward. In the 'Source' tab, figure~\ref{VisItStreamlinesAttrib1}, we define the 'Source type' as 'Line'. We can select other options too, notably 'Single Point', 'Sphere' etc. We now define the line 'Start' and 'End' coordinates. In this specific case, we define them as [-0.1 -0.05 0] and [-0.1 0.05 0] respectively. This choice ensures that we cover the entire y axis and start at the leftmost corner of the computational domain.
+
+To ensure that our stream lines are smooth, we change the 'Maximum step length' in the in the 'Advanced' tab. In this case, we change it to 1.e-05. The thing to keep in mind is that this length should be order of magnitude smaller than the length of the computational domain. This is shown in figure ~\ref{VisItStreamlinesAttrib2}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItStreamlinesAttrib1.png}
+  \caption{Setting the 'Source' tab parameters}
+  \label{VisItStreamlinesAttrib1}
+\end{figure}
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.75]{VisItStreamlinesAttrib2.png}
+  \caption{Setting the 'Advanced' tab parameters}
+  \label{VisItStreamlinesAttrib2}
+\end{figure}
+
+Once these parameters are set, we hit 'Apply' and then click on the 'Draw' button on the gui. This produces a visualization similar to one shown in figure ~\ref{VisItStreamlinesViewer}.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.4]{VisItStreamlinesViewer.png}
+  \caption{Streamlines visualization}
+  \label{VisItStreamlinesViewer}
 \end{figure}
 
 \chapter{Manta}
