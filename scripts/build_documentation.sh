@@ -8,7 +8,8 @@ cd uintah/doc
 
 ./runLatex
 
-cp *.pdf /var/www/uintah/htdocs
+
+cp *Guide/*.pdf /var/www/uintah/htdocs
 
 chown www-data.root /var/www/uintah/htdocs/*.pdf
 chmod go+r /var/www/uintah/htdocs/*.pdf
