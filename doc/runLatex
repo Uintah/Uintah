@@ -31,4 +31,6 @@ fi
 #cleanup
 echo "------------------"
 echo "now cleaning up"
+cd ../InstallationGuide
 /bin/rm -f installation.log installation.aux installation.out
+cd ../
