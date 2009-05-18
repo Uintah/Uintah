@@ -589,6 +589,11 @@ public:
                                   const PatchSet* patches,
                                   const MaterialSet* matls);
 
+
+  void sched_bcdummySolve( SchedulerP& sched, 
+                         const PatchSet* patches, 
+                         const MaterialSet* matls );
+
 private:
 
   ////////////////////////////////////////////////////////////////////////
@@ -696,6 +701,14 @@ private:
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw);
+
+
+  void bcdummySolve( const ProcessorGroup*,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw);
+
 private:
   // GROUP:  Local DataTypes :
   ////////////////////////////////////////////////////////////////////////
