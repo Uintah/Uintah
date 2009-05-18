@@ -6,8 +6,10 @@
 
 #set OUTPUT_DIR="-output-directory=PDF"
 
+cd InstallationGuide
 pdflatex installation.tex
 
+cd ../UserGuide
 #pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
 pdflatex  --halt-on-error  uintah.tex
 
