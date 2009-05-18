@@ -1,9 +1,9 @@
 \newcommand{\SUM}{\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
 
-\section{ICE} \label{Sec:ICE}
+\chapter{ICE} \label{Sec:ICE}
 
 
-\subsection{Introduction}
+\section{Introduction}
 The work presented here describes a multi-material CFD approach designed
 to solve ``full physics" simulations of dynamic fluid structure interactions
 involving large deformations and material transformations (e.g., phase change).
@@ -195,7 +195,7 @@ and Lagrangian reference frames.  The algorithmic details necesssary for
 integrating them to achieve a tightly coupled fluid-structure interaction
 capability is provided in Sec.~\ref{sec:MPMICE}.
 
-\subsection{Algorithm Description}\label{sec:ICE:algorithm}
+\section{Algorithm Description}\label{sec:ICE:algorithm}
 
 The Eulerian method implemented here is a cell-centered, finite volume,
 multi-material version of the ICE (for Implicit, Continuous fluid, Eulerian)
@@ -267,9 +267,9 @@ zero and the full material stress dominates the dynamics as it should.
 %\subsection{Uintah Implementation}
 %- to be filled in\\
 
-\subsection{Uintah Specification}
+\section{Uintah Specification}
 %______________________________________________________________________
-\subsubsection{Basic Inputs}
+\subsection{Basic Inputs}
 Each Uintah component is invoked using a single executable called
 \it sus \normalfont, which chooses the type of simulation
 to execute based on the \it SimulationComponent \normalfont tag in the
@@ -289,7 +289,7 @@ system.
 %\red{ discuss timestep scheme.  We mainly use aggressive}
 %
 %______________________________________________________________________
-\subsubsection{Semi-Implicit Pressure Solve}
+\subsection{Semi-Implicit Pressure Solve}
 The equation for the change in the pressure field $\Delta{P}$ during a given
 timestep is given by
 %
@@ -362,7 +362,7 @@ tolerance                        &   XXXX\\
 \normalsize\\
 \\
 %______________________________________________________________________
-\subsubsection{Physical Constants}
+\subsection{Physical Constants}
 The gravitational constant and a reference pressure are specified in:
 \begin{Verbatim}[fontsize=\footnotesize]
 <PhysicalConstants>
@@ -372,7 +372,7 @@ The gravitational constant and a reference pressure are specified in:
 \end{Verbatim}
 %
 %______________________________________________________________________
-\subsubsection{Material Properties}
+\subsection{Material Properties}
 For each ICE material the thermodynamic and transport properties must be
 specified, in addition to the initial conditions of the fluid inside of
 each geom\_object.  Below is the an example of how to specify an invisid
@@ -407,7 +407,7 @@ that thermodynamic state.\big{)}
 </MaterialProperties>
 \end{Verbatim}
 %______________________________________________________________________
-\subsubsection{Equation of State}
+\subsection{Equation of State}
 Below is a list of the various equations of state, along with the user defined
 constants, that are available.  The reader should consult the literature for
 the theoretical development and applicability of the equations of state to
@@ -527,7 +527,7 @@ The input parameters for the Tillotson equation of state \cite{ref:gathers} for 
 \end{Verbatim}
 %
 %______________________________________________________________________
-\subsubsection{Exchange Properties}
+\subsection{Exchange Properties}
 The heat and momentum exchange coefficients $K_{rs}$ and $H_{rs}$, which
 determine the rate at which momentum and heat are transferred between
 materials, are specified in the following format.
@@ -551,7 +551,7 @@ For a two material problem the coefficients would be:
 %
 %
 %______________________________________________________________________
-\subsubsection{BoundaryConditions}
+\subsection{BoundaryConditions}
 Boundary conditions must be specified on each face of the computational
 domain $(x^-, x^+, y^-, y^+,z^-,z^+)$ for the variables $P, \bf{u},
 T, \rho, v$ for each material.  The three main types of numerical
@@ -682,7 +682,7 @@ the reflected pressure waves significantly.
 \normalsize
 %______________________________________________________________________
 %  XML tags
-\subsubsection{XML tag description}
+\subsection{XML tag description}
 %__________________________________
 \begin {center}
 \begin{tabular}{lllp{8cm}}
@@ -717,7 +717,7 @@ do\_Refluxing         & boolean &              &    on/off switch for correcting
 
 %______________________________________________________________________
 \newpage
-\subsection{Examples}
+\section{Examples}
 Below are several example problems that illustrate the wide range of problems
 that can be solved using the ICE algorithm.  Where possible simulation
 results are compared to exact solutions or high fidelity numerical results.
@@ -725,13 +725,13 @@ Note in order to run the post processing scripts the user should have a
 recent version of Octave installed.  To visualize the results the visualization
 package VisIT should be used.  VisIT session files are included.
  
-\section*{\center Poiseuille Flow}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Poiseuille Flow}
+\subsubsection*{\underline{Problem Description}}
 The Poiseuille flow problem is classical viscous flow problem in which flow is
 driven through two parallel plates from fixed pressure gradient.  The pressure
 gradient is balanced by the diffusion $x$ momentum in the $y$ direction.
 
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE

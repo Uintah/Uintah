@@ -1,8 +1,8 @@
 
 
-\section{MPM} \label{Sec:MPM}
+\chapter{MPM} \label{Sec:MPM}
 
-\subsection{Introduction}
+\section{Introduction}
 
 The material point method (MPM) was described by Sulsky et al.~\cite{sulskycmame,sulskycpc} as
 an extension to the FLIP (Fluid-Implicit Particle) method of
@@ -70,7 +70,7 @@ Following that is a description of the information that goes into an input
 file.  Finally, a number of examples are provided, along with representative
 results.
 
-\subsection{Algorithm Description} \label{Sec:AlgDesc}
+\section{Algorithm Description} \label{Sec:AlgDesc}
 
 Time and space prohibit an exhaustive description of the theoretical
 underpinnings of the Material Point Method.   Here we will concentrate
@@ -240,7 +240,7 @@ conduction is also available in the explicit MPM code, although it may be
 neglected via a run time option in the input file.  Explicit MPM is typically
 used for high rate simulations in which heat conduction is negligible.
 
-\subsection{Shape functions for MPM and GIMP} \label{gimp_mpm}
+\section{Shape functions for MPM and GIMP} \label{gimp_mpm}
 
 In both MPM and GIMP, the basic idea is the same: objects are discretized into
 particles, or material points, each of which contains all state data for the
@@ -386,7 +386,7 @@ Alternatively, one can assume that the particle size remains constant (insofar
 as it applies to the effective shape function evaluations only).  This is
 the approach currently implemented in Uintah.
 
-\subsection{Uintah Implementation} \label{Sec:UintahImp}
+\section{Uintah Implementation} \label{Sec:UintahImp}
 
 Users of Uintah-MPM needn't necessarily bother themselves with the
 implementation in code of the algorithm described above.  This section

@@ -722,7 +722,7 @@ then restarting the ongoing simulation from a given checkpoint.
 
 
 %__________________________________
-\chapter{Visualization tools}
+\chapter{Visualization tools -- VisIt}
 
 Visualization of Uintah data is currently possible using any of three
 software packages.  These are SCIRun, VisIt and Manta.  Of these, SCIRun is
@@ -736,7 +736,6 @@ While the capabilities of Manta are more limited, it is a fast way to
 interactively interrogate reasonably large datasets, provided the user has
 access to a reasonable shared memory resource, (e.g. an 8 core desktop system).
 
-\chapter{VisIt}
 
 \section{Reading Uintah Data Archive's}
 
@@ -1020,6 +1019,9 @@ Next, we hit Draw. This produces a visualization as shown in figure~\ref{VisItSu
   \label{VisItSubsetPlotWireframe}
 \end{figure}
 
+
+\chapter{Visualization Tools -- Manta}
+
 \subsection{Iso-surfaces}
 
 The easiest way to draw iso-surfaces is to use the 'Contour' Plot. As with other plots demonstrated above, the contour plot is selected on a regular 3D scalar variable. Figure ~\ref{VisItContourPlot} illustrates this. 
@@ -1090,6 +1092,7 @@ Once these parameters are set, we hit 'Apply' and then click on the 'Draw' butto
 \end{figure}
 
 \chapter{Manta}
+>>>>>>> .r44338
 
 To run the C-SAFE scene: 
 \begin{Verbatim}
@@ -1269,7 +1272,7 @@ A.  Try increasing the number of threads, shrinking the window size, and reducin
 
 
 %__________________________________
-\section{Data Extraction Tools}
+\chapter{Data Extraction Tools}
 
 Uintah offers a number of tools for accessing data stored in Uintah Data
 Archives (``UDAs").  Because the format of Uintah data is specific to the
@@ -1279,7 +1282,7 @@ code may be necessary), postprocessed with external software such as
 Matlab or Octave, or simply plotted with, e.g. gnuplot.  These tools are not compiled automatically when ``make sus'' is issued.  To compile them cd to ``opt/StandAlone/tools'' and issue ``make''.  These tools
 are described below.
 
-\subsection{puda}
+\section{puda}
 
 The command line extraction utility \tt puda \normalfont
 (for ``parse uintah data archive") has a number of uses.  For example, it
@@ -1408,7 +1411,7 @@ Parsing const_test_hypo.uda/index.xml
 
 Compare this output with the output from puda above.  Notice that the ordering of the six independent components of the stress tensor for partextract are $\sigma_{11}$,$\sigma_{22}$, $\sigma_{33}$, $\sigma_{23}$, $\sigma_{13}$ , $\sigma_{12}$.
 
-\subsection{lineextract}
+\section{lineextract}
 
 Lineextract is used to extract an array of data from a region of a computational domain. Data can be extracted from a point, along a line, or from a three dimensional region and then stored as a variable for ease of post processing.
 
@@ -1442,12 +1445,12 @@ simulation. The variable containing the density data within the uda is ``rho\_CC
 ./lineextract -v rho_CC  -timestep 7 -istart 60 0 0 -iend 60 1000 0 -m 1 -o rho -uda test01.uda.000
 \end{Verbatim}
 
-\subsection{timeextract}
+\section{timeextract}
 
-\subsection{compare\_uda}
+\section{compare\_uda}
 
 %__________________________________
-\subsection{plotting tools}
+\section{plotting tools}
 - plotStats\\
 - plotRegridder \\
 - plotCPU\_usage \\

@@ -17,8 +17,9 @@ multiple components. However, neither of these techniques will achieve
 maximum efficiency for complex multi-physics problems.
 
 Uintah uses a non-traditional approach to achieving parallelism by
-employing an abstract task graph representation to describe computation
-and communication. The task graph (see Figure~\ref{fig:TaskGraph}) is an explicit representation of the
+employing an abstract task graph representation to describe
+computation and communication. The task graph (see
+Figure~\ref{fig:TaskGraph}) is an explicit representation of the
 computation and communication that occur in the coarse of a single
 iteration of the simulation (typically a timestep or nonlinear solver
 iteration). Uintah components delegate decisions about parallelism to
