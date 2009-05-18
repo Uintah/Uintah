@@ -243,15 +243,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       }
     }
 
-    // debug check
-    for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
-
-      const VarLabel* temp = iter->second.label; 
-      cout << "in here \n";
-
-    }
-
-
     if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
       d_inletBoundary = true;
       for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
