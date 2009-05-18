@@ -855,6 +855,24 @@ private:
                             DataWarehouse*,
                             DataWarehouse* new_dw);
 
+
+   // Efficiency Variables
+   struct EfficiencyInfo {
+    const VarLabel* label; //efficiency label
+    vector<std::string> species; 
+    double fuel_ratio; 
+    double air_ratio; 
+    std::vector<string> which_inlets; //inlets needed for this calculation
+   };
+
+   struct SpeciesEfficiencyInfo {
+     const VarLabel* flowRateLabel;
+     double molWeightRatio; 
+   };
+
+  void insertIntoEffMap( std::string name, double fuel_ratio, double air_ratio, vector<std::string> species, vector<std::string> which_inlets ); 
+
+  void insertIntoSpeciesMap ( std::string name, double mol_ratio );
 private:
 
   // const VarLabel* inputs
@@ -928,6 +946,12 @@ private:
   //BC source term stuff
   std::vector<BCSourceInfo* > d_sourceBoundaryInfo;
   int d_numSourceBoundaries;
+
+  typedef std::map<std::string, struct EfficiencyInfo> EfficiencyMap;
+  EfficiencyMap d_effVars;
+
+  typedef std::map<std::string, struct SpeciesEfficiencyInfo> SpeciesEffMap; // label string, molecular weight ratio 
+  SpeciesEffMap d_speciesEffInfo;
 
 }; // End of class BoundaryCondition
 } // End namespace Uintah

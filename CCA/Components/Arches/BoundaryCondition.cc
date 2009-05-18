@@ -196,6 +196,61 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
       }
     }
 
+    // --- new efficiency calculator --- 
+    ProblemSpecP eff_db = db->findBlock("ScalarEfficiency");
+    if (eff_db) {
+      for (ProblemSpecP scalareff_db = eff_db->findBlock("scalar"); scalareff_db != 0; 
+            scalareff_db = scalareff_db->findNextBlock("scalar")) {
+
+        std::string scalar_name;
+        std::string fuel_ratio; 
+        std::string air_ratio; 
+        vector<std::string> species; 
+        std::vector<string> which_inlets; 
+
+        scalareff_db->getAttribute("label",scalar_name);
+        scalareff_db->getAttribute("fuel_ratio",fuel_ratio);
+        scalareff_db->getAttribute("air_ratio",  air_ratio); 
+
+        double dfuel_ratio = atof(fuel_ratio.c_str());
+        double dair_ratio  = atof(air_ratio.c_str());
+
+        for (ProblemSpecP inlet_db = scalareff_db->findBlock("inlet"); inlet_db != 0;
+            inlet_db = inlet_db->findNextBlock("inlet")){
+          std::string inletName = inlet_db->getNodeValue();
+
+          which_inlets.push_back(inletName);
+        }
+
+        // now get the species it needs to compute efficiency
+        for (ProblemSpecP species_db = scalareff_db->findBlock("species"); species_db != 0;
+            species_db = species_db->findNextBlock("species")){
+
+          std::string species_name;
+          std::string mol_ratio; 
+
+          species_db->getAttribute("label",species_name);
+          species_db->getAttribute("mol_ratio",mol_ratio);
+
+          double dmol_ratio = atof(mol_ratio.c_str());
+
+          species.push_back(species_name);
+          this->insertIntoSpeciesMap( species_name, dmol_ratio ); 
+
+        }
+
+        this->insertIntoEffMap( scalar_name, dfuel_ratio, dair_ratio, species, which_inlets ); 
+      }
+    }
+
+    // debug check
+    for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
+
+      const VarLabel* temp = iter->second.label; 
+      cout << "in here \n";
+
+    }
+
 
     if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
       d_inletBoundary = true;
@@ -213,6 +268,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
         double f = d_flowInlets[d_numInlets]->streamMixturefraction.d_mixVars[0];
         if (f > 0.0){
           d_flowInlets[d_numInlets]->fcr = d_props->getCarbonContent(f);
+          
         }
         if (d_calcExtraScalars) {
 
@@ -4687,6 +4743,15 @@ BoundaryCondition::sched_getScalarFlowRate(SchedulerP& sched,
     tsk->computes(d_lab->d_enthalpyFlowRateLabel);
   }
 
+  for (BoundaryCondition::SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
+
+    //this will need to change when the new table stuff is ready
+    const VarLabel* temp1 = VarLabel::find(iter->first);
+    tsk->requires(Task::NewDW, temp1, gn, 0); // Species needed for calculation
+
+    tsk->computes(iter->second.flowRateLabel);
+  }
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -4764,7 +4829,21 @@ BoundaryCondition::getScalarFlowRate(const ProcessorGroup*,
         }
       }
     }
-    
+
+    // --- new efficiency calculator --- 
+    for (BoundaryCondition::SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
+      double IN = 0.0;
+      double OUT = 0.0;
+
+      constCCVariable<double> species;
+      const VarLabel* temp = VarLabel::find(iter->first);
+
+      new_dw->get(species, temp, indx, patch, gn, 0);  // this is like co2 scalar
+
+      getVariableFlowRate(patch, cellinfo, &constVars, species, &IN, &OUT);
+      new_dw->put(sum_vartype(OUT-IN), iter->second.flowRateLabel);
+
+    }
 
     double so2IN = 0.0;
     double so2OUT = 0.0;
@@ -4843,6 +4922,16 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_totalRadSrcLabel);
     tsk->computes(d_lab->d_normTotalRadSrcLabel);
     tsk->computes(d_lab->d_enthalpyEfficiencyLabel);
+  }
+
+  for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
+    const VarLabel* test;
+    test = iter->second.label;
+    tsk->computes(iter->second.label);
+  }
+
+  for ( SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
+    tsk->requires(Task::NewDW, iter->second.flowRateLabel);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -4965,6 +5054,50 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup*,
         throw InvalidValue("No sulfur in the domain from ExtraScalar", __FILE__, __LINE__);
       new_dw->put(delt_vartype(sulfurEfficiencyES), d_lab->d_sulfurEfficiencyESLabel);
     }
+
+    // new efficiency calculation
+    for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
+      double comp_eff = 0.0;
+      double new_totalFlowRate = 0.0;
+
+      // loop over all inlets and get the stuff coming into the domain
+      for (int indx = 0; indx < d_numInlets; indx++) {
+        FlowInlet* fi = d_flowInlets[indx];
+        
+        for (std::vector<GeometryPieceP>::iterator gi_iter = fi->d_geomPiece.begin();
+            gi_iter != fi->d_geomPiece.end(); gi_iter++) {
+
+          GeometryPieceP inlet = *gi_iter;
+          std::string inlet_name = inlet->getName();
+
+          // check if this geometry/inlet a part of this efficiency calculation
+          std::vector<std::string>::iterator name_iter = find( iter->second.which_inlets.begin(), 
+              iter->second.which_inlets.end(), inlet_name );
+
+          if (name_iter != iter->second.which_inlets.end())
+            new_totalFlowRate += fi->flowRate * iter->second.fuel_ratio;
+        }
+      }
+
+      // loop over all species to get the stuff leaving the domain
+      double flowRates = 0.0;
+      for ( vector<std::string>::iterator sp_iter = iter->second.species.begin(); 
+            sp_iter != iter->second.species.end(); sp_iter++ ){
+
+        SpeciesEffMap::iterator sem_iter = d_speciesEffInfo.find(*sp_iter);
+        sum_vartype my_sum_var;
+        double species_flow_rate; 
+        new_dw->get(my_sum_var, sem_iter->second.flowRateLabel);
+        species_flow_rate = my_sum_var; 
+        flowRates += species_flow_rate * sem_iter->second.molWeightRatio; 
+
+      }
+
+      comp_eff = flowRates / new_totalFlowRate; 
+
+      new_dw->put(delt_vartype(comp_eff), iter->second.label);
+    }
+
     if (d_enthalpySolve) {
       if (totalEnthalpyFlowRate < 0.0) {
         enthalpyEfficiency = enthalpyFlowRate/totalEnthalpyFlowRate;
@@ -6023,6 +6156,48 @@ BoundaryCondition::Prefill(const ProcessorGroup*,
 
   }
 }
+
+void BoundaryCondition::insertIntoEffMap ( std::string name, double fuel_ratio, double air_ratio, vector<std::string> species, vector<std::string> which_inlets ) {
+
+  EfficiencyMap::iterator iter = d_effVars.find( name ); 
+  if ( iter == d_effVars.end() ){
+    EfficiencyInfo info;
+
+    const VarLabel* tempLabel; 
+    tempLabel = VarLabel::create(name, min_vartype::getTypeDescription());
+
+    info.label = tempLabel;
+    info.fuel_ratio = fuel_ratio; 
+    info.air_ratio  = air_ratio; 
+    info.species = species; 
+    info.which_inlets = which_inlets;
+
+    iter = d_effVars.insert( std::make_pair( name, info ) ).first; 
+  } else {
+    // Each scalar name must be unique
+    throw InvalidValue("Found two scalars in the ScalarEfficiency section that are identical! Please choose unique names.",__FILE__,__LINE__);
+
+  }
+}
+
+void BoundaryCondition::insertIntoSpeciesMap ( std::string name, double mol_ratio )
+{
+  SpeciesEffMap::iterator iter = d_speciesEffInfo.find( name ); 
+  // we have a problem here...what if the species is needed twice for two different components?
+  if ( iter == d_speciesEffInfo.end() ){
+
+    SpeciesEfficiencyInfo info; 
+
+    std::string modName = name;
+    modName += "_flowrate"; 
+    info.flowRateLabel = VarLabel::create(modName, sum_vartype::getTypeDescription());
+    info.molWeightRatio = mol_ratio; 
+
+    iter = d_speciesEffInfo.insert( std::make_pair( name, info ) ).first; 
+
+  }
+}
+
 
 
 
