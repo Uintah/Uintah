@@ -2015,6 +2015,9 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
                                  const PatchSet* patches,
                                  const MaterialSet* matls)
 {
+
+  d_boundaryCondition->sched_bcdummySolve( sched, patches, matls ); 
+
   Task* tsk = scinew Task( "ExplicitSolver::dataCopy",this, 
                            &ExplicitSolver::dummySolve);
 

@@ -4916,8 +4916,6 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
   }
 
   for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
-    const VarLabel* test;
-    test = iter->second.label;
     tsk->computes(iter->second.label);
   }
 
@@ -6189,6 +6187,42 @@ void BoundaryCondition::insertIntoSpeciesMap ( std::string name, double mol_rati
   }
 }
 
+void 
+BoundaryCondition::sched_bcdummySolve( SchedulerP& sched, 
+                                     const PatchSet* patches, 
+                                     const MaterialSet* matls )
+{
+  Task* tsk = scinew Task( "BoundaryCondition::bcdummySolve",this, &BoundaryCondition::bcdummySolve);
+ 
+  for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
+    tsk->computes(iter->second.label);
+  }
 
+  for ( SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
+    tsk->computes(iter->second.flowRateLabel);
+  }
+
+  sched->addTask(tsk, patches, matls);
+}
+void 
+BoundaryCondition::bcdummySolve( const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset*,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+
+  for (int p = 0; p < patches->size(); p++) {
+    int archIndex = 0; // only one arches material
+
+    for ( EfficiencyMap::iterator iter = d_effVars.begin(); iter != d_effVars.end(); iter++){
+      new_dw->put(delt_vartype(0.0),iter->second.label);
+    }
+
+    for ( SpeciesEffMap::iterator iter = d_speciesEffInfo.begin(); iter != d_speciesEffInfo.end(); iter++){
+      new_dw->put(delt_vartype(0.0),iter->second.flowRateLabel);
+    }
+  }
+}
 
 
