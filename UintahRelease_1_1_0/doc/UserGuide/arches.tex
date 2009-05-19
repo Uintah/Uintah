@@ -1,0 +1,95 @@
+%% LyX 1.6.2 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+%\documentclass[english]{article}
+%\usepackage[T1]{fontenc}
+%\usepackage[latin9]{inputenc}
+
+%\usepackage{babel}
+
+%\begin{document}
+
+\section{Arches}
+
+\subsection{Introduction}
+
+The Arches component solves a low-mach formulation with a pressure
+projection of the Navier-Stokes equations for turbulent, variable
+density, reacting flows. Turbulent flow scales are modeled using a
+Large Eddy Simulation (LES) approach. Chemistry is handled using chemistry
+parameterization and closure models for subgrid scale mixing. Modes
+of heat transfer include radiation. blah blah blah
+
+
+\subsection{Theory - Algorithm Description}
+
+The essential governing equations for the Arches component, written
+in finite volume form, include the mass balance, momentum balance,
+mixture fraction balance, and energy balance equations. Using a bold-face
+symbol to represent a vector quantity, the equations are: 
+\begin{enumerate}
+\item The mass balance, \begin{equation}
+\int_{V}\frac{\partial\rho}{\partial t}dV+\oint_{S}\rho\mathbf{u}\cdot d\mathbf{S}=0\;,\label{eqn:mass_balance}\end{equation}
+ where $\rho$ is density and $\mathbf{u}$ is the velocity vector. 
+\item The momentum balance, \begin{equation}
+\int_{V}\frac{\partial\rho\mathbf{u}}{\partial t}dV+\oint_{S}\rho\mathbf{uu}\cdot d\mathbf{S}=\oint_{S}\tau\cdot d\mathbf{S}-\int_{V}\nabla pdV+\int_{V}\rho\mathbf{g}dV\;,\label{eqn:mom_balance}\end{equation}
+ where $\tau$ is the deviatoric stress tensor defined as $\tau_{ij}=2\mu S_{ij}-\frac{2}{3}\mu\frac{\partial u_{k}}{\partial x_{k}}\delta_{ij}$,
+the second isotropic term in $\tau_{ij}$ is absorbed into the pressure
+projection for the current low-Mach scheme, and $S_{ij}=\frac{1}{2}\left(\frac{\partial u_{i}}{\partial x_{j}}+\frac{\partial u_{j}}{\partial x_{i}}\right)$.
+Also in Equation \ref{eqn:mom_balance}, $\mathbf{g}$ is the gravitational
+body force and $p$ is pressure. 
+\item The mixture fraction balance, \begin{equation}
+\int_{V}\frac{\partial\rho f}{\partial t}dV+\oint_{S}\rho\mathbf{u}f\cdot d\mathbf{S}=\oint_{S}D\nabla f\cdot d\mathbf{S}\;,\label{eqn:species_balance}\end{equation}
+ where $f$ is the mixture fraction and a Fick's law form of the diffusion
+term assuming equal diffusivities results in a single diffusion coefficient,
+$D$. 
+\item The thermal energy balance, \begin{equation}
+\int_{V}\frac{\partial\rho h}{\partial t}dV+\oint_{S}\rho\mathbf{u}h\cdot d\mathbf{S}=\oint_{S}k\nabla h\cdot d\mathbf{S}-\oint_{S}q\cdot d\mathbf{S}\;,\label{eqn:heat_balance}\end{equation}
+ where $h$ is the sum of the chemical plus sensible enthalpy, $q$
+is the radiative flux, a Fourier's law form of the conduction term
+is used with a diffusion coefficient, $k$, and the pressure term
+is neglected. 
+\end{enumerate}
+These equations are solved in an LES context, meaning filters are
+applied to the equations. Here, we use Favre filtering, defined as
+\[
+\overline{\phi}=\frac{\overline{\rho\phi}}{\overline{\rho}},\]
+ to isolate the density in the filtered equations. The filtering operations
+result in the classic turbulence closure problem and thus models are
+required. The model options are for Arches are discussed below. 
+
+The set of filtered equations are discretized in space and time and
+solved on a staggered, finite volume mesh. The staggering scheme consists
+of four offset grids. One grid stores the scalar quantities and the
+remaining three grids store each component of the velocity vector.
+The velocity components are situated so that the center of their control
+volume is located on the face centers of the scalar grid in their
+respective direction. 
+
+The equations are solved in an explicit manner. 
+
+%FIXME
+%\subsection{Uintah Specification}
+
+
+%\subsubsection{Basic Inputs}
+
+
+%\subsubsection{Turbulence}
+
+
+%\subsubsection{Properties}
+
+
+%\subsubsection{BoundaryConditions}
+
+
+%\subsubsection{Physical Constants}
+
+
+%\subsubsection{Solvers}
+
+
+%\subsection{Examples}
+
+
+%\subsection{References}

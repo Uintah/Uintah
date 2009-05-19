@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+
+   <Meta>
+        <title>Rigid compression of a billet</title>
+   </Meta>
+
+   <SimulationComponent type="impm" />
+
+   <Time>
+        <maxTime>0.20</maxTime>
+        <initTime>0.0</initTime>
+        <delt_min>0.001</delt_min>
+        <delt_max>0.005</delt_max>
+        <timestep_multiplier>1.0</timestep_multiplier>
+   </Time>
+
+    <Grid>
+        <BoundaryConditions>
+           <Face side = "x-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "y-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                  
+           <Face side = "y+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+           </Face>                           
+        </BoundaryConditions>
+        <Level>
+        <Box label="1">
+          <lower>[ 0.0, 0.0,0.0]</lower>
+          <upper>[40.0,21.0,0.5]</upper>
+          <patches>[1,1,1]</patches>
+        </Box>
+        <spacing>[.5,.5,.5]</spacing>
+        </Level>
+    </Grid>
+
+   <DataArchiver>
+        <filebase>billet.static.uda</filebase>
+        <outputInterval>.01</outputInterval>
+        <save label="p.x"/>
+        <save label="p.velocity"/>
+        <save label="p.volume"/>
+        <save label="p.stress"/>
+        <save label="p.particleID"/>
+        <save label="g.mass"/>
+        <save label="g.acceleration"/>
+        <save label="g.stressFS"/>
+        <checkpoint cycle = "2" interval = ".05"/>
+   </DataArchiver>
+
+    <MPM>
+        <time_integrator>implicit</time_integrator>
+        <dynamic>false</dynamic>
+        <convergence_criteria_disp>1.e-4</convergence_criteria_disp>
+        <convergence_criteria_energy>4.e-4</convergence_criteria_energy>
+        <do_grid_reset>true</do_grid_reset>
+        <DoImplicitHeatConduction>false</DoImplicitHeatConduction>
+    </MPM>
+
+    <PhysicalConstants>
+        <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+      <MPM>
+        <material>
+           <density>10.0</density>
+           <thermal_conductivity>1.0</thermal_conductivity>
+           <specific_heat>5</specific_heat>
+           <constitutive_model type="comp_neo_hook">
+              <bulk_modulus> 60000000.0</bulk_modulus>
+              <shear_modulus> 6000000.0</shear_modulus>
+           </constitutive_model>
+           <geom_object>
+              <box label="billet">
+                <min>[ 0.0, 0.0,0.0]</min>
+                <max>[20.0,20.0,0.5]</max>
+              </box>
+              <res>[4,4,1]</res>
+              <velocity>[0.0,0.0,0]</velocity>
+              <temperature>12</temperature>
+           </geom_object>
+        </material>
+
+        <material>
+            <density>10.0</density>
+            <thermal_conductivity>1.0</thermal_conductivity>
+            <specific_heat>5</specific_heat>
+            <constitutive_model type="comp_neo_hook">
+               <bulk_modulus> 60000000.0</bulk_modulus>
+               <shear_modulus> 6000000.0</shear_modulus>
+            </constitutive_model>
+            <is_rigid>true</is_rigid>
+           <geom_object>
+              <box label = "platen">
+                <min>[0.0, 20.0,0.0]</min>
+                <max>[32.0,20.5,0.5]</max>
+              </box>
+              <res>[2,2,1]</res>
+              <velocity>[0.0,-50.0,0.0]</velocity>
+              <temperature>12</temperature>
+           </geom_object>
+        </material>
+
+        <contact>
+          <type>rigid</type>
+          <materials>[0,1]</materials>
+          <stop_time>999999.9 </stop_time>
+          <direction>[1,1,1]</direction>
+        </contact>
+
+      </MPM>
+    </MaterialProperties>
+
+    
+</Uintah_specification>

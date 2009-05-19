@@ -1,0 +1,36 @@
+#! /bin/sh
+
+/bin/rm -f *.aux
+
+#mkdir -p PDF
+
+#set OUTPUT_DIR="-output-directory=PDF"
+
+cd InstallationGuide
+pdflatex installation.tex
+
+cd ../UserGuide
+#pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
+pdflatex  --halt-on-error  uintah.tex
+
+
+if [ $? -eq 0 ]; then
+  echo "------------------"
+  echo "Now running bibtex"
+  echo "------------------"
+  #bibtex arches
+  bibtex ice
+  bibtex mpm
+  bibtex mpmice
+#  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
+#  pdflatex -interaction=batchmode $OUTPUT_DIR uintah.tex
+  pdflatex -interaction=batchmode uintah.tex
+  pdflatex -interaction=batchmode uintah.tex
+fi
+
+#cleanup
+echo "------------------"
+echo "now cleaning up"
+cd ../InstallationGuide
+/bin/rm -f installation.log installation.aux installation.out
+cd ../
