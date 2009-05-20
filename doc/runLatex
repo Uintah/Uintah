@@ -9,6 +9,9 @@
 cd InstallationGuide
 pdflatex installation.tex
 
+cd ../DeveloperGuide 
+pdflatex UintahAPI.tex
+
 cd ../UserGuide
 #pdflatex  --halt-on-error $OUTPUT_DIR uintah.tex
 pdflatex  --halt-on-error  uintah.tex
