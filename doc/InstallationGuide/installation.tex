@@ -1,4 +1,4 @@
-\documentclass[12pt]{report}
+\documentclass[12pt]{article}
 \usepackage{listings}
 \usepackage{amsmath}
 \usepackage[pdftex]{graphicx}
@@ -25,25 +25,25 @@
 
 \newpage
 
-\chapter{Installing Uintah} \label{Sec:installation}
+\section{Installing Uintah} \label{sec:installation}
 
 The Uintah library is composed of several executables and a generic
 library framework for solving PDEs on structured AMR grids.  The VisIt
 and Teem libraries are used to visualize the resulting data.
 
-Uintah can be obtained either from a tarball \tt
-http://www.uintah.utah.edu \normalfont or by using svn to download the
-latest source from the following:
+Uintah can be obtained either from a tarball 
+\url{http://www.uintah.utah.edu/chrome/site/uintah.tar.gz} or by
+using svn to download the latest source from the following:
 
 \begin{Verbatim}[fontsize=\footnotesize]
-  svn co https://code.sci.utah.edu/svn/SCIRun/trunk Uintah
+  svn co https://gforge.sci.utah.edu/svn/uintah/trunk Uintah
 \end{Verbatim}
 
 The above command checks out the Uintah source tree and installs it
 into a directory called Uintah in the users home directory.
 
-VisIt can be obtained from https://wci.llnl.gov/codes/visit/. And Teem
-can be obtained from http://teem.sourceforge.net/.
+VisIt can be obtained from \url{https://wci.llnl.gov/codes/visit/}
+And Teem can be obtained from \url{http://teem.sourceforge.net/}.
 
 \section{Library Dependencies}
 
@@ -52,26 +52,33 @@ available or easily installable on various Linux or Unix like OS
 distributions.  
 
 Required libraries:
+\begin{itemize}
+\item mpi (openmpi, mpich, or lam or a vendor supplied mpi library)
+\item blas
+\item lapack
+\item make
+\item libxml2-devel
+\item zlib-devel
+\item c++
+\item fortran
+\item subversion
+\item ccmake
 
-mpi (openmpi, mpich, or lam or a vendor supplied mpi library)
-blas
-lapack
-make
-libxml2-devel
-zlib-devel
-c++
-subversion
-ccmake
+\end{itemize}
 
 Useful libraries:
-hypre-2.0
-petsc 2.3.3
+\begin{itemize}
+\item hypre-2.0
+\item petsc 2.3.3
+\end{itemize}
+
+
 
 Hypre 2.0 can be downloaded from
-https://computation.llnl.gov/casc/hypre/software.html.
+\url{https://computation.llnl.gov/casc/hypre/software.html}.
 
 Petsc 2.3.3 can be downloaded from
-http://www.mcs.anl.gov/petsc/petsc-as/download/index.html.
+\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}.
 
 \section{Debian Dependencies}
 
@@ -98,7 +105,7 @@ the mpi libaries and include files.
 \section{CentOS 5 Dependencies}
 
 CentOS 5 does not provide an openmpi rpm, however a src.rpm can be
-downloaded from http://www.open-mpi.org:80/software/ompi/v1.3/ and
+downloaded from \url{http://www.open-mpi.org:80/software/ompi/v1.3/} and
 installed via rpmbuild
 
 \begin{Verbatim}
@@ -140,7 +147,7 @@ instructions.  Please refer to the petsc website for comprehensive
 installation instructions if you encounter any difficulties.
 
 Download petsc-2.3.3 from
-http://www.mcs.anl.gov/petsc/petsc-as/download/index.html
+\url{http://www.mcs.anl.gov/petsc/petsc-as/download/index.html}
 
 The following configure script assumes the location of mpi is in
 /usr/local/openmpi using the Fedora Core 9 OS.  For other OS
@@ -167,7 +174,7 @@ instructions, however, if you encounter problems please refer to the
 hypre website for troubleshooting.
 
 Download hypre-2.0 from
-https://computation.llnl.gov/casc/hypre/download/hypre-2.0.0\_reg.html
+\url{https://computation.llnl.gov/casc/hypre/download/hypre-2.0.0\_reg.html}
 
 If installing hypre on a 64bit platform, hypre must be modified to add
 the -fPIC compile option.  After unpacking the hypre tar file, edit
@@ -204,7 +211,11 @@ make install
 \label{sec:teem}
 
 
-Download Teem from http://teem.sourceforge.net/download/index.html.  Teem uses cmake to configure the build system. Installation instructions for Teem are found at http://teem.sourceforge.net/build.html.  Simplified instructions are as follows:
+Download Teem from
+\url{http://teem.sourceforge.net/download/index.html}.  Teem uses
+cmake to configure the build system. Installation instructions for
+Teem are found at \url{http://teem.sourceforge.net/build.html}.  Simplified
+instructions are as follows:
 
 \begin{verbatim}
 
@@ -240,17 +251,29 @@ The Teem libraries and include files will be install in /usr/local hierarchy.
 \subsection{Client/ Server}
 \label{sec:ClientServer}
 
-You would most likely will want to install a VisIt server on a multiprocessor machine. This requires you to build the server from source (as it is needed to compile the UDA reading plugin). You can then install any client on your local machine and attach to the server. 
+You would most likely will want to install a VisIt server on a
+multiprocessor machine. This requires you to build the server from
+source (as it is needed to compile the UDA reading plugin). You can
+then install any client on your local machine and attach to the
+server.
 
 \subsection{Prebuilt binaries}
 \label{sec:PrebuiltBinaries}
 
-If you have a system that matches the prebuilt binaries, found at \url{https://wci.llnl.gov/codes/visit/executables.html}, you may want to try one. In most cases you will want to build your own binaries. There are currently no universal binaries available for Mac OS X 10.5 (leopard).
+If you have a system that matches the prebuilt binaries, found at
+\url{https://wci.llnl.gov/codes/visit/executables.html}, you may want
+to try one. In most cases you will want to build your own
+binaries. There are currently no universal binaries available for Mac
+OS X 10.5 (leopard).
 
 \subsection{Using the build script}
 \label{sec:UsingTheBuildScript}
 
-We recommend that you first try the visit build script (WARNING, make sure you get the must recent version of this script. The build script must correspond to the version of VisIt you wish to install. The latest version is 1.11.2). This is a link to the script, \url{https://wci.llnl.gov/codes/visit/1.11.2/build\_visit}.
+We recommend that you first try the visit build script (WARNING, make
+sure you get the must recent version of this script. The build script
+must correspond to the version of VisIt you wish to install. The
+latest version is 1.11.2). This is a link to the script,
+\url{https://wci.llnl.gov/codes/visit/1.11.2/build\_visit}.
 
 You can also use the following command on the terminal (from most linux boxes), to download the file directly, 
 
