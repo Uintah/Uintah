@@ -387,7 +387,7 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
       else {
 	numParticles = mapA[p].particles; 
 	for (int i = 0; i < numParticles; i++) {
-	  Matrix3 empMat;
+	  Matrix3 empMat(DBL_MIN);
 	  matrixRep.push_back(empMat);
 
 	  data.push_back(FLT_MIN);
