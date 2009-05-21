@@ -66,8 +66,6 @@ Variable::Variable()
 
 Variable::~Variable()
 {
-  if (d_nextvar !=NULL) 
-    delete d_nextvar;
 }
 
 void
