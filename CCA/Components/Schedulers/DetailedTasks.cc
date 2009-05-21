@@ -89,6 +89,7 @@ DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
   dwmap[Task::NewDW] = Task::NoDW;
   
   stask_=scinew Task("send old data", Task::InitialSend);
+  stask_->Block=0;
   stask_->setMapping(dwmap);
 
   //create a send old detailed task for every processor in my neighborhood

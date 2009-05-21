@@ -823,8 +823,17 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
   }
 #endif
+  int currblock=0;
+  map<int, int> blockTasks;
+  map<int, int> blockTasksDone;
+  if (useExternalQueue_ && !d_sharedState->isCopyDataTimestep()) {
+    for (int i = 0; i < ntasks; i++)
+      blockTasks[dts->localTask(i)->getTask()->Block]++;
+  }
 
   set<DetailedTask*> pending_tasks;
+  DetailedTask * reducetask = 0; //task graph have already enforced 
+                                 //that no reduce task can run at the same time
 
   while( numTasksDone < ntasks) {
     i++;
@@ -914,17 +923,12 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     else {
       // using queued task receiving structure
 
-      if (dts->numInternalReadyTasks() > 0) {
+      while ((dts->numInternalReadyTasks() > 0) || (dts->numExternalReadyTasks() > 0)) {
         // if we have an internally-ready task, initiate its recvs (or run it if reduction)
+      if (dts->numInternalReadyTasks() > 0) {
         DetailedTask * task = dts->getNextInternalReadyTask();
 
-        if (task->getTask()->getType() == Task::Reduction){
-          if(!abort) {
-            taskdbg << d_myworld->myrank() << " Running task " << task->getTask()->getName() << endl;
-            initiateReduction(task);
-          }
-          numTasksDone++;
-        }
+        if (task->getTask()->getType() == Task::Reduction) reducetask = task;
         else {
           initiateTask( task, abort, abort_point, iteration );
           task->markInitiated();
@@ -934,7 +938,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
           pending_tasks.insert(task);
         }
       }
-      else if (dts->numExternalReadyTasks() > 0) {
+      if (dts->numExternalReadyTasks() > 0) {
         // run a task that has its communication complete
         // tasks get in this queue automatically when their receive count hits 0
         //   in DependencyBatch::received, which is called when a message is delivered.
@@ -944,12 +948,23 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         ASSERTEQ(task->getExternalDepCount(), 0);
         runTask(task, iteration);
         numTasksDone++;
+        blockTasksDone[task->getTask()->Block]++;
+      } 
       }
-      else {
+      if ((reducetask!=0) && (blockTasksDone[currblock] == blockTasks[currblock]-1)){
+            if(!abort) {
+              taskdbg << d_myworld->myrank() << " Running task " << reducetask->getTask()->getName() << endl;
+              initiateReduction(reducetask);
+            }
+            numTasksDone++;
+            blockTasksDone[reducetask->getTask()->Block]++;
+            currblock++;
+            reducetask=0;
+      } else if (numTasksDone < ntasks){
         // we have nothing to do, so wait until we get something
         //taskdbg << d_myworld->myrank() << " Waiting .... "  << endl;
-        for (set<DetailedTask*>::iterator iter = pending_tasks.begin(); iter != pending_tasks.end(); iter++)
-          ;//taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
+      //  for (set<DetailedTask*>::iterator iter = pending_tasks.begin(); iter != pending_tasks.end(); iter++)
+        //  ;//taskdbg << d_myworld->myrank() << " Task " << **iter << " MPID: " << (*iter)->getExternalDepCount() << endl;
         processMPIRecvs(WAIT_ONCE);
       }
     }
