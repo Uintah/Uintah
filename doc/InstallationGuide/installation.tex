@@ -608,5 +608,126 @@ Please see the \textbf{User Guide}
 the various tools and executables within the \textbf{Uintah}
 framework.
 
+\section{Mac OSX Installation}
+
+Following are step-by-step instructions for installing the \textbf{Uintah Computational Framework} on \textbf{Mac OSX}.  It is assumed that all commands are run as administrator (which may require a sudo).  These instructions were tested on OSX 10.5.6 and 10.5.7 but should work on previous versions.
+
+\subsection{Installing Developer Tools}
+Install the suite of developer tools that are packaged with Mac OS X.  These can be found in the "Optional Installs" directory on the Mac OS X Installation CD for newer versions (i.e. Tiger, Leopard) or on the included Developer CD if your version of OSX is older).  Double-click the XCodeTools.mpkg and follow the installer instructions.  This will install GCC, as well as many other useful developer tools.
+
+\subsection{Installing Fortran Compiler}
+Download gfortran from \url{http://hpc.sourceforge.net/} making sure the package is designed for your CPU architecture--Intel or PowerPC.  Put package in root directory and extract.  Extracting from / puts everything in the correct places.  Extract using:
+
+\begin{verbatim}
+tar -xvf gfortran-*-bin.tar.gz
+\end{verbatim}
+
+\subsection{Installing Subversion/libpng3/libxml2/other dependencies}
+As mentioned above, several libraries are required for Uintah, and may need to be updated or installed depending on the version of Mac running.  Some of these include SVN, libpng3, cmake, zlib and libxml2, which are all conveniently part of the fink project.
+
+Download the appropriate version of fink for your version of OSX from \url{http://www.finkproject.org/download/srcdist.php}.  Where "x" and "y" are version numbers, extract and install with:
+
+\begin{verbatim}
+tar -xvf fink-0.x.y-full.tar 
+cd fink-0.x.y-full
+./bootstrap 
+pathsetup.sh
+\end{verbatim}
+
+For a GUI version of fink, download Fink Commander and install from disk image from \url{http://finkcommander.sourceforge.net/} following instructions in the installer.  The Fink Commander website stresses that you install Commander after fink.
+
+Finally, update or install any necessary packages using Fink Commander's search bar.
+
+\subsection{Install/Update X11}
+X11 can be found in the "Optional Installs" directory accompanying your Mac OS Installation CD.  This copy should be updated.  Alternately, X11 can be downloaded from the web and installed.  Current versions can be found at \url{http://xquartz.macosforge.org/trac/wiki/Releases}.  Find a package that matches your version of OSX (or update OSX to newest version), and install it.  
+Installation is as simple as downloading the disk image from this site, mounting it, double-clicking the installer application, and following instructions.
+
+\subsection{Installing an LAM MPI}
+Download LAM MPI from \url{http://www.lam-mpi.org/7.1/download.php} version 7.1.4 or newer.  Make a new directory in ~/ for this and all of the following source packages.  This documentation assumes this directory is ~/Uintah.  Inside this directory make another for installation directories.  This documentation assumes this directory is ~/Uintah/installs
+
+\begin{verbatim}
+cd ~/Uintah/installs
+tar -xvf lam-7.1.4.tar.gz
+cd lam-7.1.4
+./configure --prefix=/Users/<username>/Uintah/installs/lam-7.1.4 --enable-shared=yes --with-fc=gfortran
+make
+make install
+\end{verbatim}
+
+These last two commands will build LAM in the directory to which --prefix= points.
+
+\subsection{Installing PETSc}
+PETSc and Hypre (the next two packages to install) are used by Uintah for their PDE and linear algebra and capabilities respectively.
+Download PETSc from \url{http://www-unix.mcs.anl.gov/petsc/petsc-as/download/index.html}.  Unarchive it in ~/Uintah/installs directory using a similar tar command as is found above.  Configure using:
+
+\begin{verbatim}
+./config/configure.py \
+   --prefix=/Users/<username>/Uintah/installs/petsc-2.3.3-p13 \
+   --with-matlab=false \
+   --with-x=false \
+   --with-shared=0 \
+   --with-debugging=0 \
+   --with-mpi-dir=/Users/<username>/Uintah/installs/lam-7.1.4
+\end{verbatim}
+
+Set the environmental variables the configuring process asks you to set, and install using:
+
+\begin{verbatim}
+make
+make install
+\end{verbatim}
+
+\subsection{Installing Hypre}
+Download Hypre version 2.x from \url{https://computation.llnl.gov/casc/hypre/software.html} to ~/Uintah/installs.  Unarchive and install by running
+
+\begin{verbatim}
+cd hypre-2.x.x/src
+./configure \
+   --with-MPI-include=/Users/<username>/Uintah/installs/lam-7.1.4/include \
+   --with-MPI-lib-dirs=/Users/<username>/Uintah/installs/lam-7.1.4/lib \
+   --with-MPI-libs="mpi lam pmpi util" \
+   --prefix=/Users/<username>/Uintah/installs/hypre-2.0.0/hypre_install \
+   CFLAGS="-DMPIPP_H" \
+   CXXFLAGS="-DMPIPP_H" 
+make
+make install
+\end{verbatim}
+
+Take down of your --prefix line for future reference, as this is where you will point Uintah's configure.
+
+\subsection{Installing Uintah}
+Download the Uintah source from our website using:
+
+\begin{verbatim}
+cd ~/
+svn co https://gforge.sci.utah.edu/svn/uintah/trunk ~/Uintah
+\end{verbatim}
+
+Uintah will not install correctly if configured from within the source directory.  As such, it is advised to create a directory on the same level as /Uintah/src named mac[Numofbits]opt in which to configure and build.  
+
+\begin{verbatim}
+cd Uintah
+mkdir mac32opt
+cd mac32opt
+./configure \
+   --enable-optimize \
+   --with-mpi=/Users/<username>/Uintah/installs/lam-7.1.4 \
+   --with-petsc=/Users/<username>/Uintah/installs/petsc-2.3.3-p13 \
+   --with-hypre=/Users/<username>/Uintah/installs/hypre-2.0.0/hypre_install \
+   PETSC_ARCH=darwin9.3.0-c-opt \
+   F77=gfortran
+\end{verbatim}
+
+The previous configure command is a template, and may need editing.  Point each of the components to the proper places and it should configure just fine.  If you want to build Uintah with support for Visit, add --with-teem=/dir/to/teem/ and --with-visit=/dir/to/visit/ Finish the process off with:
+
+\begin{verbatim}
+make all
+\end{verbatim}
+  
+
+Some useful programs can be found in the installation:  
+sus will be built and installed in ~/Uintah/mac32opt/StandAlone  
+Extraction utilities that extract specific variables from UDA (Uintah Data Archive) can be found in ~/Uintah/mac32opt/StandAlone/tools
+
 
 \end{document}
