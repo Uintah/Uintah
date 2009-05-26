@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <Core/Exceptions/InvalidValue.h>
 
 using namespace std;
 using namespace Uintah;
@@ -85,7 +86,38 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "doDiff", d_doDiff, false);
   db->getWithDefault( "addSources", d_addSources, true); 
 
+  // Check for clipping
+  d_doClipping = false; 
+  ProblemSpecP db_clipping = db->findBlock("Clipping");
+  d_lowClip = 0.0; // initializing this to zero for getAbscissa values
+  double clip_default = -9999999999.0;
+  if (db_clipping) {
+    //This seems like a *safe* number to assume 
+    d_doLowClip = false; 
+    d_doHighClip = false; 
+    d_doClipping = true;
+    
+    db_clipping->getWithDefault("low", d_lowClip,  clip_default);
+    db_clipping->getWithDefault("high",d_highClip, clip_default);
 
+    if ( d_lowClip != clip_default ) 
+      d_doLowClip = true; 
+
+    if ( d_highClip != clip_default ) 
+      d_doHighClip = true; 
+
+    if ( !d_doHighClip && !d_doLowClip ) 
+      throw InvalidValue("A low or high clipping must be specified if the <Clipping> section is activated!", __FILE__, __LINE__);
+   } 
+
+  // initial value 
+  ProblemSpecP db_initialValue = db->findBlock("initial_value");
+  d_initValue = 0.0;
+  if (db_initialValue) {
+    string s_myValue; 
+    db_initialValue->getAttribute("value", s_myValue);
+    d_initValue = atof(s_myValue.c_str());
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule clean up. 
@@ -169,8 +201,6 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -363,6 +393,7 @@ ScalarEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int 
   tsk->requires(Task::NewDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   //Old
+  tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -394,9 +425,11 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     constCCVariable<double> RHS; 
     constCCVariable<double> old_den; 
     constCCVariable<double> new_den; 
+    constCCVariable<double> rk1_phi;
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch); 
+    old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
     new_dw->get(new_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
     old_dw->get(old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0);
@@ -404,7 +437,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
     d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt );
     Vector alpha = d_timeIntegrator->d_alpha; 
     Vector beta  = d_timeIntegrator->d_beta; 
-    d_timeIntegrator->timeAvePhi( patch, phi, oldphi, timeSubStep, alpha, beta ); 
+    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, alpha, beta ); 
     
     // copy averaged phi into oldphi
     oldphi.copyData(phi); 
@@ -732,4 +765,28 @@ ScalarEqn::gradPtoF( phiT& phi, const IntVector c, const Patch* p, gradT& G )
   G.b =  ( phi[c] - phi[c - zd] ) / Dx.z(); 
 #endif
 } 
+//---------------------------------------------------------------------------
+// Method: Clip the scalar 
+//---------------------------------------------------------------------------
+template<class phiType> void
+ScalarEqn::clipPhi( const Patch* p, 
+                       phiType& phi )
+{
+  // probably should put these "if"s outside the loop   
+  for (CellIterator iter=p->getCellIterator__New(0); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+
+    if (d_doLowClip) {
+      if (phi[c] < d_lowClip) 
+        phi[c] = d_lowClip; 
+    }
+
+    if (d_doHighClip) { 
+      if (phi[c] > d_highClip) 
+        phi[c] = d_highClip; 
+    } 
+  }
+}
+
 
