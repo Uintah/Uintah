@@ -132,6 +132,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     CCVariable<double> devolSrc; 
     if ( new_dw->exists(d_srcLabel, matlIndex, patch ) ){
       new_dw->getModifiable( devolSrc, d_srcLabel, matlIndex, patch ); 
+      devolSrc.initialize(0.0);
     } else {
       new_dw->allocateAndPut( devolSrc, d_srcLabel, matlIndex, patch );
       devolSrc.initialize(0.0);
@@ -141,39 +142,25 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
       IntVector c = *iter;
 
-      double source = 0.0;
-      constCCVariable<double> model_values;
-      constCCVariable<double> weight_values; 
 
       for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-        std::string wght_name = "w_qn";
         std::string model_name = d_devolModelName; 
         std::string node;  
         std::stringstream out; 
         out << iqn; 
         node = out.str(); 
-        wght_name += node; 
         model_name += "_qn";
         model_name += node;
-
-        EqnBase& t_eqn = dqmomFactory.retrieve_scalar_eqn( wght_name );
-        DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(t_eqn);
-
-        const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-        double w_scale = eqn.getScalingConstant();
-        old_dw->get( weight_values, tempLabel_w, matlIndex, patch, gn, 0 );
 
         ModelBase& temp_model = modelFactory.retrieve_model( model_name ); 
         KobayashiSarofimDevol& model = dynamic_cast<KobayashiSarofimDevol&>(temp_model); 
 
-        const VarLabel* tempLabel_m = model.getGasRateLabel(); 
-        old_dw->get( model_values, tempLabel_m, matlIndex, patch, gn, 0 );
+        constCCVariable<double> qn_gas_devol;
+        const VarLabel* gasModelLabel = model.getGasRateLabel(); 
+        old_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
 
-        source += w_scale*weight_values[c]*model_values[c]; 
+        devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Kobayashi/Sarofim model
       }
-
-      // add the source term to the array
-      devolSrc[c] = source; //sign accounted for in the Kobayashi Coal Model.
     }
   }
 }

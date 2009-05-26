@@ -54,7 +54,8 @@ DEALINGS IN THE SOFTWARE.
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
+#include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 
 using namespace Uintah;
 using namespace std;
@@ -301,6 +302,14 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->computes(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
+
+    // TOTAL KLUDGE FOR REACTING COAL---------------------------
+    // Keep commented out unless you know what you are doing!
+    //SourceTermFactory& factory = SourceTermFactory::self();
+    //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
+    //const VarLabel* srcLabel = src.getSrcLabel();
+    //tsk->requires(Task::OldDW, srcLabel, gn, 0);
+    // END KLUDGE ----------------------------------------------
   }else {
 
     // -------- New Coefficient Stuff -------------
@@ -315,6 +324,14 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->modifies(d_lab->d_scalDiffCoefSrcLabel);
 //#endif
     tsk->modifies(d_lab->d_scalarBoundarySrcLabel);
+
+    // TOTAL KLUDGE FOR REACTING COAL---------------------------
+    // Keep commented out unless you know what you are doing!
+    //SourceTermFactory& factory = SourceTermFactory::self();
+    //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
+    //const VarLabel* srcLabel = src.getSrcLabel();
+    //tsk->requires(Task::OldDW, srcLabel, gn, 0);
+    // END KLUDGE ----------------------------------------------
   }
   if (doing_EKT_now){
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -429,6 +446,16 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 //#endif
     new_dw->getModifiable(scalarVars.scalarBoundarySrc,
                                 d_lab->d_scalarBoundarySrcLabel, indx, patch);
+
+  // TOTAL KLUDGE FOR REACTING COAL---------------------------
+  // Keep commented out unless you know what you are doing!
+  //SourceTermFactory& factory = SourceTermFactory::self();
+  //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
+  //const VarLabel* srcLabel = src.getSrcLabel();
+  //old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0);
+  // END KLUDGE ----------------------------------------------
+
+
   }else {
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->getModifiable(scalarVars.scalarCoeff[ii],
@@ -452,8 +479,16 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
                           d_lab->d_scalDiffCoefSrcLabel, indx, patch);
     scalarVars.scalarDiffNonlinearSrc.initialize(0.0);
 //#endif
-        new_dw->getModifiable(scalarVars.scalarBoundarySrc,
-                        d_lab->d_scalarBoundarySrcLabel, indx, patch);
+    new_dw->getModifiable(scalarVars.scalarBoundarySrc,
+                          d_lab->d_scalarBoundarySrcLabel, indx, patch);
+ 
+    // TOTAL KLUDGE FOR REACTING COAL---------------------------
+    // Keep commented out unless you know what you are doing!
+    //SourceTermFactory& factory = SourceTermFactory::self();
+    //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
+    //const VarLabel* srcLabel = src.getSrcLabel();
+    //old_dw->get( scalarVars.otherSource, srcLabel, indx, patch, Ghost::None, 0);
+    // END KLUDGE ----------------------------------------------
   }
 
   for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {

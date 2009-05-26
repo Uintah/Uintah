@@ -53,7 +53,7 @@ private:
 
   }; //end Class ExplicitTimeInt
   
-
+  // no density
   template <class phiT, class constphiT>
   void ExplicitTimeInt::singlePatchFEUpdate( const Patch* patch, 
                                              phiT& phi, 
@@ -72,6 +72,7 @@ private:
     } 
   }
 
+  // with density
   template <class phiT, class constphiT>
   void ExplicitTimeInt::singlePatchFEUpdate( const Patch* patch, 
                                              phiT& phi, constCCVariable<double>& old_den, 
