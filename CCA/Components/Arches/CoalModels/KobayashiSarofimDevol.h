@@ -75,7 +75,7 @@ private:
   //const VarLabel* d_temperature_label;
   const VarLabel* d_raw_coal_mass_fraction_label;
   const VarLabel* d_weight_label;
-  const VarLabel* d_gasDevolRate; 
+  const VarLabel* d_gasDevolRate; //gas devol rate for this qn only
 
   double A1;
   double A2;
@@ -97,6 +97,7 @@ private:
   double Y2_;
 
   double d_rc_scaling_factor;
+  double d_w_scaling_factor; 
 
 }; // end ConstSrcTerm
 } // end namespace Uintah

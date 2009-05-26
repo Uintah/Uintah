@@ -186,6 +186,9 @@ namespace Uintah {
       SFCYVariable<double> vmomBoundarySrc;
       SFCZVariable<double> wmomBoundarySrc;
 
+      //other
+      constCCVariable<double> otherSource;
+
     }; // End class ArchesVariables
    
 } // End namespace Uintah
