@@ -1806,8 +1806,7 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
     GridVariableBase* v;
 
     for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
-      tmpVar->copyPointer(*v);
-      if (Min(l, tmpVar->getLow()) == tmpVar->getLow()  &&  Max(h, tmpVar->getHigh()) == tmpVar->getHigh())  //find a completed region
+      if (Min(l, v->getLow()) == v->getLow()  &&  Max(h, v->getHigh()) == v->getHigh())  //find a completed region
         break;
     }
       // just like a "missing patch": got data on this patch, but it either corresponds to a different
@@ -1816,6 +1815,8 @@ OnDemandDataWarehouse::getRegion(constGridVariableBase& constVar,
       missing_patches.push_back(patch->getRealPatch());
       continue;
     }
+    
+    tmpVar->copyPointer(*v);
     
     if (patch->isVirtual()) {
       // if patch is virtual, it is probable a boundary layer/extra cell that has been requested (from AMR)
@@ -2145,23 +2146,12 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
     GridVariableBase* srcvar = var.cloneType();
     GridVariableBase* v;
     for (v = head; v!=NULL; v = dynamic_cast<GridVariableBase*>(v->getNextvar())){
-      srcvar->copyPointer(*v);
-
-  	  if(neighbor->isVirtual())
-	      srcvar->offsetGrid(neighbor->getVirtualOffset());
-
-      if (Min(srcvar->getLow(), low) == srcvar->getLow()  && Max(srcvar->getHigh(),high) == srcvar->getHigh()) {
-        try {
-          var.copyPatch(srcvar, low, high);
-        } catch (InternalError& e) {
-           cout << " Bad range: " << low << " " << high  
-             << " source var range: "  << srcvar->getLow() << " " << srcvar->getHigh() << endl;
-           throw e;
-        }
-        dn = high-low;
-        total+=dn.x()*dn.y()*dn.z();
-        break;
+      if(neighbor->isVirtual()){
+        if (Min(v->getLow(), low-neighbor->getVirtualOffset()) == v->getLow()  && Max(v->getHigh(),high-neighbor->getVirtualOffset()) == v->getHigh())  break;
+      } else {
+        if (Min(v->getLow(), low) == v->getLow()  && Max(v->getHigh(),high) == v->getHigh())  break;
       }
+
     } //end for vars
     if (v==NULL) {
      // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
@@ -2170,7 +2160,22 @@ getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Pa
 			  	    matlIndex, neighbor == patch?
 				      "on patch":"on neighbor", __FILE__, __LINE__));
     }
+  	  
+    srcvar->copyPointer(*v);
+
+    if(neighbor->isVirtual())
+	      srcvar->offsetGrid(neighbor->getVirtualOffset());
+
+    try {
+       var.copyPatch(srcvar, low, high);
+    } catch (InternalError& e) {
+        cout << " Bad range: " << low << " " << high  
+        << " source var range: "  << srcvar->getLow() << " " << srcvar->getHigh() << endl;
+       throw e;
+    }
     delete srcvar;
+    dn = high-low;
+    total+=dn.x()*dn.y()*dn.z();
     } //end if neigbor
   } //end for neigbours 
     
