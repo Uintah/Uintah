@@ -12,7 +12,7 @@ mkdir uintah-$VERSION
 
 cp -a doc src uintah-$VERSION
 
-cd src
+cd uintah-$VERSION/src
 
 for i in `find . -name "*.release"`; do 
     j=`echo $i | sed 's/.release//'`;  
@@ -24,7 +24,7 @@ cd ../doc
 
 ./runLatex
 
-cd ..
+cd ../..
 
 tar -X src/exclude.txt --exclude-vcs -cvf uintah-$VERSION.tar uintah-$VERSION
 
