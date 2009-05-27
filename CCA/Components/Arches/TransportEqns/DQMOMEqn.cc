@@ -979,6 +979,7 @@ DQMOMEqn::computeDiff( const Patch* p, fT& Fdiff, oldPhiT& oldPhi, gammaT& gamma
 //---------------------------------------------------------------------------
 // Method: Compute the boundary conditions. 
 //---------------------------------------------------------------------------
+#if 0
 template<class phiType> void
 DQMOMEqn::computeBCs( const Patch* p, 
                        string varName,
@@ -986,6 +987,7 @@ DQMOMEqn::computeBCs( const Patch* p,
 {
   d_boundaryCond->setScalarValueBC( 0, p, phi, varName );
 }
+#endif
 //---------------------------------------------------------------------------
 // Method: Interpolate a variable to the face of its respective cv
 //---------------------------------------------------------------------------
