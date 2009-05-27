@@ -161,6 +161,7 @@ DWDatabase<DomainType>::~DWDatabase()
 template<class DomainType>
 void DWDatabase<DomainType>::clear()
 {
+  cleanForeign();  //clean all foreign vars first
   for(typename varDBtype::iterator iter = vars.begin();
       iter != vars.end(); iter++){
 
@@ -189,6 +190,12 @@ DWDatabase<DomainType>::cleanForeign()
       iter != vars.end();){
     const Variable* var = iter->second.var;
     if(var && var->isForeign()){
+      Variable* nextvar = var->getNextvar();
+      while (nextvar != NULL){   // clean all foreign vars under this label
+        Variable* delvar = nextvar;
+        nextvar = delvar->getNextvar();
+        delete delvar;
+      }
       delete var;
       typename varDBtype::iterator deliter = iter;
       iter++;

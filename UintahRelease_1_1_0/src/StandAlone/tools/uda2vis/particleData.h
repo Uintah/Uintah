@@ -34,7 +34,7 @@
 #include <vector>
 using namespace std;
 
-enum DataType { UNKNOWN=-1, SCALAR=0, VECTOR=1, TENSOR=2 };
+enum DataType { UNKNOWN=-1, POINT=0, VECTOR=1, TENSOR=2 };
 
 class nameVal {
   public:

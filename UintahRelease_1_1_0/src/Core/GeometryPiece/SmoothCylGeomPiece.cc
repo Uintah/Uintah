@@ -370,7 +370,7 @@ SmoothCylGeomPiece::createSolidCylPoints()
 
   // Create particles for the solid cylinder
   double currZ = 0.5*axisInc;
-  for (int kk = 0; kk < d_numAxial-1; ++kk) {
+  for (int kk = 0; kk < d_numAxial; ++kk) {
 
     Vector currCenter = d_bottom.asVector() + axis*currZ;
 
@@ -452,7 +452,7 @@ SmoothCylGeomPiece::createHollowCylPoints()
 
   // Create particles for the hollow cylinder
   double currZ = 0.5*axisInc;
-  for (int kk = 0; kk < d_numAxial-1; ++kk) {
+  for (int kk = 0; kk < d_numAxial; ++kk) {
     Vector currCenter = d_bottom.asVector() + axis*currZ;
     for (int ii = 0; ii < numThick; ++ii) {
       double prevRadius = innerRad + ii*radInc;

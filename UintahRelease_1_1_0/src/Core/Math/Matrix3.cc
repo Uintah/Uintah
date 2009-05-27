@@ -560,14 +560,20 @@ void Matrix3::polarRotationRMB(Matrix3& R) const
 // If new error is smaller than old error, then keep on iterating.
 // If new error equals or exceeds old error, we have reached
 // machine precision accuracy.
-    if(ERR>=ERRZ){
+    if(ERR>=ERRZ || ERR+1.0 == 1.0){
+//    if(ERR>=ERRZ){
       converged = true;
     }
+    double old_ERRZ=ERRZ;
     ERRZ=ERR;
+
+    cerr.precision(15);
 
     if(num_iters==200){
       cerr << "Matrix3::polarRotationRMB not converging with Matrix:" << endl;
       cerr << F << endl;
+      cerr << "ERR = " << ERR << endl;
+      cerr << "ERRZ = " << old_ERRZ << endl;
       exit(1);
     }
     num_iters++;
