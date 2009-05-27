@@ -682,7 +682,7 @@ the reflected pressure waves significantly.
 %FIXME
 %Table below shows some of the
 
-\subsubsection{Output Variable Names}
+\subsection{Output Variable Names}
 There are numerous variables that can be saved during a simulation.  The table below is
 a list of the most commonly saved variables.  To see the entire list ICE
 specfic variables available to the user run
@@ -812,7 +812,7 @@ the adaptive mesh cell refinement criteria can be set.
 \newpage
 Below is a list of the \TT{XML} tags pertaining specifically to \TT{ICE} problems.
 
-\subsubsection{XML tag description}
+\subsection{XML tag description}
 %__________________________________
 \begin {center}
 \scriptsize
@@ -847,7 +847,7 @@ do\_Refluxing         & boolean &              &    on/off switch for correcting
 
 %______________________________________________________________________
 \newpage
-\subsection{Examples}
+\section{Examples}
 Below are several example problems that illustrate the wide range of problems
 that can be solved using the ICE algorithm.  Where possible simulation
 results are compared to exact solutions or high fidelity numerical results.
@@ -855,13 +855,14 @@ Note in order to run the post processing scripts the user should have a
 recent version of Octave installed.  To visualize the results the visualization
 package VisIT should be used.  VisIT session files are included.
  
-\section*{\center Poiseuille Flow}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Poiseuille Flow}
+\addcontentsline{toc}{subsection}{Poiseuille Flow}
+\subsubsection*{\underline{Problem Description}}
 The Poiseuille flow problem is classical viscous flow problem in which flow is
 driven through two parallel plates from fixed pressure gradient.  The pressure
 gradient is balanced by the diffusion $x$ momentum in the $y$ direction.
 
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -893,7 +894,7 @@ This will generate a postscript file Couette\-Poiseuille.ps
 \item [Physical time simulated:] \hfill 15 sec.
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{fig:Poiseuille} shows a comparison of the exact and simulated u
 velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
 plot shows the difference of the velocity $\|u - u_{exact}\|$.
@@ -906,8 +907,9 @@ plot shows the difference of the velocity $\|u - u_{exact}\|$.
 \newpage
 %
 %______________________________________________________________________
-\section*{\center Combined Couette-Poiseuille Flow}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Combined Couette-Poiseuille Flow}
+\addcontentsline{toc}{subsection}{Combined Couette-Poiseuille Flow}
+\subsubsection*{\underline{Problem Description}}
 The combined Couette-Poiseuille flow problem is another classical viscous
 flow problem in which flow is driven through a channel by a pressure gradient
 and a wall moving.  The reduced x momentum equation differential is
@@ -918,7 +920,7 @@ and a wall moving.  The reduced x momentum equation differential is
 subject to the no slip boundary condition $u(\pm h) = \text{wall velocity}$,
 where $h$ is half the height of the channel \cite{ref:white}.
 
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -939,21 +941,22 @@ This Octave script will generate a postscript file Couette\-Poiseuille.ps
 \item [Physical time simulated:] \hfill 15 sec.
 \end{description}
 
-\section*{\underline{Results}}
-Figure \ref{fig:Poiseuille} shows a comparison of the exact and simulated u
+\subsubsection*{\underline{Results}}
+Figure \ref{fig:CombinedPoiseuille} shows a comparison of the exact and simulated u
 velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
 plot shows the difference of the velocity $\|u - u_{exact}\|$.
 %
 \begin{figure}
   \includegraphics[scale=.85]{Couette-Poiseuille.png}
   \caption{ Comparison of $u$ velocity $t = 15sec$}
-  \label{fig:Poiseuille}
+  \label{fig:CombinedPoiseuille}
   \end{figure}
 \newpage
 %
 %______________________________________________________________________
-\section*{\center Shock Tube}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Shock Tube}
+\addcontentsline{toc}{subsection}{Shock Tube}
+\subsubsection*{\underline{Problem Description}}
 The shock tube problem is a standard 1D compressible flow problem that
 has been used by many as a validation test case \cite{ref:laney, ref:sod, ref:toro}.
 At time $t=0$ the computational domain is divided into two separate regions of
@@ -966,7 +969,7 @@ fan moves towards the left while the shockwave and contact discontinutity
 move to the right.  This problem tests the algorithm's ability to capture
 steep gradients and solve Eulers equations.
 %
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -986,7 +989,7 @@ This Octave script will generate a postscript file shockTube.ps
 \item [Physical time simulated:] \hfill 0.005 sec.
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{results.ST} shows a comparison of the exact versus simulated
 results at time $t = 5msec$.
 %
@@ -998,9 +1001,9 @@ results at time $t = 5msec$.
 \newpage
 %
 %__________________________________SHOCKTUBE AMR
-\section*{\center Shock Tube with Adaptive Mesh Refinement}
-%
-\subsection*{\underline{Simulation Specifics}}
+\subsection*{\center Shock Tube with Adaptive Mesh Refinement}
+\addcontentsline{toc}{subsection}{Shock Tube with Adaptive Mesh Refinement}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -1023,7 +1026,7 @@ This Octave script will generate a postscript file shockTube\_AMR.ps
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{results.ST.AMR} shows a comparison of the exact versus simulated results at time $t = 5msec$.
 \begin{figure}
   \includegraphics[scale=.85]{shockTube_AMR.png}
@@ -1033,8 +1036,9 @@ Figure \ref{results.ST.AMR} shows a comparison of the exact versus simulated res
 \newpage
 %
 %__________________________________riemann2D
-\section*{\center 2D Riemann Problem with Adaptive Mesh Refinement}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center 2D Riemann Problem with Adaptive Mesh Refinement}
+\addcontentsline{toc}{subsection}{2D Riemann Problem with Adaptive Mesh Refinement}
+\subsubsection*{\underline{Problem Description}}
 In two-dimensional Riemann problems there 15 different solutions that combine
 rarefaction waves, shock waves and a slip line or contact discontinuities
 \cite{ref:schulz_collins_glaz, ref:Liska_Wendroff}.  Here we simulate 4 slip
@@ -1045,7 +1049,7 @@ four quadrants are $V_{ll}=(1, 1, -0.75, 0.5), V_{lr}=(1, 3, -0.75,-0.5),
 V_{ul}=(1,2,0.75,0.5), V_{ur}=(1,1,0.75,-0.5)$ where, $p$ is pressure,
 $\rho$ is the density of the polytropic gas, $u$ and $v$ are the $x$ and $y$
 component of velocity.
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -1064,7 +1068,7 @@ component of velocity.
 \item [Physical time simulated:] \hfill 0.3 sec.
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{fig:riemann2D} shows a flood and line contour plot(s) of the density of the gas at 0.03sec.
 \begin{figure}
   \includegraphics[scale=.6]{riemann2D.png}
@@ -1074,8 +1078,9 @@ Figure \ref{fig:riemann2D} shows a flood and line contour plot(s) of the density
 \newpage
 %
 %__________________________________
-\section*{\center Explosion 2D}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Explosion 2D}
+\addcontentsline{toc}{subsection}{Explosion 2D}
+\subsubsection*{\underline{Problem Description}}
 For the multidimensional blast wave orexplosion test is a standard compressible
 flow problem that has been used by many as a validation test case.  At time
 $t=0$ there is a circular region of gas at the center of the domain at a
@@ -1091,7 +1096,7 @@ with a radius $R=0.4$ and the surrounding box 2x2x0.1.  The initial condition
 inside of the circular region were $(p=1, \rho=1, u=0, v=0)$  and outside
 $(p=0.1, \rho=0.125, u=0, v=0).$  The fluid was an ideal, inviscid, polytropic gas.
 %
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill ICE
 \item [Input file name:] \hfill \TT{Explosion.ups}
@@ -1116,7 +1121,7 @@ This Octave script will generate a postscript file explosion\_AMR.ps
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figures \ref{fig:pressExplode} and \ref{fig:rhoExplode} shows surface plots of the pressure and density at $t=0.25.$  
 %\newpage
 \begin{figure}
@@ -1141,8 +1146,11 @@ Since this test is symetrical we can use results from the equivalent 1 dimension
   \label{fig:1dExplode}
 \end{figure}
 \newpage
-\section*{\center ANFO Rate Stick}
-\subsection*{\underline{Problem Description}}
+
+%__________________________________
+\subsection*{\center ANFO Rate Stick}
+\addcontentsline{toc}{subsection}{ANFO Rate Stick}
+\subsubsection*{\underline{Problem Description}}
 A cylindrical stick ($r = 8 mm$) of Ammonium Nitrate Fuel Oil (ANFO) given an initial
 velocity of $90 m/s$.  As it strikes the domain boundary, pressure is generated
 sufficient to reach the initial pressure required to activate the 
@@ -1158,7 +1166,7 @@ simulated by shrinking the computational domain to one cell in each of the
 transverse directions.
 
 %
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description}
 \item [Component used:] \hfill ICE
 \item [Input file name:] \hfill \TT{JWLpp8mmRS.ups}
@@ -1177,7 +1185,7 @@ transverse directions.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{fig:RateStick} shows a volume rendering of the density of the
 reactant.  Note the curvature of the reaction zone.
 \begin{figure}
@@ -1231,7 +1239,7 @@ reactant.  Note the curvature of the reaction zone.
 %\newpage
 
 
-\subsection{References}
+\section{References}
 \bibliographystyle{plain}
 \bibliography{ice}
 

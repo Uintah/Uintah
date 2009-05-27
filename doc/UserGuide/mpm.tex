@@ -2837,8 +2837,9 @@ $1/$\tt <samplingFrequency> \normalfont time units, starting at
 
 It is also possible to save grid based data with this module,
 see Section~\ref{Sec:ICE} for more information.
-
-\subsection{Examples} \label{Sec:ExamplesMPM}
+%
+%______________________________________________________________________
+\section{Examples} \label{Sec:ExamplesMPM}
 
 The following examples are meant to be illustrative of a variety of
 capabilities of Uintah-MPM, but are by no means exhaustive.  Input files
@@ -2854,13 +2855,13 @@ inputs/MPM
 \end{Verbatim}
 
 
-\section*{\center Colliding Disks}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Colliding Disks}
+\subsubsection*{\underline{Problem Description}}
 This is an implementation of an example calculation from \cite{sulskycmame} in
 which two elastic disks collide and rebound.  See Section 7.3 of that
 manuscript for a description of the problem.
  
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill MPM
 \item [Input file name:] \hfill disks\_sulsky.ups
@@ -2879,7 +2880,7 @@ manuscript for a description of the problem.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 
 Figure~\ref{figdisks} shows a snapshot of the simulation, as the disks
 are beginning to collide.
@@ -2902,15 +2903,17 @@ gnuplot
 gnuplot> plot "StrainEnergy.dat", "KineticEnergy.dat"
 gnuplot> quit
 \end{Verbatim}
-
-\section*{\center Taylor Impact Test}
-\subsection*{\underline{Problem Description}}
+%
+%__________________________________
+\subsection*{\center Taylor Impact Test}
+\addcontentsline{toc}{subsection}{Taylor Impact Test}
+\subsubsection*{\underline{Problem Description}}
 This is a simulation of an Taylor impact experiment calculation from 
 \cite{Gust82} in a copper cylinder at 718 K that is fired at a
 rigid anvil at 188 m/s.  The copper cylinder has a length of 30 mm and
 a diameter of 6 mm.  The cylinder rebounds from the anvil after 100 $\mu$s.
  
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill MPM
 \item [Input file name:] \hfill taylorImpact.ups
@@ -2929,7 +2932,7 @@ a diameter of 6 mm.  The cylinder rebounds from the anvil after 100 $\mu$s.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure~\ref{fig:taylorImpact_slide} shows a snapshot from the end of the simulation.
 There, the cylinder is allowed to slide laterally across the plate due
 to the following optional specification in the \tt <contact> \normalfont
@@ -2963,9 +2966,10 @@ section as follows:
   \label{fig:taylorImpact_stick}
 \end{figure}
 
-
-\section*{\center Sphere Rolling Down an Inclined Plane}
-\subsection*{\underline{Problem Description}}
+%__________________________________
+\subsection*{\center Sphere Rolling Down an Inclined Plane}
+\addcontentsline{toc}{subsection}{Sphere Rolling Down an Inclined Plane}
+\subsubsection*{\underline{Problem Description}}
 Here, a sphere of soft plastic, initially at rest, rolls under the
 influence of gravity down a plane of a harder plastic.  Gravity is
 oriented such that the plane is effectively angled at 45 degrees to
@@ -2977,7 +2981,7 @@ barely above it.  The same simulation is also run using a friction
 coefficient of $\mu = 0.0$.  The difference in the results is shown
 below.
  
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill MPM
 \item [Input file name:] \hfill inclinedPlaneSphere.ups
@@ -2996,8 +3000,7 @@ below.
 
 \end{description}
 
-\section*{\underline{Results}}
-
+\subsubsection*{\underline{Results}}
 Figure~\ref{figincplaneSphere_bigmu} and Figure~\ref{figincplaneSphere_0mu}
 show snapshots of the simulation, as
 the sphere is about halfway down the plane.
@@ -3027,8 +3030,10 @@ sticking and rolling.}
   \label{figincplaneSphere_0mu}
 \end{figure}
 
-\section*{\center Crushing a Foam Microstructure}
-\subsection*{\underline{Problem Description}}
+%__________________________________
+\subsection*{\center Crushing a Foam Microstructure}
+\addcontentsline{toc}{subsection}{Crushing a Foam Microstructure}
+\subsubsection*{\underline{Problem Description}}
 This calculation demonstrates two important strength of MPM.  The first
 is the ability to quickly generate a computational representation of
 complex geometries.  The second is the ability of the method to handle
@@ -3046,7 +3051,7 @@ foam's constituent material, or is left as void space.  This particle
 representation avoids the time consuming steps required to build a suitable
 unstructured mesh for this very complicated geometry.
  
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill MPM
 \item [Input file name:] \hfill foam.ups
@@ -3096,7 +3101,7 @@ where NP is the number of processors being used.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 
 Figure~\ref{figfoam} shows a snapshot of the simulation via isosurfacing,
 as the foam is at about 50\% compaction.
@@ -3136,8 +3141,10 @@ gnuplot> quit
 These reaction forces are similar to what would be measured on a mechanical
 testing device, and help to understand the material behavior.
 
-\section*{\center Hole in an Elastic Plate}
-\subsection*{\underline{Problem Description}}
+%__________________________________
+\subsection*{\center Hole in an Elastic Plate}
+\addcontentsline{toc}{subsection}{Hole in an Elastic Plate}
+\subsubsection*{\underline{Problem Description}}
 A flat plate with a hole in the center is loaded in tension.  To achieve a
 quasi-static solution, the load is applied slowly and a viscous damping force
 is used to reduce transients in the solution.  As such, this simulation
@@ -3158,7 +3165,7 @@ in the \tt <MPM> \normalfont section of the input file, and:
 section below that.
 
  
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill MPM
 \item [Input file name:] \hfill holePlate.ups
@@ -3177,7 +3184,7 @@ section below that.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 
 Figure~\ref{fig:holeInPlate} shows a snapshot of the equivalent stress
 throughout the plate, as well as the load applied to the vectors near the
@@ -3193,8 +3200,10 @@ x and y directions, the maximum stress is $308 Pa$.
 \end{figure}
 \newpage
 
-\section*{\center Tungsten Sphere Impacting a Steel Target}
-\subsection*{\underline{Problem Description}}
+%__________________________________
+\subsection*{\center Tungsten Sphere Impacting a Steel Target}
+\addcontentsline{toc}{subsection}{Tungsten Sphere Impacting a Steel Target}
+\subsubsection*{\underline{Problem Description}}
 A $1 mm$ tungsten sphere with an initial velocity of $5000 m/s$
 impacts a steel target.  Axisymmetric conditions are used in this case,
 conversion of the input file to the full 3D simulation is straightforward.
@@ -3210,7 +3219,7 @@ plasticity with linear hardening.  One difficulty with using the more
 sophisticated models is that parameters can be difficult to find for many
 materials.
 
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description}
 \item [Component used:] \hfill MPM
 \item [Input file name:] \hfill WSphereIntoSteel.axi.ups
@@ -3229,7 +3238,7 @@ materials.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 
 Figure~\ref{fig:WSphereSteelInit} shows the initial configuration for
 this simulation, with particles colored by the magnitude of their velocity.
@@ -3254,7 +3263,8 @@ magnitude.
   \label{fig:WSphereSteelFinal}
 \end{figure}
 
-\subsection{References}
+%______________________________________________________________________
+\section{References}
 \bibliographystyle{plain}
 \bibliography{mpm}
 

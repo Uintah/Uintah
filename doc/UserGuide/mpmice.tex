@@ -1,7 +1,7 @@
 
-\section{MPMICE} \label{Sec:MPMICE}
+\chapter{MPMICE} \label{Sec:MPMICE}
 
-\subsection{Introduction}
+\section{Introduction}
 
 MPMICE is a marriage of the multi-material ICE method, described in
 Section~\ref{Sec:ICE} and MPM, described in Section~\ref{Sec:MPM}.
@@ -11,7 +11,7 @@ differ, largely due to their constitutive relationships.  MPM is used
 to track the evolution of solid materials in a Lagrangian frame of
 reference, while fluids are evolved in the Eulerian frame.
 
-\subsection{Theory - Algorithm Description}
+\section{Theory - Algorithm Description}
 
 At this time, the reader is directed to the manuscript by Guilkey,
 Harman and Banerjee~\cite{fourthmit} for the theoretical and algorithmic
@@ -40,10 +40,11 @@ description of the method.
 %\subsubsection{BoundaryConditions}
 %\subsubsection{Physical Boundary Conditions}
 
-\subsection{Examples}
+\section{Examples}
 
-\section*{\center Mach 2 Wedge}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Mach 2 Wedge}
+\addcontentsline{toc}{subsection}{Mach 2 Wedge}
+\subsubsection*{\underline{Problem Description}}
 This is a simulation of a symmetric $20^o$ wedge traveling through initially
 quiescent air at Mach 2.0.  A shock forms at the leading edge of the
 wedge and an expansion fan over its top.  Consultation of oblique shock
@@ -57,7 +58,7 @@ triangulated surface, rather than the geometric primitives usually used.
 This allows the user to study flow around arbitrarily complex objects,
 without the difficulty of generating a body fitted mesh around that object.
 
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description}
 \item [Component used:] \hfill rmpmice (Rigid MPM-ICE)
 \item [Input file name:] \hfill Mach2Wedge.ups
@@ -81,7 +82,7 @@ the same directory as sus.)
 
 \newpage
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 
 Figure~\ref{figwedge} shows a snapshot of the simulation.  Contour
 plot depicts pressure and reflects the presence of a leading shock
@@ -97,8 +98,9 @@ air.  Contour plot depicts pressure.}
 \newpage
 %
 %__________________________________
-\section*{\center Cylinder in a Crossflow}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Cylinder in a Crossflow}
+\addcontentsline{toc}{subsection}{Cylinder in a Crossflow}
+\subsubsection*{\underline{Problem Description}}
 In this example the domain is initially filled with air moving at a uniform velocity of $0.03m/s$  A ridgid cylinder $O.D. = 0.02m$ is placed $0.1m$ from the inlet and a passive scalar is injected into the domain through a $0.002m$ hole on in the inlet boundary of the domain.  A velocity perturbation is placed upstream of the cylinder to produce an instablity that will help trigger the onset of the K\'arm\'an vortex street.
 %
 \subsection*{\underline{Simulation Specifics}}
@@ -140,8 +142,9 @@ A movie of the results is located at
 \newpage
 
 %__________________________________
-\section*{\center Copper Clad Rate Stick (aka ``Cylinder Test"}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Copper Clad Rate Stick (aka ``Cylinder Test")}
+\addcontentsline{toc}{subsection}{"Cylinder Test"}
+\subsubsection*{\underline{Problem Description}}
 
 This is a two-dimensional version of the ``cylinder test" which is used to
 characterize equations of state for explosive products.  In those tests, a
@@ -167,7 +170,7 @@ uncommenting the Neumann conditions, as well as changing the spatial extents
 and resolution in the Z direction to match those in the Y direction.
 
 %
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description}
 \item [Component used:] \hfill mpmice (MPM-ICE)
 \item [Input file name:] \hfill \TT{QM100CuRS.ups}
@@ -188,7 +191,7 @@ and resolution in the Z direction to match those in the Y direction.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 
 Figure~\ref{fig:QM100} shows a snapshot of the simulation at time $t=60sec$.
 Particles are colored by velocity magnitude, contours reflect the density of
