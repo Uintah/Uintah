@@ -1,4 +1,7 @@
 \newcommand{\SUM}{\raise1.5pt\hbox{$\scriptstyle\sum_{s=1}^N$}}
+\newcommand {\cc}{\tiny(CC)}
+\newcommand {\fc}{\tiny(FC)}
+\newcommand {\dat}{\tiny(dat)}
 
 \chapter{ICE} \label{Sec:ICE}
 
@@ -530,7 +533,7 @@ The input parameters for the Tillotson equation of state \cite{ref:gathers} for 
 \subsection{Exchange Properties}
 The heat and momentum exchange coefficients $K_{rs}$ and $H_{rs}$, which
 determine the rate at which momentum and heat are transferred between
-materials, are specified in the following format.
+materials, and are specified in the following format.
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 0->1,   0->2,  0->3
@@ -599,10 +602,10 @@ cell using
   </BoundaryConditions>
 </Grid>
 \end{Verbatim}
-There is also the field \TT{id = "all"}.  In principal, one could set
+There is also the field tag \TT{id = "all".}  In principal, one could set
 different boundary condition types for different materials.  In practice,
 this is rarely used, so the usage illustrated here should be used.  Note that
-pressure field id is always 0.Symmetric boundary conditions are set using:
+pressure field id is always 0.  Symmetric boundary conditions are set using:
 %
 \begin{Verbatim}[fontsize=\footnotesize]
 <Face side = "y-">
@@ -679,15 +682,142 @@ the reflected pressure waves significantly.
 %FIXME
 %Table below shows some of the
 
+\subsubsection{Output Variable Names}
+There are numerous variables that can be saved during a simulation.  The table below is
+a list of the most commonly saved variables.  To see the entire list ICE
+specfic variables available to the user run
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+  inputs/labelNames ice
+\end{Verbatim}
+% 
+Dimensions are given in mass (M), length (L), time (t) and tempertare
+(T).  Bold face label names signify vectors quantities.  The location of
+the variable on the grid is denoted by (CC) for the cell-centered or (FC)
+for face-centered.  Conserved quantities that are summed over all cells, every
+timestep, and written to a ``dat" file inside of the \TT{uda} directory are denoted with (dat).
+%
+%__________________________________
+\newpage
+\begin {center}
+\scriptsize
+\begin{tabular}{lllp{8cm}}
+\label{table:iceLabels}
+\\
+LabelName & & Description\\
+\hline
+\hline
+delP\_Dilatate        &$M/Lt^2$    & change in pressure during the, \cc.\\ 
+delP\_MassX           &$M/Lt^2$    & change in pressure due to mass addition, \cc. \\
+
+eng\_adv              & $ML^2/t^2$ & energy of a material after the advection task, \cc.\\
+eng\_exch\_error      & $ML^2/t^2$ & $\sum_{i=1}^{\text{AllCells}} \text{Internal Energy After Exchange Process} - $ \\
+                      &            & $\sum_{i=1}^{\text{AllCells}}\text{Internal Energy Before Exchange Process}$, \dat.\\
+eng\_L\_ME\_CC        & $ML^2/t^2$ & Energy of a material after the exchange task and just before the advection task, \cc.\\
+
+%heatCond\_src\_CC
+imp\_delP             & $M/Lt^2$ & \cc.\\
+%int\_eng\_L\_CC
+%intE\_source\_CC
+KineticEnergy         & $ML^2/t^2$ &   $\sum_{i=1}^{\text{AllCells}} (0.5 m \vec(v)^2)_i$, \dat.\\
+
+mach                  & & Mach number, \cc.\\
+mag\_div\_vel\_CC     & & Magnitude of the divergence of the velocity, \cc.\\
+mag\_grad\_press\_CC  & & Magnitude of the gradient of the pressure, \cc.\\
+mag\_grad\_rho\_CC    & & Magnitude of the gradient of the density, \cc.\\
+mag\_grad\_temp\_CC   & & Magnitude of the gradient of the temperature, \cc.\\
+mag\_grad\_vol\_frac\_CC
+                      & & Magnitude of the gradient of the volume fraction, \cc.\\
+mass\_adv             & $M$ & Mass of a material after the advection task, \cc.\\
+mass\_L\_CC           & $M$ & Mass of a material just before the advection task, \cc.\\
+
+%matrix
+%max\_RHS
+modelEng\_src         & $ML^2/t^2$ & Energy source term, computed from a reaction model, \cc.\\
+modelMass\_src        & $M$        & Mass source term, computed from a reaction model, \cc.\\
+\bf{modelMom\_src}    & $ML/t$     & Momentum source term, computed from a reaction model, \cc.\\
+modelVol\_src         & & Volume source term,  computed from a reaction model, \cc.\\
+
+%mom\_adv
+\bf{mom\_exch\_error} & $ML/t$ &  $\sum_{i=1}^{\text{AllCells}} \text{Momemtum After Exchange Process} - $ \\
+                      &        &  $\sum_{i=1}^{\text{AllCells}} \text{Momentum Before Exchange Process}$, \dat.\\
+\bf{mom\_L\_CC}       & $ML/t$ & Momemtum before momentum exchange task, \cc.\\
+\bf{mom\_L\_ME\_CC}   & $ML/t$ & Momentum after momentum exchange task, \cc.\\
+\bf{mom\_source\_CC}  & $ML/t$ & All sources of momentum,\cc.\\
+
+press\_CC             & $M/Lt^2$ & Pressure  $P = P_{\text{equilibration}} + \Delta{P}$, \cc.\\
+press\_equil\_CC      & $M/Lt^2$ & Pressure after the compute equilibration task, \cc.\\
+pressX\_FC            & $M/Lt^2$ & Pressure on the $x^{-,+}$ cell faces, \fc.\\
+pressY\_FC            & $M/Lt^2$ & Pressure on the $y^{-,+}$ cell faces, \fc.\\
+pressZ\_FC            & $M/Lt^2$ & Pressure on the $z^{-,+}$ cell faces, \fc.\\
+
+rho\_CC               & $M/L^3$  & Density  of each material, \cc.\\
+rho\_micro\_CC        & $M/L^3$  & Microscopic or intensive density, \cc.\\
+%rhs
+
+specific\_heat        & $L^2/t^2T$ & Constant Specific Heat, \cc.\\
+speedSound\_CC        & $L/t$      & Speed of sound  of each material, \cc.\\
+sp\_vol\_adv          & & \\
+sp\_vol\_CC           & $L3/M$     & Specific volume of each material, \cc.\\
+%sp\_vol\_L\_CC
+%sp\_vol\_src\_CC
+%sp\_volX\_FC
+%sp\_volY\_FC
+%sp\_volZ\_FC
+%sum\_imp\_delP
+
+temp\_CC              & $T$  & Temperature  of each material, \cc.\\
+TempX\_FC             & $T$  & temperature on the $x^{-,+}$ cell faces, \fc.\\
+TempY\_FC             & $T$  & temperature on the $y^{-,+}$ cell faces, \fc.\\
+TempZ\_FC             & $T$  & temperature on the $z^{-,+}$ cell faces, \fc.\\
+thermalCond           & $ML/t^3T$ & Thermal conductivity, \cc.\\
+
+TotalIntEng           & $ML^2/t^2$ & $\sum_{i=1}^{\text{AllCells}} (m c_v T)_i$, \dat.\\
+TotalMass             & $M$        & $\sum_{i=1}^{\text{AllCells}} m_i$, \dat.\\
+TotalMomentum         & $ML/t$     & $\sum_{i=1}^{\text{AllCells}} (m \vec{v})_i$, \dat.\\
+%turb\_viscosity\_CC
+
+uvel\_FC              & $L/t$  & x-component of velocity, before momentum exchange, \fc.\\
+uvel\_FCME            & $L/t$  & x-component of velocity, after momentum exchange task, \fc.\\
+
+\bf{vel\_CC}          & $L/t$  & Velocity at the end of a timestep, \cc.\\ 
+viscosity             & $M/Lt$ & Dynamic viscosity, \cc.\\
+vol\_frac\_CC         &        & Volume fraction of each material, \cc.\\
+vol\_fracX\_FC        &        & Volume fraction on the $x^{-,+}$ cell faces, \fc.\\
+vol\_fracY\_FC        &        & Volume fraction on the $y^{-,+}$ cell faces, \fc.\\
+vol\_fracZ\_FC        &        & Volume fraction on the $z^{-,+}$ cell faces, \fc.\\
+vvel\_FC              & $L/t$ & y-component of velocity, before momentum exchange task, \fc.\\
+vvel\_FCME            & $L/t$ & y-component of velocity, after momentum exchange task, \fc.\\
+wvel\_FC              & $L/t$ & z-component of velocity, before momentum exchange, \fc.\\
+wvel\_FCME            & $L/t$ & z-component of velocity, after momentum exchange task, \fc.\\
+
+\hline
+\end{tabular}
+\normalfont
+\end{center}
 \normalsize
 %______________________________________________________________________
+The variables,
+\TT{mag\_div\_vel\_CC,
+mag\_grad\_press\_CC,  
+mag\_grad\_rho\_CC, 
+mag\_grad\_temp\_CC,   
+mag\_grad\_vol\_frac\_CC,}
+are the magnitude of the gradient or divergence of the respective primative variable.  
+If the user visual To  are large and based on this information
+the adaptive mesh cell refinement criteria can be set.
+
+%______________________________________________________________________
 %  XML tags
-\subsection{XML tag description}
+\newpage
+Below is a list of the \TT{XML} tags pertaining specifically to \TT{ICE} problems.
+
+\subsubsection{XML tag description}
 %__________________________________
 \begin {center}
+\scriptsize
 \begin{tabular}{lllp{8cm}}
-\\
-\footnotesize{XML tag} & \footnotesize{Type} & \footnotesize{Dimensions} & \footnotesize{Description}\\
+XML tag & Type & Dimensions & Description\\
 \hline
 \hline
 cfl                   & double &               &    Courant Number.\\
@@ -696,7 +826,7 @@ gravity               & Vector & $[L/t^2]$     &    gravitational acceleration, 
 \underline{\footnotesize{global material properties}} & & &\\
 dynamic\_viscosity    & double & $[M/Lt]$      &    viscosity, $\mu$.\\
 thermal\_conditucivity& double & $[ML/t^3T]$   &    thermal conductivity, $k$\\
-specific\_heat        & double & $ [L^2/t^2 T]$ &   $c_p$\\
+specific\_heat        & double & $[L^2/t^2 T]$ &   $c_p$\\
 gamma                 & double &               &    ratio of specific heats, $\gamma$.\\
 \\
 \underline{\footnotesize{geometry object related}} & & &\\
@@ -717,7 +847,7 @@ do\_Refluxing         & boolean &              &    on/off switch for correcting
 
 %______________________________________________________________________
 \newpage
-\section{Examples}
+\subsection{Examples}
 Below are several example problems that illustrate the wide range of problems
 that can be solved using the ICE algorithm.  Where possible simulation
 results are compared to exact solutions or high fidelity numerical results.
@@ -725,13 +855,13 @@ Note in order to run the post processing scripts the user should have a
 recent version of Octave installed.  To visualize the results the visualization
 package VisIT should be used.  VisIT session files are included.
  
-\subsection*{\center Poiseuille Flow}
-\subsubsection*{\underline{Problem Description}}
+\section*{\center Poiseuille Flow}
+\subsection*{\underline{Problem Description}}
 The Poiseuille flow problem is classical viscous flow problem in which flow is
 driven through two parallel plates from fixed pressure gradient.  The pressure
 gradient is balanced by the diffusion $x$ momentum in the $y$ direction.
 
-\subsubsection*{\underline{Simulation Specifics}}
+\subsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
