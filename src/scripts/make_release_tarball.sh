@@ -1,6 +1,18 @@
 #! /bin/sh
 
-cd ..
+#VERSION
+
+VERSION="1.1.0-alpha"
+
+# Start off in the src/scripts directory.
+
+cd ../..
+
+mkdir uintah-$VERSION
+
+cp -a doc src uintah-$VERSION
+
+cd src
 
 for i in `find . -name "*.release"`; do 
     j=`echo $i | sed 's/.release//'`;  
@@ -14,7 +26,9 @@ cd ../doc
 
 cd ..
 
-tar -X src/exclude.txt --exclude-vcs -cvf uintah.tar doc src
+tar -X src/exclude.txt --exclude-vcs -cvf uintah-$VERSION.tar uintah-$VERSION
+
+gzip uintah-$VERSION.tar
 
 
 
