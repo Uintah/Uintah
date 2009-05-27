@@ -139,9 +139,11 @@ handleParticleData<Point>( QueryInfo & qinfo, int matlNo, bool matlClassfication
   result.x = /*floatArrayX*/ dataX;
   result.y = /*floatArrayY*/ dataY;
   result.z = /*floatArrayZ*/ dataZ;
-  result.type = SCALAR;
+  result.type = POINT;
 
   result.numParticles = dataX.size();
+
+  // cout << result.numParticles << endl;
 
   // cout << mapA.size() << endl;
 
@@ -271,9 +273,9 @@ handleParticleData<Vector>( QueryInfo & qinfo, int matlNo, bool matlClassficatio
       else {
 	numParticles = mapA[p].particles;
 	for (int i = 0; i < numParticles; i++) {
-	  dataX.push_back(-FLT_MAX);
-	  dataY.push_back(-FLT_MAX);
-	  dataZ.push_back(-FLT_MAX);
+	  dataX.push_back(FLT_MIN);
+	  dataY.push_back(FLT_MIN);
+	  dataZ.push_back(FLT_MIN);
 	}
       }
 
@@ -385,10 +387,10 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
       else {
 	numParticles = mapA[p].particles; 
 	for (int i = 0; i < numParticles; i++) {
-	  Matrix3 empMat(-DBL_MAX);
+	  Matrix3 empMat(DBL_MIN);
 	  matrixRep.push_back(empMat);
 
-	  data.push_back(-FLT_MAX);
+	  data.push_back(FLT_MIN);
 	}
       }
 
@@ -424,6 +426,8 @@ handleParticleData<Matrix3>( QueryInfo & qinfo, int matlNo, bool matlClassficati
   result.matrixRep = matrixRep;
   result.type = TENSOR;
   result.numParticles = data.size();
+
+  // cout << result.matrixRep.size() << endl;
 
   cout << "Out handleParticleData<Matrix3>\n";
 
@@ -523,7 +527,7 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, Parti
       else {
 	numParticles = mapA[p].particles;
 	for (int i = 0; i < numParticles; i++) {
-	  data.push_back(-FLT_MAX);
+	  data.push_back(FLT_MIN);
 	}
       }
     // } // end for each Material
@@ -546,6 +550,7 @@ handleParticleData( QueryInfo & qinfo, int matlNo, bool matlClassfication, Parti
   result.name = name;
   result.data = /*floatArray*/ data;
   result.numParticles = data.size();
+  result.type = UNKNOWN;
 
   // return result;
 
@@ -659,9 +664,9 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 	dataRef.push_back(nameValObj);	
 
 	// With tensor data we also have the Trace value and data != NULL in that case
-	if ( particleVars[cnt].type == 2 ) { // Tensor data 
+	if ( particleVars[cnt].type == TENSOR ) { // Tensor data 
 	  tenVal tenValObj;
-	  matrixVec& matrixRepRef = particleVars[cnt].matrixRep;
+	  // matrixVec& matrixRepRef = particleVars[cnt].matrixRep;
 	  // matrixVec* matrixRepPtr = particleVars[cnt].matrixRep;
 	  // matrixVec& matrixRepRef = *(matrixRepPtr);
 
@@ -669,9 +674,12 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 
 	  for (unsigned int i = 0; i < 3; i++) {
 	    for (unsigned int j = 0; j < 3; j++) {
-	      tenValObj.mat[i][j] =  matrixRepRef[particle](i, j);
+	      Matrix3& matRef = /*matrixRepRef[particle]*/ particleVars[cnt].matrixRep[particle];
+	      tenValObj.mat[i][j] = matRef(i, j);
 	    }
 	  }		  
+	 
+	  // cout << particle << " " << cnt << endl;
 
 	  tenDataRef.push_back(tenValObj);
 	}
@@ -686,7 +694,7 @@ saveParticleData( vector<ParticleDataContainer> & particleVars,
 	  varData.y = particleVars[cnt].y[particle];
 	  varData.z = particleVars[cnt].z[particle];
 	}
-	else if ( particleVars[cnt].type == 1 ) { // Vector data
+	else if ( particleVars[cnt].type == VECTOR ) { // Vector data
 	  vecVal vecValObj;
 
 	  vecValObj.name = particleVars[cnt].name;

@@ -67,7 +67,6 @@ ICELabel::ICELabel()
   // Cell Centered variables
   TMV_CCLabel             = VarLabel::create("TMV_CC",        CC_double);
   press_CCLabel           = VarLabel::create("press_CC",      CC_double);
-  matl_press_CCLabel      = VarLabel::create("matl_press_CC", CC_double);
   press_equil_CCLabel     = VarLabel::create("press_equil_CC",CC_double);
   delP_DilatateLabel      = VarLabel::create("delP_Dilatate", CC_double);
   delP_MassXLabel         = VarLabel::create("delP_MassX",    CC_double); 
@@ -82,7 +81,6 @@ ICELabel::ICELabel()
   DLabel                  = VarLabel::create("D",             CC_Vector); 
   speedSound_CCLabel      = VarLabel::create("speedSound_CC", CC_double);
   vol_frac_CCLabel        = VarLabel::create("vol_frac_CC",   CC_double);
-  press_force_CCLabel     = VarLabel::create("press_force",   CC_Vector);
   mom_source_CCLabel      = VarLabel::create("mom_source_CC", CC_Vector);
   int_eng_source_CCLabel  = VarLabel::create("intE_source_CC",CC_double);
   heatCond_src_CCLabel    = VarLabel::create("heatCond_src_CC",CC_double);
@@ -148,11 +146,7 @@ ICELabel::ICELabel()
   grad_dp_XFCLabel   = VarLabel::create("grad_dp_XFC",SFCX_double);
   grad_dp_YFCLabel   = VarLabel::create("grad_dp_YFC",SFCY_double);
   grad_dp_ZFCLabel   = VarLabel::create("grad_dp_ZFC",SFCZ_double);
-    
-  // these should are for rate form and should be removed.  
-  press_diffX_FCLabel = VarLabel::create("press_diffX_FC", SFCX_double);
-  press_diffY_FCLabel = VarLabel::create("press_diffY_FC", SFCY_double);
-  press_diffZ_FCLabel = VarLabel::create("press_diffZ_FC", SFCZ_double);  
+      
   //__________________________________  
   // Misc labels
   machLabel           = VarLabel::create("mach",       CC_double); 
@@ -267,7 +261,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(press_CCLabel);
     VarLabel::destroy(TMV_CCLabel);
     VarLabel::destroy(press_equil_CCLabel);
-    VarLabel::destroy(matl_press_CCLabel);
     VarLabel::destroy(delP_DilatateLabel);
     VarLabel::destroy(delP_MassXLabel);
     VarLabel::destroy(rho_CCLabel);
@@ -283,7 +276,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(DLabel);
     VarLabel::destroy(speedSound_CCLabel);
     VarLabel::destroy(vol_frac_CCLabel);
-    VarLabel::destroy(press_force_CCLabel); 
     VarLabel::destroy(mom_source_CCLabel);
     VarLabel::destroy(int_eng_source_CCLabel);
     VarLabel::destroy(heatCond_src_CCLabel);
@@ -344,9 +336,6 @@ ICELabel::~ICELabel()
     VarLabel::destroy(grad_dp_XFCLabel);
     VarLabel::destroy(grad_dp_YFCLabel);
     VarLabel::destroy(grad_dp_ZFCLabel);
-    VarLabel::destroy(press_diffX_FCLabel);
-    VarLabel::destroy(press_diffY_FCLabel);
-    VarLabel::destroy(press_diffZ_FCLabel);
     // Misc labels
     VarLabel::destroy(IveBeenHereLabel);
     VarLabel::destroy(machLabel);

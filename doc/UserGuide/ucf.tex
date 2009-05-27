@@ -1019,9 +1019,6 @@ Next, we hit Draw. This produces a visualization as shown in figure~\ref{VisItSu
   \label{VisItSubsetPlotWireframe}
 \end{figure}
 
-
-\chapter{Visualization Tools -- Manta}
-
 \subsection{Iso-surfaces}
 
 The easiest way to draw iso-surfaces is to use the 'Contour' Plot. As with other plots demonstrated above, the contour plot is selected on a regular 3D scalar variable. Figure ~\ref{VisItContourPlot} illustrates this. 
@@ -1091,7 +1088,36 @@ Once these parameters are set, we hit 'Apply' and then click on the 'Draw' butto
   \label{VisItStreamlinesViewer}
 \end{figure}
 
-\chapter{Manta}
+\subsection{Visualizing extra cells}
+
+For visualizaing extra cells we use the 'Inverse Ghost Zone' opearator ~\ref{VisItInverseGhostZoneOp} in conjunction with the 'Pseudocolor' plot. Since the plugin reads in extra cells as ghost cells, the usage of this operator make sense in this scenario.  
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItInverseGhostZoneOp.png}
+  \caption{Selecting the Inverse Ghost Zone operator}
+  \label{VisItInverseGhostZoneOp}
+\end{figure}
+
+After the operator is applied to the 'Pseudocolor' plot, we double click on the opeator to change its attributes. We switch to 'Both ghost zones and real zones' in this window ~\ref{VisItInverseGhostZoneAttribs} and hit 'Apply'.
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItInverseGhostZoneAttribs.png}
+  \caption{The attributes window for the 'Inverse Ghost Zone' operator}
+  \label{VisItInverseGhostZoneAttribs}
+\end{figure}
+
+We then hit 'Draw'. When combined with the 'Mesh' plot we get a visualization similar to the one shown in figure ~\ref{VisItInverseGhostZoneViewer}. The pick operations on the viewer can then be used to investigate the value(s) in these extra cells. 
+
+\begin{figure}
+  \center
+  \includegraphics[scale=0.5]{VisItInverseGhostZoneViewer.png}
+  \caption{Extra cells together with the 'Mesh' plot}
+  \label{VisItInverseGhostZoneViewer}
+\end{figure}
+
+\chapter{Visualization Tools -- Manta}
 >>>>>>> .r44338
 
 To run the C-SAFE scene: 
