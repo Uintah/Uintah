@@ -140,6 +140,7 @@ WARNING
     double d_StartTime;
     double d_StopTime;
     vector<VarLabel*> d_varLabels;
+    vector<int> d_varMatl;
     SimulationStateP d_sharedState;
     vector<line*> d_lines;
     Output* d_dataArchiver;
