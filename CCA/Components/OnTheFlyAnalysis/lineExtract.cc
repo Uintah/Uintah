@@ -101,19 +101,13 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
                                SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup \t\t\t\tlineExtract" << endl;
-
-  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  
+  int numMatls  = d_sharedState->getNumMatls();
   
   if(!d_dataArchiver){
     throw InternalError("lineExtract:couldn't get output port", __FILE__, __LINE__);
   }
-  
-  vector<int> m(1);
-  m[0] = d_matl->getDWIndex();
-  d_matl_set = scinew MaterialSet();
-  d_matl_set->addAll(m);
-  d_matl_set->addReference();                               
-  
+                               
   ps_lb->lastWriteTimeLabel =  VarLabel::create("lastWriteTime", 
                                             max_vartype::getTypeDescription());
 
@@ -123,16 +117,57 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   d_prob_spec->require("timeStart",         d_StartTime);            
   d_prob_spec->require("timeStop",          d_StopTime);
 
-  //__________________________________
-  //  Read in variables label names
+
   ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("lineExtract: Couldn't find <Variables> tag", __FILE__, __LINE__);    
   } 
-  map<string,string> attribute;                    
+  map<string,string> attribute;
+  
+
+  //__________________________________
+  //  Read in the optional material index that may be different
+  //  from the default index
+  d_matl = d_sharedState->parseAndLookupMaterial(d_prob_spec, "material");
+  int defaultMatl = d_matl->getDWIndex();
+  vector<int> m;
+  m.push_back(defaultMatl);
+  d_matl_set = scinew MaterialSet();
+  
   for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
                     var_spec = var_spec->findNextBlock("analyze")) {
     var_spec->getAttributes(attribute);
+   
+    int matl = defaultMatl;
+    if (attribute["matl"].empty() == false){
+      matl = atoi(attribute["matl"].c_str());
+    }
+    
+    // bulletproofing
+    if(matl < 0 || matl > numMatls){
+      throw ProblemSetupException("lineExtract: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
+    }
+    
+    d_varMatl.push_back(matl);
+    m.push_back(matl);
+  }
+  
+  // remove any duplicate entries
+  sort(m.begin(), m.end());
+  vector<int>::iterator it;
+  it = unique(m.begin(), m.end());
+  m.erase(it, m.end());
+
+  //Construct the matl_set
+  d_matl_set->addAll(m);
+  d_matl_set->addReference();
+  
+  //__________________________________
+  //  Read in variables label names                
+  for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
+                    var_spec = var_spec->findNextBlock("analyze")) {
+    var_spec->getAttributes(attribute);
+    
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
     if(label == NULL){
@@ -333,7 +368,13 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
       throw InternalError("lineExtract: scheduleDoAnalysis label not found: " 
                           + name , __FILE__, __LINE__);
     }
-    t->requires(Task::NewDW,d_varLabels[i], gac, 1);
+    
+    MaterialSubset* matSubSet = scinew MaterialSubset();
+    matSubSet->add(d_varMatl[i]);
+    matSubSet->addReference();
+    
+    
+    t->requires(Task::NewDW,d_varLabels[i], matSubSet, gac, 1);
   }
   t->computes(ps_lb->lastWriteTimeLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -391,7 +432,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
       constSFCZVariable<double> q_SFCZ_double;      
             
       Ghost::GhostType gac = Ghost::AroundCells;
-      int indx = d_matl->getDWIndex();
+      
 
       for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
         
@@ -404,7 +445,9 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
 
         const Uintah::TypeDescription* td = d_varLabels[i]->typeDescription();
         const Uintah::TypeDescription* subtype = td->getSubType();
-        
+
+
+        int indx = d_varMatl[i];        
         switch(td->getType()){
           case Uintah::TypeDescription::CCVariable:      // CC Variables
             switch(subtype->getType()) {
@@ -575,7 +618,7 @@ void lineExtract::createFile(string& filename)
     if(td->getType()      == TypeDescription::CCVariable && 
        subtype->getType() == TypeDescription::int_type){
       string name = d_varLabels[i]->getName();
-      fprintf(fp,"     %s", name.c_str());
+      fprintf(fp,"     %s(%i)", name.c_str(),d_varMatl[i]);
     }
   }
   // All CCVariable<double>
@@ -586,7 +629,7 @@ void lineExtract::createFile(string& filename)
     if(td->getType()      == TypeDescription::CCVariable && 
        subtype->getType() == TypeDescription::double_type){
       string name = d_varLabels[i]->getName();
-      fprintf(fp,"     %s", name.c_str());
+      fprintf(fp,"     %s(%i)", name.c_str(),d_varMatl[i]);
     }
   }
   // All CCVariable<Vector>
@@ -597,7 +640,8 @@ void lineExtract::createFile(string& filename)
     if(td->getType()      == TypeDescription::CCVariable && 
        subtype->getType() == TypeDescription::Vector){
       string name = d_varLabels[i]->getName(); 
-      fprintf(fp,"     %s.x      %s.y      %s.z", name.c_str(),name.c_str(),name.c_str());
+      int m = d_varMatl[i];
+      fprintf(fp,"     %s(%i).x      %s(%i).y      %s(%i).z", name.c_str(),m,name.c_str(),m,name.c_str(),m);
     }
   }
   // All SFCXVariable<double>
