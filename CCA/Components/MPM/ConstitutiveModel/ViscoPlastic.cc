@@ -750,10 +750,22 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       pDeformGrad_new[idx] = tensorF_new;
       double J = tensorF_new.Determinant();
 
+      if(d_setStressToZero && pLocalized[idx]){
+        pDeformGrad_new[idx] = pDeformGrad[idx];
+        J = pDeformGrad[idx].Determinant();
+        tensorF_new = pDeformGrad[idx];
+      }
+
       // Check 1: Look at Jacobian
       if (!(J > 0.0)) {
-        cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
+        cerr << getpid() ;
+        cerr << "**ERROR** Negative Jacobian of deformation gradient"
+             << " in particle " << pParticleID[idx] << endl;
+        cerr << "l = " << tensorL << endl;
+        cerr << "F_old = " << pDeformGrad[idx] << endl;
+        cerr << "F_inc = " << tensorFinc << endl;
+        cerr << "F_new = " << tensorF_new << endl;
+        cerr << "J = " << J << endl;
         throw ParameterNotFound("**ERROR**:ViscoPlastic", __FILE__, __LINE__);
       }
 
