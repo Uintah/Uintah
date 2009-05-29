@@ -361,6 +361,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
   
   Ghost::GhostType gac = Ghost::AroundCells;
+  
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
     if(d_varLabels[i] == NULL){
@@ -373,11 +374,15 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
     
-    
     t->requires(Task::NewDW,d_varLabels[i], matSubSet, gac, 1);
+    
+    if(matSubSet && matSubSet->removeReference()){
+      delete matSubSet;
+    }
   }
   t->computes(ps_lb->lastWriteTimeLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
+
 }
 
 //______________________________________________________________________
