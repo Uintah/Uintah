@@ -186,8 +186,9 @@ namespace Uintah {
       SFCYVariable<double> vmomBoundarySrc;
       SFCZVariable<double> wmomBoundarySrc;
 
-      //other
-      constCCVariable<double> otherSource;
+      //KLUDGE FOR REACTING COAL ------
+      //constCCVariable<double> otherSource;
+      // END KLUDGE --------------------
 
     }; // End class ArchesVariables
    
