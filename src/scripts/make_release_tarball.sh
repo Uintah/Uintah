@@ -4,6 +4,16 @@
 
 VERSION="1.1.0-alpha"
 
+while getopts v: opt
+
+do 
+  	case "$opt" in
+	   v) VERSION="$OPTARG";;
+        esac
+done
+shift `expr $OPTIND - 1`
+
+
 # Start off in the src/scripts directory.
 
 cd ../..
