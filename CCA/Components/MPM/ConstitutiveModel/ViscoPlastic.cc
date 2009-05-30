@@ -773,8 +773,12 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_0/J;
       pVolume_deformed[idx]=pMass[idx]/rho_cur;
 
-      // Compute polar decomposition of F (F = VR)
-      tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
+      //tensorF_new.polarDecomposition(tensorV, tensorR, d_tol, false);
+
+      // Compute polar decomposition of F (F = RU) -
+      // Note that tensorV is really tensorU, the right stretch
+      // tensorV is never really used - should be deleted.
+      tensorF_new.polarDecompositionRMB(tensorV, tensorR);
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
