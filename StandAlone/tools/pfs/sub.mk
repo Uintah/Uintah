@@ -85,3 +85,30 @@ LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIB
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+###############################################
+# ImageFromGeom
+
+SRCS := $(SRCDIR)/ImageFromGeom.cc
+PROGRAM := $(SRCDIR)/ImageFromGeom
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+     Core/Grid \
+     Core/Util \
+     Core/Parallel \
+     Core/Exceptions \
+     Core/Math \
+     Core/ProblemSpec \
+     CCA/Ports \
+     CCA/Components/ProblemSpecification \
+     Core/GeometryPiece \
+     Core/Exceptions \
+     Core/Geometry
+endif
+
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
