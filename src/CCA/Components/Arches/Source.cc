@@ -252,6 +252,15 @@ Source::calculateScalarSource(const ProcessorGroup* pc,
                constvars->old_density, constvars->old_scalar,
                cellinfo->sew, cellinfo->sns, cellinfo->stb, delta_t);
 
+  // TOTAL KLUDGE FOR REACTING COAL---------------------------
+  // Keep commented out unless you know what you are doing!
+  //for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){
+  //  Vector Dx = patch->dCell();
+  //  double volume = Dx.x()*Dx.y()*Dx.z();
+  //  vars->scalarNonlinearSrc[*iter] += vars->otherSource[*iter]*volume;
+  //}
+  // END KLUDGE ----------------------------------------------
+
 // Here we need to add the boundary source term if there are some.
   if (d_boundaryCondition->getNumSourceBndry() > 0){
     for (CellIterator iter=patch->getCellIterator__New(); !iter.done(); iter++){

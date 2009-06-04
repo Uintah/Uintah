@@ -192,8 +192,10 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   out << d_quad_node;
   node = out.str();
   temp_weight_name += node;
-  EqnBase& weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
+  EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
+  DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
+  d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires(Task::OldDW, d_weight_label, Ghost::None, 0);
 
   // For each required variable, determine if it plays the role of temperature or mass fraction;
@@ -206,7 +208,8 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
     if ( iMap != LabelToRoleMap.end() ) {
       if ( iMap->second == "temperature") {
         // automatically use Arches' temperature label if role="temperature"
-        tsk->requires(Task::OldDW, d_fieldLabels->d_dummyTLabel, Ghost::AroundCells, 1);
+        //tsk->requires(Task::OldDW, d_fieldLabels->d_dummyTLabel, Ghost::AroundCells, 1);
+        tsk->requires(Task::OldDW, d_fieldLabels->d_tempINLabel, Ghost::AroundCells, 1);
 
         // Only require() variables found in equation factories (right now we're not tracking temperature this way)
       } else if ( iMap->second == "raw_coal_mass_fraction") {
@@ -281,7 +284,8 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     // - get all weights (for number density)
 
     constCCVariable<double> temperature;
-    old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
+    //old_dw->get( temperature, d_fieldLabels->d_dummyTLabel, matlIndex, patch, gac, 1 );
+    old_dw->get( temperature, d_fieldLabels->d_tempINLabel, matlIndex, patch, gac, 1 );
     constCCVariable<double> w_omegac;
     new_dw->get( w_omegac, d_raw_coal_mass_fraction_label, matlIndex, patch, gn, 0 );
     constCCVariable<double> weight;
@@ -308,9 +312,11 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
         devol_rate[c] = -1.0*(k1+k2)*(omegac);  
       else 
         devol_rate[c] = 0.0;
-      testVal = (Y1_*k1 + Y2_*k2)*omegac*d_rc_scaling_factor;
+
+      testVal = (Y1_*k1 + Y2_*k2)*w_omegac[c]*d_rc_scaling_factor*d_w_scaling_factor; 
+      //testVal uses the weighted abscissa so the weight isn't needed in the gas source term
       if (testVal > 0.0)
-        gas_devol_rate[c] = (Y1_*k1 + Y2_*k2)*omegac*d_rc_scaling_factor;
+        gas_devol_rate[c] = testVal; 
       else 
         gas_devol_rate[c] = 0.0;
 

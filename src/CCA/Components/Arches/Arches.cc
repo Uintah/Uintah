@@ -1377,6 +1377,15 @@ Arches::sched_scalarInit( const LevelP& level,
     tsk->computes( oldtempVar ); 
   } 
 
+
+  // TOTAL KLUDGE FOR REACTING COAL---------------------------
+  // Keep commented out unless you know what you are doing!
+  //SourceTermFactory& factory = SourceTermFactory::self();
+  //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
+  //const VarLabel* srcLabel = src.getSrcLabel();
+  //tsk->computes(srcLabel);
+  //----------------------------------------------------------
+
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
@@ -1407,11 +1416,22 @@ Arches::scalarInit( const ProcessorGroup* ,
       new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
       new_dw->allocateAndPut( oldtempVar, oldtempVarLabel, matlIndex, patch ); 
     
-      tempVar.initialize(0.0);
+      tempVar.initialize(initValue);
       oldtempVar.initialize(initValue); 
 
       //do Boundary conditions
       eqn->computeBCsSpecial( patch, eqn_name, tempVar ); 
+
+
+  // TOTAL KLUDGE FOR REACTING COAL---------------------------
+  // Keep commented out unless you know what you are doing!
+  //SourceTermFactory& factory = SourceTermFactory::self();
+  //SourceTermBase& src = factory.retrieve_source_term( "eta_source" ); 
+  //const VarLabel* srcLabel = src.getSrcLabel();
+  //CCVariable<double> srcVar;
+  //new_dw->allocateAndPut( srcVar, srcLabel, matlIndex, patch );
+  //srcVar.initialize(0.0);
+  //----------------------------------------------------------
 
     }
   }
@@ -1472,65 +1492,44 @@ Arches::dqmomInit( const ProcessorGroup* ,
 
     DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self(); 
     DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns(); 
-    //double mylength = .5;
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-      EqnBase* temp_eqn = ieqn->second; 
-      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
-      const VarLabel* tempSourceLabel = eqn->getSourceLabel();
-      const VarLabel* tempVarLabel = eqn->getTransportEqnLabel(); 
-      const VarLabel* oldtempVarLabel = eqn->getoldTransportEqnLabel(); 
-      double initValue = eqn->getInitValue(); 
-      //proc0cout << "INITIAL VALUE FOR" << tempVarLabel << endl; 
-      //proc0cout << " = " << initValue << endl; 
-      
-      CCVariable<double> tempSource;
-      CCVariable<double> tempVar; 
-      CCVariable<double> oldtempVar; 
-      new_dw->allocateAndPut( tempSource, tempSourceLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( tempVar, tempVarLabel, matlIndex, patch ); 
-      new_dw->allocateAndPut( oldtempVar, oldtempVarLabel, matlIndex, patch ); 
+
+
+    // --- DQMOM EQNS
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); 
+         ieqn != dqmom_eqns.end(); ieqn++){
     
-      tempSource.initialize(0.0);
-      tempVar.initialize(0.0);
-      oldtempVar.initialize(0.0); 
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+      
+      const VarLabel* sourceLabel = eqn->getSourceLabel();
+      const VarLabel* phiLabel = eqn->getTransportEqnLabel(); 
+      const VarLabel* oldPhiLabel = eqn->getoldTransportEqnLabel(); 
+      double initValue = eqn->getInitValue(); 
+      
+      CCVariable<double> source;
+      CCVariable<double> phi; 
+      CCVariable<double> oldphi; 
 
-      //if ( eqn->weight() )
-      //  tempVar.initialize(1);
-      //else {
+      new_dw->allocateAndPut( source, sourceLabel, matlIndex, patch ); 
+      new_dw->allocateAndPut( phi,    phiLabel,    matlIndex, patch ); 
+      new_dw->allocateAndPut( oldphi, oldPhiLabel, matlIndex, patch ); 
+    
+      source.initialize(0.0);
+      phi.initialize(initValue);
+      oldphi.initialize(initValue); 
 
-        for (CellIterator iter=patch->getCellIterator__New(); 
-              !iter.done(); iter++){
-          Point pt = patch->cellPosition(*iter);
-          //if (pt.x() > .25 && pt.x() < .75 && pt.y() > .25 && pt.y() < .75)
-          //if (pt.y() > .25 && pt.y() < .75 ) {
+      std::string eqn_name = eqn->getEqnName();
 
-  
-          if (pt.x() < .0){
-            if (!eqn->weight()){
-              tempVar[*iter] = initValue;
-              oldtempVar[*iter] = initValue; 
-            } 
-            else 
-              tempVar[*iter] = 1.5;
-          //} else if (eqn->weight()) {
-            //tempVar[*iter] = 1.0;
-          }
-          else {
-            if (!eqn->weight())
-              tempVar[*iter] = 0;
-            else 
-              tempVar[*iter] = .0;
-          }
-        //}
-        //mylength += .10; 
-      }
-    } 
+      eqn->computeBCs( patch, eqn_name, phi );
+
+    }
 
      // --- PARTICLE VELS
     for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin(); 
           i != d_lab->partVel.end(); i++){
+    
       CCVariable<Vector> partVel; 
-      new_dw->allocateAndPut( partVel, i->second, matlIndex, patch ); 
+      new_dw->allocateAndPut( partVel, i->second, matlIndex, patch );
+
       for (CellIterator iter=patch->getCellIterator__New(); 
            !iter.done(); iter++){
         IntVector c = *iter; 
@@ -1540,14 +1539,17 @@ Arches::dqmomInit( const ProcessorGroup* ,
     }
 
 
+    // --- MODELS VALUES
     ModelFactory& modelFactory = ModelFactory::self();
     ModelFactory::ModelMap models = modelFactory.retrieve_all_models();
-    for ( ModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
+    for ( ModelFactory::ModelMap::iterator imodel=models.begin(); 
+          imodel != models.end(); imodel++){
+
       ModelBase* model = imodel->second;
       const VarLabel* modelLabel = model->getModelLabel();
-      CCVariable<double> tempModel; 
-      new_dw->allocateAndPut( tempModel, modelLabel, matlIndex, patch ); 
-      tempModel.initialize(0.0);
+      CCVariable<double> model_value; 
+      new_dw->allocateAndPut( model_value, modelLabel, matlIndex, patch ); 
+      model_value.initialize(0.0);
     }
   }
 }
