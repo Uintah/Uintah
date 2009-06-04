@@ -729,5 +729,30 @@ Some useful programs can be found in the installation:
 sus will be built and installed in ~/Uintah/mac32opt/StandAlone  
 Extraction utilities that extract specific variables from UDA (Uintah Data Archive) can be found in ~/Uintah/mac32opt/StandAlone/tools
 
+\subsection{Installing Visit and udaReader on Mac}
+
+A Mac binary distribution is available from LLNL at \url{https://wci.llnl.gov/codes/visit/executables.html}.  The main difficulty in installing Uintah with udaReader plugin has to do with actually finding the Visit installation executable.  Furthermore, naming conventions are slightly different, and thus several links must be set up.
+
+Extract the mac install and create links by (substitute i386 and Visit version where necessary):
+
+\begin{verbatim}
+tar xvf visit1_11_2.darwin-i386.tar.gz
+cd visit/1.11.2
+export PATHTOVISIT=\$(pwd)
+mkdir src
+ln -s \$PATHTOVISIT/darwin-i386/bin src/bin
+ln -s \$PATHTOVISIT/../bin/frontendlaucher src/bin/visit
+\end{verbatim}
+
+Now that the links have been set up, configure Uintah with --with-visit=\$PATHTOVISIT and --with-teem=DIR/TO/TEEM.  See Section 8.1 for Teem installation.
+
+An easier solution is to download the VisIt directory from the Uintah source, and run xml2makefile from \$PATHTOVISIT/darwin-i386/bin on udareaderMTMD.xml within Visit/udaReaderMTMD/udaREaderMTMD.xml such as:
+
+\begin{verbatim}
+xml2makefile -clobber -private VisIt/udaReaderMTMD/udaReaderMTMD.xml
+\end{verbatim}
+
+To install Visit from source, see build notes for Mac inside source tarball.
+
 
 \end{document}
