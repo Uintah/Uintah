@@ -448,12 +448,26 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
 
       // Update the deformation gradient tensor to its time n+1 value.
       FF = pDefGradInc*pDefGrad[idx];
+
+      // if already failed, use previous FF
+      if(d_setStressToZero && pFailed[idx]){
+        FF = pDefGrad[idx];
+      }
+
       J = FF.Determinant();
+
       if (!(J > 0.0)) {
-        cerr << getpid() 
-             << "**ERROR** Negative Jacobian of deformation gradient" << endl;
+        cerr << getpid() ;
+        cerr << "**ERROR** Negative Jacobian of deformation gradient"
+             << " in particle " << pParticleID[idx] << endl;
+        cerr << "l = " << velGrad << endl;
+        cerr << "F_old = " << pDefGrad[idx] << endl;
+        cerr << "F_inc = " << pDefGradInc << endl;
+        cerr << "F_new = " << FF << endl;
+        cerr << "J = " << J << endl;
         throw ParameterNotFound("**ERROR**:CNHDamage", __FILE__, __LINE__);
       }
+
       pDefGrad_new[idx] = FF;
 
       // Get the deformed volume
