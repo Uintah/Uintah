@@ -92,6 +92,20 @@ to perform inter-process communication via MPI. Then, when the
 scheduler is executed, the tasks will execute in the pre-determined
 order.
 
+\subsection{needRecompile()}
+
+%% Not sure where this information really should go, but wanted to
+%% save it for posterity...
+
+Each component has a needRecompile() function that is called once per
+timestep.  If, for whatever reason, a Component determines that the
+list of tasks it had previously scheduled is no longer valid, then the
+Component must return 'true' when its needRecompile() function is
+called.  This will cause the scheduler to rebuild the task graph (by
+asking each component to re-specify tasks).  Note, rebuilding the
+taskgraph is a relatively expensive operation, so only should be done
+if necessary.
+
 \section{Tasks}
 
 A task contains two essential components: a pointer to a function

@@ -679,9 +679,125 @@ the reflected pressure waves significantly.
 %FIXME
 %Table below shows some of the
 
+\subsection{Output Variable Names}
+There are numerous variables that can be saved during a simulation.  The table below is
+a list of the most commonly saved variables.  To see the entire list ICE
+specfic variables available to the user run
+%
+\begin{Verbatim}[fontsize=\footnotesize]
+  inputs/labelNames ice
+\end{Verbatim}
+% 
+Dimensions are given in mass (M), length (L), time (t) and tempertare
+(T).  Bold face label names signify vectors quantities.  The location of
+the variable on the grid is denoted by (CC) for the cell-centered or (FC)
+for face-centered.  Conserved quantities that are summed over all cells, every
+timestep, and written to a ``dat" file inside of the \TT{uda} directory are denoted with (dat).
+%
+%__________________________________
+\newpage
+\begin {center}
+\scriptsize
+\begin{tabular}{lllp{8cm}}
+\label{table:iceLabels}
+\\
+LabelName & & Description\\
+\hline
+\hline
+delP\_Dilatate        &$M/Lt^2$    & change in pressure during the, \cc.\\ 
+delP\_MassX           &$M/Lt^2$    & change in pressure due to mass addition, \cc. \\
+
+eng\_adv              & $ML^2/t^2$ & energy of a material after the advection task, \cc.\\
+eng\_exch\_error      & $ML^2/t^2$ & $\sum_{i=1}^{\text{AllCells}} \text{Internal Energy After Exchange Process} - $ \\
+                      &            & $\sum_{i=1}^{\text{AllCells}}\text{Internal Energy Before Exchange Process}$, \dat.\\
+eng\_L\_ME\_CC        & $ML^2/t^2$ & Energy of a material after the exchange task and just before the advection task, \cc.\\
+
+%heatCond\_src\_CC
+imp\_delP             & $M/Lt^2$ & \cc.\\
+%int\_eng\_L\_CC
+%intE\_source\_CC
+KineticEnergy         & $ML^2/t^2$ &   $\sum_{i=1}^{\text{AllCells}} (0.5 m \vec(v)^2)_i$, \dat.\\
+
+mach                  & & Mach number, \cc.\\
+mag\_div\_vel\_CC     & & Magnitude of the divergence of the velocity, \cc.\\
+mag\_grad\_press\_CC  & & Magnitude of the gradient of the pressure, \cc.\\
+mag\_grad\_rho\_CC    & & Magnitude of the gradient of the density, \cc.\\
+mag\_grad\_temp\_CC   & & Magnitude of the gradient of the temperature, \cc.\\
+mag\_grad\_vol\_frac\_CC
+                      & & Magnitude of the gradient of the volume fraction, \cc.\\
+mass\_adv             & $M$ & Mass of a material after the advection task, \cc.\\
+mass\_L\_CC           & $M$ & Mass of a material just before the advection task, \cc.\\
+
+%matrix
+%max\_RHS
+modelEng\_src         & $ML^2/t^2$ & Energy source term, computed from a reaction model, \cc.\\
+modelMass\_src        & $M$        & Mass source term, computed from a reaction model, \cc.\\
+\bf{modelMom\_src}    & $ML/t$     & Momentum source term, computed from a reaction model, \cc.\\
+modelVol\_src         & & Volume source term,  computed from a reaction model, \cc.\\
+
+%mom\_adv
+\bf{mom\_exch\_error} & $ML/t$ &  $\sum_{i=1}^{\text{AllCells}} \text{Momemtum After Exchange Process} - $ \\
+                      &        &  $\sum_{i=1}^{\text{AllCells}} \text{Momentum Before Exchange Process}$, \dat.\\
+\bf{mom\_L\_CC}       & $ML/t$ & Momemtum before momentum exchange task, \cc.\\
+\bf{mom\_L\_ME\_CC}   & $ML/t$ & Momentum after momentum exchange task, \cc.\\
+\bf{mom\_source\_CC}  & $ML/t$ & All sources of momentum,\cc.\\
+
+press\_CC             & $M/Lt^2$ & Pressure  $P = P_{\text{equilibration}} + \Delta{P}$, \cc.\\
+press\_equil\_CC      & $M/Lt^2$ & Pressure after the compute equilibration task, \cc.\\
+pressX\_FC            & $M/Lt^2$ & Pressure on the $x^{-,+}$ cell faces, \fc.\\
+pressY\_FC            & $M/Lt^2$ & Pressure on the $y^{-,+}$ cell faces, \fc.\\
+pressZ\_FC            & $M/Lt^2$ & Pressure on the $z^{-,+}$ cell faces, \fc.\\
+
+rho\_CC               & $M/L^3$  & Density  of each material, \cc.\\
+rho\_micro\_CC        & $M/L^3$  & Microscopic or intensive density, \cc.\\
+%rhs
+
+specific\_heat        & $L^2/t^2T$ & Constant Specific Heat, \cc.\\
+speedSound\_CC        & $L/t$      & Speed of sound  of each material, \cc.\\
+sp\_vol\_adv          & & \\
+sp\_vol\_CC           & $L3/M$     & Specific volume of each material, \cc.\\
+%sp\_vol\_L\_CC
+%sp\_vol\_src\_CC
+%sp\_volX\_FC
+%sp\_volY\_FC
+%sp\_volZ\_FC
+%sum\_imp\_delP
+
+temp\_CC              & $T$  & Temperature  of each material, \cc.\\
+TempX\_FC             & $T$  & temperature on the $x^{-,+}$ cell faces, \fc.\\
+TempY\_FC             & $T$  & temperature on the $y^{-,+}$ cell faces, \fc.\\
+TempZ\_FC             & $T$  & temperature on the $z^{-,+}$ cell faces, \fc.\\
+thermalCond           & $ML/t^3T$ & Thermal conductivity, \cc.\\
+
+TotalIntEng           & $ML^2/t^2$ & $\sum_{i=1}^{\text{AllCells}} (m c_v T)_i$, \dat.\\
+TotalMass             & $M$        & $\sum_{i=1}^{\text{AllCells}} m_i$, \dat.\\
+TotalMomentum         & $ML/t$     & $\sum_{i=1}^{\text{AllCells}} (m \vec{v})_i$, \dat.\\
+%turb\_viscosity\_CC
+
+uvel\_FC              & $L/t$  & x-component of velocity, before momentum exchange, \fc.\\
+uvel\_FCME            & $L/t$  & x-component of velocity, after momentum exchange task, \fc.\\
+
+\bf{vel\_CC}          & $L/t$  & Velocity at the end of a timestep, \cc.\\ 
+viscosity             & $M/Lt$ & Dynamic viscosity, \cc.\\
+vol\_frac\_CC         &        & Volume fraction of each material, \cc.\\
+vol\_fracX\_FC        &        & Volume fraction on the $x^{-,+}$ cell faces, \fc.\\
+vol\_fracY\_FC        &        & Volume fraction on the $y^{-,+}$ cell faces, \fc.\\
+vol\_fracZ\_FC        &        & Volume fraction on the $z^{-,+}$ cell faces, \fc.\\
+vvel\_FC              & $L/t$ & y-component of velocity, before momentum exchange task, \fc.\\
+vvel\_FCME            & $L/t$ & y-component of velocity, after momentum exchange task, \fc.\\
+wvel\_FC              & $L/t$ & z-component of velocity, before momentum exchange, \fc.\\
+wvel\_FCME            & $L/t$ & z-component of velocity, after momentum exchange task, \fc.\\
+
+\hline
+\end{tabular}
+\normalfont
+\end{center}
 \normalsize
 %______________________________________________________________________
 %  XML tags
+\newpage
+Below is a list of the \TT{XML} tags pertaining specifically to \TT{ICE} problems.
+
 \subsection{XML tag description}
 %__________________________________
 \begin {center}
@@ -726,6 +842,7 @@ recent version of Octave installed.  To visualize the results the visualization
 package VisIT should be used.  VisIT session files are included.
  
 \subsection*{\center Poiseuille Flow}
+\addcontentsline{toc}{subsection}{Poiseuille Flow}
 \subsubsection*{\underline{Problem Description}}
 The Poiseuille flow problem is classical viscous flow problem in which flow is
 driven through two parallel plates from fixed pressure gradient.  The pressure
@@ -763,7 +880,7 @@ This will generate a postscript file Couette\-Poiseuille.ps
 \item [Physical time simulated:] \hfill 15 sec.
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{fig:Poiseuille} shows a comparison of the exact and simulated u
 velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
 plot shows the difference of the velocity $\|u - u_{exact}\|$.
@@ -776,8 +893,9 @@ plot shows the difference of the velocity $\|u - u_{exact}\|$.
 \newpage
 %
 %______________________________________________________________________
-\section*{\center Combined Couette-Poiseuille Flow}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Combined Couette-Poiseuille Flow}
+\addcontentsline{toc}{subsection}{Combined Couette-Poiseuille Flow}
+\subsubsection*{\underline{Problem Description}}
 The combined Couette-Poiseuille flow problem is another classical viscous
 flow problem in which flow is driven through a channel by a pressure gradient
 and a wall moving.  The reduced x momentum equation differential is
@@ -788,7 +906,7 @@ and a wall moving.  The reduced x momentum equation differential is
 subject to the no slip boundary condition $u(\pm h) = \text{wall velocity}$,
 where $h$ is half the height of the channel \cite{ref:white}.
 
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -809,21 +927,22 @@ This Octave script will generate a postscript file Couette\-Poiseuille.ps
 \item [Physical time simulated:] \hfill 15 sec.
 \end{description}
 
-\section*{\underline{Results}}
-Figure \ref{fig:Poiseuille} shows a comparison of the exact and simulated u
+\subsubsection*{\underline{Results}}
+Figure \ref{fig:CombinedPoiseuille} shows a comparison of the exact and simulated u
 velocity at time $t = 15sec$, 5 cells from the end of the domain.  The lower
 plot shows the difference of the velocity $\|u - u_{exact}\|$.
 %
 \begin{figure}
   \includegraphics[scale=.85]{Couette-Poiseuille.png}
   \caption{ Comparison of $u$ velocity $t = 15sec$}
-  \label{fig:Poiseuille}
+  \label{fig:CombinedPoiseuille}
   \end{figure}
 \newpage
 %
 %______________________________________________________________________
-\section*{\center Shock Tube}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Shock Tube}
+\addcontentsline{toc}{subsection}{Shock Tube}
+\subsubsection*{\underline{Problem Description}}
 The shock tube problem is a standard 1D compressible flow problem that
 has been used by many as a validation test case \cite{ref:laney, ref:sod, ref:toro}.
 At time $t=0$ the computational domain is divided into two separate regions of
@@ -836,7 +955,7 @@ fan moves towards the left while the shockwave and contact discontinutity
 move to the right.  This problem tests the algorithm's ability to capture
 steep gradients and solve Eulers equations.
 %
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -856,7 +975,7 @@ This Octave script will generate a postscript file shockTube.ps
 \item [Physical time simulated:] \hfill 0.005 sec.
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{results.ST} shows a comparison of the exact versus simulated
 results at time $t = 5msec$.
 %
@@ -868,9 +987,9 @@ results at time $t = 5msec$.
 \newpage
 %
 %__________________________________SHOCKTUBE AMR
-\section*{\center Shock Tube with Adaptive Mesh Refinement}
-%
-\subsection*{\underline{Simulation Specifics}}
+\subsection*{\center Shock Tube with Adaptive Mesh Refinement}
+\addcontentsline{toc}{subsection}{Shock Tube with Adaptive Mesh Refinement}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -893,7 +1012,7 @@ This Octave script will generate a postscript file shockTube\_AMR.ps
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{results.ST.AMR} shows a comparison of the exact versus simulated results at time $t = 5msec$.
 \begin{figure}
   \includegraphics[scale=.85]{shockTube_AMR.png}
@@ -903,8 +1022,9 @@ Figure \ref{results.ST.AMR} shows a comparison of the exact versus simulated res
 \newpage
 %
 %__________________________________riemann2D
-\section*{\center 2D Riemann Problem with Adaptive Mesh Refinement}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center 2D Riemann Problem with Adaptive Mesh Refinement}
+\addcontentsline{toc}{subsection}{2D Riemann Problem with Adaptive Mesh Refinement}
+\subsubsection*{\underline{Problem Description}}
 In two-dimensional Riemann problems there 15 different solutions that combine
 rarefaction waves, shock waves and a slip line or contact discontinuities
 \cite{ref:schulz_collins_glaz, ref:Liska_Wendroff}.  Here we simulate 4 slip
@@ -915,7 +1035,7 @@ four quadrants are $V_{ll}=(1, 1, -0.75, 0.5), V_{lr}=(1, 3, -0.75,-0.5),
 V_{ul}=(1,2,0.75,0.5), V_{ur}=(1,1,0.75,-0.5)$ where, $p$ is pressure,
 $\rho$ is the density of the polytropic gas, $u$ and $v$ are the $x$ and $y$
 component of velocity.
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \footnotesize
 \item [Component used:] \hfill ICE
@@ -934,7 +1054,7 @@ component of velocity.
 \item [Physical time simulated:] \hfill 0.3 sec.
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{fig:riemann2D} shows a flood and line contour plot(s) of the density of the gas at 0.03sec.
 \begin{figure}
   \includegraphics[scale=.6]{riemann2D.png}
@@ -944,8 +1064,9 @@ Figure \ref{fig:riemann2D} shows a flood and line contour plot(s) of the density
 \newpage
 %
 %__________________________________
-\section*{\center Explosion 2D}
-\subsection*{\underline{Problem Description}}
+\subsection*{\center Explosion 2D}
+\addcontentsline{toc}{subsection}{Explosion 2D}
+\subsubsection*{\underline{Problem Description}}
 For the multidimensional blast wave orexplosion test is a standard compressible
 flow problem that has been used by many as a validation test case.  At time
 $t=0$ there is a circular region of gas at the center of the domain at a
@@ -961,7 +1082,7 @@ with a radius $R=0.4$ and the surrounding box 2x2x0.1.  The initial condition
 inside of the circular region were $(p=1, \rho=1, u=0, v=0)$  and outside
 $(p=0.1, \rho=0.125, u=0, v=0).$  The fluid was an ideal, inviscid, polytropic gas.
 %
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill ICE
 \item [Input file name:] \hfill \TT{Explosion.ups}
@@ -986,7 +1107,7 @@ This Octave script will generate a postscript file explosion\_AMR.ps
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figures \ref{fig:pressExplode} and \ref{fig:rhoExplode} shows surface plots of the pressure and density at $t=0.25.$  
 %\newpage
 \begin{figure}
@@ -1011,8 +1132,11 @@ Since this test is symetrical we can use results from the equivalent 1 dimension
   \label{fig:1dExplode}
 \end{figure}
 \newpage
-\section*{\center ANFO Rate Stick}
-\subsection*{\underline{Problem Description}}
+
+%__________________________________
+\subsection*{\center ANFO Rate Stick}
+\addcontentsline{toc}{subsection}{ANFO Rate Stick}
+\subsubsection*{\underline{Problem Description}}
 A cylindrical stick ($r = 8 mm$) of Ammonium Nitrate Fuel Oil (ANFO) given an initial
 velocity of $90 m/s$.  As it strikes the domain boundary, pressure is generated
 sufficient to reach the initial pressure required to activate the 
@@ -1028,7 +1152,7 @@ simulated by shrinking the computational domain to one cell in each of the
 transverse directions.
 
 %
-\subsection*{\underline{Simulation Specifics}}
+\subsubsection*{\underline{Simulation Specifics}}
 \begin{description}
 \item [Component used:] \hfill ICE
 \item [Input file name:] \hfill \TT{JWLpp8mmRS.ups}
@@ -1047,7 +1171,7 @@ transverse directions.
 
 \end{description}
 
-\section*{\underline{Results}}
+\subsubsection*{\underline{Results}}
 Figure \ref{fig:RateStick} shows a volume rendering of the density of the
 reactant.  Note the curvature of the reaction zone.
 \begin{figure}
@@ -1101,7 +1225,7 @@ reactant.  Note the curvature of the reaction zone.
 %\newpage
 
 
-\subsection{References}
+\section{References}
 \bibliographystyle{plain}
 \bibliography{ice}
 
