@@ -1708,7 +1708,7 @@ if test "$with_visit"; then
    sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/testavtudaReaderMTMDFileFormat.C"
 
    BUILD_VISIT=yes
-   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.so
+   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.$SO_OR_ARCHIVE_EXTENSION
    VISIT_INSTALL_DIR=$with_visit
 fi
 

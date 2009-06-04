@@ -264,7 +264,13 @@
       <file                   spec="OPTIONAL NO_DATA" >
         <name                 spec="REQUIRED STRING" />
         <var                  spec="MULTIPLE STRING" />
+        <format               spec="OPTIONAL STRING" />
       </file>
+      <image                   spec="OPTIONAL NO_DATA" >
+        <name                 spec="REQUIRED STRING" />
+        <res                  spec="OPTIONAL VECTOR" />
+        <threshold            spec="OPTIONAL MULTIPLE_DOUBLES" />
+      </image>
 
       <res                    spec="OPTIONAL VECTOR" /> <!-- FIXME: ?? These are only  optional in some cases... -->
       <velocity               spec="OPTIONAL VECTOR" /> <!--           eg, ARCHES doesn't use them... -->
